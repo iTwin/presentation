@@ -21,27 +21,24 @@
     "Presentation"
   ],
   "type": "module",
-  "main": "lib/cjs/presentation-shared.js",
-  "types": "lib/cjs/presentation-shared",
-  "module": "lib/esm/presentation-shared.js",
+  "types": "lib/presentation-shared",
+  "module": "lib/presentation-shared.js",
   "exports": {
     ".": {
-      "import": "./lib/esm/presentation-shared.js",
-      "require": "./lib/cjs/presentation-shared.js"
+      "import": "./lib/presentation-shared.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s typecheck && npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run -s typecheck && npm run -s build:lib",
+    "build:lib": "tsc -p tsconfig.lib.json",
     "clean": "rimraf lib temp",
     "cover": "vitest run --coverage",
     "lint": "eslint \"./src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "extract-api": "betools extract-api --entry=presentation-shared --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/presentation-shared --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-shared.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },

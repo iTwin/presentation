@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "rootDir": "./src",
-    "outDir": "lib/esm"
+    "outDir": "lib"
   },
-  "include": ["src/shared", "src/presentation-shared.ts"]
+  "include": ["src/presentation-core-interop", "src/presentation-core-interop.ts"]
 }

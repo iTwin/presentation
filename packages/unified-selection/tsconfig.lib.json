@@ -2,10 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "module": "CommonJS",
-    "moduleResolution": "Bundler",
     "rootDir": "./src",
-    "outDir": "lib/cjs"
+    "outDir": "lib"
   },
   "include": ["src/unified-selection", "src/unified-selection.ts"]
 }
