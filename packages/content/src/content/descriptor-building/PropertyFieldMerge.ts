@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert } from "@itwin/core-bentley";
 import { normalizeFullClassName, type ValueDescriptor } from "@itwin/presentation-shared";
 import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvider.js";
 import { getOrCreate } from "../InternalUtils.js";
@@ -54,8 +55,11 @@ interface PropertyFieldCandidate extends CategorizedField {
 export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate[]): CategorizedField[] {
   const groups = new Map<Field["id"], PropertyFieldCandidate[]>();
   for (const candidate of candidates) {
-    const baseId = PropertyField.computeId(candidate.field);
-    getOrCreate({ map: groups, key: baseId, createFunc: () => [] }).push(candidate);
+    assert(
+      () => PropertyField.computeId(candidate.field) === candidate.field.id,
+      "Fields merged with `mergePropertyFieldsByIdentity` must not have forked IDs.",
+    );
+    getOrCreate({ map: groups, key: candidate.field.id, createFunc: () => [] }).push(candidate);
   }
 
   const result: CategorizedField[] = [];

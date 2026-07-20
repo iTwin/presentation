@@ -10,6 +10,7 @@ export default defineConfig({
     name: "Content tests",
     include: ["src/test/**/*.test.ts"],
     testTimeout: 60000,
+    env: { NODE_ENV: "development" },
     restoreMocks: true,
     clearMocks: true,
     mockReset: true,

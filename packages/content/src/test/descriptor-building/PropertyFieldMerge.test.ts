@@ -19,10 +19,15 @@ function createField(props: {
   type?: PropertyField["type"];
   pathFromTarget?: PropertyField["pathFromTarget"];
 }): PropertyField {
+  const id = PropertyField.computeId({
+    propertyClassName: props.propertyClassName,
+    propertyName: props.propertyName,
+    pathFromTarget: props.pathFromTarget,
+  });
   return {
     kind: "property",
-    id: "unused",
-    selectorId: "unused",
+    id,
+    selectorId: id,
     label: props.label ?? "Label",
     type: props.type ?? { kind: "primitive", type: "String" },
     hidden: props.hidden,
@@ -71,7 +76,7 @@ describe("mergePropertyFieldsByIdentity", () => {
       valueClassNames: ["Stuff:Window"],
     });
     merge([field]);
-    expect(field.id).to.equal("unused");
+    expect(field.id).to.equal(PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" }));
     expect(field.valueClassNames).to.deep.equal(["Stuff:Window"]);
   });
 
