@@ -711,6 +711,7 @@ describe("createRelationshipPathJoinClause", () => {
     it("returns empty joins array for empty path", async () => {
       const result = await createRelationshipPathJoinInfo({ schemaProvider, path: [] });
       expect(result.joins).toEqual([]);
+      expect(result.steps).toEqual([]);
       expect(result.bindings).toBeUndefined();
     });
 
@@ -743,6 +744,13 @@ describe("createRelationshipPathJoinClause", () => {
       expect(trimWhitespace(result.joins[0].joinCondition)).toBe(
         trimWhitespace(`[t].[ECInstanceId] = [s].[${navigationProperty.name}].[Id]`),
       );
+      expect(result.steps).toEqual([
+        {
+          relationshipClassIdSelector: `[s].[${navigationProperty.name}].[RelECClassId]`,
+          sourceClassIdSelector: "[s].[ECClassId]",
+          targetClassIdSelector: "[t].[ECClassId]",
+        },
+      ]);
       expect(result.bindings).toBeUndefined();
     });
 
@@ -774,6 +782,13 @@ describe("createRelationshipPathJoinClause", () => {
         joinAlias: "t",
       });
       expect(trimWhitespace(result.joins[1].joinCondition)).toBe("[t].[ECInstanceId] = [r].[TargetECInstanceId]");
+      expect(result.steps).toEqual([
+        {
+          relationshipClassIdSelector: "[r].[ECClassId]",
+          sourceClassIdSelector: "[s].[ECClassId]",
+          targetClassIdSelector: "[t].[ECClassId]",
+        },
+      ]);
       expect(result.bindings).toBeUndefined();
     });
 
@@ -812,6 +827,91 @@ describe("createRelationshipPathJoinClause", () => {
       });
       expect(trimWhitespace(result.joins[1].joinCondition)).toBe("[t].[ECInstanceId] = [r].[TargetECInstanceId]");
       expect(result.bindings).toBeUndefined();
+    });
+
+    describe("sourceClassIdSelector and targetClassIdSelector", () => {
+      it("selects source and target `ECClassId` for a link-table step", async () => {
+        const { sourceClass, targetClass, relationship } = setupLinkTableRelationshipClasses();
+        const result = await createRelationshipPathJoinInfo({
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: sourceClass.fullName,
+              sourceAlias: "s",
+              relationshipName: relationship.fullName,
+              relationshipAlias: "r",
+              targetClassName: targetClass.fullName,
+              targetAlias: "t",
+            },
+          ],
+        });
+        expect(result.steps).toEqual([
+          {
+            relationshipClassIdSelector: "[r].[ECClassId]",
+            sourceClassIdSelector: "[s].[ECClassId]",
+            targetClassIdSelector: "[t].[ECClassId]",
+          },
+        ]);
+      });
+
+      it("selects source and target `ECClassId` for a navigation-property step", async () => {
+        const { sourceClass, targetClass, relationship, navigationProperty } =
+          await setupNavigationPropertyRelationshipClasses({
+            navigationPropertyDirection: "Forward",
+            navigationPropertyName: "PhysicalMaterial",
+            source: "PhysicalElement",
+            target: "PhysicalMaterial",
+            relationship: { name: "PhysicalElementIsOfPhysicalMaterial", direction: "Forward" },
+          });
+        const result = await createRelationshipPathJoinInfo({
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: sourceClass.fullName,
+              sourceAlias: "s",
+              relationshipName: relationship.fullName,
+              relationshipAlias: "r",
+              targetClassName: targetClass.fullName,
+              targetAlias: "t",
+            },
+          ],
+        });
+        expect(result.steps).toEqual([
+          {
+            relationshipClassIdSelector: `[s].[${navigationProperty.name}].[RelECClassId]`,
+            sourceClassIdSelector: "[s].[ECClassId]",
+            targetClassIdSelector: "[t].[ECClassId]",
+          },
+        ]);
+      });
+
+      it("tracks aliases across a multi-step path, using each step's own source", async () => {
+        const step1 = setupLinkTableRelationshipClasses({ source: "a", relationship: "r1", target: "b" });
+        const step2 = setupLinkTableRelationshipClasses({ source: step1.targetClass, relationship: "r2", target: "c" });
+        const result = await createRelationshipPathJoinInfo({
+          schemaProvider,
+          path: [
+            {
+              sourceClassName: step1.sourceClass.fullName,
+              sourceAlias: "a",
+              relationshipName: step1.relationship.fullName,
+              relationshipAlias: "r1",
+              targetClassName: step1.targetClass.fullName,
+              targetAlias: "b",
+            },
+            {
+              sourceClassName: step2.sourceClass.fullName,
+              sourceAlias: "b",
+              relationshipName: step2.relationship.fullName,
+              relationshipAlias: "r2",
+              targetClassName: step2.targetClass.fullName,
+              targetAlias: "c",
+            },
+          ],
+        });
+        expect(result.steps.map((s) => s.sourceClassIdSelector)).toEqual(["[a].[ECClassId]", "[b].[ECClassId]"]);
+        expect(result.steps.map((s) => s.targetClassIdSelector)).toEqual(["[b].[ECClassId]", "[c].[ECClassId]"]);
+      });
     });
 
     it("collects bindings across steps", async () => {

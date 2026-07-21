@@ -75,6 +75,38 @@ interface RelationshipJoinInfo {
 }
 
 /**
+ * Per-path-step resolution info that is not tied to a specific JOIN clause.
+ * @public
+ */
+interface RelationshipPathStepJoinInfo {
+  /**
+   * An ECSQL selector that yields the step's concrete relationship `ECClassId` for the actual data
+   * row being traversed. The concept is the same for every step; only the expression differs by how
+   * the relationship is represented:
+   * - link-table step: `[relationship_alias].[ECClassId]` (the joined relationship table),
+   * - navigation-property step: `[owner_alias].[navigation_property_name].[RelECClassId]`, where the
+   *   owner alias is the source or target of the step depending on the navigation property direction.
+   *
+   * Note: for `outer` joins the relationship row / navigation value may be `NULL` when nothing is
+   * related, in which case this selector yields `NULL`.
+   */
+  relationshipClassIdSelector: string;
+  /**
+   * An ECSQL selector that yields the step's concrete source `ECClassId` for the actual data row
+   * being traversed, i.e. `[source_alias].[ECClassId]` of the class the step is joined from.
+   */
+  sourceClassIdSelector: string;
+  /**
+   * An ECSQL selector that yields the step's concrete target `ECClassId` for the actual data row
+   * being traversed, i.e. `[target_alias].[ECClassId]` of the class the step is joined to.
+   *
+   * Note: for `outer` joins the target row may be `NULL` when nothing is related, in which case this
+   * selector yields `NULL`.
+   */
+  targetClassIdSelector: string;
+}
+
+/**
  * A resolved, render-ready description of a relationship-path JOIN, as a flat, ordered list of
  * concrete join clauses. Produced by `createRelationshipPathJoinInfo`; consumed by the
  * `createRelationshipPathJoinClause` render overload.
@@ -88,6 +120,8 @@ interface RelationshipPathJoinInfo {
    * relationship + target.
    */
   joins: RelationshipJoinInfo[];
+  /** Per-path-step resolution info, one entry per input path step, in path order. */
+  steps: RelationshipPathStepJoinInfo[];
   /** `instanceFilter` bindings collected across all steps, or `undefined` when none. */
   bindings?: Record<string, ECSqlBinding>;
 }
@@ -100,7 +134,7 @@ export async function createRelationshipPathJoinInfo(
   props: CreateRelationshipPathJoinClauseProps,
 ): Promise<RelationshipPathJoinInfo> {
   if (props.path.length === 0) {
-    return { joins: [] };
+    return { joins: [], steps: [] };
   }
   let prev = {
     alias: props.path[0].sourceAlias,
@@ -108,11 +142,16 @@ export async function createRelationshipPathJoinInfo(
     className: props.path[0].sourceClassName,
   };
   const joins: RelationshipJoinInfo[] = [];
+  const steps: RelationshipPathStepJoinInfo[] = [];
   const bindings: Record<string, ECSqlBinding> = {};
   for (const stepDef of props.path) {
     const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
     const navigationProperty = await getNavigationProperty(step);
     const filterCondition = resolveInstanceFilterCondition(step);
+    // Source/target `ECClassId` selectors are resolved the same way regardless of how the
+    // relationship is represented: read from the source/target aliases actually joined for this step.
+    const sourceClassIdSelector = createRawPropertyValueSelector(prev.alias, "ECClassId");
+    const targetClassIdSelector = createRawPropertyValueSelector(step.targetAlias, "ECClassId");
     if (step.instanceFilter?.bindings) {
       for (const [key, value] of Object.entries(step.instanceFilter.bindings)) {
         if (key in bindings) {
@@ -125,6 +164,19 @@ export async function createRelationshipPathJoinInfo(
     }
     if (navigationProperty) {
       const isNavigationPropertyForward = navigationProperty.direction === "Forward";
+      // The navigation value (`.Id` and `.RelECClassId`) lives on the same alias that holds the
+      // navigation property in the join condition below.
+      const navigationValueAlias =
+        isNavigationPropertyForward === !step.relationshipReverse ? prev.alias : step.targetAlias;
+      steps.push({
+        relationshipClassIdSelector: createRawPropertyValueSelector(
+          navigationValueAlias,
+          navigationProperty.name,
+          "RelECClassId",
+        ),
+        sourceClassIdSelector,
+        targetClassIdSelector,
+      });
       const joinCondition =
         isNavigationPropertyForward === !step.relationshipReverse
           ? `${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")} = ${createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id")}${filterCondition}`
@@ -136,6 +188,11 @@ export async function createRelationshipPathJoinInfo(
         joinCondition,
       });
     } else {
+      steps.push({
+        relationshipClassIdSelector: createRawPropertyValueSelector(step.relationshipAlias, "ECClassId"),
+        sourceClassIdSelector,
+        targetClassIdSelector,
+      });
       const relPropNames = !step.relationshipReverse
         ? { this: "SourceECInstanceId", next: "TargetECInstanceId" }
         : { this: "TargetECInstanceId", next: "SourceECInstanceId" };
@@ -171,7 +228,7 @@ export async function createRelationshipPathJoinInfo(
     }
     prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
   }
-  return { joins, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
+  return { joins, steps, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
 }
 
 /**

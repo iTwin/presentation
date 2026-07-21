@@ -678,6 +678,7 @@ interface RelationshipPathJoinClauseResult {
 interface RelationshipPathJoinInfo {
     bindings?: Record<string, ECSqlBinding>;
     joins: RelationshipJoinInfo[];
+    steps: RelationshipPathStepJoinInfo[];
 }
 
 // @public
@@ -692,6 +693,13 @@ interface RelationshipPathStep {
     relationshipReverse?: boolean;
     sourceClassName: EC.FullClassName;
     targetClassName: EC.FullClassName;
+}
+
+// @public
+interface RelationshipPathStepJoinInfo {
+    relationshipClassIdSelector: string;
+    sourceClassIdSelector: string;
+    targetClassIdSelector: string;
 }
 
 // @public

@@ -123,6 +123,11 @@ export interface ContentSource {
 export interface ResolvedPath {
   /**
    * The concrete relationship path from the content target to the related property source.
+   *
+   * Every class on each step is concrete — the step's `sourceClassName`, `targetClassName` and
+   * `relationshipName` are all resolved from the scanned data, never a polymorphically-selected base.
+   * For a polymorphic relationship this means the concrete relationship subclass(es) actually present
+   * in the data; distinct subclasses are reported as separate `ResolvedPath` entries.
    */
   path: RelationshipPath;
 
