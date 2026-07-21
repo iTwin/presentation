@@ -20,14 +20,19 @@ export type DeepReadonly<T> = T extends (...args: any[]) => any
 /**
  * Serializes a relationship path to a deterministic string. When `omitLastTargetClass` is set, the
  * final step's target class (and its arrow) is left off, yielding a target-independent serialization
- * of the path's last relationship.
+ * of the path's last relationship. When `includeInstanceFilters` is set, each step's `instanceFilter`
+ * (if any) is appended inline right after that step, so paths differing only by a step filter get
+ * distinct strings — use this when a step's filter must not be merged away (e.g. JOIN aliasing /
+ * de-duplication). A filter-free path yields the same string with or without `includeInstanceFilters`.
  */
 export function serializeRelationshipPath({
   path,
   omitLastTargetClass,
+  includeInstanceFilters,
 }: {
   path: RelationshipPath;
   omitLastTargetClass?: boolean;
+  includeInstanceFilters?: boolean;
 }): string {
   let result = "";
   path.forEach((step, index) => {
@@ -38,6 +43,9 @@ export function serializeRelationshipPath({
     result += `-${rel}`;
     if (!(omitLastTargetClass && index === path.length - 1)) {
       result += `->${step.targetClassName}`;
+    }
+    if (includeInstanceFilters && step.instanceFilter) {
+      result += `{${JSON.stringify(step.instanceFilter)}}`;
     }
   });
   return result;

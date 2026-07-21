@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { computeFieldForkKey, toSortedUniqueClassNames } from "../../content/model/Utils.js";
+import { computeFieldForkKey, serializeRelationshipPath, toSortedUniqueClassNames } from "../../content/model/Utils.js";
 
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 
 describe("toSortedUniqueClassNames", () => {
   it("normalizes, de-duplicates, and sorts class names", () => {
@@ -36,5 +36,56 @@ describe("computeFieldForkKey", () => {
     expect(key.length).to.be.lessThan(20);
     // stable across calls
     expect(key).to.equal(computeFieldForkKey(longSubset));
+  });
+});
+
+describe("serializeRelationshipPath", () => {
+  describe("with includeInstanceFilters", () => {
+    function step(overrides?: Partial<RelationshipPath[number]>): RelationshipPath[number] {
+      return {
+        sourceClassName: "Schema.A",
+        relationshipName: "Schema.AtoB",
+        targetClassName: "Schema.B",
+        ...overrides,
+      };
+    }
+
+    it("matches the plain serialization for a filter-free path", () => {
+      const path: RelationshipPath = [step()];
+      expect(serializeRelationshipPath({ path, includeInstanceFilters: true })).to.equal(
+        serializeRelationshipPath({ path }),
+      );
+    });
+
+    it("distinguishes paths that differ only by a step instance filter", () => {
+      const pathA: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0" } })];
+      const pathB: RelationshipPath = [step({ instanceFilter: { expression: "this.Y > 0" } })];
+      expect(serializeRelationshipPath({ path: pathA, includeInstanceFilters: true })).to.not.equal(
+        serializeRelationshipPath({ path: pathB, includeInstanceFilters: true }),
+      );
+      // ...and both differ from the filter-free serialization.
+      expect(serializeRelationshipPath({ path: pathA, includeInstanceFilters: true })).to.not.equal(
+        serializeRelationshipPath({ path: pathA, includeInstanceFilters: false }),
+      );
+    });
+
+    it("distinguishes filters that differ only by their bindings", () => {
+      const pathA: RelationshipPath = [
+        step({ instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 1 } } } }),
+      ];
+      const pathB: RelationshipPath = [
+        step({ instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 2 } } } }),
+      ];
+      expect(serializeRelationshipPath({ path: pathA, includeInstanceFilters: true })).to.not.equal(
+        serializeRelationshipPath({ path: pathB, includeInstanceFilters: true }),
+      );
+    });
+
+    it("is deterministic for the same filtered path", () => {
+      const path: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0" } })];
+      expect(serializeRelationshipPath({ path, includeInstanceFilters: true })).to.equal(
+        serializeRelationshipPath({ path, includeInstanceFilters: true }),
+      );
+    });
   });
 });
