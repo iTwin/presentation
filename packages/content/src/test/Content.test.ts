@@ -859,7 +859,7 @@ describe("resolveContentSources", () => {
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include(
-        `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].id = [this].ECInstanceId`,
+        `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [this].[ECInstanceId]`,
       );
       expect(query.bindings).to.deep.equal({ [TARGET_FILTER_JOIN_ALIAS]: { type: "idset", value: ["0x1", "0x2"] } });
     });

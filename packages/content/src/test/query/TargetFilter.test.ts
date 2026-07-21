@@ -18,7 +18,7 @@ describe("buildTargetFilter", () => {
   it("builds IdSet join and binding for instance ids", () => {
     const target: ContentTarget = { primaryClass, instanceIds: ["0x1", "0x2"] };
     expect(buildTargetFilter(target)).to.deep.equal({
-      joins: `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].id = [this].ECInstanceId`,
+      joins: `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [this].[ECInstanceId]`,
       bindings: { [TARGET_FILTER_JOIN_ALIAS]: { type: "idset", value: ["0x1", "0x2"] } },
     });
   });
@@ -49,7 +49,7 @@ describe("buildTargetFilter", () => {
       instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 100 } } },
     };
     expect(buildTargetFilter(target)).to.deep.equal({
-      joins: `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].id = [this].ECInstanceId`,
+      joins: `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [this].[ECInstanceId]`,
       where: "[this].Area > :minArea",
       bindings: {
         [TARGET_FILTER_JOIN_ALIAS]: { type: "idset", value: ["0x1"] },

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECSql, normalizeFullClassName } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX } from "../../InternalUtils.js";
+import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS } from "../../InternalUtils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlBinding, IInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
@@ -41,7 +41,11 @@ export interface EmitterOptions {
 
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-/** The ECExpression root symbol referring to the primary/current instance. */
+/**
+ * The ECExpression grammar's root symbol for the primary/current instance — the literal token a
+ * consumer writes (e.g. `this.PropertyName`). It is a fixed part of the expression language, so it
+ * stays `"this"` regardless of the actual SQL alias ({@link PRIMARY_CLASS_ALIAS}) the root maps to.
+ */
 const PRIMARY_INSTANCE_ROOT = "this";
 
 const BUILTIN_FUNCTIONS = toLowerCaseValues({
@@ -100,7 +104,7 @@ export class Emitter {
   #bindingIndex = 0;
 
   private constructor(options: EmitterOptions) {
-    this.#primaryClassAlias = options.primaryClassAlias ?? PRIMARY_INSTANCE_ROOT;
+    this.#primaryClassAlias = options.primaryClassAlias ?? PRIMARY_CLASS_ALIAS;
     this.#primaryClassName = options.primaryClassName;
     this.#labelFactory = options.labelSelectClauseFactory;
     this.#getSelectedInstanceIds = options.context?.getSelectedInstanceIds;

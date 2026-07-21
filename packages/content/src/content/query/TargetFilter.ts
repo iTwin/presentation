@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSQL_PREFIX } from "../InternalUtils.js";
+import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS } from "../InternalUtils.js";
 
 import type { ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../ContentTarget.js";
@@ -22,14 +22,14 @@ export function buildTargetFilter(target: ContentTarget): {
   let joins: string | undefined;
 
   if (target.instanceIds) {
-    joins = `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].id = [this].ECInstanceId`;
+    joins = `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]`;
     bindings[TARGET_FILTER_JOIN_ALIAS] = { type: "idset", value: target.instanceIds };
   }
 
   if (target.instanceFilter) {
-    const alias = target.instanceFilter.primaryClassAlias ?? "this";
+    const alias = target.instanceFilter.primaryClassAlias ?? PRIMARY_CLASS_ALIAS;
     const aliasPattern = new RegExp(`(?:\\[${alias}\\]|\\b${alias})\\.`, "g");
-    const expression = target.instanceFilter.expression.replace(aliasPattern, "[this].");
+    const expression = target.instanceFilter.expression.replace(aliasPattern, `[${PRIMARY_CLASS_ALIAS}].`);
     clauses.push(expression);
     if (target.instanceFilter.bindings) {
       Object.assign(bindings, target.instanceFilter.bindings);

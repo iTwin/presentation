@@ -16,6 +16,15 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 export const ECSQL_PREFIX = "pres_";
 
 /**
+ * Alias assigned to the primary (target) class in generated content queries. Matches the default
+ * `primaryClassAlias` / `targetAlias` of the public `instanceFilter` / calculated-field APIs, so
+ * consumer-authored expressions referencing `this.` resolve against the same alias.
+ *
+ * @internal
+ */
+export const PRIMARY_CLASS_ALIAS = "this";
+
+/**
  * Gets the entry for `key` from `map`, or inserts and returns `createFunc()` when absent.
  * Accepts any map-like object — both `Map` and `WeakMap` satisfy the structural constraint.
  *
