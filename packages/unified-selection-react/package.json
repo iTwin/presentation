@@ -67,6 +67,7 @@
     "happy-dom": "catalog:test-tools",
     "react": "catalog:react",
     "rimraf": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

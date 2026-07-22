@@ -64,6 +64,7 @@
     "rxjs": "catalog:rxjs",
     "sanitize-filename": "^1.6.4",
     "sass": "^1.101.0",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

@@ -38,7 +38,8 @@ catalogs:
     eslint: ^9.39.5
     eslint-plugin-react: ^7.37.5
     rimraf: ^6.1.3
-    typescript: ~6.0.3
+    '@typescript/native': npm:typescript@^7.0.2
+    typescript: npm:@typescript/typescript6@^6.0.2
     vite: ^8.1.5
   itwinjs-core:
     '@itwin/core-bentley': ^5.11.3

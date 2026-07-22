@@ -67,6 +67,7 @@
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "rxjs-for-await": "catalog:rxjs",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

@@ -30,6 +30,7 @@
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }
