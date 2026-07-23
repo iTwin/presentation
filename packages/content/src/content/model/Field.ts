@@ -66,7 +66,7 @@ export interface PropertyField extends BaseField {
    *   value classes coincide with the target classes, but for a related property they are the
    *   related-endpoint classes rather than the target.
    *
-   * Always non-empty,  de-duplicated, and sorted by full name.
+   * Always non-empty, de-duplicated, and sorted by full name.
    */
   valueClassNames: EC.FullClassNameDotNotation[];
   /**
