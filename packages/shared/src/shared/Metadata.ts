@@ -25,8 +25,8 @@ export interface ECSchemaProvider {
  */
 export interface ECClassHierarchyInspector {
   classDerivesFrom(
-    derivedClassFullName: EC.FullClassName,
-    candidateBaseClassFullName: EC.FullClassName,
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
   ): Promise<boolean> | boolean;
 }
 
@@ -41,13 +41,13 @@ export function createCachingECClassHierarchyInspector(props: {
   cacheSize?: number;
 }): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
-  function createCacheKey(derivedClassName: EC.FullClassName, baseClassName: EC.FullClassName) {
+  function createCacheKey(derivedClassName: EC.FullClassNameDotNotation, baseClassName: EC.FullClassNameDotNotation) {
     return `${derivedClassName}/${baseClassName}`;
   }
   return {
     classDerivesFrom(
-      derivedClassFullName: EC.FullClassName,
-      candidateBaseClassFullName: EC.FullClassName,
+      derivedClassFullName: EC.FullClassNameDotNotation,
+      candidateBaseClassFullName: EC.FullClassNameDotNotation,
     ): Promise<boolean> | boolean {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
@@ -602,7 +602,10 @@ export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPa
  * @throws Error if the schema or class is not found.
  * @public
  */
-export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class> {
+export async function getClass(
+  schemaProvider: ECSchemaProvider,
+  fullClassName: EC.FullClassNameDotNotation,
+): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await schemaProvider.getSchema(schemaName);
   if (!schema) {

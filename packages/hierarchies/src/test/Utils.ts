@@ -312,7 +312,7 @@ export function createClassHierarchyInspectorStub(
     stubEntityClass: schemaProvider.stubEntityClass,
     stubRelationshipClass: schemaProvider.stubRelationshipClass,
     stubOtherClass: schemaProvider.stubOtherClass,
-    classDerivesFrom: async (derived: EC.FullClassName, base: EC.FullClassName) => {
+    classDerivesFrom: async (derived: EC.FullClassNameDotNotation, base: EC.FullClassNameDotNotation) => {
       const derivedClass = await getClass(schemaProvider, derived);
       const baseClass = await getClass(schemaProvider, base);
       return derivedClass.is(baseClass);
