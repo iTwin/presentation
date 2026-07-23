@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSql, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
+import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
 import { classifyPathCardinality, partitionPathsByJoinBudget } from "./QueryLimits.js";
@@ -235,8 +235,8 @@ export async function buildBaseQuery(
       // Value filters resolve relationship-class properties against the step's relationship alias; classify
       // once up front which of the referenced property classes are relationship classes.
       const relationshipPropertyClasses = await collectRelationshipPropertyClasses(schemaProvider, filters);
-      const isPropertyFieldRelationshipClass = (className: EC.FullClassName) =>
-        relationshipPropertyClasses.has(normalizeFullClassName(className));
+      const isPropertyFieldRelationshipClass = (className: EC.FullClassNameDotNotation) =>
+        relationshipPropertyClasses.has(className);
 
       // Value filters resolve their columns through the alias map (related fields) or `targetAlias`
       // substitution (calculated fields).
@@ -470,7 +470,7 @@ function resolveSelector(props: {
   field: PropertyField | CalculatedField;
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
-  isRelationshipClass: (className: EC.FullClassName) => boolean;
+  isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
 }): { selector: string; type: Exclude<PrimitiveValueType, "Point2d" | "Point3d"> } {
   const { field, member, relatedClassAliases, isRelationshipClass } = props;
   const type = getSelectorValueType(field.type, member);
@@ -502,7 +502,7 @@ function resolveSelector(props: {
 function resolvePropertyAlias(props: {
   field: PropertyField;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
-  isRelationshipClass: (className: EC.FullClassName) => boolean;
+  isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
 }): string {
   const { field, relatedClassAliases, isRelationshipClass } = props;
   if (field.pathFromTarget.length === 0) {
@@ -535,7 +535,7 @@ async function collectRelationshipPropertyClasses(
     [...classNames].map(async (className) => {
       const ecClass = await getClass(schemaProvider, className);
       if (ecClass.isRelationshipClass()) {
-        relationshipClasses.add(normalizeFullClassName(className));
+        relationshipClasses.add(className);
       }
     }),
   );
