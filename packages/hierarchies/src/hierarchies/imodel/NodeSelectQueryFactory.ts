@@ -6,7 +6,6 @@
 import { assert } from "@itwin/core-bentley";
 import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
 import {
-  compareFullClassNames,
   ECSql,
   getClass,
   normalizeFullClassName,
@@ -940,7 +939,7 @@ async function getHiddenClassesTree(
 async function getDirectDerivedClasses(ecClass: EC.Class): Promise<EC.Class[]> {
   const allDerived = await ecClass.getDerivedClasses();
   return (await Promise.all(allDerived.map(async (c) => ({ derived: c, base: await c.baseClass }))))
-    .filter(({ base }) => base && compareFullClassNames(base.fullName, ecClass.fullName) === 0)
+    .filter(({ base }) => base && base.fullName.toLocaleLowerCase() === ecClass.fullName.toLocaleLowerCase())
     .map(({ derived }) => derived);
 }
 

@@ -5,7 +5,6 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  compareFullClassNames,
   createMainThreadReleaseOnTimePassedHandler,
   normalizeFullClassName,
   parseFullClassName,
@@ -42,32 +41,6 @@ describe("normalizeFullClassName", () => {
   it("throws on invalid full class name", () => {
     expect(() => normalizeFullClassName("invalid")).toThrow();
     expect(() => normalizeFullClassName("schema.class.whatever")).toThrow();
-  });
-});
-
-describe("compareFullClassNames", () => {
-  it("detects differences", () => {
-    const differentSchemaCompare = compareFullClassNames("schema.class", "schema2.class");
-    const differentSchemaCompareInverted = compareFullClassNames("schema2.class", "schema.class");
-    expect(differentSchemaCompare).not.toBe(0);
-    expect(differentSchemaCompareInverted).not.toBe(0);
-    expect(differentSchemaCompareInverted).toBe(differentSchemaCompare * -1);
-
-    const differentClassCompare = compareFullClassNames("schema.class", "schema.class2");
-    const differentClassCompareInverted = compareFullClassNames("schema.class2", "schema.class");
-    expect(differentClassCompare).not.toBe(0);
-    expect(differentClassCompareInverted).not.toBe(0);
-    expect(differentClassCompareInverted).toBe(differentClassCompare * -1);
-  });
-
-  it("compares full class names in a case-insensitive way", () => {
-    expect(compareFullClassNames("schema:class", "SCHEMA:CLASS")).toBe(0);
-    expect(compareFullClassNames("Schema.Class", "schema.class")).toBe(0);
-  });
-
-  it("compares full class names, ignoring the separator", () => {
-    expect(compareFullClassNames("schema:class", "schema.class")).toBe(0);
-    expect(compareFullClassNames("schema.class", "schema:class")).toBe(0);
   });
 });
 

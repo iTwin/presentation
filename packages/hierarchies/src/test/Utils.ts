@@ -5,7 +5,7 @@
 
 import { vi } from "vitest";
 import { Dictionary, Logger } from "@itwin/core-bentley";
-import { compareFullClassNames, getClass } from "@itwin/presentation-shared";
+import { getClass } from "@itwin/presentation-shared";
 
 import type { Mock } from "vitest";
 import type { LogLevel } from "@itwin/core-bentley";
@@ -180,9 +180,11 @@ export type TStubCustomAttributesFunc = (props: {
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, StubbedSchema>();
-  const classes = new Dictionary<EC.FullClassNameDotNotation, EC.Class>(compareFullClassNames); // className -> class
-  const classHierarchy = new Dictionary<EC.FullClassNameDotNotation, EC.FullClassNameDotNotation>(
-    compareFullClassNames,
+  const classes = new Dictionary<EC.FullClassNameDotNotation, EC.Class>((a, b) =>
+    a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
+  ); // className -> class
+  const classHierarchy = new Dictionary<EC.FullClassNameDotNotation, EC.FullClassNameDotNotation>((a, b) =>
+    a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
   ); // className -> baseClassName
   const customAttributes = new Map<string, Map<EC.FullClassNameDotNotation, EC.CustomAttribute>>(); // schemaName -> (className -> customAttribute)
   const getSchemaImpl = (schemaName: string) => {
@@ -201,7 +203,7 @@ export function createECSchemaProviderStub() {
   const getDerivedClasses = (classFullName: EC.FullClassNameDotNotation): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
-      if (compareFullClassNames(baseClassName, classFullName) === 0) {
+      if (baseClassName.toLocaleLowerCase() === classFullName.toLocaleLowerCase()) {
         derivedClasses.push(classes.get(derivedClassName)!);
         derivedClasses.push(...getDerivedClasses(derivedClassName));
       }
@@ -241,8 +243,10 @@ export function createECSchemaProviderStub() {
           ? `${schemaName!}.${targetClassOrClassName}`
           : targetClassOrClassName.fullName;
       return (
-        compareFullClassNames(targetName, myName) === 0 ||
-        getBaseClasses(myName).some((baseClass) => compareFullClassNames(baseClass.fullName, targetName) === 0)
+        targetName.toLocaleLowerCase() === myName.toLocaleLowerCase() ||
+        getBaseClasses(myName).some(
+          (baseClass) => baseClass.fullName.toLocaleLowerCase() === targetName.toLocaleLowerCase(),
+        )
       );
     },
     getCustomAttributes: async () => props.customAttributes ?? new Map(),

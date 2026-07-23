@@ -3,7 +3,6 @@ Release Tag;API Item Type;API Item Name
 public;type;ArrayElement
 public;type;ArrayValue
 public;interface;ArrayValueDescriptor
-public;function;compareFullClassNames
 public;type;ConcatenatedValue
 public;namespace;ConcatenatedValue
 public;type;ConcatenatedValuePart

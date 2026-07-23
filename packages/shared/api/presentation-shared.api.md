@@ -39,9 +39,6 @@ interface ClassBasedLabelSelectClause {
 }
 
 // @public
-export function compareFullClassNames(lhs: EC.FullClassName, rhs: EC.FullClassName): number;
-
-// @public
 export type ConcatenatedValue = ConcatenatedValuePart[];
 
 // @public (undocumented)
@@ -330,7 +327,7 @@ export namespace EC {
 // @public
 export interface ECClassHierarchyInspector {
     // (undocumented)
-    classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean;
+    classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
 }
 
 // @public
@@ -462,7 +459,7 @@ export function formatConcatenatedValue(props: {
 }): Promise<string>;
 
 // @public
-export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class>;
+export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class>;
 
 // @public
 export interface IInstanceLabelSelectClauseFactory {

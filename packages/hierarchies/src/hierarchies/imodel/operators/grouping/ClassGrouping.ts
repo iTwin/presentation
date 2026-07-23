@@ -4,11 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Dictionary } from "@itwin/core-bentley";
-import {
-  compareFullClassNames,
-  createMainThreadReleaseOnTimePassedHandler,
-  getClass,
-} from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -44,7 +40,7 @@ export async function createClassGroups(
     grouped: new Dictionary<
       EC.FullClassNameDotNotation,
       { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
-    >(compareFullClassNames),
+    >((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
   };
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {
@@ -52,7 +48,7 @@ export async function createClassGroups(
     const nodeClassName = node.key.instanceKeys[0].className;
     if (
       node.processingParams?.grouping?.byClass &&
-      (!parentNodeClass || compareFullClassNames(nodeClassName, parentNodeClass) !== 0)
+      (!parentNodeClass || nodeClassName.toLocaleLowerCase() !== parentNodeClass.toLocaleLowerCase())
     ) {
       let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {

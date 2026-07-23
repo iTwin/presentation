@@ -35,7 +35,6 @@ export { createCachingECClassHierarchyInspector, getClass } from "./shared/Metad
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,
-  compareFullClassNames,
   normalizeFullClassName,
   parseFullClassName,
   releaseMainThread,

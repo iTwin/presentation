@@ -4,11 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SortedArray } from "@itwin/core-bentley";
-import {
-  compareFullClassNames,
-  createMainThreadReleaseOnTimePassedHandler,
-  getClass,
-} from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -42,7 +38,7 @@ export async function getBaseClassGroupingECClasses(
   if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
     // if we have a class grouping node, we can cut the front of sortedClasses up to a point where our grouping class is
     const cutPosition = sortedClasses.findIndex(
-      (c) => compareFullClassNames(c.fullName, parentNode.key.className) === 0,
+      (c) => c.fullName.toLocaleLowerCase() === parentNode.key.className.toLocaleLowerCase(),
     );
     if (cutPosition >= 0) {
       return sortedClasses.slice(cutPosition + 1);
@@ -68,7 +64,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
       !node.processingParams.grouping.byBaseClasses.fullClassNames.some(
-        (className) => compareFullClassNames(className, baseClassFullName) === 0,
+        (className) => className.toLocaleLowerCase() === baseClassFullName.toLocaleLowerCase(),
       )
     ) {
       ungroupedNodes.push(node);
@@ -106,7 +102,10 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
 async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]) {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  const baseClasses = new SortedArray<EC.FullClassNameDotNotation>(compareFullClassNames, false);
+  const baseClasses = new SortedArray<EC.FullClassNameDotNotation>(
+    (a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
+    false,
+  );
   for (const node of nodes) {
     await releaseMainThread();
     if (node.processingParams?.grouping?.byBaseClasses) {
