@@ -172,7 +172,7 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
 }
 
 /**
- * Converts a full class name (`SchemaName.ClassName` or `SchemaName:ClassName`) into a
+ * Converts a full class name (`SchemaName.ClassName`) into a
  * bracket-quoted ECSQL class selector: `[SchemaName].[ClassName]`.
  *
  * @throws Error if the provided full class name is not valid.
