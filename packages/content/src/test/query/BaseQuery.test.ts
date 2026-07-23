@@ -699,4 +699,139 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([path]);
     });
   });
+
+  describe("value filters on split paths", () => {
+    it("joins a schema-`many` filtered path onto the anchor to evaluate a target-property filter", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+      const field = makePropertyField({
+        propertyName: "Name",
+        propertyClassName: "TestSchema.Many",
+        pathFromTarget: path,
+        valueClassNames: ["TestSchema.Many"],
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      // The 1:many path's selected columns are owned by an additional group, but the anchor still joins
+      // it (outer) so the value filter can be evaluated against its target alias.
+      expect(result.anchor.paths).to.deep.equal([]);
+      const key = "TestSchema.Primary-[TestSchema.RelMany]->TestSchema.Many";
+      expect(result.anchor.parts.relatedClassAliases.get(key)).to.deep.equal({
+        target: `${ECSQL_PREFIX}t0`,
+        relationship: `${ECSQL_PREFIX}r0`,
+      });
+      expect(result.anchor.parts.joins).to.include("OUTER JOIN");
+      expect(result.anchor.parts.joins).to.include("[TestSchema].[RelMany]");
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "A" } });
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
+    });
+
+    it("joins a schema-`many` filtered path onto the anchor to evaluate a relationship-property filter", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+      const field = makePropertyField({
+        propertyName: "RelProp",
+        propertyClassName: "TestSchema.RelMany",
+        pathFromTarget: path,
+        valueClassNames: ["TestSchema.RelMany"],
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      expect(result.anchor.paths).to.deep.equal([]);
+      // A relationship-class property resolves against the step's relationship alias, not the target.
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}r0].[RelProp] = :${ECSQL_PREFIX}vf0`);
+      expect(result.additional).to.have.length(1);
+    });
+
+    it("joins a path forced 1:many by a `many` hint onto the anchor for filtering", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const cardinalityHints = new Map<string, CardinalityHint>([[serializeRelationshipPath({ path }), "many"]]);
+      const field = makePropertyField({
+        propertyName: "Name",
+        propertyClassName: "TestSchema.One",
+        pathFromTarget: path,
+        valueClassNames: ["TestSchema.One"],
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        cardinalityHints,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      // The hint splits the path off for column ownership, yet the anchor still joins it to filter.
+      expect(result.anchor.paths).to.deep.equal([]);
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
+    });
+
+    it("joins a filtered path from an overflow 1:1 partition onto the anchor", async () => {
+      const paths = Array.from({ length: 40 }, (_, i) => [
+        makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
+      ]);
+      // Paths are packed in source order, so the last path lands in an overflow partition.
+      const filteredPath = paths[paths.length - 1];
+      const field = makePropertyField({
+        propertyName: "Name",
+        propertyClassName: "TestSchema.Target39",
+        pathFromTarget: filteredPath,
+        valueClassNames: ["TestSchema.Target39"],
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource(paths),
+        includeRelatedJoins: true,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      // The filtered path's columns are owned by an overflow additional group, not the anchor...
+      const relationshipName = (p: { path: RelationshipPath }) => p.path[0].relationshipName;
+      expect(result.anchor.paths.some((p) => relationshipName(p) === "TestSchema.Rel39")).to.equal(false);
+      expect(result.additional!.some((g) => g.paths.some((p) => relationshipName(p) === "TestSchema.Rel39"))).to.equal(
+        true,
+      );
+      // ...yet the anchor joins it (under its globally-assigned alias) and evaluates the filter.
+      const key = "TestSchema.Primary-[TestSchema.Rel39]->TestSchema.Target39";
+      const aliases = result.anchor.parts.relatedClassAliases.get(key);
+      expect(aliases).to.not.be.undefined;
+      expect(result.anchor.parts.where).to.equal(`[${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
+    });
+
+    it("outer-joins a split path so an `is-null` filter matches primaries with no related instance", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+      const field = makePropertyField({
+        propertyName: "Name",
+        propertyClassName: "TestSchema.Many",
+        pathFromTarget: path,
+        valueClassNames: ["TestSchema.Many"],
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        filters: [{ field, operator: "is-null" }],
+      });
+
+      expect(result.anchor.parts.joins).to.include("OUTER JOIN");
+      expect(result.anchor.parts.joins).to.not.include("INNER JOIN [TestSchema].[RelMany]");
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NULL`);
+    });
+  });
 });

@@ -6,7 +6,7 @@
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
-import { classifyPathCardinality, partitionPathsByJoinBudget } from "./QueryLimits.js";
+import { classifyPathCardinality, countJoinTables, partitionPathsByJoinBudget } from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClauses } from "./ValueFilters.js";
 
@@ -83,6 +83,9 @@ export interface BaseQuery {
   /**
    * The **anchor** group — always present (even for a direct-only source). Owns the primary-key +
    * direct + calculated columns plus its share of 1:1 related columns, and drives ORDER BY + paging.
+   * Also carries the primary-restricting clauses (query filterers + value filters), so it additionally
+   * joins every path a value filter references — even one whose selected columns are owned by an
+   * `additional` group — so those predicates are evaluable here.
    */
   anchor: BaseQueryGroup;
   /**
@@ -137,9 +140,11 @@ export async function buildBaseQuery(
   );
 
   // Related-columns mode joins every resolved path; primaries-only mode joins only the paths a value
-  // filter references (to evaluate it).
+  // filter references (to evaluate it). Value-filter paths are collected in both modes: primaries-only
+  // joins exactly them, while related-columns force-joins them onto the anchor so a filtered path's
+  // predicate is still evaluable even when its selected columns are owned by an additional group.
   const groupPaths = includeRelatedJoins ? collectUniquePaths(source) : [];
-  const filterPaths = includeRelatedJoins ? [] : collectFilterPaths(filters);
+  const filterPaths = collectFilterPaths(filters);
 
   // Serialize each path's prefix keys once (memoized by path reference); every alias lookup below reuses
   // them instead of re-serializing path slices.
@@ -161,7 +166,7 @@ export async function buildBaseQuery(
   // query, they let the join info resolved for a path (below) serve both the JOIN-table budget count and
   // the rendered SQL, so a path's join info is never resolved more than once.
   const relatedClassAliases = assignPrefixAliases(
-    includeRelatedJoins ? groupPaths.map((p) => p.path) : filterPaths,
+    includeRelatedJoins ? [...groupPaths.map((p) => p.path), ...filterPaths] : filterPaths,
     getPrefixKeys,
   );
 
@@ -278,10 +283,18 @@ export async function buildBaseQuery(
   // Related-columns mode: split the resolved paths into the anchor (primary-key + direct + calculated +
   // its share of 1:1 related columns) plus additional groups for budget-overflow 1:1 partitions and each
   // 1:many path (isolated so the anchor stays one row per primary).
+  //
+  // The anchor carries the primary-restricting value filters, so every path a filter references must be
+  // joined onto it regardless of which group owns that path's selected columns. Those filter-only joins
+  // consume the anchor's SQLite JOIN-table budget, so reserve their tables before packing the 1:1 value
+  // paths. (An outer join is used for the count and the render alike, matching how the filter joins are
+  // emitted below.)
+  const filterJoinInfos = await Promise.all(filterPaths.map(async (path) => resolvePathInfo(path, "outer")));
   const reservedTables =
     1 +
     (targetFilter.joins ? 1 : 0) +
-    filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
+    filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0) +
+    filterJoinInfos.reduce((count, info) => count + countJoinTables(info), 0);
   const { anchorPaths, additionalGroups } = await splitRelatedPaths({
     resolvePathInfo,
     schemaProvider,
@@ -291,14 +304,13 @@ export async function buildBaseQuery(
   });
 
   // The anchor owns direct/calculated columns, so its related steps are outer-joined (an inner join
-  // would drop a primary missing one related instance and take its direct columns down with it).
+  // would drop a primary missing one related instance and take its direct columns down with it). Its join
+  // set unions the anchor's own value paths with every filter-referenced path (a shared prefix is merged
+  // by alias, so a path already selected by the anchor is joined only once).
+  const anchorJoinPaths = unionPaths([...anchorPaths.map((resolved) => resolved.path), ...filterPaths]);
   const anchor: BaseQueryGroup = {
     paths: anchorPaths,
-    parts: await buildGroupParts({
-      paths: anchorPaths.map((resolved) => resolved.path),
-      joinType: "outer",
-      includePrimaryFilters: true,
-    }),
+    parts: await buildGroupParts({ paths: anchorJoinPaths, joinType: "outer", includePrimaryFilters: true }),
   };
   if (additionalGroups.length === 0) {
     return { anchor };
@@ -393,7 +405,7 @@ function collectUniquePaths(source: ContentSource): ResolvedPath[] {
   return [...byKey.values()];
 }
 
-/** Collects the distinct related paths referenced by value filters (used by primaries-only mode). */
+/** Collects the distinct related paths referenced by value filters (joined to evaluate their predicates). */
 function collectFilterPaths(filters: ContentValueFilter[]): RelationshipPath[] {
   const byKey = new Map<string, RelationshipPath>();
   for (const filter of filters) {
@@ -402,6 +414,18 @@ function collectFilterPaths(filters: ContentValueFilter[]): RelationshipPath[] {
       if (!byKey.has(key)) {
         byKey.set(key, filter.field.pathFromTarget);
       }
+    }
+  }
+  return [...byKey.values()];
+}
+
+/** De-duplicates related paths by their serialized join key, preserving first-seen order. */
+function unionPaths(paths: RelationshipPath[]): RelationshipPath[] {
+  const byKey = new Map<string, RelationshipPath>();
+  for (const path of paths) {
+    const key = serializeJoinPath(path);
+    if (!byKey.has(key)) {
+      byKey.set(key, path);
     }
   }
   return [...byKey.values()];

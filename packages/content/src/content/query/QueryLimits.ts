@@ -54,8 +54,10 @@ type ResolvedPathWithJoinInfo = ResolvedPath & {
  * budget. This is not `info.joins.length`: an outer link-table entry (`relationship-select`) wraps a
  * subquery that itself joins the relationship + target, so it counts as two tables. A single step's
  * info therefore spans 1 to 3 tables (nav property → 1, inner link-table → 2, outer link-table → 3).
+ *
+ * @internal
  */
-function countJoinTables(info: ResolvedPathWithJoinInfo["joinInfo"]): number {
+export function countJoinTables(info: ResolvedPathWithJoinInfo["joinInfo"]): number {
   return info.joins.reduce((count, join) => count + 1 + (join.joinTarget.kind === "relationship-select" ? 1 : 0), 0);
 }
 
