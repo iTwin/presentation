@@ -677,7 +677,6 @@ interface RelationshipPathJoinClauseResult {
 // @public
 interface RelationshipPathJoinInfo {
     bindings?: Record<string, ECSqlBinding>;
-    joins: RelationshipJoinInfo[];
     steps: RelationshipPathStepJoinInfo[];
 }
 
@@ -697,6 +696,7 @@ interface RelationshipPathStep {
 
 // @public
 interface RelationshipPathStepJoinInfo {
+    joins: RelationshipJoinInfo[];
     relationshipClassIdSelector: string;
     sourceClassIdSelector: string;
     targetClassIdSelector: string;
