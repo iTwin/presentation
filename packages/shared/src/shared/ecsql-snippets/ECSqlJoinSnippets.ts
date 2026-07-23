@@ -80,6 +80,13 @@ interface RelationshipJoinInfo {
  */
 interface RelationshipPathStepJoinInfo {
   /**
+   * The ordered JOIN clauses to emit — one entry per JOIN. A path step contributes 1 (navigation
+   * property) or 2 (link-table) entries. Note the join-table count is not `joins.length`: an
+   * outer link-table entry (`JoinTargetRelationshipSelect`) wraps a subquery that itself joins the
+   * relationship + target.
+   */
+  joins: RelationshipJoinInfo[];
+  /**
    * An ECSQL selector that yields the step's concrete relationship `ECClassId` for the actual data
    * row being traversed. The concept is the same for every step; only the expression differs by how
    * the relationship is represented:
@@ -113,13 +120,6 @@ interface RelationshipPathStepJoinInfo {
  * @public
  */
 interface RelationshipPathJoinInfo {
-  /**
-   * The ordered JOIN clauses to emit — one entry per JOIN. A path step contributes 1 (navigation
-   * property) or 2 (link-table) entries. Note the join-table count is not `joins.length`: an
-   * outer link-table entry (`JoinTargetRelationshipSelect`) wraps a subquery that itself joins the
-   * relationship + target.
-   */
-  joins: RelationshipJoinInfo[];
   /** Per-path-step resolution info, one entry per input path step, in path order. */
   steps: RelationshipPathStepJoinInfo[];
   /** `instanceFilter` bindings collected across all steps, or `undefined` when none. */
@@ -134,14 +134,13 @@ export async function createRelationshipPathJoinInfo(
   props: CreateRelationshipPathJoinClauseProps,
 ): Promise<RelationshipPathJoinInfo> {
   if (props.path.length === 0) {
-    return { joins: [], steps: [] };
+    return { steps: [] };
   }
   let prev = {
     alias: props.path[0].sourceAlias,
     joinPropertyName: "ECInstanceId",
     className: props.path[0].sourceClassName,
   };
-  const joins: RelationshipJoinInfo[] = [];
   const steps: RelationshipPathStepJoinInfo[] = [];
   const bindings: Record<string, ECSqlBinding> = {};
   for (const stepDef of props.path) {
@@ -168,6 +167,11 @@ export async function createRelationshipPathJoinInfo(
       // navigation property in the join condition below.
       const navigationValueAlias =
         isNavigationPropertyForward === !step.relationshipReverse ? prev.alias : step.targetAlias;
+
+      const joinCondition =
+        isNavigationPropertyForward === !step.relationshipReverse
+          ? `${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")} = ${createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id")}${filterCondition}`
+          : `${createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id")} = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}${filterCondition}`;
       steps.push({
         relationshipClassIdSelector: createRawPropertyValueSelector(
           navigationValueAlias,
@@ -176,23 +180,17 @@ export async function createRelationshipPathJoinInfo(
         ),
         sourceClassIdSelector,
         targetClassIdSelector,
-      });
-      const joinCondition =
-        isNavigationPropertyForward === !step.relationshipReverse
-          ? `${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")} = ${createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id")}${filterCondition}`
-          : `${createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id")} = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}${filterCondition}`;
-      joins.push({
-        joinType: step.joinType ?? "inner",
-        joinTarget: { kind: "class", className: step.target.fullName },
-        joinAlias: step.targetAlias,
-        joinCondition,
+        joins: [
+          {
+            joinType: step.joinType ?? "inner",
+            joinTarget: { kind: "class", className: step.target.fullName },
+            joinAlias: step.targetAlias,
+            joinCondition,
+          },
+        ],
       });
     } else {
-      steps.push({
-        relationshipClassIdSelector: createRawPropertyValueSelector(step.relationshipAlias, "ECClassId"),
-        sourceClassIdSelector,
-        targetClassIdSelector,
-      });
+      const joins: RelationshipJoinInfo[] = [];
       const relPropNames = !step.relationshipReverse
         ? { this: "SourceECInstanceId", next: "TargetECInstanceId" }
         : { this: "TargetECInstanceId", next: "SourceECInstanceId" };
@@ -225,10 +223,17 @@ export async function createRelationshipPathJoinInfo(
         joinAlias: step.targetAlias,
         joinCondition: targetJoinCondition,
       });
+
+      steps.push({
+        relationshipClassIdSelector: createRawPropertyValueSelector(step.relationshipAlias, "ECClassId"),
+        sourceClassIdSelector,
+        targetClassIdSelector,
+        joins,
+      });
     }
     prev = { alias: step.targetAlias, className: step.target.fullName, joinPropertyName: "ECInstanceId" };
   }
-  return { joins, steps, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
+  return { steps, bindings: Object.keys(bindings).length > 0 ? bindings : undefined };
 }
 
 /**
@@ -286,7 +291,7 @@ export function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo)
 export function createRelationshipPathJoinClause(
   arg: CreateRelationshipPathJoinClauseProps | RelationshipPathJoinInfo,
 ): Promise<RelationshipPathJoinClauseResult> | RelationshipPathJoinClauseResult {
-  if ("joins" in arg) {
+  if ("steps" in arg) {
     return renderRelationshipPathJoinClause(arg);
   }
   return createRelationshipPathJoinInfo(arg).then(renderRelationshipPathJoinClause);
@@ -294,7 +299,8 @@ export function createRelationshipPathJoinClause(
 
 function renderRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult {
   let joins = "";
-  for (const entry of info.joins) {
+  const flatJoins = info.steps.flatMap((step) => step.joins);
+  for (const entry of flatJoins) {
     const joinKw = entry.joinType === "outer" ? "OUTER JOIN" : "INNER JOIN";
     if (entry.joinTarget.kind === "class") {
       joins += `
