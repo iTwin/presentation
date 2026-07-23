@@ -39,8 +39,8 @@ vi.mock("@itwin/presentation-shared", async (importOriginal) => {
       }) => ({
         // `joins` is a `RelationshipJoinInfo[]` in the real result; the tests never inspect it (the
         // rendered string comes from the mocked `createRelationshipPathJoinClause` below).
-        joins: [],
         steps: path.map((step) => ({
+          joins: [],
           sourceClassIdSelector: `[${step.sourceAlias}].[ECClassId]`,
           relationshipClassIdSelector: `[${step.relationshipAlias}].[ECClassId]`,
           targetClassIdSelector: `[${step.targetAlias}].[ECClassId]`,
@@ -50,11 +50,7 @@ vi.mock("@itwin/presentation-shared", async (importOriginal) => {
       createRelationshipPathJoinClause: (info: {
         steps: Array<{ relationshipClassIdSelector: string }>;
         bindings?: unknown;
-      }) => ({
-        joins: FIXED_JOINS,
-        bindings: info.bindings,
-        relationshipClassIdSelectors: info.steps.map((step) => step.relationshipClassIdSelector),
-      }),
+      }) => ({ joins: FIXED_JOINS, bindings: info.bindings }),
     },
   };
 });
@@ -223,8 +219,8 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const queryRow: ECSqlQueryRow = {
         0: "TestSchema.ClassA",
-        1: "TestSchema.ConcreteB",
-        2: "TestSchema.ConcreteRelAB",
+        1: "TestSchema.ConcreteRelAB",
+        2: "TestSchema.ConcreteB",
       };
       const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
 
@@ -271,8 +267,8 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const imodelAccess = createMockIModelAccess({
         resolvePathsQueryResults: [
-          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB1", 2: "TestSchema.ConcreteRelAB1" },
-          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB2", 2: "TestSchema.ConcreteRelAB2" },
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB1", 2: "TestSchema.ConcreteB1" },
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB2", 2: "TestSchema.ConcreteB2" },
         ],
       });
 
@@ -331,7 +327,7 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const imodelAccess = createMockIModelAccess({
         resolvePathsQueryResults: [
-          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB", 2: "TestSchema.ConcreteRelAB" },
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
         ],
       });
 
@@ -362,8 +358,8 @@ describe("resolveContentSources", () => {
       // Same near-end and target classes, but two concrete relationship subclasses present in the data.
       const imodelAccess = createMockIModelAccess({
         resolvePathsQueryResults: [
-          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB", 2: "TestSchema.ConcreteRel1" },
-          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB", 2: "TestSchema.ConcreteRel2" },
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRel1", 2: "TestSchema.ConcreteB" },
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRel2", 2: "TestSchema.ConcreteB" },
         ],
       });
 
@@ -417,10 +413,10 @@ describe("resolveContentSources", () => {
         resolvePathsQueryResults: [
           {
             0: "TestSchema.ClassA",
-            1: "TestSchema.ConcreteB",
-            2: "TestSchema.ConcreteC",
-            3: "TestSchema.ConcreteRelAB",
-            4: "TestSchema.ConcreteRelBC",
+            1: "TestSchema.ConcreteRelAB",
+            2: "TestSchema.ConcreteB",
+            3: "TestSchema.ConcreteRelBC",
+            4: "TestSchema.ConcreteC",
           },
         ],
       });
@@ -450,10 +446,10 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const queryRow: ECSqlQueryRow = {
         0: "TestSchema.ClassA",
-        1: "TestSchema.ConcreteB",
-        2: "TestSchema.ConcreteC",
-        3: "TestSchema.ConcreteRelAB",
-        4: "TestSchema.ConcreteRelBC",
+        1: "TestSchema.ConcreteRelAB",
+        2: "TestSchema.ConcreteB",
+        3: "TestSchema.ConcreteRelBC",
+        4: "TestSchema.ConcreteC",
       };
       const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
 
@@ -515,12 +511,12 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const queryRow: ECSqlQueryRow = {
         0: "TestSchema.ClassA",
-        1: "TestSchema.ConcreteB",
-        2: "TestSchema.ConcreteC",
-        3: "TestSchema.ConcreteD",
-        4: "TestSchema.ConcreteRelAB",
-        5: "TestSchema.ConcreteRelBC",
-        6: "TestSchema.ConcreteRelCD",
+        1: "TestSchema.ConcreteRelAB",
+        2: "TestSchema.ConcreteB",
+        3: "TestSchema.ConcreteRelBC",
+        4: "TestSchema.ConcreteC",
+        5: "TestSchema.ConcreteRelCD",
+        6: "TestSchema.ConcreteD",
       };
       const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
 
@@ -586,7 +582,7 @@ describe("resolveContentSources", () => {
       // single `GROUP_CONCAT`ed cell; the resolver splits and sorts them.
       const imodelAccess = createMockIModelAccess({
         resolvePathsQueryResults: [
-          { 0: "TestSchema.Sub2,TestSchema.Sub1", 1: "TestSchema.ConcreteB", 2: "TestSchema.ConcreteRelAB" },
+          { 0: "TestSchema.Sub2,TestSchema.Sub1", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
         ],
       });
 
@@ -627,8 +623,8 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const imodelAccess = createMockIModelAccess({
         resolvePathsQueryResults: [
-          { 0: "TestSchema.Sub1", 1: "TestSchema.ConcreteB", 2: "TestSchema.ConcreteRelAB" },
-          { 0: "TestSchema.Sub2", 1: "TestSchema.ConcreteC", 2: "TestSchema.ConcreteRelAB" },
+          { 0: "TestSchema.Sub1", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+          { 0: "TestSchema.Sub2", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteC" },
         ],
       });
 
@@ -734,7 +730,7 @@ describe("resolveContentSources", () => {
       const provider2 = createMockIModelFieldsProvider("provider2_v1", { relatedProperties: [{ path: pathB }] });
       const imodelAccess = createMockIModelAccess({
         resolvePathsQueryResults: [
-          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteTarget", 2: "TestSchema.ConcreteRel" },
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRel", 2: "TestSchema.ConcreteTarget" },
         ],
       });
 
@@ -791,7 +787,9 @@ describe("resolveContentSources", () => {
       const provider1 = createMockIModelFieldsProvider("skipped_v1", undefined);
       const provider2 = createMockIModelFieldsProvider("active_v1", { relatedProperties: [{ path }] });
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       const result = await resolveContentSources({
@@ -821,7 +819,9 @@ describe("resolveContentSources", () => {
       };
       const provider2 = createMockIModelFieldsProvider("fast_v1", { relatedProperties: [{ path }] });
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       const result = await resolveContentSources({
@@ -846,7 +846,9 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const target: ContentTarget = { primaryClass: "TestSchema.ClassA", instanceIds: ["0x1", "0x2"] };
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
@@ -879,7 +881,9 @@ describe("resolveContentSources", () => {
         instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 100.0 } } },
       };
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
@@ -907,7 +911,9 @@ describe("resolveContentSources", () => {
         instanceFilter: { expression: 'x.Name = "test"', primaryClassAlias: "x" },
       };
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
@@ -933,7 +939,9 @@ describe("resolveContentSources", () => {
         instanceFilter: { expression: '[x].Name = "test"', primaryClassAlias: "x" },
       };
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
@@ -972,7 +980,17 @@ describe("resolveContentSources", () => {
         },
       };
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ConcreteB", 1: "TestSchema.ConcreteC", 2: "TestSchema.ConcreteD" }],
+        resolvePathsQueryResults: [
+          {
+            0: "TestSchema.ClassA",
+            1: "TestSchema.ConcreteRelAB",
+            2: "TestSchema.ConcreteB",
+            3: "TestSchema.ConcreteRelBC",
+            4: "TestSchema.ConcreteC",
+            5: "TestSchema.ConcreteRelCD",
+            6: "TestSchema.ConcreteD",
+          },
+        ],
       });
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
@@ -1000,7 +1018,9 @@ describe("resolveContentSources", () => {
       const target1: ContentTarget = { primaryClass: "TestSchema.ClassA" };
       const target2: ContentTarget = { primaryClass: "TestSchema.ClassD" };
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       const result = await resolveContentSources({
@@ -1026,7 +1046,9 @@ describe("resolveContentSources", () => {
       const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
       const targets: ContentTarget[] = [{ primaryClass: "TestSchema.ClassA" }, { primaryClass: "TestSchema.ClassB" }];
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteB" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteB" },
+        ],
       });
 
       await resolveContentSources({ imodelAccess, targets, config: { imodelFieldsProviders: [provider] } });
@@ -1056,7 +1078,9 @@ describe("resolveContentSources", () => {
         relatedProperties: [{ path: pathA }, { path: pathB }],
       });
       const imodelAccess = createMockIModelAccess({
-        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteTarget" }],
+        resolvePathsQueryResults: [
+          { 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteRelAB", 2: "TestSchema.ConcreteTarget" },
+        ],
       });
 
       const result = await resolveContentSources({
