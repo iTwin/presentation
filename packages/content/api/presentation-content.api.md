@@ -161,22 +161,25 @@ export interface ContentTarget {
 }
 
 // @public
-type ContentValueFilter = (ContentValueFilterBase & {
+type ContentValueFilter = (ContentValueFilterTarget & {
     operator: ScalarValueFilterOperator;
     value: PrimitiveValue;
-}) | (ContentValueFilterBase & {
+}) | (ContentValueFilterTarget & {
     operator: "is-in" | "is-not-in";
     value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
-}) | (ContentValueFilterBase & {
+}) | (ContentValueFilterTarget & {
     operator: "is-null" | "is-not-null";
     value?: never;
 });
 
 // @public
-interface ContentValueFilterBase {
-    field: PropertyField | CalculatedField;
+type ContentValueFilterTarget = {
+    field: PropertyField;
     member?: string;
-}
+} | {
+    field: CalculatedField;
+    member?: never;
+};
 
 // @public
 export interface ContentValues {

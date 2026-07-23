@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS } from "../InternalUtils.js";
+import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 
 import type { ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../ContentTarget.js";
@@ -28,8 +28,11 @@ export function buildTargetFilter(target: ContentTarget): {
 
   if (target.instanceFilter) {
     const alias = target.instanceFilter.primaryClassAlias ?? PRIMARY_CLASS_ALIAS;
-    const aliasPattern = new RegExp(`(?:\\[${alias}\\]|\\b${alias})\\.`, "g");
-    const expression = target.instanceFilter.expression.replace(aliasPattern, `[${PRIMARY_CLASS_ALIAS}].`);
+    const expression = substituteExpressionAlias({
+      expression: target.instanceFilter.expression,
+      fromAlias: alias,
+      toAlias: PRIMARY_CLASS_ALIAS,
+    });
     clauses.push(expression);
     if (target.instanceFilter.bindings) {
       Object.assign(bindings, target.instanceFilter.bindings);

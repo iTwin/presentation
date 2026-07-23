@@ -68,19 +68,26 @@ interface ContentSortSpec {
 }
 
 /**
- * Attributes shared by all content value filters.
+ * The field a value filter targets. `member` (composite access) is only valid for property fields —
+ * calculated fields are scalar expressions, so the type disallows a member on them.
  * @public
  */
-interface ContentValueFilterBase {
-  /** The field to filter on. */
-  field: PropertyField | CalculatedField;
-  /**
-   * For composite fields (structs, points), the member to compare.
-   * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
-   * Omit for scalar fields.
-   */
-  member?: string;
-}
+type ContentValueFilterTarget =
+  | {
+      /** The property field to filter on. */
+      field: PropertyField;
+      /**
+       * For composite property fields (structs, points), the member to compare.
+       * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
+       * Omit for scalar fields.
+       */
+      member?: string;
+    }
+  | {
+      /** The calculated field to filter on. Calculated fields are scalar, so `member` does not apply. */
+      field: CalculatedField;
+      member?: never;
+    };
 
 /** @public */
 type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-not-null" | "is-in" | "is-not-in">;
@@ -93,19 +100,19 @@ type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-no
  * @public
  */
 export type ContentValueFilter =
-  | (ContentValueFilterBase & {
+  | (ContentValueFilterTarget & {
       /** The filter operator. */
       operator: ScalarValueFilterOperator;
       /** The scalar value to compare against. */
       value: PrimitiveValue;
     })
-  | (ContentValueFilterBase & {
+  | (ContentValueFilterTarget & {
       /** The filter operator. */
       operator: "is-in" | "is-not-in";
       /** The values to compare against. */
       value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
     })
-  | (ContentValueFilterBase & {
+  | (ContentValueFilterTarget & {
       /** The filter operator. */
       operator: "is-null" | "is-not-null";
       /** Null checks do not accept values. */

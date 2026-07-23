@@ -25,6 +25,20 @@ export const ECSQL_PREFIX = "pres_";
 export const PRIMARY_CLASS_ALIAS = "this";
 
 /**
+ * Rewrites references to `fromAlias` within a consumer-authored ECSQL expression to the query's actual
+ * `toAlias`, handling both the bracketed (`[fromAlias].`) and bare (`fromAlias.`) forms. Only alias
+ * references followed by a member access (a `.`) are rewritten; a bare occurrence not followed by `.`
+ * is left untouched. Used to bind an expression's chosen alias (an instance filter's
+ * `primaryClassAlias` or a calculated field's `targetAlias`) to {@link PRIMARY_CLASS_ALIAS}.
+ *
+ * @internal
+ */
+export function substituteExpressionAlias(props: { expression: string; fromAlias: string; toAlias: string }): string {
+  const pattern = new RegExp(`(?:\\[${props.fromAlias}\\]|\\b${props.fromAlias})\\.`, "g");
+  return props.expression.replace(pattern, `[${props.toAlias}].`);
+}
+
+/**
  * Gets the entry for `key` from `map`, or inserts and returns `createFunc()` when absent.
  * Accepts any map-like object — both `Map` and `WeakMap` satisfy the structural constraint.
  *
