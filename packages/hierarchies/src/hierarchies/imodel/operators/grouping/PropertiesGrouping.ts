@@ -9,7 +9,6 @@ import {
   createMainThreadReleaseOnTimePassedHandler,
   formatConcatenatedValue,
   getClass,
-  normalizeFullClassName,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
@@ -60,7 +59,7 @@ export interface PropertyGroupInfo {
 
 /** @internal */
 export type PreviousPropertiesGroupingInfo = Array<{
-  propertiesClassName: EC.FullClassName;
+  propertiesClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   isRange?: boolean;
 }>;
@@ -353,8 +352,7 @@ export async function getUniquePropertiesGroupInfo(
           ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey
           : "";
       const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
-      const mapKey =
-        `${normalizeFullClassName(byProperties.propertiesClassName)}:${propertyGroupKey}`.toLocaleLowerCase();
+      const mapKey = `${byProperties.propertiesClassName}:${propertyGroupKey}`.toLocaleLowerCase();
 
       let isAlreadyGrouped = false;
       if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
@@ -399,7 +397,7 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
-  nodeFullClassName: EC.FullClassName,
+  nodeFullClassName: EC.FullClassNameDotNotation,
   classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<boolean> {
   if (

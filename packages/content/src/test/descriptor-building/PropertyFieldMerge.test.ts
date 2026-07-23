@@ -10,9 +10,9 @@ import { PropertyField } from "../../content/model/Field.js";
 import type { EC } from "@itwin/presentation-shared";
 
 function createField(props: {
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  valueClassNames: EC.FullClassName[];
+  valueClassNames: EC.FullClassNameDotNotation[];
   label?: string;
   hidden?: boolean;
   readOnly?: boolean;
@@ -58,12 +58,12 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("passes a single candidate through, keyed by base id, with normalized target classes", () => {
     const field = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window", "Stuff:Door"],
+      valueClassNames: ["Stuff.Window", "Stuff.Door"],
     });
     const result = merge([field]);
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result).to.deep.equal({
       [id]: { ...field, id, selectorId: id, valueClassNames: ["Stuff.Door", "Stuff.Window"] },
     });
@@ -71,70 +71,70 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("does not mutate the input candidate", () => {
     const field = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
     });
     merge([field]);
-    expect(field.id).to.equal(PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" }));
-    expect(field.valueClassNames).to.deep.equal(["Stuff:Window"]);
+    expect(field.id).to.equal(PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" }));
+    expect(field.valueClassNames).to.deep.equal(["Stuff.Window"]);
   });
 
   it("unions target classes of direct-property candidates that share identity", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
     });
     const result = merge([a, b]);
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
   it("de-duplicates overlapping target classes across candidates", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door", "Stuff:Window"],
+      valueClassNames: ["Stuff.Door", "Stuff.Window"],
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window", "Stuff:Roof"],
+      valueClassNames: ["Stuff.Window", "Stuff.Roof"],
     });
     const result = merge([a, b]);
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Roof", "Stuff.Window"]);
   });
 
   it("unions related-endpoint candidates that share identity", () => {
     const path: PropertyField["pathFromTarget"] = [
       {
-        sourceClassName: "BisCore:Element",
-        targetClassName: "BisCore:ExternalSourceAspect",
-        relationshipName: "BisCore:ElementOwnsMultiAspects",
+        sourceClassName: "BisCore.Element",
+        targetClassName: "BisCore.ExternalSourceAspect",
+        relationshipName: "BisCore.ElementOwnsMultiAspects",
       },
     ];
     const a = createField({
-      propertyClassName: "BisCore:ExternalSourceAspect",
+      propertyClassName: "BisCore.ExternalSourceAspect",
       propertyName: "Identifier",
       pathFromTarget: path,
-      valueClassNames: ["BisCore:ExternalSourceAspectX"],
+      valueClassNames: ["BisCore.ExternalSourceAspectX"],
     });
     const b = createField({
-      propertyClassName: "BisCore:ExternalSourceAspect",
+      propertyClassName: "BisCore.ExternalSourceAspect",
       propertyName: "Identifier",
       pathFromTarget: path,
-      valueClassNames: ["BisCore:ExternalSourceAspectY"],
+      valueClassNames: ["BisCore.ExternalSourceAspectY"],
     });
     const result = merge([a, b]);
     const id = PropertyField.computeId({
-      propertyClassName: "BisCore:ExternalSourceAspect",
+      propertyClassName: "BisCore.ExternalSourceAspect",
       propertyName: "Identifier",
       pathFromTarget: path,
     });
@@ -146,26 +146,26 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("keeps candidates with distinct identities separate", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
     });
-    const b = createField({ propertyClassName: "Stuff:Thing", propertyName: "Width", valueClassNames: ["Stuff:Door"] });
+    const b = createField({ propertyClassName: "Stuff.Thing", propertyName: "Width", valueClassNames: ["Stuff.Door"] });
     const result = merge([a, b]);
     expect(Object.keys(result)).to.have.length(2);
   });
 
   it("throws when grouped candidates have divergent metadata", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       label: "One",
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       label: "Two",
     });
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
@@ -173,14 +173,14 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent category facts", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
     });
     expect(() =>
       mergePropertyFieldsByIdentity([
@@ -192,14 +192,14 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("merges candidates that agree on schema category facts", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
     });
     const schema = { anchor: "targetClass", category: { source: "schema", id: "Geo", label: "Geometry" } } as const;
     const result = toRecord(
@@ -208,21 +208,21 @@ describe("mergePropertyFieldsByIdentity", () => {
         { field: b, categorization: schema, provider: { id: "p_v1" } },
       ]),
     );
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
   it("throws when grouped candidates have divergent hidden flag", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       hidden: true,
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       hidden: false,
     });
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
@@ -230,15 +230,15 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent readOnly flag", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       readOnly: true,
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       readOnly: false,
     });
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
@@ -246,15 +246,15 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped candidates have divergent value type", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       type: { kind: "primitive", type: "String" },
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       type: { kind: "primitive", type: "Double" },
     });
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
@@ -262,15 +262,15 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("throws when grouped navigation candidates have divergent target class", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Owner",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       type: { kind: "navigation", targetClassName: "Stuff.Person" },
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Owner",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       type: { kind: "navigation", targetClassName: "Stuff.Organization" },
     });
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
@@ -278,19 +278,19 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("merges navigation candidates that share a target class", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Owner",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       type: { kind: "navigation", targetClassName: "Stuff.Person" },
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Owner",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       type: { kind: "navigation", targetClassName: "Stuff.Person" },
     });
     const result = merge([a, b]);
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Owner" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Owner" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
@@ -306,19 +306,19 @@ describe("mergePropertyFieldsByIdentity", () => {
       ],
     });
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Point",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       type: type(),
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Point",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       type: type(),
     });
     const result = merge([a, b]);
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Point" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Point" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
@@ -336,27 +336,27 @@ describe("mergePropertyFieldsByIdentity", () => {
       },
     });
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Color",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       type: type(),
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Color",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       type: type(),
     });
     const result = merge([a, b]);
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Color" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Color" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
   it("throws when grouped candidates have divergent enumeration metadata", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Color",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       type: {
         kind: "primitive",
         type: "Integer",
@@ -364,9 +364,9 @@ describe("mergePropertyFieldsByIdentity", () => {
       },
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Color",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       type: {
         kind: "primitive",
         type: "Integer",
@@ -378,15 +378,15 @@ describe("mergePropertyFieldsByIdentity", () => {
 
   it("resolves inter-provider metadata conflicts in favor of the higher priority, unioning value classes", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       label: "Low priority",
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       label: "High priority",
     });
     const result = toRecord(
@@ -395,22 +395,22 @@ describe("mergePropertyFieldsByIdentity", () => {
         { field: b, categorization: { anchor: "none" }, provider: { id: "b_v1", priority: 2 } },
       ]),
     );
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result[id].label).to.equal("High priority");
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
   });
 
   it("resolves inter-provider ties in favor of input order", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       label: "First",
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       label: "Second",
     });
     const result = toRecord(
@@ -419,21 +419,21 @@ describe("mergePropertyFieldsByIdentity", () => {
         { field: b, categorization: { anchor: "none" }, provider: { id: "b_v1", priority: 5 } },
       ]),
     );
-    const id = PropertyField.computeId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result[id].label).to.equal("First");
   });
 
   it("throws when the same provider produces divergent metadata for one field id", () => {
     const a = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Door"],
+      valueClassNames: ["Stuff.Door"],
       label: "One",
     });
     const b = createField({
-      propertyClassName: "Stuff:Thing",
+      propertyClassName: "Stuff.Thing",
       propertyName: "Height",
-      valueClassNames: ["Stuff:Window"],
+      valueClassNames: ["Stuff.Window"],
       label: "Two",
     });
     expect(() =>

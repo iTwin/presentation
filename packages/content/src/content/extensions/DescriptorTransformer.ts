@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { PropertyField } from "../model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../model/Utils.js";
 
@@ -135,7 +134,7 @@ interface TransformableDescriptor {
    * value-supplier classes, if `valueClassNames` is empty, or if it contains a class not
    * represented by the field.
    */
-  forkField(id: Field["id"], valueClassNames: EC.FullClassName[]): TransformableField<PropertyField>;
+  forkField(id: Field["id"], valueClassNames: EC.FullClassNameDotNotation[]): TransformableField<PropertyField>;
 }
 
 /**
@@ -187,9 +186,7 @@ export function createTransformableDescriptor(
         // The subset covers every value-supplier class: mutate in place, no fork.
         return field;
       }
-      field.valueClassNames = field.valueClassNames.filter(
-        (className) => !subset.includes(normalizeFullClassName(className)),
-      );
+      field.valueClassNames = field.valueClassNames.filter((className) => !subset.includes(className));
       const fork: PropertyField = { ...field, id: forkedId, valueClassNames: subset };
       descriptor.fields[forkedId] = fork;
       return fork;

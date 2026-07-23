@@ -125,7 +125,7 @@ export async function collectCategories(props: {
   //    class-based category nests under its nearest existing ancestor in the path's
   //    `rel_0 → tgt_0 → rel_1 → tgt_1 → …` chain (a step's target nests under its relationship; a
   //    step nests under the previous step's target).
-  const labelsToResolve: Array<{ category: CategoryDefinition; className: EC.FullClassName }> = [];
+  const labelsToResolve: Array<{ category: CategoryDefinition; className: EC.FullClassNameDotNotation }> = [];
   const registerAnchorCategory = (
     id: CategoryDefinition["id"],
     path: RelationshipPath,

@@ -134,7 +134,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -186,7 +186,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -251,7 +251,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(x.ECClassId) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(x.ECClassId, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         x.ECInstanceId AS ${NodeSelectClauseColumnNames.ECInstanceId},
         x.Label AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(x.HasChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -281,7 +281,7 @@ describe("createNodesQueryClauseFactory", () => {
       const labelClause = await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this" });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         ${labelClause} AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -303,7 +303,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -339,7 +339,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -533,7 +533,7 @@ describe("createNodesQueryClauseFactory", () => {
 
       describe("by properties", () => {
         interface TestPropertyFilterProps {
-          className: EC.FullClassName;
+          className: EC.FullClassNameDotNotation;
           classAlias: string;
           rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
           expectedECSql: string;
@@ -1343,7 +1343,7 @@ describe("createNodesQueryClauseFactory", () => {
           const hideClass = imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass });
           imodelAccess.stubCustomAttribute({
             schemaName: "s2",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
+            attributes: new Map<EC.FullClassNameDotNotation, EC.CustomAttribute>([
               ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema" }],
             ]),
           });
@@ -1363,7 +1363,7 @@ describe("createNodesQueryClauseFactory", () => {
           const showClass = imodelAccess.stubEntityClass({ schemaName: "s3", className: "z", baseClass: hideClass });
           imodelAccess.stubCustomAttribute({
             schemaName: "s2",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
+            attributes: new Map<EC.FullClassNameDotNotation, EC.CustomAttribute>([
               [
                 "CoreCustomAttributes.HiddenSchema",
                 { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false },
@@ -1372,7 +1372,7 @@ describe("createNodesQueryClauseFactory", () => {
           });
           imodelAccess.stubCustomAttribute({
             schemaName: "s3",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
+            attributes: new Map<EC.FullClassNameDotNotation, EC.CustomAttribute>([
               [
                 "CoreCustomAttributes.HiddenSchema",
                 { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: true },
@@ -1399,7 +1399,7 @@ describe("createNodesQueryClauseFactory", () => {
           });
           imodelAccess.stubCustomAttribute({
             schemaName: "s2",
-            attributes: new Map<EC.FullClassName, EC.CustomAttribute>([
+            attributes: new Map<EC.FullClassNameDotNotation, EC.CustomAttribute>([
               [
                 "CoreCustomAttributes.HiddenSchema",
                 { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false },

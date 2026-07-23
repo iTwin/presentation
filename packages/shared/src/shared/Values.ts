@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { compareStrings, Id64 } from "@itwin/core-bentley";
-import { normalizeFullClassName } from "./Utils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, PrimitiveValueType } from "./Metadata.js";
@@ -15,7 +14,7 @@ import type { EC, PrimitiveValueType } from "./Metadata.js";
  */
 export interface InstanceKey {
   /** Full class name in format `SchemaName.ClassName` */
-  className: EC.FullClassName;
+  className: EC.FullClassNameDotNotation;
   /** ECInstance ID */
   id: Id64String;
 }
@@ -37,10 +36,7 @@ export namespace InstanceKey {
    *- `positive value` if lhs key is more than rhs key
    */
   export function compare(lhs: InstanceKey, rhs: InstanceKey): number {
-    const classNameCompareResult = compareStrings(
-      normalizeFullClassName(lhs.className).toLocaleLowerCase(),
-      normalizeFullClassName(rhs.className).toLocaleLowerCase(),
-    );
+    const classNameCompareResult = compareStrings(lhs.className.toLocaleLowerCase(), rhs.className.toLocaleLowerCase());
     if (classNameCompareResult !== 0) {
       return classNameCompareResult;
     }

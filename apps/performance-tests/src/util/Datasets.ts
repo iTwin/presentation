@@ -165,18 +165,13 @@ export class Datasets {
 
     await createIModel(name, localPath, async (txn) => {
       await txn.iModel.importSchemaStrings([getFullSchemaXml({ schemaName, schemaContentXml: schema })]);
-      const { id: categoryId } = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
-      const { id: modelId } = insertPhysicalModelWithPartition({
-        txn,
-        fullClassNameSeparator: ":",
-        codeValue: "My Model",
-      });
+      const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "My Category" });
+      const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
       for (let groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
         for (let j = 0; j < elementsPerGroup; ++j) {
           insertPhysicalElement({
             txn,
-            classFullName: `${schemaName}:${defaultClassName}_${groupIdx}` satisfies EC.FullClassName,
-            fullClassNameSeparator: ":",
+            classFullName: `${schemaName}.${defaultClassName}_${groupIdx}` satisfies EC.FullClassNameDotNotation,
             userLabel: `${defaultUserLabel}_${groupIdx}`,
             modelId,
             categoryId,
@@ -198,16 +193,8 @@ export class Datasets {
     console.log(`${numElements} elements: Creating...`);
 
     await createIModel(name, localPath, async (txn) => {
-      const { id: spatialCategoryId } = insertSpatialCategory({
-        txn,
-        fullClassNameSeparator: ":",
-        codeValue: "My Category",
-      });
-      const { id: physicalModelId } = insertPhysicalModelWithPartition({
-        txn,
-        fullClassNameSeparator: ":",
-        codeValue: "My Model",
-      });
+      const { id: spatialCategoryId } = insertSpatialCategory({ txn, codeValue: "My Category" });
+      const { id: physicalModelId } = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
       const { id: drawingModelId } = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
       const { id: drawingCategoryId } = insertDrawingCategory({ txn, codeValue: "test drawing category" });
 
@@ -271,12 +258,7 @@ export class Datasets {
   private static async createCategoryIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
     await createIModel(name, localPath, async (txn) => {
-      const { id: categoryId } = insertSpatialCategory({
-        txn,
-        fullClassNameSeparator: ":",
-        codeValue: "My Category",
-        userLabel: "test_category",
-      });
+      const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "My Category", userLabel: "test_category" });
 
       // Insert `numElements` - 1 subcategories as `insertSpatialCategory` provides one additional subcategory
       for (let i = 0; i < numElements - 1; ++i) {
@@ -305,7 +287,7 @@ export class Datasets {
         codeValue: "group information model",
       });
       const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
-      const { id: categoryId } = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
+      const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "My Category" });
 
       for (let groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
         const { id: groupId } = insertGroupInformationElement({ txn, modelId: groupModelId, userLabel: "test_group" });

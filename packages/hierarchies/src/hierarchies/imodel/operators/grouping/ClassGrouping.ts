@@ -18,14 +18,17 @@ import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.j
 import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface ClassInfo {
-  fullName: EC.FullClassName;
+  fullName: EC.FullClassNameDotNotation;
   name: string;
   label?: string;
 }
 
 interface ClassGroupingInformation {
   ungrouped: ProcessedInstanceHierarchyNode[];
-  grouped: Dictionary<EC.FullClassName, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+  grouped: Dictionary<
+    EC.FullClassNameDotNotation,
+    { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+  >;
 }
 
 /** @internal */
@@ -38,9 +41,10 @@ export async function createClassGroups(
     parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
   const groupings: ClassGroupingInformation = {
     ungrouped: [],
-    grouped: new Dictionary<EC.FullClassName, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>(
-      compareFullClassNames,
-    ),
+    grouped: new Dictionary<
+      EC.FullClassNameDotNotation,
+      { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+    >(compareFullClassNames),
   };
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {

@@ -106,7 +106,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
 async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]) {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  const baseClasses = new SortedArray<EC.FullClassName>(compareFullClassNames, false);
+  const baseClasses = new SortedArray<EC.FullClassNameDotNotation>(compareFullClassNames, false);
   for (const node of nodes) {
     await releaseMainThread();
     if (node.processingParams?.grouping?.byBaseClasses) {

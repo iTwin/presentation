@@ -3,13 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  type EC,
-  type ECSqlBinding,
-  normalizeFullClassName,
-  type RelationshipPath,
-  type ValueDescriptor,
-} from "@itwin/presentation-shared";
+import { type EC, type ECSqlBinding, type RelationshipPath, type ValueDescriptor } from "@itwin/presentation-shared";
 import { serializeRelationshipPath } from "./Utils.js";
 
 /**
@@ -48,7 +42,7 @@ export interface PropertyField extends BaseField {
    * Drives the SQL column / property metadata. Distinct from {@link (PropertyField:interface).valueClassNames},
    * which are the concrete *value-supplier* classes this field represents.
    */
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   /** The EC property name within the property's class. */
   propertyName: string;
   /**
@@ -74,7 +68,7 @@ export interface PropertyField extends BaseField {
    *
    * Always non-empty, normalized, de-duplicated, and sorted by normalized full name.
    */
-  valueClassNames: EC.FullClassName[];
+  valueClassNames: EC.FullClassNameDotNotation[];
   /**
    * ID of the {@link ValueSelector} (column) this field reads. Equals this field's *base* id (its
    * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so all fork/override
@@ -95,12 +89,12 @@ export namespace PropertyField {
    * its original ID.
    */
   export function computeId(props: {
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     pathFromTarget?: RelationshipPath;
     forkKey?: string;
   }): Field["id"] {
-    let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
+    let identity = `${props.propertyClassName}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
       identity += `(${serializeRelationshipPath({ path: props.pathFromTarget })})`;
     }

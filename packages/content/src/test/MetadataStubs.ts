@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
 
 import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
@@ -16,9 +16,9 @@ export function createPrimitiveProperty(props: {
   /** When `true`, the property reports as an array of the given primitive type. */
   array?: boolean;
   /** Full name of the class that declares the property (defaults to the owning class). */
-  declaringClassName?: EC.FullClassName;
+  declaringClassName?: EC.FullClassNameDotNotation;
   /** EC schema property category assigned to the property, if any. */
-  category?: { fullName: EC.FullClassName; label?: string };
+  category?: { fullName: EC.FullClassNameDotNotation; label?: string };
 }): EC.Property {
   return {
     name: props.name,
@@ -46,7 +46,7 @@ export function createPrimitiveProperty(props: {
 
 /** Creates an entity `EC.Class` stub for tests. */
 export function createEntityClass(props: {
-  fullName: EC.FullClassName;
+  fullName: EC.FullClassNameDotNotation;
   label?: string;
   /** All properties visible on the class (own + inherited), returned by `getProperties`. */
   properties?: EC.Property[];
@@ -62,10 +62,7 @@ export function createEntityClass(props: {
   /** Classes that derive directly or indirectly from this class. */
   derivedClasses?: EC.Class[];
 }): EC.EntityClass {
-  const normalized = normalizeFullClassName(props.fullName);
-  const dotIndex = normalized.indexOf(".");
-  const schemaName = normalized.slice(0, dotIndex);
-  const className = normalized.slice(dotIndex + 1);
+  const { schemaName, className } = parseFullClassName(props.fullName);
   return {
     schema: { name: schemaName } as unknown as EC.Schema,
     fullName: props.fullName,
@@ -88,16 +85,15 @@ export function createEntityClass(props: {
 
 /** Creates a mixin class stub for tests. */
 export function createMixinClass(props: {
-  fullName: EC.FullClassName;
+  fullName: EC.FullClassNameDotNotation;
   ownProperties?: EC.Property[];
   baseClass?: EC.Class;
 }): EC.Mixin {
-  const normalized = normalizeFullClassName(props.fullName);
-  const dotIndex = normalized.indexOf(".");
+  const { schemaName, className } = parseFullClassName(props.fullName);
   return {
-    schema: { name: normalized.slice(0, dotIndex) } as unknown as EC.Schema,
+    schema: { name: schemaName } as unknown as EC.Schema,
     fullName: props.fullName,
-    name: normalized.slice(dotIndex + 1),
+    name: className,
     baseClass: Promise.resolve(props.baseClass),
     is: async () => false,
     getProperty: async (name: string) => props.ownProperties?.find((property) => property.name === name),
@@ -117,7 +113,7 @@ export function createMixinClass(props: {
  * looked up by their (normalized) full name. `classDerivesFrom` walks the stubs' `baseClass` chain.
  */
 export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider & ECClassHierarchyInspector {
-  const byFullName = new Map(classes.map((cls) => [normalizeFullClassName(cls.fullName), cls]));
+  const byFullName = new Map(classes.map((cls) => [cls.fullName, cls]));
   return {
     getSchema: async (schemaName: string) => ({
       name: schemaName,
@@ -129,7 +125,7 @@ export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider & ECCl
       const target = normalizeFullClassName(candidateBaseClassFullName);
       let current = byFullName.get(normalizeFullClassName(derivedClassFullName));
       while (current) {
-        if (normalizeFullClassName(current.fullName) === target) {
+        if (current.fullName === target) {
           return true;
         }
         current = await current.baseClass;

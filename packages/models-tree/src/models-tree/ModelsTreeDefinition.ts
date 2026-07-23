@@ -69,7 +69,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /** Should element nodes be grouped by class. Defaults to `enable`. */
   elementClassGrouping: "enable" | "enableWithCounts" | "disable";
   /** Full class name of a `GeometricElement3d` sub-class that should be used to load element nodes. Defaults to `BisCore.GeometricElement3d` */
-  elementClassSpecification: EC.FullClassName;
+  elementClassSpecification: EC.FullClassNameDotNotation;
   /** Should models without elements be shown. Defaults to `false` */
   showEmptyModels: boolean;
 }
@@ -685,7 +685,7 @@ function parseQueryRow(
   row: ECSqlQueryRow,
   groupInfos: ElementsGroupInfo[],
   separator: string,
-  elementClassName: EC.FullClassName,
+  elementClassName: EC.FullClassNameDotNotation,
 ) {
   const rowElements: string[] = row[1].split(separator);
   const path = new Array<InstanceKey>();

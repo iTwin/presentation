@@ -73,11 +73,11 @@ export interface CategorizedField {
 export async function collectClassPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   /** The class whose properties are enumerated. */
-  className: EC.FullClassName;
+  className: EC.FullClassNameDotNotation;
   /** Relationship path from the content target to `className` (`[]` for direct properties). */
   pathFromTarget: RelationshipPath;
   /** Concrete value-supplier classes for the produced fields. */
-  valueClassNames: EC.FullClassName[];
+  valueClassNames: EC.FullClassNameDotNotation[];
   /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */

@@ -37,7 +37,7 @@ interface BaseHierarchyNode {
 
 // @public
 export interface ClassGroupingNodeKey {
-    className: EC.FullClassName;
+    className: EC.FullClassNameDotNotation;
     type: "class-grouping";
 }
 
@@ -99,7 +99,7 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
     parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
         key: InstancesNodeKey;
     };
-    parentNodeClassName: EC.FullClassName;
+    parentNodeClassName: EC.FullClassNameDotNotation;
     parentNodeInstanceIds: Id64String[];
 };
 
@@ -109,7 +109,7 @@ export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "par
 // @public
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
     // (undocumented)
-    fullClassNames: EC.FullClassName[] | ECSqlValueSelector[];
+    fullClassNames: EC.FullClassNameDotNotation[] | ECSqlValueSelector[];
 }
 
 // @public
@@ -159,7 +159,7 @@ type ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSql
 interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
     createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
     createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
-    propertiesClassName: EC.FullClassName;
+    propertiesClassName: EC.FullClassNameDotNotation;
     propertyGroups: ECSqlSelectClausePropertyGroup[];
 }
 
@@ -315,7 +315,7 @@ type HierarchyNodeAutoExpandProp = "single-child" | "always";
 
 // @public
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
-    fullClassNames: EC.FullClassName[];
+    fullClassNames: EC.FullClassNameDotNotation[];
 }
 
 // @public
@@ -401,7 +401,7 @@ interface HierarchyNodeProcessingParamsBase {
 interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
     createGroupForOutOfRangeValues?: boolean;
     createGroupForUnspecifiedValues?: boolean;
-    propertiesClassName: EC.FullClassName;
+    propertiesClassName: EC.FullClassNameDotNotation;
     propertyGroups: HierarchyNodePropertyGroup[];
 }
 
@@ -573,7 +573,7 @@ interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingP
 
 // @public
 interface InstanceNodesQueryDefinition {
-    fullClassName: EC.FullClassName;
+    fullClassName: EC.FullClassNameDotNotation;
     query: ECSqlQueryDef;
 }
 
@@ -581,7 +581,7 @@ interface InstanceNodesQueryDefinition {
 interface InstancesNodeChildHierarchyLevelDefinition {
     definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
     onlyIfNotHandled?: boolean;
-    parentInstancesNodePredicate: EC.FullClassName | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
+    parentInstancesNodePredicate: EC.FullClassNameDotNotation | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
 }
 
 // @public
@@ -676,7 +676,7 @@ interface NodeSelectClauseProps {
 interface NodesQueryClauseFactory {
     createFilterClauses(props: {
         contentClass: {
-            fullName: EC.FullClassName;
+            fullName: EC.FullClassNameDotNotation;
             alias: string;
         };
         filter?: GenericInstanceFilter;
@@ -745,7 +745,7 @@ export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | Proper
 // @public
 export interface PropertyOtherValuesGroupingNodeKey {
     properties: Array<{
-        className: EC.FullClassName;
+        className: EC.FullClassNameDotNotation;
         propertyName: string;
     }>;
     type: "property-grouping:other";
@@ -754,7 +754,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
 // @public
 export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     type: "property-grouping:value";
 }
@@ -762,7 +762,7 @@ export interface PropertyValueGroupingNodeKey {
 // @public
 export interface PropertyValueRangeGroupingNodeKey {
     fromValue: number;
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     toValue: number;
     type: "property-grouping:range";

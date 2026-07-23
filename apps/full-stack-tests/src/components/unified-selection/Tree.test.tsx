@@ -25,6 +25,7 @@ import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, fireEvent, render, waitFor } from "../../RenderUtils.js";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
+import { toColonInstanceKey } from "../Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
@@ -75,11 +76,11 @@ describe("Learning snippets", async () => {
       let elementKey: InstanceKey;
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
         withEditTxn(imodel, (txn) => {
-          const categoryKey = insertSpatialCategory({ txn, fullClassNameSeparator: ":", codeValue: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ txn, fullClassNameSeparator: ":", codeValue: "My Model" });
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
           elementKey = insertPhysicalElement({
             txn,
-            fullClassNameSeparator: ":",
+
             userLabel: "My Element",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
@@ -112,11 +113,11 @@ describe("Learning snippets", async () => {
       // test Tree selection -> Unified Selection synchronization
       fireEvent.click(modelNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([modelKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([toColonInstanceKey(modelKey)]);
       });
       fireEvent.click(elementNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([elementKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([toColonInstanceKey(elementKey)]);
       });
     });
   });

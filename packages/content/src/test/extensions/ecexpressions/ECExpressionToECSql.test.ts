@@ -329,7 +329,7 @@ describe("convertECExpressionToECSql", () => {
   describe("related instances", () => {
     it("emits EXISTS for the HasRelatedInstance string form (backward)", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.HasRelatedInstance("BisCore:ModelContainsElements", "Backward", "BisCore:Model")`,
+        expression: `this.HasRelatedInstance("BisCore.ModelContainsElements", "Backward", "BisCore.Model")`,
       });
       expect(result.bindings).to.be.undefined;
       expect(trimWhitespace(result.ecsql)).to.equal(
@@ -347,7 +347,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits COUNT for the GetRelatedInstancesCount string form (forward)", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.GetRelatedInstancesCount("BisCore:ModelContainsElements", "Forward", "BisCore:Element")`,
+        expression: `this.GetRelatedInstancesCount("BisCore.ModelContainsElements", "Forward", "BisCore.Element")`,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
         trimWhitespace(`
@@ -364,7 +364,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits a scalar subquery for the GetRelatedValue string form", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.GetRelatedValue("BisCore:ModelContainsElements", "Forward", "BisCore:Element", "UserLabel")`,
+        expression: `this.GetRelatedValue("BisCore.ModelContainsElements", "Forward", "BisCore.Element", "UserLabel")`,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
         trimWhitespace(`
@@ -382,7 +382,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits a label subquery for the GetRelatedDisplayLabel string form", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.GetRelatedDisplayLabel("BisCore:ModelContainsElements", "Forward", "BisCore:Element")`,
+        expression: `this.GetRelatedDisplayLabel("BisCore.ModelContainsElements", "Forward", "BisCore.Element")`,
         labelSelectClauseFactory,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
@@ -401,7 +401,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits EXISTS for the HasRelatedInstance lambda form", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.HasRelatedInstance("BisCore:Element", e => e.UserLabel = "test")`,
+        expression: `this.HasRelatedInstance("BisCore.Element", e => e.UserLabel = "test")`,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
         trimWhitespace(`
@@ -417,7 +417,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits COUNT for the GetRelatedInstancesCount lambda form", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.GetRelatedInstancesCount("BisCore:Element", e => e.Name = "x")`,
+        expression: `this.GetRelatedInstancesCount("BisCore.Element", e => e.Name = "x")`,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
         trimWhitespace(`
@@ -433,7 +433,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits a scalar subquery for the GetRelatedValue lambda form", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.GetRelatedValue("BisCore:Element", "UserLabel", e => e.Name = "x")`,
+        expression: `this.GetRelatedValue("BisCore.Element", "UserLabel", e => e.Name = "x")`,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
         trimWhitespace(`
@@ -450,7 +450,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("emits a label subquery for the GetRelatedDisplayLabel lambda form", async () => {
       const result = await convertECExpressionToECSql({
-        expression: `this.GetRelatedDisplayLabel("BisCore:Element", e => e.Name = "x")`,
+        expression: `this.GetRelatedDisplayLabel("BisCore.Element", e => e.Name = "x")`,
         labelSelectClauseFactory,
       });
       expect(trimWhitespace(result.ecsql)).to.equal(
@@ -721,7 +721,7 @@ describe("convertECExpressionToECSql", () => {
 
     it("throws when a related-instance function is called without a receiver", async () => {
       await expect(
-        convertECExpressionToECSql({ expression: `HasRelatedInstance("A:B", "Forward", "C:D")` }),
+        convertECExpressionToECSql({ expression: `HasRelatedInstance("A.B", "Forward", "C.D")` }),
       ).rejects.toThrow(/must be called on an instance/);
     });
 
@@ -733,20 +733,20 @@ describe("convertECExpressionToECSql", () => {
 
     it("throws for an invalid full class name", async () => {
       await expect(
-        convertECExpressionToECSql({ expression: `this.HasRelatedInstance("NoColon", "Forward", "Bis:Model")` }),
+        convertECExpressionToECSql({ expression: `this.HasRelatedInstance("NoColon", "Forward", "Bis.Model")` }),
       ).rejects.toThrow(/Invalid full class name/);
     });
 
     it("throws for an invalid related property identifier", async () => {
       await expect(
-        convertECExpressionToECSql({ expression: `this.GetRelatedValue("S:C", "Forward", "S2:C2", "Bad Name")` }),
+        convertECExpressionToECSql({ expression: `this.GetRelatedValue("S.C", "Forward", "S2.C2", "Bad Name")` }),
       ).rejects.toThrow(/Invalid identifier/);
     });
 
     it("throws for an invalid relationship direction", async () => {
       await expect(
         convertECExpressionToECSql({
-          expression: `this.HasRelatedInstance("BisCore:Rel", "Sideways", "BisCore:Model")`,
+          expression: `this.HasRelatedInstance("BisCore.Rel", "Sideways", "BisCore.Model")`,
         }),
       ).rejects.toThrow(/direction/);
     });

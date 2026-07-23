@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { normalizeFullClassName, type ValueDescriptor } from "@itwin/presentation-shared";
+import { type ValueDescriptor } from "@itwin/presentation-shared";
 import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvider.js";
 import { getOrCreate } from "../InternalUtils.js";
 import { PropertyField } from "../model/Field.js";
@@ -143,6 +143,6 @@ function toComparableValueDescriptor(descriptor: ValueDescriptor): unknown {
         descriptor.members.map((member) => [member.name, member.label, toComparableValueDescriptor(member.type)]),
       ];
     case "navigation":
-      return ["navigation", normalizeFullClassName(descriptor.targetClassName)];
+      return ["navigation", descriptor.targetClassName];
   }
 }

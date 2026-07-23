@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName } from "@itwin/presentation-shared";
-
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 
 /**
@@ -34,14 +32,12 @@ export function serializeRelationshipPath({
   let result = "";
   path.forEach((step, index) => {
     if (result.length === 0) {
-      result = normalizeFullClassName(step.sourceClassName);
+      result = step.sourceClassName;
     }
-    const rel = step.relationshipReverse
-      ? `[!${normalizeFullClassName(step.relationshipName)}]`
-      : `[${normalizeFullClassName(step.relationshipName)}]`;
+    const rel = step.relationshipReverse ? `[!${step.relationshipName}]` : `[${step.relationshipName}]`;
     result += `-${rel}`;
     if (!(omitLastTargetClass && index === path.length - 1)) {
-      result += `->${normalizeFullClassName(step.targetClassName)}`;
+      result += `->${step.targetClassName}`;
     }
   });
   return result;
@@ -51,10 +47,8 @@ export function serializeRelationshipPath({
  * Normalizes, de-duplicates, and sorts the given class names. Produces the canonical
  * representation used for a property field's `valueClassNames` invariant.
  */
-export function toSortedUniqueClassNames<TClassName extends string>(
-  classNames: TClassName[],
-): EC.FullClassNameDotNotation[] {
-  return Array.from(new Set(classNames.map((name) => normalizeFullClassName(name)))).sort();
+export function toSortedUniqueClassNames(classNames: EC.FullClassNameDotNotation[]): EC.FullClassNameDotNotation[] {
+  return Array.from(new Set(classNames)).sort();
 }
 
 /**
@@ -62,7 +56,7 @@ export function toSortedUniqueClassNames<TClassName extends string>(
  * `forkKey` when carving a property field. The same subset always yields the same key
  * (normalized + sorted), so forking the same subset twice produces the same field ID.
  */
-export function computeFieldForkKey(valueClassNames: EC.FullClassName[]): string {
+export function computeFieldForkKey(valueClassNames: EC.FullClassNameDotNotation[]): string {
   const joined = toSortedUniqueClassNames(valueClassNames).join(";");
   // Keep the key human-readable when short; fall back to a stable hash when long.
   return joined.length <= MAX_READABLE_FORK_KEY_LENGTH ? joined : hashString(joined);

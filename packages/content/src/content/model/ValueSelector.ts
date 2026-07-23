@@ -65,7 +65,7 @@ export interface CalculatedValueSelector extends Pick<CalculatedField, "expressi
  * @internal
  */
 export function computePropertySelectorId(props: {
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }): ValueSelector["id"] {

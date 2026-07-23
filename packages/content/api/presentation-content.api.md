@@ -142,7 +142,7 @@ interface ContentSortSpec {
 // @public
 export interface ContentSource {
     resolvedDeclarations: ResolvedDeclarationGroup[];
-    resolvedPrimaryClasses: EC.FullClassName[];
+    resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
     target: ContentTarget;
 }
 
@@ -154,7 +154,7 @@ export interface ContentTarget {
         bindings?: Record<string, ECSqlBinding>;
     };
     instanceIds?: Id64String[];
-    primaryClass: EC.FullClassName;
+    primaryClass: EC.FullClassNameDotNotation;
 }
 
 // @public
@@ -284,7 +284,7 @@ interface IModelFieldsProvider extends BaseFieldsProvider {
 // @public
 interface InputPropertyDeclaration {
     path?: RelationshipPath;
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
 }
 
@@ -299,16 +299,16 @@ export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     selectorId: string;
-    valueClassNames: EC.FullClassName[];
+    valueClassNames: EC.FullClassNameDotNotation[];
 }
 
 // @public (undocumented)
 export namespace PropertyField {
     export function computeId(props: {
-        propertyClassName: EC.FullClassName;
+        propertyClassName: EC.FullClassNameDotNotation;
         propertyName: string;
         pathFromTarget?: RelationshipPath;
         forkKey?: string;
@@ -389,7 +389,7 @@ interface ResolvedDeclarationGroup {
 // @public
 interface ResolvedPath {
     path: RelationshipPath;
-    targetClassNames: EC.FullClassName[];
+    targetClassNames: EC.FullClassNameDotNotation[];
 }
 
 // @public
@@ -405,7 +405,7 @@ interface TransformableDescriptor {
     readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     // (undocumented)
     readonly fields: Readonly<Record<Field["id"], TransformableField>>;
-    forkField(id: Field["id"], valueClassNames: EC.FullClassName[]): TransformableField<PropertyField>;
+    forkField(id: Field["id"], valueClassNames: EC.FullClassNameDotNotation[]): TransformableField<PropertyField>;
     // (undocumented)
     removeField(id: string): void;
     // (undocumented)

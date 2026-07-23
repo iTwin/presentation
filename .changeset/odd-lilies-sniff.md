@@ -8,15 +8,18 @@ The full class names used in this package were defined as `string`, although we 
 
 ## Breaking changes
 
-- `ClassGroupingNodeKey.className` is now of type `EC.FullClassName` instead of `string`.
-- `NodesQueryClauseFactory.createSelectClause` prop `grouping.byBaseClasses.fullClassNames` is now of type `EC.FullClassName[]` instead of `string[]`.
-- `NodesQueryClauseFactory.createSelectClause` prop `grouping.byProperties.propertiesClassName` is now of type `EC.FullClassName` instead of `string`.
-- `HierarchyNodesDefinition.fullClassName` is now of type `EC.FullClassName` instead of `string`.
-- `createPredicateBasedHierarchyDefinition` prop `hierarchies.childNodes[number].parentInstancesNodePredicate` now accepts `EC.FullClassName` instead of `string`.
-- `NodesQueryClauseFactory.createFilterClauses` prop `contentClass.fullName` is now of type `EC.FullClassName` instead of `string`.
-- `PropertyOtherValuesGroupingNodeKey.properties[number].className` is now of type `EC.FullClassName` instead of `string`.
-- `PropertyValueGroupingNodeKey.propertyClassName` is now of type `EC.FullClassName` instead of `string`.
-- `PropertyValueRangeGroupingNodeKey.propertyClassName` is now of type `EC.FullClassName` instead of `string`.
+- `ClassGroupingNodeKey.className` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `PropertyOtherValuesGroupingNodeKey.properties[number].className` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `PropertyValueGroupingNodeKey.propertyClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `PropertyValueRangeGroupingNodeKey.propertyClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- A hierarchy node's `processingParams.grouping.byBaseClasses.fullClassNames` is now of type `EC.FullClassNameDotNotation[]` instead of `string[]`.
+- A hierarchy node's `processingParams.grouping.byProperties.propertiesClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `NodesQueryClauseFactory.createSelectClause` prop `grouping.byBaseClasses.fullClassNames` is now of type `EC.FullClassNameDotNotation[]` instead of `string[]`.
+- `NodesQueryClauseFactory.createSelectClause` prop `grouping.byProperties.propertiesClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `NodesQueryClauseFactory.createFilterClauses` prop `contentClass.fullName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `HierarchyNodesDefinition.fullClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+- `createPredicateBasedHierarchyDefinition` prop `hierarchies.childNodes[number].parentInstancesNodePredicate` now accepts `EC.FullClassNameDotNotation` instead of `string`.
+- `DefineInstanceNodeChildHierarchyLevelProps.parentNodeClassName` (provided to `HierarchyDefinition.defineHierarchyLevel`) is now of type `EC.FullClassNameDotNotation` instead of `string`.
 
 In many cases migration will be seamless, as long as the input string matches the expected format. In some cases (e.g. when assigning a string variable to one of the affected properties), you may need to use `normalizeFullClassName` from `@itwin/presentation-shared` to ensure the value is of the correct type:
 

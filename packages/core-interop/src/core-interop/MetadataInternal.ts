@@ -433,7 +433,7 @@ async function createFromOptionalLazyLoaded<TSource extends CoreSchemaItem, TTar
   return source.then(convert);
 }
 
-const EMPTY_MAP: ReadonlyMap<EC.FullClassName, EC.CustomAttribute> = new Map();
+const EMPTY_MAP: ReadonlyMap<EC.FullClassNameDotNotation, EC.CustomAttribute> = new Map();
 async function createCustomAttributesSet(
   coreCustomAttributes: CoreClass["customAttributes"],
 ): Promise<EC.CustomAttributeSet> {
@@ -447,10 +447,9 @@ async function createCustomAttributesSet(
         yield [normalizedClassName, { ...ca, className: normalizedClassName }];
       }
     },
-    get(className: EC.FullClassName) {
-      const normalizedClassName = normalizeFullClassName(className);
-      const coreCustomAttribute = coreCustomAttributes.get(normalizedClassName);
-      return coreCustomAttribute ? { ...coreCustomAttribute, className: normalizedClassName } : undefined;
+    get(className: EC.FullClassNameDotNotation) {
+      const coreCustomAttribute = coreCustomAttributes.get(className);
+      return coreCustomAttribute ? { ...coreCustomAttribute, className } : undefined;
     },
   };
 }

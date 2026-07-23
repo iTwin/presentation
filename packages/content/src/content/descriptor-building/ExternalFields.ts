@@ -9,7 +9,7 @@ import type { ExternalField, Field } from "../model/Field.js";
 
 /** Column coordinates of a property an external fields provider needs as input. */
 export interface ExternalInput {
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }

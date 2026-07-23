@@ -76,7 +76,7 @@ export async function checkRequiredSchemas(
  */
 export async function classMatchesSpec(
   imodelAccess: ECClassHierarchyInspector,
-  className: EC.FullClassName,
+  className: EC.FullClassNameDotNotation,
   classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
 ): Promise<boolean> {
   if (!classSpec) {

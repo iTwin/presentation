@@ -234,7 +234,7 @@ async function mapRelatedPropertiesSpec(props: {
   imodelAccess: ECSchemaProvider;
   spec: NormalizedRelatedPropertiesSpec;
   /** Full class name of the source for the first path step */
-  sourceClassName: EC.FullClassName;
+  sourceClassName: EC.FullClassNameDotNotation;
   /** Category of the parent scope, used when flattening nested specs */
   parentCategoryId?: CategoryDefinition["id"];
 }): Promise<{
@@ -253,11 +253,11 @@ async function mapRelatedPropertiesSpec(props: {
     const isLastStep = i === steps.length - 1;
 
     // Determine targetClassName from the step spec or by looking up the relationship in the schema.
-    let targetClassName: EC.FullClassName;
+    let targetClassName: EC.FullClassNameDotNotation;
     if (step.targetClass) {
       targetClassName = `${step.targetClass.schemaName}.${step.targetClass.className}`;
     } else {
-      const relClassName: EC.FullClassName = `${step.relationship.schemaName}.${step.relationship.className}`;
+      const relClassName: EC.FullClassNameDotNotation = `${step.relationship.schemaName}.${step.relationship.className}`;
       const relClass = await getClass(imodelAccess, relClassName);
       if (!relClass.isRelationshipClass()) {
         throw new Error(`"${relClassName}" is not a relationship class`);
@@ -338,7 +338,7 @@ async function mapRelatedPropertiesSpec(props: {
 async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
   specs: PresentationRules.RelatedPropertiesSpecification[];
-  sourceClassName: EC.FullClassName;
+  sourceClassName: EC.FullClassNameDotNotation;
   parentCategoryId?: CategoryDefinition["id"];
 }): Promise<{
   declarations: RelatedPropertiesDeclaration[];
