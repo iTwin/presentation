@@ -29,8 +29,8 @@ describe("computeFieldForkKey", () => {
   it("falls back to a bounded hash for long subsets", () => {
     const longSubset = Array.from(
       { length: 20 },
-      (_, i) => `Schema.VeryLongClassNameNumber${i}`,
-    ) as EC.FullClassNameDotNotation[];
+      (_, i): EC.FullClassNameDotNotation => `Schema.VeryLongClassNameNumber${i}`,
+    );
     const key = computeFieldForkKey(longSubset);
     expect(key).to.not.contain(";");
     expect(key.length).to.be.lessThan(20);

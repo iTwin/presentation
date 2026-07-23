@@ -17,7 +17,7 @@ import type { CalculatedField, Field, PropertyField as PropertyFieldType } from 
 function propertyField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  valueClassNames: string[];
+  valueClassNames: EC.FullClassNameDotNotation[];
   label?: string;
   pathFromTarget?: PropertyFieldType["pathFromTarget"];
 }): PropertyFieldType {
@@ -35,7 +35,7 @@ function propertyField(props: {
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
-    valueClassNames: toSortedUniqueClassNames(props.valueClassNames as EC.FullClassNameDotNotation[]),
+    valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
   };
 }
 
@@ -148,9 +148,7 @@ describe("ValueSelector", () => {
         valueClassNames: ["Stuff.Door"],
       });
       const descriptor = createDescriptor([removable, inputBacked]);
-      const externalInputs = [
-        { propertyClassName: "Stuff.Thing" as EC.FullClassNameDotNotation, propertyName: "Width" },
-      ];
+      const externalInputs = [{ propertyClassName: "Stuff.Thing" as const, propertyName: "Width" }];
 
       const transformable = createTransformableDescriptor(descriptor);
       transformable.removeField(removable.id);
