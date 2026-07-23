@@ -103,8 +103,8 @@ export type ContentValueFilter =
   | (ContentValueFilterTarget & {
       /** The filter operator. */
       operator: ScalarValueFilterOperator;
-      /** The scalar value to compare against. */
-      value: PrimitiveValue;
+      /** The scalar value to compare against. Points are filtered per-coordinate via `member`, so a whole-point value is not accepted. */
+      value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
     })
   | (ContentValueFilterTarget & {
       /** The filter operator. */

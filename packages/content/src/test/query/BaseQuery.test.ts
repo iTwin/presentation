@@ -424,15 +424,98 @@ describe("buildBaseQuery", () => {
       });
       const filters: ContentValueFilter[] = [
         { field: point2dField, member: "x", operator: "is-equal", value: 1 },
-        { field: point3dField, member: "y", operator: "is-equal", value: 2 },
+        { field: point2dField, member: "y", operator: "is-equal", value: 2 },
+        { field: point3dField, member: "x", operator: "is-equal", value: 3 },
+        { field: point3dField, member: "y", operator: "is-equal", value: 4 },
+        { field: point3dField, member: "z", operator: "is-equal", value: 5 },
       ];
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
+      expect(result.anchor.parts.where).to.equal(
+        [
+          `([this].[Origin].[x] = :${ECSQL_PREFIX}vf0)`,
+          `([this].[Origin].[y] = :${ECSQL_PREFIX}vf1)`,
+          `([this].[Location].[x] = :${ECSQL_PREFIX}vf2)`,
+          `([this].[Location].[y] = :${ECSQL_PREFIX}vf3)`,
+          `([this].[Location].[z] = :${ECSQL_PREFIX}vf4)`,
+        ].join(" AND "),
+      );
       expect(result.anchor.parts.bindings).to.deep.equal({
         [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 1 },
         [`${ECSQL_PREFIX}vf1`]: { type: "double", value: 2 },
+        [`${ECSQL_PREFIX}vf2`]: { type: "double", value: 3 },
+        [`${ECSQL_PREFIX}vf3`]: { type: "double", value: 4 },
+        [`${ECSQL_PREFIX}vf4`]: { type: "double", value: 5 },
       });
+    });
+
+    it("emits the canonical coordinate spelling for a case-insensitive point member", async () => {
+      const point3dField = makePropertyField({
+        propertyName: "Location",
+        type: { kind: "primitive", type: "Point3d" },
+      });
+      const filters: ContentValueFilter[] = [{ field: point3dField, member: "Z", operator: "is-equal", value: 1 }];
+
+      const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
+
+      expect(result.anchor.parts.where).to.equal(`[this].[Location].[z] = :${ECSQL_PREFIX}vf0`);
+    });
+
+    it("validates the coordinate member of a related point property", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const field = makePropertyField({
+        propertyName: "Location",
+        propertyClassName: "TestSchema.Target",
+        pathFromTarget: path,
+        valueClassNames: ["TestSchema.Target"],
+        type: { kind: "primitive", type: "Point3d" },
+      });
+
+      const validFilters: ContentValueFilter[] = [{ field, member: "y", operator: "is-equal", value: 1 }];
+      const validResult = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters: validFilters });
+      expect(validResult.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Location].[y] = :${ECSQL_PREFIX}vf0`);
+
+      const invalidFilters: ContentValueFilter[] = [{ field, member: "w", operator: "is-equal", value: 1 }];
+      await expect(
+        buildBaseQuery({ schemaProvider, source: makeSource([path]), filters: invalidFilters }),
+      ).rejects.toThrow(`Value filters on Point3d fields require member "x", "y", or "z", but got "w".`);
+    });
+
+    it("throws for a value filter on a Point2d field without a member", async () => {
+      const field = makePropertyField({ propertyName: "Origin", type: { kind: "primitive", type: "Point2d" } });
+      const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: 1 }];
+
+      await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
+        `Value filters directly on Point2d fields are not supported. Provide coordinate member "x" or "y".`,
+      );
+    });
+
+    it("throws for a value filter on a Point3d field without a member", async () => {
+      const field = makePropertyField({ propertyName: "Location", type: { kind: "primitive", type: "Point3d" } });
+      const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: 1 }];
+
+      await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
+        `Value filters directly on Point3d fields are not supported. Provide coordinate member "x", "y", or "z".`,
+      );
+    });
+
+    it("throws for a Point2d value filter that references the z coordinate", async () => {
+      const field = makePropertyField({ propertyName: "Origin", type: { kind: "primitive", type: "Point2d" } });
+      const filters: ContentValueFilter[] = [{ field, member: "z", operator: "is-equal", value: 1 }];
+
+      await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
+        `Value filters on Point2d fields require member "x" or "y", but got "z".`,
+      );
+    });
+
+    it("throws for a point value filter that references an unknown member", async () => {
+      const field = makePropertyField({ propertyName: "Location", type: { kind: "primitive", type: "Point3d" } });
+      const filters: ContentValueFilter[] = [{ field, member: "foo", operator: "is-equal", value: 1 }];
+
+      await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
+        `Value filters on Point3d fields require member "x", "y", or "z", but got "foo".`,
+      );
     });
 
     it("appends the navigation Id member and binds as an id", async () => {
@@ -832,6 +915,32 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.include("OUTER JOIN");
       expect(result.anchor.parts.joins).to.not.include("INNER JOIN [TestSchema].[RelMany]");
       expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NULL`);
+    });
+
+    it("joins an anchor-owned 1:1 filtered path only once", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const field = makePropertyField({
+        propertyName: "Name",
+        propertyClassName: "TestSchema.Target",
+        pathFromTarget: path,
+        valueClassNames: ["TestSchema.Target"],
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      // The 1:1 path fits the join budget, so the anchor both selects its columns and evaluates the
+      // filter — `unionPaths` merges the selected and filter-referenced path so it is joined only once.
+      expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([path]);
+      expect(result.additional).to.be.undefined;
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      // A single link-table path renders exactly two `OUTER JOIN`s; a duplicated join would double that.
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(2);
     });
   });
 });

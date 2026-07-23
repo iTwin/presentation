@@ -511,7 +511,10 @@ function resolveSelector(props: {
     }
     case "property": {
       // Composite access (e.g. a struct member or point `x`) addresses a member of the property column.
-      const memberSuffix = member ? `.[${member}]` : "";
+      // For a point property, emit the validated, canonical coordinate spelling; other composite
+      // members are addressed verbatim.
+      const resolvedMember = isPointType(field.type) ? resolvePointMember(field.type.type, member) : member;
+      const memberSuffix = resolvedMember ? `.[${resolvedMember}]` : "";
       const alias = resolvePropertyAlias({ field, relatedClassAliases, isRelationshipClass });
       return { selector: `[${alias}].[${field.propertyName}]${memberSuffix}`, type };
     }
@@ -568,9 +571,9 @@ async function collectRelationshipPropertyClasses(
 
 /**
  * Resolves the primitive type a filter operand binds as for the value addressed by `type` (optionally
- * one of its composite `member`s). A point coordinate member (`x`/`y`/`z`) binds as `Double`; a struct
- * member binds as that member's declared type; a navigation column binds as `Id`. Array fields are not
- * scalar-filterable and are rejected.
+ * one of its composite `member`s). A point requires a coordinate `member` (`x`/`y`/`z`), each of which
+ * binds as `Double`; a struct member binds as that member's declared type; a navigation column binds
+ * as `Id`. Array fields are not scalar-filterable and are rejected.
  */
 function getSelectorValueType(
   type: ValueDescriptor,
@@ -597,9 +600,50 @@ function getSelectorValueType(
       return getSelectorValueType(memberType, undefined);
     }
     case "primitive":
-      // A point is filtered through a coordinate member (`x`/`y`/`z`), all of which are doubles.
-      return type.type === "Point2d" || type.type === "Point3d" ? "Double" : type.type;
+      if (type.type === "Point2d" || type.type === "Point3d") {
+        // A point is filtered through a coordinate member (`x`/`y`/`z`), all of which are doubles.
+        resolvePointMember(type.type, member);
+        return "Double";
+      }
+      return type.type;
   }
+}
+
+/** Narrows a value descriptor to a point primitive. */
+function isPointType(
+  type: ValueDescriptor,
+): type is Extract<ValueDescriptor, { kind: "primitive" }> & { type: "Point2d" | "Point3d" } {
+  return type.kind === "primitive" && (type.type === "Point2d" || type.type === "Point3d");
+}
+
+/**
+ * Validates the coordinate `member` addressed on a point field and returns its canonical (lowercase)
+ * spelling. A point value is not scalar-filterable on its own, so a member is required; only the
+ * type's coordinate axes are accepted (matched case-insensitively, consistent with struct members).
+ */
+function resolvePointMember(pointType: "Point2d" | "Point3d", member: string | undefined): string {
+  const allowed = pointType === "Point2d" ? ["x", "y"] : ["x", "y", "z"];
+  if (!member) {
+    throw new Error(
+      `Value filters directly on ${pointType} fields are not supported. Provide coordinate member ${formatOrList(allowed)}.`,
+    );
+  }
+  const canonical = allowed.find((axis) => axis === member.toLocaleLowerCase());
+  if (!canonical) {
+    throw new Error(
+      `Value filters on ${pointType} fields require member ${formatOrList(allowed)}, but got "${member}".`,
+    );
+  }
+  return canonical;
+}
+
+/** Formats a list of coordinate names as a quoted, `or`-joined enumeration (e.g. `"x", "y", or "z"`). */
+function formatOrList(items: readonly string[]): string {
+  const quoted = items.map((item) => `"${item}"`);
+  if (quoted.length === 2) {
+    return `${quoted[0]} or ${quoted[1]}`;
+  }
+  return `${quoted.slice(0, -1).join(", ")}, or ${quoted[quoted.length - 1]}`;
 }
 
 /**

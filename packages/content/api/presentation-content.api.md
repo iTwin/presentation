@@ -163,7 +163,7 @@ export interface ContentTarget {
 // @public
 type ContentValueFilter = (ContentValueFilterTarget & {
     operator: ScalarValueFilterOperator;
-    value: PrimitiveValue;
+    value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
 }) | (ContentValueFilterTarget & {
     operator: "is-in" | "is-not-in";
     value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
