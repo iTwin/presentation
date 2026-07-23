@@ -23,6 +23,7 @@
     "@types/node": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }

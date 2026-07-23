@@ -54,7 +54,7 @@
     "classnames": "catalog:react",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
-    "fast-xml-parser": "^5.9.3",
+    "fast-xml-parser": "^5.10.1",
     "immer": "^10.2.0",
     "react": "catalog:react",
     "react-dom": "catalog:react",
@@ -63,6 +63,7 @@
     "rss-parser": "^3.13.0",
     "rxjs": "catalog:rxjs",
     "sass": "^1.101.0",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vite": "catalog:build-tools",
     "vite-plugin-static-copy": "catalog:build-tools"

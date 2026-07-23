@@ -39,7 +39,7 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^2.31.1",
     "@stylistic/eslint-plugin": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
     "cspell": "^9.8.0",
@@ -54,6 +54,7 @@
     "npm-run-all": "^4.1.5",
     "oxfmt": "^0.47.0",
     "rimraf": "catalog:build-tools",
+    "typescript": "catalog:build-tools",
     "yaml": "^2.9.0",
     "yargs": "^17.7.3"
   },
