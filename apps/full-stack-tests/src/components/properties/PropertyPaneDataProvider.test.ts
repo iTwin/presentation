@@ -80,7 +80,6 @@ describe("PropertyDataProvider", async () => {
             modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
             elementKey = insertPhysicalElement({
               txn,
-
               userLabel: "My Element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
@@ -129,7 +128,6 @@ describe("PropertyDataProvider", async () => {
             modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
             elementKey = insertPhysicalElement({
               txn,
-
               userLabel: "My Element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
@@ -254,27 +252,20 @@ describe("PropertyDataProvider", async () => {
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
           withEditTxn(imodel, (txn) => {
             const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
-            const modelKey = insertPhysicalModelWithPartition({
-              txn,
-
-              codeValue: "My Model",
-            });
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
             elementKey = insertPhysicalElement({
               txn,
-
               userLabel: "My Element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
             });
             const repositoryLinkKey = insertRepositoryLink({
               txn,
-
               repositoryUrl: "Repository URL",
               repositoryLabel: "Repository Label",
             });
             externalsSourceAspectKey = insertExternalSourceAspect({
               txn,
-
               elementId: elementKey.id,
               identifier: "My External Source Aspect",
               repositoryId: repositoryLinkKey.id,
@@ -571,11 +562,7 @@ describe("PropertyDataProvider", async () => {
         );
         return withEditTxn(imodel, (txn) => {
           const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
-          const modelKey = insertPhysicalModelWithPartition({
-            txn,
-
-            codeValue: "My Model",
-          });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
           // Both selected elements have a `MyType` type definition (`PhysicalElement -> PhysicalType`),
           // and each type owns a `CommonTypeAspect` (`PhysicalType -> ElementAspect`), forming two
           // levels of nested content below the selected elements.

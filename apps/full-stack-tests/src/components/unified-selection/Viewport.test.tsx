@@ -53,15 +53,10 @@ describe("Learning snippets", async () => {
       const { imodelConnection } = await buildTestIModel(async (imodel) => {
         withEditTxn(imodel, (txn) => {
           const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
-          const modelKey = insertPhysicalModelWithPartition({
-            txn,
-
-            codeValue: "My Model",
-          });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
           (elementKeys.push(
             insertPhysicalElement({
               txn,
-
               userLabel: "My Assembly Element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
@@ -70,7 +65,6 @@ describe("Learning snippets", async () => {
             elementKeys.push(
               insertPhysicalElement({
                 txn,
-
                 userLabel: "My Child Element 1",
                 modelId: modelKey.id,
                 categoryId: categoryKey.id,
@@ -78,7 +72,6 @@ describe("Learning snippets", async () => {
               }),
               insertPhysicalElement({
                 txn,
-
                 userLabel: "My Child Element 2",
                 modelId: modelKey.id,
                 categoryId: categoryKey.id,

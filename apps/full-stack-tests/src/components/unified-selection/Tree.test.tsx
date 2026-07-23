@@ -80,7 +80,6 @@ describe("Learning snippets", async () => {
           modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
           elementKey = insertPhysicalElement({
             txn,
-
             userLabel: "My Element",
             modelId: modelKey.id,
             categoryId: categoryKey.id,
