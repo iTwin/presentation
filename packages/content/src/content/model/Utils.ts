@@ -44,7 +44,7 @@ export function serializeRelationshipPath({
 }
 
 /**
- * Normalizes, de-duplicates, and sorts the given class names. Produces the canonical
+ * De-duplicates, and sorts the given class names. Produces the canonical
  * representation used for a property field's `valueClassNames` invariant.
  */
 export function toSortedUniqueClassNames(classNames: EC.FullClassNameDotNotation[]): EC.FullClassNameDotNotation[] {
