@@ -15,9 +15,9 @@ import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js
 import type { CalculatedField, Field, PropertyField as PropertyFieldType } from "../../content/model/Field.js";
 
 function propertyField(props: {
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  valueClassNames: string[];
+  valueClassNames: EC.FullClassNameDotNotation[];
   label?: string;
   pathFromTarget?: PropertyFieldType["pathFromTarget"];
 }): PropertyFieldType {
@@ -35,7 +35,7 @@ function propertyField(props: {
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
-    valueClassNames: toSortedUniqueClassNames(props.valueClassNames as EC.FullClassName[]),
+    valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
   };
 }
 
@@ -65,9 +65,9 @@ describe("ValueSelector", () => {
   describe("collectSelectors", () => {
     it("produces one selector per SQL-backed field", () => {
       const prop = propertyField({
-        propertyClassName: "Stuff:Thing",
+        propertyClassName: "Stuff.Thing",
         propertyName: "Height",
-        valueClassNames: ["Stuff:Door"],
+        valueClassNames: ["Stuff.Door"],
       });
       const calc = calculatedField({ id: "provider:calc", expression: "1" });
       const selectors = collectSelectors({ fields: [prop, calc], externalInputs: [] });
@@ -95,12 +95,12 @@ describe("ValueSelector", () => {
 
     it("deduplicates a property field and its fork into a single selector", () => {
       const field = propertyField({
-        propertyClassName: "Stuff:Thing",
+        propertyClassName: "Stuff.Thing",
         propertyName: "Height",
-        valueClassNames: ["Stuff:Door", "Stuff:Window"],
+        valueClassNames: ["Stuff.Door", "Stuff.Window"],
       });
       const descriptor = createDescriptor([field]);
-      const fork = createTransformableDescriptor(descriptor).forkField(field.id, ["Stuff:Door"]);
+      const fork = createTransformableDescriptor(descriptor).forkField(field.id, ["Stuff.Door"]);
       expect(fork.id).to.not.equal(field.id);
 
       const selectors = collectSelectors({ fields: Object.values(descriptor.fields), externalInputs: [] });
@@ -110,14 +110,14 @@ describe("ValueSelector", () => {
     it("adds a field-less selector for an external input with no matching field", () => {
       const selectors = collectSelectors({
         fields: [],
-        externalInputs: [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }],
+        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
       });
-      const id = computePropertySelectorId({ propertyClassName: "Stuff:Thing", propertyName: "Height" });
+      const id = computePropertySelectorId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
       expect(Object.keys(selectors)).to.deep.equal([id]);
       expect(selectors[id]).to.deep.equal({
         kind: "property",
         id,
-        propertyClassName: "Stuff:Thing",
+        propertyClassName: "Stuff.Thing",
         propertyName: "Height",
         pathFromTarget: [],
       });
@@ -125,30 +125,30 @@ describe("ValueSelector", () => {
 
     it("reuses the field-backed selector for an external input matching a field (no duplicate)", () => {
       const prop = propertyField({
-        propertyClassName: "Stuff:Thing",
+        propertyClassName: "Stuff.Thing",
         propertyName: "Height",
-        valueClassNames: ["Stuff:Door"],
+        valueClassNames: ["Stuff.Door"],
       });
       const selectors = collectSelectors({
         fields: [prop],
-        externalInputs: [{ propertyClassName: "Stuff:Thing", propertyName: "Height" }],
+        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
       });
       expect(Object.keys(selectors)).to.deep.equal([prop.selectorId]);
     });
 
     it("drops a removed output field's selector on recompute, but keeps it when it is also an external input (pinning replacement)", () => {
       const removable = propertyField({
-        propertyClassName: "Stuff:Thing",
+        propertyClassName: "Stuff.Thing",
         propertyName: "Height",
-        valueClassNames: ["Stuff:Door"],
+        valueClassNames: ["Stuff.Door"],
       });
       const inputBacked = propertyField({
-        propertyClassName: "Stuff:Thing",
+        propertyClassName: "Stuff.Thing",
         propertyName: "Width",
-        valueClassNames: ["Stuff:Door"],
+        valueClassNames: ["Stuff.Door"],
       });
       const descriptor = createDescriptor([removable, inputBacked]);
-      const externalInputs = [{ propertyClassName: "Stuff:Thing" as EC.FullClassName, propertyName: "Width" }];
+      const externalInputs = [{ propertyClassName: "Stuff.Thing" as const, propertyName: "Width" }];
 
       const transformable = createTransformableDescriptor(descriptor);
       transformable.removeField(removable.id);

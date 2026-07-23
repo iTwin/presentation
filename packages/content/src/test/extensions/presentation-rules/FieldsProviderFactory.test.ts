@@ -97,7 +97,7 @@ function createIModelAccessFromClasses(
   return { getSchema, classDerivesFrom: async () => true };
 }
 
-function createTarget(primaryClass: EC.FullClassName = "TestSchema.TestElement"): ContentTarget {
+function createTarget(primaryClass: EC.FullClassNameDotNotation = "TestSchema.TestElement"): ContentTarget {
   return { primaryClass };
 }
 

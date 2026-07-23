@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { vi } from "vitest";
-import { parseFullClassName } from "../shared/Utils.js";
 
 import type { Mock } from "vitest";
 import type { EC } from "../shared/Metadata.js";
@@ -14,7 +13,7 @@ export interface StubClassFuncProps {
   className: string;
   classLabel?: string;
   properties?: EC.Property[];
-  is?: (fullClassName: EC.FullClassName) => Promise<boolean>;
+  is?: (fullClassName: EC.FullClassNameDotNotation) => Promise<boolean>;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
@@ -72,11 +71,7 @@ export function createECSchemaProviderStub() {
       if (typeof targetClassOrClassName === "string") {
         return props.is(`${schemaName!}.${targetClassOrClassName}`);
       }
-      // need this just to make sure `.` is used for separating schema and class names
-      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(
-        targetClassOrClassName.fullName,
-      );
-      return props.is(`${parsedSchemaName}.${parsedClassName}`);
+      return props.is(targetClassOrClassName.fullName);
     }),
     isEntityClass: () => false,
     isRelationshipClass: () => false,

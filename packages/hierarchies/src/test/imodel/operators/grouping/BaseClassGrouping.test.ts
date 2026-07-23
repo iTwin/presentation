@@ -182,7 +182,7 @@ describe("BaseClassGrouping", () => {
             grouping: {
               byBaseClasses: {
                 /* cspell:disable-next-line */
-                fullClassNames: ["testschema:parentclass"],
+                fullClassNames: ["testschema.parentclass"],
               },
             },
           },

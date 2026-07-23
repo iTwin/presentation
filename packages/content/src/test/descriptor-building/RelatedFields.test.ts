@@ -54,7 +54,7 @@ function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"
   return { target: { primaryClass: "TestSchema.A" }, resolvedPrimaryClasses: ["TestSchema.A"], resolvedDeclarations };
 }
 
-function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassName[]): ResolvedPath {
+function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassNameDotNotation[]): ResolvedPath {
   return { path, targetClassNames };
 }
 

@@ -18,7 +18,7 @@ import type { EC, ECClassHierarchyInspector } from "../Metadata.js";
  */
 export interface ClassBasedLabelSelectClause {
   /** Full class name */
-  className: EC.FullClassName;
+  className: EC.FullClassNameDotNotation;
   /** A factory method to create an instance label select clause */
   clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
@@ -56,7 +56,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(
 ): IInstanceLabelSelectClauseFactory {
   const { classHierarchyInspector, clauses: labelClausesByClass } = props;
   const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
-  async function getLabelClausesForClass(queryClassName: EC.FullClassName) {
+  async function getLabelClausesForClass(queryClassName: EC.FullClassNameDotNotation) {
     const matchingLabelClauses = await Promise.all(
       labelClausesByClass.map(async (entry) => {
         if (await classHierarchyInspector.classDerivesFrom(entry.className, queryClassName)) {

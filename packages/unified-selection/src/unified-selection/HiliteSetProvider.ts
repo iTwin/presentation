@@ -164,7 +164,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     return promise;
   }
 
-  private async getTypeImpl(fullClassName: EC.FullClassName): Promise<InstanceIdType> {
+  private async getTypeImpl(fullClassName: EC.FullClassNameDotNotation): Promise<InstanceIdType> {
     return (
       (await this.checkType(fullClassName, "BisCore.Subject", "subject")) ??
       (await this.checkType(fullClassName, "BisCore.Model", "model")) ??
@@ -178,7 +178,11 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     );
   }
 
-  private async checkType(keyClassName: EC.FullClassName, checkClassName: EC.FullClassName, type: InstanceIdType) {
+  private async checkType(
+    keyClassName: EC.FullClassNameDotNotation,
+    checkClassName: EC.FullClassNameDotNotation,
+    type: InstanceIdType,
+  ) {
     try {
       const res = this._imodelAccess.classDerivesFrom(keyClassName, checkClassName);
       const isOfType = typeof res === "boolean" ? res : await res;

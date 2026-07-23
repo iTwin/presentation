@@ -23,7 +23,7 @@ import type { RunOptions } from "../util/TestUtilities.js";
 export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
-    fullClassName?: EC.FullClassName;
+    fullClassName?: EC.FullClassNameDotNotation;
     nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,

@@ -11,7 +11,7 @@ import {
   createIModelKey,
 } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, parseFullClassName } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createSchemaContext } from "../IModelUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
@@ -72,9 +72,4 @@ export function createProvider(
     // @ts-expect-error: using non-exposed way to override source name
     sourceName: props.sourceName,
   });
-}
-
-export function createClassECSqlSelector(fullClassName: string) {
-  const { schemaName, className } = parseFullClassName(fullClassName);
-  return `[${schemaName}].[${className}]`;
 }

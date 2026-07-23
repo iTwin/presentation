@@ -29,22 +29,25 @@ import type {
 
 // cspell:words ecdbmap
 
-type FullClassNameSeparator = "." | ":";
-type FullClassName = `${string}${FullClassNameSeparator}${string}`;
+type FullClassName = `${string}.${string}`;
 
-export interface BaseInstanceInsertProps {
+interface InstanceKey {
+  className: FullClassName;
+  id: Id64String;
+}
+
+interface BaseInstanceInsertProps {
   txn: EditTxn;
   classFullName?: FullClassName;
-  fullClassNameSeparator?: FullClassNameSeparator;
 }
 
 export function insertSubject(
   props: BaseInstanceInsertProps & { codeValue: string; parentId?: Id64String } & Partial<
       Omit<SubjectProps, "id" | "parent" | "code" | "model">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, codeValue, parentId, ...subjectProps } = props;
-  const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}Subject`;
+  const defaultClassName = `BisCore.Subject`;
   const className = classFullName ?? defaultClassName;
   const id = txn.insertElement({
     classFullName: className,
@@ -62,7 +65,7 @@ export function insertSubject(
 
 export function insertPhysicalModelWithPartition(
   props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
-) {
+): InstanceKey {
   const { codeValue, partitionParentId, ...baseProps } = props;
   const partitionKey = insertPhysicalPartition({
     ...baseProps,
@@ -76,9 +79,9 @@ export function insertPhysicalPartition(
   props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
       Omit<InformationPartitionElementProps, "id" | "parent" | "code">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, codeValue, parentId, ...partitionProps } = props;
-  const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalPartition`;
+  const defaultModelClassName = `BisCore.PhysicalPartition`;
   const className = classFullName ?? defaultModelClassName;
   const partitionId = txn.insertElement({
     classFullName: className,
@@ -88,7 +91,7 @@ export function insertPhysicalPartition(
       scope: parentId,
       value: codeValue,
     }),
-    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
+    parent: { id: parentId, relClassName: `BisCore.SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
@@ -98,9 +101,9 @@ export function insertPhysicalSubModel(
   props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
       Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modeledElementId, ...modelProps } = props;
-  const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalModel`;
+  const defaultModelClassName = `BisCore.PhysicalModel`;
   const className = classFullName ?? defaultModelClassName;
   const modelId = txn.insertModel({
     classFullName: className,
@@ -112,7 +115,7 @@ export function insertPhysicalSubModel(
 
 export function insertDrawingModelWithPartition(
   props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
-) {
+): InstanceKey {
   const { codeValue, partitionParentId, ...baseProps } = props;
   const partitionKey = insertDrawingPartition({
     ...baseProps,
@@ -126,9 +129,9 @@ export function insertDrawingPartition(
   props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
       Omit<InformationPartitionElementProps, "id" | "parent" | "code" | "userLabel">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, codeValue, parentId, ...partitionProps } = props;
-  const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}Drawing`;
+  const defaultModelClassName = `BisCore.Drawing`;
   const className = classFullName ?? defaultModelClassName;
   const partitionId = txn.insertElement({
     classFullName: className,
@@ -138,7 +141,7 @@ export function insertDrawingPartition(
       scope: parentId,
       value: codeValue,
     }),
-    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
+    parent: { id: parentId, relClassName: `BisCore.SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
@@ -148,9 +151,9 @@ export function insertDrawingSubModel(
   props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
       Omit<GeometricModel2dProps, "id" | "modeledElement" | "parentModel">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modeledElementId, ...modelProps } = props;
-  const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingModel`;
+  const defaultModelClassName = `BisCore.DrawingModel`;
   const className = classFullName ?? defaultModelClassName;
   const modelId = txn.insertModel({
     classFullName: className,
@@ -164,9 +167,9 @@ export function insertSpatialCategory(
   props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<
       Omit<CategoryProps, "id" | "model" | "parent" | "code">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, codeValue, ...categoryProps } = props;
-  const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}SpatialCategory`;
+  const defaultClassName = `BisCore.SpatialCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = txn.insertElement({
@@ -186,9 +189,9 @@ export function insertDrawingCategory(
   props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<
       Omit<CategoryProps, "id" | "model" | "parent" | "code">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, codeValue, ...categoryProps } = props;
-  const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingCategory`;
+  const defaultClassName = `BisCore.DrawingCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = txn.insertElement({
@@ -204,19 +207,19 @@ export function insertDrawingCategory(
   return { className, id };
 }
 
-export function getDefaultSubcategoryKey(categoryId: Id64String, fullClassNameSeparator?: string) {
+export function getDefaultSubcategoryKey(categoryId: Id64String): InstanceKey {
   const pair = Id64.getUint32Pair(categoryId);
   pair.lower++; // id of default subcategory is always `category id + 1`
-  return { className: `BisCore${fullClassNameSeparator ?? "."}SubCategory`, id: Id64.fromUint32PairObject(pair) };
+  return { className: `BisCore.SubCategory`, id: Id64.fromUint32PairObject(pair) };
 }
 
 export function insertSubCategory(
   props: BaseInstanceInsertProps & { codeValue: string; parentCategoryId: Id64String; modelId?: Id64String } & Partial<
       Omit<SubCategoryProps, "id" | "model" | "parent" | "code">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, codeValue, parentCategoryId, ...subCategoryProps } = props;
-  const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}SubCategory`;
+  const defaultClassName = `BisCore.SubCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = txn.insertElement({
@@ -227,10 +230,7 @@ export function insertSubCategory(
       scope: model,
       value: codeValue,
     }),
-    parent: {
-      id: parentCategoryId,
-      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}CategoryOwnsSubCategories`,
-    },
+    parent: { id: parentCategoryId, relClassName: `BisCore.CategoryOwnsSubCategories` },
     ...subCategoryProps,
   });
   return { className, id };
@@ -245,9 +245,9 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
     typeDefinitionId?: Id64String;
   } & Partial<Omit<PhysicalElementProps, "id" | "model" | "category" | "parent" | "typeDefinition" | "code">> &
     TAdditionalProps,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, categoryId, parentId, typeDefinitionId, codeValue, ...elementProps } = props;
-  const defaultClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalObject`;
+  const defaultClassName = `Generic.PhysicalObject`;
   const className = classFullName ?? defaultClassName;
   const id = txn.insertElement({
     classFullName: className,
@@ -260,21 +260,9 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
           value: codeValue,
         })
       : Code.createEmpty(),
-    ...(parentId
-      ? {
-          parent: {
-            id: parentId,
-            relClassName: `BisCore${props.fullClassNameSeparator ?? "."}PhysicalElementAssemblesElements`,
-          },
-        }
-      : undefined),
+    ...(parentId ? { parent: { id: parentId, relClassName: `BisCore.PhysicalElementAssemblesElements` } } : undefined),
     ...(typeDefinitionId
-      ? {
-          typeDefinition: {
-            id: typeDefinitionId,
-            relClassName: `BisCore${props.fullClassNameSeparator ?? "."}PhysicalElementIsOfType`,
-          },
-        }
+      ? { typeDefinition: { id: typeDefinitionId, relClassName: `BisCore.PhysicalElementIsOfType` } }
       : undefined),
     ...elementProps,
   } satisfies PhysicalElementProps);
@@ -284,9 +272,9 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
 export function insertPhysicalType<TAdditionalProps extends {}>(
   props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> &
     TAdditionalProps,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, ...elementProps } = props;
-  const defaultClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalType`;
+  const defaultClassName = `Generic.PhysicalType`;
   const className = classFullName ?? defaultClassName;
   const id = txn.insertElement({
     classFullName: className,
@@ -300,9 +288,9 @@ export function insertPhysicalType<TAdditionalProps extends {}>(
 export function insertPhysicalMaterial<TAdditionalProps extends {}>(
   props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> &
     TAdditionalProps,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, ...elementProps } = props;
-  const defaultClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalMaterial`;
+  const defaultClassName = `Generic.PhysicalMaterial`;
   const className = classFullName ?? defaultClassName;
   const id = txn.insertElement({
     classFullName: className,
@@ -318,23 +306,16 @@ export function insertDrawingGraphic<TAdditionalProps extends {}>(
       Omit<GeometricElement2dProps, "id" | "model" | "category" | "parent">
     > &
     TAdditionalProps,
-) {
+): InstanceKey {
   const { txn, classFullName, modelId, categoryId, parentId, ...elementProps } = props;
-  const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingGraphic`;
+  const defaultClassName = `BisCore.DrawingGraphic`;
   const className = classFullName ?? defaultClassName;
   const id = txn.insertElement({
     classFullName: className,
     model: modelId,
     category: categoryId,
     code: Code.createEmpty(),
-    ...(parentId
-      ? {
-          parent: {
-            id: parentId,
-            relClassName: `BisCore${props.fullClassNameSeparator ?? "."}ElementOwnsChildElements`,
-          },
-        }
-      : undefined),
+    ...(parentId ? { parent: { id: parentId, relClassName: `BisCore.ElementOwnsChildElements` } } : undefined),
     ...elementProps,
   } satisfies GeometricElement2dProps);
   return { className, id };
@@ -344,9 +325,9 @@ export function insertRepositoryLink(
   props: BaseInstanceInsertProps & { repositoryUrl?: string; repositoryLabel?: string } & Partial<
       Omit<RepositoryLinkProps, "id" | "model" | "url" | "userLabel">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, repositoryUrl, repositoryLabel, ...repoLinkProps } = props;
-  const defaultClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}RepositoryLink`;
+  const defaultClassName = `BisCore.RepositoryLink`;
   const className = classFullName ?? defaultClassName;
   const id = txn.insertElement({
     classFullName: className,
@@ -363,16 +344,16 @@ export function insertExternalSourceAspect(
   props: BaseInstanceInsertProps & { elementId: Id64String; identifier: string; repositoryId?: Id64String } & Partial<
       Omit<ExternalSourceAspectProps, "id" | "classFullName" | "element" | "source">
     >,
-) {
+): InstanceKey {
   const { txn, repositoryId, elementId, identifier, ...externalSourceAspectProps } = props;
   const externalSourceId = txn.insertElement({
-    classFullName: `BisCore${props.fullClassNameSeparator ?? "."}ExternalSource`,
+    classFullName: `BisCore.ExternalSource`,
     model: IModel.repositoryModelId,
     code: Code.createEmpty(),
     repository: repositoryId ? { id: repositoryId } : undefined,
   } satisfies ExternalSourceProps as ElementProps);
 
-  const className = `BisCore${props.fullClassNameSeparator ?? "."}ExternalSourceAspect`;
+  const className = `BisCore.ExternalSourceAspect`;
   const id = txn.insertAspect({
     classFullName: className,
     kind: "ExternalSource",
@@ -388,7 +369,7 @@ export function insertExternalSourceAspect(
 
 export function insertFunctionalModelWithPartition(
   props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
-) {
+): InstanceKey {
   const { codeValue, partitionParentId, ...baseProps } = props;
   const partitionKey = insertFunctionalPartition({
     ...baseProps,
@@ -402,9 +383,9 @@ export function insertFunctionalPartition(
   props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
       Omit<InformationPartitionElementProps, "id" | "parent" | "code">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, codeValue, parentId, ...partitionProps } = props;
-  const defaultModelClassName: FullClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalPartition`;
+  const defaultModelClassName = `Functional.FunctionalPartition`;
   const className = classFullName ?? defaultModelClassName;
   const partitionId = txn.insertElement({
     classFullName: className,
@@ -414,7 +395,7 @@ export function insertFunctionalPartition(
       scope: parentId,
       value: codeValue,
     }),
-    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
+    parent: { id: parentId, relClassName: `BisCore.SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
@@ -424,9 +405,9 @@ export function insertFunctionalSubModel(
   props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
       Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modeledElementId, ...modelProps } = props;
-  const defaultModelClassName: FullClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalModel`;
+  const defaultModelClassName = `Functional.FunctionalModel`;
   const className = classFullName ?? defaultModelClassName;
   const modelId = txn.insertModel({
     classFullName: className,
@@ -443,16 +424,14 @@ export function insertFunctionalElement(
     relationshipName: "DrawingGraphicRepresentsFunctionalElement" | "PhysicalElementFulfillsFunction";
     parentId?: string;
   } & Partial<Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">>,
-) {
+): InstanceKey {
   const { txn, modelId, representedElementId, relationshipName, parentId, ...elementProps } = props;
-  const className = `Functional${props.fullClassNameSeparator ?? "."}FunctionalComposite`;
+  const className = `Functional.FunctionalComposite`;
   const id = txn.insertElement({
     classFullName: className,
     model: modelId,
     code: Code.createEmpty(),
-    parent: parentId
-      ? { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}ElementOwnsChildElements` }
-      : undefined,
+    parent: parentId ? { id: parentId, relClassName: `BisCore.ElementOwnsChildElements` } : undefined,
     ...elementProps,
   } satisfies FunctionalElementProps);
   txn.insertRelationship({
@@ -465,7 +444,7 @@ export function insertFunctionalElement(
 
 export function insertGroupInformationModelWithPartition(
   props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String },
-) {
+): InstanceKey {
   const { codeValue, partitionParentId, ...baseProps } = props;
   const partitionKey = insertGroupInformationPartition({
     ...baseProps,
@@ -479,9 +458,9 @@ export function insertGroupInformationPartition(
   props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
       Omit<InformationPartitionElementProps, "id" | "parent" | "code">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, codeValue, parentId, ...partitionProps } = props;
-  const defaultModelClassName: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}GroupInformationPartition`;
+  const defaultModelClassName = `BisCore.GroupInformationPartition`;
   const className = classFullName ?? defaultModelClassName;
   const partitionId = txn.insertElement({
     classFullName: className,
@@ -491,7 +470,7 @@ export function insertGroupInformationPartition(
       scope: parentId,
       value: codeValue,
     }),
-    parent: { id: parentId, relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements` },
+    parent: { id: parentId, relClassName: `BisCore.SubjectOwnsPartitionElements` },
     ...partitionProps,
   });
   return { className, id: partitionId };
@@ -501,9 +480,9 @@ export function insertGroupInformationSubModel(
   props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<
       Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">
     >,
-) {
+): InstanceKey {
   const { txn, classFullName, modeledElementId, ...modelProps } = props;
-  const defaultModelClassName: FullClassName = `Generic${props.fullClassNameSeparator ?? "."}GroupModel`;
+  const defaultModelClassName = `Generic.GroupModel`;
   const className = classFullName ?? defaultModelClassName;
   const modelId = txn.insertModel({
     classFullName: className,
@@ -517,18 +496,18 @@ export function insertGroupInformationElement(
   props: BaseInstanceInsertProps & { modelId: Id64String } & Partial<
       Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">
     >,
-) {
+): InstanceKey {
   const { txn, modelId, ...elementProps } = props;
-  const className = `Generic${props.fullClassNameSeparator ?? "."}Group`;
+  const className = `Generic.Group`;
   const id = txn.insertElement({ classFullName: className, model: modelId, code: Code.createEmpty(), ...elementProps });
   return { className, id };
 }
 
 export function insertSheetIndexFolder(
   props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>,
-) {
+): InstanceKey {
   const { txn, ...elementProps } = props;
-  const className: FullClassName = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;
+  const className = `BisCore.SheetIndexFolder`;
   const id = txn.insertElement({
     classFullName: className,
     model: IModel.repositoryModelId,

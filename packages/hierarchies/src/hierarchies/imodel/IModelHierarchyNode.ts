@@ -100,7 +100,7 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  fullClassNames: EC.FullClassName[];
+  fullClassNames: EC.FullClassNameDotNotation[];
 }
 
 /**
@@ -114,7 +114,7 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  propertiesClassName: EC.FullClassName;
+  propertiesClassName: EC.FullClassNameDotNotation;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *

@@ -41,7 +41,7 @@ export interface CreateRelationshipPathJoinClauseProps {
  */
 interface JoinTargetClass {
   kind: "class";
-  className: EC.FullClassName;
+  className: EC.FullClassNameDotNotation;
 }
 
 /**
@@ -52,7 +52,7 @@ interface JoinTargetClass {
  */
 interface JoinTargetRelationshipSelect {
   kind: "relationship-select";
-  relationshipClassName: EC.FullClassName;
+  relationshipClassName: EC.FullClassNameDotNotation;
   relationshipAlias: string;
   /** The class inner-joined inside the subquery, its alias, and the inner `ON` condition. */
   innerTarget: JoinTargetClass;

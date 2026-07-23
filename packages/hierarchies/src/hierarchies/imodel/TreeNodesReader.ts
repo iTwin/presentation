@@ -5,7 +5,7 @@
 
 import { from, mergeMap, of } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { normalizeFullClassName, parseInstanceLabel } from "@itwin/presentation-shared";
+import { parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
 import { log } from "../internal/LoggingUtils.js";
 
@@ -48,7 +48,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
  * @internal
  */
 export interface RowDef {
-  [NodeSelectClauseColumnNames.FullClassName]: EC.FullClassName;
+  [NodeSelectClauseColumnNames.FullClassName]: EC.FullClassNameDotNotation;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
   [NodeSelectClauseColumnNames.DisplayLabel]: string;
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
@@ -73,10 +73,7 @@ export const defaultNodesParser: (
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and generic nodes
     label: parseInstanceLabel(typedRow.DisplayLabel),
-    key: {
-      type: "instances",
-      instanceKeys: [{ className: normalizeFullClassName(typedRow.FullClassName), id: typedRow.ECInstanceId }],
-    },
+    key: { type: "instances", instanceKeys: [{ className: typedRow.FullClassName, id: typedRow.ECInstanceId }] },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
     ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),

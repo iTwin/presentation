@@ -203,7 +203,7 @@ describe("SearchHierarchyDefinition", () => {
       return {
         label: "test",
         key: createTestInstanceNodeKey({
-          instanceKeys: [createTestInstanceKey({ className: "Schema:Class", id: "0x1" })],
+          instanceKeys: [createTestInstanceKey({ className: "Schema.Class", id: "0x1" })],
         }),
         ...overrides,
       };
@@ -217,15 +217,15 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("assigns search props when row has matching search columns and target paths match", async () => {
-      const targetIdentifier: HierarchyNodeIdentifier = { className: "Schema:Class", id: "0x1", imodelKey: "imodel" };
+      const targetIdentifier: HierarchyNodeIdentifier = { className: "Schema.Class", id: "0x1", imodelKey: "imodel" };
       const targetPaths: HierarchySearchTree[] = [{ identifier: targetIdentifier }];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -235,14 +235,14 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("doesn't match when identifier id differs from row id", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x2" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Class", id: "0x2" } }];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -253,12 +253,12 @@ describe("SearchHierarchyDefinition", () => {
     it("doesn't match generic node identifier", async () => {
       const targetPaths: HierarchySearchTree[] = [{ identifier: { type: "generic", id: "0x1" } }];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -268,15 +268,15 @@ describe("SearchHierarchyDefinition", () => {
 
     it("doesn't match when imodelKey differs", async () => {
       const targetPaths: HierarchySearchTree[] = [
-        { identifier: { className: "Schema:Class", id: "0x1", imodelKey: "other-imodel" } },
+        { identifier: { className: "Schema.Class", id: "0x1", imodelKey: "other-imodel" } },
       ];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -285,14 +285,14 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("matches when identifier has no imodelKey", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Class", id: "0x1" } }];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -304,15 +304,15 @@ describe("SearchHierarchyDefinition", () => {
     it("falls back to classDerivesFrom when class names differ", async () => {
       const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
       classDerivesFrom.mockImplementation(async (derived, candidate) => {
-        if (derived === "Schema:Derived" && candidate === "Schema:Base") {
+        if (derived === "Schema.Derived" && candidate === "Schema.Base") {
           return true;
         }
         return false;
       });
 
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Base", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Base", id: "0x1" } }];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Derived", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Derived", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({
         targetPaths,
@@ -321,7 +321,7 @@ describe("SearchHierarchyDefinition", () => {
       });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Derived" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Derived" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -333,9 +333,9 @@ describe("SearchHierarchyDefinition", () => {
     it("doesn't match when classDerivesFrom returns false for both directions", async () => {
       const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(false);
 
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Unrelated", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Unrelated", id: "0x1" } }];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Derived", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Derived", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({
         targetPaths,
@@ -344,7 +344,7 @@ describe("SearchHierarchyDefinition", () => {
       });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Derived" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Derived" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -354,15 +354,15 @@ describe("SearchHierarchyDefinition", () => {
 
     it("assigns autoExpand from search tree options", async () => {
       const targetPaths: HierarchySearchTree[] = [
-        { identifier: { className: "Schema:Class", id: "0x1" }, options: { autoExpand: true } },
+        { identifier: { className: "Schema.Class", id: "0x1" }, options: { autoExpand: true } },
       ];
       const parsedNode = createSourceInstanceNode({
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Class", id: "0x1" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
       });
       const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
       const result = await firstValueFrom(
         def.parseNode({
-          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema:Class" },
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
           parentNode: undefined,
           imodelKey: "imodel",
         }),
@@ -380,15 +380,15 @@ describe("SearchHierarchyDefinition", () => {
     const constProps = { imodelAccess: stubIModelAccess, ...nodeSelectClauseFactory };
 
     it("returns source definitions when search identifiers are not applicable to the level", async () => {
-      const sourceDefs: HierarchyLevelDefinition = [{ fullClassName: "Schema:Class", query: { ecsql: "SELECT *" } }];
+      const sourceDefs: HierarchyLevelDefinition = [{ fullClassName: "Schema.Class", query: { ecsql: "SELECT *" } }];
       const parentNode = {
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Parent", id: "0x2" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Parent", id: "0x2" }] }),
         label: "parent",
         parentKeys: [],
         search: { isSearchTarget: true },
       };
       const def = createSearchHierarchyDefinition({
-        targetPaths: [{ identifier: { className: "Schema:Class", id: "0x1" } }],
+        targetPaths: [{ identifier: { className: "Schema.Class", id: "0x1" } }],
         source: { defineHierarchyLevel: () => of(sourceDefs) },
       });
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, ...constProps }));
@@ -434,9 +434,9 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("applies ECInstanceIds search for instance definitions matching search identifier", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Class", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Class",
+        fullClassName: "Schema.Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
       const def = createSearchHierarchyDefinition({
@@ -454,9 +454,9 @@ describe("SearchHierarchyDefinition", () => {
       stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Class" });
       stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Other" });
 
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Other", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Other", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Class",
+        fullClassName: "Schema.Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
       const def = createSearchHierarchyDefinition({
@@ -472,9 +472,9 @@ describe("SearchHierarchyDefinition", () => {
       const baseClass = stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Base" });
       stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Derived", baseClass });
 
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Derived", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Derived", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Base",
+        fullClassName: "Schema.Base",
         query: { ecsql: "SELECT * FROM Schema.Base" },
       };
       const def = createSearchHierarchyDefinition({
@@ -488,10 +488,10 @@ describe("SearchHierarchyDefinition", () => {
 
     it("skips instance identifier with non-matching imodelKey", async () => {
       const targetPaths: HierarchySearchTree[] = [
-        { identifier: { className: "Schema:Class", id: "0x1", imodelKey: "other-imodel" } },
+        { identifier: { className: "Schema.Class", id: "0x1", imodelKey: "other-imodel" } },
       ];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Class",
+        fullClassName: "Schema.Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
       const def = createSearchHierarchyDefinition({
@@ -507,11 +507,11 @@ describe("SearchHierarchyDefinition", () => {
       stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Derived", baseClass });
 
       const targetPaths: HierarchySearchTree[] = [
-        { identifier: { className: "Schema:Derived", id: "0x1" } },
-        { identifier: { className: "Schema:Base", id: "0x1" } },
+        { identifier: { className: "Schema.Derived", id: "0x1" } },
+        { identifier: { className: "Schema.Base", id: "0x1" } },
       ];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Base",
+        fullClassName: "Schema.Base",
         query: { ecsql: "SELECT * FROM Schema.Base" },
       };
       const def = createSearchHierarchyDefinition({
@@ -534,11 +534,11 @@ describe("SearchHierarchyDefinition", () => {
       stubIModelAccess.stubEntityClass({ schemaName: "Schema", className: "Derived", baseClass });
 
       const targetPaths: HierarchySearchTree[] = [
-        { identifier: { className: "Schema:Base", id: "0x1" } },
-        { identifier: { className: "Schema:Derived", id: "0x1" } },
+        { identifier: { className: "Schema.Base", id: "0x1" } },
+        { identifier: { className: "Schema.Derived", id: "0x1" } },
       ];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Base",
+        fullClassName: "Schema.Base",
         query: { ecsql: "SELECT * FROM Schema.Base" },
       };
       const def = createSearchHierarchyDefinition({
@@ -551,13 +551,13 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("applies ECInstanceIds selector when parent has search target ancestor", async () => {
-      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema:Class", id: "0x1" } }];
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Class", id: "0x1" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Class",
+        fullClassName: "Schema.Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
       const parentNode = {
-        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema:Parent", id: "0x2" }] }),
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Parent", id: "0x2" }] }),
         label: "parent",
         parentKeys: [],
         search: { hasSearchTargetAncestor: true, childrenTargetPaths: targetPaths },
@@ -576,7 +576,7 @@ describe("SearchHierarchyDefinition", () => {
     it("skips generic identifiers when looking for instance definitions", async () => {
       const targetPaths: HierarchySearchTree[] = [{ identifier: { type: "generic", id: "test-key" } }];
       const instanceDef: InstanceNodesQueryDefinition = {
-        fullClassName: "Schema:Class",
+        fullClassName: "Schema.Class",
         query: { ecsql: "SELECT * FROM Schema.Class" },
       };
       const def = createSearchHierarchyDefinition({

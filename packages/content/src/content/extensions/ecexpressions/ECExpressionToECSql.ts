@@ -29,7 +29,7 @@ export interface ConvertECExpressionToECSqlProps {
    * Full name of the primary (`this`) class. When provided, instance label select clauses generated for
    * the primary instance can be more efficient.
    */
-  primaryClassName?: EC.FullClassName;
+  primaryClassName?: EC.FullClassNameDotNotation;
 
   /**
    * Factory used to generate instance label select clauses for `GetDisplayLabel` and related-instance label functions.

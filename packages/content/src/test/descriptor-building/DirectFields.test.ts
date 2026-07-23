@@ -12,8 +12,8 @@ import type { ContentSource } from "../../content/ContentTarget.js";
 import type { PropertyField } from "../../content/model/Field.js";
 
 function createSource(props: {
-  primaryClass: EC.FullClassName;
-  resolvedPrimaryClasses?: EC.FullClassName[];
+  primaryClass: EC.FullClassNameDotNotation;
+  resolvedPrimaryClasses?: EC.FullClassNameDotNotation[];
 }): ContentSource {
   return {
     target: { primaryClass: props.primaryClass },
@@ -89,7 +89,7 @@ describe("collectDirectPropertyFields", () => {
 
     const [field] = await enumerate({
       imodelAccess,
-      source: createSource({ primaryClass: "TestSchema:Element", resolvedPrimaryClasses: [] }),
+      source: createSource({ primaryClass: "TestSchema.Element", resolvedPrimaryClasses: [] }),
     });
 
     expect(field.valueClassNames).to.deep.equal(["TestSchema.Element"]);

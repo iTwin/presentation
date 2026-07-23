@@ -38,18 +38,18 @@ describe("useUnifiedSelection", () => {
 
   describe("isNodeSelected", () => {
     it("returns true if instance node is selected", () => {
-      const selectedInstanceKey = { id: "0x1", className: "Schema:Name" as const };
+      const selectedInstanceKey = { id: "0x1", className: "Schema.Name" as const };
       const selectedInstancesNodesKey: InstancesNodeKey = {
         type: "instances",
         instanceKeys: [{ ...selectedInstanceKey, imodelKey }],
       };
       const noIModelInstancesNodesKey: InstancesNodeKey = {
         type: "instances",
-        instanceKeys: [{ id: "0x2", className: "Schema:Name" }],
+        instanceKeys: [{ id: "0x2", className: "Schema.Name" }],
       };
       const differentIModelInstancesNodesKey: InstancesNodeKey = {
         type: "instances",
-        instanceKeys: [{ id: "0x3", className: "Schema:Name", imodelKey: "unknown-imodel" }],
+        instanceKeys: [{ id: "0x3", className: "Schema.Name", imodelKey: "unknown-imodel" }],
       };
       const mergedInstancesNodesKey: InstancesNodeKey = {
         type: "instances",
@@ -93,9 +93,9 @@ describe("useUnifiedSelection", () => {
     it("returns true if grouping node is selected", () => {
       const instancesNodesKey: InstancesNodeKey = {
         type: "instances",
-        instanceKeys: [{ id: "0x1", className: "Schema:Name" as const }],
+        instanceKeys: [{ id: "0x1", className: "Schema.Name" as const }],
       };
-      const selectedInstanceKey = { id: "0x2", className: "Schema:Name" as const };
+      const selectedInstanceKey = { id: "0x2", className: "Schema.Name" as const };
       const nodes = [
         createTreeModelNode({
           id: "node-1",
@@ -133,7 +133,7 @@ describe("useUnifiedSelection", () => {
     it("returns true if generic node is selected with default `createSelectableForGenericNode` handler", () => {
       const instancesNodesKey: InstancesNodeKey = {
         type: "instances",
-        instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
+        instanceKeys: [{ id: "0x1", className: "Schema.Name" }],
       };
       const genericNodeKey: GenericNodeKey = { type: "generic", id: "generic-node" };
       const instancesNode = createTestHierarchyNode({ id: "instances-node", key: instancesNodesKey });
@@ -162,7 +162,7 @@ describe("useUnifiedSelection", () => {
     it("returns true if generic node is selected with custom `createSelectableForGenericNode` handler", () => {
       const instancesNodesKey: InstancesNodeKey = {
         type: "instances",
-        instanceKeys: [{ id: "0x1", className: "Schema:Name" }],
+        instanceKeys: [{ id: "0x1", className: "Schema.Name" }],
       };
       const genericNodeKey: GenericNodeKey = { type: "generic", id: "generic-node" };
       const instancesNode = createTestHierarchyNode({ id: "instances-node", key: instancesNodesKey });
@@ -211,7 +211,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("adds instance node to selection", () => {
-      const instanceKey = { id: "0x1", className: "Schema:Name" as const };
+      const instanceKey = { id: "0x1", className: "Schema.Name" as const };
       const instancesNodesKey: InstancesNodeKey = {
         type: "instances",
         instanceKeys: [
@@ -259,7 +259,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("adds grouping node to selection", async () => {
-      const instanceKey = { id: "0x1", className: "Schema:Name" as const };
+      const instanceKey = { id: "0x1", className: "Schema.Name" as const };
       const groupingNode = createTestGroupingNode({
         id: "grouping-node",
         groupedInstanceKeys: [
@@ -358,7 +358,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("removes instance node from selection", () => {
-      const instanceKey = { id: "0x1", className: "Schema:Name" as const };
+      const instanceKey = { id: "0x1", className: "Schema.Name" as const };
       const instancesNodesKey: InstancesNodeKey = {
         type: "instances",
         instanceKeys: [
@@ -410,7 +410,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("removes grouping node from selection", async () => {
-      const instanceKey = { id: "0x1", className: "Schema:Name" as const };
+      const instanceKey = { id: "0x1", className: "Schema.Name" as const };
       const groupingNode = createTestGroupingNode({
         id: "grouping-node",
         groupedInstanceKeys: [
@@ -529,7 +529,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("replaces selection with node", () => {
-      const instanceKey = { id: "0x1", className: "Schema:Name" as const };
+      const instanceKey = { id: "0x1", className: "Schema.Name" as const };
       const instancesNodesKey: InstancesNodeKey = { type: "instances", instanceKeys: [{ ...instanceKey, imodelKey }] };
       const nodes = [
         createTreeModelNode({
@@ -567,7 +567,7 @@ describe("useUnifiedSelection", () => {
         storage.addToSelection({
           imodelKey,
           source: "some-source",
-          selectables: [{ id: "0x1", className: "Schema:Class" }],
+          selectables: [{ id: "0x1", className: "Schema.Class" }],
         });
       });
 
@@ -584,7 +584,7 @@ describe("useUnifiedSelection", () => {
         storage.addToSelection({
           imodelKey,
           source: "some-source",
-          selectables: [{ id: "0x1", className: "Schema:Class" }],
+          selectables: [{ id: "0x1", className: "Schema.Class" }],
           level: 1,
         });
       });

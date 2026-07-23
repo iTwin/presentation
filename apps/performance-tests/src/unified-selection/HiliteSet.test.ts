@@ -19,7 +19,7 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k elements",
     iModelName: "50k elements",
-    fullClassName: "BisCore:Element",
+    fullClassName: "BisCore.Element",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     expectedCounts: { elements: 50_000 },
   });
@@ -27,7 +27,7 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k group elements",
     iModelName: "50k group member elements",
-    fullClassName: "BisCore:GroupInformationElement",
+    fullClassName: "BisCore.GroupInformationElement",
     inputQuery: "SELECT ECInstanceId FROM BisCore:GroupInformationElement",
     expectedCounts: { elements: 50_000 },
   });
@@ -35,7 +35,7 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "1k subjects",
     iModelName: "1k subjects",
-    fullClassName: "BisCore:Subject",
+    fullClassName: "BisCore.Subject",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Subject WHERE UserLabel = 'test_subject'",
     expectedCounts: { models: 20 },
   });
@@ -43,7 +43,7 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k subcategories",
     iModelName: "50k subcategories",
-    fullClassName: "BisCore:SpatialCategory",
+    fullClassName: "BisCore.SpatialCategory",
     inputQuery: "SELECT ECInstanceId FROM BisCore:SpatialCategory",
     expectedCounts: { subCategories: 50_000 },
   });
@@ -51,7 +51,7 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k functional 3D elements",
     iModelName: "50k functional 3D elements",
-    fullClassName: "Functional:FunctionalElement",
+    fullClassName: "Functional.FunctionalElement",
     inputQuery: "SELECT ECInstanceId FROM Functional:FunctionalElement",
     expectedCounts: { elements: 50_000 },
   });
@@ -59,7 +59,7 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k functional 2D elements",
     iModelName: "50k functional 2D elements",
-    fullClassName: "Functional:FunctionalElement",
+    fullClassName: "Functional.FunctionalElement",
     inputQuery: "SELECT ECInstanceId FROM Functional:FunctionalElement",
     // iModel contains one additional 2D element
     expectedCounts: { elements: 50_001 },

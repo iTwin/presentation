@@ -19,17 +19,19 @@ The full class names used in this package were defined as `string`, although we 
 
 ## Breaking changes
 
-- Changed `EC.CustomAttribute.className` to be of type `EC.FullClassName` instead of `string`.
-- Changed `EC.CustomAttributeSet.get` argument to be of type `EC.FullClassName` instead of `string`.
-- Changed `EC.SchemaItem.fullName` to be of type `EC.FullClassName` instead of `string`.
-- Changed `compareFullClassNames` arguments to be of type `EC.FullClassName` instead of `string`.
-- Changed `createClassBasedInstanceLabelSelectClauseFactory` prop `clauses` to take objects with `{ className: EC.FullClassName }` arguments instead of `{ className: string }`.
-- Changed `IInstanceLabelSelectClauseFactory.createSelectClause` prop `className` to be of type `EC.FullClassName` instead of `string`.
-- Changed `ECSql.createPrimitivePropertyValueSelectorProps` prop `propertyClassName` to be of type `EC.FullClassName` instead of `string`.
-- Changed `ECSql.createRelationshipPathJoinClause` prop `path` to take class names (`relationshipName`, `sourceClassName` and `targetClassName`) of type `EC.FullClassName` instead of `string`.
-- Changed `ECClassHierarchyInspector.classDerivesFrom` arguments to be of type `EC.FullClassName` instead of `string`.
-- Changed the second argument of `getClass` to be of type `EC.FullClassName` instead of `string`.
-- Changed `InstanceKey.className` to be of type `EC.FullClassName` instead of `string`.
+- Changed `EC.CustomAttribute.className` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `EC.CustomAttributeSet.get` argument to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `EC.SchemaItem.fullName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `createClassBasedInstanceLabelSelectClauseFactory` prop `clauses` to take objects with `{ className: EC.FullClassNameDotNotation }` arguments instead of `{ className: string }`.
+- Changed `IInstanceLabelSelectClauseFactory.createSelectClause` prop `className` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `ECSql.createPrimitivePropertyValueSelectorProps` prop `propertyClassName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `ECSql.createRelationshipPathJoinClause` prop `path` to take class names (`relationshipName`, `sourceClassName` and `targetClassName`) of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `ECClassHierarchyInspector.classDerivesFrom` arguments to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed the second argument of `getClass` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `InstanceKey.className` to be of type `EC.FullClassNameDotNotation` instead of `string`. The value is now always in dot notation, so consumers no longer need to call `normalizeFullClassName` on it.
+- Changed `RelationshipPathStep` class-name properties (`sourceClassName`, `targetClassName` and `relationshipName`) to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Changed `NavigationValueDescriptor.targetClassName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+- Removed `compareFullClassNames`. With `EC.FullClassNameDotNotation` being used across the package, this function is no longer needed. Use `===` operator to compare full class names instead.
 
 In many cases migration will be seamless, as long as the input string matches the expected format. In some cases (e.g. when assigning a string variable to one of the affected properties), you may need to use `normalizeFullClassName` to ensure the value is of the correct type:
 

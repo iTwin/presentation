@@ -56,10 +56,10 @@ function createStructProperty(props: { name: string; members: EC.Property[]; arr
 function createNavigationProperty(props: {
   name: string;
   direction: "Forward" | "Backward";
-  sourceClassName?: EC.FullClassName;
-  targetClassName?: EC.FullClassName;
+  sourceClassName?: EC.FullClassNameDotNotation;
+  targetClassName?: EC.FullClassNameDotNotation;
 }): EC.Property {
-  const constraint = (className: EC.FullClassName | undefined): EC.RelationshipConstraint =>
+  const constraint = (className: EC.FullClassNameDotNotation | undefined): EC.RelationshipConstraint =>
     ({
       abstractConstraint: Promise.resolve(
         className ? ({ fullName: className } as unknown as EC.EntityClass) : undefined,

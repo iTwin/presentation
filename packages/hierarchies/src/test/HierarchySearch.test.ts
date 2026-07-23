@@ -1092,11 +1092,11 @@ describe("createHierarchySearchHelper", () => {
     it("returns correct child node props when parent node has instance node target path", () => {
       const result = createHierarchySearchHelper([], {
         search: {
-          childrenTargetPaths: [{ identifier: { imodelKey: "a", className: "test:className", id: "id" } }],
+          childrenTargetPaths: [{ identifier: { imodelKey: "a", className: "test.className", id: "id" } }],
           hasSearchTargetAncestor: true,
         },
       }).createChildNodeProps({
-        nodeKey: { type: "instances", instanceKeys: [{ imodelKey: "test", className: "test:className", id: "id" }] },
+        nodeKey: { type: "instances", instanceKeys: [{ imodelKey: "test", className: "test.className", id: "id" }] },
       });
 
       expect(result).toEqual({ search: { hasSearchTargetAncestor: true } });

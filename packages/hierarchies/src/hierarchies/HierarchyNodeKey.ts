@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
-import { InstanceKey, normalizeFullClassName } from "@itwin/presentation-shared";
+import { InstanceKey } from "@itwin/presentation-shared";
 
 import type { EC } from "@itwin/presentation-shared";
 
@@ -61,7 +61,7 @@ export interface ClassGroupingNodeKey {
   type: "class-grouping";
 
   /** Full name of the ECClass that this grouping node is grouping by. */
-  className: EC.FullClassName;
+  className: EC.FullClassNameDotNotation;
 }
 
 /**
@@ -91,7 +91,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:other";
   /** Identifiers of properties whose values are grouped under this node. */
-  properties: Array<{ className: EC.FullClassName; propertyName: string }>;
+  properties: Array<{ className: EC.FullClassNameDotNotation; propertyName: string }>;
 }
 
 /**
@@ -106,7 +106,7 @@ export interface PropertyValueGroupingNodeKey {
   propertyName: string;
 
   /** Full name of the ECClass containing the property. */
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
 
   /** Formatted property value that this node is grouping by. */
   formattedPropertyValue: string;
@@ -124,7 +124,7 @@ export interface PropertyValueRangeGroupingNodeKey {
   propertyName: string;
 
   /** Full name of the ECClass containing the property. */
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
 
   /** Defines the start of the values' range that this node is grouping by. */
   fromValue: number;
@@ -255,10 +255,7 @@ export namespace HierarchyNodeKey {
       }
       case "class-grouping": {
         assert(rhs.type === "class-grouping");
-        return compareStrings(
-          normalizeFullClassName(lhs.className).toLocaleLowerCase(),
-          normalizeFullClassName(rhs.className).toLocaleLowerCase(),
-        );
+        return compareStrings(lhs.className.toLocaleLowerCase(), rhs.className.toLocaleLowerCase());
       }
       case "label-grouping": {
         assert(rhs.type === "label-grouping");
@@ -275,8 +272,8 @@ export namespace HierarchyNodeKey {
         }
         for (let i = 0; i < lhs.properties.length; ++i) {
           const classCompareResult = compareStrings(
-            normalizeFullClassName(lhs.properties[i].className).toLocaleLowerCase(),
-            normalizeFullClassName(rhs.properties[i].className).toLocaleLowerCase(),
+            lhs.properties[i].className.toLocaleLowerCase(),
+            rhs.properties[i].className.toLocaleLowerCase(),
           );
           if (classCompareResult !== 0) {
             return classCompareResult;
@@ -294,8 +291,8 @@ export namespace HierarchyNodeKey {
       case "property-grouping:value": {
         assert(rhs.type === "property-grouping:value");
         const propertyClassNameCompareResult = compareStrings(
-          normalizeFullClassName(lhs.propertyClassName).toLocaleLowerCase(),
-          normalizeFullClassName(rhs.propertyClassName).toLocaleLowerCase(),
+          lhs.propertyClassName.toLocaleLowerCase(),
+          rhs.propertyClassName.toLocaleLowerCase(),
         );
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
@@ -312,8 +309,8 @@ export namespace HierarchyNodeKey {
       case "property-grouping:range": {
         assert(rhs.type === "property-grouping:range");
         const propertyClassNameCompareResult = compareStrings(
-          normalizeFullClassName(lhs.propertyClassName).toLocaleLowerCase(),
-          normalizeFullClassName(rhs.propertyClassName).toLocaleLowerCase(),
+          lhs.propertyClassName.toLocaleLowerCase(),
+          rhs.propertyClassName.toLocaleLowerCase(),
         );
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;

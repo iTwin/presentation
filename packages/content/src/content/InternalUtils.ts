@@ -81,7 +81,7 @@ export async function getClassLabel({
   className,
 }: {
   imodelAccess: ECSchemaProvider;
-  className: EC.FullClassName;
+  className: EC.FullClassNameDotNotation;
 }): Promise<string> {
   const ecClass = await getClass(imodelAccess, className);
   return ecClass.label ?? ecClass.name;

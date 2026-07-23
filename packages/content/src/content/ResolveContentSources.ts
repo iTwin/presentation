@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, toArray } from "rxjs";
-import { ECSql, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
+import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "./InternalUtils.js";
 import { toSortedUniqueClassNames } from "./model/Utils.js";
 
@@ -268,10 +268,10 @@ async function resolveDeclarationPaths({
       map((row) => ({
         path: declaration.path.map((step: RelationshipPath[number], i: number) => ({
           ...step,
-          sourceClassName: (i === 0 ? target.primaryClass : row[i]) as EC.FullClassName,
-          targetClassName: row[i + 1] as EC.FullClassName,
+          sourceClassName: (i === 0 ? target.primaryClass : row[i]) as EC.FullClassNameDotNotation,
+          targetClassName: row[i + 1] as EC.FullClassNameDotNotation,
         })),
-        targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassName[]),
+        targetClassNames: toSortedUniqueClassNames((row[0] as string).split(",") as EC.FullClassNameDotNotation[]),
       })),
       toArray(),
     ),
@@ -293,7 +293,7 @@ async function resolvePrimaryClasses({
   const primaryClass = await getClass(imodelAccess, target.primaryClass);
   const derivedClasses = await primaryClass.getDerivedClasses();
   if (derivedClasses.length === 0) {
-    return [normalizeFullClassName(target.primaryClass)];
+    return [target.primaryClass];
   }
 
   const reader = imodelAccess.createQueryReader(buildPrimaryEnumerationQuery(target), { rowFormat: "Indexes" });
