@@ -469,14 +469,16 @@ function collectPrefixAliases(
  * so a shared step is emitted exactly once.
  */
 function mergeJoinInfos(infos: RelationshipPathJoinInfo[]): RelationshipPathJoinInfo {
-  const seenAliases = new Set<string>();
-  const joins: RelationshipPathJoinInfo["joins"] = [];
+  const seenTargets = new Set<string>();
+  const steps: RelationshipPathJoinInfo["steps"] = [];
   const bindings: Record<string, ECSqlBinding> = {};
   for (const info of infos) {
-    for (const entry of info.joins) {
-      if (!seenAliases.has(entry.joinAlias)) {
-        seenAliases.add(entry.joinAlias);
-        joins.push(entry);
+    for (const step of info.steps) {
+      // A step's `targetClassIdSelector` encodes its target alias, which is stable across paths (thanks
+      // to {@link assignPrefixAliases}), so it identifies a shared-prefix step and lets it be emitted once.
+      if (!seenTargets.has(step.targetClassIdSelector)) {
+        seenTargets.add(step.targetClassIdSelector);
+        steps.push(step);
       }
     }
     // Shared-prefix steps contribute identical bindings; keep the first occurrence of each key.
@@ -486,7 +488,7 @@ function mergeJoinInfos(infos: RelationshipPathJoinInfo[]): RelationshipPathJoin
       }
     }
   }
-  return { joins, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
+  return { steps, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
 }
 
 /** Resolves a field's raw column selector (without navigation `.Id`) and its value type. */

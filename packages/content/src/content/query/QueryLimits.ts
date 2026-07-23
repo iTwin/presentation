@@ -58,7 +58,9 @@ type ResolvedPathWithJoinInfo = ResolvedPath & {
  * @internal
  */
 export function countJoinTables(info: ResolvedPathWithJoinInfo["joinInfo"]): number {
-  return info.joins.reduce((count, join) => count + 1 + (join.joinTarget.kind === "relationship-select" ? 1 : 0), 0);
+  return info.steps
+    .flatMap((step) => step.joins)
+    .reduce((count, join) => count + 1 + (join.joinTarget.kind === "relationship-select" ? 1 : 0), 0);
 }
 
 /**

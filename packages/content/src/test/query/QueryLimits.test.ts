@@ -19,7 +19,7 @@ type JoinInfo = Awaited<ReturnType<typeof ECSql.createRelationshipPathJoinInfo>>
 
 describe("QueryLimits", () => {
   // Minimal join-info builders — only `joinTarget.kind` matters to the table-count logic.
-  function classJoin(): JoinInfo["joins"][number] {
+  function classJoin(): JoinInfo["steps"][number]["joins"][number] {
     return {
       joinType: "inner",
       joinTarget: { kind: "class", className: "TestSchema.X" },
@@ -28,7 +28,7 @@ describe("QueryLimits", () => {
     };
   }
 
-  function relationshipSelectJoin(): JoinInfo["joins"][number] {
+  function relationshipSelectJoin(): JoinInfo["steps"][number]["joins"][number] {
     return {
       joinType: "outer",
       joinTarget: {
@@ -83,13 +83,16 @@ describe("QueryLimits", () => {
     // A resolved path paired with a join info. `cost` is either the number of single-table class
     // joins to synthesize, or the explicit join entries to use.
     function path(
-      props: ({ cost: number } | { joins: JoinInfo["joins"] }) & { steps: RelationshipPath },
+      props: ({ cost: number } | { joins: JoinInfo["steps"][number]["joins"] }) & { steps: RelationshipPath },
     ): ResolvedPath & { joinInfo: JoinInfo } {
       const joins = "cost" in props ? Array.from({ length: props.cost }, classJoin) : props.joins;
+      // Only the flattened join entries matter to the table-count logic, so wrap them in a single step.
       return {
         path: props.steps,
         targetClassNames: [props.steps[props.steps.length - 1].targetClassName],
-        joinInfo: { joins },
+        joinInfo: {
+          steps: [{ joins, relationshipClassIdSelector: "", sourceClassIdSelector: "", targetClassIdSelector: "" }],
+        },
       };
     }
 
