@@ -34,7 +34,7 @@ export interface SymbolValues {
  */
 export interface EmitterOptions {
   primaryClassAlias?: string;
-  primaryClassName?: EC.FullClassName;
+  primaryClassName?: EC.FullClassNameDotNotation;
   labelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
   context?: { getSelectedInstanceIds?: () => Id64String[]; resolveRoot?: (root: string) => SymbolValues | undefined };
 }
@@ -90,7 +90,7 @@ const BUILTIN_UNSUPPORTED_FUNCTIONS = new Set(
  */
 export class Emitter {
   readonly #primaryClassAlias: string;
-  readonly #primaryClassName?: EC.FullClassName;
+  readonly #primaryClassName?: EC.FullClassNameDotNotation;
   readonly #labelFactory?: IInstanceLabelSelectClauseFactory;
   readonly #getSelectedInstanceIds?: () => Id64String[];
   readonly #resolveRoot?: (root: string) => SymbolValues | undefined;
@@ -368,7 +368,7 @@ export class Emitter {
     return this.#labelClause(alias, className);
   }
 
-  async #labelClause(classAlias: string, className?: EC.FullClassName): Promise<string> {
+  async #labelClause(classAlias: string, className?: EC.FullClassNameDotNotation): Promise<string> {
     if (!this.#labelFactory) {
       throw new Error("Generating an instance label requires a `labelSelectClauseFactory` option.");
     }

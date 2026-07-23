@@ -4,11 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Dictionary } from "@itwin/core-bentley";
-import {
-  compareFullClassNames,
-  createMainThreadReleaseOnTimePassedHandler,
-  getClass,
-} from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -18,14 +14,17 @@ import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.j
 import type { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface ClassInfo {
-  fullName: EC.FullClassName;
+  fullName: EC.FullClassNameDotNotation;
   name: string;
   label?: string;
 }
 
 interface ClassGroupingInformation {
   ungrouped: ProcessedInstanceHierarchyNode[];
-  grouped: Dictionary<EC.FullClassName, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+  grouped: Dictionary<
+    EC.FullClassNameDotNotation,
+    { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+  >;
 }
 
 /** @internal */
@@ -38,9 +37,10 @@ export async function createClassGroups(
     parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
   const groupings: ClassGroupingInformation = {
     ungrouped: [],
-    grouped: new Dictionary<EC.FullClassName, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>(
-      compareFullClassNames,
-    ),
+    grouped: new Dictionary<
+      EC.FullClassNameDotNotation,
+      { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+    >((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
   };
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {
@@ -48,7 +48,7 @@ export async function createClassGroups(
     const nodeClassName = node.key.instanceKeys[0].className;
     if (
       node.processingParams?.grouping?.byClass &&
-      (!parentNodeClass || compareFullClassNames(nodeClassName, parentNodeClass) !== 0)
+      (!parentNodeClass || nodeClassName.toLocaleLowerCase() !== parentNodeClass.toLocaleLowerCase())
     ) {
       let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {

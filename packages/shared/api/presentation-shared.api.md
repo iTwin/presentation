@@ -34,12 +34,9 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 
 // @public
 interface ClassBasedLabelSelectClause {
-    className: EC.FullClassName;
+    className: EC.FullClassNameDotNotation;
     clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
-
-// @public
-export function compareFullClassNames(lhs: EC.FullClassName, rhs: EC.FullClassName): number;
 
 // @public
 export type ConcatenatedValue = ConcatenatedValuePart[];
@@ -79,7 +76,7 @@ export function createCachingECClassHierarchyInspector(props: {
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @public
-function createClassSelector(fullClassName: EC.FullClassName): string;
+function createClassSelector(fullClassName: EC.FullClassNameDotNotation): string;
 
 // @public
 function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
@@ -104,7 +101,7 @@ function createInstanceKeySelector(props: {
 // @public
 interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
-    className?: EC.FullClassName;
+    className?: EC.FullClassNameDotNotation;
     selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
@@ -120,7 +117,7 @@ function createNullableSelector(props: {
 // @public
 function createPrimitivePropertyValueSelectorProps(input: {
     schemaProvider: ECSchemaProvider;
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyClassAlias: string;
     propertyName: string;
 }): Promise<TypedPrimitiveValueSelectorProps>;
@@ -186,13 +183,13 @@ export namespace EC {
         // (undocumented)
         [propName: string]: any;
         // (undocumented)
-        className: FullClassName;
+        className: FullClassNameDotNotation;
     }
     export interface CustomAttributeSet {
         // (undocumented)
-        [Symbol.iterator]: () => IterableIterator<[FullClassName, CustomAttribute]>;
+        [Symbol.iterator]: () => IterableIterator<[FullClassNameDotNotation, CustomAttribute]>;
         // (undocumented)
-        get(className: FullClassName): CustomAttribute | undefined;
+        get(className: FullClassNameDotNotation): CustomAttribute | undefined;
     }
     export interface EntityClass extends Class {
         getMixins(): Promise<Mixin[]>;
@@ -306,7 +303,7 @@ export namespace EC {
         // (undocumented)
         description?: string;
         // (undocumented)
-        fullName: FullClassName;
+        fullName: FullClassNameDotNotation;
         // (undocumented)
         label?: string;
         // (undocumented)
@@ -330,7 +327,7 @@ export namespace EC {
 // @public
 export interface ECClassHierarchyInspector {
     // (undocumented)
-    classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean;
+    classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
 }
 
 // @public
@@ -462,7 +459,7 @@ export function formatConcatenatedValue(props: {
 }): Promise<string>;
 
 // @public
-export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class>;
+export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class>;
 
 // @public
 export interface IInstanceLabelSelectClauseFactory {
@@ -491,7 +488,7 @@ interface IModelInstanceLabelSelectClauseFactoryProps {
 
 // @public
 export interface InstanceKey {
-    className: EC.FullClassName;
+    className: EC.FullClassNameDotNotation;
     id: Id64String;
 }
 
@@ -522,7 +519,7 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 // @public
 interface JoinTargetClass {
     // (undocumented)
-    className: EC.FullClassName;
+    className: EC.FullClassNameDotNotation;
     // (undocumented)
     kind: "class";
 }
@@ -539,7 +536,7 @@ interface JoinTargetRelationshipSelect {
     // (undocumented)
     relationshipAlias: string;
     // (undocumented)
-    relationshipClassName: EC.FullClassName;
+    relationshipClassName: EC.FullClassNameDotNotation;
 }
 
 // @public
@@ -555,7 +552,7 @@ export type LogLevel = "error" | "warning" | "info" | "trace";
 export interface NavigationValueDescriptor {
     // (undocumented)
     kind: "navigation";
-    targetClassName: EC.FullClassName;
+    targetClassName: EC.FullClassNameDotNotation;
 }
 
 // @public
@@ -688,10 +685,10 @@ interface RelationshipPathStep {
         relationshipAlias?: string;
         bindings?: Record<string, ECSqlBinding>;
     };
-    relationshipName: EC.FullClassName;
+    relationshipName: EC.FullClassNameDotNotation;
     relationshipReverse?: boolean;
-    sourceClassName: EC.FullClassName;
-    targetClassName: EC.FullClassName;
+    sourceClassName: EC.FullClassNameDotNotation;
+    targetClassName: EC.FullClassNameDotNotation;
 }
 
 // @public

@@ -9,13 +9,13 @@ import { PropertyField } from "../../content/model/Field.js";
 describe("PropertyField", () => {
   describe("computeId", () => {
     it("computes id from class name and property name", () => {
-      const result = PropertyField.computeId({ propertyClassName: "BisCore:Element", propertyName: "CodeValue" });
+      const result = PropertyField.computeId({ propertyClassName: "BisCore.Element", propertyName: "CodeValue" });
       expect(result).to.equal("BisCore.Element.CodeValue");
     });
 
     it("normalizes colon notation to dot notation", () => {
       const result = PropertyField.computeId({
-        propertyClassName: "BisCore:GeometricElement",
+        propertyClassName: "BisCore.GeometricElement",
         propertyName: "UserLabel",
       });
       expect(result).to.equal("BisCore.GeometricElement.UserLabel");
@@ -41,13 +41,13 @@ describe("PropertyField", () => {
 
     it("appends single-step forward path in parentheses", () => {
       const result = PropertyField.computeId({
-        propertyClassName: "BisCore:ElementAspect",
+        propertyClassName: "BisCore.ElementAspect",
         propertyName: "Value",
         pathFromTarget: [
           {
-            sourceClassName: "BisCore:Element",
-            targetClassName: "BisCore:ElementAspect",
-            relationshipName: "BisCore:ElementOwnsUniqueAspect",
+            sourceClassName: "BisCore.Element",
+            targetClassName: "BisCore.ElementAspect",
+            relationshipName: "BisCore.ElementOwnsUniqueAspect",
           },
         ],
       });
@@ -58,13 +58,13 @@ describe("PropertyField", () => {
 
     it("appends single-step reverse path with reverse arrows", () => {
       const result = PropertyField.computeId({
-        propertyClassName: "BisCore:Model",
+        propertyClassName: "BisCore.Model",
         propertyName: "Name",
         pathFromTarget: [
           {
-            sourceClassName: "BisCore:Element",
-            targetClassName: "BisCore:Model",
-            relationshipName: "BisCore:ModelContainsElements",
+            sourceClassName: "BisCore.Element",
+            targetClassName: "BisCore.Model",
+            relationshipName: "BisCore.ModelContainsElements",
             relationshipReverse: true,
           },
         ],
@@ -74,19 +74,19 @@ describe("PropertyField", () => {
 
     it("appends multi-step path", () => {
       const result = PropertyField.computeId({
-        propertyClassName: "BisCore:Element",
+        propertyClassName: "BisCore.Element",
         propertyName: "UserLabel",
         pathFromTarget: [
           {
-            sourceClassName: "BisCore:Element",
-            targetClassName: "BisCore:Model",
-            relationshipName: "BisCore:ModelContainsElements",
+            sourceClassName: "BisCore.Element",
+            targetClassName: "BisCore.Model",
+            relationshipName: "BisCore.ModelContainsElements",
             relationshipReverse: true,
           },
           {
-            sourceClassName: "BisCore:Model",
-            targetClassName: "BisCore:Element",
-            relationshipName: "BisCore:ModelModelsElement",
+            sourceClassName: "BisCore.Model",
+            targetClassName: "BisCore.Element",
+            relationshipName: "BisCore.ModelModelsElement",
           },
         ],
       });
@@ -97,7 +97,7 @@ describe("PropertyField", () => {
 
     it("appends fork key as a suffix", () => {
       const result = PropertyField.computeId({
-        propertyClassName: "BisCore:Element",
+        propertyClassName: "BisCore.Element",
         propertyName: "CodeValue",
         forkKey: "Stuff.Door",
       });
@@ -106,13 +106,13 @@ describe("PropertyField", () => {
 
     it("appends fork key after the path", () => {
       const result = PropertyField.computeId({
-        propertyClassName: "BisCore:ElementAspect",
+        propertyClassName: "BisCore.ElementAspect",
         propertyName: "Value",
         pathFromTarget: [
           {
-            sourceClassName: "BisCore:Element",
-            targetClassName: "BisCore:ElementAspect",
-            relationshipName: "BisCore:ElementOwnsUniqueAspect",
+            sourceClassName: "BisCore.Element",
+            targetClassName: "BisCore.ElementAspect",
+            relationshipName: "BisCore.ElementOwnsUniqueAspect",
           },
         ],
         forkKey: "BisCore.ElementAspectX",

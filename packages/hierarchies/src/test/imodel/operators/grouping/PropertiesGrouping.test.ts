@@ -1107,11 +1107,11 @@ describe("PropertiesGrouping", () => {
             },
           }),
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "testSchema:Class", id: "0x2" }] },
+            key: { type: "instances", instanceKeys: [{ className: "testSchema.Class", id: "0x2" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema:Class",
+                  propertiesClassName: "testSchema.Class",
                   /* cspell:disable-next-line */
                   propertyGroups: [{ propertyName: "propertyname", propertyValue: "PropertyValue" }],
                 },
@@ -1566,12 +1566,12 @@ describe("PropertiesGrouping", () => {
             },
           }),
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "testSchema:Class2", id: "0x2" }] },
+            key: { type: "instances", instanceKeys: [{ className: "testSchema.Class2", id: "0x2" }] },
             processingParams: {
               grouping: {
                 byProperties: {
                   /* cspell:disable-next-line */
-                  propertiesClassName: "testschema:class2",
+                  propertiesClassName: "testschema.class2",
                   createGroupForOutOfRangeValues: true,
                   propertyGroups: [
                     /* cspell:disable-next-line */
@@ -1898,7 +1898,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema:Class",
+                  propertiesClassName: "testSchema.Class",
                   propertyGroups: [
                     {
                       /* cspell:disable-next-line */

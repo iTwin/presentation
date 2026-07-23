@@ -1172,7 +1172,7 @@ describe("resolveContentSources", () => {
 
       const result = await resolveContentSources({
         imodelAccess,
-        targets: [{ primaryClass: "TestSchema:ClassA" }],
+        targets: [{ primaryClass: "TestSchema.ClassA" }],
         config: { imodelFieldsProviders: [provider] },
       });
 

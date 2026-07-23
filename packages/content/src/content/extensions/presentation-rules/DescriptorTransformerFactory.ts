@@ -72,7 +72,7 @@ export function createDescriptorTransformerFromContentModifierRule({
 
       // Precompute the matched value-class subset per candidate (before any forking shrinks the
       // originals), so repeat specs and the cross-field "hide others" rule re-resolve the same forks.
-      const matchedByCandidate = new Map<TransformablePropertyField, EC.FullClassName[]>();
+      const matchedByCandidate = new Map<TransformablePropertyField, EC.FullClassNameDotNotation[]>();
       for (const candidate of candidates) {
         matchedByCandidate.set(candidate, await computeMatchedValueClasses(imodelAccess, candidate, rule.class));
       }
@@ -135,11 +135,11 @@ async function computeMatchedValueClasses(
   imodelAccess: ECClassHierarchyInspector & ECSchemaProvider,
   field: TransformablePropertyField,
   classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
-): Promise<EC.FullClassName[]> {
+): Promise<EC.FullClassNameDotNotation[]> {
   if (!classSpec) {
     return [...field.valueClassNames];
   }
-  const matched: EC.FullClassName[] = [];
+  const matched: EC.FullClassNameDotNotation[] = [];
   for (const valueClassName of field.valueClassNames) {
     if (await classMatchesSpec(imodelAccess, valueClassName, classSpec)) {
       matched.push(valueClassName);

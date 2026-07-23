@@ -6,7 +6,6 @@
 import { assert } from "@itwin/core-bentley";
 import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
 import {
-  compareFullClassNames,
   ECSql,
   getClass,
   normalizeFullClassName,
@@ -38,7 +37,7 @@ import type { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
  * @public
  */
 export enum NodeSelectClauseColumnNames {
-  /** Full class name of the instance the node represents. Type: `string` in format `{schema name}:{class name}`. */
+  /** Full class name of the instance the node represents. Type: `string` in format `{schema name}.{class name}`. */
   FullClassName = "FullClassName",
   /** ECInstance ID of the instance the node represents. Type: `Id64String`. */
   ECInstanceId = "ECInstanceId",
@@ -160,7 +159,7 @@ interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGro
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  propertiesClassName: EC.FullClassName;
+  propertiesClassName: EC.FullClassNameDotNotation;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *
@@ -229,7 +228,7 @@ interface ECSqlSelectClausePropertyValueRange {
  * @public
  */
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-  fullClassNames: EC.FullClassName[] | ECSqlValueSelector[];
+  fullClassNames: EC.FullClassNameDotNotation[] | ECSqlValueSelector[];
 }
 
 /**
@@ -253,7 +252,7 @@ export interface NodesQueryClauseFactory {
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   createFilterClauses(props: {
-    contentClass: { fullName: EC.FullClassName; alias: string };
+    contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
     filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }>;
 }
@@ -285,7 +284,7 @@ class NodeSelectQueryFactory {
   public async createSelectClause(props: NodeSelectClauseProps) {
     // note: the columns order must match the order in `NodeSelectClauseColumnNames`
     return `
-      ec_ClassName(${props.ecClassId.selector}) AS ${NodeSelectClauseColumnNames.FullClassName},
+      ec_ClassName(${props.ecClassId.selector}, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
       ${props.ecInstanceId.selector} AS ${NodeSelectClauseColumnNames.ECInstanceId},
       ${createECSqlValueSelector(
         typeof props.nodeLabel === "object" && "of" in props.nodeLabel
@@ -321,7 +320,7 @@ class NodeSelectQueryFactory {
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   public async createFilterClauses(props: {
-    contentClass: { fullName: EC.FullClassName; alias: string };
+    contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
     filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }> {
     const { contentClass, filter } = props;
@@ -329,7 +328,7 @@ class NodeSelectQueryFactory {
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
       : { from: contentClass.fullName, joins: [], where: [] };
 
-    const fromClass = await getClass(this._imodelAccess, normalizeFullClassName(from));
+    const fromClass = await getClass(this._imodelAccess, from);
     const hiddenClasses = await getHiddenClassesTree(fromClass);
     const hiddenClassesWhereClause = createWhereClauseForHiddenClasses(hiddenClasses, contentClass.alias);
     hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
@@ -353,9 +352,9 @@ class NodeSelectQueryFactory {
  */
 async function createInstanceFilterClauses(props: {
   imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-  contentClass: { fullName: EC.FullClassName; alias: string };
+  contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
   filter: GenericInstanceFilter;
-}): Promise<{ from: EC.FullClassName; where: string[]; joins: string[] }> {
+}): Promise<{ from: EC.FullClassNameDotNotation; where: string[]; joins: string[] }> {
   const { imodelAccess, contentClass, filter } = props;
 
   // In some cases the given filter means we want the query to return nothing - e.g. when filtering by classes that don't intersect
@@ -364,7 +363,10 @@ async function createInstanceFilterClauses(props: {
 
   const from = await specializeContentClass({
     classHierarchyInspector: {
-      async classDerivesFrom(derivedClassName: EC.FullClassName, baseClassName: EC.FullClassName): Promise<boolean> {
+      async classDerivesFrom(
+        derivedClassName: EC.FullClassNameDotNotation,
+        baseClassName: EC.FullClassNameDotNotation,
+      ): Promise<boolean> {
         try {
           return await imodelAccess.classDerivesFrom(derivedClassName, baseClassName);
         } catch (e) {
@@ -387,7 +389,7 @@ async function createInstanceFilterClauses(props: {
     return DISABLE_QUERY;
   }
 
-  let filteredClassNamesInThisIModel: EC.FullClassName[] | undefined;
+  let filteredClassNamesInThisIModel: EC.FullClassNameDotNotation[] | undefined;
   if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
     filteredClassNamesInThisIModel = (
       await Promise.all(
@@ -431,7 +433,7 @@ async function createInstanceFilterClauses(props: {
     throw e;
   }
 
-  const classAliasMap = new Map<string, EC.FullClassName>([[contentClass.alias, from]]);
+  const classAliasMap = new Map<string, EC.FullClassNameDotNotation>([[contentClass.alias, from]]);
   filter.relatedInstances.forEach(
     ({ path, alias }) =>
       path.length > 0 && classAliasMap.set(alias, normalizeFullClassName(path[path.length - 1].targetClassName)),
@@ -829,7 +831,7 @@ function assignRelationshipPathAliases(
   sourceAlias: string,
   targetAlias: string,
 ): JoinRelationshipPath {
-  function createAlias(fullClassName: EC.FullClassName, index: number) {
+  function createAlias(fullClassName: EC.FullClassNameDotNotation, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
   const result: JoinRelationshipPath = [];
@@ -853,10 +855,12 @@ function assignRelationshipPathAliases(
 
 interface SpecializeContentClassProps {
   classHierarchyInspector: ECClassHierarchyInspector;
-  contentClassName: EC.FullClassName;
-  filterClassNames: EC.FullClassName[];
+  contentClassName: EC.FullClassNameDotNotation;
+  filterClassNames: EC.FullClassNameDotNotation[];
 }
-async function specializeContentClass(props: SpecializeContentClassProps): Promise<EC.FullClassName | undefined> {
+async function specializeContentClass(
+  props: SpecializeContentClassProps,
+): Promise<EC.FullClassNameDotNotation | undefined> {
   const filterClass = await getSpecializedPropertyClass(props.classHierarchyInspector, props.filterClassNames);
   if (!filterClass) {
     return props.contentClassName;
@@ -872,8 +876,8 @@ async function specializeContentClass(props: SpecializeContentClassProps): Promi
 
 async function getSpecializedPropertyClass(
   classHierarchyInspector: ECClassHierarchyInspector,
-  classes: EC.FullClassName[],
-): Promise<EC.FullClassName | undefined> {
+  classes: EC.FullClassNameDotNotation[],
+): Promise<EC.FullClassNameDotNotation | undefined> {
   if (classes.length === 0) {
     return undefined;
   }
@@ -888,7 +892,7 @@ async function getSpecializedPropertyClass(
 }
 
 interface HiddenClassNode {
-  fullName: EC.FullClassName;
+  fullName: EC.FullClassNameDotNotation;
   state: "hide" | "show";
   children: HiddenClassNode[];
 }
@@ -935,7 +939,7 @@ async function getHiddenClassesTree(
 async function getDirectDerivedClasses(ecClass: EC.Class): Promise<EC.Class[]> {
   const allDerived = await ecClass.getDerivedClasses();
   return (await Promise.all(allDerived.map(async (c) => ({ derived: c, base: await c.baseClass }))))
-    .filter(({ base }) => base && compareFullClassNames(base.fullName, ecClass.fullName) === 0)
+    .filter(({ base }) => base && base.fullName.toLocaleLowerCase() === ecClass.fullName.toLocaleLowerCase())
     .map(({ derived }) => derived);
 }
 
@@ -994,7 +998,7 @@ function createWhereClauseForHiddenClasses(
 
 async function tryGetClass(
   schemaProvider: ECSchemaProvider,
-  fullClassName: EC.FullClassName,
+  fullClassName: EC.FullClassNameDotNotation,
 ): Promise<EC.Class | undefined> {
   try {
     return await getClass(schemaProvider, fullClassName);

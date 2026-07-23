@@ -53,7 +53,7 @@ export function collectSelectors(props: {
 /** Creates a {@link PropertyValueSelector} with its id derived from the property's identity. */
 function createPropertySelector(props: {
   id: string;
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }): PropertyValueSelector {

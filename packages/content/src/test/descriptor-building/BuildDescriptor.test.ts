@@ -16,8 +16,8 @@ import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFi
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 
 function createSource(
-  primaryClass: EC.FullClassName,
-  resolvedPrimaryClasses: EC.FullClassName[] = [primaryClass],
+  primaryClass: EC.FullClassNameDotNotation,
+  resolvedPrimaryClasses: EC.FullClassNameDotNotation[] = [primaryClass],
 ): ContentSource {
   return { target: { primaryClass }, resolvedPrimaryClasses, resolvedDeclarations: [] };
 }

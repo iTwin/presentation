@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, of, take, toArray } from "rxjs";
-import { compareFullClassNames } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { createHierarchySearchHelper } from "../HierarchySearch.js";
@@ -115,7 +114,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
                   return false;
                 }
-                if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
+                if (identifier.className.toLocaleLowerCase() === rowInstanceKey.className.toLocaleLowerCase()) {
                   return true;
                 }
                 return firstValueFrom(
@@ -213,7 +212,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               for (const entry of entries) {
                 /* v8 ignore else -- @preserve */
                 if (
-                  compareFullClassNames(entry.className, x.className) === 0 ||
+                  entry.className.toLocaleLowerCase() === x.className.toLocaleLowerCase() ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
                   (await imodelAccess.classDerivesFrom(x.className, entry.className))
                 ) {
@@ -231,7 +230,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 continue;
               }
               if (
-                compareFullClassNames(id.className, definition.fullClassName) !== 0 &&
+                id.className.toLocaleLowerCase() !== definition.fullClassName.toLocaleLowerCase() &&
                 !(await Promise.all([
                   imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
                   imodelAccess.classDerivesFrom(definition.fullClassName, id.className),

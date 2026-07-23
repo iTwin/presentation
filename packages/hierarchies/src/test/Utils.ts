@@ -5,7 +5,7 @@
 
 import { vi } from "vitest";
 import { Dictionary, Logger } from "@itwin/core-bentley";
-import { compareFullClassNames, getClass, normalizeFullClassName } from "@itwin/presentation-shared";
+import { getClass } from "@itwin/presentation-shared";
 
 import type { Mock } from "vitest";
 import type { LogLevel } from "@itwin/core-bentley";
@@ -90,7 +90,7 @@ export function createTestProcessedGroupingNode<
 ): Omit<ProcessedGroupingHierarchyNode, "children"> & { children: TChild[] } {
   return {
     label: "test",
-    key: { type: "class-grouping", className: normalizeFullClassName("TestSchema.TestClass") },
+    key: { type: "class-grouping", className: "TestSchema.TestClass" },
     parentKeys: [],
     groupedInstanceKeys: [],
     children: new Array<TChild>(),
@@ -175,14 +175,18 @@ export type TStubRelationshipClassFunc = (
 ) => EC.RelationshipClass & ECClassExtraMembers;
 export type TStubCustomAttributesFunc = (props: {
   schemaName: string;
-  attributes: Map<EC.FullClassName, EC.CustomAttribute>;
+  attributes: Map<EC.FullClassNameDotNotation, EC.CustomAttribute>;
 }) => void;
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, StubbedSchema>();
-  const classes = new Dictionary<EC.FullClassName, EC.Class>(compareFullClassNames); // className -> class
-  const classHierarchy = new Dictionary<EC.FullClassName, EC.FullClassName>(compareFullClassNames); // className -> baseClassName
-  const customAttributes = new Map<string, Map<EC.FullClassName, EC.CustomAttribute>>(); // schemaName -> (className -> customAttribute)
+  const classes = new Dictionary<EC.FullClassNameDotNotation, EC.Class>((a, b) =>
+    a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
+  ); // className -> class
+  const classHierarchy = new Dictionary<EC.FullClassNameDotNotation, EC.FullClassNameDotNotation>((a, b) =>
+    a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
+  ); // className -> baseClassName
+  const customAttributes = new Map<string, Map<EC.FullClassNameDotNotation, EC.CustomAttribute>>(); // schemaName -> (className -> customAttribute)
   const getSchemaImpl = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
@@ -196,17 +200,17 @@ export function createECSchemaProviderStub() {
     }
     return schemaStub;
   };
-  const getDerivedClasses = (classFullName: EC.FullClassName): EC.Class[] => {
+  const getDerivedClasses = (classFullName: EC.FullClassNameDotNotation): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
-      if (compareFullClassNames(baseClassName, classFullName) === 0) {
+      if (baseClassName.toLocaleLowerCase() === classFullName.toLocaleLowerCase()) {
         derivedClasses.push(classes.get(derivedClassName)!);
         derivedClasses.push(...getDerivedClasses(derivedClassName));
       }
     }
     return derivedClasses;
   };
-  const getBaseClasses = (classFullName: EC.FullClassName): EC.Class[] => {
+  const getBaseClasses = (classFullName: EC.FullClassNameDotNotation): EC.Class[] => {
     const baseClasses = new Array<EC.Class>();
     const baseClassName = classHierarchy.get(classFullName);
     if (baseClassName) {
@@ -233,14 +237,16 @@ export function createECSchemaProviderStub() {
     },
     getDerivedClasses: async () => getDerivedClasses(`${props.schemaName}.${props.className}`),
     is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
-      const myName: EC.FullClassName = `${props.schemaName}.${props.className}`;
-      const targetName: EC.FullClassName =
+      const myName: EC.FullClassNameDotNotation = `${props.schemaName}.${props.className}`;
+      const targetName: EC.FullClassNameDotNotation =
         typeof targetClassOrClassName === "string"
           ? `${schemaName!}.${targetClassOrClassName}`
           : targetClassOrClassName.fullName;
       return (
-        compareFullClassNames(targetName, myName) === 0 ||
-        getBaseClasses(myName).some((baseClass) => compareFullClassNames(baseClass.fullName, targetName) === 0)
+        targetName.toLocaleLowerCase() === myName.toLocaleLowerCase() ||
+        getBaseClasses(myName).some(
+          (baseClass) => baseClass.fullName.toLocaleLowerCase() === targetName.toLocaleLowerCase(),
+        )
       );
     },
     getCustomAttributes: async () => props.customAttributes ?? new Map(),
@@ -283,7 +289,7 @@ export function createECSchemaProviderStub() {
   };
   const stubCustomAttribute: TStubCustomAttributesFunc = (props) => {
     const schemaCustomAttributes =
-      customAttributes.get(props.schemaName) ?? new Map<EC.FullClassName, EC.CustomAttribute>();
+      customAttributes.get(props.schemaName) ?? new Map<EC.FullClassNameDotNotation, EC.CustomAttribute>();
     customAttributes.set(props.schemaName, schemaCustomAttributes);
     for (const [className, attribute] of props.attributes) {
       schemaCustomAttributes.set(className, { ...attribute, className });
@@ -310,7 +316,7 @@ export function createClassHierarchyInspectorStub(
     stubEntityClass: schemaProvider.stubEntityClass,
     stubRelationshipClass: schemaProvider.stubRelationshipClass,
     stubOtherClass: schemaProvider.stubOtherClass,
-    classDerivesFrom: async (derived: EC.FullClassName, base: EC.FullClassName) => {
+    classDerivesFrom: async (derived: EC.FullClassNameDotNotation, base: EC.FullClassNameDotNotation) => {
       const derivedClass = await getClass(schemaProvider, derived);
       const baseClass = await getClass(schemaProvider, base);
       return derivedClass.is(baseClass);

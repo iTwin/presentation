@@ -14,7 +14,7 @@ const path: RelationshipPath = [
   { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
 ];
 
-function createSingleClassIModelAccess(fullName: EC.FullClassName, properties: EC.Property[]) {
+function createSingleClassIModelAccess(fullName: EC.FullClassNameDotNotation, properties: EC.Property[]) {
   return createSchemaAccess([createEntityClass({ fullName, properties })]);
 }
 

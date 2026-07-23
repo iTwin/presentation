@@ -5,11 +5,9 @@
 
 import { assert } from "@itwin/core-bentley";
 import {
-  compareFullClassNames,
   createMainThreadReleaseOnTimePassedHandler,
   formatConcatenatedValue,
   getClass,
-  normalizeFullClassName,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
@@ -60,7 +58,7 @@ export interface PropertyGroupInfo {
 
 /** @internal */
 export type PreviousPropertiesGroupingInfo = Array<{
-  propertiesClassName: EC.FullClassName;
+  propertiesClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   isRange?: boolean;
 }>;
@@ -205,7 +203,7 @@ export async function createPropertyGroups(
         };
         const hasPropertyIdentifier = groupingNode.key.properties.find(
           (x) =>
-            compareFullClassNames(x.className, thisPropertyIdentifier.className) === 0 &&
+            x.className.toLocaleLowerCase() === thisPropertyIdentifier.className.toLocaleLowerCase() &&
             x.propertyName.toLocaleLowerCase() === thisPropertyIdentifier.propertyName.toLocaleLowerCase(),
         );
         if (!hasPropertyIdentifier) {
@@ -311,17 +309,17 @@ function createNodePropertyGroupPathMatchers(
         return (x) =>
           key.properties.some(
             (p) =>
-              compareFullClassNames(p.className, x.propertiesClassName) === 0 &&
+              p.className.toLocaleLowerCase() === x.propertiesClassName.toLocaleLowerCase() &&
               p.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase() &&
               !!x.isRange,
           );
       case "property-grouping:range":
         return (x) =>
-          compareFullClassNames(key.propertyClassName, x.propertiesClassName) === 0 &&
+          key.propertyClassName.toLocaleLowerCase() === x.propertiesClassName.toLocaleLowerCase() &&
           key.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase();
       case "property-grouping:value":
         return (x) =>
-          compareFullClassNames(key.propertyClassName, x.propertiesClassName) === 0 &&
+          key.propertyClassName.toLocaleLowerCase() === x.propertiesClassName.toLocaleLowerCase() &&
           key.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase();
     }
   });
@@ -353,8 +351,7 @@ export async function getUniquePropertiesGroupInfo(
           ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey
           : "";
       const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
-      const mapKey =
-        `${normalizeFullClassName(byProperties.propertiesClassName)}:${propertyGroupKey}`.toLocaleLowerCase();
+      const mapKey = `${byProperties.propertiesClassName}:${propertyGroupKey}`.toLocaleLowerCase();
 
       let isAlreadyGrouped = false;
       if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
@@ -399,12 +396,12 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
-  nodeFullClassName: EC.FullClassName,
+  nodeFullClassName: EC.FullClassNameDotNotation,
   classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<boolean> {
   if (
-    compareFullClassNames(nodePropertyGroupingParams.propertiesClassName, handlerGroupingParams.ecClass.fullName) !==
-      0 ||
+    nodePropertyGroupingParams.propertiesClassName.toLocaleLowerCase() !==
+      handlerGroupingParams.ecClass.fullName.toLocaleLowerCase() ||
     nodePropertyGroupingParams.propertyGroups.length < handlerGroupingParams.previousPropertiesGroupingInfo.length + 1
   ) {
     return false;
@@ -433,7 +430,8 @@ export function doPreviousPropertiesMatch(
     previousPropertiesGroupingInfo.length <= nodesProperties.propertyGroups.length &&
     previousPropertiesGroupingInfo.every(
       (groupingInfo, index) =>
-        compareFullClassNames(groupingInfo.propertiesClassName, nodesProperties.propertiesClassName) === 0 &&
+        groupingInfo.propertiesClassName.toLocaleLowerCase() ===
+          nodesProperties.propertiesClassName.toLocaleLowerCase() &&
         groupingInfo.propertyName.toLocaleLowerCase() ===
           nodesProperties.propertyGroups[index].propertyName.toLocaleLowerCase() &&
         !!groupingInfo.isRange === !!nodesProperties.propertyGroups[index].ranges,

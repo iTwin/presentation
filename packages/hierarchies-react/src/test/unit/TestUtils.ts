@@ -132,7 +132,7 @@ export function createTestGroupingNode({
 }: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
   return {
     ...props,
-    key: props.key ?? { type: "class-grouping", className: "Schema:Class" },
+    key: props.key ?? { type: "class-grouping", className: "Schema.Class" },
     label: props.label ?? id,
     children: props.children ?? false,
     parentKeys: props.parentKeys ?? [],

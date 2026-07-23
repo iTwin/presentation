@@ -149,7 +149,7 @@ describe("useTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
-    const searchTree = await HierarchySearchTree.createFromPathsList([[{ id: "0x1", className: "Schema:Class" }]]);
+    const searchTree = await HierarchySearchTree.createFromPathsList([[{ id: "0x1", className: "Schema.Class" }]]);
     const promise = new ResolvablePromise<HierarchySearchTree[]>();
     const getSearchPaths = async () => promise;
 
@@ -272,8 +272,8 @@ describe("useTree", () => {
   });
 
   it("loads hierarchy using latest search paths", async () => {
-    const searchTree1 = await HierarchySearchTree.createFromPathsList([[{ id: "0x1", className: "Schema:Class" }]]);
-    const searchTree2 = await HierarchySearchTree.createFromPathsList([[{ id: "0x2", className: "Schema:Class" }]]);
+    const searchTree1 = await HierarchySearchTree.createFromPathsList([[{ id: "0x1", className: "Schema.Class" }]]);
+    const searchTree2 = await HierarchySearchTree.createFromPathsList([[{ id: "0x2", className: "Schema.Class" }]]);
 
     const rootNode1 = createTestHierarchyNode({ id: "root-1" });
     const rootNode2 = createTestHierarchyNode({ id: "root-2" });
@@ -621,7 +621,7 @@ describe("useTree", () => {
     ];
     const groupingNode = createTestGroupingNode({
       id: "grouping-node",
-      key: { type: "class-grouping", className: "Schema:Class" },
+      key: { type: "class-grouping", className: "Schema.Class" },
       nonGroupingAncestor: rootNodes[0],
       autoExpand: true,
     });
@@ -751,8 +751,8 @@ describe("useTree", () => {
     );
     hierarchyProvider.getNodeInstanceKeys.mockImplementation(() =>
       createAsyncIterator([
-        { id: "0x1", className: "Schema:Class" },
-        { id: "0x2", className: "Schema:Class" },
+        { id: "0x1", className: "Schema.Class" },
+        { id: "0x2", className: "Schema.Class" },
       ]),
     );
     const { result } = renderHook(useTree, { initialProps });
@@ -1053,7 +1053,7 @@ describe("useUnifiedSelectionTree", () => {
 
   function createNodeKey(id: string) {
     const imodelKey = "test-imodel-key";
-    const instanceKey = { id, className: "Schema:Class" as const, imodelKey };
+    const instanceKey = { id, className: "Schema.Class" as const, imodelKey };
     const instancesNodeKey: InstancesNodeKey = { type: "instances", instanceKeys: [instanceKey] };
     return { instanceKey, instancesNodeKey, imodelKey };
   }

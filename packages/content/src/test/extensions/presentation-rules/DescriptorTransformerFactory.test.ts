@@ -15,9 +15,9 @@ import type { ContentDescriptor } from "../../../content/model/ContentDescriptor
 import type { CalculatedField, Field } from "../../../content/model/Field.js";
 
 function propertyField(props: {
-  sourceClassName: EC.FullClassName;
+  sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  valueClassNames: EC.FullClassName[];
+  valueClassNames: EC.FullClassNameDotNotation[];
   pathFromTarget?: PropertyField["pathFromTarget"];
   label?: string;
   hidden?: boolean;
@@ -56,9 +56,9 @@ function createDescriptor(fields: Field[]): ContentDescriptor {
 }
 
 function forkedId(props: {
-  sourceClassName: EC.FullClassName;
+  sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
-  subset: EC.FullClassName[];
+  subset: EC.FullClassNameDotNotation[];
   pathFromTarget?: PropertyField["pathFromTarget"];
 }): Field["id"] {
   return PropertyField.computeId({

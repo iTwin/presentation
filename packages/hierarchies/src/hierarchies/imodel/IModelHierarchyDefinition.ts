@@ -35,7 +35,7 @@ export interface InstanceNodesQueryDefinition {
    * points to a base class of multiple different classes of instances returned by the query, however
    * the more specific this class is, the more efficient hierarchy building process is.
    */
-  fullClassName: EC.FullClassName;
+  fullClassName: EC.FullClassNameDotNotation;
   /**
    * An ECSQL query that selects nodes from an iModel. `SELECT` clause of the query is expected
    * to be built using `NodeSelectQueryFactory.createSelectClause`.

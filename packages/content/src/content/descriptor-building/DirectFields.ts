@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass, normalizeFullClassName } from "@itwin/presentation-shared";
+import { getClass } from "@itwin/presentation-shared";
 import { getOrCreate } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
@@ -36,9 +36,7 @@ export async function collectDirectPropertyFields(props: {
 }): Promise<CategorizedField[]> {
   const { imodelAccess, source } = props;
   const concreteClassNames =
-    source.resolvedPrimaryClasses.length > 0
-      ? source.resolvedPrimaryClasses.map(normalizeFullClassName)
-      : [normalizeFullClassName(source.target.primaryClass)];
+    source.resolvedPrimaryClasses.length > 0 ? source.resolvedPrimaryClasses : [source.target.primaryClass];
 
   // The declaring classes that can contribute a direct property (every concrete class plus all of
   // its ancestors), each mapped to the concretes that derive from it. Reading each class's *own*
@@ -79,7 +77,7 @@ async function collectDeclaringClassClosure(
       const visited = new Set<EC.FullClassNameDotNotation>();
       while (pending.length > 0) {
         const ecClass = pending.pop()!;
-        const declaringClassName = normalizeFullClassName(ecClass.fullName);
+        const declaringClassName = ecClass.fullName;
         if (visited.has(declaringClassName)) {
           continue;
         }

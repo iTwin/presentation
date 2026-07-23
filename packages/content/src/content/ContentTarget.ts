@@ -31,7 +31,7 @@ export interface ContentTarget {
   /**
    * Full class name of the primary class whose properties we want (e.g., "BisCore.Element").
    */
-  primaryClass: EC.FullClassName;
+  primaryClass: EC.FullClassNameDotNotation;
 
   /**
    * Optional set of instance IDs to scope to specific instances.
@@ -101,7 +101,7 @@ export interface ContentSource {
    * The library uses this to populate a direct field's `valueClassNames`, so overrides can be
    * scoped below a polymorphically-selected base primary via `TransformableDescriptor.forkField`.
    */
-  resolvedPrimaryClasses: EC.FullClassName[];
+  resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
 
   /**
    * Resolved declaration groups — one per provider declaration that produced
@@ -138,7 +138,7 @@ export interface ResolvedPath {
    * Discovered by a data-driven scan during source resolution, so it lists only the concrete
    * classes that participate in this path, never a polymorphically-selected base.
    */
-  targetClassNames: EC.FullClassName[];
+  targetClassNames: EC.FullClassNameDotNotation[];
 }
 
 /**
