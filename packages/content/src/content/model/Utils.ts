@@ -45,13 +45,13 @@ export function serializeRelationshipPath({
       result += `->${step.targetClassName}`;
     }
     if (includeInstanceFilters && step.instanceFilter) {
-      const { expression, primaryClassAlias, bindings } = step.instanceFilter;
+      const { bindings, ...rest } = step.instanceFilter;
       const sortedBindings = bindings
         ? Object.keys(bindings)
             .sort()
             .map((key) => [key, bindings[key]])
         : undefined;
-      result += `{${JSON.stringify({ expression, primaryClassAlias, bindings: sortedBindings })}}`;
+      result += `{${JSON.stringify({ ...rest, bindings: sortedBindings })}}`;
     }
   });
   return result;
