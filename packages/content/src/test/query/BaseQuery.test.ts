@@ -205,6 +205,49 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
     });
 
+    it("throws when identical paths across declaration groups uses same bindings with different values", async () => {
+      const step = makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target");
+      const source: ContentSource = {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedDeclarations: [
+          {
+            providerId: "a_v1",
+            declarationIndex: 0,
+            paths: [
+              {
+                path: [
+                  {
+                    ...step,
+                    instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 1 } } },
+                  },
+                ],
+                targetClassNames: ["TestSchema.Target"],
+              },
+            ],
+          },
+          {
+            providerId: "b_v1",
+            declarationIndex: 0,
+            paths: [
+              {
+                path: [
+                  {
+                    ...step,
+                    instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 2 } } },
+                  },
+                ],
+                targetClassNames: ["TestSchema.Target"],
+              },
+            ],
+          },
+        ],
+      };
+      await expect(buildBaseQuery({ schemaProvider, source, includeRelatedJoins: true })).rejects.toThrow(
+        `Duplicate ECSQL binding name "p" with different values while merging duplicate relationship-path join entries.`,
+      );
+    });
+
     it("ignores zero-step resolved paths", async () => {
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([[]]), includeRelatedJoins: true });
 

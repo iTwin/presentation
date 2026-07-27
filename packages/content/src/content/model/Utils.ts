@@ -46,7 +46,11 @@ export function serializeRelationshipPath({
     }
     if (includeInstanceFilters && step.instanceFilter) {
       const { expression, primaryClassAlias, bindings } = step.instanceFilter;
-      const sortedBindings = bindings ? Object.keys(bindings).sort().map((key) => [key, bindings[key]]) : undefined;
+      const sortedBindings = bindings
+        ? Object.keys(bindings)
+            .sort()
+            .map((key) => [key, bindings[key]])
+        : undefined;
       result += `{${JSON.stringify({ expression, primaryClassAlias, bindings: sortedBindings })}}`;
     }
   });

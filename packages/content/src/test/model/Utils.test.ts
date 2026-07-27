@@ -87,5 +87,27 @@ describe("serializeRelationshipPath", () => {
         serializeRelationshipPath({ path, includeInstanceFilters: true }),
       );
     });
+
+    it("is deterministic for the same filtered path with same bindings", () => {
+      const path: RelationshipPath = [
+        step({
+          instanceFilter: {
+            expression: "this.X > :p OR this.Y > :q",
+            bindings: { p: { type: "int", value: 1 }, q: { type: "int", value: 2 } },
+          },
+        }),
+      ];
+      const path2: RelationshipPath = [
+        step({
+          instanceFilter: {
+            expression: "this.X > :p OR this.Y > :q",
+            bindings: { q: { type: "int", value: 2 }, p: { type: "int", value: 1 } },
+          },
+        }),
+      ];
+      expect(serializeRelationshipPath({ path, includeInstanceFilters: true })).to.equal(
+        serializeRelationshipPath({ path: path2, includeInstanceFilters: true }),
+      );
+    });
   });
 });

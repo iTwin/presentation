@@ -485,7 +485,9 @@ function mergeJoinInfos(infos: RelationshipPathJoinInfo[]): RelationshipPathJoin
     for (const [name, binding] of Object.entries(info.bindings ?? {})) {
       if (name in bindings) {
         if (JSON.stringify(bindings[name]) !== JSON.stringify(binding)) {
-          throw new Error(`Duplicate ECSQL binding name "${name}" with different values while merging relationship-path joins.`);
+          throw new Error(
+            `Duplicate ECSQL binding name "${name}" with different values while merging duplicate relationship-path join entries.`,
+          );
         }
         continue;
       }
