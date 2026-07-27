@@ -191,6 +191,20 @@ describe("buildValueFilterClauses", () => {
     });
   });
 
+  it("ignores member for scalar navigation filters", () => {
+    const navigationField: PropertyField = {
+      ...propertyField,
+      type: { kind: "navigation", targetClassName: "TestSchema.Related" },
+    };
+
+    const result = build([{ field: navigationField, member: "x", operator: "is-equal", value: "0x1" }]);
+
+    expect(result).to.deep.equal({
+      where: `[field-id].[Id] = :${ECSQL_PREFIX}vf0`,
+      bindings: { [`${ECSQL_PREFIX}vf0`]: { type: "id", value: "0x1" } },
+    });
+  });
+
   it("uses IdSet binding for id-typed is-not-in filters", () => {
     const idField: PropertyField = { ...propertyField, type: { kind: "primitive", type: "Id" } };
 

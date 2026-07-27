@@ -38,7 +38,8 @@ export function buildValueFilterClauses(props: {
   const bindings: Record<string, ECSqlBinding> = {};
 
   props.filters.forEach((filter, filterIndex) => {
-    const resolved = props.resolveSelector(filter.field, filter.member);
+    // ignore `member` on navigation properties, since they are structs whose target instance id lives in a `.Id` member
+    const resolved = props.resolveSelector(filter.field, filter.field.type.kind === "navigation" ? "" : filter.member);
     // Navigation properties are structs whose target instance id lives in a `.Id` member, so filter
     // against that member rather than the raw navigation column.
     const selector =
