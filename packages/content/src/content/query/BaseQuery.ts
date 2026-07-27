@@ -481,11 +481,15 @@ function mergeJoinInfos(infos: RelationshipPathJoinInfo[]): RelationshipPathJoin
         steps.push(step);
       }
     }
-    // Shared-prefix steps contribute identical bindings; keep the first occurrence of each key.
+    // Shared-prefix steps contribute identical bindings; keep duplicates only when they are identical.
     for (const [name, binding] of Object.entries(info.bindings ?? {})) {
-      if (!(name in bindings)) {
-        bindings[name] = binding;
+      if (name in bindings) {
+        if (JSON.stringify(bindings[name]) !== JSON.stringify(binding)) {
+          throw new Error(`Duplicate ECSQL binding name "${name}" with different values while merging relationship-path joins.`);
+        }
+        continue;
       }
+      bindings[name] = binding;
     }
   }
   return { steps, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
