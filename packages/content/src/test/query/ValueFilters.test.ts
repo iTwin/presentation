@@ -55,8 +55,8 @@ describe("buildValueFilterClauses", () => {
     });
   }
 
-  it("returns empty result when no filters are provided", () => {
-    expect(build([])).to.deep.equal({});
+  it("returns undefined when no filters are provided", () => {
+    expect(build([])).toBeUndefined();
   });
 
   it.each([
@@ -81,7 +81,7 @@ describe("buildValueFilterClauses", () => {
       { field: propertyField, operator: "is-not-null" },
     ]);
 
-    expect(result).to.deep.equal({ where: "([field-id] IS NULL) AND ([field-id] IS NOT NULL)" });
+    expect(result).to.deep.equal({ where: "([field-id] IS NULL) AND ([field-id] IS NOT NULL)", bindings: {} });
   });
 
   it("passes field and member to column resolver", () => {
@@ -241,11 +241,17 @@ describe("buildValueFilterClauses", () => {
   });
 
   it("returns false condition for empty is-in filters", () => {
-    expect(build([{ field: propertyField, operator: "is-in", value: [] }])).to.deep.equal({ where: "FALSE" });
+    expect(build([{ field: propertyField, operator: "is-in", value: [] }])).to.deep.equal({
+      where: "FALSE",
+      bindings: {},
+    });
   });
 
   it("returns true condition for empty is-not-in filters", () => {
-    expect(build([{ field: propertyField, operator: "is-not-in", value: [] }])).to.deep.equal({ where: "TRUE" });
+    expect(build([{ field: propertyField, operator: "is-not-in", value: [] }])).to.deep.equal({
+      where: "TRUE",
+      bindings: {},
+    });
   });
 
   it("builds inferred bindings for composite members", () => {
