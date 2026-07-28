@@ -76,7 +76,7 @@ interface ContentSortSpec {
 type ContentValueFilterTarget =
   | {
       /**
-       * The property field to filter on. Filter can only target primitive and struct properties.
+       * The property field to filter on. Filter can only target primitive, navigation and struct properties.
        * Array properties are not supported.
        */
       field: PropertyField;
