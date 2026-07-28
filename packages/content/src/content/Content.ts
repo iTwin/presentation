@@ -68,8 +68,9 @@ interface ContentSortSpec {
 }
 
 /**
- * The field a value filter targets. `member` (composite access) is only valid for property fields —
- * calculated fields are scalar expressions, so the type disallows a member on them.
+ * The field targeted by a value filter. Filters may target calculated or property fields.
+ * When targeting a struct or point property field, specify `member` to identify the member to compare.
+ *
  * @public
  */
 type ContentValueFilterTarget =
