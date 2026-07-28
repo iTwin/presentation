@@ -17,8 +17,8 @@ export function buildTargetFilter(target: ContentTarget): {
   where?: string;
   bindings?: Record<string, ECSqlBinding>;
 } {
-  const clauses: string[] = [];
   const bindings: Record<string, ECSqlBinding> = {};
+  let where: string | undefined;
   let joins: string | undefined;
 
   if (target.instanceIds) {
@@ -33,7 +33,7 @@ export function buildTargetFilter(target: ContentTarget): {
       fromAlias: alias,
       toAlias: PRIMARY_CLASS_ALIAS,
     });
-    clauses.push(expression);
+    where = expression;
     if (target.instanceFilter.bindings) {
       Object.assign(bindings, target.instanceFilter.bindings);
     }
@@ -41,7 +41,7 @@ export function buildTargetFilter(target: ContentTarget): {
 
   return {
     ...(joins ? { joins } : undefined),
-    ...(clauses.length > 0 ? { where: clauses.join(" AND ") } : undefined),
+    ...(where ? { where } : undefined),
     ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
   };
 }
