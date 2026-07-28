@@ -33,7 +33,7 @@ export function buildValueFilterClauses(props: {
    * automatically based on the field's type.
    */
   resolveSelector: (field: PropertyField | CalculatedField, member?: string) => ValueFilterSelector;
-}): { where?: string; bindings?: Record<string, ECSqlBinding> } {
+}): { where: string; bindings: Record<string, ECSqlBinding> } | undefined {
   const clauses: string[] = [];
   const bindings: Record<string, ECSqlBinding> = {};
 
@@ -48,8 +48,12 @@ export function buildValueFilterClauses(props: {
     clauses.push(clause);
   });
 
+  if (clauses.length === 0) {
+    return undefined;
+  }
+
   const where = clauses.length > 1 ? clauses.map((clause) => `(${clause})`).join(" AND ") : clauses[0];
-  return { ...(where ? { where } : undefined), ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
+  return { where, bindings };
 }
 
 function buildFilterClause(props: {

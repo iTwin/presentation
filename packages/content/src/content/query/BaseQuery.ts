@@ -255,10 +255,10 @@ export async function buildBaseQuery(
             isRelationshipClass: isPropertyFieldRelationshipClass,
           }),
       });
-      if (valueFilter.where) {
+      if (valueFilter) {
         whereConditions.push(valueFilter.where);
+        mergeBindings(bindings, valueFilter.bindings);
       }
-      mergeBindings(bindings, valueFilter.bindings);
     }
 
     const where = whereConditions.length > 1 ? whereConditions.map((c) => `(${c})`).join(" AND ") : whereConditions[0];
