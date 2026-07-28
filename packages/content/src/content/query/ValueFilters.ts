@@ -39,7 +39,10 @@ export function buildValueFilterClauses(props: {
 
   props.filters.forEach((filter, filterIndex) => {
     // ignore `member` on navigation properties, since they are structs whose target instance id lives in a `.Id` member
-    const resolved = props.resolveSelector(filter.field, filter.field.type.kind === "navigation" ? undefined : filter.member);
+    const resolved = props.resolveSelector(
+      filter.field,
+      filter.field.type.kind === "navigation" ? undefined : filter.member,
+    );
     // Navigation properties are structs whose target instance id lives in a `.Id` member, so filter
     // against that member rather than the raw navigation column.
     const selector =
