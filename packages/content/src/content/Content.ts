@@ -74,12 +74,16 @@ interface ContentSortSpec {
  */
 type ContentValueFilterTarget =
   | {
-      /** The property field to filter on. */
+      /**
+       * The property field to filter on. Filter can only target primitive and struct properties.
+       * Array properties are not supported.
+       */
       field: PropertyField;
       /**
        * For composite property fields (structs, points), the member to compare.
        * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
        * Omit for scalar fields.
+       * For struct properties and `Point2d`/`Point3d`, the member must be provided — filtering on a struct or point as a whole is not supported.
        */
       member?: string;
     }
