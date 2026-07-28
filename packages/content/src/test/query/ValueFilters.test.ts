@@ -95,7 +95,7 @@ describe("buildValueFilterClauses", () => {
     });
 
     expect(resolveColumn).toHaveBeenCalledWith(propertyField, "x");
-    expect(result.where).to.equal(`[field-id].[x] = :${ECSQL_PREFIX}vf0`);
+    expect(result?.where).to.equal(`[field-id].[x] = :${ECSQL_PREFIX}vf0`);
   });
 
   it("uses column resolver output for calculated fields", () => {
@@ -143,7 +143,7 @@ describe("buildValueFilterClauses", () => {
       resolveSelector: (field) => ({ selector: `[${field.id}]`, type: getSelectorType(field) }),
     });
 
-    expect(result.bindings).to.deep.equal({
+    expect(result?.bindings).to.deep.equal({
       [`${ECSQL_PREFIX}vf0`]: { type: "boolean", value: true },
       [`${ECSQL_PREFIX}vf1`]: { type: "int", value: 1 },
       [`${ECSQL_PREFIX}vf2`]: { type: "long", value: 2 },
