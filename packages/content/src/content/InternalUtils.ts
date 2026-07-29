@@ -5,7 +5,7 @@
 
 import { getClass } from "@itwin/presentation-shared";
 
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
 
 /**
  * Prefix applied to internally generated ECSQL binding names
@@ -14,6 +14,29 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
  * @internal
  */
 export const ECSQL_PREFIX = "pres_";
+
+/**
+ * Alias assigned to the primary (target) class in generated content queries. Matches the default
+ * `primaryClassAlias` / `targetAlias` of the public `instanceFilter` / calculated-field APIs, so
+ * consumer-authored expressions referencing `this.` resolve against the same alias.
+ *
+ * @internal
+ */
+export const PRIMARY_CLASS_ALIAS = "this";
+
+/**
+ * Rewrites references to `fromAlias` within a consumer-authored ECSQL expression to the query's actual
+ * `toAlias`, handling both the bracketed (`[fromAlias].`) and bare (`fromAlias.`) forms. Only alias
+ * references followed by a member access (a `.`) are rewritten; a bare occurrence not followed by `.`
+ * is left untouched. Used to bind an expression's chosen alias (an instance filter's
+ * `primaryClassAlias` or a calculated field's `targetAlias`) to {@link PRIMARY_CLASS_ALIAS}.
+ *
+ * @internal
+ */
+export function substituteExpressionAlias(props: { expression: string; fromAlias: string; toAlias: string }): string {
+  const pattern = new RegExp(`(?:\\[${props.fromAlias}\\]|\\b${props.fromAlias})\\.`, "g");
+  return props.expression.replace(pattern, `[${props.toAlias}].`);
+}
 
 /**
  * Gets the entry for `key` from `map`, or inserts and returns `createFunc()` when absent.
@@ -85,4 +108,27 @@ export async function getClassLabel({
 }): Promise<string> {
   const ecClass = await getClass(imodelAccess, className);
   return ecClass.label ?? ecClass.name;
+}
+
+/**
+ * Merges `source` ECSQL bindings into `target` in place. A binding name may repeat only with an
+ * identical value (harmless — e.g. a shared join prefix or a repeated selector contributing the same
+ * binding); the same name reused with a *different* value is a real conflict that would misbind the
+ * query, so it throws.
+ *
+ * @internal
+ */
+export function mergeBindings(
+  target: Record<string, ECSqlBinding>,
+  source: Record<string, ECSqlBinding> | undefined,
+): void {
+  if (!source) {
+    return;
+  }
+  for (const [name, binding] of Object.entries(source)) {
+    if (name in target && stableStringify(target[name]) !== stableStringify(binding)) {
+      throw new Error(`Duplicate ECSQL binding name "${name}" with different values.`);
+    }
+    target[name] = binding;
+  }
 }

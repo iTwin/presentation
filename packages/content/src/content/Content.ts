@@ -41,7 +41,9 @@ import type {
   ECSchemaProvider,
   ECSqlQueryExecutor,
   InstanceKey,
-  Value,
+  Point2dValue,
+  Point3dValue,
+  PrimitiveValue,
 } from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
@@ -66,26 +68,61 @@ interface ContentSortSpec {
 }
 
 /**
+ * The field targeted by a value filter. Filters may target calculated or property fields.
+ * When targeting a struct or point property field, specify `member` to identify the member to compare.
+ *
+ * @public
+ */
+type ContentValueFilterTarget =
+  | {
+      /**
+       * The property field to filter on. Filter can only target primitive, navigation and struct properties.
+       * Array properties are not supported.
+       */
+      field: PropertyField;
+      /**
+       * For composite property fields (structs, points), the member to compare.
+       * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
+       * Omit for scalar fields.
+       * For struct properties and `Point2d`/`Point3d`, the member must be provided — filtering on a struct or point as a whole is not supported.
+       */
+      member?: string;
+    }
+  | {
+      /** The calculated field to filter on. Calculated fields are scalar, so `member` does not apply. */
+      field: CalculatedField;
+      member?: never;
+    };
+
+/** @public */
+type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-not-null" | "is-in" | "is-not-in">;
+
+/**
  * A value filter applied during query building (Stage 3).
  * Adds a WHERE clause to the final query — does not affect which fields
  * exist in the descriptor (only which rows are returned).
  *
  * @public
  */
-export interface ContentValueFilter {
-  /** The field to filter on. */
-  field: PropertyField | CalculatedField;
-  /**
-   * For composite fields (structs, points), the member to compare.
-   * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
-   * Omit for scalar fields.
-   */
-  member?: string;
-  /** The filter operator. */
-  operator: ValueFilterOperator;
-  /** The value(s) to compare against. */
-  value: Value;
-}
+export type ContentValueFilter =
+  | (ContentValueFilterTarget & {
+      /** The filter operator. */
+      operator: ScalarValueFilterOperator;
+      /** The scalar value to compare against. Points are filtered per-coordinate via `member`, so a whole-point value is not accepted. */
+      value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
+    })
+  | (ContentValueFilterTarget & {
+      /** The filter operator. */
+      operator: "is-in" | "is-not-in";
+      /** The values to compare against. */
+      value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
+    })
+  | (ContentValueFilterTarget & {
+      /** The filter operator. */
+      operator: "is-null" | "is-not-null";
+      /** Null checks do not accept values. */
+      value?: never;
+    });
 
 /** @public */
 type ValueFilterOperator =
@@ -98,7 +135,8 @@ type ValueFilterOperator =
   | "greater-than"
   | "greater-than-or-equal"
   | "like"
-  | "is-in";
+  | "is-in"
+  | "is-not-in";
 
 /**
  * Request options passed alongside the descriptor when loading values.

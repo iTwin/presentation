@@ -5,8 +5,9 @@
 
 import { filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, toArray } from "rxjs";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX } from "./InternalUtils.js";
+import { PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
 import { toSortedUniqueClassNames } from "./model/Utils.js";
+import { buildTargetFilter } from "./query/TargetFilter.js";
 
 import type { Observable } from "rxjs";
 import type {
@@ -43,38 +44,6 @@ interface ResolutionQueryStrategy {
 }
 
 // --- Query building helpers ---
-
-function buildTargetFilter(target: ContentTarget): {
-  joins?: string;
-  where?: string;
-  bindings?: Record<string, ECSqlBinding>;
-} {
-  const clauses: string[] = [];
-  const bindings: Record<string, ECSqlBinding> = {};
-  let joins: string | undefined;
-
-  if (target.instanceIds) {
-    const idSetAlias = `${ECSQL_PREFIX}instanceIds`;
-    joins = `JOIN IdSet(:${idSetAlias}) [${idSetAlias}] ON [${idSetAlias}].id = [this].ECInstanceId`;
-    bindings[idSetAlias] = { type: "idset", value: target.instanceIds };
-  }
-
-  if (target.instanceFilter) {
-    const alias = target.instanceFilter.primaryClassAlias ?? "this";
-    const aliasPattern = new RegExp(`(?:\\[${alias}\\]|\\b${alias})\\.`, "g");
-    const expression = target.instanceFilter.expression.replace(aliasPattern, "[this].");
-    clauses.push(expression);
-    if (target.instanceFilter.bindings) {
-      Object.assign(bindings, target.instanceFilter.bindings);
-    }
-  }
-
-  return {
-    ...(joins ? { joins } : undefined),
-    ...(clauses.length > 0 ? { where: clauses.join(" AND ") } : undefined),
-    ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
-  };
-}
 
 // Concrete class-name columns for a set of per-step class-id selectors
 function buildClassNameColumns(selectors: string[]): string {
@@ -116,11 +85,11 @@ function buildPrimaryEnumerationQuery(target: ContentTarget): ECSqlQueryDef {
   const targetFilter = buildTargetFilter(target);
   const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
   const ecsql = `
-    SELECT ec_classname([this].[ECClassId], 's.c')
-    FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
+    SELECT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')
+    FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
     ${targetFilter.joins ?? ""}
     ${whereClause}
-    GROUP BY [this].[ECClassId]
+    GROUP BY [${PRIMARY_CLASS_ALIAS}].[ECClassId]
   `;
   return { ecsql, ...(targetFilter.bindings ? { bindings: targetFilter.bindings } : {}) };
 }
@@ -143,8 +112,8 @@ const originalStrategy: ResolutionQueryStrategy = {
     const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
-      SELECT GROUP_CONCAT(DISTINCT ec_classname([this].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
+      FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
       ${joins} ${targetFilter.joins ?? ""}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
@@ -197,11 +166,11 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       FROM ${ECSql.createClassSelector(firstHopTarget)} [${firstHopAlias}]
       ${remainingJoins}
       INNER JOIN (
-        SELECT [${firstHopAlias}].[ECClassId] [FirstHopClassId], [this].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
-        FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
+        SELECT [${firstHopAlias}].[ECClassId] [FirstHopClassId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
+        FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
         ${firstStepJoins} ${targetFilter.joins ?? ""}
         ${instanceFilterClauses}
-        GROUP BY [${firstHopAlias}].[ECClassId], [this].[ECClassId], ${firstStepRelSelector}
+        GROUP BY [${firstHopAlias}].[ECClassId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
       ) [reachable] ON [reachable].[FirstHopClassId] = [${firstHopAlias}].[ECClassId]
       GROUP BY  [reachable].[FirstStepRelClassId], ${buildClassIdColumns(classSelectors)}
     `;
@@ -228,8 +197,8 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
-      SELECT GROUP_CONCAT(DISTINCT ec_classname([this].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(target.primaryClass)} [this]
+      SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
+      FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
       ${crossJoins} ${targetFilter.joins ?? ""}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
@@ -274,7 +243,7 @@ async function resolveDeclarationPaths({
 
   const joinPath: JoinRelationshipPath = declaration.path.map((step: RelationshipPath[number], i: number) => ({
     ...step,
-    sourceAlias: i === 0 ? "this" : `s${i - 1}`,
+    sourceAlias: i === 0 ? PRIMARY_CLASS_ALIAS : `s${i - 1}`,
     targetAlias: `s${i}`,
     relationshipAlias: `r${i}`,
     joinType: "inner" as const,
