@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECSqlBinding, TypedPrimitiveValue } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX } from "../InternalUtils.js";
+import { ECSQL_PREFIX, mergeBindings } from "../InternalUtils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { PrimitiveValueType } from "@itwin/presentation-shared";
@@ -16,6 +16,8 @@ type ContentFilterValueType = Exclude<PrimitiveValueType, "Point2d" | "Point3d">
 interface ValueFilterSelector {
   selector: string;
   type: ContentFilterValueType;
+  /** Bindings the selector's expression references (e.g. a calculated field's own bindings). */
+  bindings?: Record<string, ECSqlBinding>;
 }
 
 /**
@@ -30,7 +32,8 @@ export function buildValueFilterClauses(props: {
    *
    * Implementers should return the selector for the raw property column only. For navigation
    * properties, do **not** append the `.Id` member — `buildValueFilterClauses` appends it
-   * automatically based on the field's type.
+   * automatically based on the field's type. A selector may also carry `bindings` its expression
+   * references (e.g. a calculated field's own bindings); they are merged into the query bindings.
    */
   resolveSelector: (field: PropertyField | CalculatedField, member?: string) => ValueFilterSelector;
 }): { where: string; bindings: Record<string, ECSqlBinding> } | undefined {
@@ -47,6 +50,10 @@ export function buildValueFilterClauses(props: {
     // against that member rather than the raw navigation column.
     const selector =
       filter.field.type.kind === "navigation" ? { ...resolved, selector: `${resolved.selector}.[Id]` } : resolved;
+    // A selector may reference its own bindings (e.g. a calculated field's expression bindings); carry
+    // them into the query. A repeated selector contributes identical bindings, so an identical duplicate
+    // is kept while a name reused with a different value throws.
+    mergeBindings(bindings, selector.bindings);
     const clause = buildFilterClause({ filter, selector, filterIndex, bindings });
     clauses.push(clause);
   });

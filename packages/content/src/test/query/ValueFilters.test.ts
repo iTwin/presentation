@@ -110,6 +110,62 @@ describe("buildValueFilterClauses", () => {
     });
   });
 
+  it("merges selector-supplied bindings into the query bindings", () => {
+    const result = buildValueFilterClauses({
+      filters: [{ field: calculatedField, operator: "greater-than", value: 10 }],
+      resolveSelector: () => ({
+        selector: "([this].[Length] * :scale)",
+        type: "Double",
+        bindings: { scale: { type: "double", value: 2 } },
+      }),
+    });
+
+    expect(result).to.deep.equal({
+      where: `([this].[Length] * :scale) > :${ECSQL_PREFIX}vf0`,
+      bindings: {
+        scale: { type: "double", value: 2 },
+        [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 },
+      },
+    });
+  });
+
+  it("keeps an identical selector binding contributed by repeated selectors", () => {
+    const result = buildValueFilterClauses({
+      filters: [
+        { field: calculatedField, operator: "greater-than", value: 1 },
+        { field: calculatedField, operator: "less-than", value: 9 },
+      ],
+      resolveSelector: () => ({
+        selector: "([this].[Length] * :scale)",
+        type: "Double",
+        bindings: { scale: { type: "double", value: 2 } },
+      }),
+    });
+
+    expect(result?.bindings).to.deep.equal({
+      scale: { type: "double", value: 2 },
+      [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 1 },
+      [`${ECSQL_PREFIX}vf1`]: { type: "double", value: 9 },
+    });
+  });
+
+  it("throws when selectors reuse a binding name with different values", () => {
+    let call = 0;
+    expect(() =>
+      buildValueFilterClauses({
+        filters: [
+          { field: calculatedField, operator: "greater-than", value: 1 },
+          { field: calculatedField, operator: "less-than", value: 9 },
+        ],
+        resolveSelector: () => ({
+          selector: "([this].[Length] * :scale)",
+          type: "Double",
+          bindings: { scale: { type: "double", value: ++call } },
+        }),
+      }),
+    ).to.throw('Duplicate ECSQL binding name "scale" with different values');
+  });
+
   it("uses field descriptor-specific scalar binding types", () => {
     const date = new Date("2026-07-17T10:00:00.000Z");
     const result = buildValueFilterClauses({

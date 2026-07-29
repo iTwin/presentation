@@ -5,7 +5,7 @@
 
 import { getClass } from "@itwin/presentation-shared";
 
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
 
 /**
  * Prefix applied to internally generated ECSQL binding names
@@ -108,4 +108,24 @@ export async function getClassLabel({
 }): Promise<string> {
   const ecClass = await getClass(imodelAccess, className);
   return ecClass.label ?? ecClass.name;
+}
+
+/**
+ * Merges `source` ECSQL bindings into `target` in place. A binding name may repeat only with an
+ * identical value (harmless — e.g. a shared join prefix or a repeated selector contributing the same
+ * binding); the same name reused with a *different* value is a real conflict that would misbind the
+ * query, so it throws.
+ *
+ * @internal
+ */
+export function mergeBindings(target: Record<string, ECSqlBinding>, source: Record<string, ECSqlBinding> | undefined): void {
+  if (!source) {
+    return;
+  }
+  for (const [name, binding] of Object.entries(source)) {
+    if (name in target && stableStringify(target[name]) !== stableStringify(binding)) {
+      throw new Error(`Duplicate ECSQL binding name "${name}" with different values.`);
+    }
+    target[name] = binding;
+  }
 }

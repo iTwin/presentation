@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
+import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
 import { classifyPathCardinality, countJoinTables, partitionPathsByJoinBudget } from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
@@ -481,18 +481,9 @@ function mergeJoinInfos(infos: RelationshipPathJoinInfo[]): RelationshipPathJoin
         steps.push(step);
       }
     }
-    // Shared-prefix steps contribute identical bindings; keep duplicates only when they are identical.
-    for (const [name, binding] of Object.entries(info.bindings ?? {})) {
-      if (name in bindings) {
-        if (JSON.stringify(bindings[name]) !== JSON.stringify(binding)) {
-          throw new Error(
-            `Duplicate ECSQL binding name "${name}" with different values while merging duplicate relationship-path join entries.`,
-          );
-        }
-        continue;
-      }
-      bindings[name] = binding;
-    }
+    // Shared-prefix steps contribute identical bindings; keep an identical duplicate but reject a name
+    // reused with a different value.
+    mergeBindings(bindings, info.bindings);
   }
   return { steps, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
 }
@@ -503,19 +494,21 @@ function resolveSelector(props: {
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
-}): { selector: string; type: Exclude<PrimitiveValueType, "Point2d" | "Point3d"> } {
+}): { selector: string; type: Exclude<PrimitiveValueType, "Point2d" | "Point3d">; bindings?: Record<string, ECSqlBinding> } {
   const { field, member, relatedClassAliases, isRelationshipClass } = props;
   const type = getSelectorValueType(field.type, member);
   switch (field.kind) {
     case "calculated": {
-      // A calculated field is a scalar ECSQL expression; `ContentValueFilter` disallows a `member` on
-      // it at the type level, so there is nothing composite to address here.
-      const selector = substituteExpressionAlias({
+      // A calculated field is an arbitrary scalar ECSQL expression; `ContentValueFilter` disallows a
+      // `member` on it at the type level, so there is nothing composite to address here. Wrap it in
+      // parentheses so the filter operator binds to the whole expression (e.g. `(A OR B) = :vf`, not
+      // `A OR B = :vf`), and carry its own bindings so the expression's parameters are supplied.
+      const expression = substituteExpressionAlias({
         expression: field.expression,
         fromAlias: field.targetAlias ?? PRIMARY_CLASS_ALIAS,
         toAlias: PRIMARY_CLASS_ALIAS,
       });
-      return { selector, type };
+      return { selector: `(${expression})`, type, ...(field.bindings ? { bindings: field.bindings } : undefined) };
     }
     case "property": {
       // Composite access (e.g. a struct member or point `x`) addresses a member of the property column.
@@ -652,21 +645,4 @@ function formatOrList(items: readonly string[]): string {
     return `${quoted[0]} or ${quoted[1]}`;
   }
   return `${quoted.slice(0, -1).join(", ")}, or ${quoted[quoted.length - 1]}`;
-}
-
-/**
- * Merges `source` bindings into `target`, throwing on a duplicate name. Internal binding names are
- * `ECSQL_PREFIX`-scoped and thus collision-free by construction, so a clash signals a real bug (e.g.
- * a query filterer or instance filter reusing a reserved/duplicate parameter name).
- */
-function mergeBindings(target: Record<string, ECSqlBinding>, source: Record<string, ECSqlBinding> | undefined): void {
-  if (!source) {
-    return;
-  }
-  for (const [name, binding] of Object.entries(source)) {
-    if (name in target) {
-      throw new Error(`Duplicate ECSQL binding name "${name}" while assembling the base query.`);
-    }
-    target[name] = binding;
-  }
 }

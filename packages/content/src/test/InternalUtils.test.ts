@@ -5,7 +5,7 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
-import { collectInParallel, getClassLabel, stableStringify } from "../content/InternalUtils.js";
+import { collectInParallel, getClassLabel, mergeBindings, stableStringify } from "../content/InternalUtils.js";
 import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 
 describe("collectInParallel", () => {
@@ -92,5 +92,37 @@ describe("getClassLabel", () => {
     const cls = createEntityClass({ fullName: "TestSchema.TestClass" });
     const imodelAccess = createSchemaAccess([cls]);
     expect(await getClassLabel({ imodelAccess, className: "TestSchema.TestClass" })).to.equal("TestClass");
+  });
+});
+
+describe("mergeBindings", () => {
+  it("does nothing when source is undefined", () => {
+    const target = { a: { type: "int" as const, value: 1 } };
+    mergeBindings(target, undefined);
+    expect(target).to.deep.equal({ a: { type: "int", value: 1 } });
+  });
+
+  it("adds new bindings to the target", () => {
+    const target = { a: { type: "int" as const, value: 1 } };
+    mergeBindings(target, { b: { type: "int", value: 2 } });
+    expect(target).to.deep.equal({ a: { type: "int", value: 1 }, b: { type: "int", value: 2 } });
+  });
+
+  it("keeps an identical duplicate binding", () => {
+    const target = { a: { type: "int" as const, value: 1 } };
+    mergeBindings(target, { a: { type: "int", value: 1 } });
+    expect(target).to.deep.equal({ a: { type: "int", value: 1 } });
+  });
+
+  it("treats bindings equal regardless of key order", () => {
+    const target = { a: { type: "idset" as const, value: ["0x1", "0x2"] } };
+    expect(() => mergeBindings(target, { a: { value: ["0x1", "0x2"], type: "idset" } as (typeof target)["a"] })).to.not.throw();
+  });
+
+  it("throws when a name is reused with a different value", () => {
+    const target = { a: { type: "int" as const, value: 1 } };
+    expect(() => mergeBindings(target, { a: { type: "int", value: 2 } })).to.throw(
+      'Duplicate ECSQL binding name "a" with different values.',
+    );
   });
 });

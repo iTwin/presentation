@@ -244,7 +244,7 @@ describe("buildBaseQuery", () => {
         ],
       };
       await expect(buildBaseQuery({ schemaProvider, source, includeRelatedJoins: true })).rejects.toThrow(
-        `Duplicate ECSQL binding name "p" with different values while merging duplicate relationship-path join entries.`,
+        `Duplicate ECSQL binding name "p" with different values.`,
       );
     });
 
@@ -587,7 +587,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[this].CodeValue || [this].UserLabel LIKE :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`([this].CodeValue || [this].UserLabel) LIKE :${ECSQL_PREFIX}vf0`);
     });
 
     it("substitutes a calculated field's custom target alias", async () => {
@@ -604,7 +604,44 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[this].CodeValue LIKE :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`([this].CodeValue) LIKE :${ECSQL_PREFIX}vf0`);
+    });
+
+    it("parenthesizes a compound calculated expression before applying the operator", async () => {
+      const field: CalculatedField = {
+        kind: "calculated",
+        id: "calc",
+        label: "Calc",
+        type: { kind: "primitive", type: "Boolean" },
+        expression: "this.FlagA OR this.FlagB",
+        selectorId: "calc",
+      };
+      const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: true }];
+
+      const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
+
+      expect(result.anchor.parts.where).to.equal(`([this].FlagA OR [this].FlagB) = :${ECSQL_PREFIX}vf0`);
+    });
+
+    it("carries a calculated field's own bindings into the base query", async () => {
+      const field: CalculatedField = {
+        kind: "calculated",
+        id: "calc",
+        label: "Calc",
+        type: { kind: "primitive", type: "Double" },
+        expression: "this.Length * :scale",
+        bindings: { scale: { type: "double", value: 2 } },
+        selectorId: "calc",
+      };
+      const filters: ContentValueFilter[] = [{ field, operator: "greater-than", value: 10 }];
+
+      const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
+
+      expect(result.anchor.parts.where).to.equal(`([this].Length * :scale) > :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.bindings).to.deep.equal({
+        scale: { type: "double", value: 2 },
+        [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 },
+      });
     });
   });
 
