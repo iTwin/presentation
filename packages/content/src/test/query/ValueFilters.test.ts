@@ -122,10 +122,7 @@ describe("buildValueFilterClauses", () => {
 
     expect(result).to.deep.equal({
       where: `([this].[Length] * :scale) > :${ECSQL_PREFIX}vf0`,
-      bindings: {
-        scale: { type: "double", value: 2 },
-        [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 },
-      },
+      bindings: { scale: { type: "double", value: 2 }, [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 } },
     });
   });
 

@@ -116,7 +116,9 @@ describe("mergeBindings", () => {
 
   it("treats bindings equal regardless of key order", () => {
     const target = { a: { type: "idset" as const, value: ["0x1", "0x2"] } };
-    expect(() => mergeBindings(target, { a: { value: ["0x1", "0x2"], type: "idset" } as (typeof target)["a"] })).to.not.throw();
+    expect(() =>
+      mergeBindings(target, { a: { value: ["0x1", "0x2"], type: "idset" } as (typeof target)["a"] }),
+    ).to.not.throw();
   });
 
   it("throws when a name is reused with a different value", () => {

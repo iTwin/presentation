@@ -118,7 +118,10 @@ export async function getClassLabel({
  *
  * @internal
  */
-export function mergeBindings(target: Record<string, ECSqlBinding>, source: Record<string, ECSqlBinding> | undefined): void {
+export function mergeBindings(
+  target: Record<string, ECSqlBinding>,
+  source: Record<string, ECSqlBinding> | undefined,
+): void {
   if (!source) {
     return;
   }

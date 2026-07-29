@@ -494,7 +494,11 @@ function resolveSelector(props: {
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
-}): { selector: string; type: Exclude<PrimitiveValueType, "Point2d" | "Point3d">; bindings?: Record<string, ECSqlBinding> } {
+}): {
+  selector: string;
+  type: Exclude<PrimitiveValueType, "Point2d" | "Point3d">;
+  bindings?: Record<string, ECSqlBinding>;
+} {
   const { field, member, relatedClassAliases, isRelationshipClass } = props;
   const type = getSelectorValueType(field.type, member);
   switch (field.kind) {
