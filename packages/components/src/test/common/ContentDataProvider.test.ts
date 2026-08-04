@@ -93,7 +93,7 @@ describe("ContentDataProvider", () => {
   const rulesetManager = { onRulesetModified };
 
   const imodelKey = "test-imodel-Key";
-  const imodel = { key: imodelKey } as IModelConnection;
+  const imodel = { key: imodelKey, schemaContext: {} } as unknown as IModelConnection;
 
   beforeEach(() => {
     presentationManager = createMocked(PresentationManager);
@@ -683,6 +683,45 @@ describe("ContentDataProvider", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(presentationManager.getContentAndSize).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe("content formatting", () => {
+    beforeEach(() => {
+      provider.keys = new KeySet([createTestECInstanceKey()]);
+      // set an active unit system to make sure it's not accidentally used as a fallback display value
+      vi.spyOn(IModelApp, "quantityFormatter", "get").mockReturnValue({
+        onActiveFormattingUnitSystemChanged,
+        activeUnitSystem: "metric",
+      } as QuantityFormatter);
+    });
+
+    it("keeps original display value of a non-numeric calculated property when re-formatting", async () => {
+      // calculated properties are represented as plain `Field`s (not `PropertiesField`s)
+      const field = createTestSimpleContentField({
+        name: "calculated",
+        type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
+      });
+      const descriptor = createTestContentDescriptor({ fields: [field] });
+      presentationManager.getContentIterator.mockResolvedValue({
+        descriptor,
+        items: createAsyncIterator([
+          createTestContentItem({
+            values: { [field.name]: "raw value" },
+            displayValues: { [field.name]: "Calculated Display Value" },
+          }),
+        ]),
+        total: 1,
+      });
+
+      // first request gets already-formatted content from the manager
+      await provider.getContent();
+      // invalidating formatting forces the provider to re-format the cached content locally
+      provider.invalidateCache({ formatting: true });
+      const content = await provider.getContent();
+
+      // the display value should be preserved and not replaced with the active unit system ("metric")
+      expect(content!.contentSet[0].displayValues[field.name]).toEqual("Calculated Display Value");
     });
   });
 

@@ -622,6 +622,7 @@ class ContentFormatter {
       displayValues[field.name] = await this._propertyValueFormatter.formatPropertyValue(
         field,
         value,
+        displayValues[field.name],
         this._unitSystem,
       );
     }
