@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.16.4
+
+### Patch Changes
+
+- [#1466](https://github.com/iTwin/presentation/pull/1466): Fix calculated properties formatting when unit system changes.
+
 ## 5.16.3
 
 ### Patch Changes
