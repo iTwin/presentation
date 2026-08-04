@@ -1,0 +1,21 @@
+# Temporary diagnostic - verifies NPMJS_PUBLISH_ITWIN token identity and access.
+name: Check npm token access
+
+on: pull_request
+
+jobs:
+  check:
+    if: github.repository_owner == 'iTwin'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+
+      - name: Check token
+        run: |
+          npm whoami
+          npm access list packages imodeljs || true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
