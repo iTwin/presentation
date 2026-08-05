@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.17
+
+### Major Changes
+
+- [#1454](https://github.com/iTwin/presentation/pull/1454): Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+
 ## 2.0.0-alpha.16
 
 ### Major Changes

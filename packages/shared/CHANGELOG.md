@@ -1,5 +1,27 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.12
+
+### Major Changes
+
+- [#1446](https://github.com/iTwin/presentation/pull/1446): `EC.EntityClass`: Added `getMixins` method that returns the mixins applied directly to the entity class.
+- [#1454](https://github.com/iTwin/presentation/pull/1454): Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+
+### Minor Changes
+
+- [#1455](https://github.com/iTwin/presentation/pull/1455): Added `ECSqlBinding.create` for creating ECSQL bindings from typed primitive values.
+- [#1455](https://github.com/iTwin/presentation/pull/1455): Added exported `Point2dValue` and `Point3dValue` types for representing point primitive values.
+- [#1452](https://github.com/iTwin/presentation/pull/1452): `Props`: Added support for overloaded functions.
+
+  When the given function has multiple overload signatures, `Props` now resolves to the union of the parameter types across all overloads instead of only reflecting the last signature.
+
+- [#1452](https://github.com/iTwin/presentation/pull/1452): Add `createRelationshipPathJoinInfo` that resolves a relationship path into a flat, structured list of join descriptors without producing ECSQL. The returned result lets callers inspect the resolved join structure — e.g. to count the number of join tables without re-reading the schema.
+
+  In addition, add a sync `createRelationshipPathJoinClause(info)` overload that renders a pre-resolved result of `createRelationshipPathJoinInfo` into an ECSQL JOIN clause without any async schema access.
+
+- [#1455](https://github.com/iTwin/presentation/pull/1455): `TypedPrimitiveValue.create`: The return type is now narrowed based on the given `type` argument, so the result only exposes the properties valid for that type. For example, creating a value with type `"Point3d"` no longer exposes the `koqName` property.
+- [#1459](https://github.com/iTwin/presentation/pull/1459): `ECSql.createRelationshipPathJoinInfo`: The `joins` array moved from the top-level result into each entry of the returned `steps[]`, so every step now carries its own ordered `joins`. In addition, each step exposes selectors for the path step's concrete `ECClassId` — `relationshipClassIdSelector`, `sourceClassIdSelector` (`[sourceAlias].[ECClassId]`) and `targetClassIdSelector` (`[targetAlias].[ECClassId]`). For a link-table step the relationship selector is `[relationshipAlias].[ECClassId]`; for a navigation-property step it is `[ownerAlias].[navigationProperty].[RelECClassId]`. For `outer` joins the relationship and target selectors yield `NULL` when nothing is related.
+
 ## 2.0.0-alpha.11
 
 ### Major Changes
