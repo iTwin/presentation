@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.64
+
+### Patch Changes
+
+- [#1469](https://github.com/iTwin/presentation/pull/1469): `TreeActionBase`: Made the `onClick` prop optional.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+  - @itwin/presentation-hierarchies@2.0.0-alpha.17
+  - @itwin/unified-selection@2.0.0-alpha.0
+
 ## 2.0.0-alpha.63
 
 ### Major Changes
