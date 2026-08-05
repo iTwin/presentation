@@ -224,7 +224,7 @@ export interface TreeActionBaseAttributes {
 
 // @alpha (undocumented)
 type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.ItemAction>, "onClick"> & TreeActionBaseAttributes & {
-    onClick: () => void;
+    onClick?: () => void;
 };
 
 // @alpha
