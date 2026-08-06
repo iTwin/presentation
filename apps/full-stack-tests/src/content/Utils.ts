@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "vitest";
 import { createContentProvider, PropertyField, resolveContentSources } from "@itwin/presentation-content";
 import {
   createECSchemaProvider as createECSchemaProviderInterop,
@@ -130,30 +131,20 @@ export function getRelatedPropertyFieldsByPath(descriptor: Descriptor, path: Rel
 }
 
 /**
- * Walks a category's parent chain and returns the categories from the given leaf up to the root
- * (i.e. `[leaf, ..., root]`). Stops when a category has no `parentId` or the parent is missing from
- * the descriptor. Use this to assert nested category hierarchies such as `[Custom > Default]`.
+ * Asserts that a field's category hierarchy matches the expected category labels, ordered from the
+ * root category down to the field's immediate (leaf) category. For example, a field categorized under
+ * `Child` nested in `Parent` is validated with `["Parent", "Child"]`. A field with no resolvable
+ * category (no `categoryId`, or a dangling reference) is validated with `[]`.
  */
-export function getCategoryChain(descriptor: Descriptor, categoryId: string): Array<Descriptor["categories"][string]> {
-  const chain: Array<Descriptor["categories"][string]> = [];
-  let id: string | undefined = categoryId;
+export function validateCategoryChain(descriptor: Descriptor, field: Field, expectedLabelsRootToField: string[]): void {
+  const labelsLeafToRoot: string[] = [];
+  let id: string | undefined = field.categoryId;
   const seen = new Set<string>();
   while (id !== undefined && !seen.has(id) && id in descriptor.categories) {
     seen.add(id);
     const category: Descriptor["categories"][string] = descriptor.categories[id];
-    chain.push(category);
+    labelsLeafToRoot.push(category.label);
     id = category.parentId;
   }
-  return chain;
-}
-
-/**
- * Convenience for hierarchy assertions: returns the labels of a field's category chain from leaf to
- * root (e.g. `["Custom", "Default"]`). Throws if the field has no category.
- */
-export function getCategoryLabelChain(descriptor: Descriptor, field: Field): string[] {
-  if (!field.categoryId) {
-    throw new Error(`Expected field "${field.id}" to have a category.`);
-  }
-  return getCategoryChain(descriptor, field.categoryId).map((category) => category.label);
+  expect([...labelsLeafToRoot].reverse()).toEqual(expectedLabelsRootToField);
 }
