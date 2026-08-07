@@ -20,7 +20,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 | Platform | iTwin.js (iModels, ECSQL, Presentation APIs) |
 | Reactive | RxJS |
 | API docs | `@itwin/build-tools` (extract-api, docs) |
-| Node | ^24, pnpm 10 |
+| Node | ^24, pnpm 11 |
 
 ## Packages
 
