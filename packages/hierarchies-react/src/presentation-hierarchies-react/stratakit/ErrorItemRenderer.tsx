@@ -154,7 +154,7 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
       >
         {linkLabel}
       </Link>
-      {secondPart ? " " : ""}
+      {secondPart && !secondPart.startsWith(".") ? " " : ""}
       {secondPart ? secondPart : null}
     </div>
   );
