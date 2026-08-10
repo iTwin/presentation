@@ -141,20 +141,33 @@ interface MessageWithLinkProps {
 
 function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLinkProps) {
   const splitMessage = message.split("{{node}}", 2);
-  const firstPart = splitMessage[0].trimEnd();
-  const secondPart = splitMessage[1]?.trimStart();
+  const firstPart = splitMessage[0];
+  const secondPart = splitMessage.length > 1 ? splitMessage[1] : undefined;
+  const linkToNode = (
+    <Link
+      render={<button type="button" />}
+      onClick={scrollToElement}
+      variant="caption"
+      style={{ verticalAlign: "baseline" }}
+    >
+      {linkLabel}
+    </Link>
+  );
+
+  if (message.length === firstPart.length) {
+    return (
+      <div>
+        {linkToNode}
+        {": "}
+        {firstPart}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {firstPart}{" "}
-      <Link
-        render={<button type="button" />}
-        onClick={scrollToElement}
-        variant="caption"
-        style={{ verticalAlign: "baseline" }}
-      >
-        {linkLabel}
-      </Link>
-      {secondPart && !secondPart.startsWith(".") ? " " : ""}
+      {firstPart}
+      {linkToNode}
       {secondPart ? secondPart : null}
     </div>
   );
