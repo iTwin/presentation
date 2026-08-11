@@ -35,7 +35,6 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             instances: [{ browser: "chromium", viewport: { width: 800, height: 600 } }],
-            expect: { toMatchScreenshot: { comparatorName: "pixelmatch" } },
           },
         },
       },
