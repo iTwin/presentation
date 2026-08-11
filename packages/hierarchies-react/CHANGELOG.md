@@ -1003,6 +1003,16 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.11.4
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.19
+  - @itwin/presentation-shared@1.2.19
+  - @itwin/unified-selection@1.8.4
+
 ## 1.11.3
 
 ### Patch Changes
