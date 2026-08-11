@@ -87,6 +87,7 @@ type StrataKitTreeRendererProps = TreeRendererProps &
 export const StrataKitTreeRenderer: FC<
   PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>
 > = forwardRef<StrataKitTreeRendererAttributes, StrataKitTreeRendererProps>(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function StrataKitTreeRenderer(props, forwardedRef) {
     const {
       id,
@@ -302,6 +303,7 @@ type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
 };
 
 const VirtualTreeItem = memo(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
     const style: CSSProperties = useMemo(
       () => ({
@@ -341,6 +343,7 @@ type HierarchyNodeItemProps = {
   Pick<ReturnType<typeof useSelectionHandler>, "handleNodeSelect">;
 
 const HierarchyNodeItem = memo(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
     {
       item,

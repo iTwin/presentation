@@ -216,6 +216,7 @@ export const PlaceholderNode: FC<
   >
 > = memo(
   forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     function PlaceholderNode({ ...props }, forwardedRef) {
       const translate = useTranslation();
       return (
