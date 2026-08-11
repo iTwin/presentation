@@ -126,7 +126,12 @@ export function getFieldById(descriptor: Descriptor, id: string): Descriptor["fi
 export function getRelatedPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath): PropertyField[] {
   return getRelatedPropertyFields(descriptor).filter(
     (f) =>
-      f.id === PropertyField.computeId({ propertyClassName: f.propertyClassName, propertyName: f.propertyName, pathFromTarget: path }),
+      f.id ===
+      PropertyField.computeId({
+        propertyClassName: f.propertyClassName,
+        propertyName: f.propertyName,
+        pathFromTarget: path,
+      }),
   );
 }
 

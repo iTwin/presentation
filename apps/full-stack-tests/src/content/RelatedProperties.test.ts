@@ -278,8 +278,8 @@ describe("Content", () => {
               <ECProperty propertyName="PropA" typeName="string" />
             </ECEntityClass>
             <ECEntityClass typeName="B">
-              <ECProperty propertyName="Keep" typeName="string" />
-              <ECProperty propertyName="Drop" typeName="string" />
+              <ECProperty propertyName="DropA" typeName="string" />
+              <ECProperty propertyName="DropB" typeName="string" />
             </ECEntityClass>
             <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
               <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
@@ -292,7 +292,7 @@ describe("Content", () => {
           `,
         );
         const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
-        const b = builder.insertInstance(s.items.B.fullName, { keep: "k", drop: "d" });
+        const b = builder.insertInstance(s.items.B.fullName, { dropA: "da", dropB: "db" });
         builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
         return { schema: s };
       });
@@ -319,8 +319,8 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      expect(getPropertyFieldsByName(descriptor, "Keep")).toHaveLength(0);
-      expect(getPropertyFieldsByName(descriptor, "Drop")).toHaveLength(0);
+      expect(getPropertyFieldsByName(descriptor, "DropA")).toHaveLength(0);
+      expect(getPropertyFieldsByName(descriptor, "DropB")).toHaveLength(0);
     });
 
     it("excludes named properties with per-step select exclude", async () => {
