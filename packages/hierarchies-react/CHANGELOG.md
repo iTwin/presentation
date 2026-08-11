@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.65
+
+### Patch Changes
+
+- [#1477](https://github.com/iTwin/presentation/pull/1477): `ErrorItemRenderer`: Improved unknown error formatting by displaying the affected node before the error message, separated by a colon. Localized error messages now preserve their defined spacing around the node link.
+
 ## 2.0.0-alpha.64
 
 ### Patch Changes
