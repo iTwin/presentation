@@ -35,7 +35,7 @@ export interface TreeActionBaseAttributes {
 export type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.ItemAction>, "onClick"> &
   TreeActionBaseAttributes & {
     /** Callback invoked when the action is clicked. */
-    onClick: () => void;
+    onClick?: () => void;
   };
 
 /**
