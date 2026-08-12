@@ -114,9 +114,10 @@ describe("Hierarchies", () => {
                       FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id IN (${parentNode.extendedData!.parentSubjectIds.map(() => "?").join(",")})
                     `,
-                    bindings: parentNode.extendedData!.parentSubjectIds.map(
-                      (id: Id64String): ECSqlBinding => ({ type: "id", value: id }),
-                    ),
+                    bindings: parentNode.extendedData!.parentSubjectIds.map((id: Id64String): ECSqlBinding => ({
+                      type: "id",
+                      value: id,
+                    })),
                   },
                 },
               ];
@@ -581,9 +582,10 @@ describe("Hierarchies", () => {
                       FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id IN (${parentNode.extendedData!.parentSubjectIds.map(() => "?").join(",")})
                     `,
-                    bindings: parentNode.extendedData!.parentSubjectIds.map(
-                      (id: Id64String): ECSqlBinding => ({ type: "id", value: id }),
-                    ),
+                    bindings: parentNode.extendedData!.parentSubjectIds.map((id: Id64String): ECSqlBinding => ({
+                      type: "id",
+                      value: id,
+                    })),
                   },
                 },
               ];
@@ -684,9 +686,10 @@ describe("Hierarchies", () => {
                       FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id IN (${parentNode.extendedData!.parentSubjectIds.map(() => "?").join(",")})
                     `,
-                    bindings: parentNode.extendedData!.parentSubjectIds.map(
-                      (id: Id64String): ECSqlBinding => ({ type: "id", value: id }),
-                    ),
+                    bindings: parentNode.extendedData!.parentSubjectIds.map((id: Id64String): ECSqlBinding => ({
+                      type: "id",
+                      value: id,
+                    })),
                   },
                 },
               ];
