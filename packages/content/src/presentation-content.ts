@@ -7,6 +7,7 @@
 export type { ContentTarget, ContentSource } from "./content/ContentTarget.js";
 export type { ContentDescriptor } from "./content/model/ContentDescriptor.js";
 export type { Field, PropertyField, CalculatedField, ExternalField } from "./content/model/Field.js";
+export type { ValueSelector, PropertyValueSelector, CalculatedValueSelector } from "./content/model/ValueSelector.js";
 export { CategoryDefinition } from "./content/model/Category.js";
 export type { ContentItem, ContentValues } from "./content/model/ContentItem.js";
 
@@ -24,6 +25,9 @@ export { defineQueryFilterer } from "./content/extensions/QueryFilterer.js";
 export type { ContentConfiguration } from "./content/Content.js";
 export { resolveContentSources, createContentProvider } from "./content/Content.js";
 export { getDistinctFieldValues } from "./content/DistinctValues.js";
+
+// Default iModel configuration
+export { createIModelContentConfiguration } from "./content/extensions/presentation-rules/EmbeddedRulesets.js";
 
 // Consumer utilities
 export { mapItems, reduceItems } from "./content/Utilities.js";

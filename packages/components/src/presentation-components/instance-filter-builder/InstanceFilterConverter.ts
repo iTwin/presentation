@@ -10,8 +10,8 @@ import { StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
-import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
+import { hasBaseClass } from "./SchemaViewUtils.js";
 
 import type { Primitives } from "@itwin/appui-abstract";
 import type {
@@ -28,22 +28,21 @@ export async function findBaseExpressionClassName(imodel: IModelConnection, prop
   if (propertyClassNames.length === 1) {
     return propertyClassNames[0];
   }
-
-  const metadataProvider = getIModelMetadataProvider(imodel);
+  const schemaView = await imodel.getSchemaView();
   const [firstClassName, ...restClassNames] = propertyClassNames;
-  let currentBaseClassInfo = await metadataProvider.getECClassInfo(firstClassName);
-  /* v8 ignore next -- @preserve */
-  if (!currentBaseClassInfo) {
+  let currentBaseClass = schemaView.findClass(firstClassName);
+  /* v8 ignore next 3 -- @preserve */
+  if (!currentBaseClass) {
     return firstClassName;
   }
 
   for (const propClassName of restClassNames) {
-    const propClassInfo = await metadataProvider.getECClassInfo(propClassName);
-    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClassInfo.id)) {
-      currentBaseClassInfo = propClassInfo;
+    const propClass = schemaView.findClass(propClassName);
+    if (propClass && hasBaseClass(propClass, currentBaseClass)) {
+      currentBaseClass = propClass;
     }
   }
-  return currentBaseClassInfo.name;
+  return currentBaseClass.fullName;
 }
 
 /** @internal */

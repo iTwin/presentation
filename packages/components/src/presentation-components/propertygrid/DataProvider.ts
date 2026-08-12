@@ -15,11 +15,11 @@ import { assert } from "@itwin/core-bentley";
 import {
   addFieldHierarchy,
   ContentFlags,
+  createContentTraverser,
   createFieldHierarchies,
   DefaultContentDisplayTypes,
   PropertyValueFormat as PresentationPropertyValueFormat,
   RelationshipMeaning,
-  traverseContentItem,
   Value,
 } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
@@ -28,6 +28,7 @@ import { InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/C
 import { ContentDataProvider } from "../common/ContentDataProvider.js";
 import { createLabelRecord, findField, memoize } from "../common/Utils.js";
 import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
+import { buildIntersectionFieldsSelector } from "./PropertiesIntersection.js";
 
 import type { IPropertyDataProvider, PropertyCategory, PropertyData } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -54,6 +55,16 @@ import type { WithIModelKey } from "../common/Utils.js";
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
+
+/**
+ * Controls how properties from multiple selected elements of different classes are combined.
+ * - `"union"` (default): all properties from all selected element classes are shown.
+ * - `"intersection"`: only properties common to all selected element classes are shown.
+ *
+ * @see [[PresentationPropertyDataProvider.propertiesMergeMode]]
+ * @alpha
+ */
+export type PropertiesMergeMode = "union" | "intersection";
 
 /**
  * Default presentation ruleset used by [[PresentationPropertyDataProvider]]. The ruleset just gets properties
@@ -90,6 +101,14 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
    * If true, additional 'favorites' category is not created.
    */
   disableFavoritesCategory?: boolean;
+
+  /**
+   * Controls how properties from multiple selected elements of different classes are combined.
+   * Defaults to `"union"`.
+   * @see [[PropertiesMergeMode]]
+   * @alpha
+   */
+  propertiesMergeMode?: PropertiesMergeMode;
 }
 
 /**
@@ -103,6 +122,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   private _isNestedPropertyCategoryGroupingEnabled: boolean;
   private _onFavoritesChangedRemoveListener?: () => void;
   private _shouldCreateFavoritesCategory: boolean;
+  private _propertiesMergeMode: PropertiesMergeMode;
 
   /**
    * Constructor
@@ -119,6 +139,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this._includeFieldsWithCompositeValues = true;
     this._isNestedPropertyCategoryGroupingEnabled = true;
     this._shouldCreateFavoritesCategory = !props.disableFavoritesCategory;
+    this._propertiesMergeMode = props.propertiesMergeMode ?? "union";
   }
 
   #dispose() {
@@ -156,10 +177,22 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    * Provides content configuration for the property grid
    */
   protected override async getDescriptorOverrides(): Promise<DescriptorOverrides> {
-    return {
+    const baseOverrides = {
       ...(await super.getDescriptorOverrides()),
       contentFlags: ContentFlags.ShowLabels | ContentFlags.MergeResults,
     };
+
+    if (this._propertiesMergeMode === "intersection") {
+      const descriptor = await this.getContentDescriptor();
+      if (descriptor) {
+        const fieldsSelector = await buildIntersectionFieldsSelector(this.imodel, descriptor);
+        if (fieldsSelector) {
+          return { ...baseOverrides, fieldsSelector };
+        }
+      }
+    }
+
+    return baseOverrides;
   }
 
   /**
@@ -219,6 +252,24 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     }
     this._isNestedPropertyCategoryGroupingEnabled = value;
     this.invalidateCache({ content: true });
+  }
+
+  /**
+   * Controls how properties from multiple selected elements of different classes are combined.
+   * Defaults to `"union"`.
+   *
+   * @see [[PropertiesMergeMode]]
+   * @alpha
+   */
+  public get propertiesMergeMode(): PropertiesMergeMode {
+    return this._propertiesMergeMode;
+  }
+  public set propertiesMergeMode(value: PropertiesMergeMode) {
+    if (this._propertiesMergeMode === value) {
+      return;
+    }
+    this._propertiesMergeMode = value;
+    this.invalidateCache({ descriptorConfiguration: true });
   }
 
   /* eslint-disable @typescript-eslint/no-deprecated */
@@ -311,9 +362,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
     });
-    // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    traverseContentItem(builder, content.descriptor, contentItem);
+    createContentTraverser(builder, content.descriptor)([contentItem]);
     return builder.getPropertyData();
   });
 
@@ -374,24 +423,11 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 }
 
 async function isFieldFavorite(field: Field, imodel: IModelConnection) {
-  // note: `Presentation.favoriteProperties.hasAsync` may not be available in older versions of core
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (Presentation.favoriteProperties.hasAsync) {
-    return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return Presentation.favoriteProperties.has(field, imodel, FavoritePropertiesScope.IModel);
+  return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
 }
 
 async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
-  // note: `Presentation.favoriteProperties.sortFieldsAsync` may not be available in older versions of core
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (Presentation.favoriteProperties.sortFieldsAsync) {
-    await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
-    return;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  Presentation.favoriteProperties.sortFields(imodel, fields);
+  await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
 }
 
 const createDefaultPropertyData = (): PropertyData => ({

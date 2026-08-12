@@ -8,9 +8,7 @@
 
 import { KeySet } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { Presentation } from "@itwin/presentation-frontend";
 import { computeSelection } from "@itwin/unified-selection";
-import { mapPresentationFrontendSelectionScopeToUnifiedSelectionScope } from "../common/Utils.js";
 import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider.js";
 import { getFavoritesCategory } from "./Utils.js";
 
@@ -41,9 +39,8 @@ export interface FavoritePropertiesDataProviderProps {
 
   /**
    * Active selection scope provider.
-   * Takes active scope from `Presentation.selection.scopes.activeScope` if not provided.
    */
-  activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
+  activeScopeProvider: () => Parameters<typeof computeSelection>[0]["scope"];
 }
 
 /**
@@ -75,27 +72,14 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
   public includeFieldsWithCompositeValues: boolean;
 
   /** Constructor. */
-  constructor(
-    props: FavoritePropertiesDataProviderProps & {
-      activeScopeProvider: NonNullable<FavoritePropertiesDataProviderProps["activeScopeProvider"]>;
-    },
-  );
-  /**
-   * Constructor.
-   * @deprecated in 5.16. Create the provider with props that include an `activeScopeProvider`. The `activeScopeProvider` prop will be made required in the next major release.
-   */
-  constructor(props?: FavoritePropertiesDataProviderProps);
-  constructor(props?: FavoritePropertiesDataProviderProps) {
+  constructor(props: FavoritePropertiesDataProviderProps) {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithNoValues = true;
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithCompositeValues = true;
-    this._customRuleset = /* v8 ignore next -- @preserve */ props?.ruleset;
+    this._customRuleset = props.ruleset;
     /* v8 ignore start -- @preserve */
-    this._getActiveScope =
-      props?.activeScopeProvider ??
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
+    this._getActiveScope = props.activeScopeProvider;
     /* v8 ignore stop -- @preserve */
   }
 

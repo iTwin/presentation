@@ -14,55 +14,62 @@ overrides:
   "@opentelemetry/otlp-transformer>protobufjs": ^8.0.2
   "uuid@<14": ^14.0.0
 
+packageExtensions:
+  'mocha-junit-reporter@*':
+    peerDependenciesMeta:
+      mocha:
+        optional: true
+
 autoInstallPeers: true
 
 catalogs:
   appui:
-    '@itwin/appui-react': ^5.32.0
-    '@itwin/components-react': ^5.32.0
-    '@itwin/core-react': ^5.32.0
-    '@itwin/imodel-components-react': ^5.32.0
+    '@itwin/appui-react': ^5.33.2
+    '@itwin/components-react': ^5.33.2
+    '@itwin/core-react': ^5.33.2
+    '@itwin/imodel-components-react': ^5.33.2
   build-tools:
-    '@itwin/build-tools': ^5.10.1
+    '@itwin/build-tools': ^5.12.0
     '@itwin/eslint-plugin': ^6.1.0
     '@rolldown/plugin-babel': ^0.2.3
     '@stylistic/eslint-plugin': ^5.10.0
-    '@types/node': ^24.13.1
-    '@vitejs/plugin-react': ^6.0.2
+    '@types/node': ^24.13.3
+    '@vitejs/plugin-react': ^6.0.5
     babel-plugin-react-compiler: ^1.0.0
     cpx2: ^7.0.2
     cross-env: ^7.0.3
-    eslint: ^9.39.4
+    eslint: ^9.39.5
     eslint-plugin-react: ^7.37.5
     eslint-plugin-unused-imports: ^4.4.1
     fast-glob: ^3.3.3
     rimraf: ^6.1.3
-    tsdown: ^0.21.10
-    typescript: ~6.0.3
-    vite: ^8.0.16
+    tsdown: ^0.22.13
     vite-plugin-static-copy: ^4.1.0
+    '@typescript/native': npm:typescript@~7.0.2
+    typescript: npm:@typescript/typescript6@~6.0.2
+    vite: ^8.2.1
   itwinjs-core:
-    '@itwin/core-bentley': ^5.10.1
-    '@itwin/core-common': ^5.10.1
-    '@itwin/core-geometry': ^5.10.1
+    '@itwin/core-bentley': ^5.12.0
+    '@itwin/core-common': ^5.12.0
+    '@itwin/core-geometry': ^5.12.0
   itwinjs-core-dev:
-    '@itwin/appui-abstract': ^5.10.1
-    '@itwin/core-backend': ^5.10.1
-    '@itwin/core-bentley': ^5.10.1
-    '@itwin/core-common': ^5.10.1
-    '@itwin/core-electron': ^5.10.1
-    '@itwin/core-frontend': ^5.10.1
-    '@itwin/core-geometry': ^5.10.1
-    '@itwin/core-i18n': ^5.10.1
-    '@itwin/core-orbitgt': ^5.10.1
-    '@itwin/core-quantity': ^5.10.1
-    '@itwin/ecschema-metadata': ^5.10.1
-    '@itwin/ecschema-rpcinterface-common': ^5.10.1
-    '@itwin/ecschema-rpcinterface-impl': ^5.10.1
-    '@itwin/express-server': ^5.10.1
-    '@itwin/presentation-backend': ^5.10.1
-    '@itwin/presentation-common': ^5.10.1
-    '@itwin/presentation-frontend': ^5.10.1
+    '@itwin/appui-abstract': ^5.12.0
+    '@itwin/core-backend': ^5.12.0
+    '@itwin/core-bentley': ^5.12.0
+    '@itwin/core-common': ^5.12.0
+    '@itwin/core-electron': ^5.12.0
+    '@itwin/core-frontend': ^5.12.0
+    '@itwin/core-geometry': ^5.12.0
+    '@itwin/core-i18n': ^5.12.0
+    '@itwin/core-orbitgt': ^5.12.0
+    '@itwin/core-quantity': ^5.12.0
+    '@itwin/ecschema-metadata': ^5.12.0
+    '@itwin/ecschema-rpcinterface-common': ^5.12.0
+    '@itwin/ecschema-rpcinterface-impl': ^5.12.0
+    '@itwin/express-server': ^5.12.0
+    '@itwin/presentation-backend': ^5.12.0
+    '@itwin/presentation-common': ^5.12.0
+    '@itwin/presentation-frontend': ^5.12.0
     inversify: ~6.0.2
     reflect-metadata: ^0.1.14
   itwinui:
@@ -70,33 +77,33 @@ catalogs:
     '@itwin/itwinui-illustrations-react': ^2.1.0
     '@itwin/itwinui-react': ^3.21.2
   react:
-    '@types/react': ^19.2.17
-    '@types/react-dom': ^19.2.3
+    '@types/react': ^19.2.18
+    '@types/react-dom': ^19.2.4
     classnames: ^2.5.1
-    react: ^19.2.7
+    react: ^19.2.8
     react-compiler-runtime: ^1.0.0
-    react-dom: ^19.2.7
+    react-dom: ^19.2.8
     react-error-boundary: ^4.1.2
   rxjs:
     rxjs: ^7.8.2
     rxjs-for-await: ^1.0.0
   stratakit:
-    '@stratakit/bricks': ^0.5.4
-    '@stratakit/foundations': ^0.4.8
-    '@stratakit/icons': ^0.3.1
-    '@stratakit/structures': ^0.5.7
+    '@mui/material': ^9.0.0
+    '@stratakit/icons': ^0.4.0
+    '@stratakit/mui': ^0.5.0
+    '@stratakit/structures': ^0.5.8
   test-tools:
     '@testing-library/dom': ^10.4.1
     '@testing-library/react': ^16.3.2
-    '@testing-library/user-event': ^14.6.1
+    '@testing-library/user-event': ^14.6.3
     '@types/deep-equal-in-any-order': ^1.0.4
-    '@vitest/browser-playwright': ^4.1.9
-    '@vitest/coverage-v8': ^4.1.9
+    '@vitest/browser-playwright': ^4.1.10
+    '@vitest/coverage-v8': ^4.1.10
     axe-core: ^4.11.4
     deep-equal-in-any-order: ^2.2.0
-    happy-dom: ^20.10.1
+    happy-dom: ^20.11.2
     playwright: ^1.59.1
-    vitest: ^4.1.9
+    vitest: ^4.1.10
     vitest-browser-react: ^2.2.0
 
 hoistPattern:

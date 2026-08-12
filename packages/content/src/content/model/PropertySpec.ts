@@ -12,9 +12,21 @@
 export interface StepPropertySpec {
   /** 0-based position in the path. */
   stepIndex: number;
-  /** Properties from the target class at this step. */
+  /**
+   * Properties to load from the step's target class. Omit to load no properties from the target
+   * class at this step.
+   */
   target?: ClassPropertySpec;
-  /** Properties from the relationship class at this step. */
+  /**
+   * Properties to load from the step's relationship class. Omit to load no properties from the
+   * relationship class at this step.
+   *
+   * Relationship-class fields are grouped under a dedicated **relationship category** (labelled by
+   * the relationship class), with the step's target-class category nested beneath it. A category
+   * defined for these fields should therefore nest under the relationship category, whose id is
+   * `CategoryDefinition.computeId({ path, omitTargetClass: true })` — as opposed to target-class
+   * fields, which nest under the target category (`CategoryDefinition.computeId({ path })`).
+   */
   relationship?: ClassPropertySpec;
 }
 
@@ -24,7 +36,7 @@ export interface StepPropertySpec {
  *
  * @public
  */
-interface ClassPropertySpec {
+export interface ClassPropertySpec {
   /**
    * Which properties to select from this class.
    * - `"all"`: include all properties.
@@ -32,7 +44,7 @@ interface ClassPropertySpec {
    * - `{ include: [...] }`: only these properties.
    * - `{ exclude: [...] }`: all except these properties.
    */
-  select?: PropertySelection;
+  select: PropertySelection;
 
   /**
    * Overrides applied to all selected properties.

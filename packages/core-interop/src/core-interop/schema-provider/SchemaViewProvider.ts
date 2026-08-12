@@ -93,12 +93,25 @@ export function createECClassFromSchemaView(
     getProperties(): EC.Property[] {
       return svClass.getProperties().map((p) => createECPropertyFromSchemaView(p, ecClass, sv));
     },
+    getOwnProperties(): EC.Property[] {
+      return svClass.getOwnProperties().map((p) => createECPropertyFromSchemaView(p, ecClass, sv));
+    },
     getDerivedClasses(): EC.Class[] {
       return svClass.derivedClasses.map((c) =>
         createECClassFromSchemaView(c, sv, useOrCreateSchema(c.schema, sv, schema)),
       );
     },
   };
+
+  if (svClass.isEntity()) {
+    const ecEntity: EC.EntityClass = {
+      ...ecClass,
+      getMixins(): EC.Mixin[] {
+        return svClass.mixins.map((m) => createECClassFromSchemaView(m, sv, useOrCreateSchema(m.schema, sv, schema)));
+      },
+    };
+    return ecEntity;
+  }
 
   if (svClass.isRelationship()) {
     const ecRel: EC.RelationshipClass = {
@@ -328,6 +341,7 @@ function createECEnumerationFromSchemaView(svEnum: SchemaView.Enumeration, schem
     fullName: normalizeFullClassName(svEnum.fullName),
     name: svEnum.name,
     label: svEnum.label,
+    description: svEnum.description,
     type: svEnum.primitiveType === SchemaViewPrimitiveType.Integer ? "Number" : "String",
     isStrict: svEnum.isStrict,
     enumerators: [...svEnum.getEnumerators()].map((e) => ({ name: e.name, label: e.label, value: e.value })),
@@ -335,7 +349,13 @@ function createECEnumerationFromSchemaView(svEnum: SchemaView.Enumeration, schem
 }
 
 function createECKoqFromSchemaView(svKoq: SchemaView.KindOfQuantity, schema: EC.Schema): EC.KindOfQuantity {
-  return { schema, fullName: normalizeFullClassName(svKoq.fullName), name: svKoq.name, label: svKoq.label };
+  return {
+    schema,
+    fullName: normalizeFullClassName(svKoq.fullName),
+    name: svKoq.name,
+    label: svKoq.label,
+    description: svKoq.description,
+  };
 }
 
 function createECPropertyCategoryFromSchemaView(
@@ -347,5 +367,7 @@ function createECPropertyCategoryFromSchemaView(
     fullName: normalizeFullClassName(svCategory.fullName),
     name: svCategory.name,
     label: svCategory.label,
+    description: svCategory.description,
+    priority: svCategory.priority,
   };
 }

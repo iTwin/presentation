@@ -21,20 +21,17 @@
     "url": "http://www.bentley.com"
   },
   "type": "module",
-  "main": "lib/cjs/models-tree.js",
-  "types": "lib/cjs/models-tree",
-  "module": "lib/esm/models-tree.js",
+  "types": "lib/models-tree",
+  "module": "lib/models-tree.js",
   "exports": {
     ".": {
-      "import": "./lib/esm/models-tree.js",
-      "require": "./lib/cjs/models-tree.js"
+      "import": "./lib/models-tree.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run -s build:lib",
+    "build:lib": "tsc -p tsconfig.lib.json",
     "clean": "rimraf lib",
     "lint": "eslint \"./src/**/*.ts\""
   },
@@ -53,6 +50,7 @@
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }

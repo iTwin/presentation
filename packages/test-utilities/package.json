@@ -3,20 +3,17 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "npm run -s build:lib",
+    "build:lib": "tsc -p tsconfig.lib.json",
     "clean": "rimraf lib temp",
     "lint": "eslint \"./src/**/*.ts\""
   },
   "type": "module",
-  "main": "lib/cjs/presentation-test-utilities.js",
-  "types": "lib/cjs/presentation-test-utilities",
-  "module": "lib/esm/presentation-test-utilities.js",
+  "types": "lib/presentation-test-utilities",
+  "module": "lib/presentation-test-utilities.js",
   "exports": {
     ".": {
-      "import": "./lib/esm/presentation-test-utilities.js",
-      "require": "./lib/cjs/presentation-test-utilities.js"
+      "import": "./lib/presentation-test-utilities.js"
     },
     "./package.json": "./package.json",
     "./node-hooks/ignore-styles": "./node-hooks/ignore-styles.cjs"
@@ -31,6 +28,7 @@
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }

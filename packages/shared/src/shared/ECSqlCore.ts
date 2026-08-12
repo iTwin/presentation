@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { Id64String } from "@itwin/core-bentley";
+import type { TypedPrimitiveValue } from "./Values.js";
 
 /**
  * Defines an ECSql binding consisting of a value and its type. Necessary to differentiate between numeric
@@ -19,6 +20,37 @@ export type ECSqlBinding =
   | { type: "string"; value?: string }
   | { type: "point2d"; value?: { x: number; y: number } }
   | { type: "point3d"; value?: { x: number; y: number; z: number } };
+
+/**
+ * Helpers for creating ECSQL bindings.
+ * @public
+ */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace ECSqlBinding {
+  /** Creates an ECSQL binding for the supplied typed primitive value. */
+  export function create({ value, type }: TypedPrimitiveValue): ECSqlBinding {
+    switch (type) {
+      case "Boolean":
+        return { type: "boolean", value };
+      case "Integer":
+        return { type: "int", value };
+      case "Long":
+        return { type: "long", value };
+      case "Double":
+        return { type: "double", value };
+      case "Id":
+        return { type: "id", value };
+      case "String":
+        return { type: "string", value };
+      case "DateTime":
+        return { type: "string", value: value instanceof Date ? value.toISOString() : value.toString() };
+      case "Point2d":
+        return { type: "point2d", value };
+      case "Point3d":
+        return { type: "point3d", value };
+    }
+  }
+}
 
 /**
  * Defines an ECSQL query and its bindings.

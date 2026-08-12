@@ -34,12 +34,9 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 
 // @public
 interface ClassBasedLabelSelectClause {
-    className: EC.FullClassName;
+    className: EC.FullClassNameDotNotation;
     clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
-
-// @public
-export function compareFullClassNames(lhs: EC.FullClassName, rhs: EC.FullClassName): number;
 
 // @public
 export type ConcatenatedValue = ConcatenatedValuePart[];
@@ -79,7 +76,7 @@ export function createCachingECClassHierarchyInspector(props: {
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @public
-function createClassSelector(fullClassName: EC.FullClassName): string;
+function createClassSelector(fullClassName: EC.FullClassNameDotNotation): string;
 
 // @public
 function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
@@ -104,7 +101,7 @@ function createInstanceKeySelector(props: {
 // @public
 interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
-    className?: EC.FullClassName;
+    className?: EC.FullClassNameDotNotation;
     selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
@@ -120,7 +117,7 @@ function createNullableSelector(props: {
 // @public
 function createPrimitivePropertyValueSelectorProps(input: {
     schemaProvider: ECSchemaProvider;
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyClassAlias: string;
     propertyName: string;
 }): Promise<TypedPrimitiveValueSelectorProps>;
@@ -132,10 +129,10 @@ function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): str
 function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string;
 
 // @public
-function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<{
-    joins: string;
-    bindings?: Record<string, ECSqlBinding>;
-}>;
+function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinClauseResult>;
+
+// @public
+function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult;
 
 // @public
 interface CreateRelationshipPathJoinClauseProps {
@@ -144,6 +141,9 @@ interface CreateRelationshipPathJoinClauseProps {
     // (undocumented)
     schemaProvider: ECSchemaProvider;
 }
+
+// @public
+function createRelationshipPathJoinInfo(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinInfo>;
 
 // @public
 export namespace EC {
@@ -159,6 +159,7 @@ export namespace EC {
         baseClass?: Class;
         // (undocumented)
         getDerivedClasses(): Class[];
+        getOwnProperties(): Array<Property>;
         // (undocumented)
         getProperties(): Array<Property>;
         // (undocumented)
@@ -178,7 +179,9 @@ export namespace EC {
         // (undocumented)
         isStructClass(): this is StructClass;
     }
-    export type EntityClass = Class;
+    export interface EntityClass extends Class {
+        getMixins(): Mixin[];
+    }
     export interface Enumeration extends SchemaItem {
         // (undocumented)
         enumerators: Array<Enumerator<string | number>>;
@@ -250,7 +253,9 @@ export namespace EC {
         // (undocumented)
         name: string;
     }
-    export type PropertyCategory = SchemaItem;
+    export interface PropertyCategory extends SchemaItem {
+        priority: number;
+    }
     export interface RelationshipClass extends Class {
         // (undocumented)
         direction: "Forward" | "Backward";
@@ -286,7 +291,9 @@ export namespace EC {
     }
     export interface SchemaItem {
         // (undocumented)
-        fullName: FullClassName;
+        description?: string;
+        // (undocumented)
+        fullName: FullClassNameDotNotation;
         // (undocumented)
         label?: string;
         // (undocumented)
@@ -310,7 +317,7 @@ export namespace EC {
 // @public
 export interface ECClassHierarchyInspector {
     // (undocumented)
-    classDerivesFrom(derivedClassFullName: EC.FullClassName, candidateBaseClassFullName: EC.FullClassName): Promise<boolean> | boolean;
+    classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
 }
 
 // @public
@@ -329,7 +336,8 @@ declare namespace ECSql {
         createConcatenatedValueStringSelector,
         createInstanceKeySelector,
         createPrimitivePropertyValueSelectorProps,
-        createRelationshipPathJoinClause
+        createRelationshipPathJoinClause,
+        createRelationshipPathJoinInfo
     }
 }
 
@@ -363,6 +371,11 @@ export type ECSqlBinding = {
         z: number;
     };
 };
+
+// @public
+export namespace ECSqlBinding {
+    export function create(input: TypedPrimitiveValue): ECSqlBinding;
+}
 
 // @public
 export interface ECSqlQueryDef {
@@ -400,6 +413,20 @@ export interface ECSqlQueryRow {
 type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @public
+interface EnumerationInfo<TValue extends string | number = string | number> {
+    enumerators: EnumeratorInfo<TValue>[];
+    isStrict: boolean;
+    name: string;
+}
+
+// @public
+interface EnumeratorInfo<TValue extends string | number = string | number> {
+    description?: string;
+    label: string;
+    value: TValue;
+}
+
+// @public
 interface Event_2<TListener extends (...args: any[]) => void = () => void> {
     // (undocumented)
     addListener: (listener: TListener) => () => void;
@@ -422,7 +449,7 @@ export function formatConcatenatedValue(props: {
 }): Promise<string>;
 
 // @public
-export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class>;
+export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class>;
 
 // @public
 export interface IInstanceLabelSelectClauseFactory {
@@ -451,7 +478,7 @@ interface IModelInstanceLabelSelectClauseFactoryProps {
 
 // @public
 export interface InstanceKey {
-    className: EC.FullClassName;
+    className: EC.FullClassNameDotNotation;
     id: Id64String;
 }
 
@@ -480,6 +507,29 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 }
 
 // @public
+interface JoinTargetClass {
+    // (undocumented)
+    className: EC.FullClassNameDotNotation;
+    // (undocumented)
+    kind: "class";
+}
+
+// @public
+interface JoinTargetRelationshipSelect {
+    // (undocumented)
+    innerJoinCondition: string;
+    innerTarget: JoinTargetClass;
+    // (undocumented)
+    innerTargetAlias: string;
+    // (undocumented)
+    kind: "relationship-select";
+    // (undocumented)
+    relationshipAlias: string;
+    // (undocumented)
+    relationshipClassName: EC.FullClassNameDotNotation;
+}
+
+// @public
 export function julianToDateTime(julianDate: number): Date;
 
 // @public
@@ -489,16 +539,35 @@ export type LogFunction = (category: string, message: string) => void;
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @public
+export interface NavigationValueDescriptor {
+    // (undocumented)
+    kind: "navigation";
+    targetClassName: EC.FullClassNameDotNotation;
+}
+
+// @public
 export const NOOP_LOGGER: ILogger;
 
 // @public
 export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation;
 
-// @public (undocumented)
-type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
-
 // @public
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
+
+// @public
+type OverloadParameters<TFunc> = TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+    (...args: infer A3): any;
+    (...args: infer A4): any;
+} ? A1 | A2 | A3 | A4 : TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+    (...args: infer A3): any;
+} ? A1 | A2 | A3 : TFunc extends {
+    (...args: infer A1): any;
+    (...args: infer A2): any;
+} ? A1 | A2 : TFunc extends (...args: infer A1) => any ? A1 : never;
 
 // @public
 export function parseFullClassName(fullClassName: string): {
@@ -510,7 +579,7 @@ export function parseFullClassName(fullClassName: string): {
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
 // @public
-interface Point2d {
+export interface Point2dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -518,7 +587,7 @@ interface Point2d {
 }
 
 // @public
-interface Point3d {
+export interface Point3dValue {
     // (undocumented)
     x: number;
     // (undocumented)
@@ -528,30 +597,43 @@ interface Point3d {
 }
 
 // @public
-export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
+export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 // @public (undocumented)
 export namespace PrimitiveValue {
-    export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    export function isPoint3d(value: PrimitiveValue): value is Point3d;
+    export function isPoint2d(value: PrimitiveValue): value is Point2dValue;
+    export function isPoint3d(value: PrimitiveValue): value is Point3dValue;
 }
 
 // @public
 export type PrimitiveValueDescriptor = {
     kind: "primitive";
 } & ({
-    type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+    type: Extract<PrimitiveValueType, "String">;
     kindOfQuantity?: undefined;
+    enumeration?: EnumerationInfo<string>;
 } | {
-    type: NumericPrimitiveValueType;
+    type: Extract<PrimitiveValueType, "Integer" | "Long">;
     kindOfQuantity?: string;
+    enumeration?: EnumerationInfo<number>;
+} | {
+    type: Extract<PrimitiveValueType, "Double">;
+    kindOfQuantity?: string;
+    enumeration?: undefined;
+} | {
+    type: Exclude<PrimitiveValueType, "Integer" | "Long" | "Double" | "String">;
+    kindOfQuantity?: undefined;
+    enumeration?: undefined;
 });
 
 // @public
-type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 // @public
-export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc> extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : Parameters<TFunc> extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
+export type Props<TFunc extends (...args: any[]) => any> = PropsFromParameters<OverloadParameters<TFunc>>;
+
+// @public
+type PropsFromParameters<TParams> = TParams extends [infer TProps] ? Exclude<TProps, undefined> extends object ? TProps : never : TParams extends [(infer TProps)?] ? Exclude<TProps, undefined> extends object ? TProps | undefined : never : never;
 
 // @public
 export interface RaisableEvent<TListener extends (...args: any[]) => void = () => void> extends Event_2<TListener> {
@@ -560,7 +642,30 @@ export interface RaisableEvent<TListener extends (...args: any[]) => void = () =
 }
 
 // @public
+interface RelationshipJoinInfo {
+    joinAlias: string;
+    joinCondition: string;
+    joinTarget: JoinTargetClass | JoinTargetRelationshipSelect;
+    // (undocumented)
+    joinType: "inner" | "outer";
+}
+
+// @public
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
+
+// @public
+interface RelationshipPathJoinClauseResult {
+    // (undocumented)
+    bindings?: Record<string, ECSqlBinding>;
+    // (undocumented)
+    joins: string;
+}
+
+// @public
+interface RelationshipPathJoinInfo {
+    bindings?: Record<string, ECSqlBinding>;
+    steps: RelationshipPathStepJoinInfo[];
+}
 
 // @public
 interface RelationshipPathStep {
@@ -570,10 +675,18 @@ interface RelationshipPathStep {
         relationshipAlias?: string;
         bindings?: Record<string, ECSqlBinding>;
     };
-    relationshipName: EC.FullClassName;
+    relationshipName: EC.FullClassNameDotNotation;
     relationshipReverse?: boolean;
-    sourceClassName: EC.FullClassName;
-    targetClassName: EC.FullClassName;
+    sourceClassName: EC.FullClassNameDotNotation;
+    targetClassName: EC.FullClassNameDotNotation;
+}
+
+// @public
+interface RelationshipPathStepJoinInfo {
+    joins: RelationshipJoinInfo[];
+    relationshipClassIdSelector: string;
+    sourceClassIdSelector: string;
+    targetClassIdSelector: string;
 }
 
 // @public
@@ -608,7 +721,15 @@ export function trimWhitespace(str: string | undefined): string | undefined;
 // @public
 export type TypedPrimitiveValue = ({
     value: number;
-    type: Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
+    type: Extract<PrimitiveValueType, "Double">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Integer">;
+    koqName?: string;
+} | {
+    value: number;
+    type: Extract<PrimitiveValueType, "Long">;
     koqName?: string;
 } | {
     value: boolean;
@@ -623,10 +744,10 @@ export type TypedPrimitiveValue = ({
     value: number | string | Date;
     type: Extract<PrimitiveValueType, "DateTime">;
 } | {
-    value: Point2d;
+    value: Point2dValue;
     type: Extract<PrimitiveValueType, "Point2d">;
 } | {
-    value: Point3d;
+    value: Point3dValue;
     type: Extract<PrimitiveValueType, "Point3d">;
 }) & {
     extendedType?: string;
@@ -634,7 +755,9 @@ export type TypedPrimitiveValue = ({
 
 // @public (undocumented)
 export namespace TypedPrimitiveValue {
-    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+    export function create<TValue extends PrimitiveValue, TType extends PrimitiveValueType>(value: TValue, type: TType, koqName?: string, extendedType?: string): Extract<TypedPrimitiveValue, {
+        type: TType;
+    }>;
 }
 
 // @public
@@ -666,7 +789,7 @@ namespace TypedValueSelectClauseProps {
 export type Value = PrimitiveValue | StructValue | ArrayValue | undefined;
 
 // @public
-export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
+export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor | NavigationValueDescriptor;
 
 // (No @packageDocumentation comment for this package)
 

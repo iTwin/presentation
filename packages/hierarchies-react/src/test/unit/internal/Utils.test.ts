@@ -19,28 +19,28 @@ describe("createNodeId", () => {
       key: {
         type: "instances",
         instanceKeys: [
-          { id: "0x1", className: "Schema:Class" },
-          { id: "0x2", className: "Schema:Class" },
+          { id: "0x1", className: "Schema.Class" },
+          { id: "0x2", className: "Schema.Class" },
         ],
       },
     });
-    expect(createNodeId(node)).toBe("instances,0x1,Schema:Class,0x2,Schema:Class");
+    expect(createNodeId(node)).toBe("instances,0x1,Schema.Class,0x2,Schema.Class");
   });
 
   it("creates id for `class-grouping` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
-      key: { type: "class-grouping", className: "Schema:Class" },
-      groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
+      key: { type: "class-grouping", className: "Schema.Class" },
+      groupedInstanceKeys: [{ id: "0x1", className: "Schema.Class" }],
     });
-    expect(createNodeId(node)).toBe("class-grouping,Schema:Class");
+    expect(createNodeId(node)).toBe("class-grouping,Schema.Class");
   });
 
   it("creates id for `label-grouping` node", () => {
     const node = createTestGroupingNode({
       id: "custom",
       key: { type: "label-grouping", label: "TestLabel" },
-      groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
+      groupedInstanceKeys: [{ id: "0x1", className: "Schema.Class" }],
     });
     expect(createNodeId(node)).toBe("label-grouping,TestLabel");
   });
@@ -51,25 +51,25 @@ describe("createNodeId", () => {
       key: {
         type: "property-grouping:value",
         formattedPropertyValue: "test-value",
-        propertyClassName: "TestSchema:TestClass",
+        propertyClassName: "TestSchema.TestClass",
         propertyName: "TestProp",
       },
-      groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
+      groupedInstanceKeys: [{ id: "0x1", className: "Schema.Class" }],
     });
-    expect(createNodeId(node)).toBe("property-grouping:value,test-value,TestSchema:TestClass,TestProp");
+    expect(createNodeId(node)).toBe("property-grouping:value,test-value,TestSchema.TestClass,TestProp");
   });
 
   it("creates id for `instances` node child node", () => {
     const node = createTestHierarchyNode({
       id: "custom",
-      key: { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] },
+      key: { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema.Class" }] },
       parentKeys: [
-        { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
-        { type: "class-grouping", className: "Schema:OtherClass" },
+        { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
+        { type: "class-grouping", className: "Schema.OtherClass" },
       ],
     });
     expect(createNodeId(node)).toBe(
-      "instances,0x1,Schema:Class;class-grouping,Schema:OtherClass;instances,0x3,Schema:Class",
+      "instances,0x1,Schema.Class;class-grouping,Schema.OtherClass;instances,0x3,Schema.Class",
     );
   });
 });
@@ -84,31 +84,31 @@ describe("sameNodes", () => {
   it("compares same `instance` nodes", () => {
     const lhs = createTestHierarchyNode({
       id: "lhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
     });
     const rhs = createTestHierarchyNode({
       id: "rhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
     });
     expect(sameNodes(lhs, rhs)).toBe(true);
   });
 
   it("compares same `class-grouping` nodes", () => {
-    const lhs = createTestGroupingNode({ id: "lhs", key: { type: "class-grouping", className: "Schema:Class" } });
-    const rhs = createTestGroupingNode({ id: "rhs", key: { type: "class-grouping", className: "Schema:Class" } });
+    const lhs = createTestGroupingNode({ id: "lhs", key: { type: "class-grouping", className: "Schema.Class" } });
+    const rhs = createTestGroupingNode({ id: "rhs", key: { type: "class-grouping", className: "Schema.Class" } });
     expect(sameNodes(lhs, rhs)).toBe(true);
   });
 
   it("compares same child nodes", () => {
     const lhs = createTestHierarchyNode({
       id: "lhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
-      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] }],
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
+      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema.Class" }] }],
     });
     const rhs = createTestHierarchyNode({
       id: "rhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
-      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] }],
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
+      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema.Class" }] }],
     });
     expect(sameNodes(lhs, rhs)).toBe(true);
   });
@@ -116,11 +116,11 @@ describe("sameNodes", () => {
   it("compares different `instance` nodes", () => {
     const lhs = createTestHierarchyNode({
       id: "lhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
     });
     const rhs = createTestHierarchyNode({
       id: "rhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] },
+      key: { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema.Class" }] },
     });
     expect(sameNodes(lhs, rhs)).toBe(false);
   });
@@ -128,13 +128,13 @@ describe("sameNodes", () => {
   it("compares child nodes from different levels", () => {
     const lhs = createTestHierarchyNode({
       id: "lhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
-      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] }],
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
+      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema.Class" }] }],
     });
     const rhs = createTestHierarchyNode({
       id: "rhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
-      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] }],
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
+      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x3", className: "Schema.Class" }] }],
     });
     expect(sameNodes(lhs, rhs)).toBe(false);
   });
@@ -142,15 +142,15 @@ describe("sameNodes", () => {
   it("compares child nodes from different depths", () => {
     const lhs = createTestHierarchyNode({
       id: "lhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
-      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] }],
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
+      parentKeys: [{ type: "instances", instanceKeys: [{ id: "0x2", className: "Schema.Class" }] }],
     });
     const rhs = createTestHierarchyNode({
       id: "rhs",
-      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema:Class" }] },
+      key: { type: "instances", instanceKeys: [{ id: "0x1", className: "Schema.Class" }] },
       parentKeys: [
-        { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema:Class" }] },
-        { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema:Class" }] },
+        { type: "instances", instanceKeys: [{ id: "0x2", className: "Schema.Class" }] },
+        { type: "instances", instanceKeys: [{ id: "0x3", className: "Schema.Class" }] },
       ],
     });
     expect(sameNodes(lhs, rhs)).toBe(false);

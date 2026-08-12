@@ -77,6 +77,7 @@ Multiple content sources (from multiple targets) are fed together into descripto
 The schema of the content result. Computed _before_ loading any values. Describes _what fields exist_ — it is purely structural and does not carry request-level concerns like sorting, filtering, or paging. Contains:
 
 - The list of **content sources** that were used to compute it (one per target class).
+- The set of **value selectors** — the deduplicated set of raw columns to SELECT from the iModel, keyed by selector ID. A value selector describes _what column to pull_, distinct from a field, which describes _what to display_. Multiple fields can share one selector (e.g., an override and its base), and an external fields provider input can require a selector with no output field at all. See "Value selector" below.
 - The full list of fields, organized as a two-level structure:
   - **Direct fields** — property fields and calculated fields that belong to the target class directly (no relationship path).
   - **Related field groups** — containers that group fields loaded via a specific relationship path. Each group carries its relationship path. Groups can nest for multi-step paths. Fields inside a group that have no explicit category are implicitly categorized by the group's target class (its display label becomes the category label). Groups are purely organizational — they carry no value themselves; values in content items are keyed by leaf field ID as usual.
@@ -102,6 +103,27 @@ Field kinds:
 2. **SQL calculated field** — carries an ECSQL expression evaluated in the query. The query builder includes it in the SELECT clause; the value comes back from the database like any other column. Can participate in sorting, filtering, and distinct values.
 
 Note: The current system's "related content field" (a field that contains child fields) is replaced by **related field groups** in the descriptor structure (see Content descriptor above). Groups are organizational containers, not fields — they don't have a value type or appear as columns in content items.
+
+### Value selector
+
+Describes a single **raw column to SELECT** from the iModel, deduplicated across the fields that read it. Value selectors separate two concerns that a field used to conflate:
+
+1. **What to display** — the consumer-facing field (label, category, value classes, overrides).
+2. **What column to SELECT** — how to pull one raw value out of the iModel.
+
+These are not 1:1:
+
+- **N fields : 1 column.** A field with overrides and one without (or several forks carved for different value classes) all read the **same** underlying property column. They select one column, not N.
+- **0 fields : 1 column.** An external fields provider's input needs a property **selected** so it can feed `getValues`, but there may be **no output field** for it.
+
+Selector kinds mirror the SQL-backed field kinds:
+
+- **Property value selector** — selects a real EC property column. Its ID equals the property field's _base_ ID (source class + property name + path, with no fork suffix), so every fork/override variant of the same property collapses to one selector.
+- **Calculated value selector** — selects the result of an ECSQL expression. Its ID equals the calculated field ID.
+
+External fields have **no** selector — they are populated out-of-band, not via SQL.
+
+Each SQL-backed field carries a **`selectorId`** referencing the column it reads. At value loading, one loaded column (per selector) is written to every field that references it. The descriptor's selector set is the deduplicated union of the columns backing its SQL-backed fields plus the columns required by external fields providers' inputs — see "External fields provider".
 
 ### Content values and content item
 
@@ -179,7 +201,9 @@ Provider specs are applied first (the system uses them during field generation t
 **Input:** Content descriptor (possibly modified by the consumer or by descriptor transformers).
 **Output:** ECSQL query (or queries).
 
-This stage translates the descriptor into one or more ECSQL queries. It selects columns for all fields present in the descriptor, including hidden ones (hidden fields are still queried — their values exist in content items but are flagged for UI to skip). Only fields that have been **removed** from the descriptor entirely are not queried. SQL calculated fields carry their ECSQL expression as metadata — the query builder includes that expression in the SELECT clause like any other column. Query filterers can inject additional WHERE clauses or JOINs at this point.
+This stage translates the descriptor into one or more ECSQL queries. It emits **one column per value selector** in the descriptor — not one per field. Because multiple fields can share a selector (overrides, forks), and external-input columns exist as selectors with no field, the selector set is the precise column list to SELECT. Hidden fields are still queried (their selector remains); a transformer that removes an output field drops the field's selector automatically **unless** the same column is also required as an external-input selector. Calculated value selectors carry their ECSQL expression — the query builder includes that expression in the SELECT clause like any other column. Query filterers can inject additional WHERE clauses or JOINs at this point.
+
+A property value selector carries **no column alias** — it carries semantic coordinates (`sourceClassName`, `propertyName`, `pathFromTarget`). To emit its SELECT term the builder needs `(alias, propertyName)`: `propertyName` comes straight from the selector, and the **alias is derived from `pathFromTarget`**. The builder assigns a deterministic alias per path/step while constructing the FROM + JOINs from the content source's resolved paths, then looks that alias up when emitting the selector's column (`pathFromTarget: []` → the primary-class alias; a related property → the terminal step's alias). `sourceClassName` is used only for EC metadata resolution, not for aliasing. The alias cannot live on the selector because selectors are deduplicated and query-independent, whereas aliases are per-query and depend on the FROM/JOIN shape (which may be split across multiple queries for the 64-JOIN / 1:many cases). The path→alias map must use the same path serialization the selector ID uses so the two agree on path identity.
 
 ### Stage 4: Value loading
 
@@ -304,8 +328,9 @@ Final field list:
     - "iot.lastMaintenance"   (dateTime, external)
 
   Input resolution:
-    - "pumpName" input → matches existing field "Pump.Name" → pinned (stays visible)
-    - (If no matching field existed, pipeline would add it as hidden)
+    - "pumpName" input → property value selector for Pump.Name → added to descriptor.selectors
+    - The selector's column is queried regardless of whether any output field references it,
+      and a transformer removing "Pump.Name" cannot drop the column.
 
 Descriptor transformer runs (e.g., "hide all read-only fields"):
   - "Pump.FlowRate" is marked read-only in EC metadata → transformer hides it
@@ -527,7 +552,7 @@ An external fields provider declares:
 The plan originally proposed `inputs?: (descriptor: Descriptor) => string[]` — a callback that receives the finalized descriptor and returns field ID strings. This was rejected because:
 
 1. **External fields providers cannot know what fields exist** — The descriptor's field set depends on which iModel fields providers are registered and what schema the iModel has. An external provider has no way to predict field IDs at registration time, and making it search the descriptor by class + property + path is fragile (what if the field isn't there?).
-2. **Static declarations are self-describing** — The provider declares exactly what it needs (`className`, `propertyName`, `path?`). The pipeline takes responsibility for ensuring the property is queried — either by finding an existing field that matches, or by adding a hidden field. The provider never needs to "find" anything in the descriptor.
+2. **Static declarations are self-describing** — The provider declares exactly what it needs (`className`, `propertyName`, `path?`). The pipeline takes responsibility for ensuring the property is queried by adding a value selector (column) for it. The provider never needs to "find" anything in the descriptor.
 3. **Type safety** — Static declarations enable compile-time type inference. The record keys become the typed `inputValues` accessor names in `getValues`, so TypeScript catches typos and missing inputs at compile time. A dynamic callback returning `string[]` provides no such guarantee.
 4. **Decouples from field ID encoding** — Field IDs are an internal encoding concern (class + property + path hash, etc.). Static declarations use semantic coordinates (class name + property name + path) — stable, readable, and independent of ID encoding strategy.
 
@@ -553,7 +578,7 @@ interface InputPropertyDeclaration {
 }
 ```
 
-**Input field visibility rule:** For each declared input property, the pipeline checks whether a matching field already exists in the descriptor (same class + property + path). If yes, it pins the field (prevents removal by transformers). If no, it adds the property as a hidden field (queried but not displayed). The provider never observes the descriptor directly — it just declares what it needs and the pipeline handles the rest.
+**Input column rule:** For each declared input property, the pipeline adds a **property value selector** (its column) to the descriptor unconditionally — regardless of whether any output field references the same column. Because the selector set is independent of the field set, a transformer removing an output field can never remove an input column, and no field needs to be added or "pinned". The provider never observes the descriptor directly — it just declares what it needs and the pipeline guarantees the column is selected and its value pre-extracted into `inputValues`.
 
 External fields providers run during Stage 4, after query execution but before items are emitted to the consumer. They enable external data to be first-class in the descriptor — their declared fields appear in the field list, carry categories and metadata, and can be hidden/shown like any other field.
 
@@ -562,7 +587,7 @@ External fields providers run during Stage 4, after query execution but before i
 - External fields cannot participate in SQL-level sorting, filtering, or distinct values (their data doesn't exist in the query).
 - External fields providers must not modify fields they don't own.
 
-**Example:** An external fields provider declares `inputs: { externalId: { className: "BisCore:Element", propertyName: "CodeValue" } }`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. Since no iModel fields provider independently declared `CodeValue`, the pipeline adds it as a hidden field (queried but not displayed). During Stage 4, the provider's `getValues` function reads `item.inputValues.externalId` from each item, calls an external service once with all values, and returns `externalName` and `externalStatus` for each item in the batch.
+**Example:** An external fields provider declares `inputs: { externalId: { className: "BisCore:Element", propertyName: "CodeValue" } }`. It declares `fields: [{ id: "externalName", ... }, { id: "externalStatus", ... }]`. The pipeline adds a value selector for `CodeValue` so the column is queried (no field is created). During Stage 4, the provider's `getValues` function reads `item.inputValues.externalId` from each item, calls an external service once with all values, and returns `externalName` and `externalStatus` for each item in the batch.
 
 ### Registration and ordering
 
@@ -812,7 +837,7 @@ The pipeline exposes an **async iterator** — consumers `for await` over conten
 
 5. ~~**Undo/redo interaction:**~~ **Resolved.** Consumer's responsibility. The pipeline treats the descriptor as an opaque input — it does not track modification history or support undo.
 
-6. ~~**External value sources (non-iModel data):**~~ **Resolved.** Two-phase loading with **external fields providers**. After ECSQL materializes rows, registered external fields providers are called in bulk with the page of items. Each provider declares which fields it populates, reads input values from existing (potentially hidden) fields, calls external services in batch, and fills in its fields. This keeps external data first-class in the descriptor while keeping the pipeline in control of value population. See "External fields provider" in Extension Points.
+6. ~~**External value sources (non-iModel data):**~~ **Resolved.** Two-phase loading with **external fields providers**. After ECSQL materializes rows, registered external fields providers are called in bulk with the page of items. Each provider declares which fields it populates, reads input values from columns selected on its behalf (value selectors), calls external services in batch, and fills in its fields. This keeps external data first-class in the descriptor while keeping the pipeline in control of value population. See "External fields provider" in Extension Points.
 
 7. ~~**1:many related content loading strategy:**~~ Moved to Implementation Notes — this is an internal implementation concern, not an API design question.
 

@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyRecord } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
-import { PrimitiveType, primitiveTypeToString, SchemaContext } from "@itwin/ecschema-metadata";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import {
   combineFieldNames,
   Content,
   ContentFlags,
   Item,
-  KoqPropertyValueFormatter,
+  KeySet,
   LabelDefinition,
   PropertyValueFormat,
   RelationshipMeaning,
@@ -30,6 +30,7 @@ import {
   DEFAULT_PROPERTY_GRID_RULESET,
   PresentationPropertyDataProvider,
 } from "../../presentation-components/propertygrid/DataProvider.js";
+import * as PropertiesIntersectionModule from "../../presentation-components/propertygrid/PropertiesIntersection.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -42,10 +43,8 @@ import {
 import { createMocked } from "../TestUtils.js";
 
 import type { Mocked } from "vitest";
-import type { PrimitiveValue } from "@itwin/appui-abstract";
 import type { PropertyCategory } from "@itwin/components-react";
 import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import type { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
 import type {
   ArrayTypeDescription,
   CategoryDescription,
@@ -191,6 +190,82 @@ describe("PropertyDataProvider", () => {
       const flags = overrides.contentFlags!;
       expect(flags & (ContentFlags.MergeResults | ContentFlags.ShowLabels)).not.toBe(0);
     });
+
+    it("does not apply fieldsSelector in union mode", async () => {
+      // default mode is "union"
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toBeUndefined();
+    });
+
+    it("applies fieldsSelector from buildIntersectionFieldsSelector in intersection mode", async () => {
+      const simpleField = createTestSimpleContentField({ name: "SimpleField" });
+      const descriptor = createTestContentDescriptor({ fields: [simpleField] });
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+
+      const selector = { type: "include" as const, fields: [simpleField.getFieldDescriptor()] };
+      const buildSpy = vi
+        .spyOn(PropertiesIntersectionModule, "buildIntersectionFieldsSelector")
+        .mockResolvedValue(selector);
+
+      provider = new Provider({ imodel, ruleset: rulesetId, propertiesMergeMode: "intersection" });
+      provider.keys = new KeySet([
+        { className: "Schema:A", id: "0x1" },
+        { className: "Schema:B", id: "0x2" },
+      ]);
+
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toEqual(selector);
+      expect(buildSpy).toHaveBeenCalledOnce();
+    });
+
+    it("does not apply fieldsSelector when intersection mode returns undefined", async () => {
+      const descriptor = createTestContentDescriptor({ fields: [] });
+      presentationManager.getContentDescriptor.mockResolvedValue(descriptor);
+      vi.spyOn(PropertiesIntersectionModule, "buildIntersectionFieldsSelector").mockResolvedValue(undefined);
+
+      provider = new Provider({ imodel, ruleset: rulesetId, propertiesMergeMode: "intersection" });
+      provider.keys = new KeySet([{ className: "Schema:A", id: "0x1" }]);
+
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toBeUndefined();
+    });
+
+    it("does not apply fieldsSelector when descriptor is unavailable", async () => {
+      presentationManager.getContentDescriptor.mockResolvedValue(undefined);
+
+      provider = new Provider({ imodel, ruleset: rulesetId, propertiesMergeMode: "intersection" });
+      provider.keys = new KeySet([
+        { className: "Schema:A", id: "0x1" },
+        { className: "Schema:B", id: "0x2" },
+      ]);
+
+      const overrides = await provider.getDescriptorOverrides();
+      expect(overrides.fieldsSelector).toBeUndefined();
+    });
+  });
+
+  describe("propertiesMergeMode", () => {
+    it("defaults to 'union'", () => {
+      expect(provider.propertiesMergeMode).toBe("union");
+    });
+
+    it("can be set to 'intersection' via setter", () => {
+      using p = new PresentationPropertyDataProvider({ imodel });
+      p.propertiesMergeMode = "intersection";
+      expect(p.propertiesMergeMode).toBe("intersection");
+    });
+
+    it("invalidates cache when changing value", () => {
+      const spy = vi.spyOn(provider, "invalidateCache");
+      provider.propertiesMergeMode = "intersection";
+      expect(spy).toHaveBeenCalledOnce();
+    });
+
+    it("does not invalidate cache when setting to same value", () => {
+      const spy = vi.spyOn(provider, "invalidateCache");
+      provider.propertiesMergeMode = provider.propertiesMergeMode;
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 
   describe("[deprecated] includeFieldsWithNoValues", () => {
@@ -231,17 +306,6 @@ describe("PropertyDataProvider", () => {
     it("calls `FavoritePropertiesManager.hasAsync` when it's available", async () => {
       await provider.isFieldFavoriteAsync(field);
       expect(favoritePropertiesManager.hasAsync).toHaveBeenCalledExactlyOnceWith(
-        field,
-        imodel,
-        FavoritePropertiesScope.IModel,
-      );
-    });
-
-    it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
-      Object.assign(favoritePropertiesManager, { hasAsync: undefined });
-      await provider.isFieldFavoriteAsync(field);
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      expect(favoritePropertiesManager.has).toHaveBeenCalledExactlyOnceWith(
         field,
         imodel,
         FavoritePropertiesScope.IModel,
@@ -461,58 +525,6 @@ describe("PropertyDataProvider", () => {
           const record = createTestContentItem({ values, displayValues });
           provider.getContent = async () => new Content(descriptor, [record]);
           expect(await provider.getData()).toMatchSnapshot();
-        });
-
-        it("re-formats primitive property data", async () => {
-          // stub content
-          const field = createTestPropertiesContentField({
-            type: { valueFormat: PropertyValueFormat.Primitive, typeName: primitiveTypeToString(PrimitiveType.Double) },
-            properties: [
-              {
-                property: createTestPropertyInfo({
-                  kindOfQuantity: { name: "test.koq", label: "Test Koq", persistenceUnit: "Units.M" },
-                }),
-              },
-            ],
-          });
-          const descriptor = createTestContentDescriptor({ fields: [field] });
-          const values: ValuesDictionary<any> = { [field.name]: 123.456789 };
-          const displayValues: ValuesDictionary<any> = { [field.name]: "123.5 m" };
-          const record = createTestContentItem({ values, displayValues });
-          presentationManager.getContentIterator.mockResolvedValue({
-            descriptor,
-            total: 1,
-            items: (async function* () {
-              yield record;
-            })(),
-          });
-
-          // stub formats provider
-          const onFormatsChanged = new BeUiEvent<FormatsChangedArgs>();
-          vi.spyOn(IModelApp, "formatsProvider", "get").mockReturnValue({
-            onFormatsChanged,
-          } as unknown as FormatsProvider);
-
-          // setup provider
-          const dataChangedSpy = vi.fn();
-          provider.onDataChanged.addListener(dataChangedSpy);
-
-          // check the first (unformatted) request
-          expect((await provider.getData()).records[field.category.name][0].value).toEqual({
-            valueFormat: UiPropertyValueFormat.Primitive,
-            value: 123.456789,
-            displayValue: "123.5 m",
-          } satisfies PrimitiveValue);
-
-          // change the format and ensure the results are different
-          vi.spyOn(KoqPropertyValueFormatter.prototype, "format").mockResolvedValue("formatted value");
-          onFormatsChanged.raiseEvent({ formatsChanged: "all" });
-          expect(dataChangedSpy).toHaveBeenCalledOnce();
-          expect((await provider.getData()).records[field.category.name][0].value).toEqual({
-            valueFormat: UiPropertyValueFormat.Primitive,
-            value: 123.456789,
-            displayValue: "formatted value",
-          } satisfies PrimitiveValue);
         });
 
         it("returns array property data", async () => {
@@ -1552,44 +1564,6 @@ describe("PropertyDataProvider", () => {
             Object.assign(favoritePropertiesManager, {
               hasAsync: () => true,
               sortFieldsAsync: async (_imodel: IModelConnection, fields: Field[]) =>
-                fields.sort((lhs: Field, rhs: Field): number => {
-                  if (lhs.label < rhs.label) {
-                    return -1;
-                  }
-                  if (lhs.label > rhs.label) {
-                    return 1;
-                  }
-                  return 0;
-                }),
-            });
-            const category = createTestCategoryDescription();
-            const descriptor = createTestContentDescriptor({
-              fields: [
-                createTestSimpleContentField({ category, name: "b", priority: 1, label: "b" }),
-                createTestSimpleContentField({ category, name: "c", priority: 2, label: "c" }),
-                createTestSimpleContentField({ category, name: "a", priority: 3, label: "a" }),
-              ],
-            });
-            const values: ValuesDictionary<any> = {};
-            const displayValues: ValuesDictionary<any> = {};
-            const record = createTestContentItem({ values, displayValues });
-            provider.getContent = async () => new Content(descriptor, [record]);
-
-            const data = await provider.getData();
-            const records = data.records[category.name];
-            expect(records).toMatchObject([
-              { property: { displayLabel: "a" } },
-              { property: { displayLabel: "c" } },
-              { property: { displayLabel: "b" } },
-            ]);
-          });
-
-          it("sorts favorite records using `FavoritePropertiesManager.sortFields` when `sortFieldsAsync` is not available", async () => {
-            Object.assign(favoritePropertiesManager, {
-              hasAsync: undefined,
-              sortFieldsAsync: undefined,
-              has: () => true,
-              sortFields: (_imodel: IModelConnection, fields: Field[]) =>
                 fields.sort((lhs: Field, rhs: Field): number => {
                   if (lhs.label < rhs.label) {
                     return -1;

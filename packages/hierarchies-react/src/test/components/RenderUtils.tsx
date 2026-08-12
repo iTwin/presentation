@@ -6,7 +6,7 @@
 import axe from "axe-core";
 import { expect } from "vitest";
 import { render } from "vitest-browser-react";
-import { Root } from "@stratakit/foundations";
+import { Root } from "@stratakit/mui";
 import { LocalizationContextProvider } from "../../presentation-hierarchies-react/LocalizationContext.js";
 import localeEn from "../../public/locales/en/PresentationHierarchies_1.0.json" with { type: "json" };
 

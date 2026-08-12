@@ -63,15 +63,15 @@ export interface ExternalFieldsProvider<
 /**
  * A request for an iModel property that the external fields provider needs as input.
  *
- * The system checks whether the property already exists in the descriptor:
- * - If yes, it pins the field (prevents removal by transformers).
- * - If no, it adds the property as a hidden field (queried but not displayed).
+ * The system ensures a value selector (column) exists for the requested property so it can be fed
+ * into `getValues`. The column is selected regardless of whether any output field references it, and
+ * cannot be removed by descriptor transformers.
  *
  * @public
  */
-interface InputPropertyDeclaration {
+export interface InputPropertyDeclaration {
   /** Full class name that owns the property. */
-  className: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   /** The EC property name. */
   propertyName: string;
   /**
@@ -125,8 +125,8 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  *     { id: "lastMaintenance", label: "Last Maintenance", type: { kind: "primitive", type: "DateTime" } },
  *   ],
  *   inputs: {
- *     serialNo: { className: "MySchema:Pump", propertyName: "SerialNumber" },
- *     deviceId: { className: "MySchema:Device", propertyName: "DeviceId", path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Device", relationshipName: "MySchema:PumpHasDevice" }] },
+ *     serialNo: { propertyClassName: "MySchema:Pump", propertyName: "SerialNumber" },
+ *     deviceId: { propertyClassName: "MySchema:Device", propertyName: "DeviceId", path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Device", relationshipName: "MySchema:PumpHasDevice" }] },
  *   },
  *   async getValues({ items }) {
  *     const serials = items.map((item) => item.inputValues.serialNo);

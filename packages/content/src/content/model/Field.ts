@@ -3,12 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  type EC,
-  normalizeFullClassName,
-  type RelationshipPath,
-  type ValueDescriptor,
-} from "@itwin/presentation-shared";
+import { type EC, type ECSqlBinding, type RelationshipPath, type ValueDescriptor } from "@itwin/presentation-shared";
 import { serializeRelationshipPath } from "./Utils.js";
 
 /**
@@ -19,7 +14,7 @@ import { serializeRelationshipPath } from "./Utils.js";
 interface BaseField {
   /**
    * Stable ID that uniquely identifies this field across descriptor rebuilds.
-   * Derived from: sourceClassName + propertyAccessPath (for property fields),
+   * Derived from: propertyClassName + propertyAccessPath (for property fields),
    * or a declared stable name (for calculated/external fields).
    */
   id: string;
@@ -42,15 +37,44 @@ interface BaseField {
  */
 export interface PropertyField extends BaseField {
   kind: "property";
-  /** Full class name of the class that owns this property (e.g., "BisCore.Element"). */
-  sourceClassName: EC.FullClassName;
-  /** The EC property name within the source class. */
+  /**
+   * Full class name of the class that *declares* this property (e.g., "BisCore.Element").
+   * Drives the SQL column / property metadata. Distinct from {@link (PropertyField:interface).valueClassNames},
+   * which are the concrete *value-supplier* classes this field represents.
+   */
+  propertyClassName: EC.FullClassNameDotNotation;
+  /** The EC property name within the property's class. */
   propertyName: string;
   /**
-   * Relationship path from the content target to this field's source class.
+   * Relationship path from the content target to this field's property class.
    * Empty array means the field belongs to the target class directly.
    */
   pathFromTarget: RelationshipPath;
+  /**
+   * Concrete classes of the instances that supply this field's value (the field's "value origin").
+   *
+   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these are the
+   * primary (selected) classes; for a related property they are the concrete classes at the
+   * relationship path's terminal end. For example, `["Stuff.Door", "Stuff.Window"]` for a
+   * `Height` declared on `Stuff.Thing`, or `["BisCore.ExternalSourceAspectX",
+   * "BisCore.ExternalSourceAspectY"]` for an `Identifier` declared on
+   * `BisCore.ExternalSourceAspect` and loaded over a relationship.
+   *
+   * Do not confuse this with:
+   * - {@link (PropertyField:interface).propertyClassName} — the class that *declares* the property.
+   * - The content *target* classes (the classes content was requested for). For a direct property the
+   *   value classes coincide with the target classes, but for a related property they are the
+   *   related-endpoint classes rather than the target.
+   *
+   * Always non-empty, de-duplicated, and sorted by full name.
+   */
+  valueClassNames: EC.FullClassNameDotNotation[];
+  /**
+   * ID of the {@link ValueSelector} (column) this field reads. Equals this field's *base* id (its
+   * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so all fork/override
+   * variants of the same underlying property share one selector. Immutable in the transformer view.
+   */
+  selectorId: string;
 }
 /** @public */
 export namespace PropertyField {
@@ -58,15 +82,24 @@ export namespace PropertyField {
    * Computes the ID of a property field from its source class, property name,
    * and relationship path from the target. Use this to look up property fields
    * directly in `descriptor.fields`.
+   *
+   * When a non-empty `forkKey` is provided, it is appended as a `#${forkKey}` suffix so a field
+   * that has been carved for a subset of its value-supplier classes gets a distinct, stable ID.
+   * An `undefined` or empty `forkKey` leaves the identity unchanged — so a survivor field keeps
+   * its original ID.
    */
   export function computeId(props: {
-    propertyClassName: EC.FullClassName;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     pathFromTarget?: RelationshipPath;
+    forkKey?: string;
   }): Field["id"] {
-    let identity = `${normalizeFullClassName(props.propertyClassName)}.${props.propertyName}`;
+    let identity = `${props.propertyClassName}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
-      identity += `(${serializeRelationshipPath(props.pathFromTarget)})`;
+      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget })})`;
+    }
+    if (props.forkKey) {
+      identity += `#${props.forkKey}`;
     }
     return identity;
   }
@@ -106,6 +139,15 @@ export interface CalculatedField extends BaseField {
    * @default "this"
    */
   targetAlias?: string;
+  /**
+   * Bind values referenced by `expression`, keyed by parameter name.
+   */
+  bindings?: Record<string, ECSqlBinding>;
+  /**
+   * ID of the {@link ValueSelector} (column) this field reads. Equals this field's id
+   * (`${providerId}:${localId}`). Immutable in the transformer view.
+   */
+  selectorId: string;
 }
 
 /**

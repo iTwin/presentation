@@ -1,5 +1,58 @@
 # @itwin/unified-selection
 
+## 2.0.0-alpha.0
+
+### Major Changes
+
+- [#1454](https://github.com/iTwin/presentation/pull/1454): Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+
+  This is a packaging change only — the public API is unchanged — so consumers already using the ESM build are not affected. For downstream packages depending on these:
+
+  - If you list one of these packages as a `peerDependency`, widen the version range to include the new major version.
+  - If you have one of these packages as a `dependency` and re-expose it through your public API, you can safely bump to the new major version — the API is unchanged, so it will not break your API consumers.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+
+## 1.8.4
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.19
+
+## 1.8.3
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.17
+
+## 1.8.1
+
+### Patch Changes
+
+- 9f2f1f405e82bbb5bad83de67c265ea0407d6cf1: Avoid freezing main thread when loading huge amount of selectable instance keys.
+
+## 1.8.1-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+
 ## 1.8.0
 
 ### Minor Changes

@@ -25,8 +25,8 @@ export interface ECSchemaProvider {
  */
 export interface ECClassHierarchyInspector {
   classDerivesFrom(
-    derivedClassFullName: EC.FullClassName,
-    candidateBaseClassFullName: EC.FullClassName,
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
   ): Promise<boolean> | boolean;
 }
 
@@ -41,13 +41,13 @@ export function createCachingECClassHierarchyInspector(props: {
   cacheSize?: number;
 }): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
-  function createCacheKey(derivedClassName: EC.FullClassName, baseClassName: EC.FullClassName) {
+  function createCacheKey(derivedClassName: EC.FullClassNameDotNotation, baseClassName: EC.FullClassNameDotNotation) {
     return `${derivedClassName}/${baseClassName}`;
   }
   return {
     classDerivesFrom(
-      derivedClassFullName: EC.FullClassName,
-      candidateBaseClassFullName: EC.FullClassName,
+      derivedClassFullName: EC.FullClassNameDotNotation,
+      candidateBaseClassFullName: EC.FullClassNameDotNotation,
     ): Promise<boolean> | boolean {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
@@ -110,9 +110,10 @@ export namespace EC {
    */
   export interface SchemaItem {
     schema: Schema;
-    fullName: FullClassName;
+    fullName: FullClassNameDotNotation;
     name: string;
     label?: string;
+    description?: string;
   }
 
   /**
@@ -127,6 +128,8 @@ export namespace EC {
     is(other: Class): boolean;
     getProperty(name: string): Property | undefined;
     getProperties(): Array<Property>;
+    /** Gets only the properties defined directly on this class, excluding those inherited from base classes. */
+    getOwnProperties(): Array<Property>;
     isEntityClass(): this is EntityClass;
     isRelationshipClass(): this is RelationshipClass;
     isStructClass(): this is StructClass;
@@ -139,7 +142,10 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/entityclass/
    * @public
    */
-  export type EntityClass = Class;
+  export interface EntityClass extends Class {
+    /** Gets the mixins applied directly to this entity class. */
+    getMixins(): Mixin[];
+  }
 
   /**
    * Represents a struct class.
@@ -163,11 +169,14 @@ export namespace EC {
   export type KindOfQuantity = SchemaItem;
 
   /**
-   * Represents a property category.
+   * Represents a property category used to group related properties.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/propertycategory/
    * @public
    */
-  export type PropertyCategory = SchemaItem;
+  export interface PropertyCategory extends SchemaItem {
+    /** Determines the display order of the category relative to other categories. Higher priority categories are displayed first. */
+    priority: number;
+  }
 
   /**
    * Represents a relationship constraint multiplicity.
@@ -348,40 +357,96 @@ export namespace EC {
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
-/** @public */
-type NumericPrimitiveValueType = Extract<PrimitiveValueType, "Double" | "Integer" | "Long">;
-
 /**
  * A type descriptor for a value's shape.
  *
  * - `PrimitiveValueDescriptor`: a scalar primitive.
  * - `StructValueDescriptor`: a named struct with typed members.
  * - `ArrayValueDescriptor`: an ordered collection of a single element type.
+ * - `NavigationValueDescriptor`: a reference to another EC instance, carrying the reference's target class name.
  *
  * @public
  */
-export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor;
+export type ValueDescriptor =
+  | PrimitiveValueDescriptor
+  | StructValueDescriptor
+  | ArrayValueDescriptor
+  | NavigationValueDescriptor;
 
 /**
  * Describes a scalar primitive value.
+ *
+ * When the value is backed by an enumeration (only possible for `String`-, `Integer`- and
+ * `Long`-typed values), `enumeration` carries the enumeration's metadata (its declared enumerators
+ * and their labels) so consumers can map raw values to display labels without re-reading schema. The
+ * `type` discriminates the enumerator value type (`String` → `string`, `Integer | Long` → `number`).
+ *
  * @public
  */
 export type PrimitiveValueDescriptor = { kind: "primitive" } & (
   | {
       /** The primitive value type. */
-      type: Exclude<PrimitiveValueType, NumericPrimitiveValueType>;
+      type: Extract<PrimitiveValueType, "String">;
       kindOfQuantity?: undefined;
+      /** Metadata of the enumeration backing this value, when it is enumeration-backed. */
+      enumeration?: EnumerationInfo<string>;
     }
   | {
       /** The primitive value type. */
-      type: NumericPrimitiveValueType;
+      type: Extract<PrimitiveValueType, "Integer" | "Long">;
       /**
        * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
        * Determines how the value should be formatted and which units to display.
        */
       kindOfQuantity?: string;
+      /** Metadata of the enumeration backing this value, when it is enumeration-backed. */
+      enumeration?: EnumerationInfo<number>;
+    }
+  | {
+      /** The primitive value type. */
+      type: Extract<PrimitiveValueType, "Double">;
+      /**
+       * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+       * Determines how the value should be formatted and which units to display.
+       */
+      kindOfQuantity?: string;
+      enumeration?: undefined;
+    }
+  | {
+      /** The primitive value type. */
+      type: Exclude<PrimitiveValueType, "Integer" | "Long" | "Double" | "String">;
+      kindOfQuantity?: undefined;
+      enumeration?: undefined;
     }
 );
+
+/**
+ * Metadata about the enumeration backing a primitive value. Preserved on a
+ * `PrimitiveValueDescriptor` so consumers can map raw enum values to their display labels
+ * without re-reading schema.
+ * @public
+ */
+interface EnumerationInfo<TValue extends string | number = string | number> {
+  /** Name of the enumeration type (e.g., `"MySchema.MyEnum"` for schema-backed enums). */
+  name: string;
+  /** When `true`, values are restricted to the declared enumerators. */
+  isStrict: boolean;
+  /** The declared enumerators. */
+  enumerators: EnumeratorInfo<TValue>[];
+}
+
+/**
+ * A single enumerator of an `EnumerationInfo`.
+ * @public
+ */
+interface EnumeratorInfo<TValue extends string | number = string | number> {
+  /** Display label for the enumerator. */
+  label: string;
+  /** The enumerator's raw value (string- or integer-backed, per the owning descriptor's `type`). */
+  value: TValue;
+  /** Optional description. */
+  description?: string;
+}
 
 /**
  * Describes a named struct value with typed members.
@@ -417,16 +482,32 @@ export interface ArrayValueDescriptor {
 }
 
 /**
+ * Describes a navigation property value — a reference to another EC instance.
+ * The runtime value is the referenced instance's id (`Id64String`); this descriptor
+ * additionally carries the reference's target class name as metadata, so consumers can
+ * build selects against the referenced instance (e.g. to resolve its label).
+ * @public
+ */
+export interface NavigationValueDescriptor {
+  kind: "navigation";
+  /**
+   * Full name of the relationship's target-constraint class the navigation points at
+   * (the referenced instance's class, or its base constraint class).
+   */
+  targetClassName: EC.FullClassNameDotNotation;
+}
+
+/**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
  * @public
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
-  sourceClassName: EC.FullClassName;
+  sourceClassName: EC.FullClassNameDotNotation;
   /** Full name of the target ECClass */
-  targetClassName: EC.FullClassName;
+  targetClassName: EC.FullClassNameDotNotation;
   /** Full name of the ECRelationshipClass */
-  relationshipName: EC.FullClassName;
+  relationshipName: EC.FullClassNameDotNotation;
   /**
    * Indicates that the relationship direction be reversed. This should be set to `true` when step direction
    * doesn't match relationship direction, e.g. relationship is from source `A` to target `B` and the step
@@ -447,8 +528,9 @@ export interface RelationshipPathStep {
      *
      * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
      * of the filtered class, and `relationshipAlias` (defaults to `"rel"`) to reference
-     * properties on the relationship class. At query generation time, the pipeline performs
-     * a literal replacement of all `{alias}.` occurrences with the actual query aliases.
+     * properties on the relationship class. At query generation time, the pipeline replaces
+     * all `{alias}.` occurrences (in both their bare `{alias}.` and bracket-quoted `[{alias}].`
+     * forms) with the actual query aliases.
      *
      * @example
      * ```
@@ -459,8 +541,9 @@ export interface RelationshipPathStep {
 
     /**
      * The placeholder used in `expression` to reference the target class (`targetClassName`).
-     * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
-     * actual query alias at query generation time.
+     * Every occurrence of `{targetAlias}.` in the expression, whether bare (`{targetAlias}.`)
+     * or bracket-quoted (`[{targetAlias}].`), will be replaced with the actual query alias at
+     * query generation time.
      *
      * @default "this"
      */
@@ -468,8 +551,9 @@ export interface RelationshipPathStep {
 
     /**
      * The placeholder used in `expression` to reference the relationship class (`relationshipName`).
-     * Every occurrence of `{relationshipAlias}.` in the expression will be replaced with the
-     * actual relationship alias at query generation time.
+     * Every occurrence of `{relationshipAlias}.` in the expression, whether bare (`{relationshipAlias}.`)
+     * or bracket-quoted (`[{relationshipAlias}].`), will be replaced with the actual relationship alias
+     * at query generation time.
      *
      * Only meaningful for non-navigation-property (link table) relationships. When the step uses a
      * navigation property, the relationship table is not part of the query, so any reference via
@@ -497,7 +581,10 @@ export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPa
  * @throws Error if the schema or class is not found.
  * @public
  */
-export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassName): Promise<EC.Class> {
+export async function getClass(
+  schemaProvider: ECSchemaProvider,
+  fullClassName: EC.FullClassNameDotNotation,
+): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await schemaProvider.getSchema(schemaName);
   if (!schema) {

@@ -35,7 +35,6 @@ describe("reloadTree", () => {
     dataProvider = {
       imodel: {} as IModelConnection,
       rulesetId: "",
-      getNodeKey: () => ({ type: "", version: 0, pathFromRoot: [] }),
       getFilteredNodePaths: async () => [],
       getNodesCount: async () => 3,
       getNodes: async (parent, page) => [createDelayLoadedTreeNodeItem(`${parent?.id ?? "root"}-${page?.start ?? 0}`)],

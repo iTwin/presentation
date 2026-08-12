@@ -27,7 +27,6 @@ export {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   type PortalTargetContextProviderProps,
 } from "./presentation-components/common/PortalTargetContext.js";
-export * from "./presentation-components/hooks/UseRulesetRegistration.js";
 
 /**
  * @module Logging
@@ -58,7 +57,7 @@ export type {
   PropertyDataProviderWithUnifiedSelectionProps,
   UsePropertyDataProviderWithUnifiedSelectionResult,
 } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+
 export { usePropertyDataProviderWithUnifiedSelection } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
 
 /**

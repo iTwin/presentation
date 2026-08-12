@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { vi } from "vitest";
-import { parseFullClassName } from "../shared/Utils.js";
 
 import type { Mock } from "vitest";
 import type { EC } from "../shared/Metadata.js";
@@ -73,11 +72,7 @@ export function createECSchemaProviderStub() {
       if (typeof targetClassOrClassName === "string") {
         return props.is(`${schemaName!}.${targetClassOrClassName}`);
       }
-      // need this just to make sure `.` is used for separating schema and class names
-      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(
-        targetClassOrClassName.fullName,
-      );
-      return props.is(`${parsedSchemaName}.${parsedClassName}`);
+      return props.is(targetClassOrClassName.fullName);
     }),
     isEntityClass: () => false,
     isRelationshipClass: () => false,

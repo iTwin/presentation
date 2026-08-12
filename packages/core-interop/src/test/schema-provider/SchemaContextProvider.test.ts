@@ -297,6 +297,24 @@ describe("createECClass", () => {
     expect(typeof result.is === "function").toBe(true);
   });
 
+  it("gets mixins applied to an entity class", async () => {
+    const coreClass = {
+      fullName: "s.c",
+      name: "c",
+      schemaItemType: SchemaItemType.EntityClass,
+      mixins: [Promise.resolve({ fullName: "s.m", name: "m", schemaItemType: SchemaItemType.Mixin })],
+    } as unknown as CoreClass;
+
+    const result = createECClass(coreClass, schema);
+    expect(result.isEntityClass()).toBe(true);
+    if (!result.isEntityClass()) {
+      throw new Error("Expected an entity class.");
+    }
+    const mixins = await result.getMixins();
+    expect(mixins.map((mixin) => mixin.fullName)).toEqual(["s.m"]);
+    expect(mixins[0].isMixin()).toBe(true);
+  });
+
   it("creates relationship class from core class", () => {
     const coreClass = {
       fullName: "s.c",
@@ -507,6 +525,36 @@ describe("createECClass", () => {
 
       expect(coreClass.getPropertiesSync).toHaveBeenCalledOnce();
       expect(properties.length).toBe(1);
+    });
+  });
+
+  describe("getOwnProperties", () => {
+    it("returns only direct properties from core class", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        label: "C",
+        getProperties: vi
+          .fn()
+          .mockResolvedValue([
+            {
+              isArray: () => false,
+              isStruct: () => false,
+              isEnumeration: () => false,
+              isNavigation: () => false,
+              isPrimitive: () => true,
+            },
+          ]),
+      } as unknown as CoreClass;
+      const ecClass = createECClass(coreClass, schema);
+      const properties = await ecClass.getOwnProperties();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).toHaveBeenCalledOnce();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).toHaveBeenCalledWith(true);
+      expect(properties.length).toBeGreaterThan(0);
     });
   });
 
@@ -854,6 +902,32 @@ describe("createECProperty", () => {
         propertyClass,
       ) as EC.PrimitiveProperty;
       expect(propertyNoKoq.kindOfQuantity).toBeUndefined();
+    });
+
+    it("maps category", async () => {
+      const coreCategory = {
+        fullName: "SchemaName.TestCategory",
+        name: "TestCategory",
+        label: "Test category",
+        description: "Test category description",
+        priority: 5,
+        schema: stubSchema("SchemaName"),
+      };
+      const coreProperty = {
+        ...propertyStub,
+        isPrimitive: () => true,
+        name: "test-property",
+        getCategorySync: vi.fn().mockReturnValue(coreCategory),
+      } as unknown as CorePrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
+      const category = property.category!;
+      expect(category.fullName).toBe("SchemaName.TestCategory");
+
+      const propertyNoCategory = createECProperty(
+        { ...propertyStub, isPrimitive: () => true, name: "test-property" } as unknown as CorePrimitiveProperty,
+        propertyClass,
+      ) as EC.PrimitiveProperty;
+      expect(propertyNoCategory.category).toBeUndefined();
     });
   });
 

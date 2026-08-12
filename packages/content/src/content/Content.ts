@@ -16,7 +16,7 @@
  * Stage 2 — Descriptor building (`createContentProvider` → `getContentDescriptor`)
  *   - Enumerates iModel fields from the resolved sources.
  *   - Appends `ExternalFieldsProvider.fields` declarations.
- *   - Runs `DescriptorTransformer.transform()` in ascending priority order.
+ *   - Runs `DescriptorTransformer.transform()` asynchronously in ascending priority order.
  *   - Output: frozen `ContentDescriptor`.
  *
  * Stage 3 — Query building (`getItems` / `getSize` / `getInstanceKeys`)
@@ -33,9 +33,18 @@
  *   - Merges external values into the final `ContentItem` accessors.
  */
 
+import { createContentProviderImpl } from "./CreateContentProvider.js";
 import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 
-import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, Value } from "@itwin/presentation-shared";
+import type {
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSqlQueryExecutor,
+  InstanceKey,
+  Point2dValue,
+  Point3dValue,
+  PrimitiveValue,
+} from "@itwin/presentation-shared";
 import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
@@ -44,6 +53,7 @@ import type { QueryFilterer } from "./extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 import type { ContentItem } from "./model/ContentItem.js";
 import type { CalculatedField, PropertyField } from "./model/Field.js";
+import type { DeepReadonly } from "./model/Utils.js";
 
 /**
  * Sorting specification for content value requests.
@@ -58,26 +68,61 @@ interface ContentSortSpec {
 }
 
 /**
+ * The field targeted by a value filter. Filters may target calculated or property fields.
+ * When targeting a struct or point property field, specify `member` to identify the member to compare.
+ *
+ * @public
+ */
+type ContentValueFilterTarget =
+  | {
+      /**
+       * The property field to filter on. Filter can only target primitive, navigation and struct properties.
+       * Array properties are not supported.
+       */
+      field: PropertyField;
+      /**
+       * For composite property fields (structs, points), the member to compare.
+       * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
+       * Omit for scalar fields.
+       * For struct properties and `Point2d`/`Point3d`, the member must be provided — filtering on a struct or point as a whole is not supported.
+       */
+      member?: string;
+    }
+  | {
+      /** The calculated field to filter on. Calculated fields are scalar, so `member` does not apply. */
+      field: CalculatedField;
+      member?: never;
+    };
+
+/** @public */
+type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-not-null" | "is-in" | "is-not-in">;
+
+/**
  * A value filter applied during query building (Stage 3).
  * Adds a WHERE clause to the final query — does not affect which fields
  * exist in the descriptor (only which rows are returned).
  *
  * @public
  */
-export interface ContentValueFilter {
-  /** The field to filter on. */
-  field: PropertyField | CalculatedField;
-  /**
-   * For composite fields (structs, points), the member to compare.
-   * Example: `"x"` for a Point3d field, `"Street"` for an Address struct.
-   * Omit for scalar fields.
-   */
-  member?: string;
-  /** The filter operator. */
-  operator: ValueFilterOperator;
-  /** The value(s) to compare against. */
-  value: Value;
-}
+export type ContentValueFilter =
+  | (ContentValueFilterTarget & {
+      /** The filter operator. */
+      operator: ScalarValueFilterOperator;
+      /** The scalar value to compare against. Points are filtered per-coordinate via `member`, so a whole-point value is not accepted. */
+      value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
+    })
+  | (ContentValueFilterTarget & {
+      /** The filter operator. */
+      operator: "is-in" | "is-not-in";
+      /** The values to compare against. */
+      value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
+    })
+  | (ContentValueFilterTarget & {
+      /** The filter operator. */
+      operator: "is-null" | "is-not-null";
+      /** Null checks do not accept values. */
+      value?: never;
+    });
 
 /** @public */
 type ValueFilterOperator =
@@ -90,7 +135,8 @@ type ValueFilterOperator =
   | "greater-than"
   | "greater-than-or-equal"
   | "like"
-  | "is-in";
+  | "is-in"
+  | "is-not-in";
 
 /**
  * Request options passed alongside the descriptor when loading values.
@@ -121,7 +167,7 @@ interface ContentRequestOptions {
  */
 export interface ContentConfiguration {
   /** iModel fields providers (contribute related properties and calculated fields). */
-  fieldsProviders?: IModelFieldsProvider[];
+  imodelFieldsProviders?: IModelFieldsProvider[];
 
   /** External fields providers (declare + populate fields from outside the iModel). */
   externalFieldsProviders?: ExternalFieldsProvider[];
@@ -139,12 +185,12 @@ export interface ContentConfiguration {
  * @public
  */
 interface ResolveContentSourcesProps {
-  /** Access to the iModel for schema introspection and path resolution. */
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  /** Access to the iModel for schema introspection, class-hierarchy inspection, and path resolution. */
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
   /** The content targets to resolve. */
   targets: ContentTarget[];
-  /** Extension point configuration (only `fieldsProviders` is used for resolution). */
-  config?: Pick<ContentConfiguration, "fieldsProviders">;
+  /** Extension point configuration (only `imodelFieldsProviders` is used for resolution). */
+  config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
 }
 
 /**
@@ -166,7 +212,7 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
   return resolveContentSourcesImpl({
     imodelAccess: props.imodelAccess,
     targets: props.targets,
-    fieldsProviders: props.config?.fieldsProviders ?? [],
+    imodelFieldsProviders: props.config?.imodelFieldsProviders ?? [],
   });
 }
 
@@ -176,8 +222,8 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
  * @public
  */
 interface ContentProviderProps {
-  /** Access to the iModel for running ECSQL queries. */
-  imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+  /** Access to the iModel for running ECSQL queries, schema introspection, and class-hierarchy checks. */
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
 
   /** Pre-resolved content sources (output of `resolveContentSources`). */
   sources: ContentSource[];
@@ -198,15 +244,16 @@ interface ContentProviderProps {
  *
  * @public
  */
-interface ContentProvider {
+export interface ContentProvider {
   /**
    * Get the content descriptor for the configured sources.
    * Built lazily on first call and cached for subsequent calls.
    *
    * The descriptor reflects all fields providers and descriptor transformers
-   * from the content configuration.
+   * from the content configuration. It is deeply readonly — modify it by registering a
+   * `DescriptorTransformer`, not by mutating the returned object.
    */
-  getContentDescriptor(): Promise<Readonly<ContentDescriptor>>;
+  getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
 
   /**
    * Get the total number of content items matching the configured sources.
@@ -239,7 +286,6 @@ interface ContentProvider {
  *
  * @public
  */
-/* v8 ignore next 3 */
-export function createContentProvider(_props: ContentProviderProps): ContentProvider {
-  throw new Error("Not implemented");
+export function createContentProvider(props: ContentProviderProps): ContentProvider {
+  return createContentProviderImpl(props);
 }

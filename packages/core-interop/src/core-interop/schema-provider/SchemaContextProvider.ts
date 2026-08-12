@@ -24,6 +24,7 @@ import type {
   PrimitiveArrayProperty as CorePrimitiveArrayProperty,
   PrimitiveProperty as CorePrimitiveProperty,
   Property as CoreProperty,
+  PropertyCategory as CorePropertyCategory,
   RelationshipClass as CoreRelationshipClass,
   RelationshipConstraint as CoreRelationshipConstraint,
   Schema as CoreSchema,
@@ -75,6 +76,9 @@ async function forceLoadSchemaClasses(coreSchema: CoreSchema): Promise<DerivedCl
     for (const prop of coreClass.getPropertiesSync()) {
       if (prop.kindOfQuantity) {
         await prop.kindOfQuantity;
+      }
+      if (prop.category) {
+        await prop.category;
       }
       if (prop.isEnumeration() && prop.enumeration) {
         await prop.enumeration;
@@ -191,6 +195,9 @@ abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implemen
   public get label() {
     return this._coreSchemaItem.label;
   }
+  public get description() {
+    return this._coreSchemaItem.description;
+  }
 }
 
 export function createECClass(
@@ -273,6 +280,15 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     return result;
   }
 
+  public getOwnProperties(): Array<EC.Property> {
+    const coreProperties = this._coreSchemaItem.getPropertiesSync(true);
+    const result = new Array<EC.Property>();
+    for (const coreProperty of coreProperties) {
+      result.push(createECProperty(coreProperty, this));
+    }
+    return result;
+  }
+
   public getDerivedClasses(): EC.Class[] {
     return (this._derivedMap?.get(this.fullName) ?? []).map((c) => createECClass(c, this.schema, this._derivedMap));
   }
@@ -284,6 +300,14 @@ class ECEntityClassImpl extends ECClassImpl<CoreEntityClass> implements EC.Entit
   }
   public override isEntityClass(): this is EC.EntityClass {
     return true;
+  }
+  public getMixins(): EC.Mixin[] {
+    const coreMixins = this._coreSchemaItem.getMixinsSync();
+    const result = new Array<EC.Mixin>();
+    for (const coreMixin of coreMixins) {
+      result.push(new ECMixinImpl(coreMixin, this.schema));
+    }
+    return result;
   }
 }
 
@@ -402,6 +426,10 @@ abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements EC.
   public get kindOfQuantity(): EC.KindOfQuantity | undefined {
     const koq = this._coreProperty.getKindOfQuantitySync();
     return koq ? new ECKindOfQuantityImpl(koq) : undefined;
+  }
+  public get category(): EC.PropertyCategory | undefined {
+    const cat = this._coreProperty.getCategorySync();
+    return cat ? new ECPropertyCategoryImpl(cat) : undefined;
   }
 }
 
@@ -608,6 +636,15 @@ class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
 class ECKindOfQuantityImpl extends ECSchemaItemImpl<CoreKindOfQuantity> implements EC.KindOfQuantity {
   constructor(coreKindOfQuantity: CoreKindOfQuantity) {
     super(coreKindOfQuantity);
+  }
+}
+
+class ECPropertyCategoryImpl extends ECSchemaItemImpl<CorePropertyCategory> implements EC.PropertyCategory {
+  constructor(coreCategory: CorePropertyCategory) {
+    super(coreCategory);
+  }
+  public get priority() {
+    return this._coreSchemaItem.priority;
   }
 }
 

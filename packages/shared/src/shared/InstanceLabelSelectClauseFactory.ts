@@ -33,7 +33,7 @@ export interface CreateInstanceLabelSelectClauseProps {
    * implementations may be able to create a more efficient select clause (e.g. drop some pieces of clause
    * that don't apply for given class).
    */
-  className?: EC.FullClassName;
+  className?: EC.FullClassNameDotNotation;
 
   /**
    * An optional function for concatenating multiple `TypedValueSelectClauseProps`. Selectors' concatenation

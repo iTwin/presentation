@@ -36,7 +36,7 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
    * keys are grouped by class and a hierarchy level definition is requested for each combination of class and
    * instance IDs (with the same `parentNode`).
    */
-  parentNodeClassName: EC.FullClassName;
+  parentNodeClassName: EC.FullClassNameDotNotation;
 
   /**
    * ECInstanceIds of the parent instance node.
@@ -65,7 +65,7 @@ interface InstancesNodeChildHierarchyLevelDefinition {
    * - The function version should return a boolean indicating whether this hierarchy level definition should be used
    * for the given parent node.
    */
-  parentInstancesNodePredicate: EC.FullClassName | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
+  parentInstancesNodePredicate: EC.FullClassNameDotNotation | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
 
   /**
    * Called to create a hierarchy level definition when the `parentInstancesNodePredicate` predicate passes.
@@ -268,7 +268,7 @@ async function createHierarchyLevelDefinitions(
 }
 
 function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
-  const instanceIdsByClass = new Map<EC.FullClassName, Id64String[]>();
+  const instanceIdsByClass = new Map<EC.FullClassNameDotNotation, Id64String[]>();
   instanceKeys.forEach((key) => {
     let instanceIds = instanceIdsByClass.get(key.className);
     if (!instanceIds) {

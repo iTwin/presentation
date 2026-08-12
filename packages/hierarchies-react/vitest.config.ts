@@ -25,6 +25,7 @@ export default defineConfig({
       },
       {
         plugins: [react()],
+        optimizeDeps: { include: ["@mui/material"] },
         test: {
           name: "hierarchies-react-components",
           include: ["src/test/components/**/*.test.{ts,tsx}"],
@@ -34,12 +35,6 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             instances: [{ browser: "chromium", viewport: { width: 800, height: 600 } }],
-            expect: {
-              toMatchScreenshot: {
-                comparatorName: "pixelmatch",
-                comparatorOptions: { threshold: 0.2, allowedMismatchedPixelRatio: 0.01 },
-              },
-            },
           },
         },
       },

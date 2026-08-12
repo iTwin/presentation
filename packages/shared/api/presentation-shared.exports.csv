@@ -3,7 +3,6 @@ Release Tag;API Item Type;API Item Name
 public;type;ArrayElement
 public;type;ArrayValue
 public;interface;ArrayValueDescriptor
-public;function;compareFullClassNames
 public;type;ConcatenatedValue
 public;namespace;ConcatenatedValue
 public;type;ConcatenatedValuePart
@@ -19,6 +18,7 @@ public;namespace;EC
 public;interface;ECClassHierarchyInspector
 public;interface;ECSchemaProvider
 public;type;ECSqlBinding
+public;namespace;ECSqlBinding
 public;interface;ECSqlQueryDef
 public;interface;ECSqlQueryExecutor
 public;interface;ECSqlQueryReaderOptions
@@ -34,14 +34,18 @@ public;type;IPrimitiveValueFormatter
 public;function;julianToDateTime
 public;type;LogFunction
 public;type;LogLevel
+public;interface;NavigationValueDescriptor
 public;const;NOOP_LOGGER
 public;function;normalizeFullClassName
 public;type;OmitOverUnion
 public;function;parseFullClassName
 public;function;parseInstanceLabel
+public;interface;Point2dValue
+public;interface;Point3dValue
 public;type;PrimitiveValue
 public;namespace;PrimitiveValue
 public;type;PrimitiveValueDescriptor
+public;type;PrimitiveValueType
 public;type;Props
 public;interface;RaisableEvent
 public;type;RelationshipPath

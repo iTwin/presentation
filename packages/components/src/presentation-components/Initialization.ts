@@ -8,7 +8,7 @@
 
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { Presentation } from "@itwin/presentation-frontend";
-import { localizationNamespaceName } from "./common/Utils.js";
+import { LOCALIZATION_NAMESPACE } from "./common/LocalizedStrings.js";
 import { InstanceKeyValueRenderer, InstanceKeyValueRendererName } from "./properties/InstanceKeyValueRenderer.js";
 
 import type { IPropertyValueRenderer } from "@itwin/components-react";
@@ -19,8 +19,8 @@ import type { IPropertyValueRenderer } from "@itwin/components-react";
  * @internal
  */
 export const initializeLocalization = async () => {
-  await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
+  await Presentation.localization.registerNamespace(LOCALIZATION_NAMESPACE);
+  return () => Presentation.localization.unregisterNamespace(LOCALIZATION_NAMESPACE);
 };
 
 /**

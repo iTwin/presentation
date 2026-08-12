@@ -1,5 +1,31 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.17
+
+### Major Changes
+
+- [#1454](https://github.com/iTwin/presentation/pull/1454): Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+
+## 2.0.0-alpha.16
+
+### Major Changes
+
+- [#1350](https://github.com/iTwin/presentation/pull/1350): **Breaking:** `createInstanceKeysFilteredQuery` now correctly appends `IdSet` bindings in both positional and named binding formats, using the `IdSet` virtual table instead of `InVirtualSet`.
+
+  Consumers that provide their own `LimitingECSqlQueryExecutor` or `imodelAccess` may now receive named bindings (`Record<string, ECSqlBinding>`) through the public `createQueryReader` path.
+
+  To migrate, update custom query reader / executor implementations to handle both positional bindings (`ECSqlBinding[]`) and named bindings (`Record<string, ECSqlBinding>`), or use the default implementation provided by the `@itwin/presentation-core-interop` package, `createECSqlQueryExecutor` function.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+
 ## 2.0.0-alpha.15
 
 ### Major Changes
@@ -594,6 +620,30 @@
 
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
+
+## 1.7.19
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.19
+
+## 1.7.18
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+
+## 1.7.17
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.17
 
 ## 1.7.16
 

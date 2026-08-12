@@ -1,5 +1,37 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.65
+
+### Patch Changes
+
+- [#1477](https://github.com/iTwin/presentation/pull/1477): `ErrorItemRenderer`: Improved unknown error formatting by displaying the affected node before the error message, separated by a colon. Localized error messages now preserve their defined spacing around the node link.
+
+## 2.0.0-alpha.64
+
+### Patch Changes
+
+- [#1469](https://github.com/iTwin/presentation/pull/1469): `TreeActionBase`: Made the `onClick` prop optional.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+  - @itwin/presentation-hierarchies@2.0.0-alpha.17
+  - @itwin/unified-selection@2.0.0-alpha.0
+
+## 2.0.0-alpha.63
+
+### Major Changes
+
+- [#1425](https://github.com/iTwin/presentation/pull/1425): Moved the package to use `@mui/material` and `@stratakit/mui`.
+
+  **Breaking:** Removed `@stratakit/foundations`, `@stratakit/icons` optional peer dependencies. Added `@mui/material` and `@stratakit/mui` as optional peer dependencies.
+
+### Patch Changes
+
+- [#1325](https://github.com/iTwin/presentation/pull/1325): Add accessible name for tree context menu.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+  - @itwin/presentation-hierarchies@2.0.0-alpha.16
+  - @itwin/unified-selection@1.8.1-alpha.0
+
 ## 2.0.0-alpha.62
 
 ### Patch Changes
@@ -970,6 +1002,36 @@
 ### Major Changes
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
+
+## 1.11.4
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.19
+  - @itwin/presentation-shared@1.2.19
+  - @itwin/unified-selection@1.8.4
+
+## 1.11.3
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.18
+  - @itwin/presentation-shared@1.2.18
+  - @itwin/unified-selection@1.8.3
+
+## 1.11.2
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.8.2
+  - @itwin/presentation-hierarchies@1.7.17
+  - @itwin/presentation-shared@1.2.17
 
 ## 1.11.1
 

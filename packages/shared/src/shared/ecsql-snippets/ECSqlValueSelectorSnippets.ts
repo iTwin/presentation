@@ -60,7 +60,7 @@ export async function createPrimitivePropertyValueSelectorProps({
   /** Access to schema information. */
   schemaProvider: ECSchemaProvider;
   /** Full class name of the property. Format: `SchemaName.ClassName`. */
-  propertyClassName: EC.FullClassName;
+  propertyClassName: EC.FullClassNameDotNotation;
   /** Query alias of the class that contains the property. */
   propertyClassAlias: string;
   /** Name of the property to create `TypedPrimitiveValue` for. */
@@ -172,13 +172,13 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
 }
 
 /**
- * Converts a full class name (`SchemaName.ClassName` or `SchemaName:ClassName`) into a
+ * Converts a full class name (`SchemaName.ClassName`) into a
  * bracket-quoted ECSQL class selector: `[SchemaName].[ClassName]`.
  *
  * @throws Error if the provided full class name is not valid.
  * @public
  */
-export function createClassSelector(fullClassName: EC.FullClassName): string {
+export function createClassSelector(fullClassName: EC.FullClassNameDotNotation): string {
   const { schemaName, className } = parseFullClassName(fullClassName);
   return `[${schemaName}].[${className}]`;
 }

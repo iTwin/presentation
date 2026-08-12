@@ -134,7 +134,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -184,7 +184,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -249,7 +249,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(x.ECClassId) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(x.ECClassId, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         x.ECInstanceId AS ${NodeSelectClauseColumnNames.ECInstanceId},
         x.Label AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(x.HasChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -279,7 +279,7 @@ describe("createNodesQueryClauseFactory", () => {
       const labelClause = await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this" });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         ${labelClause} AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -301,7 +301,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -337,7 +337,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -531,7 +531,7 @@ describe("createNodesQueryClauseFactory", () => {
 
       describe("by properties", () => {
         interface TestPropertyFilterProps {
-          className: EC.FullClassName;
+          className: EC.FullClassNameDotNotation;
           classAlias: string;
           rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
           expectedECSql: string;

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Anchor, Text } from "@stratakit/bricks";
+import { Link, Typography } from "@mui/material";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { useTranslation } from "../LocalizationContext.js";
@@ -123,11 +123,11 @@ function ErrorItemContainer({ treeNode, message, actions, scrollToElement }: Err
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
-          <Text key={label} variant="body-sm">
-            <Anchor onClick={action} render={<button />}>
+          <Typography key={label} variant="caption" render={<div />}>
+            <Link render={<button type="button" />} onClick={action}>
               {label}
-            </Anchor>
-          </Text>
+            </Link>
+          </Typography>
         ))}
     />
   );
@@ -141,15 +141,33 @@ interface MessageWithLinkProps {
 
 function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLinkProps) {
   const splitMessage = message.split("{{node}}", 2);
-  const firstPart = splitMessage[0].trimEnd();
-  const secondPart = splitMessage[1]?.trimStart();
+  const firstPart = splitMessage[0];
+  const secondPart = splitMessage.length > 1 ? splitMessage[1] : undefined;
+  const linkToNode = (
+    <Link
+      render={<button type="button" />}
+      onClick={scrollToElement}
+      variant="caption"
+      style={{ verticalAlign: "baseline" }}
+    >
+      {linkLabel}
+    </Link>
+  );
+
+  if (message.length === firstPart.length) {
+    return (
+      <div>
+        {linkToNode}
+        {": "}
+        {firstPart}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {firstPart}{" "}
-      <Anchor onClick={scrollToElement} render={<button />}>
-        {linkLabel}
-      </Anchor>
-      {secondPart ? " " : ""}
+      {firstPart}
+      {linkToNode}
       {secondPart ? secondPart : null}
     </div>
   );

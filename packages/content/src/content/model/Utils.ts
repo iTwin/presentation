@@ -3,20 +3,98 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName } from "@itwin/presentation-shared";
+import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
+/**
+ * Recursively marks all properties as readonly with no depth limit.
+ * @public
+ */
+export type DeepReadonly<T> = T extends (...args: any[]) => any
+  ? T
+  : T extends (infer U)[]
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T;
 
-export function serializeRelationshipPath(path: RelationshipPath): string {
+/**
+ * Serializes a relationship path to a deterministic string. When `omitLastTargetClass` is set, the
+ * final step's target class (and its arrow) is left off, yielding a target-independent serialization
+ * of the path's last relationship. When `includeInstanceFilters` is set, each step's `instanceFilter`
+ * (if any) is appended inline right after that step, so paths differing only by a step filter get
+ * distinct strings — use this when a step's filter must not be merged away (e.g. JOIN aliasing /
+ * de-duplication). A filter-free path yields the same string with or without `includeInstanceFilters`.
+ */
+export function serializeRelationshipPath({
+  path,
+  omitLastTargetClass,
+  includeInstanceFilters,
+}: {
+  path: RelationshipPath;
+  omitLastTargetClass?: boolean;
+  includeInstanceFilters?: boolean;
+}): string {
   let result = "";
-  for (const step of path) {
+  path.forEach((step, index) => {
     if (result.length === 0) {
-      result = normalizeFullClassName(step.sourceClassName);
+      result = step.sourceClassName;
     }
-    const rel = step.relationshipReverse
-      ? `[!${normalizeFullClassName(step.relationshipName)}]`
-      : `[${normalizeFullClassName(step.relationshipName)}]`;
-    result += `-${rel}->${normalizeFullClassName(step.targetClassName)}`;
-  }
+    const rel = step.relationshipReverse ? `[!${step.relationshipName}]` : `[${step.relationshipName}]`;
+    result += `-${rel}`;
+    if (!(omitLastTargetClass && index === path.length - 1)) {
+      result += `->${step.targetClassName}`;
+    }
+    if (includeInstanceFilters && step.instanceFilter) {
+      const { bindings, ...rest } = step.instanceFilter;
+      const sortedBindings = bindings
+        ? Object.keys(bindings)
+            .sort()
+            .map((key) => [key, bindings[key]])
+        : undefined;
+      result += `{${JSON.stringify({ ...rest, bindings: sortedBindings })}}`;
+    }
+  });
   return result;
+}
+
+/**
+ * De-duplicates, and sorts the given class names. Produces the canonical
+ * representation used for a property field's `valueClassNames` invariant.
+ */
+export function toSortedUniqueClassNames(classNames: EC.FullClassNameDotNotation[]): EC.FullClassNameDotNotation[] {
+  return Array.from(new Set(classNames)).sort();
+}
+
+/**
+ * Deterministic, bounded discriminator for a subset of value-supplier classes, used as the
+ * `forkKey` when carving a property field. The same subset always yields the same key
+ * (normalized + sorted), so forking the same subset twice produces the same field ID.
+ */
+export function computeFieldForkKey(valueClassNames: EC.FullClassNameDotNotation[]): string {
+  const joined = toSortedUniqueClassNames(valueClassNames).join(";");
+  // Keep the key human-readable when short; fall back to a stable hash when long.
+  return joined.length <= MAX_READABLE_FORK_KEY_LENGTH ? joined : hashString(joined);
+}
+
+const MAX_READABLE_FORK_KEY_LENGTH = 100;
+
+/**
+ * Deterministic 32-bit FNV-1a hash rendered in base-36. Stable across runs so it can be
+ * embedded in cache-stable field IDs.
+ */
+export function hashString(value: string): string {
+  // FNV-1a 32-bit: start from the FNV offset basis, then for each char XOR it in and
+  // multiply by the FNV prime (`Math.imul` keeps the multiply in 32-bit space).
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const FNV_OffsetBasis = 0x811c9dc5;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const FNV_Prime = 0x01000193;
+
+  let hash = FNV_OffsetBasis;
+  for (let i = 0; i < value.length; ++i) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, FNV_Prime);
+  }
+  // Coerce back to an unsigned 32-bit integer before rendering compactly in base-36.
+  return (hash >>> 0).toString(36);
 }

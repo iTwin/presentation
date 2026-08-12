@@ -16,6 +16,7 @@ import { createBisInstanceLabelSelectClauseFactory } from "./BisInstanceLabelSel
 import { createClassBasedInstanceLabelSelectClauseFactory } from "./ClassBasedInstanceLabelSelectClauseFactory.js";
 import { ALIAS_PREFIX } from "./Utils.js";
 
+import type { CreateRelationshipPathJoinClauseProps } from "../ecsql-snippets/ECSqlJoinSnippets.js";
 import type { TypedValueSelectClauseProps } from "../ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import type { ECSqlQueryExecutor } from "../ECSqlCore.js";
 import type {
@@ -181,7 +182,7 @@ function normalizeInstanceLabelOverrideRule(rule: RuleBase): InstanceLabelOverri
 }
 
 type ExtendedCreateInstanceLabelSelectClauseProps = CreateInstanceLabelSelectClauseProps & {
-  visitedClasses?: Set<EC.FullClassName>;
+  visitedClasses?: Set<EC.FullClassNameDotNotation>;
   depth?: number;
 };
 
@@ -189,9 +190,9 @@ interface CompileContext {
   classAlias: string;
   selectorsConcatenator: NonNullable<CreateInstanceLabelSelectClauseProps["selectorsConcatenator"]>;
   labelFactory: IInstanceLabelSelectClauseFactory;
-  visitedClasses: Set<EC.FullClassName>;
+  visitedClasses: Set<EC.FullClassNameDotNotation>;
   schemaProvider: ECSchemaProvider;
-  ruleClassName: EC.FullClassName;
+  ruleClassName: EC.FullClassNameDotNotation;
   depth: number;
 }
 
@@ -274,11 +275,11 @@ async function compileValueSpec(spec: InstanceLabelOverrideValueSpecification, c
       }
 
       const lastStep = steps[steps.length - 1];
-      let targetClassName: EC.FullClassName;
+      let targetClassName: EC.FullClassNameDotNotation;
       if (lastStep.targetClass) {
         targetClassName = `${lastStep.targetClass.schemaName}.${lastStep.targetClass.className}`;
       } else {
-        const relName: EC.FullClassName = `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`;
+        const relName: EC.FullClassNameDotNotation = `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`;
         const relClass = await getClass(ctx.schemaProvider, relName);
         if (!relClass.isRelationshipClass()) {
           throw new Error(`Class ${relName} is not a relationship class`);
@@ -347,7 +348,7 @@ async function compileCompositeSpec(
   return ctx.selectorsConcatenator(selectors, checkSelector);
 }
 
-type JoinRelationshipPathStep = Parameters<typeof createRelationshipPathJoinClause>[0]["path"][number];
+type JoinRelationshipPathStep = CreateRelationshipPathJoinClauseProps["path"][number];
 
 function normalizeRelationshipPath(path: RelationshipPathSpecification): RelationshipStepSpecification[] {
   return Array.isArray(path) ? path : [path];
@@ -367,7 +368,7 @@ function subqueryAlias(prefix: string, depth: number, stepIndex?: number): strin
 async function toJoinRelationshipPath(props: {
   schemaProvider: ECSchemaProvider;
   steps: RelationshipStepSpecification[];
-  sourceClassName: EC.FullClassName;
+  sourceClassName: EC.FullClassNameDotNotation;
   sourceAlias: string;
   finalTargetAlias: string;
   depth: number;
@@ -375,15 +376,15 @@ async function toJoinRelationshipPath(props: {
   assert(props.steps.length > 0);
 
   const result: JoinRelationshipPathStep[] = [];
-  let currentSourceClassName: EC.FullClassName = props.sourceClassName;
+  let currentSourceClassName = props.sourceClassName;
   let currentSourceAlias = props.sourceAlias;
 
   for (let i = 0; i < props.steps.length; i++) {
     const step = props.steps[i];
-    const relationshipName: EC.FullClassName = `${step.relationship.schemaName}.${step.relationship.className}`;
+    const relationshipName: EC.FullClassNameDotNotation = `${step.relationship.schemaName}.${step.relationship.className}`;
     const relationshipReverse = step.direction === "Backward";
 
-    let targetClassName: EC.FullClassName;
+    let targetClassName: EC.FullClassNameDotNotation;
     if (step.targetClass) {
       targetClassName = `${step.targetClass.schemaName}.${step.targetClass.className}`;
     } else {
@@ -423,7 +424,7 @@ async function toJoinRelationshipPath(props: {
 async function buildRelationshipPathSubquery(props: {
   schemaProvider: ECSchemaProvider;
   steps: RelationshipStepSpecification[];
-  ruleClassName: EC.FullClassName;
+  ruleClassName: EC.FullClassNameDotNotation;
   classAlias: string;
   selectExpression: string;
   finalTargetAlias: string;

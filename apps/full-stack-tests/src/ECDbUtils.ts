@@ -135,7 +135,7 @@ export class ECDbBuilder {
   }
 
   public insertInstance(
-    fullClassName: EC.FullClassName,
+    fullClassName: EC.FullClassNameDotNotation,
     props?: { [propertyName: string]: PrimitiveValue | undefined },
   ) {
     const query = this.createInsertQuery(fullClassName, props);
@@ -153,7 +153,7 @@ export class ECDbBuilder {
   }
 
   public insertRelationship(
-    fullClassName: EC.FullClassName,
+    fullClassName: EC.FullClassNameDotNotation,
     sourceId: Id64String,
     targetId: Id64String,
     props?: { [propertyName: string]: PrimitiveValue | undefined },

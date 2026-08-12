@@ -5,11 +5,15 @@
 ```ts
 
 import { EC } from '@itwin/presentation-shared';
+import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
-import type { ECSqlBinding } from '@itwin/presentation-shared';
+import { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Id64String } from '@itwin/core-bentley';
 import type { InstanceKey } from '@itwin/presentation-shared';
+import type { Point2dValue } from '@itwin/presentation-shared';
+import type { Point3dValue } from '@itwin/presentation-shared';
+import type { PrimitiveValue } from '@itwin/presentation-shared';
 import { RelationshipPath } from '@itwin/presentation-shared';
 import type { Value } from '@itwin/presentation-shared';
 import { ValueDescriptor } from '@itwin/presentation-shared';
@@ -32,20 +36,30 @@ interface BaseFieldsProvider {
 
 // @public
 export interface CalculatedField extends BaseField {
+    bindings?: Record<string, ECSqlBinding>;
     expression: string;
     // (undocumented)
     kind: "calculated";
+    selectorId: string;
     targetAlias?: string;
 }
 
 // @public
 interface CalculatedFieldDeclaration {
+    bindings?: Record<string, ECSqlBinding>;
     categoryId?: string;
     expression: string;
     id: string;
     label: string;
     targetAlias?: string;
     type: ValueDescriptor;
+}
+
+// @public
+export interface CalculatedValueSelector extends Pick<CalculatedField, "expression" | "targetAlias" | "bindings"> {
+    id: string;
+    // (undocumented)
+    kind: "calculated";
 }
 
 // @public
@@ -63,6 +77,7 @@ export interface CategoryDefinition {
 export namespace CategoryDefinition {
     export function computeId(props: {
         path: RelationshipPath;
+        omitTargetClass?: boolean;
     }): CategoryDefinition["id"];
     export function create(props: {
         path: RelationshipPath;
@@ -73,14 +88,14 @@ export namespace CategoryDefinition {
 interface ClassPropertySpec {
     defaultOverrides?: PropertyOverrides;
     overrides?: Record<string, PropertyOverrides>;
-    select?: PropertySelection;
+    select: PropertySelection;
 }
 
 // @public
 export interface ContentConfiguration {
     descriptorTransformers?: DescriptorTransformer[];
     externalFieldsProviders?: ExternalFieldsProvider[];
-    fieldsProviders?: IModelFieldsProvider[];
+    imodelFieldsProviders?: IModelFieldsProvider[];
     queryFilterers?: QueryFilterer[];
 }
 
@@ -88,18 +103,21 @@ export interface ContentConfiguration {
 export interface ContentDescriptor {
     categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     fields: Record<Field["id"], Field>;
+    selectors: Record<ValueSelector["id"], ValueSelector>;
     sources: ContentSource[];
 }
 
 // @public
-export interface ContentItem extends Readonly<ContentValues> {
-    readonly descriptor: ContentDescriptor;
-    getValue(field: Field): Value;
+export interface ContentItem {
+    readonly descriptor: DeepReadonly<ContentDescriptor>;
+    getValue(field: Field): DeepReadonly<Value>;
+    readonly primaryKey: DeepReadonly<InstanceKey>;
+    readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
 // @public
 interface ContentProvider {
-    getContentDescriptor(): Promise<Readonly<ContentDescriptor>>;
+    getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
     getInstanceKeys(options?: Pick<ContentRequestOptions, "filters">): AsyncIterable<InstanceKey>;
     getItems(options?: ContentRequestOptions): AsyncIterable<ContentItem>;
     getSize(options?: Pick<ContentRequestOptions, "filters">): Promise<number>;
@@ -108,7 +126,7 @@ interface ContentProvider {
 // @public
 interface ContentProviderProps {
     config?: ContentConfiguration;
-    imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     sources: ContentSource[];
 }
 
@@ -127,6 +145,7 @@ interface ContentSortSpec {
 // @public
 export interface ContentSource {
     resolvedDeclarations: ResolvedDeclarationGroup[];
+    resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
     target: ContentTarget;
 }
 
@@ -138,16 +157,29 @@ export interface ContentTarget {
         bindings?: Record<string, ECSqlBinding>;
     };
     instanceIds?: Id64String[];
-    primaryClass: EC.FullClassName;
+    primaryClass: EC.FullClassNameDotNotation;
 }
 
 // @public
-interface ContentValueFilter {
-    field: PropertyField | CalculatedField;
+type ContentValueFilter = (ContentValueFilterTarget & {
+    operator: ScalarValueFilterOperator;
+    value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
+}) | (ContentValueFilterTarget & {
+    operator: "is-in" | "is-not-in";
+    value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>[];
+}) | (ContentValueFilterTarget & {
+    operator: "is-null" | "is-not-null";
+    value?: never;
+});
+
+// @public
+type ContentValueFilterTarget = {
+    field: PropertyField;
     member?: string;
-    operator: ValueFilterOperator;
-    value: Value;
-}
+} | {
+    field: CalculatedField;
+    member?: never;
+};
 
 // @public
 export interface ContentValues {
@@ -156,7 +188,20 @@ export interface ContentValues {
 }
 
 // @public
-export function createContentProvider(_props: ContentProviderProps): ContentProvider;
+export function createContentProvider(props: ContentProviderProps): ContentProvider;
+
+// @public
+export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
+
+// @public
+interface CreateIModelContentConfigurationProps {
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+}
+
+// @public
+type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
+    readonly [K in keyof T]: DeepReadonly<T[K]>;
+} : T;
 
 // @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
@@ -179,7 +224,10 @@ export function defineQueryFilterer(filterer: QueryFilterer): QueryFilterer;
 // @public
 interface DescriptorTransformer {
     priority?: number;
-    transform(descriptor: TransformableDescriptor): void;
+    transform(props: {
+        descriptor: TransformableDescriptor;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    }): Promise<void>;
 }
 
 // @public
@@ -244,15 +292,15 @@ interface GetDistinctFieldValuesProps {
 // @public
 interface IModelFieldsProvider extends BaseFieldsProvider {
     getContribution(props: {
-        imodelAccess: ECSchemaProvider;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
         target: ContentTarget;
     }): Promise<FieldsProviderContribution | undefined>;
 }
 
 // @public
 interface InputPropertyDeclaration {
-    className: EC.FullClassName;
     path?: RelationshipPath;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
 }
 
@@ -260,20 +308,26 @@ interface InputPropertyDeclaration {
 export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item: TIn) => TOut | Promise<TOut>): AsyncIterable<TOut>;
 
 // @public
+type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
+
+// @public
 export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
-    sourceClassName: EC.FullClassName;
+    selectorId: string;
+    valueClassNames: EC.FullClassNameDotNotation[];
 }
 
 // @public (undocumented)
 export namespace PropertyField {
     export function computeId(props: {
-        propertyClassName: EC.FullClassName;
+        propertyClassName: EC.FullClassNameDotNotation;
         propertyName: string;
         pathFromTarget?: RelationshipPath;
+        forkKey?: string;
     }): Field["id"];
 }
 
@@ -295,6 +349,13 @@ type PropertySelection = "all" | "none" | {
 } | {
     exclude: string[];
 };
+
+// @public
+export interface PropertyValueSelector extends Pick<PropertyField, "propertyClassName" | "propertyName" | "pathFromTarget"> {
+    id: string;
+    // (undocumented)
+    kind: "property";
+}
 
 // @public
 interface QueryFilterClauses {
@@ -321,7 +382,7 @@ interface RelatedPropertiesDeclaration {
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
-    }): Promise<RelationshipPath[]>;
+    }): Promise<ResolvedPath[]>;
 }
 
 // @public
@@ -329,17 +390,26 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 
 // @public
 interface ResolveContentSourcesProps {
-    config?: Pick<ContentConfiguration, "fieldsProviders">;
-    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
     targets: ContentTarget[];
 }
 
 // @public
 interface ResolvedDeclarationGroup {
     declarationIndex: number;
-    paths: RelationshipPath[];
+    paths: ResolvedPath[];
     providerId: BaseFieldsProvider["id"];
 }
+
+// @public
+interface ResolvedPath {
+    path: RelationshipPath;
+    targetClassNames: EC.FullClassNameDotNotation[];
+}
+
+// @public (undocumented)
+type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-not-null" | "is-in" | "is-not-in">;
 
 // @public
 interface StepPropertySpec {
@@ -354,6 +424,7 @@ interface TransformableDescriptor {
     readonly categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     // (undocumented)
     readonly fields: Readonly<Record<Field["id"], TransformableField>>;
+    forkField(id: Field["id"], valueClassNames: EC.FullClassNameDotNotation[]): TransformableField<PropertyField>;
     // (undocumented)
     removeField(id: string): void;
     // (undocumented)
@@ -361,12 +432,13 @@ interface TransformableDescriptor {
 }
 
 // @public
-type TransformableField = Omit<Field, "id"> & {
-    readonly id: string;
-};
+type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
 
 // @public (undocumented)
-type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in";
+type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";
+
+// @public
+export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
 
 // (No @packageDocumentation comment for this package)
 

@@ -39,7 +39,7 @@ async function createInstanceNodesQueryDefinition({
   fullClassName,
   whereClauseFactory,
 }: Pick<DefineInstanceNodeChildHierarchyLevelProps, "createSelectClause"> & {
-  fullClassName: EC.FullClassName;
+  fullClassName: EC.FullClassNameDotNotation;
   whereClauseFactory?: (props: { alias: string }) => Promise<string>;
 }) {
   const whereClause = whereClauseFactory ? await whereClauseFactory({ alias: "this" }) : undefined;

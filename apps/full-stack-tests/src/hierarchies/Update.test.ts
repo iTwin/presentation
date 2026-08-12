@@ -36,7 +36,7 @@ import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { ECSql, normalizeFullClassName } from "@itwin/presentation-shared";
 import { createFileNameFromString, setupOutputFileLocation } from "../FilenameUtils.js";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
-import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
+import { createIModelAccess, createProvider } from "./Utils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type {
@@ -409,8 +409,8 @@ describe("Hierarchies", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: props.label === "codeValue" ? `this.CodeValue` : `aspect.Identifier` },
                       })}
-                      FROM ${createClassECSqlSelector(Subject.classFullName)} AS this
-                      LEFT JOIN ${createClassECSqlSelector(ExternalSourceAspect.classFullName)} AS aspect ON aspect.Element.Id = this.ECInstanceId
+                      FROM ${ECSql.createClassSelector(normalizeFullClassName(Subject.classFullName))} AS this
+                      LEFT JOIN ${ECSql.createClassSelector(normalizeFullClassName(ExternalSourceAspect.classFullName))} AS aspect ON aspect.Element.Id = this.ECInstanceId
                       WHERE this.Parent.Id = 0x1
                     `,
                   },
@@ -437,8 +437,8 @@ describe("Hierarchies", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },
                       })}
-                      FROM ${createClassECSqlSelector(Element.classFullName)} AS this
-                      JOIN ${createClassECSqlSelector(ElementRefersToElements.classFullName)} AS rel ON rel.TargetECInstanceId = this.ECInstanceId
+                      FROM ${ECSql.createClassSelector(normalizeFullClassName(Element.classFullName))} AS this
+                      JOIN ${ECSql.createClassSelector(normalizeFullClassName(ElementRefersToElements.classFullName))} AS rel ON rel.TargetECInstanceId = this.ECInstanceId
                       WHERE rel.SourceECInstanceId = 0x1
                     `,
                   },
@@ -482,8 +482,8 @@ describe("Hierarchies", () => {
                           ]),
                         },
                       })}
-                      FROM ${createClassECSqlSelector(PhysicalModel.classFullName)} AS this
-                      JOIN ${createClassECSqlSelector(Element.classFullName)} AS modeledElement ON modeledElement.ECInstanceId = this.ModeledElement.Id
+                      FROM ${ECSql.createClassSelector(normalizeFullClassName(PhysicalModel.classFullName))} AS this
+                      JOIN ${ECSql.createClassSelector(normalizeFullClassName(Element.classFullName))} AS modeledElement ON modeledElement.ECInstanceId = this.ModeledElement.Id
                     `,
                   },
                 },

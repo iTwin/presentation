@@ -223,7 +223,9 @@ export interface TreeActionBaseAttributes {
 }
 
 // @alpha (undocumented)
-type TreeActionBaseProps = ComponentPropsWithoutRef<typeof Tree.ItemAction> & TreeActionBaseAttributes;
+type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.ItemAction>, "onClick"> & TreeActionBaseAttributes & {
+    onClick?: () => void;
+};
 
 // @alpha
 export function TreeErrorRenderer(input: TreeErrorRendererProps): JSX.Element;

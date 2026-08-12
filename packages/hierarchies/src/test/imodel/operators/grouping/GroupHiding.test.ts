@@ -17,7 +17,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true } } },
               }),
@@ -40,12 +40,12 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: true } },
               }),
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true } } },
               }),
@@ -68,7 +68,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true } } },
               }),
@@ -77,7 +77,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
                 label: "2",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true } } },
               }),
@@ -96,7 +96,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true } } },
               }),
@@ -105,7 +105,7 @@ describe("GroupHiding", () => {
         ],
         ungrouped: [
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
             label: "2",
           }),
         ],
@@ -120,7 +120,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true } } },
               }),
@@ -141,7 +141,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byClass: { hideIfOneGroupedNode: true } } },
               }),
@@ -164,12 +164,12 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
               }),
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
               }),
@@ -191,7 +191,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
               }),
             ],
@@ -207,7 +207,7 @@ describe("GroupHiding", () => {
         grouped: [],
         ungrouped: [
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
             label: "1",
             processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
           }),
@@ -223,7 +223,7 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
               }),
@@ -249,12 +249,12 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
               }),
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
               }),
@@ -263,7 +263,7 @@ describe("GroupHiding", () => {
         ],
         ungrouped: [
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x3" }] },
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x3" }] },
             label: "2",
           }),
         ],
@@ -278,12 +278,12 @@ describe("GroupHiding", () => {
           createTestProcessedGroupingNode({
             children: [
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
               }),
               createTestProcessedInstanceNode({
-                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
                 label: "1",
                 processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
               }),
@@ -302,13 +302,13 @@ describe("GroupHiding", () => {
 
     it("hides if group has one child node", async () => {
       const childNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
         processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
       });
       const groupingNode = createTestProcessedGroupingNode({ children: [childNode] });
       const ungroupedSiblingNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         label: "1",
         processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
       });
