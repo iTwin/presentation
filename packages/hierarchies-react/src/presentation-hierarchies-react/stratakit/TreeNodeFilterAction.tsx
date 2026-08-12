@@ -34,6 +34,7 @@ type TreeNodeFilterActionProps = {
  * @alpha
  */
 export const TreeNodeFilterAction: NamedExoticComponent<TreeNodeFilterActionProps & { node: TreeNode }> = memo(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function TreeNodeFilterAction({
     node,
     onFilter,
