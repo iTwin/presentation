@@ -5,71 +5,73 @@
 /* eslint-disable @itwin/no-internal */
 /* eslint-disable no-console */
 
-import { EventEmitter, Next, ScenarioContext } from "artillery";
+import { VUContext, VUEvents } from "artillery";
 import { StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
-import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
+import {
+  ISchemaLocater,
+  Schema,
+  SchemaContext,
+  SchemaInfo,
+  SchemaKey,
+  SchemaMatchType,
+  SchemaProps,
+} from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import {
+  createIModelHierarchyProvider,
+  createLimitingECSqlQueryExecutor,
+  HierarchyNode,
+  RowsLimitExceededError,
+} from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
+import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common.js";
 
 console.log(`Frontend PID: ${process.pid}`);
 const ENABLE_REQUESTS_LOGGING = false;
 
-export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
+export async function initScenario(context: VUContext, _events: VUEvents) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  void openIModelConnectionIfNeeded().then(() => {
-    next();
-  });
+  await openIModelConnectionIfNeeded();
+  loadVariables(context);
 }
 
-export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
-  console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
+export function terminateScenario(context: VUContext, _ee: VUEvents) {
+  console.log(
+    `Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`,
+  );
   context.vars.tooLargeHierarchyLevelsCount = 0;
   context.vars.isTestTerminated = true;
-  next();
 }
 
-export function loadInitialHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadInitialHierarchy(context: VUContext, events: VUEvents) {
   // we limit loaded hierarchy depth by telling that node has no children if it has `!autoExpand` (root node in models tree is always auto-expanded)
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createModelsTreeProvider(context, events), (node) => node.children && !!node.autoExpand)
-    .then(() => {
-      events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createModelsTreeProvider(context, events), (node) => node.children && !!node.autoExpand);
+  events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-export function loadFirstBranch(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadFirstBranch(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createModelsTreeProvider(context, events), (node, index) => node.children && index === 0)
-    .then(() => {
-      events.emit("histogram", `Models Tree first branch load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createModelsTreeProvider(context, events), (node, index) => node.children && index === 0);
+  events.emit(
+    "histogram",
+    `Models Tree first branch load: ${getCurrentIModelName(context)}`,
+    timer.current.milliseconds,
+  );
 }
 
-export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadFullHierarchy(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createModelsTreeProvider(context, events), (node) => node.children)
-    .then(() => {
-      events.emit("histogram", `Models Tree full load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createModelsTreeProvider(context, events), (node) => node.children);
+  events.emit("histogram", `Models Tree full load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter) {
+function createModelsTreeProvider(context: VUContext, events: VUEvents) {
   const pendingSchemaLoads = new Map<string, Promise<SchemaProps | undefined>>();
   const isTestTerminated = () => context.vars.isTestTerminated;
-  const imodelRpcProps = (context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context);
+  const imodelRpcProps = (context.vars.imodelRpcProps as (context: VUContext) => any)(context);
   async function requestSchemaJson(schemaKey: Readonly<SchemaKey>) {
     const pending = pendingSchemaLoads.get(schemaKey.name);
     if (pending) {
@@ -79,7 +81,10 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
     const promise = doRequest("ECSchemaRpcInterface-2.0.0-getSchemaJSON", body, events, "schema_json")
       .then((schemaJson) => {
         if (isTestTerminated()) {
-          ENABLE_REQUESTS_LOGGING && console.log(`Received "schema json" response for ${schemaKey.name}, but the test is terminated, so skip parsing`);
+          ENABLE_REQUESTS_LOGGING &&
+            console.log(
+              `Received "schema json" response for ${schemaKey.name}, but the test is terminated, so skip parsing`,
+            );
           return undefined;
         }
         ENABLE_REQUESTS_LOGGING && console.log(`Received "schema json" response for ${schemaKey.name}`);
@@ -92,11 +97,19 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
     return promise;
   }
   const schedulingSchemaLocater: ISchemaLocater = {
-    getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
+    getSchemaSync<T extends Schema>(
+      _schemaKey: Readonly<SchemaKey>,
+      _matchType: SchemaMatchType,
+      _schemaContext: SchemaContext,
+    ): T | undefined {
       console.error(`getSchemaSync not implemented`);
       return undefined;
     },
-    async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
+    async getSchemaInfo(
+      schemaKey: Readonly<SchemaKey>,
+      matchType: SchemaMatchType,
+      schemaContext: SchemaContext,
+    ): Promise<SchemaInfo | undefined> {
       const schemaJson = await requestSchemaJson(schemaKey);
       if (!schemaJson) {
         return undefined;
@@ -114,7 +127,11 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
         throw e;
       }
     },
-    async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
+    async getSchema<T extends Schema>(
+      schemaKey: Readonly<SchemaKey>,
+      matchType: SchemaMatchType,
+      schemaContext: SchemaContext,
+    ): Promise<T | undefined> {
       await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
       try {
         const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);
@@ -131,8 +148,9 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
     async execute(request: DbQueryRequest): Promise<DbQueryResponse> {
       const timer = new StopWatch(undefined, true);
       const body = JSON.stringify([imodelRpcProps, request]);
-      return doRequest("IModelReadRpcInterface-3.6.0-queryRows", body, events, "query_rows").then((response) => {
-        ENABLE_REQUESTS_LOGGING && console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
+      return doRequest("IModelReadRpcInterface-3.7.0-queryRows", body, events, "query_rows").then((response) => {
+        ENABLE_REQUESTS_LOGGING &&
+          console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
         return response as DbQueryResponse;
       });
     },
@@ -154,10 +172,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   };
   const provider = createIModelHierarchyProvider({
     imodelAccess,
-    hierarchyDefinition: new ModelsTreeDefinition({
-      imodelAccess,
-      hierarchyConfig: defaultHierarchyConfiguration,
-    }),
+    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess, hierarchyConfig: defaultHierarchyConfiguration }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

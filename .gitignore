@@ -1,5 +1,6 @@
 coverage
 build
+dist
 lib
 node_modules
 built-packages
@@ -15,3 +16,6 @@ built-packages
 
 npm-debug.log*
 pnpm-debug.log*
+
+scripts/**/*.sh
+.github/plans/

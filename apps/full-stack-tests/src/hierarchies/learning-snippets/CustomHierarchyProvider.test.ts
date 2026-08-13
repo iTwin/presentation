@@ -6,9 +6,8 @@
 /* eslint-disable no-duplicate-imports */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
-import { expect } from "chai";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { collect } from "presentation-test-utilities";
-import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -29,41 +28,41 @@ import {
 } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyFilteringHelper,
+  GenericNodeKey,
+  HierarchyFilteringPath,
+  HierarchyNodeIdentifier,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Custom hierarchy providers", () => {
-      before(async () => {
+      beforeAll(async () => {
         await initialize();
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
       afterEach(() => {
-        sinon.restore();
+        vi.restoreAllMocks();
       });
 
-      it("creates basic provider", async function () {
+      it("creates basic provider", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.BasicProviderExample
         // Create a hierarchy provider that returns an infinite hierarchy, where each node has one child node.
         const provider: HierarchyProvider = {
           async *getNodes({ parentNode }) {
             yield !parentNode
-              ? {
-                  key: { type: "generic", id: `root` },
-                  label: `Root node`,
-                  children: true,
-                  parentKeys: [],
-                }
+              ? { key: { type: "generic", id: `root` }, label: `Root node`, children: true, parentKeys: [] }
               : {
                   key: { type: "generic", id: `child-${parentNode.parentKeys.length + 1}` },
                   label: `Child ${parentNode.parentKeys.length + 1}`,
@@ -79,37 +78,16 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(rootNodes)
-          .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Root node",
-              children: true,
-            },
-          ]);
+        expect(rootNodes).toMatchObject([{ label: "Root node", children: true }]);
         const childNodes1 = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
-        expect(childNodes1)
-          .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Child 1",
-              children: true,
-            },
-          ]);
+        expect(childNodes1).toMatchObject([{ label: "Child 1", children: true }]);
         const childNodes2 = await collect(provider.getNodes({ parentNode: childNodes1[0] }));
-        expect(childNodes2)
-          .to.have.lengthOf(1)
-          .and.to.containSubset([
-            {
-              label: "Child 2",
-              children: true,
-            },
-          ]);
+        expect(childNodes2).toMatchObject([{ label: "Child 2", children: true }]);
       });
 
-      it("creates iModel provider", async function () {
-        const { imodel } = await buildIModel(this, async () => {});
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates iModel provider", async () => {
+        const { imodel } = await buildTestIModel();
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample
         // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
@@ -122,7 +100,9 @@ describe("Hierarchies", () => {
               // Briefcase connections support data modifications - the provider should listen to txn changes
               // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
               // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
-              this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () => this.hierarchyChanged.raiseEvent());
+              this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () =>
+                this.hierarchyChanged.raiseEvent(),
+              );
             }
           }
 
@@ -133,7 +113,9 @@ describe("Hierarchies", () => {
             this._disposeTxnListeners?.();
           }
 
-          public async *getNodes({ parentNode }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
+          public async *getNodes({
+            parentNode,
+          }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
             if (!parentNode) {
               // Query and return root bis.Subject node
               for await (const row of this._imodel.createQueryReader(
@@ -146,7 +128,10 @@ describe("Hierarchies", () => {
                 `,
               )) {
                 yield {
-                  key: { type: "instances", instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }] },
+                  key: {
+                    type: "instances",
+                    instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }],
+                  },
                   label: row.label,
                   children: !!row.hasChildren,
                   parentKeys: [],
@@ -172,7 +157,10 @@ describe("Hierarchies", () => {
                 `,
               )) {
                 yield {
-                  key: { type: "instances", instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }] },
+                  key: {
+                    type: "instances",
+                    instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }],
+                  },
                   label: row.label,
                   children: !!row.hasChildren,
                   parentKeys: [...parentNode.parentKeys, parentNode.key],
@@ -219,14 +207,14 @@ describe("Hierarchies", () => {
         await traverseHierarchy(provider);
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.callCount).to.eq(3);
-        expect(consoleLogSpy.getCall(0).args[0]).to.eq(imodel.rootSubject.name);
-        expect(consoleLogSpy.getCall(1).args[0]).to.eq("  BisCore.RealityDataSources");
-        expect(consoleLogSpy.getCall(2).args[0]).to.eq("  BisCore.DictionaryModel");
+        expect(consoleLogSpy.mock.calls).toHaveLength(3);
+        expect(consoleLogSpy.mock.calls[0][0]).toBe(imodel.rootSubject.name);
+        expect(consoleLogSpy.mock.calls[1][0]).toBe("  BisCore.RealityDataSources");
+        expect(consoleLogSpy.mock.calls[2][0]).toBe("  BisCore.DictionaryModel");
       });
 
-      it("creates 3rd party service provider", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates 3rd party service provider", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.3rdPartyServiceProviderExample
         // Create a fake books service that simulates fetching authors and books data.
@@ -281,7 +269,7 @@ describe("Hierarchies", () => {
         //   Executive orders
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual([
           "J.R.R. Tolkien",
           "  The Hobbit",
           "  The Fellowship of Ring",
@@ -297,8 +285,8 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("creates formatting provider", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates formatting provider", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderExample
         // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
@@ -372,17 +360,17 @@ describe("Hierarchies", () => {
         console.log((await provider.getNodes().next()).value.label);
         // __PUBLISH_EXTRACT_END__
 
-        expect(consoleLogSpy.callCount).to.eq(2);
-        expect(consoleLogSpy.getCall(0).args[0]).to.eq(
+        expect(consoleLogSpy.mock.calls).toHaveLength(2);
+        expect(consoleLogSpy.mock.calls[0][0]).toBe(
           `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68)`,
         );
-        expect(consoleLogSpy.getCall(1).args[0]).to.eq(
+        expect(consoleLogSpy.mock.calls[1][0]).toBe(
           "Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 }",
         );
       });
 
-      it("creates filtering provider", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates filtering provider", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         const booksService = createBooksService();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.PathsLookup
@@ -391,7 +379,10 @@ describe("Hierarchies", () => {
         // to create.
         async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
           const results: HierarchyFilteringPath[] = [];
-          const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
+          const [matchingAuthors, matchingBooks] = await Promise.all([
+            booksService.getAuthors({ name: filter }),
+            booksService.getBooks({ title: filter }),
+          ]);
           for (const author of matchingAuthors) {
             results.push([{ type: "generic", id: `author:${author.key}` }]);
           }
@@ -418,7 +409,9 @@ describe("Hierarchies", () => {
                 targetNodeKeys
                   ? {
                       rules: targetNodeKeys
-                        .filter((key) => HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("author:"))
+                        .filter(
+                          (key) => HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("author:"),
+                        )
                         .map(({ id }) => ({ key: id.slice(7) })),
                       operator: "or",
                     }
@@ -443,7 +436,10 @@ describe("Hierarchies", () => {
                     ? [
                         {
                           rules: targetNodeKeys
-                            .filter((key) => HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("book:"))
+                            .filter(
+                              (key) =>
+                                HierarchyNodeIdentifier.isGenericNodeIdentifier(key) && key.id.startsWith("book:"),
+                            )
                             .map(({ id }) => ({ key: id.slice(5) })),
                           operator: "or" as const,
                         },
@@ -489,14 +485,14 @@ describe("Hierarchies", () => {
         //   Adventures of Huckleberry Finn
         //   The Adventures of Tom Sawyer
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual([
           "J.R.R. Tolkien",
           "  The Fellowship of Ring",
           "Mark Twain",
           "  Adventures of Huckleberry Finn",
           "  The Adventures of Tom Sawyer",
         ]);
-        consoleLogSpy.resetHistory();
+        consoleLogSpy.mockClear();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2
         // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
@@ -511,7 +507,7 @@ describe("Hierarchies", () => {
         //   Red storm rising
         //   Executive orders
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual([
           "Mark Twain",
           "  The Adventures of Tom Sawyer",
           "Tom Clancy",
@@ -521,27 +517,35 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("creates provider with hierarchy level filtering support", async function () {
-        const consoleLogSpy = sinon.stub(console, "log");
+      it("creates provider with hierarchy level filtering support", async () => {
+        const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         const booksService = createBooksService();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Filter
         // A function that creates a books service - specific filter, based on the given parent node and children filters
-        function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | undefined, genericChildrenFilter: GenericInstanceFilter | undefined) {
+        function createBooksServiceFilter(
+          parentNodeFilter: Record<string, unknown> | undefined,
+          genericChildrenFilter: GenericInstanceFilter | undefined,
+        ) {
           function createRuleFilter(rule: GenericInstanceFilterRule): Record<string, unknown> {
             // note: this is a very simplistic implementation that doesn't support different operators, value types, etc.
             return { [rule.propertyName]: rule.value?.rawValue ?? "" };
           }
-          function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
-            return {
-              operator: group.operator,
-              rules: group.rules.map(createRuleOrGroupFilter),
-            };
+          function createGroupFilter(
+            group: GenericInstanceFilterRuleGroup,
+          ): BooksServiceFilter<Record<string, unknown>> {
+            return { operator: group.operator, rules: group.rules.map(createRuleOrGroupFilter) };
           }
-          function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
-            return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
+          function createRuleOrGroupFilter(
+            ruleOrGroup: GenericInstanceFilter["rules"],
+          ): BooksServiceFilter<Record<string, unknown>> {
+            return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup)
+              ? createGroupFilter(ruleOrGroup)
+              : createRuleFilter(ruleOrGroup);
           }
-          const childrenFilter = genericChildrenFilter ? createRuleOrGroupFilter(genericChildrenFilter.rules) : undefined;
+          const childrenFilter = genericChildrenFilter
+            ? createRuleOrGroupFilter(genericChildrenFilter.rules)
+            : undefined;
           if (parentNodeFilter && childrenFilter) {
             return { rules: [parentNodeFilter, childrenFilter], operator: "and" };
           }
@@ -568,7 +572,9 @@ describe("Hierarchies", () => {
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
               // For author parent node, query books and return nodes based on them
-              const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
+              const books = await booksService.getBooks(
+                createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter),
+              );
               for (const book of books) {
                 const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
                 yield {
@@ -600,20 +606,14 @@ describe("Hierarchies", () => {
                 operator: "like",
                 propertyTypeName: "string",
                 sourceAlias: "",
-                value: {
-                  displayValue: "Mark",
-                  rawValue: "Mark",
-                },
+                value: { displayValue: "Mark", rawValue: "Mark" },
               },
               {
                 propertyName: "hasBooks",
                 operator: "is-equal",
                 propertyTypeName: "boolean",
                 sourceAlias: "",
-                value: {
-                  displayValue: "False",
-                  rawValue: false,
-                },
+                value: { displayValue: "False", rawValue: false },
               },
             ],
           },
@@ -625,8 +625,8 @@ describe("Hierarchies", () => {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Albert Einstein", "- Mark Twain"]);
-        consoleLogSpy.resetHistory();
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual(["- Albert Einstein", "- Mark Twain"]);
+        consoleLogSpy.mockClear();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
         // Create a filter to find books whose key contains "OL274" substring and title contains "Hobbit".
@@ -641,20 +641,14 @@ describe("Hierarchies", () => {
                 operator: "like",
                 propertyTypeName: "string",
                 sourceAlias: "",
-                value: {
-                  displayValue: "OL274",
-                  rawValue: "OL274",
-                },
+                value: { displayValue: "OL274", rawValue: "OL274" },
               },
               {
                 propertyName: "title",
                 operator: "like",
                 propertyTypeName: "string",
                 sourceAlias: "",
-                value: {
-                  displayValue: "Hobbit",
-                  rawValue: "Hobbit",
-                },
+                value: { displayValue: "Hobbit", rawValue: "Hobbit" },
               },
             ],
           },
@@ -672,7 +666,7 @@ describe("Hierarchies", () => {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- The Hobbit"]);
+        expect(consoleLogSpy.mock.calls.map((call) => call[0])).toEqual(["- The Hobbit"]);
       });
     });
   });
@@ -680,7 +674,9 @@ describe("Hierarchies", () => {
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.BooksService
 // Define a type for a filter that can be applied to books service queries.
-type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+type BooksServiceFilter<TEntry> =
+  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
+  | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
@@ -753,7 +749,11 @@ function createBooksService() {
 
 async function traverseHierarchy(provider: HierarchyProvider): Promise<void>;
 async function traverseHierarchy(provider: HierarchyProvider, parentNode: HierarchyNode, level: number): Promise<void>;
-async function traverseHierarchy(provider: HierarchyProvider, parentNode: HierarchyNode | undefined = undefined, level: number = 0): Promise<void> {
+async function traverseHierarchy(
+  provider: HierarchyProvider,
+  parentNode: HierarchyNode | undefined = undefined,
+  level: number = 0,
+): Promise<void> {
   for await (const node of provider.getNodes({ parentNode })) {
     console.log(`${" ".repeat(level * 2)}${node.label}`);
     if (node.children) {

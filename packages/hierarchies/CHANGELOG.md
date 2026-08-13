@@ -1,5 +1,126 @@
 # @itwin/presentation-hierarchies
 
+## 1.7.19
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.19
+
+## 1.7.18
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+
+## 1.7.17
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.17
+
+## 1.7.16
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.16
+
+## 1.7.15
+
+### Patch Changes
+
+- [#1358](https://github.com/iTwin/presentation/pull/1358): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.14
+
+## 1.7.14
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.13
+
+## 1.7.13
+
+### Patch Changes
+
+- [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.12
+
+## 1.7.12
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.11
+
+## 1.7.11
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.10
+
+## 1.7.10
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.9
+
+## 1.7.9
+
+### Patch Changes
+
+- [#1208](https://github.com/iTwin/presentation/pull/1208): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.8
+
+## 1.7.8
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.7
+
+## 1.7.7
+
+### Patch Changes
+
+- [#1152](https://github.com/iTwin/presentation/pull/1152): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.6
+
+## 1.7.6
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.5
+
+## 1.7.5
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.4
+
 ## 1.7.4
 
 ### Patch Changes
@@ -31,6 +152,7 @@
 ### Minor Changes
 
 - 8f7d200926b93e862276e1f978f6c891691e0dae: Refactored specifying the depth / level to which filtering path should be auto-expanded.
+
   - Deprecated `FilteringPathAutoExpandOption` and `FilterTargetGroupingNodeInfo`.
   - Added `FilteringPathAutoExpandDepthInPath` and `FilteringPathAutoExpandDepthInHierarchy` which should be used instead.
 
@@ -93,7 +215,10 @@
   **Before:**
 
   ```ts
-  const childNodeProps = await createHierarchyFilteringHelper(undefined, undefined).createChildNodePropsAsync({
+  const childNodeProps = await createHierarchyFilteringHelper(
+    undefined,
+    undefined
+  ).createChildNodePropsAsync({
     pathMatcher: (identifier): boolean | Promise<boolean> => {
       return false;
     },
@@ -101,6 +226,7 @@
   ```
 
   **After:**
+
   - **Option A:** check if it's a Promise before awaiting:
 
     Use this when you want to get slightly better performance by avoiding unnecessary `await`.
@@ -119,7 +245,10 @@
     Use this if pathMatcher always returns a Promise or you prefer a simpler pattern.
 
     ```ts
-    const childNodeProps = await createHierarchyFilteringHelper(undefined, undefined).createChildNodePropsAsync({
+    const childNodeProps = await createHierarchyFilteringHelper(
+      undefined,
+      undefined
+    ).createChildNodePropsAsync({
       pathMatcher: async (identifier): Promise<boolean> => {
         return false;
       },
@@ -185,6 +314,7 @@
 - [#783](https://github.com/iTwin/presentation/pull/783): Added hierarchy filtering helper to make hierarchy filtering easier to implement.
 
   The helper can be created using the `createHierarchyFilteringHelper` function and supplying it the root level filtering paths and parent node. From there, filtering information for specific hierarchy level is determined and an object with the following attributes is returned:
+
   - `hasFilter` tells if the hierarchy level has a filter applied.
   - `hasFilterTargetAncestor` tells if there's a filter target ancestor node up in the hierarchy.
   - `getChildNodeFilteringIdentifiers()` returns an array of hierarchy node identifiers that apply specifically for this hierarchy level.
@@ -193,6 +323,7 @@
   See the [Implementing hierarchy filtering support](./learning/CustomHierarchyProviders.md#implementing-hierarchy-filtering-support) learning page for a usage example.
 
   In addition, deprecated a few APIs that are replaced by filtering helper:
+
   - `extractFilteringProps` function,
   - `HierarchyNodeFilteringProps.create` function.
 
@@ -238,6 +369,7 @@
   | 50k             | not tested        | 13.45 s          |
 
   In addition, changed `NodeParser` (return type of `HierarchyDefinition.parseNode`):
+
   - It now can return a promise, so instead of just `SourceInstanceHierarchyNode` it can now also return `Promise<SourceInstanceHierarchyNode>`.
   - Additionally, it now accepts an optional `parentNode` argument of `HierarchyDefinitionParentNode` type.
 
@@ -269,6 +401,7 @@
 ### Minor Changes
 
 - [#708](https://github.com/iTwin/presentation/pull/708): **BREAKING:** Added support for creating hierarchies from multiple data sources.
+
   - `InstancesNodeKey.instanceKeys` array items now have an optional `imodelKey` attribute to allow for the identification of the iModel that the instance belongs to. This is useful when working with sets of instance keys representing instances from different iModels. In addition, the same `imodelKey` attribute is also available on `HierarchyNodeIdentifier` to allow for filtering nodes based on the iModel they belong to.
   - `HierarchyNode` terminology and related changes:
     - "Standard" nodes were renamed to "IModel" nodes to signify the fact that they're based on iModel data:
@@ -296,6 +429,7 @@
     - The returned provider now has a `dispose` method to clean up resources - make sure to call it when the provider is no longer needed.
   - Added `mergeProviders` function, which, given a number of hierarchy providers, creates a new provider that merges the hierarchies of the input providers. The returned provider has a `dispose` method that needs to be called when the provider is no longer needed.
   - Renamed `createClassBasedHierarchyDefinition` to `createPredicateBasedHierarchyDefinition` to signify its props changes:
+
     - When specifying `childNodes` definition for instances parent node, the `parentNodeClassName` attribute was changed to `parentInstancesNodePredicate`. In addition to accepting a full class name, identifying the class of parent instances to return children for, it now also accepts an async function predicate.
     - When specifying `childNodes` definition for generic parent node, the `customParentNodeKey` attribute was changed to `parentGenericNodePredicate`. The type changed from `string`, identifying the key of the parent node, to an async function predicate.
 
@@ -348,6 +482,7 @@
     ```
 
 - [#708](https://github.com/iTwin/presentation/pull/708): Added utilities for custom hierarchy filtering handling:
+
   - `extractFilteringProps` function, given root level hierarchy filtering paths and a parent node, returns props required to filter particular hierarchy level.
   - `HierarchyFilteringPath` interface is now public and there's also a similarly-named namespace with the following utilities:
     - `mergeOptions` merges filtering options of two paths. This is useful for cases when there are multiple paths targeting the same node, but with different options.
@@ -376,7 +511,9 @@
   ```ts
   const selectQueryFactory = createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory(
+      { classHierarchyInspector: imodelAccess }
+    ),
   });
   ```
 
@@ -399,7 +536,12 @@
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           // Supply grouping node attributes with the path to the "C" element.
-          options: { autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length } },
+          options: {
+            autoExpand: {
+              key: groupingNode.key,
+              depth: groupingNode.parentKeys.length,
+            },
+          },
         },
       ],
     },
@@ -438,7 +580,12 @@
   const hierarchyProvider = createHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-    filtering: { paths: filterPaths.map((path) => ({ path, options: { autoExpand: true } })) },
+    filtering: {
+      paths: filterPaths.map((path) => ({
+        path,
+        options: { autoExpand: true },
+      })),
+    },
   });
   ```
 
@@ -480,12 +627,18 @@
       childNodes: [
         {
           parentNodeClassName: "BisCore.PhysicalElement",
-          definitions: async ({ parentNode }) => getPhysicalElementChildren(parentNode),
+          definitions: async ({ parentNode }) =>
+            getPhysicalElementChildren(parentNode),
         },
         {
           parentNodeClassName: "BisCore.SpatialElement",
           definitions: async ({ parentNode, parentNodeClassName }) => {
-            if (await inspector.classDerivesFrom(parentNodeClassName, "BisCore.PhysicalElement")) {
+            if (
+              await inspector.classDerivesFrom(
+                parentNodeClassName,
+                "BisCore.PhysicalElement"
+              )
+            ) {
               return [];
             }
 
@@ -495,11 +648,21 @@
         {
           parentNodeClassName: "BisCore.GeometricElement3d",
           definitions: async ({ parentNode, parentNodeClassName }) => {
-            if (await inspector.classDerivesFrom(parentNodeClassName, "BisCore.PhysicalElement")) {
+            if (
+              await inspector.classDerivesFrom(
+                parentNodeClassName,
+                "BisCore.PhysicalElement"
+              )
+            ) {
               return [];
             }
 
-            if (await inspector.classDerivesFrom(parentNodeClassName, "BisCore.SpatialElement")) {
+            if (
+              await inspector.classDerivesFrom(
+                parentNodeClassName,
+                "BisCore.SpatialElement"
+              )
+            ) {
               return [];
             }
 
@@ -520,17 +683,20 @@
       childNodes: [
         {
           parentNodeClassName: "BisCore.PhysicalElement",
-          definitions: async ({ parentNode }) => getPhysicalElementChildren(parentNode),
+          definitions: async ({ parentNode }) =>
+            getPhysicalElementChildren(parentNode),
         },
         {
           parentNodeClassName: "BisCore.SpatialElement",
           onlyIfNotHandled: true,
-          definitions: async ({ parentNode }) => getSpatialElementChildren(parentNode),
+          definitions: async ({ parentNode }) =>
+            getSpatialElementChildren(parentNode),
         },
         {
           parentNodeClassName: "BisCore.GeometricElement3d",
           onlyIfNotHandled: true,
-          definitions: async ({ parentNode }) => getGeometricElement3dChildren(parentNode),
+          definitions: async ({ parentNode }) =>
+            getGeometricElement3dChildren(parentNode),
         },
       ],
     },

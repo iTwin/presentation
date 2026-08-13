@@ -2,42 +2,44 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useState } from "react";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
+import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
+
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
       HTMLElement.prototype.scrollIntoView = () => {};
     });
 
-    after(async () => {
+    afterAll(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
       UiComponents.terminate();
       await terminate();
     });
 
-    it("limits hierarchy level size", async function () {
+    // TODO: remove skip once core dependencies are bumped to >5.8.0
+    // it.skipIf(Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4)("limits hierarchy level size", async () => {
+    it.skip("limits hierarchy level size", async () => {
       // stub console log to avoid hierarchy limit warning in console
-      const consoleStub = sinon.stub(console, "log").callsFake(() => {});
-      if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
-        // hierarchy level size limiting requires core libraries at least @4.0
-        this.skip();
-      }
+      const consoleStub = vi.spyOn(console, "log").mockImplementation(() => {});
 
       const hierarchyLevelSizeLimit = 10;
 
@@ -61,22 +63,42 @@ describe("Learning snippets", () => {
 
         // presentation-specific tree renderer should be used when limiting to allow filtering
         // down the results when the limit is exceeded
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />;
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
+          <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />
+        );
 
-        return <PresentationTree width={width} height={height} state={state} selectionMode={SelectionMode.Extended} treeRenderer={treeRenderer} />;
+        return (
+          <PresentationTree
+            width={width}
+            height={height}
+            state={state}
+            selectionMode={SelectionMode.Extended}
+            treeRenderer={treeRenderer}
+          />
+        );
       }
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
         for (let i = 0; i < 10; ++i) {
-          insertPhysicalElement({ builder, userLabel: `A element ${i + 1}`, modelId: modelKeyA.id, categoryId: categoryKey.id });
+          insertPhysicalElement({
+            builder,
+            userLabel: `A element ${i + 1}`,
+            modelId: modelKeyA.id,
+            categoryId: categoryKey.id,
+          });
         }
         const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
         for (let i = 0; i < 11; ++i) {
-          insertPhysicalElement({ builder, userLabel: `B element ${i + 1}`, modelId: modelKeyB.id, categoryId: categoryKey.id });
+          insertPhysicalElement({
+            builder,
+            userLabel: `B element ${i + 1}`,
+            modelId: modelKeyB.id,
+            categoryId: categoryKey.id,
+          });
         }
       });
 
@@ -98,11 +120,17 @@ describe("Learning snippets", () => {
 
       // expect B model to not have any children
       for (let i = 0; i < 11; ++i) {
-        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
+        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).toThrow();
       }
-      // cspell:disable-next-line
-      await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).is.not.null);
-      consoleStub.restore();
+
+      await waitFor(() =>
+        expect(
+          // cspell:disable-next-line
+          getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false }),
+        ).not.toBeNull(),
+      );
+
+      consoleStub.mockRestore();
     });
   });
 });
@@ -128,10 +156,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,

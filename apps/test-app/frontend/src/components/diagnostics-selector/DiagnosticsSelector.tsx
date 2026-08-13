@@ -21,10 +21,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   const [devSeverity, setDevSeverity] = useState("error");
   const result = useMemo(
     (): DiagnosticsProps => ({
-      ruleDiagnostics: {
-        severity: editorSeverity as DiagnosticsLoggerSeverity,
-        handler: consoleDiagnosticsHandler,
-      },
+      ruleDiagnostics: { severity: editorSeverity as DiagnosticsLoggerSeverity, handler: consoleDiagnosticsHandler },
       devDiagnostics: {
         perf: shouldMeasurePerformance,
         severity: devSeverity as DiagnosticsLoggerSeverity,
@@ -74,7 +71,12 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
         }}
         size="small"
       />
-      <ToggleSwitch label="Measure performance" labelPosition="right" checked={shouldMeasurePerformance} onChange={handleMeasurePerformanceChange} />
+      <ToggleSwitch
+        label="Measure performance"
+        labelPosition="right"
+        checked={shouldMeasurePerformance}
+        onChange={handleMeasurePerformanceChange}
+      />
     </MenuExtraContent>,
   ];
 

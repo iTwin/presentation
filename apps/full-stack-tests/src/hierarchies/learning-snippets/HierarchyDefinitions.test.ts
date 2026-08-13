@@ -4,27 +4,37 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
+import { afterAll, describe, it, test } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
-import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Hierarchy definitions", () => {
       let imodel: IModelConnection;
 
-      before(async function () {
+      test.beforeAll(async (_, suite) => {
         await initialize();
 
-        const res = await buildIModel(this, async (builder) => {
+        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
@@ -34,31 +44,26 @@ describe("Hierarchies", () => {
         imodel = res.imodel;
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("creates a hierarchy using simple hierarchy definition", async function () {
+      it("creates a hierarchy using simple hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, simply return one generic node
             if (!parentNode) {
-              return [
-                {
-                  node: {
-                    key: "physical-elements",
-                    label: "Physical elements",
-                  },
-                },
-              ];
+              return [{ node: { key: "physical-elements", label: "Physical elements" } }];
             }
             // For the root node, return a query that selects all physical elements
             if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                  classHierarchyInspector: imodelAccess,
+                }),
               });
               return [
                 {
@@ -87,13 +92,16 @@ describe("Hierarchies", () => {
             NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
-              children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "A" }),
+                NodeValidators.createForInstanceNode({ label: "B" }),
+              ],
             }),
           ],
         });
       });
 
-      it("uses hierarchy definition's parseNode callback", async function () {
+      it("uses hierarchy definition's parseNode callback", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.ParseNode
         const hierarchyDefinition: HierarchyDefinition = {
@@ -124,10 +132,7 @@ describe("Hierarchies", () => {
           parseNode(row) {
             // Parse the row into an instance node
             return {
-              key: {
-                type: "instances",
-                instanceKeys: [{ className: row.ClassName, id: row.Id }],
-              },
+              key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] },
               label: row.Label,
             };
           },
@@ -135,11 +140,14 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
-          expect: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
+          expect: [
+            NodeValidators.createForInstanceNode({ label: "A" }),
+            NodeValidators.createForInstanceNode({ label: "B" }),
+          ],
         });
       });
 
-      it("uses hierarchy definition's preProcessNode callback", async function () {
+      it("uses hierarchy definition's preProcessNode callback", async () => {
         const imodelAccess = createIModelAccess(imodel);
         const externalService = {
           getExternalId: async <TNode extends { label: string }>(node: TNode) => {
@@ -156,7 +164,9 @@ describe("Hierarchies", () => {
             if (!parentNode) {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                  classHierarchyInspector: imodelAccess,
+                }),
               });
               return [
                 {
@@ -192,15 +202,12 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
-            NodeValidators.createForInstanceNode({
-              label: "A",
-              extendedData: { externalId: "test-external-id" },
-            }),
+            NodeValidators.createForInstanceNode({ label: "A", extendedData: { externalId: "test-external-id" } }),
           ],
         });
       });
 
-      it("uses hierarchy definition's postProcessNode callback", async function () {
+      it("uses hierarchy definition's postProcessNode callback", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PostProcessNode
         const hierarchyDefinition: HierarchyDefinition = {
@@ -209,7 +216,9 @@ describe("Hierarchies", () => {
             if (!parentNode) {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                  classHierarchyInspector: imodelAccess,
+                }),
               });
               return [
                 {
@@ -220,9 +229,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: "x.ECClassId" },
                         ecInstanceId: { selector: "x.ECInstanceId" },
                         nodeLabel: { selector: "x.UserLabel" },
-                        grouping: {
-                          byClass: true,
-                        },
+                        grouping: { byClass: true },
                         extendedData: {
                           // assign an iconId to all instance nodes
                           iconId: "icon-physical-element",
@@ -261,25 +268,20 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates hierarchy using predicate based hierarchy definition", async function () {
+      it("creates hierarchy using predicate based hierarchy definition", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
           hierarchy: {
             // For root nodes, simply return one generic node
-            rootNodes: async () => [
-              {
-                node: {
-                  key: "physical-elements",
-                  label: "Physical elements",
-                },
-              },
-            ],
+            rootNodes: async () => [{ node: { key: "physical-elements", label: "Physical elements" } }],
             childNodes: [
               {
                 // For the root node, return a query that selects all physical elements
@@ -310,7 +312,10 @@ describe("Hierarchies", () => {
             NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
-              children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "A" }),
+                NodeValidators.createForInstanceNode({ label: "B" }),
+              ],
             }),
           ],
         });

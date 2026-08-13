@@ -14,15 +14,6 @@ const fs = require("fs");
 
 const packagesToUpdate = [
   {
-    name: "@itwin/presentation-testing",
-    dependencies: [
-      {
-        name: "@itwin/presentation-components",
-        peerDependencyVersion: "^5.0.0",
-      },
-    ],
-  },
-  {
     name: "@itwin/presentation-components",
     dependencies: [
       {

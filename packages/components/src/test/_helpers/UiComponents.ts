@@ -10,7 +10,10 @@ import { NodeKey } from "@itwin/presentation-common";
 import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createTestECInstancesNodeKey } from "./Hierarchy.js";
 
-export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
+export function createTestTreeNodeItem(
+  key?: NodeKey,
+  partialNode?: Partial<DelayLoadedTreeNodeItem>,
+): PresentationTreeNodeItem {
   const node = {
     id: partialNode?.id ?? "node_id",
     parentId: partialNode?.parentId,

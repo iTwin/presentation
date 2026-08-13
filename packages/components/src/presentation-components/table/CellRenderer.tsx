@@ -8,8 +8,7 @@
 
 import { useState } from "react";
 import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { NonPrimitivePropertyRenderer, PropertyValueRendererManager } from "@itwin/components-react";
-import { Orientation } from "@itwin/core-react";
+import { NonPrimitivePropertyRenderer, Orientation, PropertyValueRendererManager } from "@itwin/components-react";
 import { Anchor, Modal, ModalContent } from "@itwin/itwinui-react";
 
 /**
@@ -75,6 +74,7 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // modal window when opened causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
+  /* v8 ignore next -- @preserve */
   return (
     <>
       <Anchor
@@ -84,11 +84,18 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
       >
         {buttonLabel}
       </Anchor>
-      <Modal isOpen={isOpen} title={dialogLabel} onClose={/* c8 ignore next */ () => setIsOpen(false)} className="presentation-components-non-primitive-value">
+      <Modal
+        isOpen={isOpen}
+        title={dialogLabel}
+        onClose={() => setIsOpen(false)}
+        className="presentation-components-non-primitive-value"
+      >
         <ModalContent>
-          {/* Can't change our import to `components-react`, because it was added there in a version later than our peer dependency */}
-          {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}
-          <NonPrimitivePropertyRenderer uniqueKey={uniqueKey} propertyRecord={record} orientation={Orientation.Horizontal} />
+          <NonPrimitivePropertyRenderer
+            uniqueKey={uniqueKey}
+            propertyRecord={record}
+            orientation={Orientation.Horizontal}
+          />
         </ModalContent>
       </Modal>
     </>

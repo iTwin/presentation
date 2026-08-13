@@ -3,12 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, expect } from "chai";
 import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
-import sinon from "sinon";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
-import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
-import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
+import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
   applyECInstanceIdsFilter,
@@ -23,7 +21,11 @@ import {
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import {
+  ProcessedGenericHierarchyNode,
+  ProcessedGroupingHierarchyNode,
+  SourceGenericHierarchyNode,
+} from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser } from "../../hierarchies/internal/RxjsHierarchyDefinition.js";
 import {
@@ -40,28 +42,20 @@ import {
 describe("FilteringHierarchyDefinition", () => {
   describe("parseNode", () => {
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
-      const spy = sinon.spy();
-      const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
-      };
+      const spy = vi.fn();
+      const row = { [NodeSelectClauseColumnNames.FullClassName]: "" };
       const filteringFactory = await createFilteringHierarchyDefinition({ nodesParser: (rowProp) => of(spy(rowProp)) });
       await firstValueFrom(filteringFactory.parseNode(row));
-      expect(spy).to.be.calledOnceWithExactly(row);
+      expect(spy).toHaveBeenCalledExactlyOnceWith(row);
     });
 
     it("uses source's node parser when it has one", async () => {
-      const stub = sinon.stub().resolves({} as unknown as HierarchyNode);
-      const sourceFactory = {
-        parseNode: (rowProp: any) => from(stub(rowProp)),
-      } as unknown as RxjsHierarchyDefinition;
-      const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
-      };
-      const filteringFactory = await createFilteringHierarchyDefinition({
-        sourceFactory,
-      });
+      const stub = vi.fn().mockResolvedValue({});
+      const sourceFactory = { parseNode: (rowProp: any) => from(stub(rowProp)) } as unknown as RxjsHierarchyDefinition;
+      const row = { [NodeSelectClauseColumnNames.FullClassName]: "" };
+      const filteringFactory = await createFilteringHierarchyDefinition({ sourceFactory });
       await firstValueFrom(filteringFactory.parseNode(row));
-      expect(stub).to.be.calledOnceWithExactly(row);
+      expect(stub).toHaveBeenCalledExactlyOnceWith(row);
     });
 
     it("sets filtered node attributes when parentNode is undefined", async () => {
@@ -69,7 +63,11 @@ describe("FilteringHierarchyDefinition", () => {
 
       const className = "TestSchema.TestName";
       const paths: HierarchyNodeIdentifiersPath[] = [
-        [createTestInstanceKey({ id: "0x5", className }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+        [
+          createTestInstanceKey({ id: "0x5", className }),
+          createTestInstanceKey({ id: "0x1" }),
+          createTestInstanceKey({ id: "0x2" }),
+        ],
         [createTestInstanceKey({ id: "0x5", className }), createTestInstanceKey({ id: "0x3" })],
         [createTestInstanceKey({ id: "0x5", className })],
       ];
@@ -83,7 +81,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: className,
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.filtering).to.deep.eq({
+      expect(node.filtering).toEqual({
         filteredChildrenIdentifierPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
           { path: [createTestInstanceKey({ id: "0x3" })], options: undefined },
@@ -99,7 +97,11 @@ describe("FilteringHierarchyDefinition", () => {
       const className = "TestSchema.TestName";
       const className2 = "TestSchema.TestName2";
       const paths: HierarchyNodeIdentifiersPath[] = [
-        [createTestInstanceKey({ id: "0x5", className }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+        [
+          createTestInstanceKey({ id: "0x5", className }),
+          createTestInstanceKey({ id: "0x1" }),
+          createTestInstanceKey({ id: "0x2" }),
+        ],
         [createTestInstanceKey({ id: "0x5", className, imodelKey: "randomKey" }), createTestInstanceKey({ id: "0x3" })],
         [createTestInstanceKey({ id: "0x5", className: className2 }), createTestInstanceKey({ id: "0x4" })],
         [createTestInstanceKey({ id: "0x5", className })],
@@ -121,8 +123,10 @@ describe("FilteringHierarchyDefinition", () => {
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined }],
+      expect(node.filtering).toEqual({
+        filteredChildrenIdentifierPaths: [
+          { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
+        ],
         isFilterTarget: true,
         filterTargetOptions: undefined,
       });
@@ -134,7 +138,11 @@ describe("FilteringHierarchyDefinition", () => {
       const className = "TestSchema.TestName";
       const paths: HierarchyFilteringPath[] = [
         [createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x2" })],
-        [createTestInstanceKey({ id: "0x3" }), createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x5" })],
+        [
+          createTestInstanceKey({ id: "0x3" }),
+          createTestInstanceKey({ id: "0x4", className }),
+          createTestInstanceKey({ id: "0x5" }),
+        ],
       ];
       const filteringFactory = await createFilteringHierarchyDefinition({
         ...sourceFactory,
@@ -153,7 +161,7 @@ describe("FilteringHierarchyDefinition", () => {
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
+      expect(node.filtering).toEqual({
         filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
     });
@@ -186,10 +194,14 @@ describe("FilteringHierarchyDefinition", () => {
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
+      expect(node.filtering).toEqual({
         filteredChildrenIdentifierPaths: [
           {
-            path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3", className }), createTestInstanceKey({ id: "0x2" })],
+            path: [
+              createTestInstanceKey({ id: "0x1" }),
+              createTestInstanceKey({ id: "0x3", className }),
+              createTestInstanceKey({ id: "0x2" }),
+            ],
             options: undefined,
           },
         ],
@@ -211,7 +223,11 @@ describe("FilteringHierarchyDefinition", () => {
         is: async (other) => other === class1.fullName,
       });
       const paths: HierarchyNodeIdentifiersPath[] = [
-        [createTestInstanceKey({ id: "0x5", className: class1.fullName }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+        [
+          createTestInstanceKey({ id: "0x5", className: class1.fullName }),
+          createTestInstanceKey({ id: "0x1" }),
+          createTestInstanceKey({ id: "0x2" }),
+        ],
         [createTestInstanceKey({ id: "0x5", className: class1.fullName }), createTestInstanceKey({ id: "0x3" })],
         [createTestInstanceKey({ id: "0x5", className: class2.fullName }), createTestInstanceKey({ id: "0x4" })],
       ];
@@ -232,7 +248,7 @@ describe("FilteringHierarchyDefinition", () => {
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
+      expect(node.filtering).toEqual({
         filteredChildrenIdentifierPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
           { path: [createTestInstanceKey({ id: "0x3" })], options: undefined },
@@ -265,32 +281,31 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: testClass.fullName,
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, undefined));
-      expect(node.filtering).to.deep.eq({
+      expect(node.filtering).toEqual({
         filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
     });
 
     it("doesn't set auto-expand when filtered children paths is not set", async () => {
       const filteringFactory = await createFilteringHierarchyDefinition();
-      const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
-      };
+      const row = { [NodeSelectClauseColumnNames.FullClassName]: "" };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("doesn't set auto-expand when filtered children paths list is empty", async () => {
       const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: [] });
-      const row = {
-        [NodeSelectClauseColumnNames.FullClassName]: "",
-      };
+      const row = { [NodeSelectClauseColumnNames.FullClassName]: "" };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("does't set auto-expand when filtered children paths list is provided without `autoExpand` option", async () => {
       const paths: HierarchyNodeIdentifiersPath[] = [
-        [createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }), createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" })],
+        [
+          createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
+          createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
+        ],
       ];
       const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
       const row = {
@@ -299,7 +314,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("doesn't set auto-expand when all filtered children paths contain `autoExpand = false`", async () => {
@@ -319,7 +334,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("doesn't set auto-expand on filter targets", async () => {
@@ -336,7 +351,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("doesn't set auto-expand when all filtered children paths autoExpand depthInPath is equal to parent keys length", async () => {
@@ -363,15 +378,12 @@ describe("FilteringHierarchyDefinition", () => {
           filtering: {
             filteredChildrenIdentifierPaths: paths.map((path) => {
               const normalizedPath = HierarchyFilteringPath.normalize(path);
-              return {
-                path: normalizedPath.path.slice(1),
-                options: normalizedPath.options,
-              };
+              return { path: normalizedPath.path.slice(1), options: normalizedPath.options };
             }),
           },
         }),
       );
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("doesn't set auto-expand when all filtered children paths autoExpand depthInPath is equal to node depth", async () => {
@@ -391,7 +403,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("doesn't set auto-expand when all filtered children paths autoExpand depth is less than parent keys length", async () => {
@@ -420,15 +432,12 @@ describe("FilteringHierarchyDefinition", () => {
           filtering: {
             filteredChildrenIdentifierPaths: paths.map((path) => {
               const normalizedPath = HierarchyFilteringPath.normalize(path);
-              return {
-                path: normalizedPath.path.slice(2),
-                options: normalizedPath.options,
-              };
+              return { path: normalizedPath.path.slice(2), options: normalizedPath.options };
             }),
           },
         }),
       );
-      expect(node.autoExpand).to.be.undefined;
+      expect(node.autoExpand).toBeUndefined();
     });
 
     it("sets auto-expand when all filtered children paths autoExpand depth is greater than parent keys length", async () => {
@@ -456,15 +465,12 @@ describe("FilteringHierarchyDefinition", () => {
           filtering: {
             filteredChildrenIdentifierPaths: paths.map((path) => {
               const normalizedPath = HierarchyFilteringPath.normalize(path);
-              return {
-                path: normalizedPath.path.slice(1),
-                options: normalizedPath.options,
-              };
+              return { path: normalizedPath.path.slice(1), options: normalizedPath.options };
             }),
           },
         }),
       );
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).toBe(true);
     });
 
     it("sets auto-expand when all filtered children paths autoExpand depth is greater than parent keys length and grouping nodes are present", async () => {
@@ -488,24 +494,16 @@ describe("FilteringHierarchyDefinition", () => {
         filteringFactory.parseNode(row, {
           key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
           label: "",
-          parentKeys: [
-            {
-              type: "class-grouping",
-              className: "Generic.PhysicalObject",
-            },
-          ],
+          parentKeys: [{ type: "class-grouping", className: "Generic.PhysicalObject" }],
           filtering: {
             filteredChildrenIdentifierPaths: paths.map((path) => {
               const normalizedPath = HierarchyFilteringPath.normalize(path);
-              return {
-                path: normalizedPath.path.slice(1),
-                options: normalizedPath.options,
-              };
+              return { path: normalizedPath.path.slice(1), options: normalizedPath.options };
             }),
           },
         }),
       );
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).toBe(true);
     });
 
     it("sets auto-expand when all filtered children paths autoExpand depthInHierarchy is greater than parent keys length", async () => {
@@ -529,24 +527,16 @@ describe("FilteringHierarchyDefinition", () => {
         filteringFactory.parseNode(row, {
           key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
           label: "",
-          parentKeys: [
-            {
-              type: "class-grouping",
-              className: "Generic.PhysicalObject",
-            },
-          ],
+          parentKeys: [{ type: "class-grouping", className: "Generic.PhysicalObject" }],
           filtering: {
             filteredChildrenIdentifierPaths: paths.map((path) => {
               const normalizedPath = HierarchyFilteringPath.normalize(path);
-              return {
-                path: normalizedPath.path.slice(1),
-                options: normalizedPath.options,
-              };
+              return { path: normalizedPath.path.slice(1), options: normalizedPath.options };
             }),
           },
         }),
       );
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).toBe(true);
     });
 
     it("sets auto-expand on root node when all filtered children paths autoExpand depth is greater than 1", async () => {
@@ -567,12 +557,15 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).toBe(true);
     });
 
     it("sets auto-expand on nodes up to specified depth when some filtered children paths have autoExpand with depth greater than 0", async () => {
       const paths: HierarchyFilteringPath[] = [
-        [createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }), createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" })],
+        [
+          createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
+          createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
+        ],
         {
           path: [
             createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
@@ -588,7 +581,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).toBe(true);
 
       const row2 = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
@@ -603,15 +596,12 @@ describe("FilteringHierarchyDefinition", () => {
           filtering: {
             filteredChildrenIdentifierPaths: paths.map((path) => {
               const normalizedPath = HierarchyFilteringPath.normalize(path);
-              return {
-                path: normalizedPath.path.slice(1),
-                options: normalizedPath.options,
-              };
+              return { path: normalizedPath.path.slice(1), options: normalizedPath.options };
             }),
           },
         }),
       );
-      expect(node2.autoExpand).to.be.undefined;
+      expect(node2.autoExpand).toBeUndefined();
     });
 
     it("sets auto-expand when one of filtered children paths contains `autoExpand = true`", async () => {
@@ -638,7 +628,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).toBe(true);
     });
 
     it("sets `filterTargetOptions` and `isFilterTarget` attributes from parent's `filteredChildrenIdentifierPaths`", async () => {
@@ -647,7 +637,10 @@ describe("FilteringHierarchyDefinition", () => {
       const filteringOptions: HierarchyFilteringPathOptions = {
         autoExpand: { key: { type: "class-grouping", className: "" }, depth: 0 },
       };
-      const paths = [{ path: [createTestInstanceKey({ id: "0x5", className })], options: filteringOptions }, [createTestInstanceKey({ id: "0x5", className })]];
+      const paths = [
+        { path: [createTestInstanceKey({ id: "0x5", className })], options: filteringOptions },
+        [createTestInstanceKey({ id: "0x5", className })],
+      ];
       const filteringFactory = await createFilteringHierarchyDefinition({
         ...sourceFactory,
         // This is not necessary as parentNode paths will be used instead
@@ -667,7 +660,7 @@ describe("FilteringHierarchyDefinition", () => {
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
 
       assert(node.filtering?.isFilterTarget);
-      expect(node.filtering.filterTargetOptions).to.deep.eq(filteringOptions);
+      expect(node.filtering.filterTargetOptions).toEqual(filteringOptions);
     });
   });
 
@@ -676,56 +669,38 @@ describe("FilteringHierarchyDefinition", () => {
       const node = createTestProcessedGenericNode();
       const filteringFactory = await createFilteringHierarchyDefinition();
       const result = await firstValueFrom(filteringFactory.preProcessNode(node));
-      expect(result).to.eq(node);
+      expect(result).toBe(node);
     });
 
     it("returns node pre-processed by source factory", async () => {
       const inputNode = createTestProcessedGenericNode();
       const sourceFactoryNode = createTestProcessedGenericNode();
-      const stub = sinon.stub().resolves(sourceFactoryNode);
-      const sourceFactory = {
-        preProcessNode: (node: any) => from(stub(node)),
-      } as unknown as RxjsHierarchyDefinition;
-      const filteringFactory = await createFilteringHierarchyDefinition({
-        sourceFactory,
-      });
+      const stub = vi.fn().mockResolvedValue(sourceFactoryNode);
+      const sourceFactory = { preProcessNode: (node: any) => from(stub(node)) } as unknown as RxjsHierarchyDefinition;
+      const filteringFactory = await createFilteringHierarchyDefinition({ sourceFactory });
       const result = await firstValueFrom(filteringFactory.preProcessNode(inputNode));
-      expect(stub).to.be.calledOnceWithExactly(inputNode);
-      expect(result).to.eq(sourceFactoryNode);
+      expect(stub).toHaveBeenCalledExactlyOnceWith(inputNode);
+      expect(result).toBe(sourceFactoryNode);
     });
 
     it("returns source filter target node with `hideInHierarchy` flag if it has filter target ancestor", async () => {
       const inputNode: ProcessedGenericHierarchyNode = {
-        ...createTestProcessedGenericNode({
-          processingParams: {
-            hideInHierarchy: true,
-          },
-        }),
-        filtering: {
-          isFilterTarget: true,
-          hasFilterTargetAncestor: true,
-        },
+        ...createTestProcessedGenericNode({ processingParams: { hideInHierarchy: true } }),
+        filtering: { isFilterTarget: true, hasFilterTargetAncestor: true },
       };
       const filteringFactory = await createFilteringHierarchyDefinition();
       const result = await firstValueFrom(filteringFactory.preProcessNode(inputNode));
-      expect(result).to.eq(inputNode);
+      expect(result).toBe(inputNode);
     });
 
     it("returns `undefined` when node is filter target without filter target ancestor and has `hideInHierarchy` flag", async () => {
       const inputNode: ProcessedGenericHierarchyNode = {
-        ...createTestProcessedGenericNode({
-          processingParams: {
-            hideInHierarchy: true,
-          },
-        }),
-        filtering: {
-          isFilterTarget: true,
-          hasFilterTargetAncestor: false,
-        },
+        ...createTestProcessedGenericNode({ processingParams: { hideInHierarchy: true } }),
+        filtering: { isFilterTarget: true, hasFilterTargetAncestor: false },
       };
       const filteringFactory = await createFilteringHierarchyDefinition();
       const result = await firstValueFrom(filteringFactory.preProcessNode(inputNode).pipe(toArray()));
-      expect(result).to.deep.eq([]);
+      expect(result).toEqual([]);
     });
   });
 
@@ -734,36 +709,28 @@ describe("FilteringHierarchyDefinition", () => {
       const node = createTestProcessedGenericNode();
       const filteringFactory = await createFilteringHierarchyDefinition();
       const result = await firstValueFrom(filteringFactory.postProcessNode(node));
-      expect(result).to.eq(node);
+      expect(result).toBe(node);
     });
 
     it("returns node post-processed by source factory", async () => {
       const inputNode = createTestProcessedGenericNode();
       const sourceFactoryNode = createTestProcessedGenericNode();
-      const stub = sinon.stub().resolves(sourceFactoryNode);
-      const sourceFactory = {
-        postProcessNode: (node: any) => from(stub(node)),
-      } as unknown as RxjsHierarchyDefinition;
-      const filteringFactory = await createFilteringHierarchyDefinition({
-        sourceFactory,
-      });
+      const stub = vi.fn().mockResolvedValue(sourceFactoryNode);
+      const sourceFactory = { postProcessNode: (node: any) => from(stub(node)) } as unknown as RxjsHierarchyDefinition;
+      const filteringFactory = await createFilteringHierarchyDefinition({ sourceFactory });
       const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-      expect(stub).to.be.calledOnceWithExactly(inputNode);
-      expect(result).to.eq(sourceFactoryNode);
+      expect(stub).toHaveBeenCalledExactlyOnceWith(inputNode);
+      expect(result).toBe(sourceFactoryNode);
     });
 
     it("returns undefined when source factory post processor returns undefined", async () => {
       const inputNode = createTestProcessedGenericNode();
-      const stub = sinon.stub().resolves(undefined);
-      const sourceFactory = {
-        postProcessNode: (node: any) => from(stub(node)),
-      } as unknown as RxjsHierarchyDefinition;
-      const filteringFactory = await createFilteringHierarchyDefinition({
-        sourceFactory,
-      });
+      const stub = vi.fn().mockResolvedValue(undefined);
+      const sourceFactory = { postProcessNode: (node: any) => from(stub(node)) } as unknown as RxjsHierarchyDefinition;
+      const filteringFactory = await createFilteringHierarchyDefinition({ sourceFactory });
       const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-      expect(stub).to.be.calledOnceWithExactly(inputNode);
-      expect(result).to.eq(undefined);
+      expect(stub).toHaveBeenCalledExactlyOnceWith(inputNode);
+      expect(result).toBe(undefined);
     });
 
     const commonGroupingNodeExpansionTestCases = (createGroupingNode: () => ProcessedGroupingHierarchyNode) => {
@@ -771,7 +738,7 @@ describe("FilteringHierarchyDefinition", () => {
         const inputNode = createGroupingNode();
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("doesn't set auto-expand on grouping nodes if children have filtered children paths list set without `autoExpand` option", async () => {
@@ -786,7 +753,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("doesn't set auto-expand on grouping nodes when all filtered children paths contain `autoExpand = false`", async () => {
@@ -796,14 +763,16 @@ describe("FilteringHierarchyDefinition", () => {
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }],
+                filteredChildrenIdentifierPaths: [
+                  { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
+                ],
               },
             },
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("sets auto-expand when one of filtered children paths contains `autoExpand = true`", async () => {
@@ -823,7 +792,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("doesn't set auto-expand when one of filtered children has `filterTarget = true` and `autoExpand = false` option", async () => {
@@ -838,7 +807,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("sets auto-expand when one of filtered children has `filterTarget = true` and `autoExpand = true` option", async () => {
@@ -853,7 +822,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("doesn't set auto-expand when all child nodes target grouping node", async () => {
@@ -881,7 +850,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("sets auto-expand when at least one child node targets another grouping node", async () => {
@@ -910,7 +879,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("doesn't set auto-expand when depthInPath is smaller than grouping node depth", async () => {
@@ -923,14 +892,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 filteredChildrenIdentifierPaths: [
-                  {
-                    path: [createTestInstanceKey()],
-                    options: {
-                      autoExpand: {
-                        depthInPath: 1,
-                      },
-                    },
-                  },
+                  { path: [createTestInstanceKey()], options: { autoExpand: { depthInPath: 1 } } },
                 ],
               },
             },
@@ -938,7 +900,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("sets auto-expand when depthInPath is higher than grouping node depth", async () => {
@@ -951,14 +913,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 filteredChildrenIdentifierPaths: [
-                  {
-                    path: [createTestInstanceKey()],
-                    options: {
-                      autoExpand: {
-                        depthInPath: 2,
-                      },
-                    },
-                  },
+                  { path: [createTestInstanceKey()], options: { autoExpand: { depthInPath: 2 } } },
                 ],
               },
             },
@@ -966,7 +921,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("doesn't set auto-expand when depthInHierarchy is smaller than grouping node depth", async () => {
@@ -979,14 +934,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 filteredChildrenIdentifierPaths: [
-                  {
-                    path: [createTestInstanceKey()],
-                    options: {
-                      autoExpand: {
-                        depthInHierarchy: 1,
-                      },
-                    },
-                  },
+                  { path: [createTestInstanceKey()], options: { autoExpand: { depthInHierarchy: 1 } } },
                 ],
               },
             },
@@ -994,7 +942,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).toBeUndefined();
       });
 
       it("sets auto-expand when depthInHierarchy is higher than grouping node depth", async () => {
@@ -1007,14 +955,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 filteredChildrenIdentifierPaths: [
-                  {
-                    path: [createTestInstanceKey()],
-                    options: {
-                      autoExpand: {
-                        depthInHierarchy: 2,
-                      },
-                    },
-                  },
+                  { path: [createTestInstanceKey()], options: { autoExpand: { depthInHierarchy: 2 } } },
                 ],
               },
             },
@@ -1022,7 +963,7 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("sets auto-expand when node has hierarchy depth smaller than the filter target", async () => {
@@ -1033,20 +974,13 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
-                  autoExpand: {
-                    depth: 2,
-                  },
-                },
-              },
+              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: { depth: 2 } } },
             },
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("sets auto-expand when node has depthInPath smaller than the filter target depth", async () => {
@@ -1057,20 +991,13 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
-                  autoExpand: {
-                    depthInPath: 2,
-                  },
-                },
-              },
+              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: { depthInPath: 2 } } },
             },
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("sets auto-expand when node has depthInHierarchy smaller than the filter target hierarchy depth", async function () {
@@ -1080,20 +1007,13 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
-                  autoExpand: {
-                    depthInHierarchy: 2,
-                  },
-                },
-              },
+              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: { depthInHierarchy: 2 } } },
             },
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
+        expect(result.autoExpand).toBe(true);
       });
 
       it("doesn't set auto-expand when node has same hierarchy depth and same keys as the filter target", async () => {
@@ -1105,19 +1025,14 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                filterTargetOptions: {
-                  autoExpand: {
-                    key: createGroupingNode().key,
-                    depth: 1,
-                  },
-                },
+                filterTargetOptions: { autoExpand: { key: createGroupingNode().key, depth: 1 } },
               },
             },
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(!!result.autoExpand).to.be.false;
+        expect(!!result.autoExpand).toBe(false);
       });
 
       it("doesn't set auto-expand when node has greater hierarchy depth than the filter target", async () => {
@@ -1132,10 +1047,7 @@ describe("FilteringHierarchyDefinition", () => {
                 filterTargetOptions: {
                   autoExpand: {
                     ...createTestProcessedGroupingNode(),
-                    key: {
-                      type: "class-grouping",
-                      className: "foo",
-                    },
+                    key: { type: "class-grouping", className: "foo" },
                     depth: 1,
                   },
                 },
@@ -1145,17 +1057,14 @@ describe("FilteringHierarchyDefinition", () => {
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(!!result.autoExpand).to.be.false;
+        expect(!!result.autoExpand).toBe(false);
       });
     };
 
     describe("class grouping nodes", () => {
       function createClassGroupingNode() {
         return createTestProcessedGroupingNode({
-          key: {
-            type: "class-grouping",
-            className: "class name",
-          },
+          key: { type: "class-grouping", className: "class name" },
           groupedInstanceKeys: [],
           children: [],
         });
@@ -1167,10 +1076,7 @@ describe("FilteringHierarchyDefinition", () => {
     describe("label grouping nodes", () => {
       function createLabelGroupingNode() {
         return createTestProcessedGroupingNode({
-          key: {
-            type: "label-grouping",
-            label: "label",
-          },
+          key: { type: "label-grouping", label: "label" },
           groupedInstanceKeys: [],
           children: [],
         });
@@ -1240,14 +1146,8 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("returns source definitions when filtered instance paths is undefined", async () => {
-      const sourceDefinitions: HierarchyLevelDefinition = [
-        {
-          node: {} as unknown as SourceGenericHierarchyNode,
-        },
-      ];
-      const sourceFactory: RxjsHierarchyDefinition = {
-        defineHierarchyLevel: () => of(sourceDefinitions),
-      };
+      const sourceDefinitions: HierarchyLevelDefinition = [{ node: {} as unknown as SourceGenericHierarchyNode }];
+      const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of(sourceDefinitions) };
       const filteringFactory = await createFilteringHierarchyDefinition({
         imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
         sourceFactory,
@@ -1260,116 +1160,89 @@ describe("FilteringHierarchyDefinition", () => {
           },
         }),
       );
-      expect(result).to.eq(sourceDefinitions);
+      expect(result).toBe(sourceDefinitions);
     });
 
     it("returns no definitions when filtered instance paths list is empty", async () => {
       const sourceFactory: RxjsHierarchyDefinition = {
-        defineHierarchyLevel: () =>
-          of([
-            {
-              node: {} as unknown as SourceGenericHierarchyNode,
-            },
-          ]),
+        defineHierarchyLevel: () => of([{ node: {} as unknown as SourceGenericHierarchyNode }]),
       };
       const filteringFactory = await createFilteringHierarchyDefinition({
         imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
         sourceFactory,
       });
       const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-      expect(result).to.be.empty;
+      expect(result).toHaveLength(0);
     });
 
     describe("filtering generic node definitions", () => {
       it("omits source generic node definition when using instance key filter", async () => {
-        const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
+        const filterClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterClassName",
+          is: async () => false,
+        });
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterClass.fullName, id: "0x123" }]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("omits source generic node definition if filter type doesn't match node's key", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "xxx" })]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("omits source generic node definition when filter filtering by empty path", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("omits source generic node definition if identifier source doesn't match imodel key", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "xxx", source: "other-source" })]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("returns filtered source custom node definitions when filter type matches node's key", async () => {
         const sourceDefinition1: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom 1",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom 1", children: false }),
         };
         const sourceDefinition2: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom 2",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom 2", children: false }),
         };
         const sourceFactory: RxjsHierarchyDefinition = {
           defineHierarchyLevel: () => of([sourceDefinition1, sourceDefinition2]),
@@ -1377,10 +1250,12 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          nodeIdentifierPaths: [{ path: [createTestGenericNodeKey({ id: "custom 2" })], options: { autoExpand: true } }],
+          nodeIdentifierPaths: [
+            { path: [createTestGenericNodeKey({ id: "custom 2" })], options: { autoExpand: true } },
+          ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             node: {
               ...sourceDefinition2.node,
@@ -1392,14 +1267,9 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("returns source custom node definition filtered with multiple matching paths having same beginning", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1409,7 +1279,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             node: {
               ...sourceDefinition.node,
@@ -1426,29 +1296,26 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("applies path options to children paths", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
-        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [
-            { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
+            {
+              path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })],
+              options: { autoExpand: true },
+            },
             {
               path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
-              options: { autoExpand: groupingNode },
+              options: { autoExpand: { depthInHierarchy: 1 } },
             },
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "789" })],
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             node: {
               ...sourceDefinition.node,
@@ -1456,7 +1323,7 @@ describe("FilteringHierarchyDefinition", () => {
               filtering: {
                 filteredChildrenIdentifierPaths: [
                   { path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
-                  { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: groupingNode } },
+                  { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: { depthInHierarchy: 1 } } },
                   { path: [createTestGenericNodeKey({ id: "789" })], options: undefined },
                 ],
               },
@@ -1467,31 +1334,31 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("applies correct filtering options to itself", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestSourceGenericNode({
-            key: "custom",
-            children: false,
-          }),
+          node: createTestSourceGenericNode({ key: "custom", children: false }),
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [
-            { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
+            {
+              path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })],
+              options: { autoExpand: true },
+            },
             { path: [createTestGenericNodeKey({ id: "custom" })], options: { autoExpand: false } },
             { path: [createTestGenericNodeKey({ id: "custom" })], options: { autoExpand: true } },
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           {
             node: {
               ...sourceDefinition.node,
               autoExpand: true,
               filtering: {
-                filteredChildrenIdentifierPaths: [{ path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } }],
+                filteredChildrenIdentifierPaths: [
+                  { path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
+                ],
                 isFilterTarget: true,
                 filterTargetOptions: { autoExpand: true },
               },
@@ -1503,96 +1370,96 @@ describe("FilteringHierarchyDefinition", () => {
 
     describe("filtering instance node query definitions", () => {
       it("omits source instance node query definition when using custom node filter", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async () => false,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "xxx" })]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("omits source instance node query definition if filter class doesn't match query class", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async () => false,
+        });
+        const filterPathClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName",
+          is: async () => false,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterPathClass.fullName, id: "0x123" }]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("omits source instance node query definition when filter filtering by empty path", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async () => false,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("omits source instance node query definition if identifier source doesn't match imodel key", async () => {
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: "query.class",
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           nodeIdentifierPaths: [[{ className: "filter.class", id: "0x123", imodelKey: "other-source" }]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.be.empty;
+        expect(result).toHaveLength(0);
       });
 
       it("returns unfiltered source instance node query definitions when filtering filter target parent node", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async () => false,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1609,7 +1476,7 @@ describe("FilteringHierarchyDefinition", () => {
             },
           }),
         );
-        expect(result).to.deep.eq([applyECInstanceIdsSelector(sourceDefinition)]);
+        expect(result).toEqual([applyECInstanceIdsSelector(sourceDefinition)]);
       });
 
       it("returns filtered source instance node query definitions when filter class matches query class", async () => {
@@ -1630,13 +1497,9 @@ describe("FilteringHierarchyDefinition", () => {
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1649,22 +1512,20 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: filterPathClass1.fullName,
-              id: "0x123",
-            },
-            {
-              className: filterPathClass1.fullName,
-              id: "0x789",
-            },
+            { className: filterPathClass1.fullName, id: "0x123" },
+            { className: filterPathClass1.fullName, id: "0x789" },
           ]),
         ]);
       });
 
       it("returns source instance node query definition filtered with multiple matching paths", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async () => false,
+        });
         const filterPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName1",
@@ -1677,51 +1538,52 @@ describe("FilteringHierarchyDefinition", () => {
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          nodeIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x123" }], [{ className: filterPathClass2.fullName, id: "0x456" }]],
+          nodeIdentifierPaths: [
+            [{ className: filterPathClass1.fullName, id: "0x123" }],
+            [{ className: filterPathClass2.fullName, id: "0x456" }],
+          ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
+        expect(result).toEqual([
           applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: filterPathClass1.fullName,
-              id: "0x123",
-            },
-            {
-              className: filterPathClass2.fullName,
-              id: "0x456",
-            },
+            { className: filterPathClass1.fullName, id: "0x123" },
+            { className: filterPathClass2.fullName, id: "0x456" },
           ]),
         ]);
       });
 
       it("returns source instance node query definition filtered with multiple matching paths having same beginning", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async () => false,
+        });
         const filterPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName0",
           is: async (other) => other === queryClass.fullName,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
-        const filterPathClass2 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
+        const filterPathClass1 = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName1",
+          is: async () => false,
+        });
+        const filterPathClass2 = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName2",
+          is: async () => false,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1737,13 +1599,8 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: filterPathClass0.fullName,
-              id: "0x123",
-            },
-          ]),
+        expect(result).toEqual([
+          applyECInstanceIdsFilter(sourceDefinition, [{ className: filterPathClass0.fullName, id: "0x123" }]),
         ]);
       });
 
@@ -1765,13 +1622,9 @@ describe("FilteringHierarchyDefinition", () => {
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1784,13 +1637,8 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: queryClass.fullName,
-              id: "0x123",
-            },
-          ]),
+        expect(result).toEqual([
+          applyECInstanceIdsFilter(sourceDefinition, [{ className: queryClass.fullName, id: "0x123" }]),
         ]);
       });
 
@@ -1805,16 +1653,16 @@ describe("FilteringHierarchyDefinition", () => {
           className: "FilterPathClassName0",
           is: async (other) => other === queryClass.fullName,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
+        const filterPathClass1 = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName1",
+          is: async () => false,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
+          query: { ecsql: "SOURCE_QUERY" },
         };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
+        const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1827,67 +1675,18 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: filterPathClass0.fullName,
-              id: "0x123",
-            },
-          ]),
-        ]);
-      });
-
-      it("sets most nested grouping node as filter target", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
-          schemaName: "BisCore",
-          className: "FilterPathClassName0",
-          is: async (other) => other === queryClass.fullName,
-        });
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
-        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
-        const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
-        };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
-        const filteringFactory = await createFilteringHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
-          sourceFactory,
-          nodeIdentifierPaths: [
-            {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
-              options: { autoExpand: groupingNode1 },
-            },
-            {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
-              options: { autoExpand: groupingNode2 },
-            },
-            {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
-              options: { autoExpand: groupingNode3 },
-            },
-          ],
-        });
-        const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: filterPathClass0.fullName,
-              id: "0x123",
-            },
-          ]),
+        expect(result).toEqual([
+          applyECInstanceIdsFilter(sourceDefinition, [{ className: filterPathClass0.fullName, id: "0x123" }]),
         ]);
       });
     });
 
     it("uses filtering paths from parent node", async () => {
-      const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+      const queryClass = classHierarchyInspector.stubEntityClass({
+        schemaName: "BisCore",
+        className: "SourceQueryClassName",
+        is: async () => false,
+      });
       const childFilterClass = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
         className: "ChildFilterClass",
@@ -1895,13 +1694,9 @@ describe("FilteringHierarchyDefinition", () => {
       });
       const sourceDefinition: InstanceNodesQueryDefinition = {
         fullClassName: queryClass.fullName,
-        query: {
-          ecsql: "SOURCE_QUERY",
-        },
+        query: { ecsql: "SOURCE_QUERY" },
       };
-      const sourceFactory: RxjsHierarchyDefinition = {
-        defineHierarchyLevel: () => of([sourceDefinition]),
-      };
+      const sourceFactory: RxjsHierarchyDefinition = { defineHierarchyLevel: () => of([sourceDefinition]) };
       const filteringFactory = await createFilteringHierarchyDefinition({
         imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
         sourceFactory,
@@ -1914,19 +1709,12 @@ describe("FilteringHierarchyDefinition", () => {
               key: createTestGenericNodeKey({ id: "custom" }),
               label: "custom node",
             }),
-            filtering: {
-              filteredChildrenIdentifierPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]],
-            },
+            filtering: { filteredChildrenIdentifierPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]] },
           },
         }),
       );
-      expect(result).to.deep.eq([
-        applyECInstanceIdsFilter(sourceDefinition, [
-          {
-            className: childFilterClass.fullName,
-            id: "0x456",
-          },
-        ]),
+      expect(result).toEqual([
+        applyECInstanceIdsFilter(sourceDefinition, [{ className: childFilterClass.fullName, id: "0x456" }]),
       ]);
     });
 
@@ -1948,10 +1736,7 @@ describe("FilteringHierarchyDefinition", () => {
       const result = await lastValueFrom(
         filteringFactory.defineHierarchyLevel({
           parentNode: {
-            ...createTestProcessedGenericNode({
-              key: createTestGenericNodeKey({ id: "parent" }),
-              label: "parent",
-            }),
+            ...createTestProcessedGenericNode({ key: createTestGenericNodeKey({ id: "parent" }), label: "parent" }),
             filtering: {
               isFilterTarget: true,
               filteredChildrenIdentifierPaths: [[createTestGenericNodeKey({ id: "matches" })]],
@@ -1959,7 +1744,7 @@ describe("FilteringHierarchyDefinition", () => {
           },
         }),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         // both definitions are returned because the parent is filter target
         {
           node: {
@@ -1967,12 +1752,7 @@ describe("FilteringHierarchyDefinition", () => {
             filtering: { hasFilterTargetAncestor: true, isFilterTarget: true, filterTargetOptions: undefined },
           },
         },
-        {
-          node: {
-            ...nonMatchingSourceDefinition.node,
-            filtering: { hasFilterTargetAncestor: true },
-          },
-        },
+        { node: { ...nonMatchingSourceDefinition.node, filtering: { hasFilterTargetAncestor: true } } },
       ]);
     });
   });
@@ -1989,18 +1769,12 @@ describe("FilteringHierarchyDefinition", () => {
           },
         },
         [
-          {
-            className: "test.class",
-            id: "0x1",
-          },
-          {
-            className: "test.class",
-            id: "0x5",
-          },
+          { className: "test.class", id: "0x1" },
+          { className: "test.class", id: "0x5" },
         ],
       );
-      expect(result.fullClassName).to.eq("full-class-name");
-      expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
+      expect(result.fullClassName).toBe("full-class-name");
+      expect(result.query.ctes?.map(trimWhitespace)).toEqual([
         "source cte",
         trimWhitespace(`
           FilteringInfo(ECInstanceId, FilterClassName) AS (
@@ -2014,7 +1788,7 @@ describe("FilteringHierarchyDefinition", () => {
           )
         `),
       ]);
-      expect(trimWhitespace(result.query.ecsql)).to.deep.eq(
+      expect(trimWhitespace(result.query.ecsql)).toEqual(
         trimWhitespace(`
           SELECT
             [q].*,
@@ -2026,7 +1800,7 @@ describe("FilteringHierarchyDefinition", () => {
           JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
         `),
       );
-      expect(result.query.bindings).to.deep.eq([{ type: "string", value: "source binding" }]);
+      expect(result.query.bindings).toEqual([{ type: "string", value: "source binding" }]);
     });
   });
 });

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import {
   createNodesQueryClauseFactory,
@@ -13,9 +13,9 @@ import {
   NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { Datasets } from "../util/Datasets";
-import { run } from "../util/TestUtilities";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 describe("hide if no children", () => {
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
@@ -31,7 +31,9 @@ describe("hide if no children", () => {
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
@@ -57,7 +59,7 @@ describe("hide if no children", () => {
         rowLimit: "unbounded",
       });
       const result = await provider.loadHierarchy({ depth: 1 });
-      expect(result).to.eq(5);
+      expect(result).toBe(5);
     },
   });
 
@@ -71,7 +73,9 @@ describe("hide if no children", () => {
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           return createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
@@ -97,7 +101,7 @@ describe("hide if no children", () => {
         rowLimit: "unbounded",
       });
       const result = await provider.loadHierarchy({ depth: 1 });
-      expect(result).to.eq(5);
+      expect(result).toBe(5);
     },
   });
 });

@@ -22,15 +22,28 @@ The hierarchy definition that creates such a hierarchy would look like this:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  GroupingHierarchyNode,
+  HierarchyDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
   const queryClauseFactory = createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+      classHierarchyInspector: imodelAccess,
+    }),
   });
-  const createHierarchyLevelDefinition = async ({ whereClause, bindings }: { whereClause?: string; bindings?: ECSqlBinding[] }) => [
+  const createHierarchyLevelDefinition = async ({
+    whereClause,
+    bindings,
+  }: {
+    whereClause?: string;
+    bindings?: ECSqlBinding[];
+  }) => [
     {
       fullClassName: "BisCore.PhysicalElement",
       query: {
@@ -112,13 +125,17 @@ Let's consider two cases - filtering by label and by target element ID:
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+      result.push(
+        (JSON.parse(row.Path) as InstanceKey[])
+          .reverse()
+          .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+      );
     }
     return result;
   }
   // Find paths to elements whose label contains "C" or "E"
   const filterPaths = await createFilteredNodeIdentifierPaths(["C", "E"]);
-  expect(filterPaths).to.deep.eq([
+  expect(filterPaths).toEqual([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -140,7 +157,9 @@ Let's consider two cases - filtering by label and by target element ID:
   // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
   // a query to find matching elements by their `ECInstanceId` property. Then, we construct paths to the root element using recursive
   // CTE. Finally, we return the paths in reverse order to start from the root element.
-  async function createFilteredNodeIdentifierPaths(targetElementIds: Id64String[]): Promise<HierarchyNodeIdentifiersPath[]> {
+  async function createFilteredNodeIdentifierPaths(
+    targetElementIds: Id64String[],
+  ): Promise<HierarchyNodeIdentifiersPath[]> {
     const query: ECSqlQueryDef = {
       ctes: [
         `MatchingElements(Path, ParentId) AS (
@@ -165,13 +184,17 @@ Let's consider two cases - filtering by label and by target element ID:
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
+      result.push(
+        (JSON.parse(row.Path) as InstanceKey[])
+          .reverse()
+          .map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })),
+      );
     }
     return result;
   }
   // Find paths to target elements "C" and "E"
   const filterPaths = await createFilteredNodeIdentifierPaths([elementIds.c, elementIds.e]);
-  expect(filterPaths).to.deep.eq([
+  expect(filterPaths).toEqual([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -201,18 +224,12 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
 // (in this case - "E") are returned fully.
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     label: "A",
     children: [
-      {
-        label: "B",
-        children: [{ label: "C" }],
-      },
-      {
-        label: "E",
-        children: [{ label: "F" }],
-      },
+      { label: "B", children: [{ label: "C" }] },
+      { label: "E", children: [{ label: "F" }] },
     ],
   },
 ]);

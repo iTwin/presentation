@@ -7,14 +7,19 @@ import { from, map, merge, mergeMap } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { Id64String } from "@itwin/core-bentley";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { releaseMainThreadOnItemsCount } from "./Utils.js";
 
 /**
  * ECInstance selectable
  * @public
  */
 export interface SelectableInstanceKey {
-  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName`. */
+  /**
+   * Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName` for
+   * persistent instances or `TRANSIENT_ELEMENT_CLASSNAME` for transient instances.
+   */
   className: string;
+
   /** ECInstance ID */
   id: string;
 }
@@ -284,7 +289,14 @@ export namespace Selectables {
   export function load(selectables: Selectables): AsyncIterableIterator<SelectableInstanceKey> {
     return eachValueFrom(
       merge(
-        from(selectables.instanceKeys).pipe(mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id }))))),
+        from(selectables.instanceKeys).pipe(
+          mergeMap(([className, ids]) =>
+            from(ids).pipe(
+              releaseMainThreadOnItemsCount(1000),
+              map((id) => ({ className, id })),
+            ),
+          ),
+        ),
         from(selectables.custom).pipe(mergeMap(([_, selectable]) => from(selectable.loadInstanceKeys()))),
       ),
     );

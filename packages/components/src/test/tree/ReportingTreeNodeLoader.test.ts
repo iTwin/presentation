@@ -2,10 +2,10 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
 import { Subject } from "rxjs";
-import sinon from "sinon";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ITreeNodeLoader,
   PagedTreeNodeLoader,
@@ -21,29 +21,26 @@ import { waitFor } from "../TestUtils.js";
 describe("ReportingTreeNodeLoader", () => {
   let reportingNodeLoader: ReportingTreeNodeLoader<TreeDataProvider>;
   let loadNodeSubject: Subject<TreeNodeLoadResult>;
-  const reportStub = sinon.stub<[{ node: string | undefined; duration: number }], void>();
-  const nodeLoaderStub = {
-    loadNode: sinon.stub<Parameters<ITreeNodeLoader["loadNode"]>, ReturnType<ITreeNodeLoader["loadNode"]>>(),
-    modelSource: {},
-    dataProvider: {},
-  };
+  const reportStub = vi.fn<(props: { node: string | undefined; duration: number }) => void>();
+  const nodeLoaderStub = { loadNode: vi.fn<ITreeNodeLoader["loadNode"]>(), modelSource: {}, dataProvider: {} };
 
   beforeEach(() => {
     loadNodeSubject = new Subject<TreeNodeLoadResult>();
-    nodeLoaderStub.loadNode.returns(loadNodeSubject);
-    reportingNodeLoader = new ReportingTreeNodeLoader(nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>, reportStub);
+    nodeLoaderStub.loadNode.mockReturnValue(loadNodeSubject);
+    reportingNodeLoader = new ReportingTreeNodeLoader(
+      nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>,
+      reportStub,
+    );
   });
 
   afterEach(() => {
-    nodeLoaderStub.loadNode.reset();
-    reportStub.reset();
+    nodeLoaderStub.loadNode.mockReset();
+    reportStub.mockReset();
   });
 
   describe("loadNode", () => {
     it("reports node loading duration", async () => {
-      const performanceStub = sinon.stub(performance, "now");
-      performanceStub.onCall(0).returns(0);
-      performanceStub.onCall(1).returns(300);
+      vi.spyOn(performance, "now").mockReturnValueOnce(0).mockReturnValueOnce(300);
 
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
@@ -54,8 +51,8 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(2);
-        expect(reportStub).to.be.calledWithMatch({ node: "id", duration: 300 });
+        expect(loadedNodes).toHaveLength(2);
+        expect(reportStub).toHaveBeenCalledWith(expect.objectContaining({ node: "id", duration: 300 }));
       });
     });
 
@@ -68,8 +65,8 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(1);
-        expect(reportStub).to.not.be.called;
+        expect(loadedNodes).toHaveLength(1);
+        expect(reportStub).not.toHaveBeenCalled();
       });
     });
 
@@ -85,8 +82,8 @@ describe("ReportingTreeNodeLoader", () => {
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(2);
-        expect(reportStub).to.be.calledOnce;
+        expect(loadedNodes).toHaveLength(2);
+        expect(reportStub).toHaveBeenCalledOnce();
       });
     });
 
@@ -94,42 +91,49 @@ describe("ReportingTreeNodeLoader", () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
 
-      observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]), error: () => {} });
+      observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+        error: () => {},
+      });
       loadNodeSubject.error(new Error());
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(0);
-        expect(reportStub).to.not.be.called;
+        expect(loadedNodes).toHaveLength(0);
+        expect(reportStub).not.toHaveBeenCalled();
       });
     });
 
     it("does not report if no longer subscribed", async () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
-      const subscription = observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
+      const subscription = observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
 
       subscription.unsubscribe();
       loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(0);
-        expect(reportStub).to.not.be.called;
+        expect(loadedNodes).toHaveLength(0);
+        expect(reportStub).not.toHaveBeenCalled();
       });
     });
 
     it("reports root nodes load event if observable if unsubscribed", async () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: undefined } as TreeModelRootNode, 0);
-      const subscription = observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
+      const subscription = observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
 
       subscription.unsubscribe();
       loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(0);
-        expect(reportStub).to.be.calledOnce;
+        expect(loadedNodes).toHaveLength(0);
+        expect(reportStub).toHaveBeenCalledOnce();
       });
     });
   });

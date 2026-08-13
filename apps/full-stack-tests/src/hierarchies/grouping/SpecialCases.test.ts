@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { importSchema, withECDb } from "../../IModelUtils.js";
@@ -12,20 +13,19 @@ import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Grouping special cases", () => {
-    before(async function () {
+    beforeAll(async () => {
       await initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("groups children of hidden hierarchy levels", async function () {
+    it("groups children of hidden hierarchy levels", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
             <ECEntityClass typeName="B" />
@@ -47,7 +47,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(db);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ parentNode }) {
@@ -69,7 +71,10 @@ describe("Hierarchies", () => {
                   },
                 ];
               }
-              if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === schema.items.X.fullName)) {
+              if (
+                HierarchyNode.isInstancesNode(parentNode) &&
+                parentNode.key.instanceKeys.some((k) => k.className === schema.items.X.fullName)
+              ) {
                 return [
                   {
                     fullClassName: schema.items.Y.fullName,
@@ -79,9 +84,7 @@ describe("Hierarchies", () => {
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
                           nodeLabel: { selector: `'y: ' || CAST(this.ECInstanceId AS TEXT)` },
-                          grouping: {
-                            byClass: true,
-                          },
+                          grouping: { byClass: true },
                         })}
                         FROM ${schema.items.Y.fullName} AS this
                       `,

@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
+import { NumericEditorName } from "../../../presentation-components/properties/editors/EditorNames.js";
+import { NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
-import { NumericEditorName, NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 const createRecord = (initialValue?: number) => {
@@ -21,27 +21,40 @@ describe("<NumericPropertyEditor />", () => {
   it("renders input when property record is provided", async () => {
     const record = createRecord();
     const { getByTestId } = render(<NumericPropertyEditor propertyRecord={record} />);
-    expect(getByTestId("numeric-input")).to.not.be.null;
+    expect(getByTestId("numeric-input")).not.toBeNull();
   });
 
   it("renders nothing when property record is not provided", async () => {
     const { container } = render(<NumericPropertyEditor />);
-    expect(container.firstChild).to.be.null;
+    expect(container.firstChild).toBeNull();
   });
 
   it("Invokes `onCommit` with correct parameters only when input container gets blurred", async () => {
     const record = createRecord();
-    const spy = sinon.spy();
-    const { getByTestId, queryByDisplayValue, user } = render(<NumericPropertyEditor propertyRecord={record} onCommit={spy} />);
+    const spy = vi.fn();
+    const { getByTestId, queryByDisplayValue, user } = render(
+      <NumericPropertyEditor propertyRecord={record} onCommit={spy} />,
+    );
 
     const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
     await user.type(inputContainer, "1");
-    expect(spy).to.not.be.called;
+    expect(spy).not.toHaveBeenCalled();
 
     await user.tab();
 
-    await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
-    expect(spy).to.be.calledOnceWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 } });
+    await waitFor(() => expect(queryByDisplayValue("1")).not.toBeNull());
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
+      propertyRecord: record,
+      newValue: { valueFormat: 0, value: 1, displayValue: "1", roundingError: 0.5 },
+    });
+  });
+
+  it("renders '--' for merged record", async () => {
+    const record = createRecord();
+    record.isMerged = true;
+    const { getByDisplayValue } = render(<NumericPropertyEditor propertyRecord={record} />);
+
+    expect(getByDisplayValue("--")).not.toBeNull();
   });
 });

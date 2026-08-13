@@ -1,8 +1,0 @@
-{
-  "require": ["global-jsdom/register", "ignore-styles", "./lib/esm/test/setup.js"],
-  "checkLeaks": true,
-  "timeout": 60000,
-  "parallel": false,
-  "spec": ["./lib/esm/test/**/*.test.js"],
-  "exclude": ["./lib/test/coverage/**/*"]
-}

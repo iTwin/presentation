@@ -15,7 +15,13 @@ import { SelectableInstanceKey, Selectables } from "./Selectable.js";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 import { computeSelection, SelectionScope } from "./SelectionScope.js";
 import { SelectionStorage } from "./SelectionStorage.js";
-import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
+import {
+  CoreIModelHiliteSet,
+  CoreIModelSelectionSet,
+  CoreSelectableIds,
+  CoreSelectionSetEventType,
+  CoreSelectionSetEventUnsafe,
+} from "./types/IModel.js";
 import { safeDispose } from "./Utils.js";
 
 /**
@@ -89,8 +95,11 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    *
    * @deprecated in 1.5. Use `imodelHiliteSetProvider` prop instead.
    */
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
+  cachingHiliteSetProvider?:
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    | CachingHiliteSetProvider
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
 }
 
 /**
@@ -136,11 +145,12 @@ export class IModelSelectionHandler {
       if (props.imodelHiliteSetProvider) {
         return [props.imodelHiliteSetProvider, () => {}];
       }
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+
+      /* eslint-disable @typescript-eslint/no-deprecated */
+      /* v8 ignore else -- @preserve */
       if (props.cachingHiliteSetProvider) {
         return [
           createIModelHiliteSetProviderFromCachingProvider(
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             props.cachingHiliteSetProvider,
             props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
           ),
@@ -149,18 +159,25 @@ export class IModelSelectionHandler {
           () => {},
         ];
       }
-      /* c8 ignore start */
+      /* eslint-enable @typescript-eslint/no-deprecated */
+
+      /* v8 ignore start */
       const internalProvider = createIModelHiliteSetProvider({
         selectionStorage: this._selectionStorage,
         imodelProvider: () => this._imodelAccess,
-        createHiliteSetProvider: () => props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
+        createHiliteSetProvider: () =>
+          props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
       });
       return [internalProvider, () => safeDispose(internalProvider)];
-      /* c8 ignore end */
+      /* v8 ignore stop */
     })();
 
-    this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
-    this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
+    this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(
+      this.onIModelSelectionChanged,
+    );
+    this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(
+      this.onUnifiedSelectionChanged,
+    );
 
     if (!is5xSelectionSet(this._imodelAccess.selectionSet)) {
       // itwinjs-core@4: stop imodel from syncing tool selection with hilited list - we want to manage that sync ourselves
@@ -188,7 +205,11 @@ export class IModelSelectionHandler {
     };
   }
 
-  private syncHiliteSet(props: { changeType: StorageSelectionChangeType; selectables: Selectables; source: string }): void {
+  private syncHiliteSet(props: {
+    changeType: StorageSelectionChangeType;
+    selectables: Selectables;
+    source: string;
+  }): void {
     const { changeType, selectables, source } = props;
     switch (changeType) {
       case "clear":
@@ -206,7 +227,11 @@ export class IModelSelectionHandler {
                 "clearAll",
         });
       case "add":
-        return void from(this._imodelHiliteSetProvider.getHiliteSetProvider({ imodelKey: this._imodelAccess.key }).getHiliteSet({ selectables }))
+        return void from(
+          this._imodelHiliteSetProvider
+            .getHiliteSetProvider({ imodelKey: this._imodelAccess.key })
+            .getHiliteSet({ selectables }),
+        )
           .pipe(takeUntil(this._cancelOngoingChanges))
           .subscribe({
             next: (set) => {
@@ -214,7 +239,11 @@ export class IModelSelectionHandler {
             },
           });
       case "remove":
-        return void from(this._imodelHiliteSetProvider.getHiliteSetProvider({ imodelKey: this._imodelAccess.key }).getHiliteSet({ selectables }))
+        return void from(
+          this._imodelHiliteSetProvider
+            .getHiliteSetProvider({ imodelKey: this._imodelAccess.key })
+            .getHiliteSet({ selectables }),
+        )
           .pipe(takeUntil(this._cancelOngoingChanges))
           .subscribe({
             next: (set) => {
@@ -242,7 +271,11 @@ export class IModelSelectionHandler {
     this.syncHiliteSet(args);
   };
 
-  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
+  private applyCurrentHiliteSet({
+    activeSelectionAction,
+  }: {
+    activeSelectionAction: "clearAll" | "clearHilited" | "keep";
+  }) {
     if (activeSelectionAction !== "keep") {
       using _dispose = this.suspendIModelToolSelectionSync();
       if (!is5xSelectionSet(this._imodelAccess.selectionSet)) {
@@ -273,12 +306,15 @@ export class IModelSelectionHandler {
       });
     } else {
       // pre-5.0 core requires adding models and subcategories to hilite set separately
+      /* v8 ignore else -- @preserve */
       if (set.models.length) {
         this._imodelAccess.hiliteSet.models.addIds(set.models);
       }
+      /* v8 ignore else -- @preserve */
       if (set.subCategories.length) {
         this._imodelAccess.hiliteSet.subcategories.addIds(set.subCategories);
       }
+      /* v8 ignore else -- @preserve */
       if (set.elements.length) {
         this._imodelAccess.hiliteSet.elements.addIds(set.elements);
         this._imodelAccess.selectionSet.add(set.elements);
@@ -296,12 +332,15 @@ export class IModelSelectionHandler {
         elements: set.elements,
       });
     } else {
+      /* v8 ignore else -- @preserve */
       if (set.models.length) {
         this._imodelAccess.hiliteSet.models.deleteIds(set.models);
       }
+      /* v8 ignore else -- @preserve */
       if (set.subCategories.length) {
         this._imodelAccess.hiliteSet.subcategories.deleteIds(set.subCategories);
       }
+      /* v8 ignore else -- @preserve */
       if (set.elements.length) {
         this._imodelAccess.hiliteSet.elements.deleteIds(set.elements);
         this._imodelAccess.selectionSet.remove(set.elements);
@@ -330,11 +369,13 @@ export class IModelSelectionHandler {
               componentId: this.#componentId,
             }),
           )
-        : /* c8 ignore next */ EMPTY,
-      ids.models ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
+        : /* v8 ignore next */ EMPTY,
+      ids.models
+        ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id })))
+        : /* v8 ignore next */ EMPTY,
       ids.subcategories
         ? from(ids.subcategories).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.SubCategory", id })))
-        : /* c8 ignore next */ EMPTY,
+        : /* v8 ignore next */ EMPTY,
     );
 
     const selectionStorageVersion = this._selectionStorageChangeTracker;
@@ -373,9 +414,9 @@ function getSelectionSetChangeIds(
 ): CoreSelectableIds {
   switch (event.type) {
     case CoreSelectionSetEventType.Add:
-      return event.additions ?? (event.added ? { elements: event.added } : /* c8 ignore next */ {});
+      return event.additions ?? (event.added ? { elements: event.added } : /* v8 ignore next */ {});
     case CoreSelectionSetEventType.Remove:
-      return event.removals ?? (event.removed ? { elements: event.removed } : /* c8 ignore next */ {});
+      return event.removals ?? (event.removed ? { elements: event.removed } : /* v8 ignore next */ {});
     case CoreSelectionSetEventType.Replace:
       return "active" in event.set ? event.set.active : { elements: event.set.elements };
   }
@@ -389,12 +430,15 @@ function getUnifiedSelectionChangeType(coreChangeType: CoreSelectionSetEventType
       return "remove";
     case CoreSelectionSetEventType.Replace:
       return "replace";
+    /* v8 ignore next -- @preserve */
     case CoreSelectionSetEventType.Clear:
       return "clear";
   }
 }
 
-function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
+function is5xSelectionSet(
+  selectionSet: CoreIModelSelectionSet,
+): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
   readonly active: { [P in keyof CoreSelectableIds]-?: Id64Set };
   add: (ids: Id64Arg | CoreSelectableIds) => boolean;
   remove: (ids: Id64Arg | CoreSelectableIds) => boolean;
@@ -402,7 +446,7 @@ function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is
   return "active" in selectionSet;
 }
 
-/* c8 ignore start */
+/* v8 ignore start */
 function createIModelHiliteSetProviderFromCachingProvider(
   cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>,
   hiliteSetProvider: HiliteSetProvider,
@@ -413,4 +457,4 @@ function createIModelHiliteSetProviderFromCachingProvider(
     [Symbol.dispose]: () => {},
   };
 }
-/* c8 ignore end */
+/* v8 ignore stop */

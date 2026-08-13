@@ -123,6 +123,8 @@ export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is Pres
  * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem {
+export function isFilterablePresentationTreeNodeItem(
+  item: PresentationTreeNodeItem,
+): item is FilterablePresentationTreeNodeItem {
   return item.filtering !== undefined;
 }

@@ -3,25 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
-import sinon from "sinon";
-import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { PropertyValueFormat as AbstractPropertyValueFormat } from "@itwin/appui-abstract";
 import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { translate } from "../../presentation-components/common/Utils.js";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
 import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
+import { createTestECClassInfo, stubSchemaViewForClasses, stubVirtualization } from "../_helpers/Common.js";
+import {
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestPropertiesContentField,
+} from "../_helpers/Content.js";
 import {
   act,
   getAllByRole,
@@ -39,8 +41,6 @@ import {
 } from "../TestUtils.js";
 
 describe("PresentationInstanceFilterDialog", () => {
-  stubRaf();
-  stubDOMMatrix();
   stubVirtualization();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
@@ -56,44 +56,37 @@ describe("PresentationInstanceFilterDialog", () => {
     fields: [stringField],
   });
 
-  const propertiesSource = {
-    descriptor,
-  };
+  const propertiesSource = { descriptor };
 
   const initialFilter: PresentationInstanceFilterInfo = {
-    filter: {
-      field: stringField,
-      operator: "is-null",
-      value: undefined,
-    },
+    filter: { field: stringField, operator: "is-null", value: undefined },
     usedClasses: [classInfo],
   };
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodel = {
+  const imodelMock = {
     key: "test_imodel",
     onClose: onCloseEvent,
-  } as IModelConnection;
+    getSchemaView: vi.fn().mockResolvedValue(stubSchemaViewForClasses([])),
+  };
+  const imodel = imodelMock as unknown as IModelConnection;
 
-  before(() => {
-    HTMLElement.prototype.scrollIntoView = () => {};
-
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
-
-    const metadataProvider = getIModelMetadataProvider(imodel);
-    sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
-      return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
-    });
+  beforeAll(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  beforeEach(() => {
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
+
+    imodelMock.getSchemaView.mockResolvedValue(stubSchemaViewForClasses([{ classInfo }]));
+  });
+
+  afterAll(() => {
     onCloseEvent.raiseEvent();
-    sinon.restore();
-    delete (HTMLElement.prototype as any).scrollIntoView;
+    UiComponents.terminate();
   });
 
   it("renders with initial filter", async () => {
@@ -105,24 +98,25 @@ describe("PresentationInstanceFilterDialog", () => {
         isOpen={true}
         initialFilter={() => initialFilter}
       />,
-      {
-        addThemeProvider: true,
-      },
+      { addThemeProvider: true },
     );
 
     // verify class is selected
-    await waitFor(() => expect(queryByText(baseElement, classInfo.label)).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, classInfo.label)).not.toBeNull());
 
     // verify property is selected
-    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).not.toBeNull());
   });
 
   it("displays warning message on class selector opening if filtering rules are set ", async () => {
     const { baseElement, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={() => {}}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
     );
 
     // open property selector
@@ -134,21 +128,24 @@ describe("PresentationInstanceFilterDialog", () => {
     // enter value
     const inputContainer = await waitForElement<HTMLInputElement>(baseElement, ".fb-property-value input");
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.selected-classes");
     await user.click(classListContainer);
 
-    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
+    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).not.toBeNull();
   });
 
   it("hides warning message when class selection dropdown is hidden ", async () => {
     const { baseElement, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={() => {}}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
     );
 
     // open property selector
@@ -160,29 +157,32 @@ describe("PresentationInstanceFilterDialog", () => {
     // enter value
     const inputContainer = await waitFor(() => getByTestId(baseElement, "components-text-editor"));
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.selected-classes");
     await user.click(classListContainer);
 
     // assert that the warning is shown initially
-    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
+    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).not.toBeNull();
 
     // click somewhere else to hide the dropdown
     const header = baseElement.querySelector(".presentation-instance-filter-title");
     await user.click(header!);
 
     // hiding the dropdown should also hide the warning
-    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).to.be.null;
+    expect(queryByText(baseElement, translate("instance-filter-builder.class-selection-warning"))).toBeNull();
   });
 
   it("clears all filtering options on class list changing ", async () => {
     const { baseElement, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={() => {}}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
     );
 
     // open property selector
@@ -194,7 +194,7 @@ describe("PresentationInstanceFilterDialog", () => {
     // enter value
     const inputContainer = await waitForElement<HTMLInputElement>(baseElement, ".fb-property-value input");
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.selected-classes");
@@ -204,14 +204,20 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(within(getByRole(baseElement, "option", { hidden: true })).getByText("Class Label"));
 
     // assert that filtering rule was cleared
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).toBeNull());
   });
 
   it("invokes 'onApply' with string property filter rule", async () => {
-    const spy = sinon.spy();
-    const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const spy = vi.fn();
+    const { baseElement, user } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     // open property selector
     const propertySelector = await getRulePropertySelector(baseElement);
@@ -223,14 +229,14 @@ describe("PresentationInstanceFilterDialog", () => {
     const inputContainer = await waitForElement<HTMLInputElement>(baseElement, ".fb-property-value input");
     await user.type(inputContainer, "test value");
 
-    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).not.toBeNull());
     await user.tab();
 
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
     await waitFor(() => {
-      expect(spy).to.be.calledOnceWith({
+      expect(spy).toHaveBeenCalledExactlyOnceWith({
         filter: {
           field: stringField,
           operator: "like",
@@ -238,7 +244,7 @@ describe("PresentationInstanceFilterDialog", () => {
             valueFormat: AbstractPropertyValueFormat.Primitive,
             value: "test value",
             displayValue: "test value",
-          } as PrimitiveValue,
+          },
         },
         usedClasses: [classInfo],
       });
@@ -246,10 +252,16 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("does not invoke `onApply` when there two empty rules", async () => {
-    const spy = sinon.spy();
-    const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const spy = vi.fn();
+    const { baseElement, user } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     const addButton = getAllByRole(baseElement, "button").find((el) => within(el).queryByText("filterBuilder.add"))!;
     await user.click(addButton);
@@ -257,14 +269,20 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.not.be.called;
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("does not invoke `onApply` when filter is invalid", async () => {
-    const spy = sinon.spy();
-    const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const spy = vi.fn();
+    const { baseElement, user } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     // open property selector
     const propertySelector = await getRulePropertySelector(baseElement);
@@ -275,26 +293,38 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.not.be.called;
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it("invokes `onApply` when there are no items selected", async () => {
-    const spy = sinon.spy();
-    const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const spy = vi.fn();
+    const { baseElement, user } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.be.called;
+    expect(spy).toHaveBeenCalled();
   });
 
   it("invokes `onApply` with only selected classes", async () => {
-    const spy = sinon.spy();
-    const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const spy = vi.fn();
+    const { baseElement, user } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     // expand class selector
     const classListContainer = getByPlaceholderText(baseElement, "instance-filter-builder.select-classes-optional");
@@ -307,32 +337,46 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    expect(spy).to.be.calledWith({ filter: undefined, usedClasses: [classInfo] });
+    expect(spy).toHaveBeenCalledWith({ filter: undefined, usedClasses: [classInfo] });
   });
 
   it("invokes `onReset` when reset is clicked.", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { baseElement, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onReset={spy} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onReset={spy}
+        onApply={() => {}}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
     );
 
     const resetButton = await getResetButton(baseElement);
     await user.click(resetButton);
 
-    expect(spy).to.be.called;
+    expect(spy).toHaveBeenCalled();
   });
 
   it("throws error when filter is missing presentation metadata", async () => {
-    const fromComponentsPropertyFilterStub = sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
+    const fromComponentsPropertyFilterStub = vi
+      .spyOn(PresentationInstanceFilter, "fromComponentsPropertyFilter")
+      .mockImplementation(() => {
+        throw new Error("Some Error");
+      });
     // stub console log to avoid expected error in console
-    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
-    const spy = sinon.spy();
-    const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const consoleErrorStub = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.fn();
+    const { baseElement, user } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     // open property selector
     const propertySelector = await getRulePropertySelector(baseElement);
@@ -350,20 +394,26 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(baseElement);
     await user.click(applyButton);
 
-    await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
-    fromComponentsPropertyFilterStub.restore();
-    consoleErrorStub.restore();
+    await waitFor(() => expect(queryByText(baseElement, "general.error")).not.toBeNull());
+    fromComponentsPropertyFilterStub.mockRestore();
+    consoleErrorStub.mockRestore();
   });
 
   it("renders custom title", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const title = "custom title";
 
     const { baseElement } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} title={<div>{title}</div>} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        title={<div>{title}</div>}
+        onApply={spy}
+        isOpen={true}
+      />,
     );
 
-    await waitFor(() => expect(queryByText(baseElement, title)).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, title)).not.toBeNull());
   });
 
   it("renders results count", async () => {
@@ -379,34 +429,45 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     // wait for filter builder to render
-    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(baseElement, stringField.label)).not.toBeNull());
 
     // verify results count renderer is used
-    await waitFor(() => expect(queryByText(baseElement, "Test Results")).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, "Test Results")).not.toBeNull());
   });
 
   it("renders error boundary if error is thrown", async () => {
     // stub console log to avoid expected error in console
-    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
+    const consoleErrorStub = vi.spyOn(console, "error").mockImplementation(() => {});
     const propertiesSourceGetter = () => {
       throw new Error("Cannot load descriptor");
     };
 
     const { baseElement } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSourceGetter}
+        onApply={() => {}}
+        isOpen={true}
+      />,
     );
 
-    await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
-    consoleErrorStub.restore();
+    await waitFor(() => expect(queryByText(baseElement, "general.error")).not.toBeNull());
+    consoleErrorStub.mockRestore();
   });
 
   it("renders with lazy-loaded descriptor", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const propertiesSourceGetter = async () => ({ descriptor });
 
-    const { baseElement } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const { baseElement } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSourceGetter}
+        onApply={spy}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
+    );
 
     await getRulePropertySelector(baseElement);
   });
@@ -426,7 +487,7 @@ describe("PresentationInstanceFilterDialog", () => {
       />,
     );
 
-    await waitFor(() => expect(queryByText(baseElement, "Click Me!")).to.not.be.null);
+    await waitFor(() => expect(queryByText(baseElement, "Click Me!")).not.toBeNull());
   });
 
   it("renders spinner while loading descriptor", async () => {
@@ -435,14 +496,17 @@ describe("PresentationInstanceFilterDialog", () => {
     const propertiesSourceGetter = async () => propertiesSourcePromise;
 
     const { baseElement } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSourceGetter}
+        onApply={() => {}}
+        isOpen={true}
+      />,
+      { addThemeProvider: true },
     );
 
     await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).not.toBeNull();
     });
 
     await act(async () => {
@@ -450,7 +514,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
 
     await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).toBeNull();
     });
   });
 
@@ -464,14 +528,14 @@ describe("PresentationInstanceFilterDialog", () => {
 
   async function getResetButton(container: HTMLElement) {
     return waitForElement<HTMLButtonElement>(container, ".presentation-instance-filter-dialog-reset-button", (e) => {
-      expect(e).to.not.be.null;
+      expect(e).not.toBeNull();
     });
   }
 
   async function getApplyButton(container: HTMLElement, enabled: boolean = false) {
     return waitForElement<HTMLButtonElement>(container, ".presentation-instance-filter-dialog-apply-button", (e) => {
-      expect(e).to.not.be.null;
-      expect(e?.disabled ?? false).to.be.eq(enabled);
+      expect(e).not.toBeNull();
+      expect(e?.disabled ?? false).toBe(enabled);
     });
   }
 });

@@ -52,7 +52,8 @@ interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupi
  * A data structure for defining label grouping with additional parameters.
  * @public
  */
-interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
+interface HierarchyNodeLabelGroupingGroupParams
+  extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
   action?: "group";
 }
 
@@ -60,7 +61,10 @@ interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupi
  * A data structure for defining possible label grouping types.
  * @public
  */
-export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
+export type HierarchyNodeLabelGroupingParams =
+  | boolean
+  | HierarchyNodeLabelGroupingMergeParams
+  | HierarchyNodeLabelGroupingGroupParams;
 
 /**
  * Grouping parameters that are shared across all types of groupings.
@@ -218,7 +222,10 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
  *
  * @public
  */
-export type ProcessedHierarchyNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
+export type ProcessedHierarchyNode =
+  | ProcessedGenericHierarchyNode
+  | ProcessedInstanceHierarchyNode
+  | ProcessedGroupingHierarchyNode;
 
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -242,15 +249,18 @@ export namespace ProcessedHierarchyNode {
  * returned by hierarchy definitions as a generic node or when the node is just parsed from query results.
  * @public
  */
-export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
-  label: string | ConcatenatedValue;
-};
+export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInstanceHierarchyNode> = OmitOverUnion<
+  TBase,
+  "label" | "parentKeys"
+> & { label: string | ConcatenatedValue };
 
 /**
  * A kind of `ProcessedGenericHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @public
  */
-export type SourceGenericHierarchyNode = SourceHierarchyNode<Omit<ProcessedGenericHierarchyNode, "key"> & { key: string }>;
+export type SourceGenericHierarchyNode = SourceHierarchyNode<
+  Omit<ProcessedGenericHierarchyNode, "key"> & { key: string }
+>;
 
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.

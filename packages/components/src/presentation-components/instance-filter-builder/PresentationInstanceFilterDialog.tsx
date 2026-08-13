@@ -10,7 +10,11 @@ import "./PresentationInstanceFilterDialog.scss";
 
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
+import {
+  BuildFilterOptions,
+  useDefaultPropertyFilterBuilderRuleValidator,
+  usePropertyFilterBuilder,
+} from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
@@ -19,7 +23,7 @@ import { translate, useDelay } from "../common/Utils.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
 import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
-import { filterRuleValidator, isFilterNonEmpty } from "./Utils.js";
+import { createFilterRuleValidator, isFilterNonEmpty } from "./Utils.js";
 
 /**
  * Data structure that describes source to gather properties from.
@@ -64,7 +68,10 @@ export interface PresentationInstanceFilterDialogProps {
    *
    * This property can be set to function in order to lazy load [[PresentationInstanceFilterPropertiesSource]] when dialog is opened.
    */
-  propertiesSource: (() => Promise<PresentationInstanceFilterPropertiesSource>) | PresentationInstanceFilterPropertiesSource | undefined;
+  propertiesSource:
+    | (() => Promise<PresentationInstanceFilterPropertiesSource>)
+    | PresentationInstanceFilterPropertiesSource
+    | undefined;
   /** Renders filter results count. */
   filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
   /** Dialog title. */
@@ -104,7 +111,10 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
     >
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
-        <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
+        <Dialog.TitleBar
+          className="presentation-instance-filter-title"
+          titleText={title ? title : translate("instance-filter-builder.filter")}
+        />
         <ErrorBoundary fallback={<ErrorState />}>
           <FilterDialogContent {...restProps} />
         </ErrorBoundary>
@@ -125,25 +135,25 @@ function FilterDialogContent({ propertiesSource, ...restProps }: FilterDialogCon
     return null;
   }
 
-  return <LoadedFilterDialogContent {...restProps} descriptor={loadedPropertiesSource.descriptor} descriptorInputKeys={loadedPropertiesSource.inputKeys} />;
+  return (
+    <LoadedFilterDialogContent
+      {...restProps}
+      descriptor={loadedPropertiesSource.descriptor}
+      descriptorInputKeys={loadedPropertiesSource.inputKeys}
+    />
+  );
 }
 
 function useDelayLoadedPropertiesSource(
-  sourceOrGetter: PresentationInstanceFilterPropertiesSource | (() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined,
-): {
-  propertiesSource: PresentationInstanceFilterPropertiesSource | undefined;
-  isLoading: boolean;
-} {
+  sourceOrGetter:
+    | PresentationInstanceFilterPropertiesSource
+    | (() => Promise<PresentationInstanceFilterPropertiesSource>)
+    | undefined,
+): { propertiesSource: PresentationInstanceFilterPropertiesSource | undefined; isLoading: boolean } {
   const [{ source, isLoading }, setState] = useState(() =>
     typeof sourceOrGetter === "function"
-      ? {
-          source: undefined,
-          isLoading: false,
-        }
-      : {
-          source: sourceOrGetter,
-          isLoading: false,
-        },
+      ? { source: undefined, isLoading: false }
+      : { source: sourceOrGetter, isLoading: false },
   );
 
   useEffect(() => {
@@ -165,10 +175,7 @@ function useDelayLoadedPropertiesSource(
     void (async () => {
       try {
         const newDescriptor = await sourceOrGetter();
-        updateState({
-          source: newDescriptor,
-          isLoading: false,
-        });
+        updateState({ source: newDescriptor, isLoading: false });
       } catch (error) {
         updateState(() => {
           // throw error in setSate callback for it to be caught by ErrorBoundary
@@ -185,13 +192,26 @@ function useDelayLoadedPropertiesSource(
   return { propertiesSource: source, isLoading };
 }
 
-interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "propertiesSource"> {
+interface LoadedFilterDialogContentProps extends Omit<
+  PresentationInstanceFilterDialogProps,
+  "isOpen" | "title" | "propertiesSource"
+> {
   descriptor: Descriptor;
   descriptorInputKeys?: Keys;
 }
 
 function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
-  const { initialFilter, descriptor, imodel, filterResultsCountRenderer, descriptorInputKeys, onApply, onReset, onClose, toolbarButtonsRenderer } = props;
+  const {
+    initialFilter,
+    descriptor,
+    imodel,
+    filterResultsCountRenderer,
+    descriptorInputKeys,
+    onApply,
+    onReset,
+    onClose,
+    toolbarButtonsRenderer,
+  } = props;
   const initialFilterInfo = useInitialFilter(descriptor, initialFilter);
 
   const [initialPropertyFilter] = useState(() => {
@@ -200,10 +220,10 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     }
     return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilterInfo.filter);
   });
-
+  const ruleValidator = useRuleValidator();
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
     initialFilter: initialPropertyFilter,
-    ruleValidator: filterRuleValidator,
+    ruleValidator,
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilterInfo?.usedClasses);
@@ -267,12 +287,20 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
-        <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
+        <div>
+          {filterResultsCountRenderer ? (
+            <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} />
+          ) : null}
+        </div>
         <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
           {toolbarButtonsRenderer ? (
             toolbarButtonsRenderer({ handleApply, handleReset, handleClose })
           ) : (
-            <ToolbarButtonsRenderer handleApply={handleApply} handleReset={handleReset} handleClose={handleClose}></ToolbarButtonsRenderer>
+            <ToolbarButtonsRenderer
+              handleApply={handleApply}
+              handleReset={handleReset}
+              handleClose={handleClose}
+            ></ToolbarButtonsRenderer>
           )}
         </Dialog.ButtonBar>
       </div>
@@ -280,13 +308,20 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   );
 }
 
+function useRuleValidator() {
+  const defaultValidator = useDefaultPropertyFilterBuilderRuleValidator();
+  return useMemo(() => createFilterRuleValidator(defaultValidator), [defaultValidator]);
+}
+
 function useInitialFilter(
   descriptor: Descriptor,
   initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo),
 ) {
-  const initializedFilter = useRef<{ filterInfo: PresentationInstanceFilterInfo | undefined }>();
+  const initializedFilter = useRef<{ filterInfo: PresentationInstanceFilterInfo | undefined } | undefined>(undefined);
   if (initializedFilter.current === undefined) {
-    initializedFilter.current = { filterInfo: typeof initialFilter === "function" ? initialFilter(descriptor) : initialFilter };
+    initializedFilter.current = {
+      filterInfo: typeof initialFilter === "function" ? initialFilter(descriptor) : initialFilter,
+    };
   }
   return initializedFilter.current.filterInfo;
 }
@@ -294,7 +329,11 @@ function useInitialFilter(
 function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: FilteringDialogToolbarHandlers) {
   return (
     <>
-      <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={handleApply}>
+      <Button
+        className="presentation-instance-filter-dialog-apply-button"
+        styleType="high-visibility"
+        onClick={handleApply}
+      >
         {translate("instance-filter-builder.apply")}
       </Button>
       <Button className="presentation-instance-filter-dialog-close-button" onClick={handleClose}>
@@ -337,7 +376,11 @@ function DelayedCenteredProgressRadial() {
 function ErrorState() {
   return (
     <div style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }}>
-      <NonIdealState svg={<SvgError />} heading={translate("general.error")} description={translate("general.generic-error-description")} />
+      <NonIdealState
+        svg={<SvgError />}
+        heading={translate("general.error")}
+        description={translate("general.generic-error-description")}
+      />
     </div>
   );
 }

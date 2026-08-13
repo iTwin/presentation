@@ -3,7 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
+import {
+  EMPTY,
+  filter,
+  forkJoin,
+  from,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  scan,
+  shareReplay,
+  Subject,
+  toArray,
+} from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { Guid, GuidString, Id64String } from "@itwin/core-bentley";
 import {
@@ -15,7 +28,7 @@ import {
   ECSqlQueryRow,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, Selectables } from "./Selectable.js";
+import { SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "./Selectable.js";
 import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
@@ -138,6 +151,10 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private async getType(key: SelectableInstanceKey): Promise<InstanceIdType> {
+    if (key.className === TRANSIENT_ELEMENT_CLASSNAME) {
+      return "transient";
+    }
+
     const normalizedClassName = normalizeFullClassName(key.className);
     const cachedType = this._classRelationCache.get(normalizedClassName);
     if (cachedType) {
@@ -187,11 +204,15 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   private getInstancesByType(selectables: Selectables): InstancesByType {
     const keyTypeObs = merge(
       from(selectables.custom.values()).pipe(mergeMap((selectable) => selectable.loadInstanceKeys())),
-      from(selectables.instanceKeys).pipe(mergeMap(([className, idSet]) => from(idSet).pipe(map((id) => ({ className, id }))))),
+      from(selectables.instanceKeys).pipe(
+        mergeMap(([className, idSet]) => from(idSet).pipe(map((id) => ({ className, id })))),
+      ),
     ).pipe(
       releaseMainThreadOnItemsCount(500),
       // Get types for each instance key
-      mergeMap((instanceKey) => from(this.getType(instanceKey)).pipe(map((instanceIdType) => ({ instanceId: instanceKey.id, instanceIdType })))),
+      mergeMap((instanceKey) =>
+        from(this.getType(instanceKey)).pipe(map((instanceIdType) => ({ instanceId: instanceKey.id, instanceIdType }))),
+      ),
       // Cache the results
       shareReplay(),
     );
@@ -288,12 +309,16 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
             )
           `,
         ];
-        const ecsql = [`SELECT ECInstanceId FROM CategorySubCategories`, `SELECT ECInstanceId FROM SubCategories`].join(" UNION ");
+        const ecsql = [`SELECT ECInstanceId FROM CategorySubCategories`, `SELECT ECInstanceId FROM SubCategories`].join(
+          " UNION ",
+        );
         return from(
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/sub-categories/${Guid.createValue()}` },
+            config: {
+              restartToken: `${this.#componentName}/${this.#componentId}/sub-categories/${Guid.createValue()}`,
+            },
           }),
         );
       }),
@@ -302,73 +327,92 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
 
   private getHilitedElements(instancesByType: InstancesByType): Observable<string> {
     return forkJoin({
-      groupInformationElementKeys: instancesByType.groupInformationElement.pipe(toArray()),
-      geometricElementKeys: instancesByType.geometricElement.pipe(toArray()),
-      functionalElements: instancesByType.functionalElement.pipe(toArray()),
-      elementKeys: instancesByType.element.pipe(toArray()),
+      groupInformationElementIds: instancesByType.groupInformationElement.pipe(toArray()),
+      geometricElementIds: instancesByType.geometricElement.pipe(toArray()),
+      functionalElementIds: instancesByType.functionalElement.pipe(toArray()),
+      elementIds: instancesByType.element.pipe(toArray()),
+      transientIds: instancesByType.transient.pipe(toArray()),
     }).pipe(
-      mergeMap(({ groupInformationElementKeys, geometricElementKeys, functionalElements, elementKeys }) => {
-        const hasFunctionalElements = !!functionalElements.length;
-        if (!groupInformationElementKeys.length && !geometricElementKeys.length && !elementKeys.length && !hasFunctionalElements) {
-          return EMPTY;
-        }
+      mergeMap(
+        ({ groupInformationElementIds, geometricElementIds, functionalElementIds, elementIds, transientIds }) => {
+          const hasFunctionalElementIds = !!functionalElementIds.length;
+          const hasPersistentElementIds =
+            hasFunctionalElementIds ||
+            !!(groupInformationElementIds.length || geometricElementIds.length || elementIds.length);
+          const hasTransientElementIds = !!transientIds.length;
+          if (!hasPersistentElementIds && !hasTransientElementIds) {
+            return EMPTY;
+          }
+          if (!hasPersistentElementIds) {
+            return from(transientIds);
+          }
 
-        const bindings: ECSqlBinding[] = [];
-        const ctes = [
-          ...(hasFunctionalElements ? this.getHilitedFunctionalElementsQueryCTEs(functionalElements, bindings) : []),
-          `
-            GroupMembers(ECInstanceId, ECClassId) AS (
-              SELECT TargetECInstanceId, TargetECClassId
-              FROM BisCore.ElementGroupsMembers
-              WHERE ${formIdBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
-            )
-          `,
-          `
-            GroupGeometricElements(ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId FROM GroupMembers
-              UNION ALL
-              SELECT r.ECInstanceId, r.ECClassId
-              FROM GroupGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-            )
-          `,
-          `
-            ElementGeometricElements(ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId
-              FROM BisCore.Element
-              WHERE ${formIdBindings("ECInstanceId", elementKeys, bindings)}
-              UNION ALL
-              SELECT r.ECInstanceId, r.ECClassId
-              FROM ElementGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-            )
-          `,
-          `
-            GeometricElementGeometricElements(ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId
-              FROM BisCore.GeometricElement
-              WHERE ${formIdBindings("ECInstanceId", geometricElementKeys, bindings)}
-              UNION ALL
-              SELECT r.ECInstanceId, r.ECClassId
-              FROM GeometricElementGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-            )
-          `,
-        ];
-        const ecsql = [
-          ...(hasFunctionalElements ? ["SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)"] : []),
-          "SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-          "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-          "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
-        ].join(" UNION ");
-        return from(
-          executeQuery({
-            queryExecutor: this._imodelAccess,
-            query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/elements/${Guid.createValue()}` },
-          }),
-        );
-      }),
+          const bindings: ECSqlBinding[] = [];
+          const ctes = [
+            ...(hasFunctionalElementIds
+              ? this.getHilitedFunctionalElementsQueryCTEs(functionalElementIds, bindings)
+              : []),
+            `
+              GroupMembers(ECInstanceId, ECClassId) AS (
+                SELECT TargetECInstanceId, TargetECClassId
+                FROM BisCore.ElementGroupsMembers
+                WHERE ${formIdBindings("SourceECInstanceId", groupInformationElementIds, bindings)}
+              )
+            `,
+            `
+              GroupGeometricElements(ECInstanceId, ECClassId) AS (
+                SELECT ECInstanceId, ECClassId FROM GroupMembers
+                UNION ALL
+                SELECT r.ECInstanceId, r.ECClassId
+                FROM GroupGeometricElements s
+                JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+              )
+            `,
+            `
+              ElementGeometricElements(ECInstanceId, ECClassId) AS (
+                SELECT ECInstanceId, ECClassId
+                FROM BisCore.Element
+                WHERE ${formIdBindings("ECInstanceId", elementIds, bindings)}
+                UNION ALL
+                SELECT r.ECInstanceId, r.ECClassId
+                FROM ElementGeometricElements s
+                JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+              )
+            `,
+            `
+              GeometricElementGeometricElements(ECInstanceId, ECClassId) AS (
+                SELECT ECInstanceId, ECClassId
+                FROM BisCore.GeometricElement
+                WHERE ${formIdBindings("ECInstanceId", geometricElementIds, bindings)}
+                UNION ALL
+                SELECT r.ECInstanceId, r.ECClassId
+                FROM GeometricElementGeometricElements s
+                JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+              )
+            `,
+          ];
+          const ecsql = [
+            ...(hasFunctionalElementIds
+              ? [
+                  "SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+                ]
+              : []),
+            "SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+            "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+            "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
+          ].join(" UNION ");
+          return merge(
+            from(
+              executeQuery({
+                queryExecutor: this._imodelAccess,
+                query: { ctes, ecsql, bindings },
+                config: { restartToken: `${this.#componentName}/${this.#componentId}/elements/${Guid.createValue()}` },
+              }),
+            ),
+            from(transientIds),
+          );
+        },
+      ),
     );
   }
 
@@ -437,6 +481,7 @@ const INSTANCE_TYPES = [
   "groupInformationElement",
   "geometricElement",
   "element",
+  "transient",
   "unknown",
 ] as const;
 

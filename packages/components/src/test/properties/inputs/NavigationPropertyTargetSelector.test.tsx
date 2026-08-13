@@ -3,30 +3,31 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createRef } from "react";
-import sinon from "sinon";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyRecord,
+  PropertyValue,
+  PropertyValueFormat,
+} from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { stubVirtualization } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorProps,
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
+import { stubVirtualization } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 function createNavigationPropertyDescription(): PropertyDescription {
-  return {
-    displayLabel: "TestProp",
-    name: "test_prop",
-    typename: "navigation",
-  };
+  return { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
 }
 
 function createRecord() {
@@ -49,41 +50,41 @@ describe("NavigationPropertyTargetSelector", () => {
     values: {},
   });
 
-  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+  const getContentStub = vi.fn<PresentationManager["getContent"]>();
 
   stubVirtualization();
-  before(() => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => ({
-      getContent: getContentStub,
-    }));
-  });
-
-  after(() => {
-    sinon.restore();
-  });
-
   beforeEach(() => {
-    getContentStub.reset();
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
+      getContent: getContentStub,
+    } as unknown as PresentationManager);
+
+    getContentStub.mockReset();
+    getContentStub.mockResolvedValue(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]),
+    );
   });
 
   it("renders selector", async () => {
     const { getByRole, queryByText, user } = render(
-      <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
+      <NavigationPropertyTargetSelector
+        imodel={testImodel}
+        getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
+        propertyRecord={testRecord}
+      />,
     );
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
     await user.click(inputContainer);
 
-    expect(await waitFor(() => queryByText(contentItem.label.displayValue))).to.not.be.undefined;
+    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).not.toBeNull());
   });
 
   it("invokes onCommit with selected target", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
         imodel={testImodel}
@@ -98,7 +99,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     await user.click(target);
-    expect(spy).to.be.calledOnceWith({
+    expect(spy).toHaveBeenCalledExactlyOnceWith({
       propertyRecord: testRecord,
       newValue: {
         valueFormat: PropertyValueFormat.Primitive,
@@ -119,7 +120,7 @@ describe("NavigationPropertyTargetSelector", () => {
       />,
     );
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBeUndefined();
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
     await user.click(inputContainer);
@@ -127,7 +128,7 @@ describe("NavigationPropertyTargetSelector", () => {
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     await user.click(target);
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(contentItem.primaryKeys[0]);
+    expect((ref.current?.getValue() as PrimitiveValue).value).toBe(contentItem.primaryKeys[0]);
   });
 
   it("sets initial value from property record", async () => {
@@ -144,7 +145,9 @@ describe("NavigationPropertyTargetSelector", () => {
       displayValues: {},
       values: {},
     });
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]));
+    getContentStub.mockResolvedValue(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]),
+    );
 
     const initialProps: NavigationPropertyTargetSelectorProps = {
       imodel: testImodel,
@@ -170,7 +173,9 @@ describe("NavigationPropertyTargetSelector", () => {
       displayValues: {},
       values: {},
     });
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]));
+    getContentStub.mockResolvedValue(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem]),
+    );
 
     const initialProps: NavigationPropertyTargetSelectorProps = {
       imodel: testImodel,
@@ -195,7 +200,13 @@ describe("NavigationPropertyTargetSelector", () => {
       values: {},
     });
 
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem, baseContentItem, newContentItem]));
+    getContentStub.mockResolvedValue(
+      new Content(createTestContentDescriptor({ fields: [], categories: [] }), [
+        contentItem,
+        baseContentItem,
+        newContentItem,
+      ]),
+    );
     rerender(<NavigationPropertyTargetSelector {...initialProps} propertyRecord={newPropertyRecord} />);
 
     await waitFor(() => {
@@ -229,11 +240,13 @@ describe("NavigationPropertyTargetSelector", () => {
       );
     }
 
-    getContentStub.callsFake(async () => new Content(createTestContentDescriptor({ fields: [], categories: [] }), items));
+    getContentStub.mockImplementation(
+      async () => new Content(createTestContentDescriptor({ fields: [], categories: [] }), items),
+    );
 
     const { getByPlaceholderText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
     await waitFor(() => {
-      expect(getContentStub.calledOnce);
+      expect(getContentStub).toHaveBeenCalledOnce();
     });
 
     const combobox = await waitFor(() => getByPlaceholderText("navigation-property-editor.select-target-instance"));
@@ -242,7 +255,7 @@ describe("NavigationPropertyTargetSelector", () => {
     await user.type(combobox, "1");
 
     await waitFor(() => {
-      expect(getContentStub.calledOnce);
+      expect(getContentStub).toHaveBeenCalledOnce();
     });
   });
 
@@ -260,7 +273,9 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { getByDisplayValue, getByRole, queryByText, user, getByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { getByDisplayValue, getByRole, queryByText, user, getByText } = render(
+      <NavigationPropertyTargetSelector {...initialProps} />,
+    );
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
 
@@ -277,7 +292,7 @@ describe("NavigationPropertyTargetSelector", () => {
     await waitFor(() => getByDisplayValue("H E"));
     // Check if the menu is closed after the `tab` key was pressed.
     await user.keyboard("{Tab}");
-    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
+    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).toBeNull());
     await user.click(inputContainer);
     // Check if it's possible to type after option is selected and menu is opened again
     await user.keyboard("{Enter}");

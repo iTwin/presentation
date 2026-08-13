@@ -1,5 +1,103 @@
 # @itwin/presentation-shared
 
+## 1.2.19
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+
+## 1.2.18
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+
+## 1.2.17
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+
+## 1.2.16
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+
+## 1.2.15
+
+### Patch Changes
+
+- [#1383](https://github.com/iTwin/presentation/pull/1383): Optimize `parseFullClassName` parsing performance.
+
+## 1.2.14
+
+### Patch Changes
+
+- [#1358](https://github.com/iTwin/presentation/pull/1358): Bump dependencies.
+
+## 1.2.13
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+
+## 1.2.12
+
+### Patch Changes
+
+- [#1300](https://github.com/iTwin/presentation/pull/1300): Use more distinctive aliases in label select clauses to avoid collisions with aliases in outer FROM clause.
+- [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
+
+## 1.2.11
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+
+## 1.2.10
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+
+## 1.2.9
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+
+## 1.2.8
+
+### Patch Changes
+
+- [#1208](https://github.com/iTwin/presentation/pull/1208): Bump dependencies.
+
+## 1.2.7
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+
+## 1.2.6
+
+### Patch Changes
+
+- [#1152](https://github.com/iTwin/presentation/pull/1152): Bump dependencies.
+
+## 1.2.5
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+
+## 1.2.4
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+
 ## 1.2.3
 
 ### Patch Changes
@@ -165,7 +263,11 @@
   The change makes combining multiple concatenated values easier, e.g. now you can do this:
 
   ```ts
-  const value: ConcatenatedValue = [createConcatenatedValueX(), { type: "String", value: " - " }, createConcatenatedValueY()];
+  const value: ConcatenatedValue = [
+    createConcatenatedValueX(),
+    { type: "String", value: " - " },
+    createConcatenatedValueY(),
+  ];
   ```
 
 ## 0.2.0

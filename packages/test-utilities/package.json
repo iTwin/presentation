@@ -1,6 +1,6 @@
 {
   "name": "presentation-test-utilities",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
@@ -30,6 +30,7 @@
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
+    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }

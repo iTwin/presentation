@@ -3,11 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { HierarchyNode } from "../../../../hierarchies/HierarchyNode.js";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
-import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import {
+  HierarchyNodeAutoExpandProp,
+  InstanceHierarchyNodeProcessingParams,
+} from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
+import {
+  GroupingType,
+  ProcessedInstancesGroupingHierarchyNode,
+} from "../../../../hierarchies/imodel/operators/Grouping.js";
 import { assignAutoExpand } from "../../../../hierarchies/imodel/operators/grouping/AutoExpand.js";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
@@ -16,15 +22,11 @@ describe("AutoExpand", () => {
     {
       testName: "Base class grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "class-grouping",
-          class: {
-            name: "TestSchema:BaseClass",
-            label: "Base Class",
-          },
-        },
+        groupingNodeKey: { type: "class-grouping", class: { name: "TestSchema:BaseClass", label: "Base Class" } },
         groupingType: "base-class",
-        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (
+          autoExpand: HierarchyNodeAutoExpandProp | undefined,
+        ): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand } } };
         },
       },
@@ -32,15 +34,11 @@ describe("AutoExpand", () => {
     {
       testName: "Class grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "class-grouping",
-          class: {
-            name: "TestSchema:A",
-            label: "A",
-          },
-        },
+        groupingNodeKey: { type: "class-grouping", class: { name: "TestSchema:A", label: "A" } },
         groupingType: "class",
-        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (
+          autoExpand: HierarchyNodeAutoExpandProp | undefined,
+        ): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byClass: autoExpand ? { autoExpand } : true } };
         },
       },
@@ -51,16 +49,19 @@ describe("AutoExpand", () => {
         groupingNodeKey: {
           type: "property-grouping:other",
           label: "1",
-          property: {
-            propertyName: "length",
-            propertiesClassName: "TestSchema:BaseClass",
-          },
+          property: { propertyName: "length", propertiesClassName: "TestSchema:BaseClass" },
         },
         groupingType: "property",
-        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (
+          autoExpand: HierarchyNodeAutoExpandProp | undefined,
+        ): InstanceHierarchyNodeProcessingParams => {
           return {
             grouping: {
-              byProperties: { propertiesClassName: "TestSchema:BaseClass", autoExpand, propertyGroups: [{ propertyName: "length", propertyValue: 1 }] },
+              byProperties: {
+                propertiesClassName: "TestSchema:BaseClass",
+                autoExpand,
+                propertyGroups: [{ propertyName: "length", propertyValue: 1 }],
+              },
             },
           };
         },
@@ -69,12 +70,11 @@ describe("AutoExpand", () => {
     {
       testName: "Label grouping",
       testParams: {
-        groupingNodeKey: {
-          type: "label-grouping",
-          label: "1",
-        },
+        groupingNodeKey: { type: "label-grouping", label: "1" },
         groupingType: "label",
-        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (
+          autoExpand: HierarchyNodeAutoExpandProp | undefined,
+        ): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byLabel: autoExpand ? { autoExpand } : true } };
         },
       },
@@ -95,11 +95,15 @@ describe("AutoExpand", () => {
             ],
           }),
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
-        expect(result.ungrouped).to.deep.eq([]);
-        expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
-        expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
-        expect(result.grouped[0].autoExpand).to.eq(true);
+        const result = assignAutoExpand({
+          grouped: nodes,
+          ungrouped: [],
+          groupingType: testParams.groupingType as GroupingType,
+        });
+        expect(result.ungrouped).toEqual([]);
+        expect(HierarchyNode.isGroupingNode(result.grouped[0])).toBe(true);
+        expect(result.grouped[0].children).toEqual(nodes[0].children);
+        expect(result.grouped[0].autoExpand).toBe(true);
       });
 
       it("sets autoExpand to true when some child nodes have autoExpand set to 'always'", async () => {
@@ -126,11 +130,15 @@ describe("AutoExpand", () => {
             ],
           }),
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
-        expect(result.ungrouped).to.deep.eq([]);
-        expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
-        expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
-        expect(result.grouped[0].autoExpand).to.eq(true);
+        const result = assignAutoExpand({
+          grouped: nodes,
+          ungrouped: [],
+          groupingType: testParams.groupingType as GroupingType,
+        });
+        expect(result.ungrouped).toEqual([]);
+        expect(HierarchyNode.isGroupingNode(result.grouped[0])).toBe(true);
+        expect(result.grouped[0].children).toEqual(nodes[0].children);
+        expect(result.grouped[0].autoExpand).toBe(true);
       });
 
       it("doesn't set autoExpand when grouping node has more than one child node and none of them have autoExpand set to 'always'", async () => {
@@ -151,11 +159,15 @@ describe("AutoExpand", () => {
             ],
           }),
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
-        expect(result.ungrouped).to.deep.eq([]);
-        expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
-        expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
-        expect(result.grouped[0].autoExpand).to.eq(undefined);
+        const result = assignAutoExpand({
+          grouped: nodes,
+          ungrouped: [],
+          groupingType: testParams.groupingType as GroupingType,
+        });
+        expect(result.ungrouped).toEqual([]);
+        expect(HierarchyNode.isGroupingNode(result.grouped[0])).toBe(true);
+        expect(result.grouped[0].children).toEqual(nodes[0].children);
+        expect(result.grouped[0].autoExpand).toBe(undefined);
       });
 
       it("doesn't set autoExpand when child nodes don't have autoExpand option set", async () => {
@@ -172,11 +184,15 @@ describe("AutoExpand", () => {
             ],
           }),
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
-        expect(result.ungrouped).to.deep.eq([]);
-        expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
-        expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
-        expect(result.grouped[0].autoExpand).to.eq(undefined);
+        const result = assignAutoExpand({
+          grouped: nodes,
+          ungrouped: [],
+          groupingType: testParams.groupingType as GroupingType,
+        });
+        expect(result.ungrouped).toEqual([]);
+        expect(HierarchyNode.isGroupingNode(result.grouped[0])).toBe(true);
+        expect(result.grouped[0].children).toEqual(nodes[0].children);
+        expect(result.grouped[0].autoExpand).toBe(undefined);
       });
     });
   });

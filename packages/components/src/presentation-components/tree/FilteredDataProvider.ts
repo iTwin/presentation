@@ -15,10 +15,20 @@ import {
   TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import {
+  HierarchyRequestOptions,
+  InstanceFilterDefinition,
+  Node,
+  NodeKey,
+  NodePathElement,
+  Paged,
+} from "@itwin/presentation-common";
 import { memoize } from "../common/Utils.js";
 import { PresentationTreeDataProvider } from "./DataProvider.js";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import {
+  IFilteredPresentationTreeDataProvider,
+  IPresentationTreeDataProvider,
+} from "./IPresentationTreeDataProvider.js";
 import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 import { createTreeNodeItem } from "./Utils.js";
 
@@ -54,9 +64,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     this._filteredDataProvider = new SimpleTreeDataProvider(hierarchy);
   }
 
-  /* c8 ignore next - only here to meet interface's requirements, nothing to test */
+  /* v8 ignore next - only here to meet interface's requirements, nothing to test -- @preserve */
   public [Symbol.dispose]() {}
-  /* c8 ignore next - only here to meet interface's requirements, nothing to test */
+  /* v8 ignore next - only here to meet interface's requirements, nothing to test -- @preserve */
   public dispose() {}
 
   public get rulesetId(): string {
@@ -104,26 +114,25 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     hierarchy.set(parentId, treeNodes);
   }
 
-  public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize((index: number): ActiveMatchInfo | undefined => {
-    let activeMatch: ActiveMatchInfo | undefined;
-    if (index <= 0) {
-      return undefined;
-    }
-
-    let i = 1;
-    for (const node of this._filteredResultMatches) {
-      if (index < i + node.matchesCount) {
-        activeMatch = {
-          nodeId: node.id,
-          matchIndex: index - i,
-        };
-        break;
+  public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize(
+    (index: number): ActiveMatchInfo | undefined => {
+      let activeMatch: ActiveMatchInfo | undefined;
+      if (index <= 0) {
+        return undefined;
       }
 
-      i += node.matchesCount;
-    }
-    return activeMatch;
-  });
+      let i = 1;
+      for (const node of this._filteredResultMatches) {
+        if (index < i + node.matchesCount) {
+          activeMatch = { nodeId: node.id, matchIndex: index - i };
+          break;
+        }
+
+        i += node.matchesCount;
+      }
+      return activeMatch;
+    },
+  );
 
   /** Count filtering results. Including multiple possible matches within node labels */
   public countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number {
@@ -151,16 +160,12 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider.getFilteredNodePaths(filter);
   }
 
-  public createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition) {
+  public createRequestOptions(
+    parentKey?: NodeKey,
+    instanceFilter?: InstanceFilterDefinition,
+  ): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>> {
     return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
-
-  /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  /* c8 ignore start */
-  public getNodeKey(node: TreeNodeItem): NodeKey {
-    return this._parentDataProvider.getNodeKey(node);
-  }
-  /* c8 ignore end */
 
   /** Check if node matches currently applied filter */
   public nodeMatchesFilter(node: TreeNodeItem): boolean {

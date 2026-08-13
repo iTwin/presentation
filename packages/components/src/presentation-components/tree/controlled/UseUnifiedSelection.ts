@@ -9,7 +9,6 @@
 
 import "../../common/DisposePolyfill.js";
 
-import { useCallback } from "react";
 import { Subject, takeUntil, tap } from "rxjs";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -23,9 +22,13 @@ import {
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
 import { Guid } from "@itwin/core-bentley";
-import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
-import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
+import {
+  Presentation,
+  SelectionChangeEventArgs,
+  SelectionChangeType,
+  SelectionHelper,
+} from "@itwin/presentation-frontend";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
 import { toRxjsObservable } from "../Utils.js";
@@ -73,11 +76,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   #cancelled = new Subject<void>();
 
   constructor(params: UnifiedSelectionTreeEventHandlerParams) {
-    super({
-      ...params,
-      modelSource: params.nodeLoader.modelSource,
-    });
+    super({ ...params, modelSource: params.nodeLoader.modelSource });
     this.#dataProvider = params.nodeLoader.dataProvider;
+    /* v8 ignore next -- @preserve */
     this.#selectionSourceName = params.name ?? `Tree_${this.#dataProvider.rulesetId}_${Guid.createValue()}`;
     this.#listeners.push(Presentation.selection.selectionChange.addListener((args) => this.onSelectionChanged(args)));
     this.#listeners.push(this.modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1])));
@@ -96,6 +97,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  /* v8 ignore next -- @preserve */
   public override dispose() {
     this.#dispose();
   }
@@ -150,20 +152,13 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     }
   }
 
-  /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  /* c8 ignore start */
-  protected getNodeKey(node: TreeNodeItem): NodeKey {
-    return this.#dataProvider.getNodeKey(node);
-  }
-  /* c8 ignore end */
-
   /**
    * Determines if node should be selected.
    * Default implementation returns true if node key is in selection
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    /* c8 ignore next 3 */
+    /* v8 ignore next 3 -- @preserve */
     if (!isPresentationTreeNodeItem(node)) {
       return false;
     }
@@ -174,7 +169,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     }
 
     // ... or if it's an ECInstances node and any of instance keys is in selection
-    if (NodeKey.isInstancesNodeKey(node.key) && node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
+    if (
+      NodeKey.isInstancesNodeKey(node.key) &&
+      node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))
+    ) {
       return true;
     }
 
@@ -191,8 +189,8 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
 
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes
-      .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* c8 ignore next */ undefined))
-      .filter((key) => key !== undefined) as NodeKey[];
+      .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* v8 ignore next -- @preserve */ undefined))
+      .filter((key) => key !== undefined);
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 
@@ -231,7 +229,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
       return;
     }
 
-    if (evt.source !== this.#selectionSourceName && (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)) {
+    if (
+      evt.source !== this.#selectionSourceName &&
+      (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)
+    ) {
       this.#cancelled.next();
     }
 
@@ -257,7 +258,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     this.modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
-        /* c8 ignore next 3 */
+        /* v8 ignore next 3 -- @preserve */
         if (!node) {
           continue;
         }
@@ -275,19 +276,4 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
       node.isSelected = false;
     }
   }
-}
-
-/**
- * A custom hook which creates and disposes [[UnifiedSelectionTreeEventHandler]]
- * @public
- * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] and
- * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
- */
-export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
-  return useDisposable(
-    useCallback(
-      () => new UnifiedSelectionTreeEventHandler(props),
-      Object.values(props) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
-    ),
-  );
 }

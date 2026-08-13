@@ -11,9 +11,7 @@ import { Id64Arg } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { Presentation } from "@itwin/presentation-frontend";
 import { computeSelection } from "@itwin/unified-selection";
-import { mapPresentationFrontendSelectionScopeToUnifiedSelectionScope } from "../common/Utils.js";
 import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider.js";
 import { getFavoritesCategory } from "./Utils.js";
 
@@ -39,9 +37,8 @@ export interface FavoritePropertiesDataProviderProps {
 
   /**
    * Active selection scope provider.
-   * Takes active scope from `Presentation.selection.scopes.activeScope` if not provided.
    */
-  activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
+  activeScopeProvider: () => Parameters<typeof computeSelection>[0]["scope"];
 }
 
 /**
@@ -57,6 +54,8 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    * - For *primitive* fields: `null`, `undefined`, `""` (empty string)
    * - For *array* fields: `[]` (empty array)
    * - For *struct* fields: `{}` (object with no members)
+   *
+   * @deprecated in 5.15. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public includeFieldsWithNoValues: boolean;
 
@@ -65,19 +64,21 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    * Fields with composite values:
    * - *array* fields.
    * - *struct* fields.
+   *
+   * @deprecated in 5.15. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */
   public includeFieldsWithCompositeValues: boolean;
 
   /** Constructor. */
-  constructor(props?: FavoritePropertiesDataProviderProps) {
+  constructor(props: FavoritePropertiesDataProviderProps) {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithNoValues = true;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithCompositeValues = true;
-    this._customRuleset = /* c8 ignore next */ props?.ruleset;
-    /* c8 ignore start */
-    this._getActiveScope =
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      props?.activeScopeProvider ?? (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
-    /* c8 ignore end */
+    this._customRuleset = /* v8 ignore next -- @preserve */ props?.ruleset;
+    /* v8 ignore start -- @preserve */
+    this._getActiveScope = props.activeScopeProvider;
+    /* v8 ignore stop -- @preserve */
   }
 
   /**
@@ -115,11 +116,11 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     return this.getData(imodel, keys);
   }
 
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   private createPropertyDataProvider(imodel: IModelConnection, ruleset?: Ruleset | string) {
     const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
     provider.isNestedPropertyCategoryGroupingEnabled = false;
     return provider;
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 }

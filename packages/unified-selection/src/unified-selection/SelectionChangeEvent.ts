@@ -38,10 +38,15 @@ export interface StorageSelectionChangeEventArgs {
   changeType: StorageSelectionChangeType;
   /** Selectables affected by this selection change event. */
   selectables: Selectables;
-  /** iModel key with which the selection is associated with. */
+  /**
+   * iModel key with which the selection is associated with.
+   * Set to an empty string if the selection change is not associated with any iModel.
+   */
   imodelKey: string;
   /**
    * iModel key with which the selection is associated with.
+   * Set to an empty string if the selection change is not associated with any iModel.
+   *
    * @deprecated in 0.2. Use `imodelKey` instead.
    */
   iModelKey: string;

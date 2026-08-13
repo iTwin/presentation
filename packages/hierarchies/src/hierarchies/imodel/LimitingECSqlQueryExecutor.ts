@@ -13,7 +13,10 @@ import {
   trimWhitespace,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
-import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE } from "../internal/Common.js";
+import {
+  LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
+  LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
+} from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
 
 /**
@@ -36,9 +39,15 @@ export interface LimitingECSqlQueryExecutor {
  * Creates an `LimitingECSqlQueryExecutor` that throws `RowsLimitExceededError` if the query exceeds given amount of rows.
  * @public
  */
-export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor {
+export function createLimitingECSqlQueryExecutor(
+  baseExecutor: ECSqlQueryExecutor,
+  defaultLimit: number | "unbounded",
+): LimitingECSqlQueryExecutor {
   return {
-    async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
+    async *createQueryReader(
+      query: ECSqlQueryDef,
+      config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
+    ) {
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const queryLogger = createQueryLogger(query);
@@ -97,9 +106,10 @@ const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.Queries`;
 const LOGGING_NAMESPACE_PERFORMANCE = `${BASE_LOGGING_NAMESPACE_PERFORMANCE}.Queries`;
 function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
   const queryId = Guid.createValue();
+  /* v8 ignore next -- @preserve */
   doLog({
     category: LOGGING_NAMESPACE,
-    message: /* c8 ignore next */ () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}`,
+    message: () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}`,
   });
 
   let firstStep = true;
@@ -108,30 +118,30 @@ function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 300
   return {
     onStep() {
       if (firstStep) {
-        /* c8 ignore start */
+        /* v8 ignore start */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           severity: timer.current.milliseconds >= firstStepWarningThreshold ? "warning" : "trace",
           message: () => `[${queryId}] First step took ${timer.currentSeconds} s.`,
         });
-        /* c8 ignore end */
+        /* v8 ignore stop */
         firstStep = false;
       }
       ++rowsCount;
     },
     onComplete() {
-      /* c8 ignore start */
+      /* v8 ignore start */
       doLog({
         category: LOGGING_NAMESPACE_PERFORMANCE,
         severity: timer.current.milliseconds >= allRowsWarningThreshold ? "warning" : "trace",
         message: () => `[${queryId}] Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`,
       });
-      /* c8 ignore end */
+      /* v8 ignore stop */
     },
   };
 }
 
-/* c8 ignore start */
+/* v8 ignore start */
 function createQueryLogMessage(query: ECSqlQueryDef): string {
   const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
   const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
@@ -146,4 +156,4 @@ function createQueryLogMessage(query: ECSqlQueryDef): string {
   output += "}";
   return output;
 }
-/* c8 ignore end */
+/* v8 ignore stop */

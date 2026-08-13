@@ -20,7 +20,11 @@ Finally, the APIs used to create hierarchies are also slightly different:
 
   ```ts
   // The Presentation system has to first be statically initialized by calling `Presentation.initialize`
-  for await (const node of Presentation.presentation.getNodesIterator({ imodel, rulesetOrId: ruleset, parentKey: undefined })) {
+  for await (const node of Presentation.presentation.getNodesIterator({
+    imodel,
+    rulesetOrId: ruleset,
+    parentKey: undefined,
+  })) {
     // do something with the node
   }
   ```
@@ -58,23 +62,17 @@ Example ruleset:
   "rules": [
     {
       "ruleType": "RootNodes",
-      "specifications": [
-        /* define root node specifications here */
-      ]
+      "specifications": [/* define root node specifications here */]
     },
     {
       "ruleType": "ChildNodes",
       "condition": "ParentNode.Type = \"MyCustomParentNode\"",
-      "specifications": [
-        /* specifications for "MyCustomParentNode" parent node's children go here */
-      ]
+      "specifications": [/* specifications for "MyCustomParentNode" parent node's children go here */]
     },
     {
       "ruleType": "ChildNodes",
       "condition": "ParentNode.IsOfClass(\"BisCore\", \"Model\")",
-      "specifications": [
-        /* specifications for `BisCore.Model` parent node's children go here */
-      ]
+      "specifications": [/* specifications for `BisCore.Model` parent node's children go here */]
     }
   ]
 }
@@ -91,27 +89,19 @@ import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hie
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   classHierarchyInspector: imodelAccess,
   hierarchy: {
-    rootNodes: async () => [
-      /* define root node specifications here */
-    ],
+    rootNodes: async () => [/* define root node specifications here */],
     childNodes: [
       {
         parentGenericNodePredicate: async (parentKey) => parentKey.id === "MyCustomParentNodeKey",
-        definitions: async () => [
-          /* definitions for "MyCustomParentNode" parent node's children go here */
-        ],
+        definitions: async () => [/* definitions for "MyCustomParentNode" parent node's children go here */],
       },
       {
         parentInstancesNodePredicate: async () => true,
-        definitions: async () => [
-          /* definitions for all instances' parent nodes children go here */
-        ],
+        definitions: async () => [/* definitions for all instances' parent nodes children go here */],
       },
       {
         parentInstancesNodePredicate: "BisCore.Model",
-        definitions: async () => [
-          /* definitions for `BisCore.Model` parent node's children go here */
-        ],
+        definitions: async () => [/* definitions for `BisCore.Model` parent node's children go here */],
       },
     ],
   },
@@ -133,22 +123,16 @@ import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 const hierarchyDefinition: HierarchyDefinition = {
   defineHierarchyLevel: async ({ parentNode }) => {
     if (!parentNode) {
-      return [
-        /* define root node specifications here */
-      ];
+      return [/* define root node specifications here */];
     }
     if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "MyCustomParentNodeKey") {
-      return [
-        /* definitions for "MyCustomParentNode" parent node's children go here */
-      ];
+      return [/* definitions for "MyCustomParentNode" parent node's children go here */];
     }
     if (HierarchyNode.isInstancesNode(parentNode)) {
       // depending on whether the hierarchy definition requests node merging, an instances node may have one or more
       // instance keys; here, for simplicity, let's assume all nodes only have one instance key
       if (await imodelAccess.classDerivesFrom(parentNode.key.instanceKeys[0].className, "BisCore.Model")) {
-        return [
-          /* definitions for `BisCore.Model` parent node's children go here */
-        ];
+        return [/* definitions for `BisCore.Model` parent node's children go here */];
       }
     }
     return [];
@@ -187,16 +171,19 @@ Matching `HierarchyNodesDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const definition: HierarchyNodesDefinition = {
   node: {
     key: "MyCustomNode",
     label: "My custom node",
-    extendedData: {
-      description: "This is a custom node",
-    },
+    extendedData: { description: "This is a custom node" },
   },
 };
 ```
@@ -213,14 +200,23 @@ Example of an instance nodes of specific classes specification in Presentation R
 {
   "specType": "InstanceNodesOfSpecificClasses",
   "classes": { "schemaName": "BisCore", "classNames": ["GeometricModel"] },
-  "excludeClasses": { "schemaName": "BisCore", "classNames": ["GeometricModel2d"] },
+  "excludeClasses": {
+    "schemaName": "BisCore",
+    "classNames": ["GeometricModel2d"]
+  },
   "relatedInstances": [
     {
       "relationshipPath": [
         {
-          "relationship": { "schemaName": "BisCore", "className": "ModelModelsElement" },
+          "relationship": {
+            "schemaName": "BisCore",
+            "className": "ModelModelsElement"
+          },
           "direction": "Forward",
-          "targetClass": { "schemaName": "BisCore", "className": "InformationPartitionElement" }
+          "targetClass": {
+            "schemaName": "BisCore",
+            "className": "InformationPartitionElement"
+          }
         }
       ],
       "alias": "partition",
@@ -240,7 +236,12 @@ Matching `HierarchyNodesDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -255,15 +256,16 @@ const definition: HierarchyNodesDefinition = {
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricModel", classAlias: "this" }) },
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.GeometricModel",
+            classAlias: "this",
+          }),
+        },
         hasChildren: true,
         grouping: {
           byClass: true,
-          byLabel: {
-            action: "group",
-            hideIfNoSiblings: true,
-            hideIfOneGroupedNode: true,
-          },
+          byLabel: { action: "group", hideIfNoSiblings: true, hideIfOneGroupedNode: true },
         },
       })}
       FROM BisCore.GeometricModel [this]
@@ -287,16 +289,25 @@ Example of a related instance nodes specification in Presentation Rules:
   "specType": "RelatedInstanceNodes",
   "relationshipPaths": [
     {
-      "relationship": { "schemaName": "BisCore", "className": "ModelContainsElements" },
+      "relationship": {
+        "schemaName": "BisCore",
+        "className": "ModelContainsElements"
+      },
       "direction": "Forward",
-      "targetClass": { "schemaName": "BisCore", "className": "GeometricElement3d" }
+      "targetClass": {
+        "schemaName": "BisCore",
+        "className": "GeometricElement3d"
+      }
     }
   ],
   "relatedInstances": [
     {
       "relationshipPath": [
         {
-          "relationship": { "schemaName": "BisCore", "className": "GeometricElement3dIsInCategory" },
+          "relationship": {
+            "schemaName": "BisCore",
+            "className": "GeometricElement3dIsInCategory"
+          },
           "direction": "Forward"
         }
       ],
@@ -318,7 +329,12 @@ Matching `HierarchyNodesDefinition`:
 ```ts
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -326,14 +342,23 @@ const selectClauseFactory = createNodesQueryClauseFactory({
   imodelAccess,
   instanceLabelSelectClauseFactory: labelsFactory,
 });
-const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyNodesDefinition> => ({
+const createDefinition = async ({
+  parentNode,
+}: {
+  parentNode: HierarchyNode & { key: InstancesNodeKey };
+}): Promise<HierarchyNodesDefinition> => ({
   fullClassName: "BisCore.GeometricElement3d",
   query: {
     ecsql: `
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricElement3d", classAlias: "this" }) },
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.GeometricElement3d",
+            classAlias: "this",
+          }),
+        },
       })}
       FROM BisCore.GeometricElement3d [this]
       INNER JOIN BisCore.SpatialCategory [category] ON [category].[ECInstanceId] = [this].[Category].[Id]
@@ -364,7 +389,10 @@ The purpose of a custom query instance nodes specification in Presentation Rules
       "specifications": [
         {
           "specType": "InstanceNodesOfSpecificClasses",
-          "classes": { "schemaName": "MyDomain", "classNames": ["MyParentElement"] },
+          "classes": {
+            "schemaName": "MyDomain",
+            "classNames": ["MyParentElement"]
+          },
           "groupByClass": false,
           "groupByLabel": false
         }
@@ -379,7 +407,10 @@ The purpose of a custom query instance nodes specification in Presentation Rules
           "queries": [
             {
               "specType": "ECPropertyValue",
-              "class": { "schemaName": "MyDomain", "className": "MyChildElement" },
+              "class": {
+                "schemaName": "MyDomain",
+                "className": "MyChildElement"
+              },
               "parentPropertyName": "ChildrenQuery"
             }
           ],
@@ -399,7 +430,12 @@ The purpose of a custom query instance nodes specification in Presentation Rules
   ```ts
   import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
-  import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+  import {
+    createNodesQueryClauseFactory,
+    HierarchyLevelDefinition,
+    HierarchyNodesDefinition,
+    InstancesNodeKey,
+  } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -407,8 +443,17 @@ The purpose of a custom query instance nodes specification in Presentation Rules
     imodelAccess,
     instanceLabelSelectClauseFactory: labelsFactory,
   });
-  const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyLevelDefinition> => {
-    if (await imodelAccess.classDerivesFrom(parentNode.key.instanceKeys[0].className, `${schema.schemaName}.MyParentElement`)) {
+  const createDefinition = async ({
+    parentNode,
+  }: {
+    parentNode: HierarchyNode & { key: InstancesNodeKey };
+  }): Promise<HierarchyLevelDefinition> => {
+    if (
+      await imodelAccess.classDerivesFrom(
+        parentNode.key.instanceKeys[0].className,
+        `${schema.schemaName}.MyParentElement`,
+      )
+    ) {
       // load the query from the MyParentElement instance
       async function loadChildrenQuery() {
         for await (const row of imodelAccess.createQueryReader({
@@ -431,7 +476,10 @@ The purpose of a custom query instance nodes specification in Presentation Rules
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: {
-                      selector: await labelsFactory.createSelectClause({ className: `${schema.schemaName}.MyChildElement`, classAlias: "this" }),
+                      selector: await labelsFactory.createSelectClause({
+                        className: `${schema.schemaName}.MyChildElement`,
+                        classAlias: "this",
+                      }),
                     },
                   })}
                   FROM ${schema.schemaName}.MyChildElement this
@@ -469,7 +517,11 @@ Example of base class grouping specifications in Presentation Rules:
     "specifications": [
       {
         "specType": "InstanceNodesOfSpecificClasses",
-        "classes": { "schemaName": "BisCore", "classNames": ["GeometricElement"], "arePolymorphic": true },
+        "classes": {
+          "schemaName": "BisCore",
+          "classNames": ["GeometricElement"],
+          "arePolymorphic": true
+        },
         "groupByClass": false,
         "groupByLabel": false
       }
@@ -481,7 +533,10 @@ Example of base class grouping specifications in Presentation Rules:
         "groups": [
           {
             "specType": "Class",
-            "baseClass": { "schemaName": "BisCore", "className": "GeometricElement3d" }
+            "baseClass": {
+              "schemaName": "BisCore",
+              "className": "GeometricElement3d"
+            }
           }
         ]
       },
@@ -491,7 +546,10 @@ Example of base class grouping specifications in Presentation Rules:
         "groups": [
           {
             "specType": "Class",
-            "baseClass": { "schemaName": "BisCore", "className": "PhysicalElement" }
+            "baseClass": {
+              "schemaName": "BisCore",
+              "className": "PhysicalElement"
+            }
           }
         ]
       }
@@ -506,7 +564,12 @@ Matching `HierarchyDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -521,11 +584,14 @@ const definition: HierarchyNodesDefinition = {
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricElement", classAlias: "this" }) },
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.GeometricElement",
+            classAlias: "this",
+          }),
+        },
         grouping: {
-          byBaseClasses: {
-            fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"],
-          },
+          byBaseClasses: { fullClassNames: ["BisCore.GeometricElement3d", "BisCore.PhysicalElement"] },
         },
       })}
       FROM BisCore.GeometricElement [this]
@@ -543,7 +609,11 @@ Class grouping option simply puts instance nodes under class grouping nodes of t
 ```json
 {
   "specType": "InstanceNodesOfSpecificClasses",
-  "classes": { "schemaName": "BisCore", "classNames": ["Element"], "arePolymorphic": true },
+  "classes": {
+    "schemaName": "BisCore",
+    "classNames": ["Element"],
+    "arePolymorphic": true
+  },
   "groupByClass": true
 }
 ```
@@ -554,7 +624,12 @@ Matching `HierarchyDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -569,10 +644,13 @@ const definition: HierarchyNodesDefinition = {
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }) },
-        grouping: {
-          byClass: true,
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.Element",
+            classAlias: "this",
+          }),
         },
+        grouping: { byClass: true },
       })}
       FROM BisCore.Element [this]
     `,
@@ -595,7 +673,11 @@ Example of property grouping specifications in Presentation Rules:
     "specifications": [
       {
         "specType": "InstanceNodesOfSpecificClasses",
-        "classes": { "schemaName": "BisCore", "classNames": ["GeometricElement3d"], "arePolymorphic": true }
+        "classes": {
+          "schemaName": "BisCore",
+          "classNames": ["GeometricElement3d"],
+          "arePolymorphic": true
+        }
       }
     ],
     "customizationRules": [
@@ -637,7 +719,12 @@ Matching `HierarchyDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -652,7 +739,12 @@ const definition: HierarchyNodesDefinition = {
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.GeometricElement3d", classAlias: "this" }) },
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.GeometricElement3d",
+            classAlias: "this",
+          }),
+        },
         grouping: {
           byProperties: {
             propertiesClassName: "BisCore.GeometricElement3d",
@@ -687,7 +779,11 @@ Label grouping option, simply puts instance nodes under label grouping nodes bas
 ```json
 {
   "specType": "InstanceNodesOfSpecificClasses",
-  "classes": { "schemaName": "BisCore", "classNames": ["Element"], "arePolymorphic": true },
+  "classes": {
+    "schemaName": "BisCore",
+    "classNames": ["Element"],
+    "arePolymorphic": true
+  },
   "groupByLabel": true
 }
 ```
@@ -698,7 +794,12 @@ Matching `HierarchyDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -713,10 +814,13 @@ const definition: HierarchyNodesDefinition = {
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }) },
-        grouping: {
-          byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true },
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.Element",
+            classAlias: "this",
+          }),
         },
+        grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } },
       })}
       FROM BisCore.Element [this]
     `,
@@ -751,7 +855,10 @@ Example of same label grouping specifications in Presentation Rules:
     "customizationRules": [
       {
         "ruleType": "Grouping",
-        "class": { "schemaName": "BisCore", "className": "InformationPartitionElement" },
+        "class": {
+          "schemaName": "BisCore",
+          "className": "InformationPartitionElement"
+        },
         "groups": [
           {
             "specType": "SameLabelInstance",
@@ -780,7 +887,12 @@ Matching `HierarchyDefinition`:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyLevelDefinition,
+  HierarchyNodesDefinition,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
@@ -795,10 +907,13 @@ const definition: HierarchyNodesDefinition = {
       SELECT ${await selectClauseFactory.createSelectClause({
         ecClassId: { selector: "this.ECClassId" },
         ecInstanceId: { selector: "this.ECInstanceId" },
-        nodeLabel: { selector: await labelsFactory.createSelectClause({ className: "BisCore.Element", classAlias: "this" }) },
-        grouping: {
-          byLabel: { action: "merge" },
+        nodeLabel: {
+          selector: await labelsFactory.createSelectClause({
+            className: "BisCore.Element",
+            classAlias: "this",
+          }),
         },
+        grouping: { byLabel: { action: "merge" } },
       })}
       FROM BisCore.Element [this]
     `,

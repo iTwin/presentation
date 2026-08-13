@@ -4,55 +4,65 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  collect,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
+import { afterAll, describe, it, test } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Hierarchy level filtering", () => {
       let imodel: IModelConnection;
 
-      before(async function () {
+      test.beforeAll(async (_, suite) => {
         await initialize();
 
-        const res = await buildIModel(this, async (builder) => {
+        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
-          const b = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "B", parentId: a.id });
-          const c = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "C", parentId: b.id });
+          const b = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "B",
+            parentId: a.id,
+          });
+          const c = insertPhysicalElement({
+            builder,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "C",
+            parentId: b.id,
+          });
           return { a, b, c };
         });
         imodel = res.imodel;
       });
 
-      after(async () => {
+      afterAll(async () => {
         await terminate();
       });
 
-      it("creates filterable generic node", async function () {
+      it("creates filterable generic node", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.GenericHierarchyNodeDefinition
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [
-                {
-                  node: {
-                    key: "custom node",
-                    label: "Custom Node",
-                    supportsFiltering: true,
-                  },
-                },
-              ];
+              return [{ node: { key: "custom node", label: "Custom Node", supportsFiltering: true } }];
             }
             return [];
           },
@@ -61,21 +71,19 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
           expect: [
-            NodeValidators.createForGenericNode({
-              key: "custom node",
-              label: "Custom Node",
-              supportsFiltering: true,
-            }),
+            NodeValidators.createForGenericNode({ key: "custom node", label: "Custom Node", supportsFiltering: true }),
           ],
         });
       });
 
-      it("creates filterable instances node", async function () {
+      it("creates filterable instances node", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.InstanceNodesQueryDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -104,21 +112,18 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              label: "A",
-              supportsFiltering: true,
-            }),
-          ],
+          expect: [NodeValidators.createForInstanceNode({ label: "A", supportsFiltering: true })],
         });
       });
 
-      it("applies filter", async function () {
+      it("applies filter", async () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          }),
         });
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel(props) {
@@ -127,10 +132,7 @@ describe("Hierarchies", () => {
             const { from, joins, where } = await queryClauseFactory.createFilterClauses({
               // specify the content class whose instances are used to build nodes - this should
               // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
-              contentClass: {
-                fullName: "BisCore.PhysicalElement",
-                alias: "this",
-              },
+              contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
               // specify the filter that we get from props for this hierarchy level
               filter: props.instanceFilter,
             });
@@ -154,7 +156,10 @@ describe("Hierarchies", () => {
           },
         };
         // __PUBLISH_EXTRACT_END__
-        const provider = createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition });
+        const provider = createIModelHierarchyProvider({
+          imodelAccess: createIModelAccess(imodel),
+          hierarchyDefinition,
+        });
         const instanceFilter: GenericInstanceFilter = {
           propertyClassNames: ["BisCore.PhysicalElement"],
           relatedInstances: [],
@@ -180,7 +185,10 @@ describe("Hierarchies", () => {
         };
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined, instanceFilter })),
-          expect: [NodeValidators.createForInstanceNode({ label: "B" }), NodeValidators.createForInstanceNode({ label: "C" })],
+          expect: [
+            NodeValidators.createForInstanceNode({ label: "B" }),
+            NodeValidators.createForInstanceNode({ label: "C" }),
+          ],
         });
       });
     });

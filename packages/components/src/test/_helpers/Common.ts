@@ -4,18 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
-import sinon from "sinon";
+import { beforeEach, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
-import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
+import { SchemaView } from "@itwin/ecschema-metadata";
+import {
+  ClassInfo,
+  InstanceKey,
+  PropertyInfo,
+  RelatedClassInfo,
+  RelatedClassInfoWithOptionalRelationship,
+  Ruleset,
+} from "@itwin/presentation-common";
 import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content.js";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
-  return {
-    className: key?.className ?? "TestSchema:TestClass",
-    id: key?.id ?? "0x1",
-  };
+  return { className: key?.className ?? "TestSchema:TestClass", id: key?.id ?? "0x1" };
 }
 
 export const createTestECClassInfo = (props?: Partial<ClassInfo>) => ({
@@ -42,7 +47,9 @@ export const createTestRelatedClassInfo = (props?: Partial<RelatedClassInfo>) =>
   ...props,
 });
 
-export const createTestRelatedClassInfoWithOptionalRelationship = (props?: Partial<RelatedClassInfoWithOptionalRelationship>) => ({
+export const createTestRelatedClassInfoWithOptionalRelationship = (
+  props?: Partial<RelatedClassInfoWithOptionalRelationship>,
+) => ({
   sourceClassInfo: createTestECClassInfo({ id: "0x1", name: "source:class", label: "Source" }),
   targetClassInfo: createTestECClassInfo({ id: "0x2", name: "target:class", label: "Target" }),
   isPolymorphicTargetClass: false,
@@ -58,10 +65,7 @@ export const createTestRelationshipPath = (length: number = 2) => {
 };
 
 export function createTestRuleset(ruleset?: Partial<Ruleset>): Ruleset {
-  return {
-    id: ruleset?.id ?? "Test",
-    rules: ruleset?.rules ?? [],
-  };
+  return { id: ruleset?.id ?? "Test", rules: ruleset?.rules ?? [] };
 }
 
 const recursiveWait = async (pred: () => boolean, repeater: () => Promise<void>) => {
@@ -83,107 +87,84 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   await recursiveWaitInternal();
 };
 
-/**
- * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.
- * This is needed for tests using 'react-select' component.
- */
-export function stubRaf() {
-  const raf = global.requestAnimationFrame;
-  const caf = global.cancelAnimationFrame;
-
-  before(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: (cb: FrameRequestCallback) => {
-        return setTimeout(cb, 0);
-      },
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: (handle: number) => {
-        clearTimeout(handle);
-      },
-    });
-  });
-
-  after(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: raf,
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: caf,
-    });
-  });
-}
-
-export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial<PresentationInstanceFilterPropertyInfo>) => ({
+export const createTestPresentationInstanceFilterPropertyInfo = (
+  props?: Partial<PresentationInstanceFilterPropertyInfo>,
+) => ({
   sourceClassId: "0x1",
   sourceClassIds: ["0x1"],
-  field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }], category: createTestCategoryDescription() }),
-  propertyDescription: {
-    name: "TestName",
-    displayLabel: "TestDisplayLabel",
-    typename: "string",
-  },
+  field: createTestPropertiesContentField({
+    properties: [{ property: createTestPropertyInfo() }],
+    category: createTestCategoryDescription(),
+  }),
+  propertyDescription: { name: "TestName", displayLabel: "TestDisplayLabel", typename: "string" },
   className: "testSchema:testClass",
   ...props,
 });
 
-/**
- * Stubs global 'DOMMatrix' interface.
- * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
- */
-export function stubDOMMatrix() {
-  const domMatrix = global.DOMMatrix;
-
-  before(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
-    });
-  });
-
-  after(() => {
-    Object.defineProperty(global, "DOMGlobal", {
-      writable: true,
-      value: domMatrix,
+export function stubVirtualization() {
+  beforeEach(() => {
+    vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);
+    vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+    vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
     });
   });
 }
 
-export function stubVirtualization() {
-  let stubs: sinon.SinonStub[] = [];
+export function stubSchemaViewForClasses(
+  classes: Array<{ classInfo: ClassInfo; baseClassFullName?: string }>,
+): SchemaView {
+  interface SchemaViewClass {
+    fullName: string;
+    ecInstanceId: number;
+    baseClass: SchemaViewClass | undefined;
+  }
 
-  beforeEach(() => {
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
+  const classesByFullName = new Map<string, SchemaViewClass>();
 
-    stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-        height: 20,
-        width: 20,
-        x: 0,
-        y: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        top: 0,
-        toJSON: () => {},
-      }),
-    );
+  const getOrCreateClass = (classInfo: ClassInfo): SchemaViewClass => {
+    let schemaClass = classesByFullName.get(classInfo.name);
+    if (!schemaClass) {
+      schemaClass = {
+        fullName: classInfo.name,
+        ecInstanceId: Number.parseInt(classInfo.id.slice(2), 16),
+        baseClass: undefined,
+      };
+      classesByFullName.set(classInfo.name, schemaClass);
+    }
+    return schemaClass;
+  };
+
+  classes.forEach(({ classInfo }) => {
+    getOrCreateClass(classInfo);
   });
 
-  afterEach(() => {
-    stubs.forEach((stub) => stub.restore());
-    stubs = [];
+  classes.forEach(({ classInfo, baseClassFullName }) => {
+    if (!baseClassFullName) {
+      return;
+    }
+
+    const derivedClass = classesByFullName.get(classInfo.name);
+    const baseClass = classesByFullName.get(baseClassFullName);
+    if (derivedClass && baseClass) {
+      derivedClass.baseClass = baseClass;
+    }
   });
+
+  return { findClass: (fullClassName: string) => classesByFullName.get(fullClassName) } as SchemaView;
 }
 
 /** Props for `TestErrorBoundary` */
 export interface TestErrorBoundaryProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   onError: (error: Error, componentStack: any) => void;
 }
 /** Internal state of `TestErrorBoundary` */
@@ -197,14 +178,16 @@ export interface TestErrorBoundaryState {
  *
  * Example usage:
  * ```tsx
- * const errorSpy = sinon.spy();
+ * const errorSpy = vi.fn();
  * render(
  *   <TestErrorBoundary onError={errorSpy}>
  *     <TestComponent />
  *   </TestErrorBoundary>
  * );
  * await waitFor(() => {
- *   expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
+ *   expect(errorSpy).toHaveBeenCalledOnce();
+ *   const [error] = errorSpy.mock.calls[0];
+ *   expect(error.message).toBe("test error");
  * });
  * ```
  */

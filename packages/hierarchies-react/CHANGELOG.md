@@ -1,5 +1,181 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.11.4
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.19
+  - @itwin/presentation-shared@1.2.19
+  - @itwin/unified-selection@1.8.4
+
+## 1.11.3
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.18
+  - @itwin/presentation-shared@1.2.18
+  - @itwin/unified-selection@1.8.3
+
+## 1.11.2
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.8.2
+  - @itwin/presentation-hierarchies@1.7.17
+  - @itwin/presentation-shared@1.2.17
+
+## 1.11.1
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.16
+  - @itwin/presentation-shared@1.2.16
+  - @itwin/unified-selection@1.7.6
+
+## 1.11.0
+
+### Minor Changes
+
+- [#1387](https://github.com/iTwin/presentation/pull/1387): Added support for React version 19
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.15
+
+## 1.10.4
+
+### Patch Changes
+
+- [#1358](https://github.com/iTwin/presentation/pull/1358): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.15
+  - @itwin/presentation-shared@1.2.14
+  - @itwin/unified-selection@1.7.5
+
+## 1.10.3
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+- Updated dependencies:
+  - @itwin/unified-selection@1.7.3
+  - @itwin/presentation-hierarchies@1.7.14
+  - @itwin/presentation-shared@1.2.13
+
+## 1.10.2
+
+### Patch Changes
+
+- [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.12
+  - @itwin/unified-selection@1.7.1
+  - @itwin/presentation-hierarchies@1.7.13
+
+## 1.10.1
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.12
+  - @itwin/presentation-shared@1.2.11
+  - @itwin/unified-selection@1.7.0
+
+## 1.10.0
+
+### Minor Changes
+
+- [#1258](https://github.com/iTwin/presentation/pull/1258): Introduced new import paths: `@itwin/presentation-hierarchies-react/core` and `@itwin/presentation-hierarchies-react/itwinui`. They should allow to use this package without `@itwin/itwinui-react` dependency.
+
+## 1.9.13
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- [#1252](https://github.com/iTwin/presentation/pull/1252): Fix tree node outline not appearing on touch devices.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.11
+  - @itwin/presentation-shared@1.2.10
+  - @itwin/unified-selection@1.6.8
+
+## 1.9.12
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.10
+  - @itwin/presentation-shared@1.2.9
+  - @itwin/unified-selection@1.6.7
+
+## 1.9.11
+
+### Patch Changes
+
+- [#1208](https://github.com/iTwin/presentation/pull/1208): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.9
+  - @itwin/presentation-shared@1.2.8
+  - @itwin/unified-selection@1.6.6
+
+## 1.9.10
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1167](https://github.com/iTwin/presentation/pull/1167): Fix a greedy regular expression in `TreeNodeRenderer` that renders a "result set too large" error node.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.8
+  - @itwin/presentation-shared@1.2.7
+  - @itwin/unified-selection@1.6.5
+
+## 1.9.9
+
+### Patch Changes
+
+- [#1160](https://github.com/iTwin/presentation/pull/1160): Fixed tree placeholder node spinner size to match tree node icons.
+
+## 1.9.8
+
+### Patch Changes
+
+- [#1152](https://github.com/iTwin/presentation/pull/1152): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.7
+  - @itwin/presentation-shared@1.2.6
+  - @itwin/unified-selection@1.6.4
+
+## 1.9.7
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.6
+  - @itwin/presentation-shared@1.2.5
+  - @itwin/unified-selection@1.6.3
+
+## 1.9.6
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.2
+  - @itwin/presentation-hierarchies@1.7.5
+  - @itwin/presentation-shared@1.2.4
+
 ## 1.9.5
 
 ### Patch Changes
@@ -60,9 +236,17 @@
 
   const treeState = useUnifiedSelectionTree({
     selectionStorage,
-    createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
-      (node, uniqueId) => ({ identifier: node.key.id, data: node, async *loadInstanceKeys() {} }),
-      [],
+    createSelectableForGenericNode: useCallback<
+      NonNullable<
+        Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]
+      >
+    >(
+      (node, uniqueId) => ({
+        identifier: node.key.id,
+        data: node,
+        async *loadInstanceKeys() {},
+      }),
+      []
     ),
     // ...other options
   });
@@ -169,6 +353,7 @@
 ### Minor Changes
 
 - [#841](https://github.com/iTwin/presentation/pull/841): Changed how tree state hooks access unified selection storage.
+
   - The tree state hooks that hook into unified selection system now accept a `selectionStorage` prop. At the moment the prop is optional, but will be made required in the next major release of the package.
   - The `UnifiedSelectionProvider` React context provider is now deprecated. The context is still used by tree state hooks if the selection storage is not provided through prop.
 
@@ -244,7 +429,11 @@
   Example usage:
 
   ```tsx
-  function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  function MyTreeComponentInternal({
+    imodelAccess,
+  }: {
+    imodelAccess: IModelAccess;
+  }) {
     const {
       rootNodes,
       getNode,
@@ -259,18 +448,22 @@
       async (nodeId: string, isExpanded: boolean) => {
         const node = getNode(nodeId);
         if (node) {
-          console.log(`${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`);
+          console.log(
+            `${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`
+          );
         }
         doExpandNode(nodeId, isExpanded);
       },
-      [getNode, doExpandNode],
+      [getNode, doExpandNode]
     );
 
     // render the tree
     if (!rootNodes || !rootNodes.length) {
       return "No data to display";
     }
-    return <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />;
+    return (
+      <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />
+    );
   }
   ```
 
@@ -424,6 +617,7 @@
   See "Basic example" section in README learning page for the full example.
 
 - [#717](https://github.com/iTwin/presentation/pull/717): **BREAKING:** Add support for non-iModel-driven trees.
+
   - `useTree` and `useUnifiedSelectionTree` hooks have been changed to support non-iModel-driven trees. The hooks take a `getHierarchyProvider` prop, which returns a `HierarchyProvider`. The provider can return data from any data source.
   - New `useIModelTree` and `useIModelUnifiedSelectionTree` hooks have been added to cover the most common case, where a tree is created from a iModel's data. The API of these hooks is exactly the same as of the old `useTree` and `useUnifiedSelectionTree` hooks.
 
@@ -616,11 +810,12 @@
           const hierarchyLevelDetails = getHierarchyLevelDetails(nodeId);
           someFunc(hierarchyLevelDetails);
         }}
-
         // After the change
         onNodeClick={(node, isSelected, event) => someFunc(node.id)}
         onNodeKeyDown={(node, isSelected, event) => someFunc(node.id)}
-        onFilterClick={(hierarchyLevelDetails) => someFunc(hierarchyLevelDetails)}
+        onFilterClick={(hierarchyLevelDetails) =>
+          someFunc(hierarchyLevelDetails)
+        }
       />
     );
   }
@@ -653,7 +848,7 @@
       ...props,
       onHierarchyLimitExceeded: ({ nodeId, filter, limit }) => {
         console.log(`Hierarchy limit of ${limit} exceeded for node ${nodeId}.`);
-      }
+      },
     });
     return <TreeRenderer {...state} />;
   }
@@ -664,7 +859,7 @@
   ```ts
   import { registerTxnListeners } from "@itwin/presentation-core-interop";
 
-  function MyTree({ imodel, ...props}: Props) {
+  function MyTree({ imodel, ...props }: Props) {
     const { reloadTree, treeProps } = useTree(props);
     useEffect(() => {
       // listen for changes in iModel and reload tree
@@ -690,7 +885,7 @@
       ...props,
       onPerformanceMeasured: (action, duration) => {
         telemetryClient.log(`MyTree [${feature}] took ${duration} ms`);
-      }
+      },
     });
     return <TreeRenderer {...state} />;
   }

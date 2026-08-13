@@ -5,7 +5,7 @@
 /* eslint-disable no-duplicate-imports */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { expect } from "chai";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -13,20 +13,25 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import {
+  createLimitingECSqlQueryExecutor,
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+} from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
-import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
@@ -69,7 +74,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         iModel = (
-          await buildIModel(this, async (builder) => {
+          await buildTestIModel(async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })
@@ -80,7 +85,7 @@ describe("Hierarchies React", () => {
         await terminate();
       });
 
-      it("Tree", async function () {
+      it("Tree", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage
         // Not part of the package - this should be created once and reused across different components of the application.
         const unifiedSelectionStorage = createStorage();
@@ -105,9 +110,14 @@ describe("Hierarchies React", () => {
         // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
         function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
           // Create a factory for building labels SELECT query clauses according to BIS conventions
-          const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+          const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: imodelAccess,
+          });
           // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-          const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
+          const nodesQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: labelsQueryFactory,
+          });
           return {
             defineHierarchyLevel: async () => [
               {
@@ -119,7 +129,10 @@ describe("Hierarchies React", () => {
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: {
-                          selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                          selector: await labelsQueryFactory.createSelectClause({
+                            classAlias: "this",
+                            className: "BisCore.PhysicalModel",
+                          }),
                         },
                         hasChildren: false,
                       })}
@@ -132,7 +145,13 @@ describe("Hierarchies React", () => {
         }
 
         /** Internal component that creates and renders tree state. */
-        function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
+        function MyTreeComponentInternal({
+          imodelAccess,
+          selectionStorage,
+        }: {
+          imodelAccess: IModelAccess;
+          selectionStorage: SelectionStorage;
+        }) {
           const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
             // the unified selection storage used by all app components let them share selection state
             selectionStorage,
@@ -153,8 +172,8 @@ describe("Hierarchies React", () => {
         const { getByRole, getByText } = render(<MyTreeComponent imodel={iModel} />);
         await waitFor(() => getByRole("tree"));
 
-        expect(getByText("My Model A")).to.not.be.null;
-        expect(getByText("My Model B")).to.not.be.null;
+        expect(getByText("My Model A")).not.toBeNull();
+        expect(getByText("My Model B")).not.toBeNull();
       });
     });
   });

@@ -11,21 +11,28 @@ Here are the scopes we support at the moment:
 
 The `@itwin/unified-selection` package delivers a `computeSelection` function for computing which elements should be added into unified selection storage based on the given element ID's and a specified selection scope:
 
+<!-- [[include: [Presentation.UnifiedSelection.SelectionScopes.Imports, Presentation.UnifiedSelection.SelectionScopes.BasicExample], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
 ```ts
 import { computeSelection } from "@itwin/unified-selection";
-import { IModelConnection } from "@itwin/core-frontend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+
 const queryExecutor = createECSqlQueryExecutor(imodel);
 const selection = computeSelection({ queryExecutor, elementIds, scope: "element" });
 ```
+
+<!-- END EXTRACTION -->
 
 `element` and `functional` scopes additionally allow selecting assembly elements by specifying the `ancestorLevel` property in the selection scope argument of `computeSelection` function. The `ancestorLevel` property specifies how far "up" we should walk to find the target element. When not specified or `0`, the target element matches the request element. When set to `1`, the target element matches the direct parent element. When `2`, the target element is the parent of the parent element, and so on. In all situations when this is `> 0`, we're not walking further than the last existing element, for example, when `ancestorLevel = 1` (direct parent element is requested), but the request element doesn't have a parent, the request element is returned as the result. A negative value would result in the top-most element to be returned.
 
 For the `functional` scope, the `ancestorLevel` property is used as follows: if an element is a `BisCore.GeometricElement3d` element, its ancestor is selected based on the given `ancestorLevel` the same as with non-functional elements, and then the resulting element's related functional element will be returned (using the `Functional.PhysicalElementFulfillsFunction` relationship), or if it does not have one, then the resulting element will be returned. For `BisCore.GeometricElement2d` elements, the nearest related functional element is found in the same way it is done when the `ancestorLevel` property is not provided, and then the ancestor of that element is returned (based on the provided value of `ancestorLevel`).
 
+<!-- [[include: [Presentation.UnifiedSelection.SelectionScopes.Imports, Presentation.UnifiedSelection.SelectionScopes.AncestorLevelExample], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
 ```ts
 import { computeSelection } from "@itwin/unified-selection";
-import { IModelConnection } from "@itwin/core-frontend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 
 const queryExecutor = createECSqlQueryExecutor(imodel);
@@ -33,3 +40,5 @@ const queryExecutor = createECSqlQueryExecutor(imodel);
 // Returns the parent element, or the element itself if it does not have a parent, for each element specified in `elementIds` argument.
 const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "element", ancestorLevel: 1 } });
 ```
+
+<!-- END EXTRACTION -->

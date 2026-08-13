@@ -3,11 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConcatenatedValue } from "../shared/ConcatenatedValue.js";
-import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import {
+  createConcatenatedValueJsonSelector,
+  createRawPropertyValueSelector,
+} from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
+import {
+  ALIAS_PREFIX,
   createBisInstanceLabelSelectClauseFactory,
   createClassBasedInstanceLabelSelectClauseFactory,
   createDefaultInstanceLabelSelectClauseFactory,
@@ -18,44 +21,32 @@ import { trimWhitespace } from "../shared/Utils.js";
 
 describe("parseInstanceLabel", () => {
   it("parses empty value", () => {
-    expect(parseInstanceLabel("")).to.eq("");
+    expect(parseInstanceLabel("")).toBe("");
   });
 
   it("parses plain string", () => {
-    expect(parseInstanceLabel("test")).to.eq("test");
+    expect(parseInstanceLabel("test")).toBe("test");
   });
 
   it("parses complex value of one part", () => {
-    const labelPart: ConcatenatedValue = [
-      {
-        type: "Boolean",
-        value: true,
-      },
-    ];
-    expect(parseInstanceLabel(JSON.stringify(labelPart))).to.deep.eq(labelPart);
+    const labelPart: ConcatenatedValue = [{ type: "Boolean", value: true }];
+    expect(parseInstanceLabel(JSON.stringify(labelPart))).toEqual(labelPart);
   });
 
   it("parses complex value of multiple parts", () => {
     const labelParts: ConcatenatedValue = [
-      {
-        type: "Integer",
-        value: 123,
-      },
-      {
-        type: "String",
-        value: "http://bentley.com",
-        extendedType: "Url",
-      },
+      { type: "Integer", value: 123 },
+      { type: "String", value: "http://bentley.com", extendedType: "Url" },
     ];
-    expect(parseInstanceLabel(JSON.stringify(labelParts))).to.deep.eq(labelParts);
+    expect(parseInstanceLabel(JSON.stringify(labelParts))).toEqual(labelParts);
   });
 
   it("parses string label that looks like JSON object but is not", () => {
-    expect(parseInstanceLabel("{x}")).to.eq("{x}");
+    expect(parseInstanceLabel("{x}")).toBe("{x}");
   });
 
   it("parses string label that looks like JSON array but is not", () => {
-    expect(parseInstanceLabel("[y]")).to.eq("[y]");
+    expect(parseInstanceLabel("[y]")).toBe("[y]");
   });
 });
 
@@ -66,26 +57,26 @@ describe("createDefaultInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    const result = await factory.createSelectClause({ classAlias: "test" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`(
         SELECT ${createConcatenatedValueJsonSelector([
           {
             selector: `COALESCE(
-              ${createRawPropertyValueSelector("c", "DisplayLabel")},
-              ${createRawPropertyValueSelector("c", "Name")}
+              ${createRawPropertyValueSelector(`${ALIAS_PREFIX}c`, "DisplayLabel")},
+              ${createRawPropertyValueSelector(`${ALIAS_PREFIX}c`, "Name")}
             )`,
           },
           { value: ` [`, type: "String" },
           { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
           { value: `-`, type: "String" },
-          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+          {
+            selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+          },
           { value: `]`, type: "String" },
         ])}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = [test].[ECClassId]
+        FROM [meta].[ECClassDef] AS [${ALIAS_PREFIX}c]
+        WHERE [${ALIAS_PREFIX}c].[ECInstanceId] = [test].[ECClassId]
       )`),
     );
   });
@@ -97,11 +88,9 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       return "default selector";
     },
   };
-  const classHierarchyInspector = {
-    classDerivesFrom: sinon.stub(),
-  };
+  const classHierarchyInspector = { classDerivesFrom: vi.fn() };
   beforeEach(() => {
-    classHierarchyInspector.classDerivesFrom.reset();
+    classHierarchyInspector.classDerivesFrom.mockReset();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
@@ -110,10 +99,8 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       defaultClauseFactory,
       clauses: [],
     });
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-    });
-    expect(result).to.eq("default selector");
+    const result = await factory.createSelectClause({ classAlias: "class-alias" });
+    expect(result).toBe("default selector");
   });
 
   it("returns default clause when none of given clause classes match query class", async () => {
@@ -121,22 +108,13 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.resolves(false);
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-      className: "Schema.QueryClass",
-    });
-    expect(result).to.eq("default selector");
+    classHierarchyInspector.classDerivesFrom.mockResolvedValue(false);
+    const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
+    expect(result).toBe("default selector");
   });
 
   it("returns combination of all clauses if class name prop is not set", async () => {
@@ -144,20 +122,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    const result = await factory.createSelectClause({ classAlias: "class-alias" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
       COALESCE(
         IIF(
@@ -181,22 +151,15 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-      className: "Schema.QueryClass",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    classHierarchyInspector.classDerivesFrom.mockImplementation(
+      async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass",
+    );
+    const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
       COALESCE(
         IIF(
@@ -215,22 +178,15 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
-        {
-          className: "Schema.ClassA",
-          clause: async () => "a selector",
-        },
-        {
-          className: "Schema.ClassB",
-          clause: async () => "b selector",
-        },
+        { className: "Schema.ClassA", clause: async () => "a selector" },
+        { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
-    const result = await factory.createSelectClause({
-      classAlias: "class-alias",
-      className: "Schema.QueryClass",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    classHierarchyInspector.classDerivesFrom.mockImplementation(
+      async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB",
+    );
+    const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
       COALESCE(
         IIF(
@@ -246,14 +202,12 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 });
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
-  const classHierarchyInspector = {
-    classDerivesFrom: sinon.stub(),
-  };
+  const classHierarchyInspector = { classDerivesFrom: vi.fn() };
   let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
     factory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
-    classHierarchyInspector.classDerivesFrom.reset();
-    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => {
+    classHierarchyInspector.classDerivesFrom.mockReset();
+    classHierarchyInspector.classDerivesFrom.mockImplementation(async (derived, base) => {
       if (derived === "BisCore.GeometricElement") {
         return base === "BisCore.Element" || base === "BisCore.GeometricElement";
       }
@@ -267,16 +221,9 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
     });
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   it("returns valid clause for geometric elements", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-      className: "BisCore.GeometricElement",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.GeometricElement" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(
@@ -289,7 +236,9 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
                   { value: ` [`, type: "String" },
                   { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
                   { value: `-`, type: "String" },
-                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+                  {
+                    selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+                  },
                   { value: `]`, type: "String" },
                 ],
                 `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
@@ -312,11 +261,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause for any element", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-      className: "BisCore.Element",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.Element" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(
@@ -329,7 +275,9 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
                   { value: ` [`, type: "String" },
                   { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
                   { value: `-`, type: "String" },
-                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+                  {
+                    selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+                  },
                   { value: `]`, type: "String" },
                 ],
                 `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
@@ -352,22 +300,16 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns valid clause for any model", async () => {
-    const result = await factory.createSelectClause({
-      classAlias: "test",
-      className: "BisCore.Model",
-    });
-    expect(trimWhitespace(result)).to.eq(
+    const result = await factory.createSelectClause({ classAlias: "test", className: "BisCore.Model" });
+    expect(trimWhitespace(result)).toBe(
       trimWhitespace(`
         COALESCE(
           IIF(
             [test].[ECClassId] IS (BisCore.Model),
             (
-              SELECT ${await factory.createSelectClause({
-                classAlias: "e",
-                className: "BisCore.Element",
-              })}
-              FROM [bis].[Element] AS [e]
-              WHERE [e].[ECInstanceId] = [test].[ModeledElement].[Id]
+              SELECT ${await factory.createSelectClause({ classAlias: `${ALIAS_PREFIX}e`, className: "BisCore.Element" })}
+              FROM [bis].[Element] AS [${ALIAS_PREFIX}e]
+              WHERE [${ALIAS_PREFIX}e].[ECInstanceId] = [test].[ModeledElement].[Id]
             ),
             NULL
           ),

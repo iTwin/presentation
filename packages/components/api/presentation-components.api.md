@@ -34,7 +34,7 @@ import { IPropertyDataProvider } from '@itwin/components-react';
 import { IPropertyValueRenderer } from '@itwin/components-react';
 import { ITreeDataProvider } from '@itwin/components-react';
 import { ITreeNodeLoader } from '@itwin/components-react';
-import { JSX as JSX_2 } from 'react/jsx-runtime';
+import { JSX } from 'react';
 import { Keys } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
 import { Memoized } from 'micro-memoize';
@@ -43,7 +43,6 @@ import { Node as Node_2 } from '@itwin/presentation-common';
 import { NodeKey } from '@itwin/presentation-common';
 import { NodePathElement } from '@itwin/presentation-common';
 import { Paged } from '@itwin/presentation-common';
-import { PagedTreeNodeLoader } from '@itwin/components-react';
 import { PageOptions } from '@itwin/presentation-common';
 import { PageOptions as PageOptions_2 } from '@itwin/components-react';
 import { PrimitiveValue } from '@itwin/appui-abstract';
@@ -70,7 +69,6 @@ import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
-import { RulesetVariable } from '@itwin/presentation-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SelectionChangeType } from '@itwin/presentation-frontend';
 import { SelectionHandler } from '@itwin/presentation-frontend';
@@ -94,7 +92,6 @@ import { TreeRendererProps } from '@itwin/components-react';
 import { TreeSelectionModificationEventArgs } from '@itwin/components-react';
 import { TreeSelectionReplacementEventArgs } from '@itwin/components-react';
 import { TypeEditor } from '@itwin/components-react';
-import { UnitSystemKey } from '@itwin/core-quantity';
 import { ViewportProps } from '@itwin/imodel-components-react';
 
 // @public
@@ -102,7 +99,6 @@ export interface CacheInvalidationProps {
     content?: boolean;
     descriptor?: boolean;
     descriptorConfiguration?: boolean;
-    formatting?: boolean;
     size?: boolean;
 }
 
@@ -123,8 +119,6 @@ export class ContentDataProvider implements IContentDataProvider {
     getContentSetSize(): Promise<number>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
     getFieldByPropertyDescription(description: PropertyDescription): Promise<Field | undefined>;
-    // @deprecated
-    getFieldByPropertyRecord(propertyRecord: PropertyRecord): Promise<Field | undefined>;
     get imodel(): IModelConnection;
     set imodel(imodel: IModelConnection);
     protected invalidateCache(props: CacheInvalidationProps): void;
@@ -206,15 +200,17 @@ export interface FavoritePropertiesDataFiltererProps {
 
 // @public
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
-    constructor(props?: FavoritePropertiesDataProviderProps);
+    constructor(props: FavoritePropertiesDataProviderProps);
     getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData>;
+    // @deprecated
     includeFieldsWithCompositeValues: boolean;
+    // @deprecated
     includeFieldsWithNoValues: boolean;
 }
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
-    activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
+    activeScopeProvider: () => Parameters<typeof computeSelection>[0]["scope"];
     ruleset?: Ruleset | string;
 }
 
@@ -253,8 +249,6 @@ export interface IContentDataProvider extends IPresentationDataProvider {
     getContentDescriptor: () => Promise<Descriptor | undefined>;
     getContentSetSize: () => Promise<number>;
     getFieldByPropertyDescription: (description: PropertyDescription) => Promise<Field | undefined>;
-    // @deprecated
-    getFieldByPropertyRecord: (propertyRecord: PropertyRecord) => Promise<Field | undefined>;
     keys: KeySet;
     selectionInfo: SelectionInfo | undefined;
 }
@@ -291,7 +285,7 @@ export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
     // (undocumented)
     canRender(record: PropertyRecord): boolean;
     // (undocumented)
-    render(record: PropertyRecord, context?: PropertyValueRendererContext): JSX_2.Element;
+    render(record: PropertyRecord, context?: PropertyValueRendererContext): JSX.Element;
 }
 
 // @public
@@ -317,8 +311,6 @@ export type IPresentationPropertyDataProvider = IPropertyDataProvider & IContent
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
     createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
-    // @deprecated
-    getNodeKey(node: TreeNodeItem): NodeKey;
 }
 
 // @public @deprecated
@@ -342,10 +334,10 @@ export interface IUnifiedSelectionComponent {
 // @beta @deprecated
 export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
-// @public
-export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
+// @public @deprecated
+export function NavigationPropertyEditorContextProvider(input: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX.Element;
 
-// @public
+// @public @deprecated
 export interface NavigationPropertyEditorContextProviderProps {
     getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
     imodel: IModelConnection;
@@ -355,7 +347,7 @@ export interface NavigationPropertyEditorContextProviderProps {
 export const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps>;
 
 // @public @deprecated
-export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
+export function PortalTargetContextProvider(input: PropsWithChildren<PortalTargetContextProviderProps>): JSX.Element;
 
 // @public @deprecated
 export interface PortalTargetContextProviderProps {
@@ -372,15 +364,15 @@ export enum PresentationComponentsLoggerCategory {
 }
 
 // @public
-export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, selectedClasses, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
+export function PresentationFilterBuilderValueRenderer(input: PresentationFilterBuilderValueRendererProps): JSX.Element;
 
 // @public
-export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
+export type PresentationFilterBuilderValueRendererProps = PropertyFilterBuilderRuleValueRendererProps & {
+    imodel: IModelConnection;
     descriptor: Descriptor;
     descriptorInputKeys?: Keys;
-    imodel: IModelConnection;
     selectedClasses?: ClassInfo[];
-}
+};
 
 // @public @deprecated
 export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeItem {
@@ -404,7 +396,7 @@ export namespace PresentationInstanceFilter {
 }
 
 // @public
-export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_2.Element;
+export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX.Element;
 
 // @public
 export interface PresentationInstanceFilterBuilderProps {
@@ -430,7 +422,7 @@ export interface PresentationInstanceFilterConditionGroup {
 }
 
 // @public
-export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX_2.Element;
+export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element;
 
 // @public
 export interface PresentationInstanceFilterDialogProps {
@@ -510,6 +502,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     set isNestedPropertyCategoryGroupingEnabled(value: boolean);
     // (undocumented)
     onDataChanged: PropertyDataChangeEvent;
+    // @alpha
+    get propertiesMergeMode(): PropertiesMergeMode;
+    set propertiesMergeMode(value: PropertiesMergeMode);
     protected sortCategories(categories: CategoryDescription[]): void;
     // @deprecated
     protected sortFields(category: CategoryDescription, fields: Field[]): void;
@@ -520,31 +515,22 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 export interface PresentationPropertyDataProviderProps extends DiagnosticsProps {
     disableFavoritesCategory?: boolean;
     imodel: IModelConnection;
+    // @alpha
+    propertiesMergeMode?: PropertiesMergeMode;
     ruleset?: string | Ruleset;
 }
 
 // @public @deprecated
-export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_2.Element;
+export function PresentationTree<TEventHandler extends TreeEventHandler>(input: PresentationTreeProps<TEventHandler>): JSX.Element;
 
 // @public @deprecated
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
     [Symbol.dispose](): void;
     constructor(props: PresentationTreeDataProviderProps);
-    createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): {
-        instanceFilter?: InstanceFilterDefinition | undefined;
-        sizeLimit?: number | undefined;
-        parentKey?: NodeKey | undefined;
-        rulesetOrId: Ruleset | string;
-        rulesetVariables?: RulesetVariable[] | undefined;
-        imodel: IModelConnection;
-        locale?: string;
-        unitSystem?: UnitSystemKey;
-    };
+    createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>;
     // @deprecated (undocumented)
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
-    // @deprecated
-    getNodeKey(node: TreeNodeItem): NodeKey;
     getNodes(parentNode?: TreeNodeItem, pageOptions?: PageOptions_2): Promise<DelayLoadedTreeNodeItem[]>;
     getNodesCount(parentNode?: TreeNodeItem): Promise<number>;
     // (undocumented)
@@ -566,8 +552,6 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
         nodes: Node_2[];
         count: number;
     }>;
-    // @deprecated (undocumented)
-    getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
     // (undocumented)
     getNodesIterator: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey> & {
         maxParallelRequests?: number;
@@ -610,19 +594,7 @@ export interface PresentationTreeNodeItemFilteringInfo {
 }
 
 // @public @deprecated
-export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataProviderProps {
-    pagingSize: number;
-    seedTreeModel?: TreeModel;
-}
-
-// @public @deprecated
-export interface PresentationTreeNodeLoaderResult {
-    nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
-    onItemsRendered: (items: RenderedItemsRange) => void;
-}
-
-// @public @deprecated
-export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX_2.Element;
+export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX.Element;
 
 // @public @deprecated
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
@@ -641,7 +613,7 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
 };
 
 // @public @deprecated
-export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
+export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element;
 
 // @public @deprecated
 export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
@@ -651,11 +623,14 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
     onFilterApplied?: () => void;
 }
 
+// @alpha
+export type PropertiesMergeMode = "union" | "intersection";
+
 // @public
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
@@ -711,7 +686,7 @@ export interface SchemaMetadataContext {
 }
 
 // @public
-export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX_2.Element;
+export function SchemaMetadataContextProvider(input: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX.Element;
 
 // @public
 export interface SchemaMetadataContextProviderProps {
@@ -726,7 +701,7 @@ export interface TableCellDefinition {
 }
 
 // @public
-export function TableCellRenderer(props: TableCellRendererProps): JSX_2.Element;
+export function TableCellRenderer(props: TableCellRendererProps): JSX.Element;
 
 // @public
 export interface TableCellRendererProps {
@@ -779,12 +754,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     dispose(): void;
     // (undocumented)
     protected getKeys(nodes: TreeNodeItem[]): Keys;
-    // @deprecated (undocumented)
-    protected getNodeKey(node: TreeNodeItem): NodeKey;
     // (undocumented)
-    onSelectionModified({ modifications }: TreeSelectionModificationEventArgs): Subscription | undefined;
+    onSelectionModified(input: TreeSelectionModificationEventArgs): Subscription | undefined;
     // (undocumented)
-    onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs): Subscription | undefined;
+    onSelectionReplaced(input: TreeSelectionReplacementEventArgs): Subscription | undefined;
     // (undocumented)
     selectNodes(modelChange?: TreeModelChanges): void;
     protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>): boolean;
@@ -808,7 +781,7 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @public @deprecated
-export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps;
+export function useFilterablePresentationTree(input: useFilterablePresentationTreeProps): FilterableTreeProps;
 
 // @public @deprecated
 export interface useFilterablePresentationTreeProps {
@@ -833,9 +806,9 @@ export interface UseHierarchyLevelFilteringProps {
 }
 
 // @public
-export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps): {
+export function useInstanceFilterPropertyInfos(input: UseInstanceFilterPropertyInfosProps): {
     propertyInfos: PresentationInstanceFilterPropertyInfo[];
-    propertyRenderer: (name: string) => JSX_2.Element;
+    propertyRenderer: (name: string) => JSX.Element;
 };
 
 // @public
@@ -843,7 +816,7 @@ export interface UseInstanceFilterPropertyInfosProps {
     descriptor: Descriptor;
 }
 
-// @public
+// @public @deprecated
 export function useNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProviderProps;
 
 // @public
@@ -874,7 +847,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: U
 
 // @public
 export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
 }
 
 // @public
@@ -884,10 +857,7 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 }
 
 // @public @deprecated
-export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
-
-// @public @deprecated
-export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ onHierarchyLimitExceeded, onNodeLoaded, eventHandlerFactory, seedTreeModel, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>(input: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
 
 // @public @deprecated
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
@@ -927,17 +897,11 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
     numSelectedElements: number;
 }
 
-// @public @deprecated
-export function useRulesetRegistration(ruleset: Ruleset): void;
-
 // @public
 export function useSchemaMetadataContext(): SchemaMetadataContext | undefined;
 
 // @public @deprecated
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;
-
-// @public @deprecated
-export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
 
 // @public @deprecated
 export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P>;

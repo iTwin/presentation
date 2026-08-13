@@ -7,7 +7,12 @@ import { useCallback } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial, Table } from "@itwin/itwinui-react";
-import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import {
+  TableCellRenderer,
+  TableColumnDefinition,
+  TableRowDefinition,
+  usePresentationTableWithUnifiedSelection,
+} from "@itwin/presentation-components";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 
 export interface TableWidgetProps {

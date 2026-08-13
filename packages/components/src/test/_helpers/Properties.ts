@@ -21,17 +21,9 @@ export function createPrimitiveStringProperty(
   editorInfo?: PropertyEditorInfo,
   autoExpand?: boolean,
 ): PropertyRecord {
-  const value: PrimitiveValue = {
-    displayValue,
-    value: rawValue,
-    valueFormat: PropertyValueFormat.Primitive,
-  };
+  const value: PrimitiveValue = { displayValue, value: rawValue, valueFormat: PropertyValueFormat.Primitive };
 
-  const description: PropertyDescription = {
-    displayLabel: name,
-    name,
-    typename: StandardTypeNames.String,
-  };
+  const description: PropertyDescription = { displayLabel: name, name, typename: StandardTypeNames.String };
 
   if (editorInfo) {
     description.editor = editorInfo;
@@ -58,11 +50,7 @@ export function createArrayProperty(name: string, items?: PropertyRecord[], auto
     itemsTypeName: items.length !== 0 ? items[0].property.typename : "string",
   };
 
-  const description: PropertyDescription = {
-    displayLabel: name,
-    name,
-    typename: StandardTypeNames.Array,
-  };
+  const description: PropertyDescription = { displayLabel: name, name, typename: StandardTypeNames.Array };
   const property = new PropertyRecord(value, description);
   property.isReadonly = false;
   property.autoExpand = autoExpand;
@@ -71,25 +59,16 @@ export function createArrayProperty(name: string, items?: PropertyRecord[], auto
 
 export function createStructProperty(
   name: string,
-  members?: {
-    [name: string]: PropertyRecord;
-  },
+  members?: { [name: string]: PropertyRecord },
   autoExpand?: boolean,
 ): PropertyRecord {
   if (!members) {
     members = {};
   }
 
-  const value: StructValue = {
-    members,
-    valueFormat: PropertyValueFormat.Struct,
-  };
+  const value: StructValue = { members, valueFormat: PropertyValueFormat.Struct };
 
-  const description: PropertyDescription = {
-    displayLabel: name,
-    name,
-    typename: StandardTypeNames.Struct,
-  };
+  const description: PropertyDescription = { displayLabel: name, name, typename: StandardTypeNames.Struct };
   const property = new PropertyRecord(value, description);
   property.isReadonly = false;
   property.autoExpand = autoExpand;

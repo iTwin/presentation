@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ReactElement } from "react";
-import sinon from "sinon";
+import { beforeEach, Mock, vi } from "vitest";
 import { BeEvent } from "@itwin/core-bentley";
 import { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { EventArgs } from "@itwin/presentation-shared";
-import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
+import { RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 import {
   isTreeModelHierarchyNode,
@@ -21,32 +21,25 @@ import {
   TreeModelResultSetTooLargeInfoNode,
 } from "../presentation-hierarchies-react/internal/TreeModel.js";
 
-configure({ reactStrictMode: true });
-
 /**
  * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
  * setup `userEvent` from `@testing-library/user-event`.
  */
 function customRender(ui: ReactElement, options?: RenderOptions): RenderResult & { user: UserEvent } {
-  return {
-    ...renderRTL(ui, options),
-    user: userEvent.setup(),
-  };
+  return { ...renderRTL(ui, options), user: userEvent.setup() };
 }
 
 export * from "@testing-library/react";
 export { customRender as render };
-
-export function createStub<T extends (...args: any[]) => any>() {
-  return sinon.stub<Parameters<T>, ReturnType<T>>();
-}
 
 export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   const node = TreeModel.getNode(model, id);
   return node && isTreeModelHierarchyNode(node) ? node : undefined;
 }
 
-type ModelInputNode = (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] }) | TreeModelInfoNode;
+type ModelInputNode =
+  | (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] })
+  | TreeModelInfoNode;
 type ModelInput = Array<ModelInputNode>;
 
 function isModelInputInfoNode(node: ModelInputNode): node is TreeModelInfoNode {
@@ -71,7 +64,11 @@ export function createTreeModel(seed: ModelInput) {
     }
 
     if (input.id === undefined) {
-      model.rootNode = { ...model.rootNode, instanceFilter: input.instanceFilter, hierarchyLimit: input.hierarchyLimit };
+      model.rootNode = {
+        ...model.rootNode,
+        instanceFilter: input.instanceFilter,
+        hierarchyLimit: input.hierarchyLimit,
+      };
       continue;
     }
 
@@ -100,7 +97,10 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
+export function createTestModelGenericInfoNode({
+  id,
+  ...props
+}: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
   return {
     ...props,
     id,
@@ -114,12 +114,7 @@ export function createTestModelNoFilterMatchesInfoNode({
   id,
   ...props
 }: Partial<TreeModelNoFilterMatchesInfoNode> & { id: string }): TreeModelNoFilterMatchesInfoNode {
-  return {
-    ...props,
-    id,
-    parentId: props.parentId ?? undefined,
-    type: "NoFilterMatches",
-  };
+  return { ...props, id, parentId: props.parentId ?? undefined, type: "NoFilterMatches" };
 }
 
 export function createTestModelResultSetTooLargeInfoNode({
@@ -135,7 +130,10 @@ export function createTestModelResultSetTooLargeInfoNode({
   };
 }
 
-export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
+export function createTestHierarchyNode({
+  id,
+  ...props
+}: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "generic", id },
@@ -145,7 +143,10 @@ export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHie
   };
 }
 
-export function createTestGroupingNode({ id, ...props }: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
+export function createTestGroupingNode({
+  id,
+  ...props
+}: Partial<GroupingHierarchyNode> & { id: string }): GroupingHierarchyNode {
   return {
     ...props,
     key: props.key ?? { type: "class-grouping", className: id },
@@ -157,50 +158,44 @@ export function createTestGroupingNode({ id, ...props }: Partial<GroupingHierarc
 }
 
 export function stubVirtualization() {
-  let stubs: sinon.SinonStub[] = [];
-
   beforeEach(() => {
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
-    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
-
-    stubs.push(
-      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-        height: 20,
-        width: 20,
-        x: 0,
-        y: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        top: 0,
-        toJSON: () => {},
-      }),
-    );
-  });
-
-  afterEach(() => {
-    stubs.forEach((stub) => stub.restore());
-    stubs = [];
+    vi.spyOn(window.HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(800);
+    vi.spyOn(window.HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
+    vi.spyOn(window.Element.prototype, "getBoundingClientRect").mockReturnValue({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
+    });
   });
 }
 
 export type StubbedHierarchyProvider = {
-  [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
+  [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof vi.fn<HierarchyProvider[P]>>;
 } & {
   hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
-  [Symbol.dispose]: sinon.SinonStub<[], void>;
+  [Symbol.dispose]: Mock<() => void>;
 };
 export function createHierarchyProviderStub(customizations?: Partial<StubbedHierarchyProvider>) {
   const provider = {
     hierarchyChanged: new BeEvent(),
-    getNodes: createStub<HierarchyProvider["getNodes"]>(),
-    getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
-    setFormatter: createStub<HierarchyProvider["setFormatter"]>(),
-    setHierarchyFilter: createStub<HierarchyProvider["setHierarchyFilter"]>(),
-    [Symbol.dispose]: createStub<() => void>(),
+    getNodes: vi.fn<HierarchyProvider["getNodes"]>(),
+    getNodeInstanceKeys: vi.fn<HierarchyProvider["getNodeInstanceKeys"]>(),
+    setFormatter: vi.fn<HierarchyProvider["setFormatter"]>(),
+    setHierarchyFilter: vi.fn<HierarchyProvider["setHierarchyFilter"]>(),
+    [Symbol.dispose]: vi.fn<() => void>(),
     ...customizations,
   };
-  provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
-  provider.setHierarchyFilter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }));
+  provider.setFormatter.mockImplementation((arg) =>
+    provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }),
+  );
+  provider.setHierarchyFilter.mockImplementation((arg) =>
+    provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }),
+  );
   return provider;
 }

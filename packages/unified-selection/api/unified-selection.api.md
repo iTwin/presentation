@@ -29,6 +29,9 @@ interface CachingHiliteSetProviderProps {
 }
 
 // @public
+export const CLEAR_SELECTION_STORAGE_SOURCE = "Unified selection storage: clear";
+
+// @public
 export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
 
 // @public
@@ -172,9 +175,11 @@ interface IModelHiliteSetProviderProps {
 
 // @public (undocumented)
 type IModelKeyProp = {
-    imodelKey: string;
+    imodelKey?: string;
+    iModelKey?: never;
 } | {
-    iModelKey: string;
+    imodelKey?: never;
+    iModelKey?: string;
 };
 
 // @public

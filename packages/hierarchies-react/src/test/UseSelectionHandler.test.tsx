@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { describe, expect, it, vi } from "vitest";
 import { UserEvent } from "@testing-library/user-event";
 import {
   isPresentationHierarchyNode,
@@ -12,7 +11,11 @@ import {
   PresentationInfoNode,
   PresentationTreeNode,
 } from "../presentation-hierarchies-react/TreeNode.js";
-import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
+import {
+  SelectionChangeType,
+  SelectionMode,
+  useSelectionHandler,
+} from "../presentation-hierarchies-react/UseSelectionHandler.js";
 import { render } from "./TestUtils.js";
 
 interface TestComponentProps {
@@ -47,7 +50,7 @@ function TestComponent({ rootNodes, selectNodes, selectionMode, isSelected }: Te
 }
 
 describe("useSelectionHandler", () => {
-  const selectNodesStub = sinon.stub<[Array<string>, SelectionChangeType], void>();
+  const selectNodesStub = vi.fn<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
 
   const createHierarchyNode = (id: string, children: Array<PresentationTreeNode> = [], isExpanded: boolean = true) => {
     return { id, isExpanded, children } as PresentationHierarchyNode;
@@ -57,13 +60,13 @@ describe("useSelectionHandler", () => {
     return { id, message: "message" } as PresentationInfoNode;
   };
 
-  const createProps = (rootNodes: Array<PresentationTreeNode> | undefined, selectionMode: SelectionMode, isSelected: boolean) => {
+  const createProps = (
+    rootNodes: Array<PresentationTreeNode> | undefined,
+    selectionMode: SelectionMode,
+    isSelected: boolean,
+  ) => {
     return { rootNodes, selectNodes: selectNodesStub, selectionMode, isSelected };
   };
-
-  afterEach(() => {
-    selectNodesStub.reset();
-  });
 
   const selectionTests = (clickNode: (user: UserEvent, node: HTMLElement) => Promise<void>) => {
     describe("`none` selection mode", () => {
@@ -76,7 +79,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.not.be.called;
+        expect(selectNodesStub).not.toHaveBeenCalled();
       });
     });
 
@@ -92,7 +95,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "replace");
       });
 
       it("replaces selection when clicking using `ctrl` and `shift`", async () => {
@@ -106,14 +109,14 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Ctrl}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
-        selectNodesStub.resetHistory();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "replace");
+        selectNodesStub.mockClear();
 
         await user.keyboard(`{Shift>}`);
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "replace");
       });
 
       it("removes from selection when a selected node is clicked", async () => {
@@ -125,7 +128,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "remove");
       });
     });
 
@@ -141,7 +144,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "add");
       });
 
       it("adds to selection when clicking using `ctrl` and `shift`", async () => {
@@ -155,14 +158,14 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Ctrl}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
-        selectNodesStub.resetHistory();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "add");
+        selectNodesStub.mockClear();
 
         await user.keyboard(`{Shift>}`);
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "add");
       });
 
       it("removes from selection when a selected node is clicked", async () => {
@@ -174,7 +177,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "remove");
       });
     });
 
@@ -190,7 +193,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "replace");
       });
 
       it("replaces selection when selected node is clicked", async () => {
@@ -202,7 +205,7 @@ describe("useSelectionHandler", () => {
 
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "replace");
       });
 
       it("adds to selection when node is clicked and `ctrl` used", async () => {
@@ -216,7 +219,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Control}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "add");
       });
 
       it("removes from selection when a selected node is clicked and `ctrl` used", async () => {
@@ -230,7 +233,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Control}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node"], "remove");
       });
 
       it("replaces selection with node range when node clicked and `shift` used", async () => {
@@ -241,8 +244,8 @@ describe("useSelectionHandler", () => {
         node1.focus();
         await clickNode(user, node1);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1"], "replace");
+        selectNodesStub.mockReset();
 
         const node3 = getByText("node-3");
         node3.focus();
@@ -251,7 +254,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node3);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "node-2", "node-3"], "replace");
       });
 
       it("starts range selection from first node when previous selection does not exist", async () => {
@@ -265,7 +268,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "node-2", "node-3"], "replace");
       });
 
       it("selects range when second selected node has lower index", async () => {
@@ -276,8 +279,8 @@ describe("useSelectionHandler", () => {
         node3.focus();
         await clickNode(user, node3);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-3"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-3"], "replace");
+        selectNodesStub.mockReset();
 
         const node1 = getByText("node-1");
         node1.focus();
@@ -286,7 +289,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node1);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "node-2", "node-3"], "replace");
       });
 
       it("skips info nodes when selecting range", async () => {
@@ -297,8 +300,8 @@ describe("useSelectionHandler", () => {
         node1.focus();
         await clickNode(user, node1);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1"], "replace");
+        selectNodesStub.mockReset();
 
         const node3 = getByText("node-3");
         node3.focus();
@@ -307,7 +310,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node3);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-3"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "node-3"], "replace");
       });
 
       it("selects visible children of different depth when selecting range", async () => {
@@ -320,8 +323,8 @@ describe("useSelectionHandler", () => {
         node1.focus();
         await clickNode(user, node1);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1"], "replace");
+        selectNodesStub.mockReset();
 
         const node2 = getByText("node-2");
         node2.focus();
@@ -330,7 +333,10 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node2);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "child-outer", "child-inner", "node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(
+          ["node-1", "child-outer", "child-inner", "node-2"],
+          "replace",
+        );
       });
 
       it("skips non visible children when selecting range", async () => {
@@ -343,8 +349,8 @@ describe("useSelectionHandler", () => {
         node1.focus();
         await clickNode(user, node1);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1"], "replace");
+        selectNodesStub.mockReset();
 
         const node2 = getByText("node-2");
         node2.focus();
@@ -353,19 +359,24 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node2);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "node-2"], "replace");
       });
 
       it("subsequent range selections use the same starting point", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3"), createHierarchyNode("node-4")];
+        const nodes = [
+          createHierarchyNode("node-1"),
+          createHierarchyNode("node-2"),
+          createHierarchyNode("node-3"),
+          createHierarchyNode("node-4"),
+        ];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         let node = getByText("node-2");
         node.focus();
         await clickNode(user, node);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-2"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-2"], "replace");
+        selectNodesStub.mockReset();
 
         node = getByText("node-1");
         node.focus();
@@ -374,8 +385,8 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-1", "node-2"], "replace");
+        selectNodesStub.mockReset();
 
         node = getByText("node-3");
         node.focus();
@@ -384,8 +395,8 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-2", "node-3"], "replace");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-2", "node-3"], "replace");
+        selectNodesStub.mockReset();
 
         node = getByText("node-4");
         node.focus();
@@ -394,8 +405,8 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Control}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-4"], "add");
-        selectNodesStub.reset();
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-4"], "add");
+        selectNodesStub.mockReset();
 
         node = getByText("node-3");
         node.focus();
@@ -404,7 +415,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith(["node-3", "node-4"], "replace");
+        expect(selectNodesStub).toHaveBeenCalledExactlyOnceWith(["node-3", "node-4"], "replace");
       });
 
       it("does nothing when invalid node clicked and `shift` used", async () => {
@@ -417,7 +428,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.not.be.called;
+        expect(selectNodesStub).not.toHaveBeenCalled();
       });
     });
   };
@@ -434,13 +445,13 @@ describe("useSelectionHandler", () => {
       await user.keyboard("{Spacebar}");
       await user.keyboard("{Enter}");
 
-      expect(selectNodesStub).to.be.calledThrice;
-      selectNodesStub.reset();
+      expect(selectNodesStub).toHaveBeenCalledTimes(3);
+      selectNodesStub.mockReset();
 
       await user.keyboard("{Shift}");
       await user.keyboard("{Control}");
 
-      expect(selectNodesStub).to.not.be.called;
+      expect(selectNodesStub).not.toHaveBeenCalled();
     });
 
     selectionTests(async (user, _) => {

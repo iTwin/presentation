@@ -3,7 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelConnectionProps, RpcInterface, RpcManager, RpcOperation, RpcRequestTokenSupplier_T } from "@itwin/core-common";
+import {
+  IModelConnectionProps,
+  RpcInterface,
+  RpcManager,
+  RpcOperation,
+  RpcRequestTokenSupplier_T,
+} from "@itwin/core-common";
 
 const localDeploymentOnly: RpcRequestTokenSupplier_T = () => ({ iModelId: "none", key: "" });
 

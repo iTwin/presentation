@@ -14,7 +14,10 @@ import { from, ObservableInput, reduce } from "rxjs";
  *
  * @internal
  */
-export function reduceToMergeMapList<TSourceItem, TMapItem>(key: (item: TSourceItem) => string, value: (item: TSourceItem) => TMapItem) {
+export function reduceToMergeMapList<TSourceItem, TMapItem>(
+  key: (item: TSourceItem) => string,
+  value: (item: TSourceItem) => TMapItem,
+) {
   return reduceToMergeMapItem<TSourceItem, TMapItem[]>(key, (item, list) => {
     if (!list) {
       list = [];

@@ -43,9 +43,17 @@ type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "
  */
 interface UseSelectionHandlerResult {
   /** Should be called by node renderer when a node component is clicked. */
-  onNodeClick: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeClick: (
+    node: PresentationHierarchyNode,
+    isSelected: boolean,
+    event: React.MouseEvent<HTMLElement, MouseEvent>,
+  ) => void;
   /** Should be called by node renderer when a keyboard event happens on a node. */
-  onNodeKeyDown: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeKeyDown: (
+    node: PresentationHierarchyNode,
+    isSelected: boolean,
+    event: React.KeyboardEvent<HTMLElement>,
+  ) => void;
 }
 
 interface FlatTreeState {
@@ -60,10 +68,7 @@ interface FlatTreeState {
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
   const previousSelectionRef = useRef<string | undefined>(undefined);
-  const state = useRef<FlatTreeState>({
-    flatNodeList: [],
-    nodeIdToIndexMap: new Map(),
-  });
+  const state = useRef<FlatTreeState>({ flatNodeList: [], nodeIdToIndexMap: new Map() });
 
   useEffect(() => {
     if (!rootNodes) {
@@ -129,7 +134,12 @@ interface SelectionAction {
   type: SelectionChangeType | "disabled";
 }
 
-function getSelectionAction(selectionMode: SelectionMode, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean): SelectionAction {
+function getSelectionAction(
+  selectionMode: SelectionMode,
+  isSelected: boolean,
+  shiftDown: boolean,
+  ctrlDown: boolean,
+): SelectionAction {
   switch (selectionMode) {
     case "none":
       return { select: "node", type: "disabled" };

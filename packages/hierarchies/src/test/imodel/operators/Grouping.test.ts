@@ -3,13 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
-import sinon from "sinon";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
+import {
+  createGroupingOperator,
+  GroupingHandlerResult,
+  LOGGING_NAMESPACE,
+} from "../../../hierarchies/imodel/operators/Grouping.js";
 import {
   createIModelAccessStub,
   createTestProcessedGenericNode,
@@ -23,16 +26,12 @@ describe("Grouping", () => {
   const imodelAccess = createIModelAccessStub();
   let formatter: IPrimitiveValueFormatter;
 
-  before(() => {
+  beforeAll(() => {
     formatter = createDefaultValueFormatter();
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   describe("createGroupingOperator", () => {
-    afterEach(() => {
-      sinon.restore();
-    });
-
     it("doesn't change input nodes when grouping handlers list is empty", async () => {
       const nodes = [
         createTestProcessedInstanceNode({
@@ -45,9 +44,11 @@ describe("Grouping", () => {
         }),
       ];
       const result = await collect(
-        from(nodes).pipe(createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, undefined, [])),
+        from(nodes).pipe(
+          createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, undefined, []),
+        ),
       );
-      expect(result).to.deep.eq(nodes);
+      expect(result).toEqual(nodes);
     });
 
     it("runs grouping handlers in provided order", async () => {
@@ -68,10 +69,7 @@ describe("Grouping", () => {
         grouped: [
           createTestProcessedGroupingNode({
             label: "TestSchema A",
-            key: {
-              type: "class-grouping",
-              className: "TestSchema.A",
-            },
+            key: { type: "class-grouping", className: "TestSchema.A" },
             groupedInstanceKeys: instanceNode1.key.instanceKeys,
             children: [instanceNode1],
           }),
@@ -100,10 +98,7 @@ describe("Grouping", () => {
         grouped: [
           createTestProcessedGroupingNode({
             label: "3",
-            key: {
-              type: "label-grouping" as const,
-              label: "3",
-            },
+            key: { type: "label-grouping" as const, label: "3" },
             groupedInstanceKeys: instanceNode3.key.instanceKeys,
             children: [instanceNode3],
           }),
@@ -111,7 +106,7 @@ describe("Grouping", () => {
         ungrouped: [],
       };
 
-      const groupingSpy = sinon.spy();
+      const groupingSpy = vi.fn();
       const result = await collect(
         from([instanceNode1, instanceNode2, instanceNode3]).pipe(
           createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, groupingSpy, undefined, [
@@ -121,12 +116,16 @@ describe("Grouping", () => {
           ]),
         ),
       );
-      expect(groupingSpy.callCount).to.eq(3);
-      expect(groupingSpy.firstCall).to.be.calledWith(classGroupingResult);
-      expect(groupingSpy.secondCall).to.be.calledWith(propertyGroupingResult);
-      expect(groupingSpy.thirdCall).to.be.calledWith(labelGroupingResult);
+      expect(groupingSpy.mock.calls).toHaveLength(3);
+      expect(groupingSpy.mock.calls[0][0]).toEqual(classGroupingResult);
+      expect(groupingSpy.mock.calls[1][0]).toEqual(propertyGroupingResult);
+      expect(groupingSpy.mock.calls[2][0]).toEqual(labelGroupingResult);
 
-      expect(result).to.deep.eq([...classGroupingResult.grouped, ...propertyGroupingResult.grouped, ...labelGroupingResult.grouped]);
+      expect(result).toEqual([
+        ...classGroupingResult.grouped,
+        ...propertyGroupingResult.grouped,
+        ...labelGroupingResult.grouped,
+      ]);
     });
 
     it("assigns `nonGroupingAncestor` from parent custom node", async () => {
@@ -137,10 +136,7 @@ describe("Grouping", () => {
       });
       const labelGroupingNode = createTestProcessedGroupingNode({
         label: "1",
-        key: {
-          type: "label-grouping" as const,
-          label: "1",
-        },
+        key: { type: "label-grouping" as const, label: "1" },
         groupedInstanceKeys: groupedNode.key.instanceKeys,
         children: [groupedNode],
       });
@@ -148,21 +144,14 @@ describe("Grouping", () => {
       const result = await collect(
         from([groupedNode]).pipe(
           createGroupingOperator(imodelAccess, parentNode, formatter, testLocalizedStrings, undefined, undefined, [
-            async () => ({
-              groupingType: "label",
-              grouped: [labelGroupingNode],
-              ungrouped: [],
-            }),
+            async () => ({ groupingType: "label", grouped: [labelGroupingNode], ungrouped: [] }),
           ]),
         ),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         createTestProcessedGroupingNode({
           label: "1",
-          key: {
-            type: "label-grouping",
-            label: "1",
-          },
+          key: { type: "label-grouping", label: "1" },
           nonGroupingAncestor: parentNode,
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [groupedNode],
@@ -178,10 +167,7 @@ describe("Grouping", () => {
       });
       const labelGroupingNode = createTestProcessedGroupingNode({
         label: "1",
-        key: {
-          type: "label-grouping" as const,
-          label: "1",
-        },
+        key: { type: "label-grouping" as const, label: "1" },
         groupedInstanceKeys: groupedNode.key.instanceKeys,
         children: [groupedNode],
       });
@@ -189,21 +175,14 @@ describe("Grouping", () => {
       const result = await collect(
         from([groupedNode]).pipe(
           createGroupingOperator(imodelAccess, parentNode, formatter, testLocalizedStrings, undefined, undefined, [
-            async () => ({
-              groupingType: "label",
-              grouped: [labelGroupingNode],
-              ungrouped: [],
-            }),
+            async () => ({ groupingType: "label", grouped: [labelGroupingNode], ungrouped: [] }),
           ]),
         ),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         createTestProcessedGroupingNode({
           label: "1",
-          key: {
-            type: "label-grouping",
-            label: "1",
-          },
+          key: { type: "label-grouping", label: "1" },
           nonGroupingAncestor: parentNode,
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [groupedNode],
@@ -220,10 +199,7 @@ describe("Grouping", () => {
       });
       const labelGroupingNode = createTestProcessedGroupingNode({
         label: "1",
-        key: {
-          type: "label-grouping" as const,
-          label: "1",
-        },
+        key: { type: "label-grouping" as const, label: "1" },
         groupedInstanceKeys: groupedNode.key.instanceKeys,
         children: [groupedNode],
       });
@@ -231,21 +207,14 @@ describe("Grouping", () => {
       const result = await collect(
         from([groupedNode]).pipe(
           createGroupingOperator(imodelAccess, parentNode, formatter, testLocalizedStrings, undefined, undefined, [
-            async () => ({
-              groupingType: "label",
-              grouped: [labelGroupingNode],
-              ungrouped: [],
-            }),
+            async () => ({ groupingType: "label", grouped: [labelGroupingNode], ungrouped: [] }),
           ]),
         ),
       );
-      expect(result).to.deep.eq([
+      expect(result).toEqual([
         createTestProcessedGroupingNode({
           label: "1",
-          key: {
-            type: "label-grouping",
-            label: "1",
-          },
+          key: { type: "label-grouping", label: "1" },
           nonGroupingAncestor,
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [groupedNode],
@@ -268,10 +237,7 @@ describe("Grouping", () => {
       });
       const classGroupingNode = createTestProcessedGroupingNode({
         label: "TestSchema A",
-        key: {
-          type: "class-grouping" as const,
-          className: "TestSchema.A",
-        },
+        key: { type: "class-grouping" as const, className: "TestSchema.A" },
         groupedInstanceKeys: groupedNode1.key.instanceKeys,
         children: [groupedNode1],
       });
@@ -288,43 +254,40 @@ describe("Grouping", () => {
       });
       const labelGroupingNode = createTestProcessedGroupingNode({
         label: "3",
-        key: {
-          type: "label-grouping" as const,
-          label: "3",
-        },
+        key: { type: "label-grouping" as const, label: "3" },
         groupedInstanceKeys: groupedNode3.key.instanceKeys,
         children: [groupedNode3],
       });
 
-      const onGroupingNodeCreated = sinon.spy();
+      const onGroupingNodeCreated = vi.fn();
       const result = await collect(
         from([groupedNode1, groupedNode2, groupedNode3]).pipe(
-          createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, onGroupingNodeCreated, [
-            async () => ({
-              groupingType: "class",
-              grouped: [classGroupingNode],
-              ungrouped: [groupedNode2, groupedNode3],
-            }),
-            async () => ({
-              groupingType: "property",
-              grouped: [propertyGroupingNode],
-              ungrouped: [groupedNode3],
-            }),
-            async () => ({
-              groupingType: "label",
-              grouped: [labelGroupingNode],
-              ungrouped: [],
-            }),
-          ]),
+          createGroupingOperator(
+            imodelAccess,
+            undefined,
+            formatter,
+            testLocalizedStrings,
+            undefined,
+            onGroupingNodeCreated,
+            [
+              async () => ({
+                groupingType: "class",
+                grouped: [classGroupingNode],
+                ungrouped: [groupedNode2, groupedNode3],
+              }),
+              async () => ({ groupingType: "property", grouped: [propertyGroupingNode], ungrouped: [groupedNode3] }),
+              async () => ({ groupingType: "label", grouped: [labelGroupingNode], ungrouped: [] }),
+            ],
+          ),
         ),
       );
 
-      expect(onGroupingNodeCreated).to.be.calledThrice;
-      expect(onGroupingNodeCreated.firstCall).to.be.calledWith(classGroupingNode);
-      expect(onGroupingNodeCreated.secondCall).to.be.calledWith(propertyGroupingNode);
-      expect(onGroupingNodeCreated.thirdCall).to.be.calledWith(labelGroupingNode);
+      expect(onGroupingNodeCreated).toHaveBeenCalledTimes(3);
+      expect(onGroupingNodeCreated).toHaveBeenNthCalledWith(1, classGroupingNode);
+      expect(onGroupingNodeCreated).toHaveBeenNthCalledWith(2, propertyGroupingNode);
+      expect(onGroupingNodeCreated).toHaveBeenNthCalledWith(3, labelGroupingNode);
 
-      expect(result).to.deep.eq([classGroupingNode, propertyGroupingNode, labelGroupingNode]);
+      expect(result).toEqual([classGroupingNode, propertyGroupingNode, labelGroupingNode]);
     });
   });
 });

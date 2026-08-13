@@ -11,7 +11,12 @@ Also, these tests have a different purpose - to provide a benchmark that will be
 The simplest way to accommodate that is to use a custom test reporter (defined in `TestReporter.ts`).
 The reporter gathers test durations and information about main thread blocking and saves it to a file if an output path is provided.
 
-Example: `mocha -R ./lib/TestReporter.js -O BENCHMARK_OUTPUT_PATH="./results.json"`
+Example:
+
+```bash
+export BENCHMARK_OUTPUT_PATH="./results.json"
+pnpm test
+```
 
 ### iModels
 

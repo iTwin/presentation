@@ -3,68 +3,61 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyItemsLoader,
+  NavigationPropertyTarget,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
 
 describe("useNavigationPropertyTargetsLoader", () => {
-  let presentationManagerStub: sinon.SinonStub;
   const testImodel = {} as IModelConnection;
 
-  before(() => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-  });
-
-  after(() => {
-    sinon.restore();
-  });
-
   beforeEach(() => {
-    presentationManagerStub = sinon.stub(Presentation, "presentation");
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
   it("returns empty targets array if ruleset is undefined", async () => {
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel } });
 
-    await waitFor(() => expect(result.current.isLoading).to.eq(false));
-    expect(result.current.selectOptions).to.be.empty;
-    expect(result.current.loadedOptions).to.be.empty;
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.selectOptions).toHaveLength(0);
+    expect(result.current.loadedOptions).toHaveLength(0);
   });
 
   describe("when `getContentIterator` is available", () => {
-    const getContentIteratorStub = sinon.stub<Parameters<PresentationManager["getContentIterator"]>, ReturnType<PresentationManager["getContentIterator"]>>();
+    const getContentIteratorStub = vi.fn<PresentationManager["getContentIterator"]>();
 
     beforeEach(() => {
-      getContentIteratorStub.reset();
-      presentationManagerStub.get(() => ({
+      getContentIteratorStub.mockReset();
+      vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
         getContentIterator: getContentIteratorStub,
-      }));
+      } as unknown as PresentationManager);
     });
 
     it("returns empty targets array if there's no content", async () => {
-      getContentIteratorStub.resolves(undefined);
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
-      await waitFor(() => {
-        expect(result.current.isLoading).to.eq(false);
+      getContentIteratorStub.mockResolvedValue(undefined);
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } },
       });
-      expect(result.current.selectOptions).to.be.empty;
-      expect(result.current.loadedOptions).to.be.empty;
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(result.current.selectOptions).toHaveLength(0);
+      expect(result.current.loadedOptions).toHaveLength(0);
     });
 
     it("loads targets", async () => {
@@ -74,16 +67,22 @@ describe("useNavigationPropertyTargetsLoader", () => {
         displayValues: {},
         values: {},
       });
-      getContentIteratorStub.callsFake(async () => {
-        return { total: 1, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([contentItem]) };
+      getContentIteratorStub.mockImplementation(async () => {
+        return {
+          total: 1,
+          descriptor: createTestContentDescriptor({ fields: [] }),
+          items: createAsyncIterator([contentItem]),
+        };
       });
 
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } },
+      });
 
       await waitFor(() => {
-        expect(result.current.selectOptions).to.have.lengthOf(1);
-        expect(result.current.loadedOptions).to.have.lengthOf(1);
-        expect(result.current.loadedOptions[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+        expect(result.current.loadedOptions).toMatchObject([
+          { label: contentItem.label, key: contentItem.primaryKeys[0] },
+        ]);
       });
     });
 
@@ -92,7 +91,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
       for (let i = 0; i < VALUE_BATCH_SIZE; i++) {
         contentItems.push(createTestContentItem({ label: i.toString(), displayValues: {}, values: {} }));
       }
-      getContentIteratorStub.callsFake(async () => {
+      getContentIteratorStub.mockImplementation(async () => {
         return {
           total: contentItems.length,
           descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
@@ -106,48 +105,52 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
       await waitFor(() => {
         // add 1 for the filter reminder option
-        expect(result.current.selectOptions).to.have.lengthOf(VALUE_BATCH_SIZE + 1);
-        expect(result.current.loadedOptions).to.have.lengthOf(VALUE_BATCH_SIZE);
+        expect(result.current.selectOptions).toHaveLength(VALUE_BATCH_SIZE + 1);
+        expect(result.current.loadedOptions).toHaveLength(VALUE_BATCH_SIZE);
       });
     });
 
     it("loads targets using provided filter string", async () => {
-      getContentIteratorStub.callsFake(async () => {
-        return { total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) };
+      getContentIteratorStub.mockImplementation(async () => {
+        return {
+          total: 0,
+          descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
+          items: createAsyncIterator([]),
+        };
       });
 
       const { result } = renderHook(useNavigationPropertyTargetsLoader, {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "testFilter" },
       });
 
-      await waitFor(() => expect(result.current.isLoading).to.eq(false));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
       await waitFor(() => {
-        expect(getContentIteratorStub.callCount).to.be.greaterThanOrEqual(2);
-        const descriptor = getContentIteratorStub.lastCall.args[0].descriptor;
-        expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+        expect(getContentIteratorStub.mock.calls.length).toBeGreaterThanOrEqual(2);
+        const descriptor = getContentIteratorStub.mock.lastCall![0].descriptor;
+        expect(descriptor.fieldsFilterExpression).toContain("testFilter");
       });
     });
   });
 
   describe("when `getContentIterator` is not available", () => {
-    const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+    const getContentStub = vi.fn<PresentationManager["getContent"]>();
 
     beforeEach(() => {
-      getContentStub.reset();
-      presentationManagerStub.get(() => ({
+      getContentStub.mockReset();
+      vi.spyOn(Presentation, "presentation", "get").mockReturnValue({
         getContent: getContentStub,
-      }));
+      } as unknown as PresentationManager);
     });
 
     it("returns empty targets array if there's no content", async () => {
-      getContentStub.resolves(undefined);
+      getContentStub.mockResolvedValue(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
       });
 
-      await waitFor(() => expect(result.current.isLoading).to.eq(false));
-      expect(result.current.selectOptions).to.be.empty;
-      expect(result.current.loadedOptions).to.be.empty;
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.selectOptions).toHaveLength(0);
+      expect(result.current.loadedOptions).toHaveLength(0);
     });
 
     it("loads targets", async () => {
@@ -157,7 +160,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
         displayValues: {},
         values: {},
       });
-      getContentStub.callsFake(async () => {
+      getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [] }), [contentItem]);
       });
 
@@ -165,15 +168,17 @@ describe("useNavigationPropertyTargetsLoader", () => {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
       });
 
-      await waitFor(() => expect(result.current.isLoading).to.eq(false));
-      expect(result.current.selectOptions).to.have.lengthOf(1);
-      expect(result.current.loadedOptions).to.have.lengthOf(1);
-      expect(result.current.loadedOptions[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.loadedOptions).toMatchObject([
+        { label: contentItem.label, key: contentItem.primaryKeys[0] },
+      ]);
     });
 
     it("loads full batch of targets", async () => {
-      const contentItems = Array.from({ length: VALUE_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-      getContentStub.callsFake(async () => {
+      const contentItems = Array.from({ length: VALUE_BATCH_SIZE }, () =>
+        createTestContentItem({ displayValues: {}, values: {} }),
+      );
+      getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems);
       });
 
@@ -183,13 +188,13 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
       await waitFor(() => {
         // add 1 for the filter reminder option
-        expect(result.current.selectOptions).to.have.lengthOf(VALUE_BATCH_SIZE + 1);
-        expect(result.current.loadedOptions).to.have.lengthOf(VALUE_BATCH_SIZE);
+        expect(result.current.selectOptions).toHaveLength(VALUE_BATCH_SIZE + 1);
+        expect(result.current.loadedOptions).toHaveLength(VALUE_BATCH_SIZE);
       });
     });
 
     it("loads targets using provided filter string", async () => {
-      getContentStub.callsFake(async () => {
+      getContentStub.mockImplementation(async () => {
         return new Content(createTestContentDescriptor({ fields: [], categories: [] }), []);
       });
 
@@ -197,11 +202,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
         initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "testFilter" },
       });
 
-      await waitFor(() => expect(result.current.isLoading).to.eq(false));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
       await waitFor(() => {
-        expect(getContentStub.callCount).to.be.greaterThanOrEqual(2);
-        const descriptor = getContentStub.lastCall.args[0].descriptor;
-        expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+        expect(getContentStub.mock.calls.length).toBeGreaterThanOrEqual(2);
+        const descriptor = getContentStub.mock.lastCall![0].descriptor;
+        expect(descriptor.fieldsFilterExpression).toContain("testFilter");
       });
     });
   });
@@ -220,21 +225,24 @@ describe("useNavigationPropertyTargetsRuleset", () => {
       isTargetPolymorphic: true,
       targetClassInfo: { id: "2", label: "Target Class", name: "TestSchema:TargetClass" },
     };
-    const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
+    const propertyDescription: PropertyDescription = {
+      displayLabel: "TestProp",
+      name: "test_prop",
+      typename: "navigation",
+    };
     const { result } = renderHook(
-      ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
+      ({ getNavigationPropertyInfo, property }: Props) =>
+        useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
       { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } },
     );
 
-    await waitFor(() => expect(result.current).to.not.be.undefined);
+    await waitFor(() => expect(result.current).toBeDefined());
     const ruleset = result.current;
-    expect(ruleset).to.containSubset({
+    expect(ruleset).toMatchObject({
       rules: [
         {
           specifications: [
-            {
-              classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true },
-            },
+            { classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true } },
           ],
         },
       ],
@@ -242,51 +250,52 @@ describe("useNavigationPropertyTargetsRuleset", () => {
   });
 
   it("returns undefined if navigation property info is undefined", () => {
-    const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
+    const propertyDescription: PropertyDescription = {
+      displayLabel: "TestProp",
+      name: "test_prop",
+      typename: "navigation",
+    };
     const { result } = renderHook(
-      ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
+      ({ getNavigationPropertyInfo, property }: Props) =>
+        useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
       { initialProps: { getNavigationPropertyInfo: async () => undefined, property: propertyDescription } },
     );
 
     const ruleset = result.current;
-    expect(ruleset).to.be.undefined;
+    expect(ruleset).toBeUndefined();
   });
 });
 
 describe("NavigationPropertyItemsLoader", () => {
-  const getItemsStub = sinon.stub();
+  const getItemsStub = vi.fn();
 
   beforeEach(() => {
-    getItemsStub.callsFake(() => {
+    getItemsStub.mockImplementation(() => {
       return Array.from({ length: VALUE_BATCH_SIZE }, () => {
         return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
       });
     });
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   it("does not load items when loaded options matches the filter", async () => {
-    const getItemsSpy = sinon.spy();
+    const getItemsSpy = vi.fn();
     const itemsLoader = new NavigationPropertyItemsLoader(() => {}, getItemsSpy, getItemsStub);
     await itemsLoader.loadItems();
     await itemsLoader.loadItems("filterText");
 
-    expect(getItemsSpy.calledOnce);
+    expect(getItemsSpy).toHaveBeenCalledOnce();
   });
 
   it("does not load items when another load process is in progress", async () => {
-    const getItemsSpy = sinon.spy();
+    const getItemsSpy = vi.fn();
     const itemsLoader = new NavigationPropertyItemsLoader(() => {}, getItemsSpy, getItemsStub);
     await Promise.all([itemsLoader.loadItems("filterText"), itemsLoader.loadItems("filterText")]);
 
-    expect(getItemsSpy.calledOnce);
+    expect(getItemsSpy).toHaveBeenCalledOnce();
   });
 
   it("does not load items when enough items matches the filter", async () => {
-    const loadedItems = [];
+    const loadedItems: NavigationPropertyTarget[] = [];
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
       (newItems) => loadedItems.push(...newItems),
@@ -295,17 +304,17 @@ describe("NavigationPropertyItemsLoader", () => {
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");
 
-    expect(loadedItems.length).to.be.eq(VALUE_BATCH_SIZE);
+    expect(loadedItems).toHaveLength(VALUE_BATCH_SIZE);
   });
 
   it("does not load duplicate items", async () => {
-    getItemsStub.callsFake(() => {
+    getItemsStub.mockImplementation(() => {
       return Array.from({ length: VALUE_BATCH_SIZE / 2 }, () => {
         return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
       });
     });
 
-    const loadedItems = [];
+    const loadedItems: NavigationPropertyTarget[] = [];
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
       (newItems) => loadedItems.push(...newItems),
@@ -314,6 +323,6 @@ describe("NavigationPropertyItemsLoader", () => {
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");
 
-    expect(loadedItems.length).to.be.eq(VALUE_BATCH_SIZE / 2);
+    expect(loadedItems).toHaveLength(VALUE_BATCH_SIZE / 2);
   });
 });

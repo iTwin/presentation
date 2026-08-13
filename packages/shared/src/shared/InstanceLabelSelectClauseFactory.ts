@@ -11,6 +11,9 @@ import {
 } from "./ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import { ECClassHierarchyInspector } from "./Metadata.js";
 
+/** @internal */
+export const ALIAS_PREFIX = "pres_";
+
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
  * @public
@@ -108,6 +111,7 @@ export function parseInstanceLabel(value: string | undefined): ConcatenatedValue
  * @public
  */
 export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory {
+  const alias = `${ALIAS_PREFIX}c`;
   return {
     async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
       return `(
@@ -115,14 +119,14 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
           ${concatenate(props, [
             {
               selector: `COALESCE(
-                ${createRawPropertyValueSelector("c", "DisplayLabel")},
-                ${createRawPropertyValueSelector("c", "Name")}
+                ${createRawPropertyValueSelector(alias, "DisplayLabel")},
+                ${createRawPropertyValueSelector(alias, "Name")}
               )`,
             },
             ...createECInstanceIdSuffixSelectors(props.classAlias),
           ])}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
+        FROM [meta].[ECClassDef] AS [${alias}]
+        WHERE [${alias}].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
       )`;
     },
   };
@@ -167,7 +171,9 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
  * Creates an instance label select clause based on its class.
  * @public
  */
-export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
+export function createClassBasedInstanceLabelSelectClauseFactory(
+  props: ClassBasedInstanceLabelSelectClauseFactoryProps,
+): IInstanceLabelSelectClauseFactory {
   const { classHierarchyInspector, clauses: labelClausesByClass } = props;
   const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
   async function getLabelClausesForClass(queryClassName: string) {
@@ -197,16 +203,15 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
         return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
-      const labelClausePromises = clauseProps.className ? await getLabelClausesForClass(clauseProps.className) : labelClausesByClass;
+      const labelClausePromises = clauseProps.className
+        ? await getLabelClausesForClass(clauseProps.className)
+        : labelClausesByClass;
       if (labelClausePromises.length === 0) {
         return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
       const labelClauses = await Promise.all(
-        labelClausePromises.map(async ({ className, clause }) => ({
-          className,
-          clause: await clause(clauseProps),
-        })),
+        labelClausePromises.map(async ({ className, clause }) => ({ className, clause: await clause(clauseProps) })),
       );
 
       return `COALESCE(
@@ -240,12 +245,15 @@ interface BisInstanceLabelSelectClauseFactoryProps {
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
  * @public
  */
-export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
+export function createBisInstanceLabelSelectClauseFactory(
+  props: BisInstanceLabelSelectClauseFactoryProps,
+): IInstanceLabelSelectClauseFactory {
   const clauses: ClassBasedLabelSelectClause[] = [];
   const factory = createClassBasedInstanceLabelSelectClauseFactory({
     classHierarchyInspector: props.classHierarchyInspector,
     clauses,
   });
+  const elementAlias = `${ALIAS_PREFIX}e`;
   clauses.push(
     {
       className: "BisCore.GeometricElement",
@@ -254,7 +262,10 @@ export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabe
           ${createRawPropertyValueSelector(classAlias, "CodeValue")},
           ${concatenate(
             rest,
-            [{ selector: createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
+            [
+              { selector: createRawPropertyValueSelector(classAlias, "UserLabel") },
+              ...createECInstanceIdSuffixSelectors(classAlias),
+            ],
             `${createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
           )}
         )
@@ -272,9 +283,9 @@ export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabe
     {
       className: "BisCore.Model",
       clause: async ({ classAlias, ...rest }) => `(
-        SELECT ${await factory.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
-        FROM [bis].[Element] AS [e]
-        WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
+        SELECT ${await factory.createSelectClause({ ...rest, classAlias: elementAlias, className: "BisCore.Element" })}
+        FROM [bis].[Element] AS [${elementAlias}]
+        WHERE [${elementAlias}].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
       )`,
     },
   );
@@ -286,7 +297,9 @@ function createECInstanceIdSuffixSelectors(classAlias: string): TypedValueSelect
     { value: ` [`, type: "String" },
     { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} >> 40) AS TEXT)` },
     { value: `-`, type: "String" },
-    { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+    {
+      selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)`,
+    },
     { value: `]`, type: "String" },
   ];
 }

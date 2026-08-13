@@ -3,32 +3,39 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-import { DEFAULT_PROPERTY_GRID_RULESET, FavoritePropertiesDataProvider, PresentationPropertyDataProvider } from "@itwin/presentation-components";
+import {
+  DEFAULT_PROPERTY_GRID_RULESET,
+  FavoritePropertiesDataProvider,
+  PresentationPropertyDataProvider,
+} from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { TestIModelConnection } from "../../TestIModelSetup.js";
 
 describe("FavoritePropertiesDataProvider", async () => {
   let imodel: IModelConnection;
   let provider: FavoritePropertiesDataProvider;
   const scope = FavoritePropertiesScope.IModel;
 
-  before(async () => {
+  beforeAll(async () => {
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
     imodel = TestIModelConnection.openFile(testIModelName);
   });
 
   beforeEach(() => {
-    provider = new FavoritePropertiesDataProvider({ ruleset: DEFAULT_PROPERTY_GRID_RULESET, activeScopeProvider: () => ({ id: "element" }) });
+    provider = new FavoritePropertiesDataProvider({
+      ruleset: DEFAULT_PROPERTY_GRID_RULESET,
+      activeScopeProvider: () => ({ id: "element" }),
+    });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await imodel.close();
     await terminate();
   });
@@ -54,11 +61,11 @@ describe("FavoritePropertiesDataProvider", async () => {
 
       const tooltipData = await provider.getData(imodel, "0x38");
 
-      expect(tooltipData.categories.length).to.eq(1);
+      expect(tooltipData.categories).toHaveLength(1);
       const favoritesCategory = tooltipData.categories[0];
-      expect(tooltipData.records[favoritesCategory.name].length).to.eq(2);
-      expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Model")).to.be.true;
-      expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Country")).to.be.true;
+      expect(tooltipData.records[favoritesCategory.name]).toHaveLength(2);
+      expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Model")).toBe(true);
+      expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Country")).toBe(true);
     });
   });
 });

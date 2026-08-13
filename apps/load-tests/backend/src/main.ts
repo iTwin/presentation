@@ -46,9 +46,7 @@ async function initBackend() {
   RpcConfiguration.developmentMode = true;
 
   // initialize IModelHost
-  await IModelHost.startup({
-    profileName: `presentation-load-tests-backend-${process.pid}`,
-  });
+  await IModelHost.startup({ profileName: `presentation-load-tests-backend-${process.pid}` });
 
   // initialize Presentation backend
   let hierarchyCacheDir = path.join(process.cwd(), "temp", "hierarchy-caches");
@@ -68,11 +66,10 @@ async function initBackend() {
   });
 
   // tell BentleyCloudRpcManager which RPC interfaces to handle
-  const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-load-tests-backend", version: "v1.0" } }, [
-    ECSchemaRpcInterface,
-    IModelReadRpcInterface,
-    PresentationRpcInterface,
-  ]);
+  const rpcConfig = BentleyCloudRpcManager.initializeImpl(
+    { info: { title: "presentation-load-tests-backend", version: "v1.0" } },
+    [ECSchemaRpcInterface, IModelReadRpcInterface, PresentationRpcInterface],
+  );
   ECSchemaRpcImpl.register();
 
   // create a basic express web server

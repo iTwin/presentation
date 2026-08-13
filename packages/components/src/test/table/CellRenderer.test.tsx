@@ -3,8 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
+import { describe, expect, it } from "vitest";
+import {
+  ArrayValue,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyRecord,
+  PropertyValue,
+  PropertyValueFormat,
+  StructValue,
+} from "@itwin/appui-abstract";
 import { TableCellRenderer } from "../../presentation-components/table/CellRenderer.js";
 import { render, waitFor } from "../TestUtils.js";
 
@@ -21,14 +29,11 @@ describe("TableCellRenderer", () => {
 
   it("renders primitive value", async () => {
     const stringValue = "test_value";
-    const value: PrimitiveValue = {
-      valueFormat: PropertyValueFormat.Primitive,
-      value: stringValue,
-    };
+    const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive, value: stringValue };
     const record = createRecord(value, { typename: "string" });
 
     const { queryByText } = render(<TableCellRenderer record={record} />);
-    expect(queryByText(stringValue)).to.not.be.null;
+    expect(queryByText(stringValue)).not.toBeNull();
   });
 
   it("renders array value as button that opens dialog", async () => {
@@ -47,16 +52,12 @@ describe("TableCellRenderer", () => {
 
     await user.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
-    await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
+    await waitFor(() => expect(queryByText(dialogLabel)).not.toBeNull());
   });
 
   it("renders empty array value as button that opens dialog", async () => {
     // needs fixing. Modal causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
-    const value: ArrayValue = {
-      valueFormat: PropertyValueFormat.Array,
-      itemsTypeName: "TestArrayTypeName",
-      items: [],
-    };
+    const value: ArrayValue = { valueFormat: PropertyValueFormat.Array, itemsTypeName: "TestArrayTypeName", items: [] };
     const record = createRecord(value, { typename: "array" });
 
     const { getByText, queryByText, user } = render(<TableCellRenderer record={record} />);
@@ -65,7 +66,7 @@ describe("TableCellRenderer", () => {
 
     await user.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
-    await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
+    await waitFor(() => expect(queryByText(dialogLabel)).not.toBeNull());
   });
 
   it("renders struct value as button that opens dialog", async () => {
@@ -73,9 +74,7 @@ describe("TableCellRenderer", () => {
     const structMemberValue = "FirstMemberValue";
     const value: StructValue = {
       valueFormat: PropertyValueFormat.Struct,
-      members: {
-        firstMember: createRecord({ valueFormat: PropertyValueFormat.Primitive, value: structMemberValue }),
-      },
+      members: { firstMember: createRecord({ valueFormat: PropertyValueFormat.Primitive, value: structMemberValue }) },
     };
     const record = createRecord(value, { typename: "TestStruct" });
 
@@ -85,6 +84,6 @@ describe("TableCellRenderer", () => {
 
     await user.click(button);
     const dialogLabel = `Struct of type "${record.property.typename}"`;
-    await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
+    await waitFor(() => expect(queryByText(dialogLabel)).not.toBeNull());
   });
 });

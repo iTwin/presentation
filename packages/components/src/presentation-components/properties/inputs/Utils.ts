@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
+import { type Format, FormatType, Parser, type ParserSpec } from "@itwin/core-quantity";
+
+import type { PropertyValueConstraints } from "../../common/ContentBuilder.js";
 
 /**
  * Finds rounding error for entered value and converts it to persistence unit.
@@ -11,7 +13,8 @@ import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
  */
 export function getPersistenceUnitRoundingError(numberStr: string, parser: ParserSpec): number | undefined {
   const tokens = Parser.parseQuantitySpecification(numberStr, parser.format);
-  const enteredUnit = tokens.length > 0 && tokens[tokens.length - 1].isString ? (tokens[tokens.length - 1].value as string) : undefined;
+  const enteredUnit =
+    tokens.length > 0 && tokens[tokens.length - 1].isString ? (tokens[tokens.length - 1].value as string) : undefined;
 
   const precisionStr = getPrecision(numberStr, parser.format);
   if (!precisionStr) {
@@ -21,6 +24,30 @@ export function getPersistenceUnitRoundingError(numberStr: string, parser: Parse
   // convert precision to persistence unit
   const parseResult = parser.parseToQuantityValue(enteredUnit ? `${precisionStr}${enteredUnit}` : precisionStr);
   return parseResult.ok ? parseResult.value : undefined;
+}
+
+/** @internal */
+export function getMinMaxFromPropertyConstraints(constraints?: PropertyValueConstraints): {
+  min: number | undefined;
+  max: number | undefined;
+} {
+  if (constraints && ("minimumValue" in constraints || "maximumValue" in constraints)) {
+    return { min: constraints.minimumValue, max: constraints.maximumValue };
+  }
+
+  return { min: undefined, max: undefined };
+}
+
+/** @internal */
+export function applyNumericConstraints({ value, min, max }: { value: number; min?: number; max?: number }): number {
+  let constrainedValue = value;
+  if (min !== undefined) {
+    constrainedValue = Math.max(constrainedValue, min);
+  }
+  if (max !== undefined) {
+    constrainedValue = Math.min(constrainedValue, max);
+  }
+  return constrainedValue;
 }
 
 /** @internal */
@@ -62,6 +89,7 @@ function getLocalizedDecimalSeparator(): string {
 
   localeSpecificDecimalSeparator = ".";
   const matches = (12345.6789).toLocaleString().match(/345(.*)67/);
+  /* v8 ignore else -- @preserve */
   if (matches && matches.length > 1) {
     localeSpecificDecimalSeparator = matches[1];
   }
@@ -88,14 +116,7 @@ function getDecimalPrecision(numStr: string): string | undefined {
   return `${0.5 * Math.pow(10, -digitsAfterSeparator.value.length)}`;
 }
 
-type ParseResult =
-  | {
-      result: "noNumber" | "noSymbol";
-    }
-  | {
-      result: "success";
-      value: string;
-    };
+type ParseResult = { result: "noNumber" | "noSymbol" } | { result: "success"; value: string };
 
 function parseDigitsAfterSymbol(numStr: string, symbol: string): ParseResult {
   let lastDigitIndex = -1;

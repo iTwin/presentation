@@ -9,7 +9,8 @@ import { IModelApp } from "@itwin/core-frontend";
 import { FormatterSpec, FormatType, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { getPersistenceUnitRoundingError } from "./Utils.js";
+import { PropertyValueConstraints } from "../../common/ContentBuilder.js";
+import { applyNumericConstraints, getMinMaxFromPropertyConstraints, getPersistenceUnitRoundingError } from "./Utils.js";
 
 /**
  * Value of kind of quantity property.
@@ -18,12 +19,12 @@ import { getPersistenceUnitRoundingError } from "./Utils.js";
 export interface QuantityValue {
   /** Raw value in persistence unit. */
   rawValue?: number;
-  /** Formatted value with unit label based on active unit system or user input. */
-  formattedValue: string;
+  /** Formatted value with unit label based on active unit system or user input. With precision set to 12. */
+  highPrecisionFormattedValue: string;
+  /** Formatted value with unit label based on active unit system or user input. Default precision. */
+  defaultFormattedValue: string;
   roundingError?: number;
 }
-
-const PLACEHOLDER_RAW_VALUE = 12.34;
 
 /**
  * Props for [[useQuantityValueInput]]
@@ -33,109 +34,136 @@ export interface UseQuantityValueInputProps {
   initialRawValue?: number;
   schemaContext: SchemaContext;
   koqName: string;
+  constraints?: PropertyValueConstraints;
 }
 
 /**
  * Custom hook that manages state for quantity values input.
  * @internal
  */
-export function useQuantityValueInput({ initialRawValue, schemaContext, koqName }: UseQuantityValueInputProps) {
+export function useQuantityValueInput({
+  initialRawValue,
+  schemaContext,
+  koqName,
+  constraints,
+}: UseQuantityValueInputProps) {
   interface State {
     quantityValue: QuantityValue;
     placeholder: string;
   }
   const initialRawValueRef = useRef(initialRawValue);
-
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
       rawValue: initialRawValueRef.current,
-      formattedValue: "",
+      highPrecisionFormattedValue: "",
+      defaultFormattedValue: "",
       roundingError: undefined,
     },
     placeholder: "",
   }));
-  const { formatter, parser, placeholderFormatter } = useFormatterAndParser(koqName, schemaContext);
 
-  useEffect(() => {
-    if (!formatter || !parser) {
-      return;
-    }
-
+  const onFormatterLoad = useRef<
+    (props: {
+      newDefaultFormatter: FormatterSpec;
+      newHighPrecisionFormatter: FormatterSpec;
+      newParser: ParserSpec;
+    }) => void
+  >(({ newHighPrecisionFormatter, newParser, newDefaultFormatter }) => {
     setState((prev): State => {
-      /* c8 ignore next 1 */
-      const newPlaceholder = (placeholderFormatter ?? formatter).applyFormatting(initialRawValueRef.current ?? PLACEHOLDER_RAW_VALUE);
-      const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
-      const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
+      /* v8 ignore next 1 -- @preserve */
+      const defaultValue =
+        prev.quantityValue.rawValue !== undefined
+          ? newDefaultFormatter.applyFormatting(prev.quantityValue.rawValue)
+          : `-- ${newHighPrecisionFormatter.unitConversions[0].label}`;
+      const newFormattedValue =
+        prev.quantityValue.rawValue !== undefined
+          ? newHighPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue)
+          : newHighPrecisionFormatter.unitConversions[0].label;
+      const placeholderUnit = newHighPrecisionFormatter.unitConversions[0].label;
+      const roundingError = getPersistenceUnitRoundingError(newFormattedValue, newParser);
 
       return {
         ...prev,
         quantityValue: {
           ...prev.quantityValue,
-          formattedValue: newFormattedValue,
+          highPrecisionFormattedValue: newFormattedValue,
+          defaultFormattedValue: defaultValue,
           roundingError,
         },
-        placeholder: newPlaceholder,
+        placeholder: placeholderUnit,
       };
     });
-  }, [formatter, placeholderFormatter, parser]);
+  });
+
+  const useFormatterAndParserResult = useFormatterAndParser(koqName, schemaContext, onFormatterLoad.current);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    assert(parser !== undefined); // input should be disabled if parser is `undefined`
+    assert(useFormatterAndParserResult !== undefined); // input should be disabled if parser is `undefined`
+    const { parser, defaultFormatter } = useFormatterAndParserResult;
     const newValue = e.currentTarget.value;
     const parseResult = parser.parseToQuantityValue(newValue);
     const roundingError = getPersistenceUnitRoundingError(newValue, parser);
+    const defaultFormattedValue = parseResult.ok ? defaultFormatter?.applyFormatting(parseResult.value) : undefined;
+    const rawValue = parseResult.ok
+      ? applyNumericConstraints({ ...getMinMaxFromPropertyConstraints(constraints), value: parseResult.value })
+      : undefined;
 
-    setState(
-      (prev): State => ({
-        ...prev,
-        quantityValue: {
-          formattedValue: newValue,
-          rawValue: parseResult.ok ? parseResult.value : undefined,
-          roundingError: parseResult.ok ? roundingError : undefined,
-        },
-      }),
-    );
+    setState((prev): State => ({
+      ...prev,
+      quantityValue: {
+        highPrecisionFormattedValue: newValue,
+        defaultFormattedValue: defaultFormattedValue ?? newValue,
+        rawValue,
+        roundingError: parseResult.ok ? roundingError : undefined,
+      },
+    }));
   };
 
-  return {
-    quantityValue,
-    inputProps: {
-      onChange,
-      placeholder,
-      value: quantityValue.formattedValue,
-      disabled: !formatter || !parser,
-    },
-  };
+  return { quantityValue, inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult } };
 }
 
-function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
+function useFormatterAndParser(
+  koqName: string,
+  schemaContext: SchemaContext,
+  onChange: (props: {
+    newDefaultFormatter: FormatterSpec;
+    newHighPrecisionFormatter: FormatterSpec;
+    newParser: ParserSpec;
+  }) => void,
+): { highPrecisionFormatter: FormatterSpec; parser: ParserSpec; defaultFormatter: FormatterSpec } | undefined {
   interface State {
-    placeholderFormatter?: FormatterSpec;
-    formatterSpec: FormatterSpec;
+    defaultFormatter: FormatterSpec;
+    highPrecisionFormatter: FormatterSpec;
     parserSpec: ParserSpec;
   }
-
   const [state, setState] = useState<State>();
 
   useEffect(() => {
     const findFormatterAndParser = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      const koqFormatter = new KoqPropertyValueFormatter(schemaContext, undefined, IModelApp.formatsProvider);
-      const formatterSpec = await koqFormatter.getFormatterSpec({
+      const koqFormatter = new KoqPropertyValueFormatter({ schemaContext, formatsProvider: IModelApp.formatsProvider });
+      const highPrecisionFormatter = await koqFormatter.getFormatterSpec({
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
       });
-      // formatter for placeholder should not have precision override
-      const placeholderFormatter = await koqFormatter.getFormatterSpec({
+      // formatter for default value should not have precision override
+      const defaultFormatter = await koqFormatter.getFormatterSpec({
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
       });
-      const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
-      if (formatterSpec && parserSpec) {
-        if (formatterSpec.format.type === FormatType.Decimal) {
-          formatterSpec.format.precision = 12;
+      const parserSpec = await koqFormatter.getParserSpec({
+        koqName,
+        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+      });
+      if (highPrecisionFormatter && parserSpec && defaultFormatter) {
+        if (highPrecisionFormatter.format.type === FormatType.Decimal) {
+          highPrecisionFormatter.format.precision = 12;
         }
-        setState({ formatterSpec, parserSpec, placeholderFormatter });
+        onChange({
+          newHighPrecisionFormatter: highPrecisionFormatter,
+          newParser: parserSpec,
+          newDefaultFormatter: defaultFormatter,
+        });
+        setState({ highPrecisionFormatter, parserSpec, defaultFormatter });
         return;
       }
 
@@ -143,7 +171,9 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     };
     void findFormatterAndParser();
 
-    const listeners = [IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser)];
+    const listeners = [
+      IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser),
+    ];
     if (IModelApp.formatsProvider) {
       listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
     }
@@ -151,11 +181,13 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     return () => {
       listeners.forEach((listener) => listener());
     };
-  }, [koqName, schemaContext]);
+  }, [koqName, schemaContext, onChange]);
 
-  return {
-    formatter: state?.formatterSpec,
-    parser: state?.parserSpec,
-    placeholderFormatter: state?.placeholderFormatter,
-  };
+  return state
+    ? {
+        highPrecisionFormatter: state.highPrecisionFormatter,
+        parser: state.parserSpec,
+        defaultFormatter: state.defaultFormatter,
+      }
+    : undefined;
 }

@@ -9,27 +9,39 @@
 import "../common/DisposePolyfill.js";
 
 import * as mm from "micro-memoize";
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
-import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Primitives,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyRecord,
+  PropertyValueFormat,
+} from "@itwin/appui-abstract";
 import { Guid, GuidString } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
-import { Descriptor, Field, KeySet, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
-import { createSelectionScopeProps, Presentation, SelectionScopesManager } from "@itwin/presentation-frontend";
-import { computeSelection, Selectables } from "@itwin/unified-selection";
-
-/** @internal */
-export const localizationNamespaceName = "PresentationComponents";
+import {
+  Descriptor,
+  Field,
+  KeySet,
+  LabelCompositeValue,
+  LabelDefinition,
+  parseCombinedFieldNames,
+  Ruleset,
+  Value,
+} from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { Selectables } from "@itwin/unified-selection";
+import { LOCALIZATION_NAMESPACE, LocalizationKey } from "./LocalizedStrings.js";
 
 /**
- * Translate a string with the specified id from `PresentationComponents`
+ * Translate a string with the specified id from the `PresentationComponents`
  * localization namespace. The `stringId` should not contain namespace - it's
  * prepended automatically.
  *
  * @internal
  */
-export const translate = (stringId: string, options?: TranslationOptions): string => {
-  stringId = `${localizationNamespaceName}:${stringId}`;
-  return Presentation.localization.getLocalizedString(stringId, options);
+export const translate = (stringId: LocalizationKey, options?: TranslationOptions): string => {
+  return Presentation.localization.getLocalizedString(`${LOCALIZATION_NAMESPACE}:${stringId}`, options);
 };
 
 /**
@@ -51,13 +63,22 @@ export const getDisplayName = <P>(component: React.ComponentType<P>): string => 
  * @internal
  */
 export const findField = (descriptor: Descriptor, recordPropertyName: string): Field | undefined => {
-  let fieldsSource: { getFieldByName: (name: string) => Field | undefined } | undefined = descriptor;
+  let fieldsSource: { getFieldByName: (name: string) => Field | undefined } = descriptor;
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
-  while (fieldsSource && fieldNames.length) {
+  while (fieldNames.length) {
     const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
-    fieldsSource = field && field.isNestedContentField() ? field : undefined;
     if (!fieldNames.length) {
       return field;
+    }
+    if (!field) {
+      return undefined;
+    }
+    if (field.isNestedContentField()) {
+      fieldsSource = field;
+    } else if (field.isPropertiesField() && (field.isStructPropertiesField() || field.isArrayPropertiesField())) {
+      fieldsSource = field;
+    } else {
+      return undefined;
     }
   }
   return undefined;
@@ -73,11 +94,7 @@ export const createLabelRecord = (label: LabelDefinition, name: string): Propert
     value: createPrimitiveLabelValue(label),
     valueFormat: PropertyValueFormat.Primitive,
   };
-  const property: PropertyDescription = {
-    displayLabel: "Label",
-    typename: label.typeName,
-    name,
-  };
+  const property: PropertyDescription = { displayLabel: "Label", typename: label.typeName, name };
 
   return new PropertyRecord(value, property);
 };
@@ -130,29 +147,9 @@ export class AsyncTasksTracker {
   public trackAsyncTask(): Disposable {
     const id = Guid.createValue();
     this._asyncsInProgress.add(id);
-    return {
-      [Symbol.dispose]: () => this._asyncsInProgress.delete(id),
-    };
+    return { [Symbol.dispose]: () => this._asyncsInProgress.delete(id) };
   }
 }
-
-/** @internal */
-/* c8 ignore start */
-export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
-  return useCallback(
-    (instance: T | null) => {
-      refs.forEach((ref) => {
-        if (typeof ref === "function") {
-          ref(instance);
-        } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
-        }
-      });
-    },
-    [...refs], // eslint-disable-line react-hooks/exhaustive-deps
-  );
-}
-/* c8 ignore end */
 
 /**
  * A hook that helps components throw errors in React's render loop so they can be captured by React error
@@ -166,7 +163,7 @@ export function useErrorState() {
   const [_, setError] = useState(undefined);
   const setErrorState = useCallback((e: unknown) => {
     setError(() => {
-      throw e instanceof Error ? e : /* c8 ignore next */ new Error();
+      throw e instanceof Error ? e : /* v8 ignore next -- @preserve */ new Error();
     });
   }, []);
   return setErrorState;
@@ -203,9 +200,7 @@ export interface UniqueValue {
  */
 export function serializeUniqueValues(values: UniqueValue[]): { displayValues: string; groupedRawValues: string } {
   const displayValues: string[] = [];
-  const groupedRawValues: {
-    [key: string]: Value[];
-  } = {};
+  const groupedRawValues: { [key: string]: Value[] } = {};
   values.forEach((item) => {
     displayValues.push(item.displayValue);
     groupedRawValues[item.displayValue] = [...item.groupedRawValues];
@@ -217,7 +212,10 @@ export function serializeUniqueValues(values: UniqueValue[]): { displayValues: s
  * Function for deserializing `displayValues` and `groupedRawValues`.
  * Returns an array of `UniqueValue` or undefined if parsing fails.
  */
-export function deserializeUniqueValues(serializedDisplayValues: string, serializedGroupedRawValues: string): UniqueValue[] | undefined {
+export function deserializeUniqueValues(
+  serializedDisplayValues: string,
+  serializedGroupedRawValues: string,
+): UniqueValue[] | undefined {
   const tryParseJSON = (value: string) => {
     try {
       return JSON.parse(value);
@@ -228,7 +226,12 @@ export function deserializeUniqueValues(serializedDisplayValues: string, seriali
   const displayValues = tryParseJSON(serializedDisplayValues);
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
-  if (!displayValues || !groupedRawValues || !Array.isArray(displayValues) || Object.keys(groupedRawValues).length !== displayValues.length) {
+  if (
+    !displayValues ||
+    !groupedRawValues ||
+    !Array.isArray(displayValues) ||
+    Object.keys(groupedRawValues).length !== displayValues.length
+  ) {
     return undefined;
   }
 
@@ -254,33 +257,6 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
   return keys;
 }
 
-export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  scope: SelectionScopesManager["activeScope"],
-): Parameters<typeof computeSelection>[0]["scope"] {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const scopeProps = createSelectionScopeProps(scope);
-  switch (scopeProps.id) {
-    case "functional-element":
-      return { id: "functional" };
-    case "functional-assembly":
-      return { id: "functional", ancestorLevel: 1 };
-    case "functional-top-assembly":
-      return { id: "functional", ancestorLevel: -1 };
-    case "element":
-      return { id: "element" };
-    case "assembly":
-      return { id: "element", ancestorLevel: 1 };
-    case "top-assembly":
-      return { id: "element", ancestorLevel: -1 };
-    case "category":
-      return { id: "category" };
-    case "model":
-      return { id: "model" };
-  }
-  throw new Error(`Unknown selection scope: "${scopeProps.id}"`);
-}
-
 /**
  * A helper that disposes the given object, if it's disposable.
  *
@@ -291,6 +267,7 @@ export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
  * @internal
  */
 export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
+  /* v8 ignore else -- @preserve */
   if ("dispose" in disposable) {
     disposable.dispose();
   } else if (Symbol.dispose in disposable) {

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { assert } from "@itwin/core-bentley";
 import {
   ECClass as CoreClass,
@@ -19,7 +18,6 @@ import {
   StructProperty as CoreStructProperty,
   PrimitiveType,
   RelationshipMultiplicity,
-  SchemaContext,
   SchemaItemType,
   SchemaKey,
   StrengthDirection,
@@ -31,81 +29,84 @@ import { createECClass, createECProperty, createECSchema } from "../core-interop
 describe("createECSchemaProvider", () => {
   describe("getSchema", () => {
     it("returns schema from schema context", async () => {
-      const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
       const schemaContext = {
-        getSchema: sinon
-          .stub<[SchemaKey], CoreSchema>()
-          .withArgs(matchSchemaName)
-          .resolves({
-            name: "y",
-          } as unknown as CoreSchema),
-      };
-
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
-      const schema = await provider.getSchema("x");
-      assert(schema !== undefined);
-
-      expect(schemaContext.getSchema).to.be.calledOnceWith(matchSchemaName);
-      expect(schema.name).to.eq("y");
-      expect(typeof schema.getClass === "function").to.be.true;
-    });
-
-    it(`returns undefined on "schema not found" error`, async () => {
-      const schemaContext = {
-        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
-      };
-      schemaContext.getSchema.rejects(new Error("schema not found"));
-
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
-      expect(await provider.getSchema("x")).to.be.undefined;
-    });
-
-    it("re-throws SchemaContext errors", async () => {
-      const schemaContext = {
-        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
-      };
-      schemaContext.getSchema.rejects(new Error("Unknown error"));
-
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
-      await expect(provider.getSchema("x")).to.eventually.be.rejected;
-      expect(schemaContext.getSchema).to.be.calledOnce;
-    });
-
-    it("returns undefined from schema context", async () => {
-      const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
-      const schemaContext = {
-        getSchema: sinon.stub().resolves(undefined),
+        getSchema: vi
+          .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
+          .mockImplementation(async (key: SchemaKey) => {
+            if (key.compareByName("x")) {
+              return { name: "y" } as unknown as CoreSchema;
+            }
+            return undefined;
+          }),
       };
 
       const provider = createECSchemaProvider(schemaContext);
       const schema = await provider.getSchema("x");
+      assert(schema !== undefined);
 
-      expect(schemaContext.getSchema).to.be.calledOnceWith(matchSchemaName);
-      expect(schema).to.be.undefined;
+      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
+      const calledKey = schemaContext.getSchema.mock.calls[0][0];
+      expect(calledKey.compareByName("x")).toBe(true);
+      expect(schema.name).toBe("y");
+      expect(typeof schema.getClass === "function").toBe(true);
+    });
+
+    it(`returns undefined on "schema not found" error`, async () => {
+      const schemaContext = {
+        getSchema: vi.fn<(key: SchemaKey) => Promise<CoreSchema>>().mockRejectedValue(new Error("schema not found")),
+      };
+
+      const provider = createECSchemaProvider(schemaContext);
+      expect(await provider.getSchema("x")).toBeUndefined();
+    });
+
+    it("re-throws SchemaContext errors", async () => {
+      const schemaContext = {
+        getSchema: vi.fn<(key: SchemaKey) => Promise<CoreSchema>>().mockRejectedValue(new Error("Unknown error")),
+      };
+
+      const provider = createECSchemaProvider(schemaContext);
+      await expect(provider.getSchema("x")).rejects.toThrow();
+      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
+    });
+
+    it("returns undefined from schema context", async () => {
+      const schemaContext = { getSchema: vi.fn().mockResolvedValue(undefined) };
+
+      const provider = createECSchemaProvider(schemaContext);
+      const schema = await provider.getSchema("x");
+
+      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
+      const calledKey = schemaContext.getSchema.mock.calls[0][0];
+      expect(calledKey.compareByName("x")).toBe(true);
+      expect(schema).toBeUndefined();
     });
 
     it("doesn't repeat requests for the same schema", async () => {
       const schemaContext = {
-        getSchema: sinon.stub<[SchemaKey], CoreSchema>().resolves({ name: "x" }),
+        getSchema: vi
+          .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
+          .mockResolvedValue({ name: "x" } as unknown as CoreSchema),
       };
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
 
-      expect(schemaContext.getSchema).to.be.calledOnce;
+      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
     });
 
     it("handles duplicate schema in cache error", async () => {
       const schemaContext = {
-        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
+        getSchema: vi
+          .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
+          .mockRejectedValueOnce(new Error("The schema, x.01.02.03, already exists within this cache"))
+          .mockResolvedValueOnce({ name: "x" } as unknown as CoreSchema),
       };
-      schemaContext.getSchema.onFirstCall().rejects(new Error("The schema, x.01.02.03, already exists within this cache"));
-      schemaContext.getSchema.onSecondCall().resolves({ name: "x" });
 
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       await provider.getSchema("x");
 
-      expect(schemaContext.getSchema).to.be.calledTwice;
+      expect(schemaContext.getSchema).toHaveBeenCalledTimes(2);
     });
   });
 });
@@ -115,39 +116,31 @@ describe("createECSchema", () => {
     it("returns class from core schema", async () => {
       const coreSchema = {
         name: "s",
-        getItem: sinon.stub().resolves({
-          fullName: "s.c",
-          name: "c",
-          label: "C",
-          schemaItemType: SchemaItemType.EntityClass,
-        }),
-      } as unknown as CoreSchema;
+        getItem: vi
+          .fn()
+          .mockResolvedValue({ fullName: "s.c", name: "c", label: "C", schemaItemType: SchemaItemType.EntityClass }),
+      };
 
-      const schema = createECSchema(coreSchema);
+      const schema = createECSchema(coreSchema as unknown as CoreSchema);
       const result = await schema.getClass("c");
       assert(result !== undefined);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreSchema.getItem).to.be.calledOnceWith("c");
-      expect(result.schema.name).to.eq("s");
-      expect(result.fullName).to.eq("s.c");
-      expect(result.name).to.eq("c");
-      expect(result.label).to.eq("C");
-      expect(typeof result.is === "function").to.be.true;
+      expect(coreSchema.getItem).toHaveBeenCalledExactlyOnceWith("c");
+      expect(result.schema.name).toBe("s");
+      expect(result.fullName).toBe("s.c");
+      expect(result.name).toBe("c");
+      expect(result.label).toBe("C");
+      expect(typeof result.is === "function").toBe(true);
     });
 
     it("returns undefined from core schema", async () => {
-      const coreSchema = {
-        name: "s",
-        getItem: sinon.stub().resolves(undefined),
-      } as unknown as CoreSchema;
+      const coreSchema = { name: "s", getItem: vi.fn().mockResolvedValue(undefined) };
 
-      const schema = createECSchema(coreSchema);
+      const schema = createECSchema(coreSchema as unknown as CoreSchema);
       const result = await schema.getClass("c");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreSchema.getItem).to.be.calledOnceWith("c");
-      expect(result).to.be.undefined;
+      expect(coreSchema.getItem).toHaveBeenCalledExactlyOnceWith("c");
+      expect(result).toBeUndefined();
     });
   });
 });
@@ -169,26 +162,21 @@ describe("createECClass", () => {
       schema: { name: "core-schema" },
     } as unknown as CoreClass;
     const result = createECClass(coreClass);
-    expect(result.schema.name).to.eq("core-schema");
+    expect(result.schema.name).toBe("core-schema");
   });
 
   it("creates entity class from core class", async () => {
-    const coreClass = {
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-      schemaItemType: SchemaItemType.EntityClass,
-    } as unknown as CoreClass;
-    const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).to.be.true;
-    expect(result.isRelationshipClass()).to.be.false;
-    expect(result.isStructClass()).to.be.false;
-    expect(result.isMixin()).to.be.false;
-    expect(result.schema.name).to.eq("s");
-    expect(result.fullName).to.eq("s.c");
-    expect(result.name).to.eq("c");
-    expect(result.label).to.eq("C");
-    expect(typeof result.is === "function").to.be.true;
+    const coreClass = { fullName: "s.c", name: "c", label: "C", schemaItemType: SchemaItemType.EntityClass };
+    const result = createECClass(coreClass as unknown as CoreClass, schema);
+    expect(result.isEntityClass()).toBe(true);
+    expect(result.isRelationshipClass()).toBe(false);
+    expect(result.isStructClass()).toBe(false);
+    expect(result.isMixin()).toBe(false);
+    expect(result.schema.name).toBe("s");
+    expect(result.fullName).toBe("s.c");
+    expect(result.name).toBe("c");
+    expect(result.label).toBe("C");
+    expect(typeof result.is === "function").toBe(true);
   });
 
   it("creates relationship class from core class", async () => {
@@ -199,15 +187,15 @@ describe("createECClass", () => {
       schemaItemType: SchemaItemType.RelationshipClass,
     } as unknown as CoreClass;
     const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).to.be.false;
-    expect(result.isRelationshipClass()).to.be.true;
-    expect(result.isStructClass()).to.be.false;
-    expect(result.isMixin()).to.be.false;
-    expect(result.schema.name).to.eq("s");
-    expect(result.fullName).to.eq("s.c");
-    expect(result.name).to.eq("c");
-    expect(result.label).to.eq("C");
-    expect(typeof result.is === "function").to.be.true;
+    expect(result.isEntityClass()).toBe(false);
+    expect(result.isRelationshipClass()).toBe(true);
+    expect(result.isStructClass()).toBe(false);
+    expect(result.isMixin()).toBe(false);
+    expect(result.schema.name).toBe("s");
+    expect(result.fullName).toBe("s.c");
+    expect(result.name).toBe("c");
+    expect(result.label).toBe("C");
+    expect(typeof result.is === "function").toBe(true);
   });
 
   it("creates struct class from core class", async () => {
@@ -218,15 +206,15 @@ describe("createECClass", () => {
       schemaItemType: SchemaItemType.StructClass,
     } as unknown as CoreClass;
     const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).to.be.false;
-    expect(result.isRelationshipClass()).to.be.false;
-    expect(result.isStructClass()).to.be.true;
-    expect(result.isMixin()).to.be.false;
-    expect(result.schema.name).to.eq("s");
-    expect(result.fullName).to.eq("s.c");
-    expect(result.name).to.eq("c");
-    expect(result.label).to.eq("C");
-    expect(typeof result.is === "function").to.be.true;
+    expect(result.isEntityClass()).toBe(false);
+    expect(result.isRelationshipClass()).toBe(false);
+    expect(result.isStructClass()).toBe(true);
+    expect(result.isMixin()).toBe(false);
+    expect(result.schema.name).toBe("s");
+    expect(result.fullName).toBe("s.c");
+    expect(result.name).toBe("c");
+    expect(result.label).toBe("C");
+    expect(typeof result.is === "function").toBe(true);
   });
 
   it("creates mixin from core class", async () => {
@@ -237,15 +225,15 @@ describe("createECClass", () => {
       schemaItemType: SchemaItemType.Mixin,
     } as unknown as CoreClass;
     const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).to.be.false;
-    expect(result.isRelationshipClass()).to.be.false;
-    expect(result.isStructClass()).to.be.false;
-    expect(result.isMixin()).to.be.true;
-    expect(result.schema.name).to.eq("s");
-    expect(result.fullName).to.eq("s.c");
-    expect(result.name).to.eq("c");
-    expect(result.label).to.eq("C");
-    expect(typeof result.is === "function").to.be.true;
+    expect(result.isEntityClass()).toBe(false);
+    expect(result.isRelationshipClass()).toBe(false);
+    expect(result.isStructClass()).toBe(false);
+    expect(result.isMixin()).toBe(true);
+    expect(result.schema.name).toBe("s");
+    expect(result.fullName).toBe("s.c");
+    expect(result.name).toBe("c");
+    expect(result.label).toBe("C");
+    expect(typeof result.is === "function").toBe(true);
   });
 
   it("throws when creating class from non-class core schema item", async () => {
@@ -255,7 +243,7 @@ describe("createECClass", () => {
       name: "c",
       label: "C",
     } as unknown as CoreClass;
-    expect(() => createECClass(coreClass, schema)).to.throw();
+    expect(() => createECClass(coreClass, schema)).toThrow();
   });
 
   describe("is", () => {
@@ -264,11 +252,11 @@ describe("createECClass", () => {
       fullName: "s.c",
       name: "c",
       label: "C",
-      is: sinon.stub().resolves(true),
+      is: vi.fn().mockResolvedValue(true),
     };
 
     beforeEach(() => {
-      coreClass.is.resetHistory();
+      coreClass.is.mockClear();
     });
 
     it("handles CoreClass override", async () => {
@@ -284,16 +272,16 @@ describe("createECClass", () => {
       );
       const result = await class1.is(class2);
 
-      expect(coreClass.is).to.be.calledOnceWithExactly("c2", "s");
-      expect(result).to.be.true;
+      expect(coreClass.is).toHaveBeenCalledExactlyOnceWith("c2", "s");
+      expect(result).toBe(true);
     });
 
     it("handles class and schema names override", async () => {
       const class1 = createECClass(coreClass as unknown as CoreClass, schema);
       const result = await class1.is("a", "b");
 
-      expect(coreClass.is).to.be.calledOnceWithExactly("a", "b");
-      expect(result).to.be.true;
+      expect(coreClass.is).toHaveBeenCalledExactlyOnceWith("a", "b");
+      expect(result).toBe(true);
     });
   });
 
@@ -304,22 +292,24 @@ describe("createECClass", () => {
         fullName: "s.c",
         name: "c",
         label: "C",
-        getProperties: sinon.stub().resolves([
-          {
-            isArray: () => false,
-            isStruct: () => false,
-            isEnumeration: () => false,
-            isNavigation: () => false,
-            isPrimitive: () => true,
-          },
-        ]),
+        getProperties: vi
+          .fn()
+          .mockResolvedValue([
+            {
+              isArray: () => false,
+              isStruct: () => false,
+              isEnumeration: () => false,
+              isNavigation: () => false,
+              isPrimitive: () => true,
+            },
+          ]),
       } as unknown as CoreClass;
       const ecClass = createECClass(coreClass, schema);
       const properties = await ecClass.getProperties();
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperties).to.be.calledOnce;
-      expect(properties).to.not.be.empty;
+      expect(coreClass.getProperties).toHaveBeenCalledOnce();
+      expect(properties.length).toBeGreaterThan(0);
     });
   });
 
@@ -330,20 +320,21 @@ describe("createECClass", () => {
         fullName: "s.c",
         name: "c",
         label: "C",
-        getProperty: sinon.stub().resolves({
-          isArray: () => false,
-          isStruct: () => false,
-          isEnumeration: () => false,
-          isNavigation: () => false,
-          isPrimitive: () => true,
-        }),
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
+        getProperty: vi
+          .fn()
+          .mockResolvedValue({
+            isArray: () => false,
+            isStruct: () => false,
+            isEnumeration: () => false,
+            isNavigation: () => false,
+            isPrimitive: () => true,
+          }),
+      };
+      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
       const prop = await ecClass.getProperty("p");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperty).to.be.calledOnceWith("p", false);
-      expect(prop).to.not.be.undefined;
+      expect(coreClass.getProperty).toHaveBeenCalledExactlyOnceWith("p", false);
+      expect(prop).toBeDefined();
     });
 
     it("returns undefined from core class", async () => {
@@ -352,14 +343,13 @@ describe("createECClass", () => {
         fullName: "s.c",
         name: "c",
         label: "C",
-        getProperty: sinon.stub().resolves(undefined),
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
+        getProperty: vi.fn().mockResolvedValue(undefined),
+      };
+      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
       const prop = await ecClass.getProperty("p");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperty).to.be.calledOnceWith("p", false);
-      expect(prop).to.be.undefined;
+      expect(coreClass.getProperty).toHaveBeenCalledExactlyOnceWith("p", false);
+      expect(prop).toBeUndefined();
     });
   });
 
@@ -377,7 +367,7 @@ describe("createECClass", () => {
           { ...coreRelationshipClass, strengthDirection: StrengthDirection.Forward } as unknown as CoreClass,
           schema,
         ) as EC.RelationshipClass;
-        expect(rel.direction).to.eq("Forward");
+        expect(rel.direction).toBe("Forward");
       });
 
       it("returns backward direction from core relationship", async () => {
@@ -385,34 +375,46 @@ describe("createECClass", () => {
           { ...coreRelationshipClass, strengthDirection: StrengthDirection.Backward } as unknown as CoreClass,
           schema,
         ) as EC.RelationshipClass;
-        expect(rel.direction).to.eq("Backward");
+        expect(rel.direction).toBe("Backward");
       });
     });
 
     describe("source & target", () => {
       it("returns source constraint", () => {
-        const rel = createECClass({ ...coreRelationshipClass, source: {} } as unknown as CoreClass, schema) as EC.RelationshipClass;
-        expect(rel.source).to.not.be.undefined;
+        const rel = createECClass(
+          { ...coreRelationshipClass, source: {} } as unknown as CoreClass,
+          schema,
+        ) as EC.RelationshipClass;
+        expect(rel.source).toBeDefined();
       });
 
       it("returns target constraint", () => {
-        const rel = createECClass({ ...coreRelationshipClass, target: {} } as unknown as CoreClass, schema) as EC.RelationshipClass;
-        expect(rel.target).to.not.be.undefined;
+        const rel = createECClass(
+          { ...coreRelationshipClass, target: {} } as unknown as CoreClass,
+          schema,
+        ) as EC.RelationshipClass;
+        expect(rel.target).toBeDefined();
       });
 
       describe("ECRelationshipConstraint implementation", () => {
         it("returns undefined multiplicity from core constraint", () => {
-          const rel = createECClass({ ...coreRelationshipClass, source: { multiplicity: undefined } } as unknown as CoreClass, schema) as EC.RelationshipClass;
-          expect(rel.source.multiplicity).to.be.undefined;
+          const rel = createECClass(
+            { ...coreRelationshipClass, source: { multiplicity: undefined } } as unknown as CoreClass,
+            schema,
+          ) as EC.RelationshipClass;
+          expect(rel.source.multiplicity).toBeUndefined();
         });
 
         it("returns multiplicity from core constraint", () => {
           const rel = createECClass(
-            // eslint-disable-next-line @itwin/no-internal
-            { ...coreRelationshipClass, source: { multiplicity: new RelationshipMultiplicity(123, 456) } } as unknown as CoreClass,
+            {
+              ...coreRelationshipClass,
+              // eslint-disable-next-line @itwin/no-internal
+              source: { multiplicity: new RelationshipMultiplicity(123, 456) },
+            } as unknown as CoreClass,
             schema,
           ) as EC.RelationshipClass;
-          expect(rel.source.multiplicity).to.deep.eq({ lowerLimit: 123, upperLimit: 456 });
+          expect(rel.source.multiplicity).toEqual({ lowerLimit: 123, upperLimit: 456 });
         });
 
         it("returns polymorphic flag from core constraint", () => {
@@ -425,7 +427,7 @@ describe("createECClass", () => {
               { ...coreRelationshipClass, source: { polymorphic: testEntry.in } } as unknown as CoreClass,
               schema,
             ) as EC.RelationshipClass;
-            expect(rel.source.polymorphic).to.eq(testEntry.expectation);
+            expect(rel.source.polymorphic).toBe(testEntry.expectation);
           });
         });
 
@@ -437,12 +439,15 @@ describe("createECClass", () => {
             label: "Test abstract constraint",
           } as unknown as CoreClass;
           const rel = createECClass(
-            { ...coreRelationshipClass, source: { abstractConstraint: Promise.resolve(coreAbstractConstraint) } } as unknown as CoreClass,
+            {
+              ...coreRelationshipClass,
+              source: { abstractConstraint: Promise.resolve(coreAbstractConstraint) },
+            } as unknown as CoreClass,
             schema,
           ) as EC.RelationshipClass;
           const constraint = (await rel.source.abstractConstraint)!;
-          expect(constraint.isEntityClass()).to.be.true;
-          expect(constraint.fullName).to.eq(coreAbstractConstraint.fullName);
+          expect(constraint.isEntityClass()).toBe(true);
+          expect(constraint.fullName).toBe(coreAbstractConstraint.fullName);
         });
       });
     });
@@ -471,15 +476,15 @@ describe("createECProperty", () => {
         extendedTypeName: "extended",
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.false;
-      expect(property.isEnumeration()).to.be.false;
-      expect(property.isNavigation()).to.be.false;
-      expect(property.isPrimitive()).to.be.true;
-      expect(property.isStruct()).to.be.false;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
-      expect(property.extendedTypeName).to.eq(coreProperty.extendedTypeName);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(false);
+      expect(property.isEnumeration()).toBe(false);
+      expect(property.isNavigation()).toBe(false);
+      expect(property.isPrimitive()).toBe(true);
+      expect(property.isStruct()).toBe(false);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
+      expect(property.extendedTypeName).toBe(coreProperty.extendedTypeName);
     });
 
     it("maps primitive types", async () => {
@@ -503,7 +508,7 @@ describe("createECProperty", () => {
           primitiveType: coreType,
         } as unknown as CorePrimitiveProperty;
         const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
-        expect(property.primitiveType).to.eq(expectation);
+        expect(property.primitiveType).toBe(expectation);
       });
 
       const uninitializedTypes = [undefined, PrimitiveType.Uninitialized];
@@ -517,7 +522,7 @@ describe("createECProperty", () => {
           } as unknown as CorePrimitiveProperty,
           propertyClass,
         ) as EC.PrimitiveProperty;
-        expect(() => uninitializedProperty.primitiveType).to.throw();
+        expect(() => uninitializedProperty.primitiveType).toThrow();
       });
     });
 
@@ -526,18 +531,16 @@ describe("createECProperty", () => {
         ...propertyStub,
         isPrimitive: () => true,
         name: "test-property",
-        kindOfQuantity: Promise.resolve({
-          fullName: "SchemaName.TestKoq",
-          schema: {
-            name: "SchemaName",
-          },
-        }),
+        kindOfQuantity: Promise.resolve({ fullName: "SchemaName.TestKoq", schema: { name: "SchemaName" } }),
       } as unknown as CorePrimitiveProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
       const koq = (await property.kindOfQuantity)!;
-      expect(koq.fullName).to.eq("SchemaName.TestKoq");
+      expect(koq.fullName).toBe("SchemaName.TestKoq");
 
-      expect(await createECProperty({ ...coreProperty, kindOfQuantity: undefined } as CorePrimitiveProperty, propertyClass).kindOfQuantity).to.be.undefined;
+      expect(
+        await createECProperty({ ...coreProperty, kindOfQuantity: undefined } as CorePrimitiveProperty, propertyClass)
+          .kindOfQuantity,
+      ).toBeUndefined();
     });
   });
 
@@ -550,14 +553,14 @@ describe("createECProperty", () => {
         label: "Test property",
       } as unknown as CoreNavigationProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.false;
-      expect(property.isEnumeration()).to.be.false;
-      expect(property.isNavigation()).to.be.true;
-      expect(property.isPrimitive()).to.be.false;
-      expect(property.isStruct()).to.be.false;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(false);
+      expect(property.isEnumeration()).toBe(false);
+      expect(property.isNavigation()).toBe(true);
+      expect(property.isPrimitive()).toBe(false);
+      expect(property.isStruct()).toBe(false);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
     });
 
     it("maps direction", async () => {
@@ -573,7 +576,7 @@ describe("createECProperty", () => {
           direction: coreDirection,
         } as unknown as CoreNavigationProperty;
         const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
-        expect(property.direction).to.eq(expectation);
+        expect(property.direction).toBe(expectation);
       });
     });
 
@@ -584,14 +587,12 @@ describe("createECProperty", () => {
         name: "test-property",
         relationshipClass: Promise.resolve({
           fullName: "SchemaName.RelationshipClass",
-          schema: {
-            name: "SchemaName",
-          },
+          schema: { name: "SchemaName" },
         }),
       } as unknown as CoreNavigationProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
       const relationshipClass = await property.relationshipClass;
-      expect(relationshipClass.fullName).to.eq("SchemaName.RelationshipClass");
+      expect(relationshipClass.fullName).toBe("SchemaName.RelationshipClass");
     });
   });
 
@@ -605,15 +606,15 @@ describe("createECProperty", () => {
         extendedTypeName: "extended",
       } as unknown as CoreEnumerationProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.false;
-      expect(property.isEnumeration()).to.be.true;
-      expect(property.isNavigation()).to.be.false;
-      expect(property.isPrimitive()).to.be.false;
-      expect(property.isStruct()).to.be.false;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
-      expect(property.extendedTypeName).to.eq(coreProperty.extendedTypeName);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(false);
+      expect(property.isEnumeration()).toBe(true);
+      expect(property.isNavigation()).toBe(false);
+      expect(property.isPrimitive()).toBe(false);
+      expect(property.isStruct()).toBe(false);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
+      expect(property.extendedTypeName).toBe(coreProperty.extendedTypeName);
     });
 
     it("returns enumeration", async () => {
@@ -621,21 +622,15 @@ describe("createECProperty", () => {
         ...propertyStub,
         isEnumeration: () => true,
         name: "test-property",
-        enumeration: Promise.resolve({
-          schema: {
-            name: "SchemaName",
-          },
-        }),
+        enumeration: Promise.resolve({ schema: { name: "SchemaName" } }),
       } as unknown as CoreEnumerationProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
-      expect(await property.enumeration).to.not.be.undefined;
+      expect(await property.enumeration).toBeDefined();
     });
 
     describe("ECEnumeration implementation", () => {
       const coreEnumeration = {
-        schema: {
-          name: "SchemaName",
-        },
+        schema: { name: "SchemaName" },
         isStrict: false,
         type: undefined,
         enumerators: new Array<CoreEnumerator<number>>(),
@@ -655,7 +650,7 @@ describe("createECProperty", () => {
       it("returns `isStrict` flag", async () => {
         coreEnumeration.isStrict = true;
         const enumeration = (await property.enumeration)!;
-        expect(enumeration.isStrict).to.be.true;
+        expect(enumeration.isStrict).toBe(true);
       });
 
       it("maps enumeration type", async () => {
@@ -664,12 +659,11 @@ describe("createECProperty", () => {
           [PrimitiveType.Integer, "Number"],
           [undefined, "Number"],
         ];
-        const typeStub = sinon.stub(coreEnumeration, "type");
+        const typeStub = vi.spyOn(coreEnumeration as any, "type", "get");
         for (const [coreType, expectation] of typesMap) {
-          typeStub.reset();
-          typeStub.get(() => coreType);
+          typeStub.mockReturnValue(coreType);
           const enumeration = (await property.enumeration)!;
-          expect(enumeration.type).to.eq(expectation);
+          expect(enumeration.type).toBe(expectation);
         }
       });
 
@@ -679,7 +673,7 @@ describe("createECProperty", () => {
           { name: "2", value: 2 },
         ];
         const enumeration = (await property.enumeration)!;
-        expect(enumeration.enumerators).to.deep.eq(coreEnumeration.enumerators);
+        expect(enumeration.enumerators).toEqual(coreEnumeration.enumerators);
       });
     });
   });
@@ -693,14 +687,14 @@ describe("createECProperty", () => {
         label: "Test property",
       } as unknown as CoreStructProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.false;
-      expect(property.isEnumeration()).to.be.false;
-      expect(property.isNavigation()).to.be.false;
-      expect(property.isPrimitive()).to.be.false;
-      expect(property.isStruct()).to.be.true;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(false);
+      expect(property.isEnumeration()).toBe(false);
+      expect(property.isNavigation()).toBe(false);
+      expect(property.isPrimitive()).toBe(false);
+      expect(property.isStruct()).toBe(true);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
     });
 
     it("returns struct class", async () => {
@@ -708,15 +702,10 @@ describe("createECProperty", () => {
         ...propertyStub,
         isStruct: () => true,
         name: "test-property",
-        structClass: {
-          fullName: "SchemaName.StructClass",
-          schema: {
-            name: "SchemaName",
-          },
-        },
+        structClass: { fullName: "SchemaName.StructClass", schema: { name: "SchemaName" } },
       } as unknown as CoreStructProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
-      expect(property.structClass.fullName).to.eq("SchemaName.StructClass");
+      expect(property.structClass.fullName).toBe("SchemaName.StructClass");
     });
   });
 
@@ -732,16 +721,16 @@ describe("createECProperty", () => {
         maxOccurs: 456,
       } as unknown as CorePrimitiveArrayProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveArrayProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.true;
-      expect(property.isEnumeration()).to.be.false;
-      expect(property.isNavigation()).to.be.false;
-      expect(property.isPrimitive()).to.be.true;
-      expect(property.isStruct()).to.be.false;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
-      expect(property.minOccurs).to.eq(123);
-      expect(property.maxOccurs).to.eq(456);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(true);
+      expect(property.isEnumeration()).toBe(false);
+      expect(property.isNavigation()).toBe(false);
+      expect(property.isPrimitive()).toBe(true);
+      expect(property.isStruct()).toBe(false);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
+      expect(property.minOccurs).toBe(123);
+      expect(property.maxOccurs).toBe(456);
     });
 
     it("creates enumeration array property from core property", async () => {
@@ -755,16 +744,16 @@ describe("createECProperty", () => {
         maxOccurs: 456,
       } as unknown as CoreEnumerationArrayProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationArrayProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.true;
-      expect(property.isEnumeration()).to.be.true;
-      expect(property.isNavigation()).to.be.false;
-      expect(property.isPrimitive()).to.be.false;
-      expect(property.isStruct()).to.be.false;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
-      expect(property.minOccurs).to.eq(123);
-      expect(property.maxOccurs).to.eq(456);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(true);
+      expect(property.isEnumeration()).toBe(true);
+      expect(property.isNavigation()).toBe(false);
+      expect(property.isPrimitive()).toBe(false);
+      expect(property.isStruct()).toBe(false);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
+      expect(property.minOccurs).toBe(123);
+      expect(property.maxOccurs).toBe(456);
     });
 
     it("creates struct array property from core property", async () => {
@@ -778,16 +767,16 @@ describe("createECProperty", () => {
         maxOccurs: 456,
       } as unknown as CoreStructArrayProperty;
       const property = createECProperty(coreProperty, propertyClass) as EC.StructArrayProperty;
-      expect(property.class).to.eq(propertyClass);
-      expect(property.isArray()).to.be.true;
-      expect(property.isEnumeration()).to.be.false;
-      expect(property.isNavigation()).to.be.false;
-      expect(property.isPrimitive()).to.be.false;
-      expect(property.isStruct()).to.be.true;
-      expect(property.name).to.eq(coreProperty.name);
-      expect(property.label).to.eq(coreProperty.label);
-      expect(property.minOccurs).to.eq(123);
-      expect(property.maxOccurs).to.eq(456);
+      expect(property.class).toBe(propertyClass);
+      expect(property.isArray()).toBe(true);
+      expect(property.isEnumeration()).toBe(false);
+      expect(property.isNavigation()).toBe(false);
+      expect(property.isPrimitive()).toBe(false);
+      expect(property.isStruct()).toBe(true);
+      expect(property.name).toBe(coreProperty.name);
+      expect(property.label).toBe(coreProperty.label);
+      expect(property.minOccurs).toBe(123);
+      expect(property.maxOccurs).toBe(456);
     });
   });
 });

@@ -3,11 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Field } from "@itwin/presentation-common";
+import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
+import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
+import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -15,9 +18,6 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
-import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
-import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
-import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils.js";
 
 describe("PresentationInstanceFilter", () => {
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
@@ -35,28 +35,36 @@ describe("PresentationInstanceFilter", () => {
   });
 
   const relatedB = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:B" }), name: "relatedB", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:B" }), name: "relatedB", type: "string" } },
+    ],
     category,
     name: "relatedBPropField",
     label: "RelatedB",
   });
 
   const relatedC1 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:C1" }), name: "relatedC1", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:C1" }), name: "relatedC1", type: "string" } },
+    ],
     category,
     name: "relatedC1PropField",
     label: "RelatedC1",
   });
 
   const relatedC2 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:C2" }), name: "relatedC2", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:C2" }), name: "relatedC2", type: "string" } },
+    ],
     category,
     name: "relatedC2PropField",
     label: "RelatedC2",
   });
 
   const relatedE = createTestPropertiesContentField({
-    properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:E" }), name: "relatedE", type: "string" } }],
+    properties: [
+      { property: { classInfo: createTestECClassInfo({ name: "Schema:E" }), name: "relatedE", type: "string" } },
+    ],
     category,
     name: "relatedEPropField",
     label: "RelatedE",
@@ -172,24 +180,24 @@ describe("PresentationInstanceFilter", () => {
           },
         ],
       };
-      expect(PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.containSubset({
+      expect(PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).toMatchObject({
         operator: "and",
         conditions: [
-          {
-            operator: "is-null",
-            field: propertyField1,
-          },
-          {
-            operator: "is-null",
-            field: propertyField2,
-          },
+          { operator: "is-null", field: propertyField1 },
+          { operator: "is-null", field: propertyField2 },
         ],
       });
     });
 
     it("throws if rule properties field cannot be found", () => {
-      const property: PropertyDescription = { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop", typename: "string" };
-      expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: "is-null" })).to.throw();
+      const property: PropertyDescription = {
+        name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`,
+        displayLabel: "Prop",
+        typename: "string",
+      };
+      expect(() =>
+        PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: "is-null" }),
+      ).toThrow();
     });
 
     it("throws if group has rule with invalid property field", () => {
@@ -201,12 +209,16 @@ describe("PresentationInstanceFilter", () => {
             operator: "is-null",
           },
           {
-            property: { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop2", typename: "string" },
+            property: {
+              name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`,
+              displayLabel: "Prop2",
+              typename: "string",
+            },
             operator: "is-null",
           },
         ],
       };
-      expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.throw();
+      expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).toThrow();
     });
 
     it("throws if rule has non primitive value", () => {
@@ -215,7 +227,7 @@ describe("PresentationInstanceFilter", () => {
         operator: "is-equal",
         value: { valueFormat: PropertyValueFormat.Array, items: [], itemsTypeName: "number" },
       };
-      expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.throw();
+      expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).toThrow();
     });
   });
 
@@ -239,23 +251,14 @@ describe("PresentationInstanceFilter", () => {
 
       const presentationFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
       const result = PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter);
-      expect(result).to.be.deep.eq(filter);
+      expect(result).toEqual(filter);
     });
 
     it("converts presentation filter with nested conditions to property filter", () => {
       const presentationFilter: PresentationInstanceFilter = {
         operator: "and",
         conditions: [
-          {
-            operator: "and",
-            conditions: [
-              {
-                field: propertyField1,
-                operator: "is-null",
-                value: undefined,
-              },
-            ],
-          },
+          { operator: "and", conditions: [{ field: propertyField1, operator: "is-null", value: undefined }] },
         ],
       };
 
@@ -266,7 +269,11 @@ describe("PresentationInstanceFilter", () => {
             operator: "and",
             rules: [
               {
-                property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+                property: {
+                  name: getPropertyDescriptionName(propertyField1),
+                  displayLabel: "Prop1",
+                  typename: "string",
+                },
                 operator: "is-null",
                 value: undefined,
               },
@@ -276,19 +283,13 @@ describe("PresentationInstanceFilter", () => {
       };
 
       const result = PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter);
-      expect(result).to.be.deep.eq(propertyFilter);
+      expect(result).toEqual(propertyFilter);
     });
 
     it("converts presentation filter with nested fields to property filter", () => {
       const presentationFilter: PresentationInstanceFilter = {
         operator: "and",
-        conditions: [
-          {
-            field: relatedC1,
-            operator: "is-null",
-            value: undefined,
-          },
-        ],
+        conditions: [{ field: relatedC1, operator: "is-null", value: undefined }],
       };
 
       const propertyFilter: PropertyFilter = {
@@ -307,7 +308,7 @@ describe("PresentationInstanceFilter", () => {
       };
 
       const result = PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter);
-      expect(result).to.be.deep.eq(propertyFilter);
+      expect(result).toEqual(propertyFilter);
     });
 
     it("throws if property used in filter is not found in descriptor", () => {
@@ -320,16 +321,10 @@ describe("PresentationInstanceFilter", () => {
 
       const presentationFilter: PresentationInstanceFilter = {
         operator: "and",
-        conditions: [
-          {
-            field: propertyField,
-            operator: "is-null",
-            value: undefined,
-          },
-        ],
+        conditions: [{ field: propertyField, operator: "is-null", value: undefined }],
       };
 
-      expect(() => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter)).to.throw();
+      expect(() => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter)).toThrow();
     });
   });
 
@@ -340,7 +335,9 @@ describe("PresentationInstanceFilter", () => {
         field: propertyField1,
         value: { valueFormat: PropertyValueFormat.Primitive, value: "val", displayValue: "Value" },
       };
-      const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter, [propertyField1.properties[0].property.classInfo]);
+      const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter, [
+        propertyField1.properties[0].property.classInfo,
+      ]);
       const expectedFilter: GenericInstanceFilter = {
         rules: {
           operator: "is-equal",
@@ -353,14 +350,18 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
         filteredClassNames: [propertyField1.properties[0].property.classInfo.name],
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
 
     it("converts point3d condition", () => {
       const filter: PresentationInstanceFilter = {
         operator: "is-equal",
         field: propertyField1,
-        value: { valueFormat: PropertyValueFormat.Primitive, value: { x: 1, y: 2, z: 3 }, displayValue: "X: 1 Y: 2 Z: 3" },
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: { x: 1, y: 2, z: 3 },
+          displayValue: "X: 1 Y: 2 Z: 3",
+        },
       };
       const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter);
       const expectedFilter: GenericInstanceFilter = {
@@ -375,19 +376,13 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
         filteredClassNames: undefined,
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
 
     it("converts unique value condition", () => {
       const { displayValues, groupedRawValues } = serializeUniqueValues([
-        {
-          displayValue: "1.5",
-          groupedRawValues: [1.4, 1.5],
-        },
-        {
-          displayValue: "2.5",
-          groupedRawValues: [2.5],
-        },
+        { displayValue: "1.5", groupedRawValues: [1.4, 1.5] },
+        { displayValue: "2.5", groupedRawValues: [2.5] },
       ]);
       const filter: PresentationInstanceFilter = {
         operator: "is-equal",
@@ -426,15 +421,12 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
         filteredClassNames: undefined,
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
 
     it("converts string unique value condition", () => {
       const { displayValues, groupedRawValues } = serializeUniqueValues([
-        {
-          displayValue: "10",
-          groupedRawValues: ["10"],
-        },
+        { displayValue: "10", groupedRawValues: ["10"] },
       ]);
       const filter: PresentationInstanceFilter = {
         operator: "is-equal",
@@ -459,7 +451,7 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
         filteredClassNames: undefined,
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
 
     it("converts condition group", () => {
@@ -471,10 +463,7 @@ describe("PresentationInstanceFilter", () => {
             field: propertyField1,
             value: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123", roundingError: 0.5 },
           },
-          {
-            operator: "is-false",
-            field: propertyField2,
-          },
+          { operator: "is-false", field: propertyField2 },
         ],
       };
       const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter);
@@ -502,7 +491,7 @@ describe("PresentationInstanceFilter", () => {
         relatedInstances: [],
         filteredClassNames: undefined,
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
 
     it("converts related property condition", () => {
@@ -542,7 +531,7 @@ describe("PresentationInstanceFilter", () => {
         ],
         filteredClassNames: undefined,
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
 
     it("converts deeply related property condition", () => {
@@ -594,28 +583,22 @@ describe("PresentationInstanceFilter", () => {
         ],
         filteredClassNames: undefined,
       };
-      expect(actual).to.be.deep.eq(expectedFilter);
+      expect(actual).toEqual(expectedFilter);
     });
   });
 
   describe("fromGenericInstanceFilter", () => {
     it("parses empty rule group", () => {
       const filter: GenericInstanceFilter = {
-        rules: {
-          operator: "and",
-          rules: [],
-        },
+        rules: { operator: "and", rules: [] },
         propertyClassNames: [],
         relatedInstances: [],
         filteredClassNames: undefined,
       };
 
       const actual = PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
-      const expected: PresentationInstanceFilter = {
-        operator: "and",
-        conditions: [],
-      };
-      expect(actual).to.be.deep.eq(expected);
+      const expected: PresentationInstanceFilter = { operator: "and", conditions: [] };
+      expect(actual).toEqual(expected);
     });
 
     it("parses direct property rule", () => {
@@ -638,7 +621,7 @@ describe("PresentationInstanceFilter", () => {
         field: propertyField1,
         value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
       };
-      expect(actual).to.be.deep.eq(expected);
+      expect(actual).toEqual(expected);
     });
 
     it("parses multiple properties rules", () => {
@@ -683,19 +666,13 @@ describe("PresentationInstanceFilter", () => {
           },
         ],
       };
-      expect(actual).to.be.deep.eq(expected);
+      expect(actual).toEqual(expected);
     });
 
     it("parses unique value rule", () => {
       const { displayValues, groupedRawValues } = serializeUniqueValues([
-        {
-          displayValue: "1.5",
-          groupedRawValues: [1.4, 1.5],
-        },
-        {
-          displayValue: "2.5",
-          groupedRawValues: [2.5],
-        },
+        { displayValue: "1.5", groupedRawValues: [1.4, 1.5] },
+        { displayValue: "2.5", groupedRawValues: [2.5] },
       ]);
 
       const filter: GenericInstanceFilter = {
@@ -736,7 +713,7 @@ describe("PresentationInstanceFilter", () => {
         field: propertyField1,
         value: { valueFormat: PropertyValueFormat.Primitive, displayValue: displayValues, value: groupedRawValues },
       };
-      expect(actual).to.be.deep.eq(expected);
+      expect(actual).toEqual(expected);
     });
 
     it("parses related properties rules", () => {
@@ -785,14 +762,10 @@ describe("PresentationInstanceFilter", () => {
             field: relatedB,
             value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
           },
-          {
-            operator: "is-not-null",
-            field: relatedB,
-            value: undefined,
-          },
+          { operator: "is-not-null", field: relatedB, value: undefined },
         ],
       };
-      expect(actual).to.be.deep.eq(expected);
+      expect(actual).toEqual(expected);
     });
 
     it("parses multiple related properties rules", () => {
@@ -864,14 +837,10 @@ describe("PresentationInstanceFilter", () => {
             field: relatedC1,
             value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
           },
-          {
-            operator: "is-not-null",
-            field: relatedC2,
-            value: undefined,
-          },
+          { operator: "is-not-null", field: relatedC2, value: undefined },
         ],
       };
-      expect(actual).to.be.deep.eq(expected);
+      expect(actual).toEqual(expected);
     });
 
     it("parses deeply related properties rules", () => {
@@ -924,32 +893,24 @@ describe("PresentationInstanceFilter", () => {
         field: relatedE,
         value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
       };
-      expect(actual).to.be.deep.eq(expected);
+      expect(actual).toEqual(expected);
     });
 
     it("throws when direct property field is not found", () => {
       const filter: GenericInstanceFilter = {
-        rules: {
-          operator: "is-null",
-          sourceAlias: "this",
-          propertyName: "invalidProp",
-          propertyTypeName: "string",
-        },
+        rules: { operator: "is-null", sourceAlias: "this", propertyName: "invalidProp", propertyTypeName: "string" },
         propertyClassNames: ["Schema:A"],
         relatedInstances: [],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw("Failed to find field for property - this.invalidProp");
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow(
+        "Failed to find field for property - this.invalidProp",
+      );
     });
 
     it("throws when related property field is not found", () => {
       const filter: GenericInstanceFilter = {
-        rules: {
-          operator: "is-null",
-          sourceAlias: "rel_B_0",
-          propertyName: "invalidProp",
-          propertyTypeName: "string",
-        },
+        rules: { operator: "is-null", sourceAlias: "rel_B_0", propertyName: "invalidProp", propertyTypeName: "string" },
         propertyClassNames: ["Schema:A"],
         relatedInstances: [
           {
@@ -966,7 +927,7 @@ describe("PresentationInstanceFilter", () => {
         ],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw(
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow(
         "Failed to find field for property - rel_B_0.invalidProp",
       );
     });
@@ -995,24 +956,19 @@ describe("PresentationInstanceFilter", () => {
         ],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw(
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow(
         `Failed to find field for property - rel_B_0.${relatedB.properties[0].property.name}`,
       );
     });
 
     it("throws when related instance info is not found", () => {
       const filter: GenericInstanceFilter = {
-        rules: {
-          operator: "is-null",
-          sourceAlias: "rel_B_0",
-          propertyName: "invalidProp",
-          propertyTypeName: "string",
-        },
+        rules: { operator: "is-null", sourceAlias: "rel_B_0", propertyName: "invalidProp", propertyTypeName: "string" },
         propertyClassNames: ["Schema:A"],
         relatedInstances: [],
       };
 
-      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw(
+      expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).toThrow(
         "Failed to find field for property - rel_B_0.invalidProp",
       );
     });
@@ -1020,32 +976,36 @@ describe("PresentationInstanceFilter", () => {
 
   describe("createPrimitiveValueEqualityCondition", () => {
     it("serializes value into unique value", () => {
-      const value: PrimitiveValue = {
-        valueFormat: PropertyValueFormat.Primitive,
-        value: 1.456,
-        displayValue: "1.46",
-      };
-      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-equal", value);
+      const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive, value: 1.456, displayValue: "1.46" };
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(
+        propertyField1,
+        "is-equal",
+        value,
+      );
       const uniqueValue = serializeUniqueValues([{ displayValue: "1.46", groupedRawValues: [1.456] }]);
-      expect(condition.operator).to.be.eq("is-equal");
-      expect(condition.value?.value).to.be.eq(uniqueValue.groupedRawValues);
-      expect(condition.value?.displayValue).to.be.eq(uniqueValue.displayValues);
+      expect(condition.operator).toBe("is-equal");
+      expect(condition.value?.value).toBe(uniqueValue.groupedRawValues);
+      expect(condition.value?.displayValue).toBe(uniqueValue.displayValues);
     });
 
     it("creates `is-null` condition for 'is-equal` operator with `undefined` value", () => {
-      const value: PrimitiveValue = {
-        valueFormat: PropertyValueFormat.Primitive,
-      };
-      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-equal", value);
-      expect(condition.operator).to.be.eq("is-null");
+      const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive };
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(
+        propertyField1,
+        "is-equal",
+        value,
+      );
+      expect(condition.operator).toBe("is-null");
     });
 
     it("creates `is-not-null` condition for 'is-not-equal` operator with `undefined` value", () => {
-      const value: PrimitiveValue = {
-        valueFormat: PropertyValueFormat.Primitive,
-      };
-      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-not-equal", value);
-      expect(condition.operator).to.be.eq("is-not-null");
+      const value: PrimitiveValue = { valueFormat: PropertyValueFormat.Primitive };
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(
+        propertyField1,
+        "is-not-equal",
+        value,
+      );
+      expect(condition.operator).toBe("is-not-null");
     });
   });
 });

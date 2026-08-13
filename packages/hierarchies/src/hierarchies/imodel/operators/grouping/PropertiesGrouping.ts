@@ -32,7 +32,10 @@ interface DisplayablePropertyGroupingInfo {
 
 interface PropertyGroupingInformation {
   ungrouped: ProcessedInstanceHierarchyNode[];
-  grouped: Map<string, { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+  grouped: Map<
+    string,
+    { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+  >;
 }
 
 /** @internal */
@@ -49,7 +52,11 @@ export interface PropertyGroupInfo {
 }
 
 /** @internal */
-export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: string; propertyName: string; isRange?: boolean }>;
+export type PreviousPropertiesGroupingInfo = Array<{
+  propertiesClassName: string;
+  propertyName: string;
+  isRange?: boolean;
+}>;
 
 /** @internal */
 export async function createPropertyGroups(
@@ -70,10 +77,7 @@ export async function createPropertyGroups(
     }
     otherValuesGrouping ??= {
       node: {
-        key: {
-          type: "property-grouping:other" as const,
-          properties: [],
-        },
+        key: { type: "property-grouping:other" as const, properties: [] },
         parentKeys: [],
         groupedInstanceKeys: [],
         label: localizedStrings.other,
@@ -94,7 +98,14 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, classHierarchyInspector))) {
+    if (
+      !(await shouldCreatePropertyGroup(
+        handlerGroupingParams,
+        byProperties,
+        node.key.instanceKeys[0].className,
+        classHierarchyInspector,
+      ))
+    ) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -107,7 +118,10 @@ export async function createPropertyGroups(
     const propertyClass = handlerGroupingParams.ecClass;
     const property = await propertyClass.getProperty(currentProperty.propertyName);
 
-    if (!property?.isNavigation() && (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry")) {
+    if (
+      !property?.isNavigation() &&
+      (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry")
+    ) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -141,7 +155,9 @@ export async function createPropertyGroups(
     if (currentProperty.ranges) {
       if (typeof currentProperty.propertyValue === "number") {
         const propValue = currentProperty.propertyValue;
-        const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
+        const matchingRange = currentProperty.ranges.find(
+          (range) => propValue >= range.fromValue && propValue <= range.toValue,
+        );
 
         if (matchingRange) {
           const fromValueTypedPrimitive: TypedPrimitiveValue = {
@@ -157,7 +173,9 @@ export async function createPropertyGroups(
             value: matchingRange.toValue,
           };
 
-          const rangeLabel = matchingRange.rangeLabel ?? `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
+          const rangeLabel =
+            matchingRange.rangeLabel ??
+            `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
           addGroupingToMap(
             groupings.grouped,
             `${currentProperty.propertyName}:[${matchingRange.fromValue}-${matchingRange.toValue}]${matchingRange.rangeLabel ? `(${matchingRange.rangeLabel})` : ""}`,
@@ -183,7 +201,8 @@ export async function createPropertyGroups(
           propertyName: propertyIdentifier.propertyName,
         };
         const hasPropertyIdentifier = groupingNode.key.properties.find(
-          (x) => x.className === thisPropertyIdentifier.className && x.propertyName === thisPropertyIdentifier.propertyName,
+          (x) =>
+            x.className === thisPropertyIdentifier.className && x.propertyName === thisPropertyIdentifier.propertyName,
         );
         if (!hasPropertyIdentifier) {
           groupingNode.key.properties.push(thisPropertyIdentifier);
@@ -200,7 +219,9 @@ export async function createPropertyGroups(
     const formattedValue =
       currentProperty.propertyValue instanceof Array
         ? await formatConcatenatedValue({ value: currentProperty.propertyValue, valueFormatter })
-        : await valueFormatter(TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName));
+        : await valueFormatter(
+            TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName),
+          );
 
     addGroupingToMap(
       groupings.grouped,
@@ -220,17 +241,17 @@ export async function createPropertyGroups(
 }
 
 function addGroupingToMap(
-  groupingMap: Map<string, { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>,
+  groupingMap: Map<
+    string,
+    { displayablePropertyGroupingInfo: DisplayablePropertyGroupingInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }
+  >,
   mapKey: string,
   propertyToAdd: DisplayablePropertyGroupingInfo,
   node: ProcessedInstanceHierarchyNode,
 ): void {
   let groupingInfo = groupingMap.get(mapKey);
   if (!groupingInfo) {
-    groupingInfo = {
-      displayablePropertyGroupingInfo: propertyToAdd,
-      groupedNodes: [node],
-    };
+    groupingInfo = { displayablePropertyGroupingInfo: propertyToAdd, groupedNodes: [node] };
     groupingMap.set(mapKey, groupingInfo);
     return;
   }
@@ -261,7 +282,9 @@ function createGroupingNodes(
   return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "property" };
 }
 
-function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean> {
+function createNodePropertyGroupPathMatchers(
+  node: ParentHierarchyNode,
+): Array<(x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean> {
   if (!HierarchyNode.isPropertyGroupingNode(node)) {
     return [];
   }
@@ -281,7 +304,10 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
   return propertyGroupingNodeKeys.map((key): ((x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean) => {
     switch (key.type) {
       case "property-grouping:other":
-        return (x) => key.properties.some((p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange);
+        return (x) =>
+          key.properties.some(
+            (p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange,
+          );
       case "property-grouping:range":
         return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
       case "property-grouping:value":
@@ -311,12 +337,19 @@ export async function getUniquePropertiesGroupInfo(
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
-      const lastKey = previousPropertiesInfo.length > 0 ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey : "";
+      const lastKey =
+        previousPropertiesInfo.length > 0
+          ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey
+          : "";
       const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
       const mapKey = `${byProperties.propertiesClassName}:${propertyGroupKey}`;
 
       let isAlreadyGrouped = false;
-      if (!isAlreadyGrouped && parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
+      if (
+        !isAlreadyGrouped &&
+        parentPropertyGroupPath.length > 0 &&
+        propertyGroupIndex < parentPropertyGroupPath.length
+      ) {
         const groupMatcher = parentPropertyGroupPath[propertyGroupIndex];
         isAlreadyGrouped = groupMatcher({
           propertiesClassName: byProperties.propertiesClassName,
@@ -327,10 +360,7 @@ export async function getUniquePropertiesGroupInfo(
       if (!isAlreadyGrouped && !uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
           ecClass: await getClass(schemaProvider, byProperties.propertiesClassName),
-          propertyGroup: {
-            propertyName: propertyGroup.propertyName,
-            ranges: propertyGroup.ranges,
-          },
+          propertyGroup: { propertyName: propertyGroup.propertyName, ranges: propertyGroup.ranges },
           previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
             propertiesClassName: byProperties.propertiesClassName,
             propertyName: groupingInfo.propertyGroup.propertyName,
@@ -339,15 +369,14 @@ export async function getUniquePropertiesGroupInfo(
         });
       }
 
-      previousPropertiesInfo.push({
-        propertyGroup,
-        propertyGroupKey,
-      });
+      previousPropertiesInfo.push({ propertyGroup, propertyGroupKey });
       ++propertyGroupIndex;
     }
   }
   // Order might change in uniqueProperties, resorting to make sure that properties with fewer previous properties are returned first.
-  return [...uniqueProperties.values()].sort((lhs, rhs) => lhs.previousPropertiesGroupingInfo.length - rhs.previousPropertiesGroupingInfo.length);
+  return [...uniqueProperties.values()].sort(
+    (lhs, rhs) => lhs.previousPropertiesGroupingInfo.length - rhs.previousPropertiesGroupingInfo.length,
+  );
 }
 
 function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
@@ -371,7 +400,8 @@ async function shouldCreatePropertyGroup(
   ) {
     return false;
   }
-  const currentProperty = nodePropertyGroupingParams.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
+  const currentProperty =
+    nodePropertyGroupingParams.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
   if (
     currentProperty.propertyName !== handlerGroupingParams.propertyGroup.propertyName ||
     !doRangesMatch(currentProperty.ranges, handlerGroupingParams.propertyGroup.ranges)
@@ -401,7 +431,10 @@ export function doPreviousPropertiesMatch(
 }
 
 /** @internal */
-export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undefined, ranges2: HierarchyNodePropertyValueRange[] | undefined): boolean {
+export function doRangesMatch(
+  ranges1: HierarchyNodePropertyValueRange[] | undefined,
+  ranges2: HierarchyNodePropertyValueRange[] | undefined,
+): boolean {
   if (typeof ranges1 !== typeof ranges2) {
     return false;
   }
@@ -416,12 +449,18 @@ export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undef
     // Check twice, to validate if both ranges have the same elements (elements can be in a different order)
     ranges1.every((lhsRange) =>
       ranges2.some(
-        (rhsRange) => lhsRange.fromValue === rhsRange.fromValue && lhsRange.toValue === rhsRange.toValue && lhsRange.rangeLabel === rhsRange.rangeLabel,
+        (rhsRange) =>
+          lhsRange.fromValue === rhsRange.fromValue &&
+          lhsRange.toValue === rhsRange.toValue &&
+          lhsRange.rangeLabel === rhsRange.rangeLabel,
       ),
     ) &&
     ranges2.every((lhsRange) =>
       ranges1.some(
-        (rhsRange) => lhsRange.fromValue === rhsRange.fromValue && lhsRange.toValue === rhsRange.toValue && lhsRange.rangeLabel === rhsRange.rangeLabel,
+        (rhsRange) =>
+          lhsRange.fromValue === rhsRange.fromValue &&
+          lhsRange.toValue === rhsRange.toValue &&
+          lhsRange.rangeLabel === rhsRange.rangeLabel,
       ),
     )
   );
@@ -438,6 +477,13 @@ export async function createPropertiesGroupingHandlers(
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
   return propertiesGroupInfo.map(
     (propertyInfo) => async (nodesToGroup, nodesAlreadyGrouped) =>
-      createPropertyGroups(nodesToGroup, nodesAlreadyGrouped, propertyInfo, valueFormatter, localizedStrings, imodelAccess),
+      createPropertyGroups(
+        nodesToGroup,
+        nodesAlreadyGrouped,
+        propertyInfo,
+        valueFormatter,
+        localizedStrings,
+        imodelAccess,
+      ),
   );
 }

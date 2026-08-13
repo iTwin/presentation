@@ -4,38 +4,40 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import { useState } from "react";
-import sinon from "sinon";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "../../RenderUtils.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { stubVirtualization } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
-    stubGlobals();
     stubVirtualization();
 
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
       HTMLElement.prototype.scrollIntoView = () => {};
     });
 
-    after(async () => {
+    afterAll(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
       UiComponents.terminate();
       await terminate();
     });
 
-    it("renders tree with hierarchy level filtering", async function () {
+    it("renders tree with hierarchy level filtering", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelFiltering
       function MyTree(props: { imodel: IModelConnection }) {
         const state = usePresentationTreeState({ imodel: props.imodel, ruleset, pagingSize: 10 });
@@ -50,7 +52,9 @@ describe("Learning snippets", () => {
 
         // create presentation-specific tree renderer that enables hierarchy
         // level filtering
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />;
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
+          <PresentationTreeRenderer {...treeRendererProps} nodeLoader={state.nodeLoader} />
+        );
 
         return (
           <PresentationTree
@@ -66,7 +70,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(this, async (builder) => {
+      const { imodel } = await buildTestIModel(async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -90,21 +94,26 @@ describe("Learning snippets", () => {
       const filteringDialog = await waitFor(() => getByRole(baseElement, "dialog"));
 
       // open property selector and select the "User Label" property
-      // cspell:disable-next-line
-      const propertySelector = await waitFor(() => getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"));
+
+      const propertySelector = await waitFor(() =>
+        // cspell:disable-next-line
+        getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"),
+      );
       await user.click(propertySelector);
       await user.click(getByTitle(baseElement, "User Label"));
-      await waitFor(() => expect(propertySelector.value).to.eq("User Label"));
+      await waitFor(() => expect(propertySelector.value).toBe("User Label"));
 
       // focus value input box
       const propertyValueBox = filteringDialog.querySelector<HTMLInputElement>(".fb-property-value input")!;
-      expect(propertyValueBox).to.not.be.null;
+      expect(propertyValueBox).not.toBeNull();
       await user.click(propertyValueBox);
       await user.type(propertyValueBox, "My Element 2");
       await user.keyboard("{Enter}");
       await waitFor(() => {
         // wait for the "apply" button to become enabled
-        const disabledButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button[disabled]");
+        const disabledButton = filteringDialog.querySelector(
+          ".presentation-instance-filter-dialog-apply-button[disabled]",
+        );
         if (disabledButton) {
           throw new Error(`The "Apply" button is disabled`);
         }
@@ -112,13 +121,13 @@ describe("Learning snippets", () => {
 
       // do filter
       const applyFilterButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button")!;
-      expect(applyFilterButton).to.not.be.null;
+      expect(applyFilterButton).not.toBeNull();
       await user.click(applyFilterButton);
 
       // expect 1 element node
       await waitFor(() => {
-        expect(() => getNodeByLabel(container, "My Element 1")).to.throw();
-        expect(getNodeByLabel(container, "My Element 2")).to.not.be.undefined;
+        expect(() => getNodeByLabel(container, "My Element 1")).toThrow();
+        expect(getNodeByLabel(container, "My Element 2")).toBeDefined();
       });
     });
   });
@@ -145,10 +154,7 @@ const ruleset: Ruleset = {
         {
           specType: "RelatedInstanceNodes",
           relationshipPaths: [
-            {
-              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-              direction: "Forward",
-            },
+            { relationship: { schemaName: "BisCore", className: "ModelContainsElements" }, direction: "Forward" },
           ],
           groupByClass: false,
           groupByLabel: false,
@@ -157,26 +163,3 @@ const ruleset: Ruleset = {
     },
   ],
 };
-
-/**
- * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions and 'DOMMatrix' interface.
- * 'requestAnimationFrame' and 'cancelAnimationFrame' is needed for tests using the 'react-select' component.
- * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
- */
-function stubGlobals() {
-  const domMatrix = global.DOMMatrix;
-
-  before(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
-    });
-  });
-
-  after(() => {
-    Object.defineProperty(global, "DOMMatrix", {
-      writable: true,
-      value: domMatrix,
-    });
-  });
-}

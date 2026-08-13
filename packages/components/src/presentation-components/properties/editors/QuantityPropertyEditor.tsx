@@ -9,31 +9,27 @@ import { QuantityPropertyEditorInput } from "../inputs/QuantityPropertyEditorInp
 import { PropertyEditorAttributes } from "./Common.js";
 
 /**
- * Name for `QuantityPropertyEditor`.
- * @internal
- */
-export const QuantityEditorName = "presentation-quantity-editor";
-
-/**
  * Editor for quantity properties.
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class QuantityPropertyEditorBase extends PropertyEditorBase {
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public get reactNode(): React.ReactNode {
     return <QuantityPropertyEditor />;
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 }
 
 /**
  * Component that renders quantity property value input
  * @internal
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
-  /* c8 ignore start */
+  /* v8 ignore start -- @preserve */
   public async getPropertyValue() {
     return this._ref.current?.getValue();
   }
@@ -48,10 +44,12 @@ export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> i
     }
     return this._ref.current.htmlElement.contains(document.activeElement);
   }
-  /* c8 ignore end */
+  /* v8 ignore stop -- @preserve */
 
   /** @internal */
   public override render() {
-    return this.props.propertyRecord ? <QuantityPropertyEditorInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} /> : null;
+    return this.props.propertyRecord ? (
+      <QuantityPropertyEditorInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} />
+    ) : null;
   }
 }

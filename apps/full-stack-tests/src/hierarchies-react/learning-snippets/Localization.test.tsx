@@ -4,14 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-duplicate-imports */
 
-import { expect } from "chai";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import {
+  createBisInstanceLabelSelectClauseFactory,
+  createCachingECClassHierarchyInspector,
+} from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
 import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
@@ -21,18 +24,18 @@ import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-r
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
+import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
 import {
   createRenderedTreeNodeData,
-  LocalizationContextProvider,
   RenderedTreeNode,
   TreeNodeRenderer,
   TreeRenderer,
-} from "@itwin/presentation-hierarchies-react";
+} from "@itwin/presentation-hierarchies-react/itwinui";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils.js";
 import { render, waitFor } from "../../RenderUtils.js";
 import { stubVirtualization } from "../../Utils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
@@ -52,7 +55,8 @@ describe("Hierarchies React", () => {
         clearHierarchyLevelFilter: "Clear active filter",
         noFilteredChildren: "No child nodes match current filter",
         resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-        resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+        resultLimitExceededWithFiltering:
+          "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
         increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
         increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
       };
@@ -65,7 +69,7 @@ describe("Hierarchies React", () => {
       beforeEach(async function () {
         await initialize();
         imodel = (
-          await buildIModel(this, async (builder) => {
+          await buildTestIModel(async (builder) => {
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
           })
@@ -81,7 +85,9 @@ describe("Hierarchies React", () => {
         };
         const nodesQueryFactory = createNodesQueryClauseFactory({
           imodelAccess: access,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access }),
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+            classHierarchyInspector: access,
+          }),
         });
         const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access });
         getHierarchyDefinition = () => ({
@@ -95,7 +101,10 @@ describe("Hierarchies React", () => {
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                        selector: await labelsQueryFactory.createSelectClause({
+                          classAlias: "this",
+                          className: "BisCore.PhysicalModel",
+                        }),
                       },
                       hasChildren: true,
                       hideIfNoChildren: false,
@@ -113,7 +122,7 @@ describe("Hierarchies React", () => {
         await terminate();
       });
 
-      it("Tree localization", async function () {
+      it("Tree localization", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
         function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
           const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
@@ -125,15 +134,24 @@ describe("Hierarchies React", () => {
           if (!rootNodes) {
             return localizedStrings.loading;
           }
-          return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
+          return (
+            <TreeRenderer
+              rootNodes={rootNodes}
+              expandNode={expandNode}
+              localizedStrings={localizedStrings}
+              onFilterClick={() => {}}
+            />
+          );
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
-        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
+        const { getAllByRole, getByRole, user } = render(<MyTreeComponent imodelAccess={access} />);
+        const modelB = await waitFor(() => getByRole("treeitem", { name: /My Model B/ }));
+        await user.hover(modelB);
+        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).not.toHaveLength(0));
       });
 
-      it("Tree renderer localization", async function () {
+      it("Tree renderer localization", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer
         type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
         type TreeRendererProps = Props<typeof TreeRenderer>;
@@ -143,11 +161,19 @@ describe("Hierarchies React", () => {
             return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
           }, []);
 
-          const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, () => false), []);
+          const getNode = useCallback<TreeProps["getNode"]>(
+            (node) => createRenderedTreeNodeData(node, () => false),
+            [],
+          );
 
           return (
             <LocalizationContextProvider localizedStrings={localizedStrings}>
-              <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+              <Tree<RenderedTreeNode>
+                data={rootNodes}
+                nodeRenderer={nodeRenderer}
+                getNode={getNode}
+                enableVirtualization={true}
+              />
             </LocalizationContextProvider>
           );
         }
@@ -166,8 +192,10 @@ describe("Hierarchies React", () => {
           return <MyTreeRenderer {...state} rootNodes={rootNodes} localizedStrings={localizedStrings} />;
         }
 
-        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
-        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
+        const { getAllByRole, getByRole, user } = render(<MyTreeComponent imodelAccess={access} />);
+        const modelB = await waitFor(() => getByRole("treeitem", { name: /My Model B/ }));
+        await user.hover(modelB);
+        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).not.toHaveLength(0));
       });
     });
   });

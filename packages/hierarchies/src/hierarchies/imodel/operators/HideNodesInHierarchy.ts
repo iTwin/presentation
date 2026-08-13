@@ -6,11 +6,20 @@
 import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../../HierarchyNodeKey.js";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import {
+  createNodeIdentifierForLogging,
+  createOperatorLoggingNamespace,
+  hasChildren,
+  LOGGING_NAMESPACE_INTERNAL,
+} from "../../internal/Common.js";
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { partition } from "../../internal/operators/Partition.js";
 import { reduceToMergeMapItem } from "../../internal/operators/ReduceToMergeMap.js";
-import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import {
+  ProcessedGenericHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../IModelHierarchyNode.js";
 import { mergeInstanceNodes } from "../Utils.js";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
@@ -27,18 +36,23 @@ export function createHideNodesInHierarchyOperator(
   stopOnFirstChild: boolean,
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
-    const inputNodes = nodes.pipe(log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }));
+    const inputNodes = nodes.pipe(
+      /* v8 ignore next -- @preserve */
+      log({ category: LOGGING_NAMESPACE, message: (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
+    );
     const [withFlag, withoutFlag] = partition(
       inputNodes,
       (n): n is ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode =>
-        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideInHierarchy,
+        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) &&
+        !!n.processingParams?.hideInHierarchy,
     );
     // Defer to create a new seed for reduce on every subscribe
     const withLoadedChildren = defer(() =>
       withFlag.pipe(
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE,
-          message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)} needs hide and needs children to be loaded`,
+          message: (n) => `${createNodeIdentifierForLogging(n)} needs hide and needs children to be loaded`,
         }),
         filter((node) => node.children !== false),
         reduceToMergeMapItem(
@@ -55,7 +69,8 @@ export function createHideNodesInHierarchyOperator(
             return node;
           },
         ),
-        log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (mm) => `created a merge map of size ${mm.size}` }),
+        /* v8 ignore next -- @preserve */
+        log({ category: LOGGING_NAMESPACE, message: (mm) => `created a merge map of size ${mm.size}` }),
         mergeMap((mm) => [...mm.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
         mergeAll(),
         map((n): ProcessedHierarchyNode => n),
@@ -64,9 +79,10 @@ export function createHideNodesInHierarchyOperator(
 
     return merge(
       withoutFlag.pipe(
+        /* v8 ignore next -- @preserve */
         log({
           category: LOGGING_NAMESPACE,
-          message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node`,
+          message: (n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node`,
         }),
       ),
       stopOnFirstChild
@@ -75,25 +91,30 @@ export function createHideNodesInHierarchyOperator(
             // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
             inputNodes.pipe(
               filter(hasChildren),
+              /* v8 ignore next -- @preserve */
               log({
                 category: LOGGING_NAMESPACE,
-                message: /* c8 ignore next */ (n) =>
+                message: (n) =>
                   `\`stopOnFirstChild = true\` and node ${createNodeIdentifierForLogging(n)} is set to always have nodes - return the hidden node without loading children`,
               }),
             ),
             EMPTY.pipe(
-              finalize(() =>
+              finalize(() => {
+                /* v8 ignore next -- @preserve */
                 doLog({
                   category: LOGGING_NAMESPACE,
-                  message: /* c8 ignore next */ () =>
+                  message: () =>
                     `\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`,
-                }),
-              ),
+                });
+              }),
             ),
             withLoadedChildren,
           ).pipe(take(1))
         : withLoadedChildren,
-    ).pipe(log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }));
+    ).pipe(
+      /* v8 ignore next -- @preserve */
+      log({ category: LOGGING_NAMESPACE, message: (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
+    );
   };
 }
 

@@ -14,16 +14,19 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { Presentation, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
 // eslint-disable-next-line no-duplicate-imports
-import { PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  PresentationBackendLoggerCategory,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.Imports
 import { exportDiagnostics } from "@itwin/presentation-opentelemetry";
 import { context } from "@opentelemetry/api";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.SdkImports
-import { Resource } from "@opentelemetry/resources";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import * as opentelemetry from "@opentelemetry/sdk-node";
 import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base";
-import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
 
@@ -51,9 +54,7 @@ void (async () => {
   // configure the OpenTelemetry data exporting to the console
   const telemetry = new opentelemetry.NodeSDK({
     traceExporter: new ConsoleSpanExporter(),
-    resource: new Resource({
-      [SEMRESATTRS_SERVICE_NAME]: "presentation-test-app",
-    }),
+    resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: "presentation-test-app" }),
   });
   telemetry.start();
   process.on("SIGTERM", () => {

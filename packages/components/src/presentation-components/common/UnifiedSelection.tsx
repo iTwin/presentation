@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createContext, useContext, useEffect, useState } from "react";
+
 import type { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 
 /**
@@ -29,8 +30,8 @@ async function getUnifiedSelectionContextFn() {
   try {
     const optionalPkg = await import("@itwin/unified-selection-react");
     return optionalPkg.useUnifiedSelectionContext;
-    /* c8 ignore next 3 */
   } catch {
+    /* v8 ignore next 3 -- @preserve */
     return undefined;
   }
 }

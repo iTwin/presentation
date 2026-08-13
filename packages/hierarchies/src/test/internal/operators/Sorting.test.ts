@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
+import { describe, expect, it } from "vitest";
 import { sortNodesByLabelOperator } from "../../../hierarchies/internal/operators/Sorting.js";
 import { createTestProcessedGenericNode } from "../../Utils.js";
 
@@ -17,6 +17,6 @@ describe("Sorting", () => {
       createTestProcessedGenericNode({ label: "a" }),
     ];
     const result = await collect(from(nodes).pipe(sortNodesByLabelOperator));
-    expect(result).to.deep.eq([nodes[2], nodes[0], nodes[1]]);
+    expect(result).toEqual([nodes[2], nodes[0], nodes[1]]);
   });
 });

@@ -31,7 +31,7 @@ export interface ILogger {
  * A logger implementation that does nothing.
  * @public
  */
-/* c8 ignore next 7 */
+/* v8 ignore start */
 export const NOOP_LOGGER: ILogger = {
   isEnabled: () => false,
   logError: () => {},
@@ -39,3 +39,4 @@ export const NOOP_LOGGER: ILogger = {
   logInfo: () => {},
   logTrace: () => {},
 };
+/* v8 ignore stop */

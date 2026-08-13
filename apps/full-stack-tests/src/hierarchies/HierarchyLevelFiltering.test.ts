@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { importSchema, withECDb } from "../IModelUtils.js";
@@ -13,20 +14,19 @@ import { createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {
-    before(async () => {
+    beforeAll(async () => {
       await initialize();
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
-    it("filters root hierarchy level", async function () {
+    it("filters root hierarchy level", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X">
@@ -42,7 +42,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -71,12 +73,11 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [x2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -101,12 +102,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters child hierarchy level", async function () {
+    it("filters child hierarchy level", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -124,7 +124,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -155,23 +157,18 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({
             nodes: await collect(
               provider.getNodes({
-                parentNode: {
-                  key: { type: "instances", instanceKeys: [x] },
-                  parentKeys: [],
-                  label: "",
-                },
+                parentNode: { key: { type: "instances", instanceKeys: [x] }, parentKeys: [], label: "" },
               }),
             ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [y1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
               provider.getNodes({
-                parentNode: {
-                  key: { type: "instances", instanceKeys: [x] },
-                  parentKeys: [],
-                  label: "",
-                },
+                parentNode: { key: { type: "instances", instanceKeys: [x] }, parentKeys: [], label: "" },
                 instanceFilter: {
                   propertyClassNames: [schema.items.Y.fullName],
                   relatedInstances: [],
@@ -191,12 +188,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters grouped hierarchy level", async function () {
+    it("filters grouped hierarchy level", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -214,7 +210,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -231,9 +229,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
-                        grouping: {
-                          byClass: true,
-                        },
+                        grouping: { byClass: true },
                       })}
                       FROM ${filterClauses.from} AS this
                       ${filterClauses.joins}
@@ -248,21 +244,16 @@ describe("Hierarchies", () => {
           const groupingNode = {
             key: { type: "class-grouping" as const, className: schema.items.Y.fullName },
             parentKeys: [{ type: "instances" as const, instanceKeys: [x] }],
-            nonGroupingAncestor: {
-              key: { type: "instances" as const, instanceKeys: [x] },
-              parentKeys: [],
-              label: "X",
-            },
+            nonGroupingAncestor: { key: { type: "instances" as const, instanceKeys: [x] }, parentKeys: [], label: "X" },
             label: "Y",
             groupedInstanceKeys: [y1, y2],
           };
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: groupingNode,
-              }),
-            ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+            nodes: await collect(provider.getNodes({ parentNode: groupingNode })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [y1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -287,12 +278,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by property class", async function () {
+    it("filters by property class", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -309,7 +299,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -338,12 +330,11 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -352,10 +343,7 @@ describe("Hierarchies", () => {
                 instanceFilter: {
                   propertyClassNames: [schema.items.Y.fullName],
                   relatedInstances: [],
-                  rules: {
-                    operator: "and",
-                    rules: [],
-                  },
+                  rules: { operator: "and", rules: [] },
                 },
               }),
             ),
@@ -365,12 +353,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by filter class", async function () {
+    it("filters by filter class", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -387,7 +374,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -416,12 +405,11 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [y] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -431,10 +419,7 @@ describe("Hierarchies", () => {
                   propertyClassNames: [schema.items.X.fullName],
                   filteredClassNames: [schema.items.Y.fullName],
                   relatedInstances: [],
-                  rules: {
-                    operator: "and",
-                    rules: [],
-                  },
+                  rules: { operator: "and", rules: [] },
                 },
               }),
             ),
@@ -444,12 +429,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by direct property", async function () {
+    it("filters by direct property", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X">
@@ -465,7 +449,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -494,12 +480,11 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [x2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(
@@ -524,12 +509,11 @@ describe("Hierarchies", () => {
       );
     });
 
-    it("filters by related property", async function () {
+    it("filters by related property", async () => {
       await withECDb(
-        this,
-        async (db) => {
+        async (db, testName) => {
           const schema = await importSchema(
-            this,
+            testName,
             db,
             `
               <ECEntityClass typeName="X" />
@@ -558,7 +542,9 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+              classHierarchyInspector: imodelAccess,
+            }),
           });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
@@ -587,12 +573,11 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await collect(
-              provider.getNodes({
-                parentNode: undefined,
-              }),
-            ),
-            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [x1] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [x2] }),
+            ],
           });
           validateHierarchyLevel({
             nodes: await collect(

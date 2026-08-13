@@ -3,25 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import * as sinon from "sinon";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { createTestECClassInfo, stubSchemaViewForClasses, stubVirtualization } from "../_helpers/Common.js";
+import {
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestPropertiesContentField,
+} from "../_helpers/Content.js";
 import { render, waitFor, waitForElement, within } from "../TestUtils.js";
 
 describe("PresentationInstanceFilter", () => {
-  stubRaf();
-  stubDOMMatrix();
   stubVirtualization();
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
@@ -55,34 +55,32 @@ describe("PresentationInstanceFilter", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodel = {
+  const imodelMock = {
     key: "test_imodel",
     onClose: onCloseEvent,
-  } as IModelConnection;
+    getSchemaView: vi.fn().mockResolvedValue(stubSchemaViewForClasses([])),
+  };
+  const imodel = imodelMock as unknown as IModelConnection;
 
-  before(() => {
-    HTMLElement.prototype.scrollIntoView = () => {};
-
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
-    sinon.stub(Presentation, "localization").get(() => localization);
-
-    const metadataProvider = getIModelMetadataProvider(imodel);
-    sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
-      return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
-    });
+  beforeAll(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  beforeEach(() => {
+    const localization = new EmptyLocalization();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
+    imodelMock.getSchemaView.mockResolvedValue(stubSchemaViewForClasses([{ classInfo }]));
+  });
+
+  afterAll(() => {
     onCloseEvent.raiseEvent();
-    sinon.restore();
-    delete (HTMLElement.prototype as any).scrollIntoView;
+    UiComponents.terminate();
   });
 
   it("invokes 'onInstanceFilterChanged' with filter", async () => {
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { container, getByText, getByTitle, getByDisplayValue, user } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} />,
     );
@@ -99,7 +97,7 @@ describe("PresentationInstanceFilter", () => {
 
     // open operator selector
     const operatorSelector = await getRuleOperatorSelector(container);
-    expect(operatorSelector).to.be.not.null;
+    expect(operatorSelector).not.toBeNull();
     await user.click(operatorSelector);
 
     // select operator
@@ -109,12 +107,8 @@ describe("PresentationInstanceFilter", () => {
     await waitFor(() => getByText("filterBuilder.operators.isNotNull"));
 
     await waitFor(() =>
-      expect(spy).to.be.calledWith({
-        filter: {
-          field: propertiesField,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-          value: undefined,
-        },
+      expect(spy).toHaveBeenCalledWith({
+        filter: { field: propertiesField, operator: PropertyFilterRuleOperator.IsNotNull, value: undefined },
         usedClasses: [classInfo],
       }),
     );
@@ -125,32 +119,29 @@ describe("PresentationInstanceFilter", () => {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
         conditions: [
-          {
-            field: propertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
-          {
-            field: propertiesField2,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
+          { field: propertiesField, operator: PropertyFilterRuleOperator.IsNull, value: undefined },
+          { field: propertiesField2, operator: PropertyFilterRuleOperator.IsNull, value: undefined },
         ],
       },
       usedClasses: [classInfo],
     };
 
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { queryByDisplayValue } = render(
-      <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
+      <PresentationInstanceFilterBuilder
+        imodel={imodel}
+        descriptor={descriptor}
+        onInstanceFilterChanged={spy}
+        initialFilter={initialFilter}
+      />,
     );
 
     await waitFor(() => {
-      expect(queryByDisplayValue(propertiesField.label)).to.not.be.null;
+      expect(queryByDisplayValue(propertiesField.label)).not.toBeNull();
     });
 
     await waitFor(() => {
-      expect(queryByDisplayValue(propertiesField2.label)).to.not.be.null;
+      expect(queryByDisplayValue(propertiesField2.label)).not.toBeNull();
     });
   });
 
@@ -158,27 +149,24 @@ describe("PresentationInstanceFilter", () => {
     const initialFilter: PresentationInstanceFilterInfo = {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [
-          {
-            field: propertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-            value: undefined,
-          },
-        ],
+        conditions: [{ field: propertiesField, operator: PropertyFilterRuleOperator.IsNull, value: undefined }],
       },
       usedClasses: [classInfo, classInfo2],
     };
 
-    const spy = sinon.spy();
+    const spy = vi.fn();
     const { queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
-      <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
-      {
-        addThemeProvider: true,
-      },
+      <PresentationInstanceFilterBuilder
+        imodel={imodel}
+        descriptor={descriptor}
+        onInstanceFilterChanged={spy}
+        initialFilter={initialFilter}
+      />,
+      { addThemeProvider: true },
     );
 
     // ensure there's a property filter
-    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).not.toBeNull());
 
     // expand class selector
     const expander = getByPlaceholderText("instance-filter-builder.selected-classes");
@@ -189,7 +177,7 @@ describe("PresentationInstanceFilter", () => {
     await user.click(classItem);
 
     // assert that filtering rule was cleared
-    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.be.null);
+    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).toBeNull());
   });
 });
 

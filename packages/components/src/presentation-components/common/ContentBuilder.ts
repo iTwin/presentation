@@ -11,13 +11,13 @@ import {
   ArrayValue,
   PrimitiveValue,
   PropertyDescription,
-  PropertyEditorInfo,
   PropertyRecord,
   StandardTypeNames,
   StructValue,
   PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
+import { KOQ_RENDERER_NAME } from "@itwin/imodel-components-react";
 import {
   combineFieldNames,
   EditorDescription,
@@ -40,9 +40,13 @@ import {
   StartItemProps,
   StartStructProps,
   TypeDescription,
+  Value,
 } from "@itwin/presentation-common";
-import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
-import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
+import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "../properties/editors/EditorNames.js";
+import {
+  InstanceKeyValueRendererName,
+  InstanceKeyValueRendererNameInRules,
+} from "../properties/InstanceKeyValueRenderer.js";
 import { WithIModelKey } from "./Utils.js";
 
 /**
@@ -50,18 +54,9 @@ import { WithIModelKey } from "./Utils.js";
  * @public
  */
 export type PropertyValueConstraints =
-  | {
-      minimumLength?: number;
-      maximumLength?: number;
-    }
-  | {
-      minimumValue?: number;
-      maximumValue?: number;
-    }
-  | {
-      minOccurs?: number;
-      maxOccurs?: number;
-    };
+  | { minimumLength?: number; maximumLength?: number }
+  | { minimumValue?: number; maximumValue?: number }
+  | { minOccurs?: number; maxOccurs?: number };
 
 /**
  * Expands specified type with additional constraints property.
@@ -84,7 +79,8 @@ export interface FieldInfo {
 
 /** @internal */
 export function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
-  const property: undefined | WithConstraints<PropertyInfo> = field.isPropertiesField() ? field.properties[0].property : undefined;
+  const property: undefined | WithConstraints<PropertyInfo> =
+    field.isPropertiesField() && field.properties.length > 0 ? field.properties[0].property : undefined;
   return {
     name: combineFieldNames(field.name, parentFieldName),
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
@@ -107,11 +103,14 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   };
 
   if (info.renderer) {
-    description.renderer = { name: info.renderer.name };
+    description.renderer = {
+      name:
+        info.renderer.name === InstanceKeyValueRendererNameInRules ? InstanceKeyValueRendererName : info.renderer.name,
+    };
   }
 
   if (info.editor) {
-    description.editor = { name: info.editor.name } as PropertyEditorInfo;
+    description.editor = { name: info.editor.name };
   }
 
   if (info.koqName) {
@@ -119,6 +118,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     description.quantityType = info.koqName;
     description.editor = { name: QuantityEditorName, ...description.editor };
+    description.renderer = { name: KOQ_RENDERER_NAME, ...description.renderer };
   }
 
   if (info.constraints) {
@@ -134,11 +134,12 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     description.editor = { name: NumericEditorName, ...description.editor };
   }
 
+  if (description.typename === StandardTypeNames.Navigation) {
+    description.editor = { name: NavigationEditorName, ...description.editor };
+  }
+
   if (info.type.valueFormat === PresentationPropertyValueFormat.Primitive && info.enum) {
-    description.enum = {
-      choices: info.enum.choices,
-      isStrict: info.enum.isStrict,
-    };
+    description.enum = { choices: info.enum.choices, isStrict: info.enum.isStrict };
   }
   return description;
 }
@@ -187,10 +188,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
   public finish(): void {
     const properties = Object.entries(this._members);
     inPlaceSort(properties).by([{ asc: (p) => p[1].property.displayLabel, comparer: this._labelsComparer }]);
-    const value: StructValue = {
-      valueFormat: UiPropertyValueFormat.Struct,
-      members: Object.fromEntries(properties),
-    };
+    const value: StructValue = { valueFormat: UiPropertyValueFormat.Struct, members: Object.fromEntries(properties) };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
     const displayLabel = this._label?.displayValue;
     applyPropertyRecordAttributes(
@@ -239,7 +237,10 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   private _rootAppenderFactory: (item: Item) => IRootPropertiesAppender;
   private _propertyRecordsProcessor?: (record: PropertyRecord) => void;
 
-  public constructor(rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender, propertyRecordsProcessor?: (record: PropertyRecord) => void) {
+  public constructor(
+    rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender,
+    propertyRecordsProcessor?: (record: PropertyRecord) => void,
+  ) {
     this._rootAppenderFactory = rootPropertiesAppenderFactory;
     this._propertyRecordsProcessor = propertyRecordsProcessor;
   }
@@ -275,12 +276,15 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   public finishField(): void {}
 
   public startStruct(props: StartStructProps): boolean {
-    const fieldInfo = {
-      ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
-      type: props.valueType,
-    };
+    const fieldInfo = { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType };
     this._appendersStack.push(
-      new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.label, this._propertyRecordsProcessor),
+      new StructMembersAppender(
+        this.currentPropertiesAppender,
+        props.hierarchy,
+        fieldInfo,
+        props.label,
+        this._propertyRecordsProcessor,
+      ),
     );
     return true;
   }
@@ -295,10 +299,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
       new ArrayItemsAppender(
         this.currentPropertiesAppender,
         props.hierarchy,
-        {
-          ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
-          type: props.valueType,
-        },
+        { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType },
         this._propertyRecordsProcessor,
       ),
     );
@@ -312,10 +313,13 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   public processMergedValue(props: ProcessMergedValueProps): void {
     const propertyField = props.requestedField;
-    const value: PrimitiveValue = {
-      valueFormat: UiPropertyValueFormat.Primitive,
-    };
-    const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)));
+    const rootAppender = this._appendersStack[0];
+    assert(IPropertiesAppender.isRoot(rootAppender));
+    const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive };
+    const record = new PropertyRecord(
+      value,
+      createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)),
+    );
     record.isMerged = true;
     record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;
     this._propertyRecordsProcessor?.(record);
@@ -324,21 +328,26 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   public processPrimitiveValue(props: ProcessPrimitiveValueProps): void {
     const appender = this.currentPropertiesAppender;
-    const value: PrimitiveValue = {
-      valueFormat: UiPropertyValueFormat.Primitive,
-      value: props.rawValue,
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      displayValue: props.displayValue?.toString() ?? "",
-    };
+
+    const displayValue =
+      props.field.type.typeName === "navigation" && Value.isNavigationValue(props.rawValue)
+        ? props.rawValue.label.displayValue
+        : undefined;
+    const rawValue = Value.isNavigationValue(props.rawValue)
+      ? { id: props.rawValue.id, className: props.rawValue.className }
+      : props.rawValue;
+    const value: PrimitiveValue = { valueFormat: UiPropertyValueFormat.Primitive, value: rawValue, displayValue };
     const record = new PropertyRecord(
       value,
-      createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(props.field, props.parentFieldName), type: props.valueType }),
+      createPropertyDescriptionFromFieldInfo({
+        ...createFieldInfo(props.field, props.parentFieldName),
+        type: props.valueType,
+      }),
     );
     applyPropertyRecordAttributes(
       record,
       props.field,
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      props.displayValue?.toString(),
+      undefined,
       IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
       this._propertyRecordsProcessor,
     );
@@ -350,7 +359,7 @@ function applyPropertyRecordAttributes(
   record: WithIModelKey<PropertyRecord>,
   field: Field,
   displayValue: string | undefined,
-  extendedData: typeof Item.prototype.extendedData | undefined,
+  itemExtendedData: typeof Item.prototype.extendedData,
   propertyRecordsProcessor?: (record: PropertyRecord) => void,
 ) {
   if (displayValue) {
@@ -362,8 +371,8 @@ function applyPropertyRecordAttributes(
   if (field.isNestedContentField() && field.autoExpand) {
     record.autoExpand = true;
   }
-  if (extendedData) {
-    record.extendedData = extendedData;
+  if (field.extendedData || itemExtendedData) {
+    record.extendedData = { ...field.extendedData, ...itemExtendedData };
   }
   propertyRecordsProcessor?.(record);
 }

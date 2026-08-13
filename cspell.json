@@ -37,7 +37,6 @@
     "kita",
     "lage",
     "millis",
-    "mocharc",
     "montecarlo",
     // Lithuanian word
     "nenurodyta",
@@ -73,6 +72,8 @@
     "**/*.snap",
     "sample_documents",
     "**/*.patch",
-    ".prettierrc"
+    ".oxfmtrc.json",
+    "cspell.json",
+    "dependabot.yml"
   ]
 }

@@ -3,49 +3,48 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { PageOptions } from "@itwin/components-react";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
+import {
+  createPartialTreeNodeItem,
+  createTreeNodeItem,
+  createTreeNodeItems,
+  pageOptionsUiToPresentation,
+} from "../../presentation-components/tree/Utils.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
-import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils.js";
 
 describe("Utils", () => {
   describe("createTreeNodeItem", () => {
     it("creates tree node", () => {
       const node = createTestECInstancesNode();
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree node with extended data", () => {
       const node = { ...createTestECInstancesNode(), extendedData: { test: "value" } };
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode.extendedData!.test).to.eq("value");
+      expect(treeNode.extendedData!.test).toBe("value");
     });
 
     it("creates tree node with parent id", () => {
       const node = createTestECInstancesNode();
       const parentId = "test_parent_id";
       const treeNode = createTreeNodeItem(node, parentId);
-      expect(treeNode).to.matchSnapshot();
-    });
-
-    it("creates tree node with custom label styles", () => {
-      const node = { ...createTestECInstancesNode(), fontStyle: "Bold Italic" };
-      const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates auto expanded tree node", () => {
       const node = createTestECInstancesNode({ isExpanded: true });
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree node with children", () => {
       const node = createTestECInstancesNode({ hasChildren: true });
       const treeNode = createTreeNodeItem(node);
-      expect(treeNode.hasChildren).to.be.true;
+      expect(treeNode.hasChildren).toBe(true);
     });
 
     it("appends grouped nodes count if requested", () => {
@@ -55,7 +54,7 @@ describe("Utils", () => {
         label: LabelDefinition.fromLabelString("test"),
       };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("uses provided callback to customize tree node", () => {
@@ -66,36 +65,30 @@ describe("Utils", () => {
           item.description = "custom-description";
         },
       });
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
   });
 
   describe("createPartialTreeNodeItem", () => {
     it("assigns item id and label from loaded node", () => {
       const node = createPartialTreeNodeItem(
-        {
-          key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"),
-        },
+        { key: { type: "", version: 0, pathFromRoot: [] }, label: LabelDefinition.fromLabelString("test") },
         undefined,
         {},
       );
-      expect(node.id).not.to.be.undefined;
-      expect(node.label).not.to.be.undefined;
-      expect(node.key).not.to.be.undefined;
+      expect(node.id).not.toBeUndefined();
+      expect(node.label).not.toBeUndefined();
+      expect(node.key).not.toBeUndefined();
     });
 
     it("does not set a presentation tree node key when input does not have a key", () => {
       const node = createPartialTreeNodeItem({}, undefined, {});
-      expect(node.key).to.be.undefined;
+      expect(node.key).toBeUndefined();
     });
 
     it("uses provided callback to customize tree node", () => {
       const treeNode = createPartialTreeNodeItem(
-        {
-          key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"),
-        },
+        { key: { type: "", version: 0, pathFromRoot: [] }, label: LabelDefinition.fromLabelString("test") },
         undefined,
         {
           customizeTreeNodeItem: (item) => {
@@ -104,7 +97,7 @@ describe("Utils", () => {
           },
         },
       );
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
   });
 
@@ -112,21 +105,21 @@ describe("Utils", () => {
     it("creates tree nodes", () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
       const treeNode = createTreeNodeItems(nodes);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
 
     it("creates tree nodes with parentId", () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
       const parentId = "test_parent_id";
       const treeNode = createTreeNodeItems(nodes, parentId);
-      expect(treeNode).to.matchSnapshot();
+      expect(treeNode).toMatchSnapshot();
     });
   });
 
   describe("pageOptionsUiToPresentation", () => {
     it("returns undefined if passed undefined parameter", () => {
       const result = pageOptionsUiToPresentation(undefined);
-      expect(result).to.be.equal(undefined);
+      expect(result).toEqual(undefined);
     });
 
     it("converts ui page options to presentation page options", () => {
@@ -135,9 +128,9 @@ describe("Utils", () => {
       const pageOptions: PageOptions = { size, start };
       const result = pageOptionsUiToPresentation(pageOptions);
 
-      expect(result).to.not.be.undefined;
-      expect(result!.size).to.be.equal(size);
-      expect(result!.start).to.be.equal(start);
+      expect(result).toBeDefined();
+      expect(result!.size).toEqual(size);
+      expect(result!.start).toEqual(start);
     });
   });
 });

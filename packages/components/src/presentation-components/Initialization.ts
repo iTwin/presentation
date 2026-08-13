@@ -8,8 +8,8 @@
 
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { Presentation } from "@itwin/presentation-frontend";
-import { localizationNamespaceName } from "./common/Utils.js";
-import { InstanceKeyValueRenderer } from "./properties/InstanceKeyValueRenderer.js";
+import { LOCALIZATION_NAMESPACE } from "./common/LocalizedStrings.js";
+import { InstanceKeyValueRenderer, InstanceKeyValueRendererName } from "./properties/InstanceKeyValueRenderer.js";
 
 /**
  * Registers 'PresentationComponents' localization namespace and returns callback
@@ -17,8 +17,8 @@ import { InstanceKeyValueRenderer } from "./properties/InstanceKeyValueRenderer.
  * @internal
  */
 export const initializeLocalization = async () => {
-  await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
+  await Presentation.localization.registerNamespace(LOCALIZATION_NAMESPACE);
+  return () => Presentation.localization.unregisterNamespace(LOCALIZATION_NAMESPACE);
 };
 
 /**
@@ -26,7 +26,9 @@ export const initializeLocalization = async () => {
  * @internal
  */
 export const initializePropertyValueRenderers = async () => {
-  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [{ name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() }];
+  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [
+    { name: InstanceKeyValueRendererName, renderer: new InstanceKeyValueRenderer() },
+  ];
 
   for (const { name, renderer } of customRenderers) {
     PropertyValueRendererManager.defaultManager.registerRenderer(name, renderer);

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { GroupingHierarchyNode, HierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { createTestGenericNodeKey } from "./Utils.js";
 
@@ -69,121 +69,121 @@ describe("HierarchyNode", () => {
 
   describe("isGeneric", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isGeneric(genericNode)).to.be.true;
-      expect(HierarchyNode.isGeneric(instancesNode)).to.be.false;
-      expect(HierarchyNode.isGeneric(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isGeneric(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isGeneric(propertyOtherValuesGroupingNode)).to.be.false;
-      expect(HierarchyNode.isGeneric(propertyValueGroupingNode)).to.be.false;
-      expect(HierarchyNode.isGeneric(propertyValueRangeGroupingNode)).to.be.false;
+      expect(HierarchyNode.isGeneric(genericNode)).toBe(true);
+      expect(HierarchyNode.isGeneric(instancesNode)).toBe(false);
+      expect(HierarchyNode.isGeneric(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isGeneric(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isGeneric(propertyOtherValuesGroupingNode)).toBe(false);
+      expect(HierarchyNode.isGeneric(propertyValueGroupingNode)).toBe(false);
+      expect(HierarchyNode.isGeneric(propertyValueRangeGroupingNode)).toBe(false);
     });
   });
 
   describe("isIModelNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isIModelNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isIModelNode(instancesNode)).to.be.true;
-      expect(HierarchyNode.isIModelNode(classGroupingNode)).to.be.true;
-      expect(HierarchyNode.isIModelNode(labelGroupingNode)).to.be.true;
-      expect(HierarchyNode.isIModelNode(propertyOtherValuesGroupingNode)).to.be.true;
-      expect(HierarchyNode.isIModelNode(propertyValueGroupingNode)).to.be.true;
-      expect(HierarchyNode.isIModelNode(propertyValueRangeGroupingNode)).to.be.true;
+      expect(HierarchyNode.isIModelNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isIModelNode(instancesNode)).toBe(true);
+      expect(HierarchyNode.isIModelNode(classGroupingNode)).toBe(true);
+      expect(HierarchyNode.isIModelNode(labelGroupingNode)).toBe(true);
+      expect(HierarchyNode.isIModelNode(propertyOtherValuesGroupingNode)).toBe(true);
+      expect(HierarchyNode.isIModelNode(propertyValueGroupingNode)).toBe(true);
+      expect(HierarchyNode.isIModelNode(propertyValueRangeGroupingNode)).toBe(true);
     });
   });
 
   describe("isInstancesNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isInstancesNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isInstancesNode(instancesNode)).to.be.true;
-      expect(HierarchyNode.isInstancesNode(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isInstancesNode(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isInstancesNode(propertyOtherValuesGroupingNode)).to.be.false;
-      expect(HierarchyNode.isInstancesNode(propertyValueGroupingNode)).to.be.false;
-      expect(HierarchyNode.isInstancesNode(propertyValueRangeGroupingNode)).to.be.false;
+      expect(HierarchyNode.isInstancesNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isInstancesNode(instancesNode)).toBe(true);
+      expect(HierarchyNode.isInstancesNode(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isInstancesNode(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isInstancesNode(propertyOtherValuesGroupingNode)).toBe(false);
+      expect(HierarchyNode.isInstancesNode(propertyValueGroupingNode)).toBe(false);
+      expect(HierarchyNode.isInstancesNode(propertyValueRangeGroupingNode)).toBe(false);
     });
   });
 
   describe("isGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isGroupingNode(classGroupingNode)).to.be.true;
-      expect(HierarchyNode.isGroupingNode(labelGroupingNode)).to.be.true;
-      expect(HierarchyNode.isGroupingNode(propertyOtherValuesGroupingNode)).to.be.true;
-      expect(HierarchyNode.isGroupingNode(propertyValueGroupingNode)).to.be.true;
-      expect(HierarchyNode.isGroupingNode(propertyValueRangeGroupingNode)).to.be.true;
+      expect(HierarchyNode.isGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isGroupingNode(classGroupingNode)).toBe(true);
+      expect(HierarchyNode.isGroupingNode(labelGroupingNode)).toBe(true);
+      expect(HierarchyNode.isGroupingNode(propertyOtherValuesGroupingNode)).toBe(true);
+      expect(HierarchyNode.isGroupingNode(propertyValueGroupingNode)).toBe(true);
+      expect(HierarchyNode.isGroupingNode(propertyValueRangeGroupingNode)).toBe(true);
     });
   });
 
   describe("isClassGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isClassGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isClassGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isClassGroupingNode(classGroupingNode)).to.be.true;
-      expect(HierarchyNode.isClassGroupingNode(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isClassGroupingNode(propertyOtherValuesGroupingNode)).to.be.false;
-      expect(HierarchyNode.isClassGroupingNode(propertyValueGroupingNode)).to.be.false;
-      expect(HierarchyNode.isClassGroupingNode(propertyValueRangeGroupingNode)).to.be.false;
+      expect(HierarchyNode.isClassGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isClassGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isClassGroupingNode(classGroupingNode)).toBe(true);
+      expect(HierarchyNode.isClassGroupingNode(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isClassGroupingNode(propertyOtherValuesGroupingNode)).toBe(false);
+      expect(HierarchyNode.isClassGroupingNode(propertyValueGroupingNode)).toBe(false);
+      expect(HierarchyNode.isClassGroupingNode(propertyValueRangeGroupingNode)).toBe(false);
     });
   });
 
   describe("isLabelGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isLabelGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isLabelGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isLabelGroupingNode(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isLabelGroupingNode(labelGroupingNode)).to.be.true;
-      expect(HierarchyNode.isLabelGroupingNode(propertyOtherValuesGroupingNode)).to.be.false;
-      expect(HierarchyNode.isLabelGroupingNode(propertyValueGroupingNode)).to.be.false;
-      expect(HierarchyNode.isLabelGroupingNode(propertyValueRangeGroupingNode)).to.be.false;
+      expect(HierarchyNode.isLabelGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isLabelGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isLabelGroupingNode(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isLabelGroupingNode(labelGroupingNode)).toBe(true);
+      expect(HierarchyNode.isLabelGroupingNode(propertyOtherValuesGroupingNode)).toBe(false);
+      expect(HierarchyNode.isLabelGroupingNode(propertyValueGroupingNode)).toBe(false);
+      expect(HierarchyNode.isLabelGroupingNode(propertyValueRangeGroupingNode)).toBe(false);
     });
   });
 
   describe("isPropertyOtherValuesGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(propertyOtherValuesGroupingNode)).to.be.true;
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(propertyValueGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(propertyValueRangeGroupingNode)).to.be.false;
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(propertyOtherValuesGroupingNode)).toBe(true);
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(propertyValueGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyOtherValuesGroupingNode(propertyValueRangeGroupingNode)).toBe(false);
     });
   });
 
   describe("isPropertyValueGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isPropertyValueGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueGroupingNode(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueGroupingNode(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueGroupingNode(propertyOtherValuesGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueGroupingNode(propertyValueGroupingNode)).to.be.true;
-      expect(HierarchyNode.isPropertyValueGroupingNode(propertyValueRangeGroupingNode)).to.be.false;
+      expect(HierarchyNode.isPropertyValueGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueGroupingNode(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueGroupingNode(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueGroupingNode(propertyOtherValuesGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueGroupingNode(propertyValueGroupingNode)).toBe(true);
+      expect(HierarchyNode.isPropertyValueGroupingNode(propertyValueRangeGroupingNode)).toBe(false);
     });
   });
 
   describe("isPropertyValueRangeGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyOtherValuesGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyValueGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyValueRangeGroupingNode)).to.be.true;
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyOtherValuesGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyValueGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyValueRangeGroupingNode)).toBe(true);
     });
   });
 
   describe("isPropertyGroupingNode", () => {
     it("returns correct result for different types of nodes", () => {
-      expect(HierarchyNode.isPropertyGroupingNode(genericNode)).to.be.false;
-      expect(HierarchyNode.isPropertyGroupingNode(instancesNode)).to.be.false;
-      expect(HierarchyNode.isPropertyGroupingNode(classGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyGroupingNode(labelGroupingNode)).to.be.false;
-      expect(HierarchyNode.isPropertyGroupingNode(propertyOtherValuesGroupingNode)).to.be.true;
-      expect(HierarchyNode.isPropertyGroupingNode(propertyValueGroupingNode)).to.be.true;
-      expect(HierarchyNode.isPropertyGroupingNode(propertyValueRangeGroupingNode)).to.be.true;
+      expect(HierarchyNode.isPropertyGroupingNode(genericNode)).toBe(false);
+      expect(HierarchyNode.isPropertyGroupingNode(instancesNode)).toBe(false);
+      expect(HierarchyNode.isPropertyGroupingNode(classGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyGroupingNode(labelGroupingNode)).toBe(false);
+      expect(HierarchyNode.isPropertyGroupingNode(propertyOtherValuesGroupingNode)).toBe(true);
+      expect(HierarchyNode.isPropertyGroupingNode(propertyValueGroupingNode)).toBe(true);
+      expect(HierarchyNode.isPropertyGroupingNode(propertyValueRangeGroupingNode)).toBe(true);
     });
   });
 });

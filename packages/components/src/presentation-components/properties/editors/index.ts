@@ -10,18 +10,24 @@
 import { PureComponent } from "react";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "./EditorNames.js";
 import {
   NavigationPropertyEditor as NavigationPropertyEditorInternal,
   NavigationPropertyTargetEditor as NavigationPropertyTargetEditorInternal,
 } from "./NavigationPropertyEditor.js";
-import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
-import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
+import { NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
+import { QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
+
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 export {
   NavigationPropertyEditorContextProvider,
   NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
 } from "./NavigationPropertyEditorContext.js";
+
+/* v8 ignore start -- @preserve */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 /**
  * Editor for navigation properties.
@@ -38,8 +44,9 @@ const NavigationPropertyEditor: new () => PropertyEditorBase = NavigationPropert
  * [[PropertyEditorManager]] system where it's automatically registered as a default editor for all
  * [[StandardTypeNames.Navigation]] properties.
  */
-const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps> =
-  NavigationPropertyTargetEditorInternal;
+const NavigationPropertyTargetEditor: new (
+  props: PropertyEditorProps,
+) => TypeEditor & PureComponent<PropertyEditorProps> = NavigationPropertyTargetEditorInternal;
 
 export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 
@@ -47,10 +54,16 @@ export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 PropertyEditorManager.registerEditor(StandardTypeNames.Double, QuantityPropertyEditorBase, QuantityEditorName);
 
 // register editor for navigation properties
-PropertyEditorManager.registerEditor(StandardTypeNames.Navigation, NavigationPropertyEditorInternal);
+PropertyEditorManager.registerEditor(
+  StandardTypeNames.Navigation,
+  NavigationPropertyEditorInternal,
+  NavigationEditorName,
+);
 
 // register editor for numeric properties
 PropertyEditorManager.registerEditor(StandardTypeNames.Number, NumericPropertyEditorBase, NumericEditorName);
 PropertyEditorManager.registerEditor(StandardTypeNames.Int, NumericPropertyEditorBase, NumericEditorName);
 PropertyEditorManager.registerEditor(StandardTypeNames.Float, NumericPropertyEditorBase, NumericEditorName);
 PropertyEditorManager.registerEditor(StandardTypeNames.Double, NumericPropertyEditorBase, NumericEditorName);
+
+/* v8 ignore stop -- @preserve */

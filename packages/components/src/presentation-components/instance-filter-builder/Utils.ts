@@ -6,21 +6,25 @@
  * @module InstancesFilter
  */
 
-import { useMemo } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
-  defaultPropertyFilterBuilderRuleValidator,
   isUnaryPropertyFilterBuilderOperator,
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroup,
   PropertyFilterBuilderRuleOperator,
   PropertyFilterBuilderRuleRangeValue,
 } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import {
+  CategoryDescription,
+  ClassInfo,
+  combineFieldNames,
+  Descriptor,
+  Field,
+  NestedContentField,
+  PropertiesField,
+} from "@itwin/presentation-common";
 import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
 import { translate } from "../common/Utils.js";
-import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
 /** @internal */
@@ -64,10 +68,11 @@ function createPropertyInfos(field: Field): PresentationInstanceFilterPropertyIn
   if (field.isNestedContentField()) {
     return field.nestedFields.flatMap((nestedField) => createPropertyInfos(nestedField));
   }
+  /* v8 ignore else -- @preserve */
   if (field.isPropertiesField()) {
     return [createPropertyInfoFromPropertiesField(field)];
   }
-  /* c8 ignore next 3 */
+  /* v8 ignore next 3 -- @preserve */
   return [];
 }
 
@@ -127,48 +132,30 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
 }
 
 /** @internal */
-export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, descriptor: Descriptor) {
-  return useMemo<NavigationPropertyEditorContextProviderProps>(
-    () => ({
-      imodel,
-      getNavigationPropertyInfo: async (property) => {
-        const field = descriptor.getFieldByName(getInstanceFilterFieldName(property));
-        if (!field || !field.isPropertiesField()) {
-          return undefined;
-        }
+export function createFilterRuleValidator(defaultValidator: (item: PropertyFilterBuilderRule) => string | undefined) {
+  return (item: PropertyFilterBuilderRule) => {
+    // skip empty rules and rules that do not require value
+    if (
+      item.property === undefined ||
+      item.operator === undefined ||
+      isUnaryPropertyFilterBuilderOperator(item.operator)
+    ) {
+      return undefined;
+    }
 
-        return field.properties[0].property.navigationPropertyInfo;
-      },
-    }),
-    [imodel, descriptor],
-  );
-}
+    /* v8 ignore next 3 -- @preserve */
+    if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
+      return undefined;
+    }
 
-/** @internal */
-export function filterRuleValidator(item: PropertyFilterBuilderRule) {
-  // skip empty rules and rules that do not require value
-  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterBuilderOperator(item.operator)) {
-    return undefined;
-  }
+    const error = numericPropertyValidator({ property: item.property, operator: item.operator, value: item.value });
 
-  /* c8 ignore next 3 */
-  if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
-    return undefined;
-  }
+    if (error) {
+      return error;
+    }
 
-  const error = numericPropertyValidator({
-    property: item.property,
-    operator: item.operator,
-    value: item.value,
-  });
-
-  if (error) {
-    return error;
-  }
-
-  // TODO: refactor to `useDefaultPropertyFilterBuilderRuleValidator` after AppUI peer dep bumped to 5.0
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return defaultPropertyFilterBuilderRuleValidator(item);
+    return defaultValidator(item);
+  };
 }
 
 interface ValidatorContext {
@@ -208,7 +195,10 @@ function isEqualityOperator(operator: PropertyFilterBuilderRuleOperator) {
 
 function isPropertyNumeric(typename: string) {
   return (
-    typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
+    typename === StandardTypeNames.Number ||
+    typename === StandardTypeNames.Int ||
+    typename === StandardTypeNames.Float ||
+    typename === StandardTypeNames.Double
   );
 }
 

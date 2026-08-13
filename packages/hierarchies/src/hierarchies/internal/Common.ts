@@ -48,7 +48,7 @@ export function createOperatorLoggingNamespace(
 }
 
 /** @internal */
-/* c8 ignore start */
+/* v8 ignore start */
 export function createNodeIdentifierForLogging(
   node: { label: string | ConcatenatedValue; key: HierarchyNodeKey; parentKeys?: HierarchyNodeKey[] } | undefined,
 ) {
@@ -59,7 +59,7 @@ export function createNodeIdentifierForLogging(
   const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
   return JSON.stringify({ label, key, parentKeys });
 }
-/* c8 ignore end */
+/* v8 ignore stop */
 
 /** @internal */
 export function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
@@ -67,7 +67,10 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
+export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(
+  lhs: TLhsNode,
+  rhs: TRhsNode,
+): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
 

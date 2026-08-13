@@ -99,7 +99,7 @@ function createNullableSelector(props: {
 }): string;
 
 // @public
-function createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias, propertyClassName, propertyName, }: {
+function createPrimitivePropertyValueSelectorProps(input: {
     schemaProvider: ECSchemaProvider;
     propertyClassName: string;
     propertyClassAlias: string;
@@ -282,7 +282,6 @@ declare namespace ECSql {
         createRelationshipPathJoinClause
     }
 }
-export { ECSql }
 
 // @public
 export type ECSqlBinding = {

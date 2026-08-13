@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defineConfig } from "vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import react from "@vitejs/plugin-react";
 
@@ -12,26 +11,17 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [
     react(),
-    nodePolyfills({
-      include: ["stream", "events", "timers", "buffer", "util"],
-    }),
     viteStaticCopy({
       targets: [
         {
           // copy assets from `@itwin` dependencies
-          src: "./node_modules/@itwin/*/lib/public/*",
+          src: "./node_modules/@itwin/*/lib/public",
           dest: ".",
+          rename: { stripBase: 5 },
         },
       ],
     }),
   ],
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: "modern-compiler",
-      },
-    },
-  },
   server: {
     port: 3000,
     strictPort: true,

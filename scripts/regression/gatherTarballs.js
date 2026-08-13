@@ -11,7 +11,9 @@ const cpx = require("cpx2");
 const path = require("path");
 
 // gathers tarballs from all workspace packages to the root folder
-const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }));
+const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(
+  execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }),
+);
 
 const targetDir = path.join(workspaceRootPath, "built-packages");
 fs.mkdirSync(targetDir, { recursive: true });

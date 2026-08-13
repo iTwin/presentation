@@ -31,7 +31,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -58,7 +60,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
 // As requested by hierarchy definition, the provider returns them grouped under a label grouping node:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the label grouping node
     label: "Example element",
@@ -98,16 +100,14 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
-                  grouping: {
-                    byLabel: {
-                      action: "merge",
-                    },
-                  },
+                  grouping: { byLabel: { action: "merge" } },
                 })}
                 FROM BisCore.PhysicalElement this
               `,
@@ -122,7 +122,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
 // As requested by hierarchy definition, the provider returns them merged into a single node:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the merged node has "Example element" label and instance keys of both elements in `key.instanceKeys` list
     label: "Example element",
@@ -163,7 +163,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -189,7 +191,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
 // As requested by hierarchy definition, the provider returns them grouped under class grouping nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `BisCore.DrawingCategory` class grouping node
     label: "Drawing Category",
@@ -239,7 +241,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -266,7 +270,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 
 // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
 // As requested by hierarchy definition, the provider returns them grouped under 2 class grouping nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `BisCore.Element` class grouping node
     label: "Element",
@@ -320,7 +324,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -328,12 +334,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
                   grouping: {
                     byProperties: {
                       propertiesClassName: "BisCore.RepositoryLink",
-                      propertyGroups: [
-                        {
-                          propertyClassAlias: "this",
-                          propertyName: "Format",
-                        },
-                      ],
+                      propertyGroups: [{ propertyClassAlias: "this", propertyName: "Format" }],
                       // create a grouping node for instances whose `Format` property value is not specified
                       createGroupForUnspecifiedValues: true,
                     },
@@ -360,7 +361,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Example link with no format |                         |
 //
 // As requested by hierarchy definition, the provider returns them grouped by `Format` property value:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `Format="DGN"` property grouping node
     label: "DGN",
@@ -419,7 +420,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
@@ -464,7 +467,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Material 4      | 200           |
 //
 // As requested by hierarchy definition, the provider returns them grouped by the `Density` property value:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   {
     // the `10 - 100` range property grouping node
     label: "10 - 100",
@@ -510,27 +513,22 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
                   grouping: {
                     // create two levels of class grouping
-                    byBaseClasses: {
-                      fullClassNames: ["BisCore.Element", "BisCore.UrlLink"],
-                    },
+                    byBaseClasses: { fullClassNames: ["BisCore.Element", "BisCore.UrlLink"] },
                     // create a level for specific element's class
                     byClass: true,
                     // create a level of Format property value grouping
                     byProperties: {
                       propertiesClassName: "BisCore.RepositoryLink",
-                      propertyGroups: [
-                        {
-                          propertyClassAlias: "this",
-                          propertyName: "Format",
-                        },
-                      ],
+                      propertyGroups: [{ propertyClassAlias: "this", propertyName: "Format" }],
                     },
                     // create a level of label grouping
                     byLabel: true,
@@ -557,7 +555,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Example DGN link 2    | DGN                     |
 //
 // As requested by hierarchy definition, the provider returns them grouped under a hierarchy of grouping nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   // a class grouping node for `BisCore.Element` base class
   {
     label: "Element",
@@ -651,17 +649,14 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
-                  grouping: {
-                    byLabel: {
-                      action: "group",
-                      hideIfOneGroupedNode: true,
-                    },
-                  },
+                  grouping: { byLabel: { action: "group", hideIfOneGroupedNode: true } },
                 })}
                 FROM BisCore.RepositoryLink this
               `,
@@ -683,12 +678,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
 // | Example link 2  |
 //
 // As requested by hierarchy definition, the provider didn't place "Example link 1" under a grouping node:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   { label: "Example link 1" },
-  {
-    label: "Example link 2",
-    children: [{ label: "Example link 2" }, { label: "Example link 2" }],
-  },
+  { label: "Example link 2", children: [{ label: "Example link 2" }, { label: "Example link 2" }] },
 ]);
 ```
 
@@ -719,16 +711,14 @@ const hierarchyProvider = createIModelHierarchyProvider({
               ecsql: `
                 SELECT ${await createNodesQueryClauseFactory({
                   imodelAccess,
-                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+                    classHierarchyInspector: imodelAccess,
+                  }),
                 }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: { selector: "this.UserLabel" },
-                  grouping: {
-                    byClass: {
-                      hideIfNoSiblings: true,
-                    },
-                  },
+                  grouping: { byClass: { hideIfNoSiblings: true } },
                 })}
                 FROM BisCore.RepositoryLink this
               `,
@@ -750,7 +740,7 @@ const hierarchyProvider = createIModelHierarchyProvider({
 //
 // As requested by hierarchy definition, the provider didn't place them under a grouping node, because
 // there're no sibling nodes:
-expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
   // note: no class grouping node
   { label: "Example link 1" },
   { label: "Example link 2" },
@@ -770,7 +760,9 @@ In certain scenarios it may be required to automatically expand the grouping nod
 `
   SELECT ${await createNodesQueryClauseFactory({
     imodelAccess,
-    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+      classHierarchyInspector: imodelAccess,
+    }),
   }).createSelectClause({
     ecClassId: { selector: "this.ECClassId" },
     ecInstanceId: { selector: "this.ECInstanceId" },

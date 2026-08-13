@@ -6,20 +6,35 @@
 import { BeEvent } from "@itwin/core-bentley";
 import { Event } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "./Selectable.js";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
+import {
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+  StorageSelectionChangeType,
+} from "./SelectionChangeEvent.js";
 
 /** @public */
 type IModelKeyProp =
   | {
-      /** Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop` package to create the key for an iModel. */
-      imodelKey: string;
+      /**
+       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop`
+       * package to create the key for an iModel.
+       *
+       * Defaults to an empty string when not supplied.
+       */
+      imodelKey?: string;
+      iModelKey?: never;
     }
   | {
+      imodelKey?: never;
       /**
-       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop` package to create the key for an iModel.
+       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop`
+       * package to create the key for an iModel.
+       *
+       * Defaults to an empty string when not supplied.
+       *
        * @deprecated in 0.2. Use `imodelKey` instead.
        */
-      iModelKey: string;
+      iModelKey?: string;
     };
 
 /**
@@ -116,8 +131,11 @@ export function createStorage(): SelectionStorage {
   return new SelectionStorageImpl();
 }
 
-/** @internal */
-export const IMODEL_CLOSE_SELECTION_CLEAR_SOURCE = "Unified selection storage: clear";
+/**
+ * The source name used when selection change is caused by clearing the selection storage. Used when change is performed by `clearStorage`.
+ * @public
+ */
+export const CLEAR_SELECTION_STORAGE_SOURCE = "Unified selection storage: clear";
 
 class SelectionStorageImpl implements SelectionStorage {
   private _storage = new Map<string, MultiLevelSelectablesContainer>();
@@ -139,7 +157,9 @@ class SelectionStorageImpl implements SelectionStorage {
     this.handleChange({ ...props, changeType: "add" });
   }
 
-  public removeFromSelection(props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number }): void {
+  public removeFromSelection(
+    props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number },
+  ): void {
     this.handleChange({ ...props, changeType: "remove" });
   }
 
@@ -153,7 +173,7 @@ class SelectionStorageImpl implements SelectionStorage {
 
   public clearStorage(props: IModelKeyProp): void {
     const imodelKey = getIModelKey(props);
-    this.clearSelection({ source: IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, imodelKey });
+    this.clearSelection({ source: CLEAR_SELECTION_STORAGE_SOURCE, imodelKey });
     this._storage.delete(imodelKey);
   }
 
@@ -166,7 +186,14 @@ class SelectionStorageImpl implements SelectionStorage {
     return selectionContainer;
   }
 
-  private handleChange(props: IModelKeyProp & { source: string; level?: number; changeType: StorageSelectionChangeType; selectables: Selectable[] }) {
+  private handleChange(
+    props: IModelKeyProp & {
+      source: string;
+      level?: number;
+      changeType: StorageSelectionChangeType;
+      selectables: Selectable[];
+    },
+  ) {
     const { source, level: inLevel, changeType, selectables: change } = props;
     const imodelKey = getIModelKey(props);
     const container = this.getContainer(imodelKey);
@@ -214,7 +241,7 @@ class SelectionStorageImpl implements SelectionStorage {
 
 function getIModelKey(props: IModelKeyProp): string {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return "imodelKey" in props ? props.imodelKey : props.iModelKey;
+  return ("imodelKey" in props ? props.imodelKey : props.iModelKey) ?? "";
 }
 
 class MultiLevelSelectablesContainer {

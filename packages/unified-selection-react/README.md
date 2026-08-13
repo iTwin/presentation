@@ -51,7 +51,9 @@ function MyComponent() {
     return Selectables.size(storage.getSelection({ imodelKey }));
   }
 
-  const [selectedElementsCount, setSelectedElementsCount] = useState(() => getSelectedElementsCount(selectionContext.storage));
+  const [selectedElementsCount, setSelectedElementsCount] = useState(() =>
+    getSelectedElementsCount(selectionContext.storage),
+  );
   useEffect(() => {
     return selectionContext.storage.selectionChangeEvent.addListener(() => {
       setSelectedElementsCount(getSelectedElementsCount(selectionContext.storage));

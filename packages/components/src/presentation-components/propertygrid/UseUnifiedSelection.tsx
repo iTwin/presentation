@@ -6,14 +6,13 @@
  * @module PropertyGrid
  */
 
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { from, map, Subject, switchMap, takeLast } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
-import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { SelectionStorage } from "@itwin/unified-selection";
-import { createKeySetFromSelectables, safeDispose } from "../common/Utils.js";
+import { Selectables, SelectionStorage } from "@itwin/unified-selection";
+import { createKeySetFromSelectables } from "../common/Utils.js";
 import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
@@ -38,11 +37,8 @@ export interface PropertyDataProviderWithUnifiedSelectionProps {
 
   /**
    * Unified selection storage to use for listening and getting active selection.
-   *
-   * When not specified, the deprecated `SelectionManager` from `@itwin/presentation-frontend` package
-   * is used.
    */
-  selectionStorage?: SelectionStorage;
+  selectionStorage: SelectionStorage;
 }
 
 /**
@@ -56,20 +52,6 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
   numSelectedElements: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-const SelectionHandlerContext = createContext<SelectionHandler | undefined>(undefined);
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export function SelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
-  return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
-}
-
-/** @internal */
-export function useSelectionHandlerContext() {
-  return useContext(SelectionHandlerContext);
-}
-
 /**
  * A React hook that adds unified selection functionality to the provided data provider.
  * @public
@@ -79,26 +61,22 @@ export function usePropertyDataProviderWithUnifiedSelection(
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
   const { dataProvider, selectionStorage } = props;
   const { imodel, rulesetId } = dataProvider;
-  const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
+  const requestedContentInstancesLimit =
+    props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
   const [numSelectedElements, setNumSelectedElements] = useState(0);
 
-  const suppliedSelectionHandler = useSelectionHandlerContext();
-
   useEffect(() => {
-    function onSelectionChanged(newSelection: KeySet) {
-      setNumSelectedElements(newSelection.size);
-      dataProvider.keys = isOverLimit(newSelection.size, requestedContentInstancesLimit) ? new KeySet() : newSelection;
+    function onSelectionChanged(newSelectionOrSize: KeySet | number) {
+      setNumSelectedElements(typeof newSelectionOrSize === "number" ? newSelectionOrSize : newSelectionOrSize.size);
+      dataProvider.keys = typeof newSelectionOrSize === "number" ? new KeySet() : newSelectionOrSize;
     }
-    if (selectionStorage) {
-      return initUnifiedSelectionFromStorage({ imodel, selectionStorage, onSelectionChanged });
-    }
-    return initUnifiedSelectionFromPresentationFrontend({
+    return initUnifiedSelectionFromStorage({
       imodel,
-      rulesetId,
-      suppliedSelectionHandler,
+      selectionStorage,
+      limit: requestedContentInstancesLimit,
       onSelectionChanged,
     });
-  }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler, selectionStorage]);
+  }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, selectionStorage]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
 }
@@ -106,22 +84,28 @@ export function usePropertyDataProviderWithUnifiedSelection(
 function initUnifiedSelectionFromStorage({
   imodel,
   selectionStorage,
+  limit,
   onSelectionChanged,
 }: {
   imodel: IModelConnection;
   selectionStorage: SelectionStorage;
-  onSelectionChanged: (newSelection: KeySet) => void;
+  limit: number;
+  onSelectionChanged: (newSelectionOrSize: KeySet | number) => void;
 }) {
   const imodelKey = createIModelKey(imodel);
   const update = new Subject<number>();
   const subscription = update
     .pipe(
       map((level) => selectionStorage.getSelection({ imodelKey, level })),
-      switchMap(async (selectables) => createKeySetFromSelectables(selectables)),
+      switchMap(async (selectables) => {
+        const size = Selectables.size(selectables);
+        if (isOverLimit(size, limit)) {
+          return size;
+        }
+        return size === 0 ? new KeySet() : createKeySetFromSelectables(selectables);
+      }),
     )
-    .subscribe({
-      next: onSelectionChanged,
-    });
+    .subscribe({ next: onSelectionChanged });
   const removeSelectionChangesListener = selectionStorage.selectionChangeEvent.addListener((args) => {
     const isMyIModel = args.imodelKey === imodelKey;
     isMyIModel && update.next(args.level);
@@ -129,75 +113,12 @@ function initUnifiedSelectionFromStorage({
 
   from(selectionStorage.getSelectionLevels({ imodelKey }))
     .pipe(takeLast(1))
-    .subscribe({
-      next: (level) => update.next(level),
-    });
+    .subscribe({ next: (level) => update.next(level) });
 
   return () => {
     removeSelectionChangesListener();
     subscription.unsubscribe();
   };
-}
-
-function initUnifiedSelectionFromPresentationFrontend({
-  suppliedSelectionHandler,
-  imodel,
-  rulesetId,
-  onSelectionChanged,
-}: {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  suppliedSelectionHandler?: SelectionHandler;
-  imodel: IModelConnection;
-  rulesetId: string;
-  onSelectionChanged: (newSelection: KeySet) => void;
-}) {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const updateProviderSelection = (selectionHandler: SelectionHandler, selectionLevel?: number) => {
-    const selection = getSelectedKeys(selectionHandler, selectionLevel);
-    selection && onSelectionChanged(selection);
-  };
-
-  /* c8 ignore start */
-  const handler =
-    suppliedSelectionHandler ??
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    new SelectionHandler({
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      manager: Presentation.selection,
-      name: "PropertyGrid",
-      imodel,
-      rulesetId,
-    });
-  /* c8 ignore end */
-
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  handler.onSelect = (evt: SelectionChangeEventArgs): void => {
-    updateProviderSelection(handler, evt.level);
-  };
-
-  updateProviderSelection(handler);
-  return () => {
-    safeDispose(handler);
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
-  if (undefined === selectionLevel) {
-    const availableLevels = selectionHandler.getSelectionLevels();
-    if (0 === availableLevels.length) {
-      return undefined;
-    }
-    selectionLevel = availableLevels[availableLevels.length - 1];
-  }
-
-  for (let i = selectionLevel; i >= 0; i--) {
-    const selection = selectionHandler.getSelection(i);
-    if (!selection.isEmpty) {
-      return new KeySet(selection);
-    }
-  }
-  return new KeySet();
 }
 
 function isOverLimit(numSelectedElements: number, limit: number): boolean {

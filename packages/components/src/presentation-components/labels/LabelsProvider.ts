@@ -6,7 +6,7 @@
  * @module DisplayLabels
  */
 
-import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
+import { bufferCount, from, map, mergeMap, reduce } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -71,16 +71,14 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
         .pipe(
           bufferCount(DEFAULT_KEYS_BATCH_SIZE),
           mergeMap((keysBatch, batchIndex) => {
-            if (Presentation.presentation.getDisplayLabelDefinitionsIterator) {
-              return from(Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch })).pipe(
-                mergeMap((result) => result.items),
-                map((item, itemIndex) => ({ value: item.displayValue, index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex })),
-              );
-            }
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
-            return from(Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: keysBatch })).pipe(
-              mergeAll(),
-              map((item, valueIndex) => ({ value: item.displayValue, index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + valueIndex })),
+            return from(
+              Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch }),
+            ).pipe(
+              mergeMap((result) => result.items),
+              map((item, itemIndex) => ({
+                value: item.displayValue,
+                index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex,
+              })),
             );
           }),
           reduce((result, { value, index }) => {
@@ -88,10 +86,7 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
             return result;
           }, new Array<string>(keys.length)),
         )
-        .subscribe({
-          next: resolve,
-          error: reject,
-        });
+        .subscribe({ next: resolve, error: reject });
     });
   }
 
@@ -116,5 +111,8 @@ function areLabelRequestsEqual(lhsArgs: [InstanceKey], rhsArgs: [InstanceKey]): 
 }
 
 function areLabelsRequestsEqual(lhsArgs: [InstanceKey[]], rhsArgs: [InstanceKey[]]): boolean {
-  return lhsArgs[0].length === rhsArgs[0].length && lhsArgs[0].every((key, index) => areInstanceKeysEqual(key, rhsArgs[0][index]));
+  return (
+    lhsArgs[0].length === rhsArgs[0].length &&
+    lhsArgs[0].every((key, index) => areInstanceKeysEqual(key, rhsArgs[0][index]))
+  );
 }

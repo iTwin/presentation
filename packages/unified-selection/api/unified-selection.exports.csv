@@ -2,6 +2,7 @@ sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;CachingHiliteSetProvider
 deprecated;interface;CachingHiliteSetProvider
+public;const;CLEAR_SELECTION_STORAGE_SOURCE
 public;function;computeSelection
 public;function;createCachingHiliteSetProvider
 deprecated;function;createCachingHiliteSetProvider

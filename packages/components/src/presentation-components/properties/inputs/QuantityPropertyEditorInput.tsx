@@ -3,45 +3,72 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import {
+  type PrimitiveValue,
+  type PropertyDescription,
+  type PropertyRecord,
+  PropertyValueFormat,
+} from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { Input } from "@itwin/itwinui-react";
 import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
-import { PropertyEditorAttributes } from "../editors/Common.js";
 import { NumericPropertyInput } from "./NumericPropertyInput.js";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
+import { useQuantityValueInput, type UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
+
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { WithConstraints } from "../../common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../editors/Common.js";
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
   propertyRecord: PropertyRecord;
 }
 
 /** @internal */
-export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>((props, ref) => {
-  const schemaMetadataContext = useSchemaMetadataContext();
+export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>(
+  (props, ref) => {
+    const schemaMetadataContext = useSchemaMetadataContext();
 
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  if ((!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) || !schemaMetadataContext) {
-    return <NumericPropertyInput {...props} ref={ref} />;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
-  assert(koqName !== undefined);
+    if (
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      (!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) ||
+      !schemaMetadataContext
+    ) {
+      return <NumericPropertyInput {...props} ref={ref} />;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
+    assert(koqName !== undefined);
 
-  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
-  return (
-    <QuantityPropertyValueInput {...props} ref={ref} koqName={koqName} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />
-  );
-});
+    const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
+    return (
+      <QuantityPropertyValueInput
+        {...props}
+        ref={ref}
+        koqName={koqName}
+        schemaContext={schemaMetadataContext.schemaContext}
+        initialRawValue={initialValue}
+      />
+    );
+  },
+);
 QuantityPropertyEditorInput.displayName = "QuantityPropertyEditorInput";
 
 type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuantityValueInputProps;
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
-  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
-    const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
+  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus, onCancel }, ref) => {
+    const property: WithConstraints<PropertyDescription> = propertyRecord.property;
+    const { quantityValue, inputProps } = useQuantityValueInput({
+      koqName,
+      schemaContext,
+      initialRawValue,
+      constraints: property.constraints,
+    });
+    const [isEditing, setEditing] = useState(false);
+    const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
 
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(
@@ -50,12 +77,12 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         getValue: () => ({
           valueFormat: PropertyValueFormat.Primitive,
           value: quantityValue.rawValue,
-          displayValue: quantityValue.formattedValue,
+          displayValue: quantityValue.defaultFormattedValue,
           roundingError: quantityValue.roundingError,
         }),
         htmlElement: inputRef.current,
       }),
-      [quantityValue],
+      [quantityValue.defaultFormattedValue, quantityValue.rawValue, quantityValue.roundingError],
     );
 
     const onBlur = () => {
@@ -65,7 +92,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
           newValue: {
             valueFormat: PropertyValueFormat.Primitive,
             value: quantityValue.rawValue,
-            displayValue: quantityValue.formattedValue,
+            displayValue: quantityValue.defaultFormattedValue,
             roundingError: quantityValue.roundingError,
           },
         });
@@ -77,16 +104,38 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       }
     }, [inputProps.disabled, setFocus]);
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") {
+        onCancel?.();
+      }
+      if (e.key === "Enter") {
+        inputRef.current?.blur();
+        e.stopPropagation();
+      }
+    };
+
     return (
       <Input
-        size="small"
         {...inputProps}
+        value={value}
+        size="small"
         disabled={propertyRecord.isReadonly || inputProps.disabled}
         ref={inputRef}
-        onBlur={onBlur}
-        onFocus={() => {
-          inputRef.current?.setSelectionRange(0, 9999);
+        onBlur={() => {
+          onBlur();
+          setEditing(false);
         }}
+        onFocus={() => {
+          setEditing(true);
+          requestAnimationFrame(() => {
+            if (quantityValue.highPrecisionFormattedValue === inputProps.placeholder) {
+              inputRef.current?.setSelectionRange(0, 0);
+              return;
+            }
+            inputRef.current?.setSelectionRange(0, 9999);
+          });
+        }}
+        onKeyDown={handleKeyDown}
       />
     );
   },

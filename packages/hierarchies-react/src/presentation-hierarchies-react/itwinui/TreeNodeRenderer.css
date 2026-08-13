@@ -26,6 +26,12 @@
     background-color: var(--iui-color-background-accent-muted);
   }
 
+  &:focus-within {
+    outline: 1px solid var(--iui-color-border-accent);
+    outline-offset: -1px;
+    border-radius: var(--iui-border-radius-1);
+  }
+
   @media (hover: hover) {
     &:hover .action-buttons {
       visibility: visible;
@@ -33,12 +39,6 @@
 
     &:hover:not(.selected) .action-buttons {
       background-color: var(--iui-color-background-hover);
-    }
-
-    &:focus-within {
-      outline: 1px solid var(--iui-color-border-accent);
-      outline-offset: -1px;
-      border-radius: var(--iui-border-radius-1);
     }
   }
 

@@ -6,17 +6,29 @@
 import * as fs from "fs";
 import Backend from "i18next-http-backend";
 import * as path from "path";
+import { IModelHost } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import { IModelReadRpcInterface } from "@itwin/core-common";
+import {
+  IModelReadRpcInterface,
+  RpcConfiguration,
+  RpcDefaultConfiguration,
+  RpcInterfaceDefinition,
+} from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
-import { Props } from "@itwin/presentation-shared";
-import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
+import {
+  Presentation as PresentationFrontend,
+  PresentationProps as PresentationFrontendProps,
+} from "@itwin/presentation-frontend";
+import { setTestOutputDir } from "./FilenameUtils.js";
 
 class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {
@@ -25,7 +37,33 @@ class IntegrationTestsApp extends NoRenderApp {
   }
 }
 
+function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
+  const config = class extends RpcDefaultConfiguration {
+    public override interfaces: any = () => interfaces;
+  };
+
+  for (const definition of interfaces) {
+    // eslint-disable-next-line @itwin/no-internal
+    RpcConfiguration.assign(definition, () => config);
+  }
+
+  const instance = RpcConfiguration.obtain(config);
+
+  try {
+    RpcConfiguration.initializeInterfaces(instance);
+  } catch {
+    // this may fail with "Error: RPC interface "xxx" is already initialized." because
+    // multiple different tests want to set up rpc interfaces
+  }
+}
+
+let isInitialized = false;
+
 export async function initialize(props?: { backendTimeout?: number }) {
+  if (isInitialized) {
+    return;
+  }
+
   // init logging
   Logger.initializeToConsole();
   Logger.setLevelDefault(LogLevel.Warning);
@@ -33,7 +71,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   Logger.setLevel("SQLite", LogLevel.Error);
   Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
-  const backendInitProps: NonNullable<Props<typeof initializePresentation>>["backendProps"] = {
+  const backendInitProps = {
     id: `test-${Guid.createValue()}`,
     requestTimeout: props?.backendTimeout ?? 0,
     workerThreadsCount: 1,
@@ -44,33 +82,40 @@ export async function initialize(props?: { backendTimeout?: number }) {
       },
     },
   };
-  const frontendInitProps: PresentationFrontendProps = {
-    presentation: {
-      activeLocale: "en-PSEUDO",
-    },
-  };
+  const frontendInitProps: PresentationFrontendProps = { presentation: { activeLocale: "en-PSEUDO" } };
 
-  const frontendAppOptions: IModelAppOptions = {
-    localization: createTestLocalization(),
-  };
+  const frontendAppOptions: IModelAppOptions = { localization: createTestLocalization() };
 
-  const presentationTestingInitProps: PresentationTestingInitProps = {
-    rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
-    backendProps: backendInitProps,
-    backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) },
-    frontendProps: frontendInitProps,
-    frontendApp: IntegrationTestsApp,
-    frontendAppOptions,
-  };
+  // set up rpc interfaces
+  initializeRpcInterfaces([IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface]);
 
-  await initializePresentation(presentationTestingInitProps);
+  // init backend
+  await IModelHost.startup({ cacheDir: path.join(import.meta.dirname, "..", "build", ".cache", `${process.pid}`) });
+  PresentationBackend.initialize(backendInitProps);
+
+  // init frontend
+  await IntegrationTestsApp.startup(frontendAppOptions);
+  await PresentationFrontend.initialize(frontendInitProps);
+  setTestOutputDir(undefined);
 
   // eslint-disable-next-line @itwin/no-internal
   ECSchemaRpcImpl.register();
+
+  isInitialized = true;
 }
 
 export async function terminate() {
-  await terminatePresentation();
+  if (!isInitialized) {
+    return;
+  }
+
+  PresentationBackend.terminate();
+  await IModelHost.shutdown();
+
+  PresentationFrontend.terminate();
+  await IModelApp.shutdown();
+
+  isInitialized = false;
 }
 
 export async function resetBackend() {
@@ -81,10 +126,8 @@ export async function resetBackend() {
 
 function createTestLocalization(): ITwinLocalization {
   return new ITwinLocalization({
-    urlTemplate: `file://${path.join(path.resolve("lib/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
-    initOptions: {
-      preload: ["test"],
-    },
+    urlTemplate: `file://${path.join(path.resolve("build/public/locales"), "{{lng}}/{{ns}}.json").replace(/\\/g, "/")}`,
+    initOptions: { preload: ["test"] },
     backendHttpOptions: {
       request: (options, url, payload, callback) => {
         /**

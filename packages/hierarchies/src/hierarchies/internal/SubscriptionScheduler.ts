@@ -62,10 +62,7 @@ export class SubscriptionScheduler {
       let unsubscribed = false;
       const connectableObservable = connectable(
         iif(() => unsubscribed, EMPTY, source),
-        {
-          connector: () => new Subject<T>(),
-          resetOnDisconnect: false,
-        },
+        { connector: () => new Subject<T>(), resetOnDisconnect: false },
       );
       this._scheduler.next(connectableObservable);
       return connectableObservable.pipe(

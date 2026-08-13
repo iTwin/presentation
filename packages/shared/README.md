@@ -55,7 +55,10 @@ const classHierarchyInspector: ECClassHierarchyInspector = createCachingECClassH
   // tell how many entries should be cached in LRU cache (0 or `undefined` stand for "no caching")
   cacheSize: 100,
 });
-const isGeometricElement = await classHierarchyInspector.classDerivesFrom("MySchema.MyClass", "BisCore.GeometricElement");
+const isGeometricElement = await classHierarchyInspector.classDerivesFrom(
+  "MySchema.MyClass",
+  "BisCore.GeometricElement",
+);
 ```
 
 ## ECSql
@@ -340,7 +343,10 @@ This label selectors factory doesn't create labels on its own, but allows assign
 Example usage:
 
 ```ts
-import { createClassBasedInstanceLabelSelectClauseFactory, ECClassHierarchyInspector } from "@itwin/presentation-shared";
+import {
+  createClassBasedInstanceLabelSelectClauseFactory,
+  ECClassHierarchyInspector,
+} from "@itwin/presentation-shared";
 
 const classHierarchyInspector: ECClassHierarchyInspector = getClassHierarchyInspector();
 const labelsFactory = createClassBasedInstanceLabelSelectClauseFactory({

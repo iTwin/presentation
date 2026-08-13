@@ -4,29 +4,36 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubject } from "presentation-test-utilities";
+import { afterAll, describe, it, test } from "vitest";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  HierarchyDefinition,
+  NodesQueryClauseFactory,
+} from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
-import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildTestIModel } from "../../TestIModelSetup.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Grouping nodes' autoExpand setting", () => {
-    type ECSqlSelectClauseGroupingParams = NonNullable<Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]>;
+    type ECSqlSelectClauseGroupingParams = NonNullable<
+      Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]
+    >;
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 
-    before(async function () {
+    test.beforeAll(async (_, suite) => {
       await initialize();
-      emptyIModel = (await buildIModel(this)).imodel;
+      emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
     });
 
-    after(async () => {
+    afterAll(async () => {
       await terminate();
     });
 
@@ -38,7 +45,9 @@ describe("Hierarchies", () => {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
+          classHierarchyInspector: imodelAccess,
+        }),
       });
       return {
         async defineHierarchyLevel({ parentNode }) {
@@ -67,22 +76,19 @@ describe("Hierarchies", () => {
 
     describe("Base class grouping", () => {
       const baseClassAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: {
-          fullClassNames: ["BisCore.InformationReferenceElement"],
-          autoExpand: "always",
-        },
+        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], autoExpand: "always" },
       };
 
       const baseClassAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: {
-          fullClassNames: ["BisCore.InformationReferenceElement"],
-          autoExpand: "single-child",
-        },
+        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], autoExpand: "single-child" },
       };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, baseClassAutoExpandAlways) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, baseClassAutoExpandAlways),
+          }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
@@ -99,9 +105,12 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, baseClassAutoExpandSingleChild) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, baseClassAutoExpandSingleChild),
+          }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
@@ -118,15 +127,18 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassAutoExpandSingleChild, `ECInstanceId`) }),
+          provider: createProvider({
+            imodel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassAutoExpandSingleChild, `ECInstanceId`),
+          }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
@@ -137,14 +149,8 @@ describe("Hierarchies", () => {
                   instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
                   children: false,
                 }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],
@@ -153,21 +159,16 @@ describe("Hierarchies", () => {
     });
 
     describe("Class grouping", () => {
-      const classAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
-        byClass: {
-          autoExpand: "always",
-        },
-      };
+      const classAutoExpandAlways: ECSqlSelectClauseGroupingParams = { byClass: { autoExpand: "always" } };
 
-      const classAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
-        byClass: {
-          autoExpand: "single-child",
-        },
-      };
+      const classAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = { byClass: { autoExpand: "single-child" } };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, classAutoExpandAlways) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, classAutoExpandAlways),
+          }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
@@ -183,9 +184,12 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, classAutoExpandSingleChild) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, classAutoExpandSingleChild),
+          }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
@@ -201,15 +205,18 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classAutoExpandSingleChild, `ECInstanceId`) }),
+          provider: createProvider({
+            imodel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classAutoExpandSingleChild, `ECInstanceId`),
+          }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
@@ -219,14 +226,8 @@ describe("Hierarchies", () => {
                   instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
                   children: false,
                 }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],
@@ -235,21 +236,16 @@ describe("Hierarchies", () => {
     });
 
     describe("Label grouping", () => {
-      const labelAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
-        byLabel: {
-          autoExpand: "always",
-        },
-      };
+      const labelAutoExpandAlways: ECSqlSelectClauseGroupingParams = { byLabel: { autoExpand: "always" } };
 
-      const labelAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
-        byLabel: {
-          autoExpand: "single-child",
-        },
-      };
+      const labelAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = { byLabel: { autoExpand: "single-child" } };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, labelAutoExpandAlways) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, labelAutoExpandAlways),
+          }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
@@ -264,9 +260,12 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, labelAutoExpandSingleChild) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, labelAutoExpandSingleChild),
+          }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
@@ -281,16 +280,29 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
         const groupName = "test1";
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
+          const childSubject1 = insertSubject({
+            builder,
+            codeValue: "A1",
+            parentId: IModel.rootSubjectId,
+            userLabel: groupName,
+          });
+          const childSubject2 = insertSubject({
+            builder,
+            codeValue: "A2",
+            parentId: IModel.rootSubjectId,
+            userLabel: groupName,
+          });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelAutoExpandSingleChild, "UserLabel") }),
+          provider: createProvider({
+            imodel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelAutoExpandSingleChild, "UserLabel"),
+          }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
@@ -305,14 +317,8 @@ describe("Hierarchies", () => {
               label: groupName,
               autoExpand: false,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
               ],
             }),
           ],
@@ -339,9 +345,12 @@ describe("Hierarchies", () => {
         },
       };
 
-      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
+      it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandAlways) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandAlways),
+          }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: true,
@@ -356,9 +365,12 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
+      it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async () => {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandSingleChild) }),
+          provider: createProvider({
+            imodel: emptyIModel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandSingleChild),
+          }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: true,
@@ -373,15 +385,18 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+      it("grouping nodes' autoExpand option is undefined when none of the child nodes have autoExpand set to 'always'", async () => {
+        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesAutoExpandSingleChild, "ECInstanceId") }),
+          provider: createProvider({
+            imodel,
+            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesAutoExpandSingleChild, "ECInstanceId"),
+          }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: false,
@@ -390,14 +405,8 @@ describe("Hierarchies", () => {
                   instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
                   children: false,
                 }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
-                  children: false,
-                }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
               ],
             }),
           ],

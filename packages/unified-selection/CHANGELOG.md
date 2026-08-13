@@ -1,5 +1,174 @@
 # @itwin/unified-selection
 
+## 1.8.4
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.19
+
+## 1.8.3
+
+### Patch Changes
+
+- [#1430](https://github.com/iTwin/presentation/pull/1430): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.18
+
+## 1.8.2
+
+### Patch Changes
+
+- [#1400](https://github.com/iTwin/presentation/pull/1400): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.17
+
+## 1.8.1
+
+### Patch Changes
+
+- 9f2f1f405e82bbb5bad83de67c265ea0407d6cf1: Avoid freezing main thread when loading huge amount of selectable instance keys.
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1396](https://github.com/iTwin/presentation/pull/1396): Expose `CLEAR_SELECTION_STORAGE_SOURCE` constant that is used as selection change event source when selection storage is cleared. This should allow consumers to detect when selection change happened due to selection storage being cleared.
+
+  ```ts
+  import {
+    createStorage,
+    CLEAR_SELECTION_STORAGE_SOURCE,
+  } from "@itwin/unified-selection";
+
+  const storage = createStorage();
+  storage.selectionChangeEvent.addListener((args) => {
+    if (args.source === CLEAR_SELECTION_STORAGE_SOURCE) {
+      // ignore change if it was caused by clearing selection storage
+    }
+    // handle selection change
+  });
+
+  // this will trigger the `selectionChangeEvent` with `{ source: CLEAR_SELECTION_STORAGE_SOURCE }`
+  storage.clearStorage({ imodelKey: imodel.key });
+  ```
+
+## 1.7.6
+
+### Patch Changes
+
+- [#1390](https://github.com/iTwin/presentation/pull/1390): Update `@itwin/core-*` dependencies to `^5.10.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.16
+
+## 1.7.5
+
+### Patch Changes
+
+- [#1358](https://github.com/iTwin/presentation/pull/1358): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.14
+
+## 1.7.4
+
+### Patch Changes
+
+- [#1353](https://github.com/iTwin/presentation/pull/1353): `HiliteSetProvider`: Fix transient elements not being included in the hilite set and causing an error. Transient element keys are now correctly recognized and emitted without querying the iModel for class hierarchy information.
+
+## 1.7.3
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.13
+
+## 1.7.2
+
+### Patch Changes
+
+- [#1330](https://github.com/iTwin/presentation/pull/1330): `computeSelection`: Yield transient element IDs as selectable instance keys with the `TRANSIENT_ELEMENT_CLASSNAME` class name, instead of silently dropping them. This ensures transient selections are preserved in the computed selection result.
+
+## 1.7.1
+
+### Patch Changes
+
+- [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.12
+
+## 1.7.0
+
+### Minor Changes
+
+- [#1285](https://github.com/iTwin/presentation/pull/1285): Make `imodelKey` prop optional when calling `SelectionStorage` methods.
+
+  While the package is designed to work with iModels' selection as the first class citizen, it can be used in other contexts as well. In those cases, the `imodelKey` prop is not relevant and should not be required. This change makes it optional and defaults to an empty string when not supplied.
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.11
+
+## 1.6.8
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.10
+
+## 1.6.7
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.9
+
+## 1.6.6
+
+### Patch Changes
+
+- [#1208](https://github.com/iTwin/presentation/pull/1208): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.8
+
+## 1.6.5
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.7
+
+## 1.6.4
+
+### Patch Changes
+
+- [#1152](https://github.com/iTwin/presentation/pull/1152): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.6
+
+## 1.6.3
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.5
+
+## 1.6.2
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.4
+
 ## 1.6.1
 
 ### Patch Changes
@@ -19,6 +188,7 @@
 - [#1077](https://github.com/iTwin/presentation/pull/1077): Fix `enableUnifiedSelectionSyncWithIModel` not updating selection & hilite sets, after selection set is changed directly in a way that doesn't cause a selection storage change.
 
   A specific example:
+
   1. `enableUnifiedSelectionSyncWithIModel` is set up to use `assembly` selection scope.
   2. User clicks on an assembly part in the graphics view, causing its parent element (assembly) to be added to selection storage, and selection & hilite sets to be updated with all assembly parts.
   3. User clicks on another part of the same assembly, causing selection storage to remain unchanged (still contains the assembly), and selection & hilite sets to NOT be updated with all assembly parts. As a result, the latter sets now contain only the newly clicked part, which is incorrect.
@@ -36,6 +206,7 @@
 ### Minor Changes
 
 - [#1018](https://github.com/iTwin/presentation/pull/1018): Fixed `enableUnifiedSelectionSyncWithIModel` not using (and not being able to use) the underlying hilite set provider of the given custom `CachingHiliteSetProvider`, causing selection synchronization to work incorrectly in cases when items were added or removed to iModel's selection set.
+
   - Introduced `IModelHiliteSetProvider` interface and a factory function `createIModelHiliteSetProvider` that creates an instance of it. Functionality-wise these are very similar to `CachingHiliteSetProvider` and `createCachingHiliteSetProvider` but the new type provides access to the underlying hilite set provider of the given iModel. And the naming better represents the purpose of the type.
   - Deprecated `CachingHiliteSetProvider` and `createCachingHiliteSetProvider` in favor of the above.
   - For the `enableUnifiedSelectionSyncWithIModel` function, deprecated the `cachingHiliteSetProvider` prop in favor of the newly added `imodelHiliteSetProvider`.
@@ -51,7 +222,8 @@
     cachingHiliteSetProvider: createCachingHiliteSetProvider({
       selectionStorage,
       imodelProvider: () => imodelAccess,
-      createHiliteSetProvider: () => createMyCustomHiliteSetProvider({ imodelAccess }),
+      createHiliteSetProvider: () =>
+        createMyCustomHiliteSetProvider({ imodelAccess }),
     }),
   });
 
@@ -63,7 +235,8 @@
     imodelHiliteSetProvider: createIModelHiliteSetProvider({
       selectionStorage,
       imodelProvider: () => imodelAccess,
-      createHiliteSetProvider: () => createMyCustomHiliteSetProvider({ imodelAccess }),
+      createHiliteSetProvider: () =>
+        createMyCustomHiliteSetProvider({ imodelAccess }),
     }),
   });
   ```
@@ -91,6 +264,7 @@
 - [#901](https://github.com/iTwin/presentation/pull/901): Export `SelectionScope` type to make it easier for consumers to define "active scope" type.
 
   APIs that use this type:
+
   - The `scope` prop of `computeSelection` function.
   - Return type of `activeScopeProvider` callback prop of `enableUnifiedSelectionSyncWithIModel` function.
 
@@ -233,6 +407,7 @@
 ### Patch Changes
 
 - [#693](https://github.com/iTwin/presentation/pull/693): API documentation improvements:
+
   - Add warnings to interfaces which are not supposed to be extended or implemented by consumers. Objects of such interfaces are only supposed to be created by functions in this package. As such, adding required members to these interfaces is not considered a breaking change.
   - Changed `string` to `Id64String` where appropriate, to make it clear that the string is expected to be a valid Id64 string. Note that this is not a breaking change, as `Id64String` is just a type alias for `string`.
 
@@ -295,6 +470,7 @@
   Some of the APIs were accepting `ECSchemaProvider` as a parameter and used it to only inspect class hierarchy. This change switches them to accept `ECClassHierarchyInspector` instead - this reduces the surface area of the API and makes it more clear that only class hierarchy is being inspected, while also possibly improving performance.
 
   This is a breaking change for the following APIs:
+
   - `createHiliteSetProvider` prop `imodelAccess`.
   - `createCachingHiliteSetProvider` prop `imodelProvider`.
   - `enableUnifiedSelectionSyncWithIModel` prop `imodelAccess`.
@@ -302,7 +478,10 @@
   Migration example:
 
   ```ts
-  import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+  import {
+    createECSqlQueryExecutor,
+    createECSchemaProvider,
+  } from "@itwin/presentation-core-interop";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createHiliteSetProvider } from "@itwin/unified-selection";
 
@@ -319,7 +498,9 @@
     imodelAccess: {
       ...createECSqlQueryExecutor(imodel),
       ...createCachingECClassHierarchyInspector({
-        schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
+        schemaProvider: createECSchemaProvider(
+          MyAppFrontend.getSchemaContext(imodel)
+        ),
         cacheSize: 100,
       }),
     },
@@ -336,6 +517,7 @@
 
 - [#530](https://github.com/iTwin/presentation/pull/530): Added `enableUnifiedSelectionSyncWithIModel` for enabling synchronization between iModel's tool selection and unified selection storage.
 - [#544](https://github.com/iTwin/presentation/pull/544): Breaking API changes
+
   - The type of ECSQL query executor's `createQueryReader` function was changed from:
 
     ```ts
@@ -352,7 +534,7 @@
         SELECT * FROM ChildElements
       `,
       [{ type: "id", value: "0x1" }],
-      { rowFormat: "Indexes" },
+      { rowFormat: "Indexes" }
     );
     ```
 
@@ -375,13 +557,14 @@
         ecsql: "SELECT * FROM ChildElements",
         bindings: [{ type: "id", value: "0x1" }],
       },
-      { rowFormat: "Indexes" },
+      { rowFormat: "Indexes" }
     );
     ```
 
     This makes the API consistent with other Presentation packages and allows additional manipulation on ECSQL, which was not possible previously when ECSQL contained CTEs.
 
     The change affects the following public APIs:
+
     - `computeSelection` (`queryExecutor` prop),
     - `createHiliteSetProvider` (previously `queryExecutor` prop, now `imodelAccess` prop),
     - `createCachingHiliteSetProvider` (`iModelProvider` prop).
@@ -435,6 +618,7 @@
     ```
 
 - [#551](https://github.com/iTwin/presentation/pull/551): Changed `iModel` in attribute names to `imodel`. The change was made to be consistent with other Presentation packages and affects the following APIs:
+
   - `SelectionStorage` methods now accept `imodelKey` prop rather than `iModelKey`. It's `selectionChangeEvent` is also now raised with `imodelKey` prop in `StorageSelectionChangeEventArgs`.
   - `CachingHiliteSetProvider.getHiliteSet` now accepts an `imodelKey` prop rather than `iModelKey`.
   - `createCachingHiliteSetProvider` props now accept `imodelProvider` callback rather than `iModelProvider`.

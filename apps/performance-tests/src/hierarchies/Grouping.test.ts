@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Datasets } from "../util/Datasets";
-import { runHierarchyTest } from "./RunHierarchyTest";
+import { describe } from "vitest";
+import { Datasets } from "../util/Datasets.js";
+import { runHierarchyTest } from "./RunHierarchyTest.js";
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
@@ -52,11 +53,7 @@ describe("grouping", () => {
     iModelName: "50k flat elements",
     fullClassName: baseFullClassName,
     expectedNodeCount: 50_000 + fullClassNames.length,
-    nodeSelectProps: {
-      grouping: {
-        byBaseClasses: { fullClassNames },
-      },
-    },
+    nodeSelectProps: { grouping: { byBaseClasses: { fullClassNames } } },
   });
 
   runHierarchyTest({

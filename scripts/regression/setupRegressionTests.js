@@ -34,7 +34,9 @@ if (uiVersion) {
   applyGitPatch(`ui-${uiVersion}.patch`);
 }
 
-const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }));
+const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(
+  execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }),
+);
 
 const { corePackages, uiPackages } = parseWorkspaceFile(workspaceRootPath);
 
@@ -136,11 +138,15 @@ function parseWorkspaceFile(workspaceRoot) {
   const workspaceFile = fs.readFileSync(path.join(workspaceRoot, "pnpm-workspace.yaml"), "utf8");
   const workspace = YAML.parse(workspaceFile);
   if (workspace.catalogs["itwinjs-core"] === undefined) {
-    throw new Error("Catalog 'itwinjs-core' not found in workspace file. Please check the workspace file or update this script.");
+    throw new Error(
+      "Catalog 'itwinjs-core' not found in workspace file. Please check the workspace file or update this script.",
+    );
   }
 
   if (workspace.catalogs["appui"] === undefined) {
-    throw new Error("Catalog 'appui' not found in workspace file. Please check the workspace file or update this script.");
+    throw new Error(
+      "Catalog 'appui' not found in workspace file. Please check the workspace file or update this script.",
+    );
   }
 
   // list of packages from `itwinjs-core`
@@ -151,12 +157,19 @@ function parseWorkspaceFile(workspaceRoot) {
 }
 
 function applyGitPatch(patchFile) {
+  let patchPath;
   try {
-    const patchPath = require.resolve(`./${patchFile}`);
+    patchPath = require.resolve(`./${patchFile}`);
+  } catch (e) {
+    console.log(`Patch file "${patchFile}" not found.`);
+    return;
+  }
+  try {
     // patch known build issues in full stack tests due to older types from itwinjs-core
     execSync(`git apply ${patchPath}`);
     console.log(`Applied patch file: ${patchFile}`);
   } catch (e) {
-    console.log(`Could not find patch file: ${patchFile}`);
+    console.log(`Error applying patch file "${patchFile}": ${e.message}`);
+    process.exit(1);
   }
 }

@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeNodeItem } from "@itwin/components-react";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import {
   InfoTreeNodeItemType,
   isPresentationInfoTreeNodeItem,
@@ -15,6 +14,7 @@ import {
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 describe("isPresentationTreeNodeItem", () => {
   it("returns correct values", () => {
@@ -23,12 +23,9 @@ describe("isPresentationTreeNodeItem", () => {
       key: createTestECInstancesNodeKey(),
       label: PropertyRecord.fromString("Presentation Item"),
     };
-    const simpleItem: TreeNodeItem = {
-      id: "simple_item_id",
-      label: PropertyRecord.fromString("Simple Item"),
-    };
-    expect(isPresentationTreeNodeItem(presentationItem)).to.be.true;
-    expect(isPresentationTreeNodeItem(simpleItem)).to.be.false;
+    const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
+    expect(isPresentationTreeNodeItem(presentationItem)).toBe(true);
+    expect(isPresentationTreeNodeItem(simpleItem)).toBe(false);
   });
 });
 
@@ -47,12 +44,9 @@ describe("isPresentationInfoTreeNodeItem", () => {
       key: createTestECInstancesNodeKey(),
       label: PropertyRecord.fromString("Presentation Item"),
     };
-    const simpleItem: TreeNodeItem = {
-      id: "simple_item_id",
-      label: PropertyRecord.fromString("Simple Item"),
-    };
-    expect(isPresentationInfoTreeNodeItem(presentationInfoItem)).to.be.true;
-    expect(isPresentationInfoTreeNodeItem(presentationItem)).to.be.false;
-    expect(isPresentationInfoTreeNodeItem(simpleItem)).to.be.false;
+    const simpleItem: TreeNodeItem = { id: "simple_item_id", label: PropertyRecord.fromString("Simple Item") };
+    expect(isPresentationInfoTreeNodeItem(presentationInfoItem)).toBe(true);
+    expect(isPresentationInfoTreeNodeItem(presentationItem)).toBe(false);
+    expect(isPresentationInfoTreeNodeItem(simpleItem)).toBe(false);
   });
 });

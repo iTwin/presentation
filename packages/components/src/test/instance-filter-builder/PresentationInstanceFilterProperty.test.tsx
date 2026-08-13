@@ -3,30 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createTestPresentationInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common.js";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty.js";
+import { createTestPresentationInstanceFilterPropertyInfo } from "../_helpers/Common.js";
 import { render, waitFor } from "../TestUtils.js";
 
 describe("PresentationInstanceFilterProperty", () => {
-  stubRaf();
   const className = "TestClassName";
   const schemaName = "TestSchema";
 
-  before(() => {
+  beforeEach(() => {
     const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(Presentation, "localization").get(() => localization);
-    Element.prototype.scrollIntoView = sinon.stub();
+    vi.spyOn(IModelApp, "initialized", "get").mockReturnValue(true);
+    vi.spyOn(IModelApp, "localization", "get").mockReturnValue(localization);
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(localization);
   });
 
-  after(() => {
-    sinon.restore();
+  afterAll(() => {
+    vi.restoreAllMocks();
   });
 
   it("renders with badge", async () => {
@@ -42,14 +39,14 @@ describe("PresentationInstanceFilterProperty", () => {
       />,
     );
 
-    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
+    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).not.toBeNull();
     const propertyBadgeSelector = container.querySelector<HTMLInputElement>(".badge");
-    expect(propertyBadgeSelector).to.not.be.null;
+    expect(propertyBadgeSelector).not.toBeNull();
 
     await user.hover(propertyBadgeSelector!);
     await waitFor(() => {
-      expect(queryByText(className)).to.not.be.null;
-      expect(queryByText(schemaName)).to.not.be.null;
+      expect(queryByText(className)).not.toBeNull();
+      expect(queryByText(schemaName)).not.toBeNull();
     });
   });
 
@@ -58,10 +55,13 @@ describe("PresentationInstanceFilterProperty", () => {
       className: `${schemaName}:${className}`,
     });
     const { container, queryByTitle } = render(
-      <PresentationInstanceFilterProperty propertyDescription={testPropertyInfo.propertyDescription} fullClassName={testPropertyInfo.className} />,
+      <PresentationInstanceFilterProperty
+        propertyDescription={testPropertyInfo.propertyDescription}
+        fullClassName={testPropertyInfo.className}
+      />,
     );
 
-    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
-    expect(container.querySelector<HTMLInputElement>(".badge")).to.be.null;
+    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).not.toBeNull();
+    expect(container.querySelector<HTMLInputElement>(".badge")).toBeNull();
   });
 });

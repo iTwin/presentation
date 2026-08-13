@@ -1,5 +1,30 @@
 # Change Log - @itwin/presentation-opentelemetry
 
+## 4.2.5
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+
+## 4.2.4
+
+### Patch Changes
+
+- [#1152](https://github.com/iTwin/presentation/pull/1152): Bump dependencies.
+
+## 4.2.3
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+
+## 4.2.2
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+
 ## 4.2.1
 
 ### Patch Changes

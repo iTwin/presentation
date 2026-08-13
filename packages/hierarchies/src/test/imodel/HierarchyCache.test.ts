@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect, it } from "vitest";
 import { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
 import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache.js";
 import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils.js";
@@ -12,14 +12,14 @@ describe("HierarchyCache", () => {
   it("returns `undefined` when cache is empty", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
     const result = cache.get({ parentNode: undefined });
-    expect(result).to.be.undefined;
+    expect(result).toBeUndefined();
   });
 
   it("returns `undefined` for non-existing entry", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
     cache.set({ parentNode: createTestProcessedGenericNode() }, "test");
     const result = cache.get({ parentNode: undefined });
-    expect(result).to.be.undefined;
+    expect(result).toBeUndefined();
   });
 
   it("returns value for existing entry", () => {
@@ -28,7 +28,7 @@ describe("HierarchyCache", () => {
     const props = { parentNode: undefined };
     cache.set(props, value);
     const result = cache.get(props);
-    expect(result).to.eq(value);
+    expect(result).toBe(value);
   });
 
   it("returns `undefined` after clearing", () => {
@@ -37,7 +37,7 @@ describe("HierarchyCache", () => {
     const props = { parentNode: undefined };
     cache.set(props, value);
     cache.clear();
-    expect(cache.get(props)).to.be.undefined;
+    expect(cache.get(props)).toBeUndefined();
   });
 
   it("clears recently used entries", () => {
@@ -48,12 +48,12 @@ describe("HierarchyCache", () => {
     const value2 = "value 2";
 
     cache.set(props1, value1);
-    expect(cache.get(props1)).to.eq(value1);
-    expect(cache.get(props2)).to.be.undefined;
+    expect(cache.get(props1)).toBe(value1);
+    expect(cache.get(props2)).toBeUndefined();
 
     cache.set(props2, value2);
-    expect(cache.get(props1)).to.be.undefined;
-    expect(cache.get(props2)).to.eq(value2);
+    expect(cache.get(props1)).toBeUndefined();
+    expect(cache.get(props2)).toBe(value2);
   });
 
   describe("variations' handling", () => {
@@ -68,7 +68,7 @@ describe("HierarchyCache", () => {
         instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and", rules: [] } },
       };
       const result = cache.get(variationProps);
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns existing variation based on instance filter", () => {
@@ -79,13 +79,17 @@ describe("HierarchyCache", () => {
 
       const variationProps = {
         ...primaryProps,
-        instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and" as const, rules: [] } },
+        instanceFilter: {
+          propertyClassNames: ["x"],
+          relatedInstances: [],
+          rules: { operator: "and" as const, rules: [] },
+        },
       };
       const value = "variation";
       cache.set(variationProps, value);
 
       const result = cache.get(variationProps);
-      expect(result).to.eq(value);
+      expect(result).toBe(value);
     });
 
     it("returns `undefined` for non-existing variation based on hierarchy level size limit", () => {
@@ -94,12 +98,9 @@ describe("HierarchyCache", () => {
       const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
-      const variationProps: GetHierarchyNodesProps = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 999,
-      };
+      const variationProps: GetHierarchyNodesProps = { ...primaryProps, hierarchyLevelSizeLimit: 999 };
       const result = cache.get(variationProps);
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns existing variation based on hierarchy level size limit", () => {
@@ -108,15 +109,12 @@ describe("HierarchyCache", () => {
       const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
-      const variationProps = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 999,
-      };
+      const variationProps = { ...primaryProps, hierarchyLevelSizeLimit: 999 };
       const value = "variation";
       cache.set(variationProps, value);
 
       const result = cache.get(variationProps);
-      expect(result).to.eq(value);
+      expect(result).toBe(value);
     });
 
     it("keeps primary observable when adding variations", () => {
@@ -126,15 +124,12 @@ describe("HierarchyCache", () => {
       const primaryValue = "primary";
       cache.set(primaryProps, primaryValue);
 
-      const variationProps = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 111,
-      };
+      const variationProps = { ...primaryProps, hierarchyLevelSizeLimit: 111 };
       const value = "variation";
       cache.set(variationProps, value);
 
-      expect(cache.get(variationProps)).to.eq(value);
-      expect(cache.get(primaryProps)).to.eq(primaryValue);
+      expect(cache.get(variationProps)).toBe(value);
+      expect(cache.get(primaryProps)).toBe(primaryValue);
     });
 
     it("keeps limited number of least recently used variations", () => {
@@ -143,24 +138,18 @@ describe("HierarchyCache", () => {
       const primaryProps = { parentNode: undefined };
       cache.set(primaryProps, "primary");
 
-      const variationProps1 = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 111,
-      };
+      const variationProps1 = { ...primaryProps, hierarchyLevelSizeLimit: 111 };
       const value1 = "variation 1";
       cache.set(variationProps1, value1);
 
-      expect(cache.get(variationProps1)).to.eq(value1);
+      expect(cache.get(variationProps1)).toBe(value1);
 
-      const variationProps2 = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 222,
-      };
+      const variationProps2 = { ...primaryProps, hierarchyLevelSizeLimit: 222 };
       const value2 = "variation 2";
       cache.set(variationProps2, value2);
 
-      expect(cache.get(variationProps1)).to.be.undefined;
-      expect(cache.get(variationProps2)).to.eq(value2);
+      expect(cache.get(variationProps1)).toBeUndefined();
+      expect(cache.get(variationProps2)).toBe(value2);
     });
   });
 });

@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "noEmit": false,
     "module": "CommonJS",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
+    "rootDir": "./src",
     "outDir": "lib/cjs"
   },
-  "exclude": ["src/test/**/*"]
+  "include": ["src/hierarchies", "src/presentation-hierarchies.ts"]
 }

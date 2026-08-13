@@ -1,5 +1,78 @@
 # @itwin/presentation-core-interop
 
+## 1.3.13
+
+### Patch Changes
+
+- [#1338](https://github.com/iTwin/presentation/pull/1338): Bump iTwin.js core dependencies to `^5.9.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.13
+
+## 1.3.12
+
+### Patch Changes
+
+- [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.12
+
+## 1.3.11
+
+### Patch Changes
+
+- [#1286](https://github.com/iTwin/presentation/pull/1286): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.11
+
+## 1.3.10
+
+### Patch Changes
+
+- [#1242](https://github.com/iTwin/presentation/pull/1242): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.10
+
+## 1.3.9
+
+### Patch Changes
+
+- [#1215](https://github.com/iTwin/presentation/pull/1215): Update dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.9
+
+## 1.3.8
+
+### Patch Changes
+
+- [#1168](https://github.com/iTwin/presentation/pull/1168): Bump dependencies.
+- [#1161](https://github.com/iTwin/presentation/pull/1161): Bump iTwin.js dependencies to `^5.5.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.7
+
+## 1.3.7
+
+### Patch Changes
+
+- [#1152](https://github.com/iTwin/presentation/pull/1152): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.6
+
+## 1.3.6
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.5
+
+## 1.3.5
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.4
+
 ## 1.3.4
 
 ### Patch Changes

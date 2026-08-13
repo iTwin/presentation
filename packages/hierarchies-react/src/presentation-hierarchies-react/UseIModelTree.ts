@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
-import { createIModelHierarchyProvider, HierarchyDefinition, HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import {
+  createIModelHierarchyProvider,
+  HierarchyDefinition,
+  HierarchyFilteringPath,
+} from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 import { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
 import { useTree, UseTreeProps, UseTreeResult, useUnifiedSelectionTree } from "./UseTree.js";
@@ -78,7 +82,10 @@ export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUni
 }
 
 function useIModelTreeProps(
-  props: Pick<UseIModelTreeProps, "imodelAccess" | "imodelChanged" | "getHierarchyDefinition" | "getFilteredPaths" | "localizedStrings">,
+  props: Pick<
+    UseIModelTreeProps,
+    "imodelAccess" | "imodelChanged" | "getHierarchyDefinition" | "getFilteredPaths" | "localizedStrings"
+  >,
 ): Pick<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> {
   const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings } = props;
   return {

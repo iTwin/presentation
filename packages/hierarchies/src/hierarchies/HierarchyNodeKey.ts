@@ -89,10 +89,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:other";
   /** Identifiers of properties whose values are grouped under this node. */
-  properties: Array<{
-    className: string;
-    propertyName: string;
-  }>;
+  properties: Array<{ className: string; propertyName: string }>;
 }
 
 /**
@@ -138,7 +135,10 @@ export interface PropertyValueRangeGroupingNodeKey {
  * A key for a property grouping node.
  * @public
  */
-export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
+export type PropertyGroupingNodeKey =
+  | PropertyValueRangeGroupingNodeKey
+  | PropertyValueGroupingNodeKey
+  | PropertyOtherValuesGroupingNodeKey;
 
 /**
  * A key for one of the instance grouping nodes.
@@ -241,7 +241,10 @@ export namespace HierarchyNodeKey {
           if (instanceKeyCompareResult !== 0) {
             return instanceKeyCompareResult;
           }
-          const imodelKeyCompareResult = compareStringsOrUndefined(lhs.instanceKeys[0].imodelKey, rhs.instanceKeys[0].imodelKey);
+          const imodelKeyCompareResult = compareStringsOrUndefined(
+            lhs.instanceKeys[0].imodelKey,
+            rhs.instanceKeys[0].imodelKey,
+          );
           if (imodelKeyCompareResult !== 0) {
             return imodelKeyCompareResult;
           }

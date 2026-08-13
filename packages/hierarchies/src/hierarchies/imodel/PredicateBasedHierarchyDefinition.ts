@@ -124,7 +124,9 @@ interface GenericNodeChildHierarchyLevelDefinition {
  * @see `createPredicateBasedHierarchyDefinition`
  * @public
  */
-type PredicateBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | GenericNodeChildHierarchyLevelDefinition;
+type PredicateBasedHierarchyLevelDefinition =
+  | InstancesNodeChildHierarchyLevelDefinition
+  | GenericNodeChildHierarchyLevelDefinition;
 
 /**
  * Props for defining root hierarchy level.
@@ -137,7 +139,10 @@ export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "par
  * Props for `createPredicateBasedHierarchyDefinition`.
  * @public
  */
-interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {
+interface PredicateBasedHierarchyDefinitionProps extends Pick<
+  HierarchyDefinition,
+  "parseNode" | "preProcessNode" | "postProcessNode"
+> {
   /** Access to ECClass hierarchy in the iModel */
   classHierarchyInspector: ECClassHierarchyInspector;
 
@@ -161,7 +166,9 @@ interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinitio
  *
  * @public
  */
-export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition {
+export function createPredicateBasedHierarchyDefinition(
+  props: PredicateBasedHierarchyDefinitionProps,
+): HierarchyDefinition {
   return new PredicateBasedHierarchyDefinition(props);
 }
 
@@ -206,7 +213,9 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
     }
 
     if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
-      const instancesParentNodeDefs = this._props.hierarchy.childNodes.filter(isInstancesNodeChildHierarchyLevelDefinition);
+      const instancesParentNodeDefs = this._props.hierarchy.childNodes.filter(
+        isInstancesNodeChildHierarchyLevelDefinition,
+      );
       return firstValueFrom(
         from(groupInstanceIdsByClass(parentNode.key.instanceKeys).entries()).pipe(
           mergeMap(async ([parentNodeClassName, parentNodeInstanceIds]) =>
@@ -240,7 +249,10 @@ async function createHierarchyLevelDefinitions(
       ) {
         return { def, idx };
       }
-      if (typeof def.parentInstancesNodePredicate === "function" && (await def.parentInstancesNodePredicate(requestProps.parentNode.key))) {
+      if (
+        typeof def.parentInstancesNodePredicate === "function" &&
+        (await def.parentInstancesNodePredicate(requestProps.parentNode.key))
+      ) {
         return { def, idx };
       }
       return undefined;
@@ -267,10 +279,14 @@ function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
   return instanceIdsByClass;
 }
 
-function isGenericNodeChildHierarchyLevelDefinition(def: PredicateBasedHierarchyLevelDefinition): def is GenericNodeChildHierarchyLevelDefinition {
+function isGenericNodeChildHierarchyLevelDefinition(
+  def: PredicateBasedHierarchyLevelDefinition,
+): def is GenericNodeChildHierarchyLevelDefinition {
   return !!(def as GenericNodeChildHierarchyLevelDefinition).parentGenericNodePredicate;
 }
 
-function isInstancesNodeChildHierarchyLevelDefinition(def: PredicateBasedHierarchyLevelDefinition): def is InstancesNodeChildHierarchyLevelDefinition {
+function isInstancesNodeChildHierarchyLevelDefinition(
+  def: PredicateBasedHierarchyLevelDefinition,
+): def is InstancesNodeChildHierarchyLevelDefinition {
   return !!(def as InstancesNodeChildHierarchyLevelDefinition).parentInstancesNodePredicate;
 }

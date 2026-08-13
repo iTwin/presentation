@@ -3,30 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import sinon from "sinon";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import {
+  createFilterRuleValidator,
+  createInstanceFilterPropertyInfos,
+  DEFAULT_ROOT_CATEGORY_NAME,
+} from "../../presentation-components/instance-filter-builder/Utils.js";
+import { QuantityEditorName } from "../../presentation-components/properties/editors/EditorNames.js";
 import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
-  createTestSimpleContentField,
 } from "../_helpers/Content.js";
-import {
-  createInstanceFilterPropertyInfos,
-  DEFAULT_ROOT_CATEGORY_NAME,
-  filterRuleValidator,
-  INSTANCE_FILTER_FIELD_SEPARATOR,
-  useFilterBuilderNavigationPropertyEditorContextProviderProps,
-} from "../../presentation-components/instance-filter-builder/Utils.js";
-import { renderHook } from "../TestUtils.js";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {
@@ -55,7 +49,19 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).to.matchSnapshot();
+    // replace editor name with a placeholder in snapshot to avoid it changing every time the test is run
+    const expected = input.map((info) =>
+      info.propertyDescription.editor?.name === QuantityEditorName
+        ? {
+            ...info,
+            propertyDescription: {
+              ...info.propertyDescription,
+              editor: { name: "presentation-quantity-editor-{guid}" },
+            },
+          }
+        : info,
+    );
+    expect(expected).toMatchSnapshot();
   });
 
   it("creates property info with default root category name and does not assign a label to it", () => {
@@ -71,14 +77,26 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const propertyInfos = createInstanceFilterPropertyInfos(descriptor);
-    expect(propertyInfos[0].categoryLabel).to.be.undefined;
+    expect(propertyInfos[0].categoryLabel).toBeUndefined();
   });
 
   it("creates property infos when fields are in different categories category", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
-    const nestedCategory1 = createTestCategoryDescription({ name: "nested1", label: "Nested Category 1", parent: rootCategory });
-    const nestedCategory2 = createTestCategoryDescription({ name: "nested2", label: "Nested Category 2", parent: rootCategory });
-    const nestedCategory21 = createTestCategoryDescription({ name: "nested21", label: "Nested Category 2 1", parent: nestedCategory2 });
+    const nestedCategory1 = createTestCategoryDescription({
+      name: "nested1",
+      label: "Nested Category 1",
+      parent: rootCategory,
+    });
+    const nestedCategory2 = createTestCategoryDescription({
+      name: "nested2",
+      label: "Nested Category 2",
+      parent: rootCategory,
+    });
+    const nestedCategory21 = createTestCategoryDescription({
+      name: "nested21",
+      label: "Nested Category 2 1",
+      parent: nestedCategory2,
+    });
     const descriptor = createTestContentDescriptor({
       categories: [rootCategory, nestedCategory1, nestedCategory2, nestedCategory21],
       fields: [
@@ -94,7 +112,7 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).to.matchSnapshot();
+    expect(input).toMatchSnapshot();
   });
 
   it("creates property infos when property fields are in nested fields", () => {
@@ -117,13 +135,17 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input).to.matchSnapshot();
+    expect(input).toMatchSnapshot();
   });
 
   it("creates property info with nested field content class name", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
     const propertyField = createTestPropertiesContentField({
-      properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" } }],
+      properties: [
+        {
+          property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" },
+        },
+      ],
       category: rootCategory,
     });
 
@@ -139,11 +161,11 @@ describe("createInstanceFilterPropertyInfos", () => {
     });
 
     const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input[0].className).to.be.eq("Schema:RelatedClass");
+    expect(input[0].className).toBe("Schema:RelatedClass");
   });
 });
 
-describe("filterRuleValidator", () => {
+describe("createFilterRuleValidator", () => {
   const numericProperty: PropertyDescription = {
     displayLabel: "Numeric Prop",
     name: "numeric-prop",
@@ -157,63 +179,51 @@ describe("filterRuleValidator", () => {
     quantityType: "TestKOQ",
   };
 
-  before(() => {
-    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-  });
-
-  after(() => {
-    sinon.restore();
+  beforeEach(() => {
+    vi.spyOn(Presentation, "localization", "get").mockReturnValue(new EmptyLocalization());
   });
 
   it("returns error message for invalid numeric rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+    ).toBe("instance-filter-builder.error-messages.not-a-number");
   });
 
   it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
         operator: "is-equal",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: "[Invalid]",
-          displayValue: "[Invalid]",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: "[Invalid]", displayValue: "[Invalid]" },
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("returns error message for invalid quantity rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
         groupId: "test-group-id",
         property: quantityProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+    ).toBe("instance-filter-builder.error-messages.invalid");
   });
 
   it("returns error message for invalid from quantity value in between rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -221,22 +231,15 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
         }),
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+    ).toBe("instance-filter-builder.error-messages.invalid");
   });
 
   it("returns error message for invalid to quantity value in between rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -244,54 +247,41 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: undefined, displayValue: "Invalid" },
         }),
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+    ).toBe("instance-filter-builder.error-messages.invalid");
   });
 
   it("does not return error message for valid numeric rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
         operator: "greater",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: 10, displayValue: "10" },
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("does not return error message for valid quantity rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
         groupId: "test-group-id",
         property: quantityProperty,
         operator: "less",
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10 unit",
-        },
+        value: { valueFormat: PropertyValueFormat.Primitive, value: 10, displayValue: "10 unit" },
       }),
-    ).to.be.undefined;
+    ).toBeUndefined();
   });
 
   it("does not return error message for valid quantity value in between rule", () => {
+    const filterRuleValidator = createFilterRuleValidator(() => undefined);
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -299,84 +289,10 @@ describe("filterRuleValidator", () => {
         property: quantityProperty,
         operator: "between",
         value: PropertyFilterBuilderRuleRangeValue.serialize({
-          from: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 123,
-            displayValue: "123 unit",
-          },
-          to: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 456,
-            displayValue: "456 unit",
-          },
+          from: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123 unit" },
+          to: { valueFormat: PropertyValueFormat.Primitive, value: 456, displayValue: "456 unit" },
         }),
       }),
-    ).to.be.undefined;
-  });
-});
-
-describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
-  interface Props {
-    imodel: IModelConnection;
-    descriptor: Descriptor;
-  }
-  const testImodel = {} as IModelConnection;
-
-  it("returns navigation property info", async () => {
-    const navigationPropertyInfo: NavigationPropertyInfo = {
-      classInfo: { id: "2", label: "Prop Class", name: "TestSchema:PropClass" },
-      targetClassInfo: { id: "3", label: "Target Class", name: "TestSchema:TargetClass" },
-      isForwardRelationship: true,
-      isTargetPolymorphic: true,
-    };
-    const fieldName = "field_name";
-    const testDescriptor = createTestContentDescriptor({
-      fields: [
-        createTestPropertiesContentField({
-          name: fieldName,
-          properties: [
-            {
-              property: {
-                classInfo: { id: "1", label: "Field Class", name: "TestSchema:FieldClass" },
-                name: "nav_prop",
-                type: "navigation",
-                navigationPropertyInfo,
-              },
-            },
-          ],
-        }),
-      ],
-    });
-    const propertyDescription: PropertyDescription = {
-      displayLabel: "TestProp",
-      name: `test_category${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`,
-      typename: "navigation",
-    };
-
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
-      initialProps: { imodel: testImodel, descriptor: testDescriptor },
-    });
-
-    const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).to.be.deep.eq(navigationPropertyInfo);
-  });
-
-  it("returns `undefined` for non properties field", async () => {
-    const fieldName = "field_name";
-    const testDescriptor = createTestContentDescriptor({
-      fields: [createTestSimpleContentField({ name: fieldName })],
-    });
-    const propertyDescription: PropertyDescription = {
-      displayLabel: "TestProp",
-      name: `test_category${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`,
-      typename: "navigation",
-    };
-
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
-      initialProps: { imodel: testImodel, descriptor: testDescriptor },
-    });
-
-    const info = await result.current.getNavigationPropertyInfo(propertyDescription);
-    expect(info).to.be.undefined;
+    ).toBeUndefined();
   });
 });

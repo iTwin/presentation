@@ -39,11 +39,9 @@ stages:
             $paths = @(
               ".azure-pipelines/generate-docs.yaml",
               "packages/components/*",
-              "packages/testing/*",
               "packages/opentelemetry/*",
               "apps/test-app/*",
-              "apps/full-stack-tests/src/components/*",
-              "apps/full-stack-tests/src/testing/*"
+              "apps/full-stack-tests/src/components/*"
             )
             $sourceBranch = "origin/$(System.PullRequest.SourceBranch)"
             $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
@@ -101,9 +99,9 @@ stages:
             clean: true
 
           - task: UseNode@1
-            displayName: "Use Node 22"
+            displayName: "Use Node 24"
             inputs:
-              version: 22
+              version: 24.15.0
 
           - task: Cache@2
             displayName: Cache pnpm
@@ -147,7 +145,6 @@ stages:
       - template: common/config/azure-pipelines/jobs/docs-build.yaml@itwinjs-core
         parameters:
           checkout: itwinjs-core
-          ignoreAudit: true
           useCurrentPresentationDocsArtifact: true
 
   - stage: Tag_Docs

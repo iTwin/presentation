@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Props } from "@itwin/presentation-shared";
 import { computeSelection } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { Datasets, IModelName } from "../util/Datasets.js";
+import { run, RunOptions } from "../util/TestUtilities.js";
 
 describe("compute", () => {
   runSelectionScopeTest({
@@ -136,14 +136,14 @@ function runSelectionScopeTest(
         elementIds.push(row.ECInstanceId);
       }
 
-      return {
-        iModel,
-        elementIds,
-        queryExecutor,
-      };
+      return { iModel, elementIds, queryExecutor };
     },
     test: async (props) => {
-      const iterator = computeSelection({ elementIds: props.elementIds, scope: testProps.scope, queryExecutor: props.queryExecutor });
+      const iterator = computeSelection({
+        elementIds: props.elementIds,
+        scope: testProps.scope,
+        queryExecutor: props.queryExecutor,
+      });
       const counts = new Map<string, { count: number }>();
 
       for await (const instanceKey of iterator) {
@@ -157,7 +157,7 @@ function runSelectionScopeTest(
 
       if (testProps.expectedCounts !== undefined) {
         for (const entry of testProps.expectedCounts) {
-          expect(counts.get(entry.className)?.count).to.be.eq(entry.count);
+          expect(counts.get(entry.className)?.count).toBe(entry.count);
         }
       }
     },
