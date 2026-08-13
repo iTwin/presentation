@@ -25,6 +25,7 @@ import type { TreeActionBaseAttributes } from "./TreeAction.js";
  * @alpha
  */
 export const TreeNodeRenameAction: NamedExoticComponent<TreeActionBaseAttributes & { node: TreeNode }> = memo(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function TreeNodeRenameAction({ node, ...actionAttributes }: TreeActionBaseAttributes & { node: TreeNode }) {
     const translate = useTranslation();
     const context = useTreeNodeRenameContext();

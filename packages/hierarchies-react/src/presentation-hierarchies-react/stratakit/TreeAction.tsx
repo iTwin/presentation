@@ -57,6 +57,7 @@ export type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item
  *
  * @alpha
  */
+// eslint-disable-next-line @typescript-eslint/no-shadow
 export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps> = memo(function TreeActionBase({
   hide,
   variant = "default",

@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.65
+
+### Patch Changes
+
+- [#1477](https://github.com/iTwin/presentation/pull/1477): `ErrorItemRenderer`: Improved unknown error formatting by displaying the affected node before the error message, separated by a colon. Localized error messages now preserve their defined spacing around the node link.
+
 ## 2.0.0-alpha.64
 
 ### Patch Changes
@@ -996,6 +1002,16 @@
 ### Major Changes
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
+
+## 1.11.4
+
+### Patch Changes
+
+- [#1473](https://github.com/iTwin/presentation/pull/1473): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.19
+  - @itwin/presentation-shared@1.2.19
+  - @itwin/unified-selection@1.8.4
 
 ## 1.11.3
 

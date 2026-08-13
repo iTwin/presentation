@@ -35,6 +35,7 @@
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-components": "workspace:*",
+    "@itwin/presentation-content": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-frontend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-hierarchies": "workspace:*",
@@ -51,6 +52,7 @@
     "@types/object-hash": "^3.0.6",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
+    "@typescript/native": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
     "deep-equal-in-any-order": "catalog:test-tools",
     "eslint": "catalog:build-tools",
@@ -65,8 +67,7 @@
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
     "sanitize-filename": "^1.6.4",
-    "sass": "^1.101.0",
-    "@typescript/native": "catalog:build-tools",
+    "sass": "^1.102.0",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }
