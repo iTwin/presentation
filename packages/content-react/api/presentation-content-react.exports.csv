@@ -1,0 +1,7 @@
+sep=;
+Release Tag;API Item Type;API Item Name
+public;function;createInstanceFilterProperties
+public;interface;InstanceFilterClass
+public;interface;InstanceFilterPropertiesInfo
+public;interface;InstanceFilterProperty
+public;function;useInstanceFilterPropertiesInfo

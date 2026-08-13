@@ -31,6 +31,7 @@ import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { Root } from "@stratakit/mui";
 import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
+import { FilterBuilder } from "../filter-builder/FilterBuilder";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
@@ -297,6 +298,13 @@ function IModelComponents(props: IModelComponentsProps) {
               id: "multi-datasource-tree",
               label: "Multi data source tree",
               content: <MultiDataSourceTreePanel imodel={imodel} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
+              id: "filter-builder-comparison",
+              label: "Filter builder comparison",
+              content: <FilterBuilder imodel={imodel} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
