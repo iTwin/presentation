@@ -32,7 +32,7 @@ interface RelatedPropertiesDeclaration {
  * `BisCore` ruleset into a presentation-content fields provider.
  */
 export const bisCoreContentCustomization = defineIModelFieldsProvider({
-  id: "biscore-content-customization_v1",
+  id: "bis-content-customization_v1",
   async getContribution({ imodelAccess, target }) {
     if (target.primaryClass !== elementClassName) {
       return undefined;
