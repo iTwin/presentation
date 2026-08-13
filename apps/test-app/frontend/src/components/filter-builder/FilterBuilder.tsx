@@ -25,7 +25,7 @@ import type { ContentDescriptor } from "@itwin/presentation-content";
 import type { InstanceFilterClass, InstanceFilterProperty } from "@itwin/presentation-content-react";
 
 /**
- * Displays independently-loaded legacy and presentation-content filter builders side by side.
+ * Displays a presentation-content-backed filter builder.
  */
 export function FilterBuilder({ imodel }: { imodel: IModelConnection }) {
   return (

@@ -140,7 +140,7 @@ function startsWithRelationshipPath(
         path[index].sourceClassName === step.sourceClassName &&
         path[index].targetClassName === step.targetClassName &&
         path[index].relationshipName === step.relationshipName &&
-        path[index].relationshipReverse === step.relationshipReverse,
+        Boolean(path[index].relationshipReverse) === Boolean(step.relationshipReverse),
     )
   );
 }
