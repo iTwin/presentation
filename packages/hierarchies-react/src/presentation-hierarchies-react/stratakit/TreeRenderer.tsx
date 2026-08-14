@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
@@ -11,7 +11,7 @@ import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
-import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
+import { PlaceholderNode, SkeletonNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 import type { ComponentProps, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
 import type { FlatTreeItem, FlatTreeNodeItem } from "../FlatTreeNode.js";
@@ -79,6 +79,11 @@ type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "filterHierarchyLevel"> &
   TreeRendererOwnProps;
 
+// Fraction of the visible window that must be newly-scrolled-in to count as a large scroll and show skeletons.
+const SKELETON_SCROLL_THRESHOLD = 0.5;
+
+const EMPTY_SET: ReadonlySet<string> = new Set();
+
 /**
  * A component that renders a tree using the `Tree` component from `@stratakit/structures`.
  *
@@ -87,7 +92,6 @@ type StrataKitTreeRendererProps = TreeRendererProps &
 export const StrataKitTreeRenderer: FC<
   PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>
 > = forwardRef<StrataKitTreeRendererAttributes, StrataKitTreeRendererProps>(
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   function StrataKitTreeRenderer(props, forwardedRef) {
     const {
       id,
@@ -174,6 +178,9 @@ export const StrataKitTreeRenderer: FC<
       };
     }, [flatItems, isNodeSelected]);
 
+    const visibleNodeKeys = items.map((virtualItem) => flatItems[virtualItem.index].id);
+    const skeletonKeys = useScrollSkeletonKeys(visibleNodeKeys, isScrolling);
+
     return (
       <>
         {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
@@ -192,6 +199,7 @@ export const StrataKitTreeRenderer: FC<
               {items.map((virtualizedItem) => {
                 const item = flatItems[virtualizedItem.index];
                 const selected = isNodeSelected(item.id);
+                const showSkeleton = skeletonKeys.has(item.id);
                 return (
                   <VirtualTreeItem
                     ref={virtualizer.measureElement}
@@ -200,6 +208,7 @@ export const StrataKitTreeRenderer: FC<
                     start={virtualizedItem.start}
                     item={item}
                     selected={selected}
+                    showSkeleton={showSkeleton}
                     expandNode={expandNode}
                     reloadTree={reloadTree}
                     handleNodeSelect={handleNodeSelect}
@@ -218,6 +227,23 @@ export const StrataKitTreeRenderer: FC<
     );
   },
 );
+
+/** Returns the keys of rows to render as skeletons: only brand-new rows that appear during a large scroll. */
+function useScrollSkeletonKeys(visibleNodeKeys: string[], isScrolling: boolean): ReadonlySet<string> {
+  const [renderedKeys, setRenderedKeys] = useState<ReadonlySet<string>>(EMPTY_SET);
+
+  const newKeys = visibleNodeKeys.filter((key) => !renderedKeys.has(key));
+  const isLargeScroll =
+    isScrolling && newKeys.length > Math.max(1, Math.floor(visibleNodeKeys.length * SKELETON_SCROLL_THRESHOLD));
+
+  // Once settled, adopt the current window (guarded state update during render avoids a ref and re-render loops).
+  if (!isLargeScroll && newKeys.length > 0) {
+    setRenderedKeys(new Set(visibleNodeKeys));
+    return EMPTY_SET;
+  }
+
+  return isLargeScroll ? new Set(newKeys) : EMPTY_SET;
+}
 
 function useExpandAndScrollToNode({
   rootNodes,
@@ -300,11 +326,14 @@ type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
   "data-index": number;
   item: FlatTreeItem;
+  showSkeleton: boolean;
 };
 
 const VirtualTreeItem = memo(
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
+    { start, item, showSkeleton, ...props },
+    forwardedRef,
+  ) {
     const style: CSSProperties = useMemo(
       () => ({
         position: "absolute",
@@ -330,6 +359,20 @@ const VirtualTreeItem = memo(
       );
     }
 
+    // Newly-scrolled-into-view row during a large scroll: render a lightweight skeleton until it settles.
+    if (showSkeleton) {
+      return (
+        <SkeletonNode
+          ref={forwardedRef}
+          data-index={props["data-index"]}
+          style={style}
+          aria-level={item.level}
+          aria-posinset={item.posInLevel}
+          aria-setsize={item.levelSize}
+        />
+      );
+    }
+
     return <HierarchyNodeItem {...props} ref={forwardedRef} style={style} item={item} />;
   }),
 );
@@ -343,7 +386,6 @@ type HierarchyNodeItemProps = {
   Pick<ReturnType<typeof useSelectionHandler>, "handleNodeSelect">;
 
 const HierarchyNodeItem = memo(
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
     {
       item,
