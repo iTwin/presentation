@@ -70,6 +70,25 @@ export interface PropertyField extends BaseField {
    */
   valueClassNames: EC.FullClassNameDotNotation[];
   /**
+   * Concrete primary (content target) classes whose instances have access to this field.
+   *
+   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these coincide
+   * with {@link (PropertyField:interface).valueClassNames} — the primary class *is* the value
+   * origin. For a related property they are the concrete classes at the relationship path's
+   * *first* step's source end — i.e. the primary-side classes that actually connect to this
+   * field's related value, as opposed to {@link (PropertyField:interface).valueClassNames}, which
+   * are the classes at the path's terminal (related) end.
+   *
+   * For example, given primary classes `A1`/`A2` both related to `B` over the same relationship,
+   * a property declared on `B` has `valueClassNames: ["B"]` but `primaryClasses: ["A1", "A2"]`. If
+   * instead `A1` and `A2` relate to distinct concrete classes `B1`/`B2`, separate fields are
+   * created: one with `valueClassNames: ["B1"]`/`primaryClasses: ["A1"]`, the other with
+   * `valueClassNames: ["B2"]`/`primaryClasses: ["A2"]`.
+   *
+   * Always non-empty, de-duplicated, and sorted by full name.
+   */
+  primaryClasses: EC.FullClassNameDotNotation[];
+  /**
    * ID of the {@link ValueSelector} (column) this field reads. Equals this field's *base* id (its
    * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so all fork/override
    * variants of the same underlying property share one selector. Immutable in the transformer view.

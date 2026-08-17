@@ -111,6 +111,29 @@ describe("collectRelatedPropertyFields", () => {
     );
   });
 
+  it("attributes the field's primaryClasses to the resolved path's concrete source classes", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.B" })],
+      }),
+    ]);
+    const provider = createProvider("p1_v1", [{ path: [aToB] }]);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB], ["TestSchema.A1", "TestSchema.A2"])],
+      },
+    ]);
+
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
+
+    expect(fields).to.have.lengthOf(1);
+    expect(fields[0].primaryClasses).to.deep.equal(["TestSchema.A1", "TestSchema.A2"]);
+    expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.B"]);
+  });
+
   it("loads only the target class opted in by a step spec", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({

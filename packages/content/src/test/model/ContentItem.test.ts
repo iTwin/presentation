@@ -29,6 +29,7 @@ function createTestPropertyField(id: string): PropertyField {
     propertyName: id,
     pathFromTarget: [],
     valueClassNames: ["BisCore.Element"],
+    primaryClasses: ["BisCore.Element"],
   };
 }
 

@@ -74,10 +74,21 @@ export async function collectClassPropertyFields(props: {
   imodelAccess: ECSchemaProvider;
   /** The class whose properties are enumerated. */
   className: EC.FullClassNameDotNotation;
-  /** Relationship path from the content target to `className` (`[]` for direct properties). */
-  pathFromTarget: RelationshipPath;
   /** Concrete value-supplier classes for the produced fields. */
   valueClassNames: EC.FullClassNameDotNotation[];
+  /** Information on how to reach related properties or `undefined` for direct properties. */
+  relationshipInfo:
+    | {
+        /** Relationship path from the content target to `className` (`[]` for direct properties). */
+        pathFromTarget: RelationshipPath;
+        /**
+         * Concrete primary classes that have access to the produced fields. Defaults to `valueClassNames`
+         * (the direct-property case, where the primary class is itself the value origin). Related-property
+         * enumeration passes the concrete source classes of the path's first step instead.
+         */
+        primaryClasses: EC.FullClassNameDotNotation[];
+      }
+    | undefined;
   /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
@@ -85,7 +96,9 @@ export async function collectClassPropertyFields(props: {
   /** When `true`, enumerate only properties declared directly on `className` (exclude inherited ones). */
   excludeInherited?: boolean;
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, className, pathFromTarget, valueClassNames, spec, anchor, excludeInherited } = props;
+  const { imodelAccess, className, relationshipInfo, valueClassNames, spec, anchor, excludeInherited } = props;
+  const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
+  const primaryClasses = relationshipInfo?.primaryClasses ?? valueClassNames;
   const ecClass = await getClass(imodelAccess, className);
   const result: CategorizedField[] = [];
   const properties = excludeInherited ? await ecClass.getOwnProperties() : await ecClass.getProperties();
@@ -110,6 +123,7 @@ export async function collectClassPropertyFields(props: {
       propertyName: property.name,
       pathFromTarget,
       valueClassNames,
+      primaryClasses,
     };
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;

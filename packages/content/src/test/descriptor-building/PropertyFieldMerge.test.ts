@@ -13,6 +13,7 @@ function createField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
+  primaryClasses?: EC.FullClassNameDotNotation[];
   label?: string;
   hidden?: boolean;
   readOnly?: boolean;
@@ -36,6 +37,7 @@ function createField(props: {
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames,
+    primaryClasses: props.primaryClasses ?? props.valueClassNames,
   };
 }
 
@@ -65,7 +67,13 @@ describe("mergePropertyFieldsByIdentity", () => {
     const result = merge([field]);
     const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result).to.deep.equal({
-      [id]: { ...field, id, selectorId: id, valueClassNames: ["Stuff.Door", "Stuff.Window"] },
+      [id]: {
+        ...field,
+        id,
+        selectorId: id,
+        valueClassNames: ["Stuff.Door", "Stuff.Window"],
+        primaryClasses: ["Stuff.Door", "Stuff.Window"],
+      },
     });
   });
 
@@ -94,6 +102,25 @@ describe("mergePropertyFieldsByIdentity", () => {
     const result = merge([a, b]);
     const id = PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.Door", "Stuff.Window"]);
+  });
+
+  it("unions primary classes of related-property candidates that share identity", () => {
+    const a = createField({
+      propertyClassName: "Stuff.B",
+      propertyName: "Prop",
+      valueClassNames: ["Stuff.B"],
+      primaryClasses: ["Stuff.A1"],
+    });
+    const b = createField({
+      propertyClassName: "Stuff.B",
+      propertyName: "Prop",
+      valueClassNames: ["Stuff.B"],
+      primaryClasses: ["Stuff.A2"],
+    });
+    const result = merge([a, b]);
+    const id = PropertyField.computeId({ propertyClassName: "Stuff.B", propertyName: "Prop" });
+    expect(result[id].primaryClasses).to.deep.equal(["Stuff.A1", "Stuff.A2"]);
+    expect(result[id].valueClassNames).to.deep.equal(["Stuff.B"]);
   });
 
   it("de-duplicates overlapping target classes across candidates", () => {

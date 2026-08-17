@@ -71,6 +71,7 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames ?? [primaryClass],
+    primaryClasses: props.primaryClasses ?? [primaryClass],
     selectorId: props.selectorId ?? `selector-${props.propertyName}`,
   };
 }
@@ -390,6 +391,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Target",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Target"],
+        primaryClasses: [primaryClass],
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -405,6 +407,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Rel",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Rel"],
+        primaryClasses: [primaryClass],
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -512,6 +515,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Target",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Target"],
+        primaryClasses: [primaryClass],
         type: { kind: "primitive", type: "Point3d" },
       });
 
@@ -696,6 +700,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Target",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Target"],
+        primaryClasses: [primaryClass],
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -871,6 +876,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Many",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Many"],
+        primaryClasses: [primaryClass],
       });
 
       const result = await buildBaseQuery({
@@ -903,6 +909,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.RelMany",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.RelMany"],
+        primaryClasses: [primaryClass],
       });
 
       const result = await buildBaseQuery({
@@ -926,6 +933,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.One",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.One"],
+        primaryClasses: [primaryClass],
       });
 
       const result = await buildBaseQuery({
@@ -954,6 +962,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Target39",
         pathFromTarget: filteredPath,
         valueClassNames: ["TestSchema.Target39"],
+        primaryClasses: [filteredPath[0].sourceClassName],
       });
 
       const result = await buildBaseQuery({
@@ -983,6 +992,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Many",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Many"],
+        primaryClasses: [primaryClass],
       });
 
       const result = await buildBaseQuery({
@@ -1004,6 +1014,7 @@ describe("buildBaseQuery", () => {
         propertyClassName: "TestSchema.Target",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Target"],
+        primaryClasses: [primaryClass],
       });
 
       const result = await buildBaseQuery({

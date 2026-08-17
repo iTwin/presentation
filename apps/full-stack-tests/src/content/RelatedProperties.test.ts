@@ -82,6 +82,7 @@ describe("Content", () => {
       expect(propB!.propertyClassName).toBe(setup.schema.items.B.fullName);
       expect(propB!.pathFromTarget).toEqual(path);
       expect(propB!.valueClassNames).toEqual([setup.schema.items.B.fullName]);
+      expect(propB!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
     });
 
     it("adds multi-step related property fields", async () => {
@@ -153,6 +154,7 @@ describe("Content", () => {
       expect(propC).toBeDefined();
       expect(propC!.pathFromTarget).toEqual(path);
       expect(propC!.propertyClassName).toBe(setup.schema.items.C.fullName);
+      expect(propC!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
     });
 
     it("loads only the properties opted in by a step spec", async () => {
@@ -206,7 +208,9 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      expect(getPropertyFieldByName(descriptor, "Keep").pathFromTarget).toEqual(declaration.path);
+      const keepField = getPropertyFieldByName(descriptor, "Keep");
+      expect(keepField.pathFromTarget).toEqual(declaration.path);
+      expect(keepField.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       expect(getPropertyFieldsByName(descriptor, "Drop")).toHaveLength(0);
     });
 
@@ -266,6 +270,7 @@ describe("Content", () => {
       expect(relProp!.propertyClassName).toBe(setup.schema.items.AtoB.fullName);
       expect(relProp!.pathFromTarget).toEqual(declaration.path);
       expect(relProp!.valueClassNames).toEqual([setup.schema.items.AtoB.fullName]);
+      expect(relProp!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
     });
 
     it("loads no target properties with per-step select none", async () => {
@@ -374,7 +379,9 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      expect(getPropertyFieldByName(descriptor, "Keep").pathFromTarget).toEqual(declaration.path);
+      const keepField = getPropertyFieldByName(descriptor, "Keep");
+      expect(keepField.pathFromTarget).toEqual(declaration.path);
+      expect(keepField.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       expect(getPropertyFieldsByName(descriptor, "Drop")).toHaveLength(0);
     });
 
@@ -499,6 +506,8 @@ describe("Content", () => {
       const propC = related.find((f) => f.propertyName === "PropC");
       expect(propB?.pathFromTarget).toEqual(pathToB);
       expect(propC?.pathFromTarget).toEqual(pathToC);
+      expect(propB?.primaryClasses).toEqual([setup.schema.items.A.fullName]);
+      expect(propC?.primaryClasses).toEqual([setup.schema.items.A.fullName]);
     });
 
     it("adds a related property field reached by traversing a relationship backwards", async () => {
@@ -563,6 +572,7 @@ describe("Content", () => {
         },
       ]);
       expect(propB!.valueClassNames).toEqual([setup.schema.items.B.fullName]);
+      expect(propB!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
     });
 
     it("discovers all derived target classes and creates a field per concrete subclass", async () => {
@@ -658,6 +668,8 @@ describe("Content", () => {
       expect(sharedFields).toHaveLength(2);
       expect(sharedFields[0].valueClassNames).toEqual([setup.schema.items.B1.fullName]);
       expect(sharedFields[1].valueClassNames).toEqual([setup.schema.items.B2.fullName]);
+      expect(sharedFields[0].primaryClasses).toEqual([setup.schema.items.A.fullName]);
+      expect(sharedFields[1].primaryClasses).toEqual([setup.schema.items.A.fullName]);
 
       expect(sharedFields[0].pathFromTarget).toEqual([
         {
@@ -677,6 +689,7 @@ describe("Content", () => {
       // Subclass-specific properties are discovered on their respective concrete classes.
       const prop1Field = getPropertyFieldByName(descriptor, "Prop1");
       expect(prop1Field.valueClassNames).toEqual([setup.schema.items.B1.fullName]);
+      expect(prop1Field.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       expect(prop1Field.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
@@ -687,6 +700,7 @@ describe("Content", () => {
 
       const prop2Field = getPropertyFieldByName(descriptor, "Prop2");
       expect(prop2Field.valueClassNames).toEqual([setup.schema.items.B2.fullName]);
+      expect(prop2Field.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       expect(prop2Field.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
@@ -763,6 +777,7 @@ describe("Content", () => {
         },
       ]);
       expect(propB?.valueClassNames).toEqual([setup.schema.items.B.fullName]);
+      expect(propB?.primaryClasses).toEqual([setup.schema.items.A.fullName]);
     });
 
     it("resolves a polymorphic middle step to each concrete intermediate class", async () => {
@@ -851,6 +866,8 @@ describe("Content", () => {
       expect(propCFields).toHaveLength(2);
       expect(propCFields[0].valueClassNames).toEqual([setup.schema.items.C.fullName]);
       expect(propCFields[1].valueClassNames).toEqual([setup.schema.items.C.fullName]);
+      expect(propCFields[0].primaryClasses).toEqual([setup.schema.items.A.fullName]);
+      expect(propCFields[1].primaryClasses).toEqual([setup.schema.items.A.fullName]);
 
       expect(propCFields[0].pathFromTarget).toEqual([
         {
@@ -951,11 +968,13 @@ describe("Content", () => {
       expect(propBFields).toHaveLength(1);
       expect(propBFields[0].propertyName).toBe("PropB");
       expect(propBFields[0].pathFromTarget).toEqual(shortPath);
+      expect(propBFields[0].primaryClasses).toEqual([setup.schema.items.A.fullName]);
 
       const propCFields = getRelatedPropertyFieldsByPath(descriptor, longPath);
       expect(propCFields).toHaveLength(1);
       expect(propCFields[0].propertyName).toBe("PropC");
       expect(propCFields[0].pathFromTarget).toEqual(longPath);
+      expect(propCFields[0].primaryClasses).toEqual([setup.schema.items.A.fullName]);
 
       expect(propBFields[0].id).not.toBe(propCFields[0].id);
     });
@@ -1016,12 +1035,14 @@ describe("Content", () => {
       expect(propB).toBeDefined();
       expect(propB!.propertyClassName).toBe(setup.schema.items.B.fullName);
       expect(propB!.valueClassNames).toEqual([setup.schema.items.B.fullName]);
+      expect(propB!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       expect(propB!.pathFromTarget).toEqual(expectedPath);
 
       const relProp = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "RelProp");
       expect(relProp).toBeDefined();
       expect(relProp!.propertyClassName).toBe(setup.schema.items.AtoB.fullName);
       expect(relProp!.valueClassNames).toEqual([setup.schema.items.AtoB.fullName]);
+      expect(relProp!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       expect(relProp!.pathFromTarget).toEqual(expectedPath);
 
       expect(propB!.id).not.toBe(relProp!.id);
@@ -1083,8 +1104,181 @@ describe("Content", () => {
       expect(relProp).toBeDefined();
       expect(relProp!.propertyClassName).toBe(setup.schema.items.AtoB.fullName);
       expect(relProp!.pathFromTarget).toEqual(expectedPath);
+      expect(relProp!.primaryClasses).toEqual([setup.schema.items.A.fullName]);
       // The target class contributes no fields.
       expect(getPropertyFieldsByName(descriptor, "PropB")).toHaveLength(0);
+    });
+
+    it("loads related properties from target reached by multiple sources", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECProperty propertyName="PropB" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="A1">
+              <BaseClass>A</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>A</BaseClass>
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const a1 = builder.insertInstance(s.items.A1.fullName, { propA: "a1" });
+        const a2 = builder.insertInstance(s.items.A2.fullName, { propA: "a2" });
+        const b = builder.insertInstance(s.items.B.fullName, { propB: "b" });
+        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const path: RelationshipPath = [
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ];
+      const provider = defineIModelFieldsProvider({
+        id: "provider_v1",
+        async getContribution() {
+          return { relatedProperties: [{ path }] };
+        },
+      });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      const propBFields = getPropertyFieldsByName(descriptor, "PropB");
+      expect(propBFields).toHaveLength(1);
+      expect(propBFields[0].valueClassNames).toEqual([setup.schema.items.B.fullName]);
+      expect(propBFields[0].primaryClasses).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
+      expect(propBFields[0].pathFromTarget).toEqual([
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ]);
+    });
+
+    it("creates separate fields for concrete related classes reached by different concrete sources", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="A1">
+              <BaseClass>A</BaseClass>
+              <ECProperty propertyName="PropA1" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>A</BaseClass>
+              <ECProperty propertyName="PropA2" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="B1">
+              <BaseClass>B</BaseClass>
+              <ECProperty propertyName="PropB1" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B2">
+              <BaseClass>B</BaseClass>
+              <ECProperty propertyName="PropB2" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const a1 = builder.insertInstance(s.items.A1.fullName, { propA1: "a1" });
+        const a2 = builder.insertInstance(s.items.A2.fullName, { propA2: "a2" });
+        const b1 = builder.insertInstance(s.items.B1.fullName, { propB1: "b1" });
+        const b2 = builder.insertInstance(s.items.B2.fullName, { propB2: "b2" });
+        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b1.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b2.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const path: RelationshipPath = [
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ];
+      const provider = defineIModelFieldsProvider({
+        id: "provider_v1",
+        async getContribution() {
+          return { relatedProperties: [{ path }] };
+        },
+      });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      const propB1Fields = getPropertyFieldsByName(descriptor, "PropB1");
+      expect(propB1Fields).toHaveLength(1);
+      expect(propB1Fields[0].valueClassNames).toEqual([setup.schema.items.B1.fullName]);
+      expect(propB1Fields[0].primaryClasses).toEqual([setup.schema.items.A1.fullName]);
+      expect(propB1Fields[0].pathFromTarget).toEqual([
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B1.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ]);
+
+      const propB2Fields = getPropertyFieldsByName(descriptor, "PropB2");
+      expect(propB2Fields).toHaveLength(1);
+      expect(propB2Fields[0].valueClassNames).toEqual([setup.schema.items.B2.fullName]);
+      expect(propB2Fields[0].primaryClasses).toEqual([setup.schema.items.A2.fullName]);
+      expect(propB2Fields[0].pathFromTarget).toEqual([
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B2.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ]);
     });
   });
 });

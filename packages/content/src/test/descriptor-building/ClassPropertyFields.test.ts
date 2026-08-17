@@ -34,7 +34,7 @@ describe("collectClassPropertyFields", () => {
     const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.B",
-      pathFromTarget: path,
+      relationshipInfo: { pathFromTarget: path, primaryClasses: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
     });
@@ -54,6 +54,7 @@ describe("collectClassPropertyFields", () => {
         propertyName: "Prop",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.B"],
+        primaryClasses: ["TestSchema.A"],
       },
     ]);
   });
@@ -68,8 +69,8 @@ describe("collectClassPropertyFields", () => {
     const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.C",
-      pathFromTarget: [],
       valueClassNames: ["TestSchema.C"],
+      relationshipInfo: undefined,
       spec: { select: "all", overrides: { gamma: { label: "Override Gamma" } } },
     });
 
@@ -85,8 +86,8 @@ describe("collectClassPropertyFields", () => {
     const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.C",
-      pathFromTarget: [],
       valueClassNames: ["TestSchema.C"],
+      relationshipInfo: undefined,
       spec: { select: "all" },
     });
 
@@ -101,8 +102,8 @@ describe("collectClassPropertyFields", () => {
     const [field] = await collectFields({
       imodelAccess,
       className: "TestSchema.Derived",
-      pathFromTarget: [],
       valueClassNames: ["TestSchema.Derived"],
+      relationshipInfo: undefined,
       spec: { select: "all" },
     });
 
@@ -121,8 +122,8 @@ describe("collectClassPropertyFields", () => {
           createPrimitiveProperty({ name: "C", declaringClassName: "TestSchema.C" }),
         ]),
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select },
       });
       return fields.map((f) => f.propertyName);
@@ -155,8 +156,8 @@ describe("collectClassPropertyFields", () => {
       const results = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all", defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
         anchor: "targetClass",
       });
@@ -177,8 +178,8 @@ describe("collectClassPropertyFields", () => {
       const results = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: {
           select: "all",
           defaultOverrides: { categoryId: "default", readOnly: true },
@@ -203,8 +204,8 @@ describe("collectClassPropertyFields", () => {
       const [field] = await collectFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
       });
 
@@ -227,8 +228,8 @@ describe("collectClassPropertyFields", () => {
       const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
         anchor: "none",
       });
@@ -251,8 +252,8 @@ describe("collectClassPropertyFields", () => {
       const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
         anchor: "targetClass",
       });
@@ -275,8 +276,8 @@ describe("collectClassPropertyFields", () => {
       const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all", overrides: { prop: { categoryId: "custom" } } },
         anchor: "none",
       });
@@ -292,8 +293,8 @@ describe("collectClassPropertyFields", () => {
       const [{ categorization }] = await collectClassPropertyFields({
         imodelAccess,
         className: "TestSchema.C",
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
         anchor: "relationshipClass",
       });
