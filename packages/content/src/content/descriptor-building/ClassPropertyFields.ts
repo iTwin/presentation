@@ -88,12 +88,12 @@ export async function collectClassPropertyFields(props: {
   const { imodelAccess, className, pathFromTarget, valueClassNames, spec, anchor, excludeInherited } = props;
   const ecClass = await getClass(imodelAccess, className);
   const result: CategorizedField[] = [];
-  const properties = excludeInherited ? await ecClass.getOwnProperties() : await ecClass.getProperties();
+  const properties = excludeInherited ? ecClass.getOwnProperties() : ecClass.getProperties();
   for (const property of properties) {
     if (!isSelected(property.name, spec.select)) {
       continue;
     }
-    const type = await createValueDescriptorFromProperty(property);
+    const type = createValueDescriptorFromProperty(property);
     if (type === undefined) {
       continue;
     }
@@ -122,7 +122,7 @@ export async function collectClassPropertyFields(props: {
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
     } else {
-      const schemaCategory = await property.category;
+      const schemaCategory = property.category;
       if (schemaCategory) {
         categorization.category = {
           source: "schema",

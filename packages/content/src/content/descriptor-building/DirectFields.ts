@@ -87,11 +87,11 @@ async function collectDeclaringClassClosure(
           key: declaringClassName,
           createFunc: () => new Set<EC.FullClassNameDotNotation>(),
         }).add(concreteClassName);
-        const [baseClass, mixins] = await Promise.all([
-          ecClass.baseClass,
-          ecClass.isEntityClass() ? ecClass.getMixins() : undefined,
-        ]);
+
+        const baseClass = ecClass.baseClass;
         baseClass && pending.push(baseClass);
+
+        const mixins = ecClass.isEntityClass() ? ecClass.getMixins() : undefined;
         mixins && pending.push(...mixins);
       }
     }),

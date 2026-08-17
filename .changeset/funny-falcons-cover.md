@@ -1,5 +1,17 @@
 ---
-"@itwin/presentation-core-interop": minor
+"@itwin/presentation-core-interop": major
 ---
 
-Added a new `createECSchemaProvider` overload accepting a `SchemaView` instance (from `@itwin/ecschema-metadata`) that naturally provides synchronous access.
+Changed `createECSchemaProvider` to take an instance of an iModel (either `IModelDb` or `IModelConnection`) instead of a `SchemaContext`.
+
+Migration:
+
+```ts
+const iModel: IModelDb | IModelConnection = ...;
+
+// previously:
+const schemaProvider = createECSchemaProvider(iModel.schemaContext);
+
+// now:
+const schemaProvider = createECSchemaProvider(iModel);
+```

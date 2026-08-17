@@ -24,7 +24,7 @@ export const QUERY_CANCEL_DELAY_MS = 100;
  * or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/).
  * @public
  */
-interface CoreECSqlReaderFactory {
+export interface CoreECSqlReaderFactory {
   createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): AsyncIterableIterator<QueryRowProxy>;
 }
 

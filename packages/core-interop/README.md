@@ -68,7 +68,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider } from "@itwin/presentation-core-interop";
 
 const imodel: IModelConnection = getIModelConnection();
-const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+const schemaProvider = createECSchemaProvider(imodel);
 // the created schema provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
 ```
 

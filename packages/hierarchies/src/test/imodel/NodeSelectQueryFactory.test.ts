@@ -1395,6 +1395,30 @@ describe("createNodesQueryClauseFactory", () => {
             where: `[content-class].[ECClassId] IS NOT (${hideClass1.ecsqlSelector})`,
           });
         });
+
+        it("excludes multiple hidden sibling classes in the same schema", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const hideClass1 = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: selectClass,
+            isHidden: true,
+          });
+          const hideClass2 = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "z",
+            baseClass: selectClass,
+            isHidden: true,
+          });
+          const clauses = await factory.createFilterClauses({
+            contentClass: { fullName: selectClass.fullName, alias: "content-class" },
+          });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).toEqual({
+            from: selectClass.fullName,
+            joins: "",
+            where: `[content-class].[ECClassId] IS NOT (${hideClass1.ecsqlSelector}, ${hideClass2.ecsqlSelector})`,
+          });
+        });
       });
     });
 

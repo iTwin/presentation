@@ -263,7 +263,7 @@ async function mapRelatedPropertiesSpec(props: {
         throw new Error(`"${relClassName}" is not a relationship class`);
       }
       const constraint = step.direction === "Forward" ? relClass.target : relClass.source;
-      const constraintClass = await constraint.abstractConstraint;
+      const constraintClass = constraint.abstractConstraint;
       if (!constraintClass) {
         throw new Error(`Cannot determine target class for relationship "${relClassName}"`);
       }

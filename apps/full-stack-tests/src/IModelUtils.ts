@@ -5,8 +5,9 @@
 
 import { IModelDb, IModelJsFs, SnapshotDb, StandaloneDb } from "@itwin/core-backend";
 import { OpenMode } from "@itwin/core-bentley";
+import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
+import { Schema, SchemaContext, SchemaView, schemaViewFormatVersion } from "@itwin/ecschema-metadata";
 import { createFileNameFromString, getTestName, setupOutputFileLocation } from "./FilenameUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
@@ -94,6 +95,30 @@ export async function createChangedIModels<TResultBase extends {}, TResultChange
   };
 }
 
+export function unifyIModelAPIs(imodel: IModelConnection | IModelDb | ECDb) {
+  if (imodel instanceof IModelConnection || imodel instanceof IModelDb) {
+    return imodel;
+  }
+
+  // `ECDb` has no `getSchemaView`, so provide one by reading the whole-schema view blob via `PRAGMA schema_view`
+  // and parsing it with `SchemaView.fromBinary`. The blob is self-contained, so a single fetch serves every schema.
+  let schemaViewPromise: Promise<SchemaView> | undefined;
+  async function getSchemaView(): Promise<SchemaView> {
+    schemaViewPromise ??= (async () => {
+      const pragma = `PRAGMA schema_view(${schemaViewFormatVersion})`;
+      const reader = imodel.createQueryReader(pragma, undefined, { rowFormat: QueryRowFormat.UseECSqlPropertyNames });
+      const row = await reader.next();
+      if (row.done) {
+        throw new Error(`${pragma} returned no rows`);
+      }
+      return SchemaView.fromBinary(row.value.data as Uint8Array, row.value.schemaToken as string | undefined);
+    })();
+    return schemaViewPromise;
+  }
+  return { getSchemaView, createQueryReader: imodel.createQueryReader.bind(imodel) };
+}
+
+// Builds a `SchemaContext` for the given iModel. Used where a `SchemaContext` is still required (e.g. value formatting).
 export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   if (imodel instanceof IModelConnection) {
     return imodel.schemaContext;

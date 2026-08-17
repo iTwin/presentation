@@ -134,7 +134,7 @@ export namespace EC {
     isRelationshipClass(): this is RelationshipClass;
     isStructClass(): this is StructClass;
     isMixin(): this is Mixin;
-    getDerivedClasses(): Class[];
+    getDerivedClassNames(props?: { onlyDirect?: boolean }): EC.FullClassNameDotNotation[];
   }
 
   /**

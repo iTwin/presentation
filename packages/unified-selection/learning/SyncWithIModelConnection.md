@@ -39,7 +39,7 @@ function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStor
         imodelAccess: {
           ...createECSqlQueryExecutor(iModelConnection),
           ...createCachingECClassHierarchyInspector({
-            schemaProvider: createECSchemaProvider(iModelConnection.schemaContext),
+            schemaProvider: createECSchemaProvider(iModelConnection),
           }),
           key: createIModelKey(iModelConnection),
           hiliteSet: iModelConnection.hilited,

@@ -85,7 +85,7 @@ export class StatelessHierarchyProvider {
   }
 
   public static async createIModelAccess(iModel: IModelDb, rowLimit?: number | "unbounded"): Promise<IModelAccess> {
-    const schemaProvider = createECSchemaProvider(iModel.schemaContext);
+    const schemaProvider = createECSchemaProvider(iModel);
     const rowLimitToUse = rowLimit ?? DEFAULT_ROW_LIMIT;
     const imodelAccess = {
       imodelKey: iModel.key,

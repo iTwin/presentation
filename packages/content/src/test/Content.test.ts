@@ -59,10 +59,10 @@ function createMockGetSchema(derivedClasses: Record<string, string[]> = {}) {
   return vi.fn(
     async (schemaName: string) =>
       ({
-        getClass: async (className: string) => {
+        getClass: (className: string) => {
           const fullName = `${schemaName}.${className}`;
           const derived = derivedClasses[fullName] ?? [];
-          return { fullName, getDerivedClasses: async () => derived.map((d) => ({ fullName: d })) };
+          return { fullName, getDerivedClassNames: () => derived };
         },
       }) as unknown as EC.Schema,
   );

@@ -49,7 +49,7 @@ function createStructProperty(props: { name: string; members: EC.Property[]; arr
     isPrimitive: () => false,
     isEnumeration: () => false,
     isNavigation: () => false,
-    structClass: { getProperties: async () => props.members } as unknown as EC.StructClass,
+    structClass: { getProperties: () => props.members } as unknown as EC.StructClass,
   } as unknown as EC.Property;
 }
 
@@ -61,9 +61,7 @@ function createNavigationProperty(props: {
 }): EC.Property {
   const constraint = (className: EC.FullClassNameDotNotation | undefined): EC.RelationshipConstraint =>
     ({
-      abstractConstraint: Promise.resolve(
-        className ? ({ fullName: className } as unknown as EC.EntityClass) : undefined,
-      ),
+      abstractConstraint: className ? ({ fullName: className } as unknown as EC.EntityClass) : undefined,
     }) as unknown as EC.RelationshipConstraint;
   return {
     name: props.name,
@@ -85,50 +83,50 @@ function createNavigationProperty(props: {
 
 describe("createValueDescriptorFromProperty", () => {
   describe("primitive properties", () => {
-    it("maps a string property", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("maps a string property", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Code", primitiveType: "String" }),
       );
       expect(result).to.deep.equal({ kind: "primitive", type: "String" });
     });
 
-    it("maps a boolean property", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("maps a boolean property", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "IsPrivate", primitiveType: "Boolean" }),
       );
       expect(result).to.deep.equal({ kind: "primitive", type: "Boolean" });
     });
 
-    it("attaches kind of quantity to a numeric property", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("attaches kind of quantity to a numeric property", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Length", primitiveType: "Double", koq: "Units.LENGTH" }),
       );
       expect(result).to.deep.equal({ kind: "primitive", type: "Double", kindOfQuantity: "Units.LENGTH" });
     });
 
-    it("attaches kind of quantity to an integer property", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("attaches kind of quantity to an integer property", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Count", primitiveType: "Integer", koq: "Units.MONETARY" }),
       );
       expect(result).to.deep.equal({ kind: "primitive", type: "Integer", kindOfQuantity: "Units.MONETARY" });
     });
 
-    it("omits kind of quantity when a numeric property has none", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("omits kind of quantity when a numeric property has none", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Count", primitiveType: "Integer" }),
       );
       expect(result).to.deep.equal({ kind: "primitive", type: "Integer" });
     });
 
-    it("returns undefined for Binary", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("returns undefined for Binary", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Data", primitiveType: "Binary" }),
       );
       expect(result).to.be.undefined;
     });
 
-    it("returns undefined for IGeometry", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("returns undefined for IGeometry", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Geometry", primitiveType: "IGeometry" }),
       );
       expect(result).to.be.undefined;
@@ -136,10 +134,8 @@ describe("createValueDescriptorFromProperty", () => {
   });
 
   describe("enumeration properties", () => {
-    it("maps a string-backed enumeration to a string primitive", async () => {
-      const result = await createValueDescriptorFromProperty(
-        createEnumerationProperty({ name: "Status", type: "String" }),
-      );
+    it("maps a string-backed enumeration to a string primitive", () => {
+      const result = createValueDescriptorFromProperty(createEnumerationProperty({ name: "Status", type: "String" }));
       expect(result).to.deep.equal({
         kind: "primitive",
         type: "String",
@@ -147,8 +143,8 @@ describe("createValueDescriptorFromProperty", () => {
       });
     });
 
-    it("maps a number-backed enumeration to an integer primitive, preserving enumerators", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("maps a number-backed enumeration to an integer primitive, preserving enumerators", () => {
+      const result = createValueDescriptorFromProperty(
         createEnumerationProperty({
           name: "Level",
           type: "Number",
@@ -176,15 +172,15 @@ describe("createValueDescriptorFromProperty", () => {
       });
     });
 
-    it("falls back to a plain string primitive when the enumeration cannot be resolved", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("falls back to a plain string primitive when the enumeration cannot be resolved", () => {
+      const result = createValueDescriptorFromProperty(
         createEnumerationProperty({ name: "Status", type: "String", missing: true }),
       );
       expect(result).to.deep.equal({ kind: "primitive", type: "String" });
     });
 
-    it("preserves enumerator metadata, falling back to the enumerator name for a missing label", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("preserves enumerator metadata, falling back to the enumerator name for a missing label", () => {
+      const result = createValueDescriptorFromProperty(
         createEnumerationProperty({
           name: "Status",
           type: "String",
@@ -214,8 +210,8 @@ describe("createValueDescriptorFromProperty", () => {
   });
 
   describe("struct properties", () => {
-    it("maps struct members, skipping unsupported ones", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("maps struct members, skipping unsupported ones", () => {
+      const result = createValueDescriptorFromProperty(
         createStructProperty({
           name: "Origin",
           members: [
@@ -236,8 +232,8 @@ describe("createValueDescriptorFromProperty", () => {
   });
 
   describe("navigation properties", () => {
-    it("uses the target constraint for a forward navigation", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("uses the target constraint for a forward navigation", () => {
+      const result = createValueDescriptorFromProperty(
         createNavigationProperty({
           name: "Model",
           direction: "Forward",
@@ -248,8 +244,8 @@ describe("createValueDescriptorFromProperty", () => {
       expect(result).to.deep.equal({ kind: "navigation", targetClassName: "BisCore.Model" });
     });
 
-    it("uses the source constraint for a backward navigation", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("uses the source constraint for a backward navigation", () => {
+      const result = createValueDescriptorFromProperty(
         createNavigationProperty({
           name: "Parent",
           direction: "Backward",
@@ -260,8 +256,8 @@ describe("createValueDescriptorFromProperty", () => {
       expect(result).to.deep.equal({ kind: "navigation", targetClassName: "BisCore.Element" });
     });
 
-    it("returns undefined when the constraint class cannot be resolved", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("returns undefined when the constraint class cannot be resolved", () => {
+      const result = createValueDescriptorFromProperty(
         createNavigationProperty({ name: "Model", direction: "Forward" }),
       );
       expect(result).to.be.undefined;
@@ -269,15 +265,15 @@ describe("createValueDescriptorFromProperty", () => {
   });
 
   describe("array properties", () => {
-    it("wraps a primitive element type", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("wraps a primitive element type", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Tags", primitiveType: "String", array: true }),
       );
       expect(result).to.deep.equal({ kind: "array", elementType: { kind: "primitive", type: "String" } });
     });
 
-    it("wraps an enumeration element type", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("wraps an enumeration element type", () => {
+      const result = createValueDescriptorFromProperty(
         createEnumerationProperty({ name: "Levels", type: "Number", array: true }),
       );
       expect(result).to.deep.equal({
@@ -290,8 +286,8 @@ describe("createValueDescriptorFromProperty", () => {
       });
     });
 
-    it("wraps a struct element type", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("wraps a struct element type", () => {
+      const result = createValueDescriptorFromProperty(
         createStructProperty({
           name: "Points",
           array: true,
@@ -307,15 +303,15 @@ describe("createValueDescriptorFromProperty", () => {
       });
     });
 
-    it("returns undefined when the element type is unsupported", async () => {
-      const result = await createValueDescriptorFromProperty(
+    it("returns undefined when the element type is unsupported", () => {
+      const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Blobs", primitiveType: "Binary", array: true }),
       );
       expect(result).to.be.undefined;
     });
   });
 
-  it("returns undefined for a property that is none of the known kinds", async () => {
+  it("returns undefined for a property that is none of the known kinds", () => {
     const property = {
       name: "Unknown",
       class: {} as EC.Class,
@@ -327,7 +323,7 @@ describe("createValueDescriptorFromProperty", () => {
       isEnumeration: () => false,
       isNavigation: () => false,
     } as unknown as EC.Property;
-    const result = await createValueDescriptorFromProperty(property);
+    const result = createValueDescriptorFromProperty(property);
     expect(result).to.be.undefined;
   });
 });

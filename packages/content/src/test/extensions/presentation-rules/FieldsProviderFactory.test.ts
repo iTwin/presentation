@@ -29,7 +29,7 @@ function createStubClass(props: { schemaName: string; className: string; label?:
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => false,
-    getDerivedClasses: async () => [],
+    getDerivedClassNames: () => [],
   } as unknown as EC.Class;
 }
 
@@ -54,17 +54,17 @@ function createStubRelationshipClass(props: {
     isRelationshipClass: () => true,
     isStructClass: () => false,
     isMixin: () => false,
-    getDerivedClasses: async () => [],
+    getDerivedClassNames: () => [],
     direction: "Forward",
     source: {
       polymorphic: true,
       multiplicity: { lowerLimit: 0, upperLimit: 1 },
-      abstractConstraint: Promise.resolve(props.sourceClass),
+      abstractConstraint: props.sourceClass,
     },
     target: {
       polymorphic: true,
       multiplicity: { lowerLimit: 0, upperLimit: 1 },
-      abstractConstraint: Promise.resolve(props.targetClass),
+      abstractConstraint: props.targetClass,
     },
   } as unknown as EC.RelationshipClass;
 }

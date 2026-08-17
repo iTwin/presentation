@@ -195,12 +195,17 @@ export function createECSchemaProviderStub() {
     }
     return schemaStub;
   };
-  const getDerivedClasses = (classFullName: EC.FullClassNameDotNotation): EC.Class[] => {
-    const derivedClasses = new Array<EC.Class>();
+  const getDerivedClassNames = (
+    classFullName: EC.FullClassNameDotNotation,
+    options?: { onlyDirect?: boolean },
+  ): EC.FullClassNameDotNotation[] => {
+    const derivedClasses = new Array<EC.FullClassNameDotNotation>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
       if (baseClassName.toLocaleLowerCase() === classFullName.toLocaleLowerCase()) {
-        derivedClasses.push(classes.get(derivedClassName)!);
-        derivedClasses.push(...getDerivedClasses(derivedClassName));
+        derivedClasses.push(derivedClassName);
+        if (!options?.onlyDirect) {
+          derivedClasses.push(...getDerivedClassNames(derivedClassName, options));
+        }
       }
     }
     return derivedClasses;
@@ -230,7 +235,8 @@ export function createECSchemaProviderStub() {
     addDerivedClass: (derived: EC.Class) => {
       classHierarchy.set(derived.fullName, `${props.schemaName}.${props.className}`);
     },
-    getDerivedClasses: () => getDerivedClasses(`${props.schemaName}.${props.className}`),
+    getDerivedClassNames: (options?: { onlyDirect?: boolean }) =>
+      getDerivedClassNames(`${props.schemaName}.${props.className}`, options),
     is: (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       const myName: EC.FullClassNameDotNotation = `${props.schemaName}.${props.className}`;
       const targetName: EC.FullClassNameDotNotation =

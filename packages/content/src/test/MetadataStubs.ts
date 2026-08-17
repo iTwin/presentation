@@ -75,7 +75,7 @@ export function createEntityClass(props: {
     isStructClass: () => false,
     isMixin: () => false,
     getMixins: () => props.mixins ?? [],
-    getDerivedClasses: async () => props.derivedClasses ?? [],
+    getDerivedClassNames: () => (props.derivedClasses ?? []).map((c) => c.fullName),
   } as unknown as EC.EntityClass;
 }
 
@@ -99,7 +99,7 @@ export function createMixinClass(props: {
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => true,
-    getDerivedClasses: async () => [],
+    getDerivedClassNames: () => [],
   } as unknown as EC.Mixin;
 }
 
@@ -123,7 +123,7 @@ export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider & ECCl
         if (current.fullName === target) {
           return true;
         }
-        current = await current.baseClass;
+        current = current.baseClass;
       }
       return false;
     },

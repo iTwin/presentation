@@ -158,7 +158,9 @@ export namespace EC {
         // (undocumented)
         baseClass?: Class;
         // (undocumented)
-        getDerivedClasses(): Class[];
+        getDerivedClassNames(props?: {
+            onlyDirect?: boolean;
+        }): EC.FullClassNameDotNotation[];
         getOwnProperties(): Array<Property>;
         // (undocumented)
         getProperties(): Array<Property>;

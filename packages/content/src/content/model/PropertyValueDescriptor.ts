@@ -22,8 +22,8 @@ type PrimitiveValueType = PrimitiveValueDescriptor["type"];
  *
  * @internal
  */
-export async function createValueDescriptorFromProperty(property: EC.Property): Promise<ValueDescriptor | undefined> {
-  const scalar = await createScalarValueDescriptor(property);
+export function createValueDescriptorFromProperty(property: EC.Property): ValueDescriptor | undefined {
+  const scalar = createScalarValueDescriptor(property);
   if (scalar === undefined) {
     return undefined;
   }
@@ -34,7 +34,7 @@ export async function createValueDescriptorFromProperty(property: EC.Property): 
 }
 
 /** Builds the descriptor for a property's scalar shape, ignoring array-ness. */
-async function createScalarValueDescriptor(property: EC.Property): Promise<ValueDescriptor | undefined> {
+function createScalarValueDescriptor(property: EC.Property): ValueDescriptor | undefined {
   if (property.isNavigation()) {
     return createNavigationValueDescriptor(property);
   }
@@ -49,23 +49,23 @@ async function createScalarValueDescriptor(property: EC.Property): Promise<Value
     if (type === undefined) {
       return undefined;
     }
-    return createPrimitiveValueDescriptor(type, await getKindOfQuantityName(property));
+    return createPrimitiveValueDescriptor(type, property.kindOfQuantity?.fullName);
   }
   return undefined;
 }
 
-async function createNavigationValueDescriptor(property: EC.NavigationProperty): Promise<ValueDescriptor | undefined> {
-  const relationship = await property.relationshipClass;
+function createNavigationValueDescriptor(property: EC.NavigationProperty): ValueDescriptor | undefined {
+  const relationship = property.relationshipClass;
   const constraint = property.direction === "Forward" ? relationship.target : relationship.source;
-  const constraintClass = await constraint.abstractConstraint;
+  const constraintClass = constraint.abstractConstraint;
   if (!constraintClass) {
     return undefined;
   }
   return { kind: "navigation", targetClassName: constraintClass.fullName };
 }
 
-async function createEnumerationValueDescriptor(property: EC.EnumerationProperty): Promise<PrimitiveValueDescriptor> {
-  const enumeration = await property.enumeration;
+function createEnumerationValueDescriptor(property: EC.EnumerationProperty): PrimitiveValueDescriptor {
+  const enumeration = property.enumeration;
   // EC enumerations are backed by either `int` or `string`. The abstract metadata only exposes the
   // coarse `"String" | "Number"` distinction, so numeric enumerations map to `Integer`.
   if (enumeration) {
@@ -102,10 +102,10 @@ function toEnumerator<TValue extends string | number>(
   };
 }
 
-async function createStructValueDescriptor(property: EC.StructProperty): Promise<StructValueDescriptor> {
+function createStructValueDescriptor(property: EC.StructProperty): StructValueDescriptor {
   const members: StructValueDescriptor["members"] = [];
-  for (const member of await property.structClass.getProperties()) {
-    const type = await createValueDescriptorFromProperty(member);
+  for (const member of property.structClass.getProperties()) {
+    const type = createValueDescriptorFromProperty(member);
     if (type === undefined) {
       continue;
     }
@@ -134,8 +134,4 @@ function toPrimitiveValueType(type: EC.PrimitiveType): PrimitiveValueType | unde
     return undefined;
   }
   return type;
-}
-
-async function getKindOfQuantityName(property: EC.Property): Promise<string | undefined> {
-  return (await property.kindOfQuantity)?.fullName;
 }
