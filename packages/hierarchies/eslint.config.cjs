@@ -10,5 +10,11 @@ module.exports = [
     files: ["**/*.ts"],
     ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
   },
+  {
+    files: ["src/test/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/unbound-method": "off",
+    },
+  },
   ...eslintBaseConfig,
 ];

@@ -357,6 +357,9 @@ importers:
       '@itwin/presentation-components':
         specifier: workspace:*
         version: link:../../packages/components
+      '@itwin/presentation-content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop
