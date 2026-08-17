@@ -56,7 +56,7 @@ for await (const row of executor.createQueryReader({ ecsql: MY_QUERY })) {
 
 ### `createECSchemaProvider`
 
-Maps an instance of `itwinjs-core` [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) class to an instance of `ECSchemaProvider`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
+Maps an instance of `itwinjs-core` iModel (either [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) or [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)) to an instance of `ECSchemaProvider`, used in `@itwin/presentation-hierarchies`, `@itwin/unified-selection` and other packages.
 
 Example:
 
