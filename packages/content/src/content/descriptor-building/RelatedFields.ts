@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { type ECSchemaProvider, getClass, type RelationshipPath } from "@itwin/presentation-shared";
 import { collectInParallel } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
-import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
@@ -88,8 +88,7 @@ async function createFieldsForPath(props: {
   if (properties === undefined) {
     const lastStep = path[path.length - 1];
     return collectClassPropertyFields({
-      imodelAccess,
-      className: lastStep.targetClassName,
+      propertiesClass: await getClass(imodelAccess, lastStep.targetClassName),
       pathFromTarget: path,
       valueClassNames: [lastStep.targetClassName],
       spec: { select: "all" },
@@ -121,31 +120,24 @@ async function createFieldsForStep(props: {
   const enumerated: CategorizedField[] = [];
   if (stepSpec.target) {
     enumerated.push(
-      ...(await collectClassPropertyFields({
-        imodelAccess,
-        className: step.targetClassName,
+      ...collectClassPropertyFields({
+        propertiesClass: await getClass(imodelAccess, step.targetClassName),
         pathFromTarget,
         valueClassNames: [step.targetClassName],
         spec: stepSpec.target,
         anchor: "targetClass",
-      })),
+      }),
     );
   }
   if (stepSpec.relationship) {
-    // Known limitation: `step.relationshipName` is the *declared* relationship class — Stage 1
-    // resolves concrete entity endpoints (`sourceClassName`/`targetClassName`) from the data, but
-    // not the relationship class. So for a polymorphic relationship these `valueClassNames` may be
-    // a non-concrete (base/abstract) relationship class rather than the concrete classes present in
-    // the data. Tracked with https://github.com/iTwin/presentation/issues/1442.
     enumerated.push(
-      ...(await collectClassPropertyFields({
-        imodelAccess,
-        className: step.relationshipName,
+      ...collectClassPropertyFields({
+        propertiesClass: await getClass(imodelAccess, step.relationshipName),
         pathFromTarget,
         valueClassNames: [step.relationshipName],
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
-      })),
+      }),
     );
   }
   return enumerated;

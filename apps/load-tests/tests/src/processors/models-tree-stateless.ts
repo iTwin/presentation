@@ -6,9 +6,9 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
+import { createSchemaViewGetter } from "presentation-test-utilities";
 import { StopWatch } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";
-import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
   createIModelHierarchyProvider,
@@ -20,8 +20,7 @@ import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shar
 import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common.js";
 
 import type { VUContext, VUEvents } from "artillery";
-import type { DbQueryRequest, DbQueryResponse, DbRequestExecutor } from "@itwin/core-common";
-import type { ISchemaLocater, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
+import type { DbQueryRequest, DbQueryResponse, DbRequestExecutor, QueryBinder, QueryOptions } from "@itwin/core-common";
 import type { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 console.log(`Frontend PID: ${process.pid}`);
@@ -65,81 +64,7 @@ export async function loadFullHierarchy(context: VUContext, events: VUEvents) {
 }
 
 function createModelsTreeProvider(context: VUContext, events: VUEvents) {
-  const pendingSchemaLoads = new Map<string, Promise<SchemaProps | undefined>>();
-  const isTestTerminated = () => context.vars.isTestTerminated;
   const imodelRpcProps = (context.vars.imodelRpcProps as (context: VUContext) => any)(context);
-  async function requestSchemaJson(schemaKey: Readonly<SchemaKey>) {
-    const pending = pendingSchemaLoads.get(schemaKey.name);
-    if (pending) {
-      return pending;
-    }
-    const body = JSON.stringify([imodelRpcProps, schemaKey.name]);
-    const promise = doRequest("ECSchemaRpcInterface-2.0.0-getSchemaJSON", body, events, "schema_json")
-      .then((schemaJson) => {
-        if (isTestTerminated()) {
-          ENABLE_REQUESTS_LOGGING &&
-            console.log(
-              `Received "schema json" response for ${schemaKey.name}, but the test is terminated, so skip parsing`,
-            );
-          return undefined;
-        }
-        ENABLE_REQUESTS_LOGGING && console.log(`Received "schema json" response for ${schemaKey.name}`);
-        return schemaJson as SchemaProps;
-      })
-      .finally(() => {
-        pendingSchemaLoads.delete(schemaKey.name);
-      });
-    pendingSchemaLoads.set(schemaKey.name, promise);
-    return promise;
-  }
-  const schedulingSchemaLocater: ISchemaLocater = {
-    getSchemaSync<T extends Schema>(
-      _schemaKey: Readonly<SchemaKey>,
-      _matchType: SchemaMatchType,
-      _schemaContext: SchemaContext,
-    ): T | undefined {
-      console.error(`getSchemaSync not implemented`);
-      return undefined;
-    },
-    async getSchemaInfo(
-      schemaKey: Readonly<SchemaKey>,
-      matchType: SchemaMatchType,
-      schemaContext: SchemaContext,
-    ): Promise<SchemaInfo | undefined> {
-      const schemaJson = await requestSchemaJson(schemaKey);
-      if (!schemaJson) {
-        return undefined;
-      }
-      try {
-        const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
-          return schemaInfo;
-        }
-        return undefined;
-      } catch (e) {
-        if (isTestTerminated()) {
-          return undefined;
-        }
-        throw e;
-      }
-    },
-    async getSchema<T extends Schema>(
-      schemaKey: Readonly<SchemaKey>,
-      matchType: SchemaMatchType,
-      schemaContext: SchemaContext,
-    ): Promise<T | undefined> {
-      await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
-      try {
-        const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);
-        return schema as T;
-      } catch (e) {
-        if (isTestTerminated()) {
-          return undefined;
-        }
-        throw e;
-      }
-    },
-  };
   const schedulingQueryExecutor: DbRequestExecutor<DbQueryRequest, DbQueryResponse> = {
     async execute(request: DbQueryRequest): Promise<DbQueryResponse> {
       const timer = new StopWatch(undefined, true);
@@ -152,14 +77,18 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
     },
   };
 
-  const schemas = new SchemaContext();
-  schemas.addLocater(schedulingSchemaLocater);
-  const schemaProvider = createECSchemaProvider(schemas);
-  const queryExecutor = createECSqlQueryExecutor({
-    createQueryReader(ecsql, bindings, config) {
+  const coreReaderFactory = {
+    createQueryReader(ecsql: string, bindings?: QueryBinder, config?: QueryOptions) {
       return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
     },
-  });
+  };
+
+  // Loads the whole-schema view blob once via `PRAGMA schema_view` and parses it with `SchemaView.fromBinary`.
+  // The blob is self-contained, so a single fetch serves every schema the hierarchy needs.
+  const getSchemaView = createSchemaViewGetter(coreReaderFactory);
+
+  const schemaProvider = createECSchemaProvider({ getSchemaView, ...coreReaderFactory });
+  const queryExecutor = createECSqlQueryExecutor(coreReaderFactory);
   const imodelAccess = {
     imodelKey: imodelRpcProps.key,
     ...schemaProvider,

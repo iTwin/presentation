@@ -89,7 +89,7 @@ import {
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     // The key of the iModel we're accessing
     imodelKey: createIModelKey(imodel),

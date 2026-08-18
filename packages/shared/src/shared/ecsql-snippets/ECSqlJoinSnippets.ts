@@ -145,7 +145,7 @@ export async function createRelationshipPathJoinInfo(
   const bindings: Record<string, ECSqlBinding> = {};
   for (const stepDef of props.path) {
     const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
-    const navigationProperty = await getNavigationProperty(step);
+    const navigationProperty = getNavigationProperty(step);
     const filterCondition = resolveInstanceFilterCondition(step);
     // Source/target `ECClassId` selectors are resolved the same way regardless of how the
     // relationship is represented: read from the source/target aliases actually joined for this step.
@@ -351,25 +351,25 @@ async function getRelationshipPathStepClasses(
   };
 }
 
-async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promise<EC.NavigationProperty | undefined> {
+function getNavigationProperty(step: ResolvedRelationshipPathStep): EC.NavigationProperty | undefined {
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
-  for (const prop of await source.getProperties()) {
+  for (const prop of source.getProperties()) {
     /* v8 ignore else -- @preserve */
     if (
       prop.isNavigation() &&
       prop.direction === "Forward" &&
-      (await prop.relationshipClass).fullName === step.relationship.fullName
+      prop.relationshipClass.fullName === step.relationship.fullName
     ) {
       return prop;
     }
   }
-  for (const prop of await target.getProperties()) {
+  for (const prop of target.getProperties()) {
     /* v8 ignore else -- @preserve */
     if (
       prop.isNavigation() &&
       prop.direction === "Backward" &&
-      (await prop.relationshipClass).fullName === step.relationship.fullName
+      prop.relationshipClass.fullName === step.relationship.fullName
     ) {
       return prop;
     }

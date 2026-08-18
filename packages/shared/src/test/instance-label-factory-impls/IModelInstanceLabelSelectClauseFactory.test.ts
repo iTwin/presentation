@@ -184,12 +184,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classA),
+            abstractConstraint: classA,
+            constraintClasses: [classA],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classB),
+            abstractConstraint: classB,
+            constraintClasses: [classB],
           },
         });
 
@@ -243,12 +245,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classA),
+            abstractConstraint: classA,
+            constraintClasses: [classA],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classB),
+            abstractConstraint: classB,
+            constraintClasses: [classB],
           },
         });
 
@@ -303,12 +307,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classA),
+            abstractConstraint: classA,
+            constraintClasses: [classA],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classB),
+            abstractConstraint: classB,
+            constraintClasses: [classB],
           },
         });
         schemaProvider.stubRelationshipClass({
@@ -317,12 +323,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classC),
+            abstractConstraint: classC,
+            constraintClasses: [classC],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classB),
+            abstractConstraint: classB,
+            constraintClasses: [classB],
           },
         });
 
@@ -385,12 +393,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classA),
+            abstractConstraint: classA,
+            constraintClasses: [classA],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classB),
+            abstractConstraint: classB,
+            constraintClasses: [classB],
           },
         });
 
@@ -440,12 +450,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classA),
+            abstractConstraint: classA,
+            constraintClasses: [classA],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(classB),
+            abstractConstraint: classB,
+            constraintClasses: [classB],
           },
         });
 
@@ -546,12 +558,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(undefined),
+            abstractConstraint: undefined,
+            constraintClasses: [],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(undefined),
+            abstractConstraint: undefined,
+            constraintClasses: [],
           },
         });
         const ruleset = makeRuleset([
@@ -582,12 +596,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
           source: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(undefined),
+            abstractConstraint: undefined,
+            constraintClasses: [],
           },
           target: {
             polymorphic: true,
             multiplicity: { lowerLimit: 0, upperLimit: 1 },
-            abstractConstraint: Promise.resolve(undefined),
+            abstractConstraint: undefined,
+            constraintClasses: [],
           },
         });
         const ruleset = makeRuleset([
@@ -852,12 +868,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classA),
+          abstractConstraint: classA,
+          constraintClasses: [classA],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classB),
+          abstractConstraint: classB,
+          constraintClasses: [classB],
         },
       });
 
@@ -910,12 +928,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classA),
+          abstractConstraint: classA,
+          constraintClasses: [classA],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classB),
+          abstractConstraint: classB,
+          constraintClasses: [classB],
         },
       });
 
@@ -968,12 +988,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classA),
+          abstractConstraint: classA,
+          constraintClasses: [classA],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classB),
+          abstractConstraint: classB,
+          constraintClasses: [classB],
         },
       });
 
@@ -1022,12 +1044,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classA),
+          abstractConstraint: classA,
+          constraintClasses: [classA],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classB),
+          abstractConstraint: classB,
+          constraintClasses: [classB],
         },
       });
 
@@ -1087,12 +1111,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classA),
+          abstractConstraint: classA,
+          constraintClasses: [classA],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classB),
+          abstractConstraint: classB,
+          constraintClasses: [classB],
         },
       });
       schemaProvider.stubRelationshipClass({
@@ -1101,12 +1127,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classB),
+          abstractConstraint: classB,
+          constraintClasses: [classB],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(classA),
+          abstractConstraint: classA,
+          constraintClasses: [classA],
         },
       });
 
@@ -1270,12 +1298,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(undefined),
+          abstractConstraint: undefined,
+          constraintClasses: [],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(undefined),
+          abstractConstraint: undefined,
+          constraintClasses: [],
         },
       });
       const ruleset = makeRuleset([
@@ -1310,12 +1340,14 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
         source: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(undefined),
+          abstractConstraint: undefined,
+          constraintClasses: [],
         },
         target: {
           polymorphic: true,
           multiplicity: { lowerLimit: 0, upperLimit: 1 },
-          abstractConstraint: Promise.resolve(undefined),
+          abstractConstraint: undefined,
+          constraintClasses: [],
         },
       });
       const ruleset = makeRuleset([

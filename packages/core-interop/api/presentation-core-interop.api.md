@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { ECSchemaProvider } from '@itwin/presentation-shared';
+import { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Event as Event_2 } from '@itwin/presentation-shared';
 import type { ILogger } from '@itwin/presentation-shared';
@@ -13,9 +13,8 @@ import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import type { QueryOptions } from '@itwin/core-common';
 import type { QueryRowProxy } from '@itwin/core-common';
-import type { Schema } from '@itwin/ecschema-metadata';
 import type { SchemaContext } from '@itwin/ecschema-metadata';
-import { SchemaKey } from '@itwin/ecschema-metadata';
+import type { SchemaView } from '@itwin/ecschema-metadata';
 import type { UnitSystemKey } from '@itwin/core-quantity';
 
 // @public
@@ -33,13 +32,14 @@ interface CoreIModel {
 }
 
 // @public
-interface CoreSchemaContext {
-    // (undocumented)
-    getSchema(key: SchemaKey): Promise<Schema | undefined>;
-}
+type CoreSchemaViewGetter = (props?: {
+    schemas?: string[];
+}) => Promise<PublicCoreSchemaView>;
 
 // @public
-export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider;
+export function createECSchemaProvider(imodel: {
+    getSchemaView: CoreSchemaViewGetter;
+} & CoreECSqlReaderFactory): ECSchemaProvider;
 
 // @public
 export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
@@ -80,6 +80,9 @@ interface ICoreTxnManager {
     onCommit: Event_2;
     onCommitted: Event_2;
 }
+
+// @public
+type PublicCoreSchemaView = Pick<SchemaView, "schemaToken" | "isOutdated" | "schemaCount" | "classCount" | "getSchema" | "getSchemaByAlias" | "getSchemas" | "findClass" | "findEnumeration" | "findKindOfQuantity" | "findPropertyCategory">;
 
 // @public
 export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void;

@@ -50,7 +50,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * const imodel: IModelConnection = ...
    * const imodelAccess = {
    *   ...createECSqlQueryExecutor(imodel),
-   *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
+   *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) }),
    *   key: createIModelKey(imodel),
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,

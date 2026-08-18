@@ -36,7 +36,7 @@ describe("models tree", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
+      const provider = await StatelessHierarchyProvider.create({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).toBeGreaterThan(0);
     },
@@ -47,7 +47,7 @@ describe("models tree", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
+      const provider = await StatelessHierarchyProvider.create({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy();
       expect(result).toBeGreaterThan(0);
     },
@@ -57,7 +57,7 @@ describe("models tree", () => {
     testName: "creates initial filtered view for 50k target items",
     setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
-      const imodelAccess = StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
+      const imodelAccess = await StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
       const targetItems = new Array<InstanceKey>();
       const query: ECSqlQueryDef = {
         ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d`,
@@ -81,7 +81,7 @@ describe("models tree", () => {
         }),
       };
       expect(search.paths).toHaveLength(50000);
-      const provider = new StatelessHierarchyProvider({
+      const provider = await StatelessHierarchyProvider.create({
         imodelAccess,
         getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
         search: { paths: await HierarchySearchTree.createFromPathsList(search.paths) },

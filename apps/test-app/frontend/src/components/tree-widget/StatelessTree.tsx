@@ -58,7 +58,7 @@ export function StatelessTreeV2({
 }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
-    const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+    const schemaProvider = createECSchemaProvider(imodel);
     setIModelAccess({
       imodelKey: imodel.key,
       ...schemaProvider,

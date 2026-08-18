@@ -10,7 +10,7 @@ import {
   createECSqlQueryExecutor,
 } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createSchemaContext } from "../IModelUtils.js";
+import { unifyIModelAPIs } from "../IModelUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
 import type {
@@ -27,7 +27,7 @@ import type { RelationshipPath } from "@itwin/presentation-shared";
  * required by the content pipeline APIs.
  */
 export function createContentIModelAccess(ecdb: ECDb) {
-  const schemaProvider = createECSchemaProviderInterop(createSchemaContext(ecdb));
+  const schemaProvider = createECSchemaProviderInterop(unifyIModelAPIs(ecdb));
   const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
   const queryExecutor = createECSqlQueryExecutor(ecdb);
   return { ...schemaProvider, ...classHierarchyInspector, ...queryExecutor };

@@ -124,7 +124,7 @@ describe("search", () => {
       props.iModel.close();
     },
     test: async ({ search, ...props }) => {
-      const provider = new StatelessHierarchyProvider({
+      const provider = await StatelessHierarchyProvider.create({
         ...props,
         search: { paths: await HierarchySearchTree.createFromPathsList(search.paths) },
         rowLimit: "unbounded",

@@ -55,7 +55,7 @@ describe("Unified selection", () => {
         const selectables = Selectables.create([keys.elementKey]);
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
-        const schemaProvider = createECSchemaProvider(getIModelConnection().schemaContext);
+        const schemaProvider = createECSchemaProvider(getIModelConnection());
         const hiliteProvider = createHiliteSetProvider({
           imodelAccess: {
             ...schemaProvider,
@@ -96,9 +96,7 @@ describe("Unified selection", () => {
           if (imodelKey === createIModelKey(imodelConnection)) {
             return {
               ...createECSqlQueryExecutor(imodelConnection),
-              ...createCachingECClassHierarchyInspector({
-                schemaProvider: createECSchemaProvider(imodelConnection.schemaContext),
-              }),
+              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelConnection) }),
               key: imodelKey,
             };
           }

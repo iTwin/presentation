@@ -11,7 +11,7 @@ import type { ContentTarget } from "../../../content/ContentTarget.js";
 import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
-  return { name, version, getClass: async () => undefined, getCustomAttributes: async () => new Map() };
+  return { name, version, isHidden: false, getClass: () => undefined };
 }
 
 function createStubClass(props: { schemaName: string; className: string; label?: string }): EC.Class {
@@ -20,16 +20,16 @@ function createStubClass(props: { schemaName: string; className: string; label?:
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.label,
-    baseClass: Promise.resolve(undefined),
-    is: async () => false,
-    getProperty: async () => undefined,
-    getProperties: async () => [],
+    baseClass: undefined,
+    is: () => false,
+    getProperty: () => undefined,
+    getProperties: () => [],
+    getOwnProperties: () => [],
     isEntityClass: () => true,
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => false,
-    getDerivedClasses: async () => [],
-    getCustomAttributes: async () => new Map(),
+    getDerivedClassNames: () => [],
   } as unknown as EC.Class;
 }
 
@@ -45,26 +45,26 @@ function createStubRelationshipClass(props: {
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.label,
-    baseClass: Promise.resolve(undefined),
-    is: async () => false,
-    getProperty: async () => undefined,
-    getProperties: async () => [],
+    baseClass: undefined,
+    is: () => false,
+    getProperty: () => undefined,
+    getProperties: () => [],
+    getOwnProperties: () => [],
     isEntityClass: () => false,
     isRelationshipClass: () => true,
     isStructClass: () => false,
     isMixin: () => false,
-    getDerivedClasses: async () => [],
-    getCustomAttributes: async () => new Map(),
+    getDerivedClassNames: () => [],
     direction: "Forward",
     source: {
       polymorphic: true,
       multiplicity: { lowerLimit: 0, upperLimit: 1 },
-      abstractConstraint: Promise.resolve(props.sourceClass),
+      abstractConstraint: props.sourceClass,
     },
     target: {
       polymorphic: true,
       multiplicity: { lowerLimit: 0, upperLimit: 1 },
-      abstractConstraint: Promise.resolve(props.targetClass),
+      abstractConstraint: props.targetClass,
     },
   } as unknown as EC.RelationshipClass;
 }

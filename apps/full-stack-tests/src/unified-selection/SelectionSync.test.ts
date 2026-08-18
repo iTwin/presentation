@@ -25,7 +25,7 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createStorage, enableUnifiedSelectionSyncWithIModel, Selectables } from "@itwin/unified-selection";
-import { buildTestIModel, createSchemaContext } from "../IModelUtils.js";
+import { buildTestIModel, unifyIModelAPIs } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { getSchemaFromPackage } from "./getSchema.js";
 
@@ -63,7 +63,7 @@ describe("Unified selection sync with iModel", () => {
   }
 
   function enableSync(props?: { selectionScope?: SelectionScope }): Disposable {
-    const schemaProvider = createECSchemaProvider(createSchemaContext(imodelConnection));
+    const schemaProvider = createECSchemaProvider(unifyIModelAPIs(imodelConnection));
     const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
     const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 123);
     const dispose = enableUnifiedSelectionSyncWithIModel({

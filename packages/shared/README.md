@@ -23,16 +23,16 @@ The namespace defines all the [EC](https://www.itwinjs.org/bis/ec/) types that P
 Example usage:
 
 ```ts
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider } from "@itwin/presentation-core-interop";
 import { ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 
-const schemas = new SchemaContext();
-const schemaProvider: ECSchemaProvider = createECSchemaProvider(schemas);
+const iModelConnection: IModelConnection = ...; // obtain the IModelConnection instance
+const schemaProvider: ECSchemaProvider = createECSchemaProvider(iModelConnection);
 
 // get schema and a class from it
 const ecSchema = await schemaProvider.getSchema("MySchema");
-const ecClassFromSchema = await ecSchema.getClass("MyClass");
+const ecClassFromSchema = ecSchema.getClass("MyClass");
 
 // ... or use the `getClass` utility to get straight to the class
 const ecClassFromUtility = await getClass(schemaProvider, "MySchema.MyClass");

@@ -46,8 +46,7 @@ export async function collectDirectPropertyFields(props: {
   const perClass = await Promise.all(
     [...derivedConcretesByDeclaringClass].map(async ([declaringClass, derivedConcretes]) =>
       collectClassPropertyFields({
-        imodelAccess,
-        className: declaringClass,
+        propertiesClass: await getClass(imodelAccess, declaringClass),
         pathFromTarget: [],
         // Preserve the resolved-class order (the walk populates the set in arbitrary order).
         valueClassNames: concreteClassNames.filter((concreteClassName) => derivedConcretes.has(concreteClassName)),
@@ -87,11 +86,11 @@ async function collectDeclaringClassClosure(
           key: declaringClassName,
           createFunc: () => new Set<EC.FullClassNameDotNotation>(),
         }).add(concreteClassName);
-        const [baseClass, mixins] = await Promise.all([
-          ecClass.baseClass,
-          ecClass.isEntityClass() ? ecClass.getMixins() : undefined,
-        ]);
+
+        const baseClass = ecClass.baseClass;
         baseClass && pending.push(baseClass);
+
+        const mixins = ecClass.isEntityClass() ? ecClass.getMixins() : undefined;
         mixins && pending.push(...mixins);
       }
     }),

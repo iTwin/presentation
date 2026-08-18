@@ -17,6 +17,7 @@ beforeAll(async () => {
   Logger.setLevelDefault(LogLevel.Warning);
   Logger.setLevel("i18n", LogLevel.Error);
   Logger.setLevel("SQLite", LogLevel.Error);
+  Logger.setLevel("ECDb", LogLevel.None);
 
   await IModelHost.startup({ profileName: "presentation-performance-tests" });
   await Datasets.initialize("./datasets");
