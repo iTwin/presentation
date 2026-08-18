@@ -292,8 +292,7 @@ async function resolvePrimaryClasses({
   target: ContentTarget;
 }): Promise<EC.FullClassNameDotNotation[]> {
   const primaryClass = await getClass(imodelAccess, target.primaryClass);
-  const derivedClasses = await primaryClass.getDerivedClasses();
-  if (derivedClasses.length === 0) {
+  if (primaryClass.getDerivedClassNames().length === 0) {
     return [target.primaryClass];
   }
 

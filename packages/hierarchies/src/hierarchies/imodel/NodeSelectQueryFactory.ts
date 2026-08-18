@@ -328,8 +328,8 @@ class NodeSelectQueryFactory {
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
       : { from: contentClass.fullName, joins: [], where: [] };
 
-    const fromClass = await getClass(this._imodelAccess, from);
-    const hiddenClasses = await getHiddenClassesTree(fromClass);
+    const fromClass = await getClass(this._imodelAccess, normalizeFullClassName(from));
+    const hiddenClasses = await getHiddenClassesTree(this._imodelAccess, fromClass);
     const hiddenClassesWhereClause = createWhereClauseForHiddenClasses(hiddenClasses, contentClass.alias);
     hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
     assert(!hiddenClassesWhereClause.showClause, "`showClause` is expected to always be empty here");
@@ -602,17 +602,17 @@ async function createPropertyGroupSelectors(
   const selectors = new Array<{ key: string; selector: string }>();
   selectors.push({ key: "propertyName", selector: `${createECSqlValueSelector(propertyGroup.propertyName)}` });
 
-  const property = await propertyClass.getProperty(propertyGroup.propertyName);
+  const property = propertyClass.getProperty(propertyGroup.propertyName);
   if (!property) {
     throw new Error(`Property "${propertyGroup.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
   }
 
   if (property.isNavigation()) {
-    const relationshipClass = await property.relationshipClass;
+    const relationshipClass = property.relationshipClass;
     const abstractConstraint =
       property.direction === "Forward"
-        ? await relationshipClass.target.abstractConstraint
-        : await relationshipClass.source.abstractConstraint;
+        ? relationshipClass.target.abstractConstraint
+        : relationshipClass.source.abstractConstraint;
     // TODO: MISSING_COVERAGE
     /* v8 ignore else -- @preserve */
     if (!abstractConstraint) {
@@ -697,7 +697,7 @@ async function createWhereClause(
   if (!propertyClass) {
     throw new Error(`Class with alias "${sourceAlias}" not found.`);
   }
-  const property = await propertyClass.getProperty(rule.propertyName);
+  const property = propertyClass.getProperty(rule.propertyName);
   if (!property) {
     throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
   }
@@ -898,61 +898,74 @@ interface HiddenClassNode {
 }
 
 async function getHiddenClassesTree(
+  schemaProvider: ECSchemaProvider,
   selectClass: EC.Class,
   selectClassAttribute: "show" | "hide" = "show",
 ): Promise<HiddenClassNode[]> {
-  const derivedClasses = await getDirectDerivedClasses(selectClass);
-
-  const derivedClassSchemas = derivedClasses.reduce(
-    (acc, ecClass) => {
-      /* v8 ignore else -- @preserve */
-      if (!acc.set.has(ecClass.schema.name)) {
-        acc.schemas.push(ecClass.schema);
-        acc.set.add(ecClass.schema.name);
+  const derivedClassNames = selectClass.getDerivedClassNames({ onlyDirect: true });
+  const derivedClassNamesBySchema = derivedClassNames.reduce((acc, fullClassName) => {
+    const { schemaName, className } = parseFullClassName(fullClassName);
+    let entry = acc.get(schemaName);
+    if (!entry) {
+      entry = [];
+      acc.set(schemaName, entry);
+    }
+    entry.push(className);
+    return acc;
+  }, new Map<string, string[]>());
+  const derivedClassesBySchema = await Promise.all(
+    [...derivedClassNamesBySchema.entries()].map(async ([schemaName, classNames]) => {
+      const schema = await schemaProvider.getSchema(schemaName);
+      /* v8 ignore next 3 -- @preserve */
+      if (!schema) {
+        throw new Error(`Schema "${schemaName}" not found.`);
       }
-      return acc;
-    },
-    { set: new Set<string>(), schemas: new Array<EC.Schema>() },
-  ).schemas;
-  const hiddenSchemas = new Map<string, "hide" | "show" | undefined>();
-  await Promise.all(
-    derivedClassSchemas.map(async (ecSchema) => {
-      hiddenSchemas.set(ecSchema.name, await getHiddenSchemaAttribute(ecSchema));
+      return {
+        schema,
+        classes: classNames.map((className) => {
+          const lookupClass = schema.getClass(className);
+          /* v8 ignore next 3 -- @preserve */
+          if (!lookupClass) {
+            throw new Error(`Class "${className}" not found in schema "${schemaName}".`);
+          }
+          return lookupClass;
+        }),
+      };
     }),
   );
 
-  const tree = (
-    await Promise.all(
-      derivedClasses.map(async (ecClass): Promise<HiddenClassNode[]> => {
-        const hiddenClassAttr = await getHiddenClassAttribute(ecClass);
+  const hiddenSchemas = new Map<string, "hide" | "show" | undefined>();
+  for (const { schema } of derivedClassesBySchema) {
+    hiddenSchemas.set(schema.name, schema.isHidden ? "hide" : undefined);
+  }
+
+  return Promise.all(
+    derivedClassesBySchema
+      .flatMap(({ classes }) => classes)
+      .map(async (ecClass): Promise<HiddenClassNode[]> => {
+        const hiddenClassAttr = (() => {
+          switch (ecClass.isHidden) {
+            case true:
+              return "hide";
+            case false:
+              return "show";
+            default:
+              return undefined;
+          }
+        })();
         const attr = hiddenClassAttr ?? hiddenSchemas.get(ecClass.schema.name);
         if (!attr || attr === selectClassAttribute) {
-          return getHiddenClassesTree(ecClass, selectClassAttribute);
+          return getHiddenClassesTree(schemaProvider, ecClass, selectClassAttribute);
         }
-        return [{ fullName: ecClass.fullName, state: attr, children: await getHiddenClassesTree(ecClass, attr) }];
+        return [
+          {
+            fullName: ecClass.fullName,
+            state: attr,
+            children: await getHiddenClassesTree(schemaProvider, ecClass, attr),
+          },
+        ];
       }),
-    )
-  ).flat();
-  return tree;
-}
-
-async function getDirectDerivedClasses(ecClass: EC.Class): Promise<EC.Class[]> {
-  const allDerived = await ecClass.getDerivedClasses();
-  return (await Promise.all(allDerived.map(async (c) => ({ derived: c, base: await c.baseClass }))))
-    .filter(({ base }) => base && base.fullName.toLocaleLowerCase() === ecClass.fullName.toLocaleLowerCase())
-    .map(({ derived }) => derived);
-}
-
-async function getHiddenClassAttribute(ecClass: EC.Class): Promise<"hide" | "show" | undefined> {
-  const customAttributes = await ecClass.getCustomAttributes();
-  const hiddenClassAttribute = customAttributes.get("CoreCustomAttributes.HiddenClass");
-  return hiddenClassAttribute ? (hiddenClassAttribute.Show ? "show" : "hide") : undefined;
-}
-
-async function getHiddenSchemaAttribute(ecSchema: EC.Schema): Promise<"hide" | "show" | undefined> {
-  const customAttributes = await ecSchema.getCustomAttributes();
-  const hiddenSchemaAttribute = customAttributes.get("CoreCustomAttributes.HiddenSchema");
-  return hiddenSchemaAttribute ? (hiddenSchemaAttribute.ShowClasses ? "show" : "hide") : undefined;
+  ).then((results) => results.flat());
 }
 
 function createWhereClauseForHiddenClasses(

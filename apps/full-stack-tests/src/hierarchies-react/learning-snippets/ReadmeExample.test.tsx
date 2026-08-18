@@ -30,7 +30,7 @@ import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     imodelKey: createIModelKey(imodel),
     ...schemaProvider,

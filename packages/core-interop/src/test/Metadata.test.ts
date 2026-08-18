@@ -3,1051 +3,1290 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { assert } from "@itwin/core-bentley";
-import { PrimitiveType, RelationshipMultiplicity, SchemaItemType, StrengthDirection } from "@itwin/ecschema-metadata";
-import { createECSchemaProvider } from "../core-interop/Metadata.js";
-import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal.js";
+import { SchemaViewPrimitiveType, StrengthDirection } from "@itwin/ecschema-metadata";
+import {
+  createECClassHierarchyResolver,
+  createECPropertyFromSchemaView,
+  createECSchemaFromSchemaView,
+  createECSchemaProvider,
+} from "../core-interop/Metadata.js";
+import { createCoreECSqlReaderStub } from "./Utils.js";
 
-import type {
-  ECClass as CoreClass,
-  EnumerationArrayProperty as CoreEnumerationArrayProperty,
-  EnumerationProperty as CoreEnumerationProperty,
-  Enumerator as CoreEnumerator,
-  NavigationProperty as CoreNavigationProperty,
-  PrimitiveArrayProperty as CorePrimitiveArrayProperty,
-  PrimitiveProperty as CorePrimitiveProperty,
-  Schema as CoreSchema,
-  StructArrayProperty as CoreStructArrayProperty,
-  StructProperty as CoreStructProperty,
-  SchemaKey,
-} from "@itwin/ecschema-metadata";
-import type { EC } from "@itwin/presentation-shared";
-
-function stubSchema(name: string, version: EC.SchemaVersion = { read: 0, write: 0, minor: 0 }) {
-  return { name, schemaKey: { version } };
-}
+import type { QueryRowProxy } from "@itwin/core-common";
+import type { SchemaView } from "@itwin/ecschema-metadata";
+import type { EC, Props } from "@itwin/presentation-shared";
+import type { ECClassHierarchyResolver } from "../core-interop/Metadata.js";
+import type { CoreECSqlReaderFactory } from "../core-interop/QueryExecutor.js";
 
 describe("createECSchemaProvider", () => {
-  describe("getSchema", () => {
-    it("returns schema from schema context", async () => {
-      const schemaContext = {
-        getSchema: vi
-          .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
-          .mockImplementation(async (key: SchemaKey) => {
-            if (key.compareByName("x")) {
-              return stubSchema("y", { read: 1, write: 2, minor: 3 }) as unknown as CoreSchema;
-            }
-            return undefined;
-          }),
-      };
-
-      const provider = createECSchemaProvider(schemaContext);
-      const schema = await provider.getSchema("x");
-      assert(schema !== undefined);
-
-      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
-      const calledKey = schemaContext.getSchema.mock.calls[0][0];
-      expect(calledKey.compareByName("x")).toBe(true);
-      expect(schema.name).toBe("y");
-      expect(schema.version).toEqual({ read: 1, write: 2, minor: 3 });
-      expect(typeof schema.getClass === "function").toBe(true);
+  it("returns undefined when schema not found in view", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(new Map([["TestSchema", { name: "TestSchema", classes: new Map() }]])),
     });
+    const provider = createECSchemaProvider(imodel);
+    expect(await provider.getSchema("NonExistentSchema")).toBeUndefined();
+  });
 
-    it(`returns undefined on "schema not found" error`, async () => {
-      const schemaContext = {
-        getSchema: vi.fn<(key: SchemaKey) => Promise<CoreSchema>>().mockRejectedValue(new Error("schema not found")),
-      };
-
-      const provider = createECSchemaProvider(schemaContext);
-      expect(await provider.getSchema("x")).toBeUndefined();
+  it("returns schema from schema view", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          ["TestSchema", { name: "TestSchema", readVersion: 1, writeVersion: 2, minorVersion: 3, classes: new Map() }],
+        ]),
+      ),
     });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    expect(schema.name).toBe("TestSchema");
+    expect(schema.version).toEqual({ read: 1, write: 2, minor: 3 });
+    expect(schema.isHidden).toBe(false);
+  });
 
-    it("re-throws SchemaContext errors", async () => {
-      const schemaContext = {
-        getSchema: vi.fn<(key: SchemaKey) => Promise<CoreSchema>>().mockRejectedValue(new Error("Unknown error")),
-      };
-
-      const provider = createECSchemaProvider(schemaContext);
-      await expect(provider.getSchema("x")).rejects.toThrow();
-      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
+  it("returns class from schema view", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            { name: "TestSchema", classes: new Map([["TestClass", { name: "TestClass", schemaName: "TestSchema" }]]) },
+          ],
+        ]),
+      ),
     });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    const cls = schema.getClass("TestClass");
+    assert(cls !== undefined);
+    expect(cls.name).toBe("TestClass");
+    expect(cls.fullName).toBe("TestSchema.TestClass");
+    expect(cls.isEntityClass()).toBe(true);
+    expect(cls.isHidden).toBeUndefined();
+  });
 
-    it("returns undefined from schema context", async () => {
-      const schemaContext = { getSchema: vi.fn().mockResolvedValue(undefined) };
-
-      const provider = createECSchemaProvider(schemaContext);
-      const schema = await provider.getSchema("x");
-
-      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
-      const calledKey = schemaContext.getSchema.mock.calls[0][0];
-      expect(calledKey.compareByName("x")).toBe(true);
-      expect(schema).toBeUndefined();
+  it("returns property from schema view class", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              classes: new Map([
+                [
+                  "TestClass",
+                  {
+                    name: "TestClass",
+                    schemaName: "TestSchema",
+                    properties: new Map([
+                      [
+                        "TestProp",
+                        createMockProperty({
+                          name: "TestProp",
+                          isPrimitive: () => true,
+                          isEnumeration: () => false,
+                          primitiveType: SchemaViewPrimitiveType.String,
+                          extendedTypeName: undefined,
+                          kindOfQuantity: undefined,
+                        } as unknown as SchemaView.Property),
+                      ],
+                    ]),
+                  },
+                ],
+              ]),
+            },
+          ],
+        ]),
+      ),
     });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    const cls = schema.getClass("TestClass");
+    assert(cls !== undefined);
+    const prop = cls.getProperty("TestProp");
+    assert(prop !== undefined);
+    expect(prop.name).toBe("TestProp");
+    expect(prop.isPrimitive()).toBe(true);
+  });
 
-    it("doesn't repeat requests for the same schema", async () => {
-      const schemaContext = {
-        getSchema: vi
-          .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
-          .mockResolvedValue(stubSchema("x") as unknown as CoreSchema),
-      };
+  it("batches schema view requests made within the same frame", async () => {
+    const schemaView = createMockSchemaView(
+      new Map([
+        ["SchemaA", { name: "SchemaA", classes: new Map() }],
+        ["SchemaB", { name: "SchemaB", classes: new Map() }],
+      ]),
+    );
+    const getSchemaView = vi.fn(async () => schemaView);
+    const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
+    const provider = createECSchemaProvider(imodel);
 
-      const provider = createECSchemaProvider(schemaContext);
-      await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
+    const [schemaA, schemaB] = await Promise.all([provider.getSchema("SchemaA"), provider.getSchema("SchemaB")]);
+    expect(schemaA?.name).toBe("SchemaA");
+    expect(schemaB?.name).toBe("SchemaB");
+    expect(getSchemaView).toHaveBeenCalledTimes(1);
+    expect(getSchemaView).toHaveBeenCalledWith({ schemas: ["SchemaA", "SchemaB"] });
+  });
 
-      expect(schemaContext.getSchema).toHaveBeenCalledOnce();
-    });
+  it("issues a new request for schemas requested in a later frame", async () => {
+    const schemaView = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
+    const getSchemaView = vi.fn(async () => schemaView);
+    const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
+    const provider = createECSchemaProvider(imodel);
 
-    it("handles duplicate schema in cache error", async () => {
-      const schemaContext = {
-        getSchema: vi
-          .fn<(key: SchemaKey) => Promise<CoreSchema | undefined>>()
-          .mockRejectedValueOnce(new Error("The schema, x.01.02.03, already exists within this cache"))
-          .mockResolvedValueOnce(stubSchema("x") as unknown as CoreSchema),
-      };
-
-      const provider = createECSchemaProvider(schemaContext);
-      await provider.getSchema("x");
-
-      expect(schemaContext.getSchema).toHaveBeenCalledTimes(2);
-    });
+    await provider.getSchema("SchemaA");
+    await provider.getSchema("SchemaA");
+    expect(getSchemaView).toHaveBeenCalledTimes(2);
   });
 });
 
-describe("createECSchema", () => {
-  describe("getClass", () => {
-    it("returns class from core schema", async () => {
-      const coreSchema = {
-        ...stubSchema("s"),
-        getItem: vi
-          .fn()
-          .mockResolvedValue({ fullName: "s.c", name: "c", label: "C", schemaItemType: SchemaItemType.EntityClass }),
-      };
-
-      const schema = createECSchema(coreSchema as unknown as CoreSchema);
-      const result = await schema.getClass("c");
-      assert(result !== undefined);
-
-      expect(coreSchema.getItem).toHaveBeenCalledExactlyOnceWith("c", expect.any(Function));
-      expect(result.schema.name).toBe("s");
-      expect(result.fullName).toBe("s.c");
-      expect(result.name).toBe("c");
-      expect(result.label).toBe("C");
-      expect(typeof result.is === "function").toBe(true);
+describe("createECSchemaFromSchemaView", () => {
+  it("returns true for isHidden when schema is hidden", () => {
+    const mockSchema = createMockSchema({ name: "HiddenSchema", isHidden: true, classes: new Map() });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["HiddenSchema", { name: "HiddenSchema", isHidden: true }]])),
     });
-
-    it("returns undefined from core schema", async () => {
-      const coreSchema = { ...stubSchema("s"), getItem: vi.fn().mockResolvedValue(undefined) };
-
-      const schema = createECSchema(coreSchema as unknown as CoreSchema);
-      const result = await schema.getClass("c");
-
-      expect(coreSchema.getItem).toHaveBeenCalledExactlyOnceWith("c", expect.any(Function));
-      expect(result).toBeUndefined();
-    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    expect(ecSchema.isHidden).toBe(true);
   });
 
-  describe("getCustomAttributes", () => {
-    it("returns custom attributes from core schema", async () => {
-      const ca: EC.CustomAttribute = { className: "schema.class", name: "x", label: "y" };
-      const coreSchema = {
-        ...stubSchema("s"),
-        customAttributes: new Map([["schema.class", ca]]),
-      } as unknown as CoreSchema;
-
-      const schema = createECSchema(coreSchema);
-      const result = await schema.getCustomAttributes();
-
-      const entries = [...result];
-      expect(entries.length).to.eq(1);
-      expect(entries[0]).to.deep.eq(["schema.class", ca]);
-      expect(result.get("schema.class")).to.deep.eq(ca);
+  it("returns undefined from getClass for non-existent name", () => {
+    const mockSchema = createMockSchema({ name: "TestSchema", classes: new Map() });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["TestSchema", { name: "TestSchema" }]])),
     });
-
-    it("returns empty set when core schema's custom attributes are not defined", async () => {
-      const coreSchema = { ...stubSchema("s"), customAttributes: undefined } as unknown as CoreSchema;
-
-      const schema = createECSchema(coreSchema);
-      const result = await schema.getCustomAttributes();
-
-      const entries = [...result];
-      expect(entries.length).to.eq(0);
-      expect(result.get("schema.class")).to.be.undefined;
-    });
-
-    it("returns undefined custom attribute when there are custom attributes but the requested one does not exist", async () => {
-      const coreSchema = {
-        ...stubSchema("s"),
-        customAttributes: new Map([["schema.class", { className: "schema.class", name: "x", label: "y" }]]),
-      } as unknown as CoreSchema;
-      const schema = createECSchema(coreSchema);
-      const result = await schema.getCustomAttributes();
-      expect(result.get("schema.other_class")).to.be.undefined;
-    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    expect(ecSchema.getClass("DoesNotExist")).toBeUndefined();
   });
 });
 
-describe("createECClass", () => {
-  const schema: EC.Schema = {
-    name: "s",
-    version: { read: 1, write: 0, minor: 0 },
-    async getClass() {
-      return undefined;
-    },
-    async getCustomAttributes() {
-      return new Map();
-    },
-  };
-
-  it("creates class using schema from core class", async () => {
-    const coreClass = {
-      schemaItemType: SchemaItemType.EntityClass,
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-      schema: stubSchema("core-schema"),
-    } as unknown as CoreClass;
-    const result = createECClass(coreClass);
-    expect(result.schema.name).toBe("core-schema");
-  });
-
-  it("creates entity class from core class", async () => {
-    const coreClass = { fullName: "s.c", name: "c", label: "C", schemaItemType: SchemaItemType.EntityClass };
-    const result = createECClass(coreClass as unknown as CoreClass, schema);
-    expect(result.isEntityClass()).toBe(true);
-    expect(result.isRelationshipClass()).toBe(false);
-    expect(result.isStructClass()).toBe(false);
-    expect(result.isMixin()).toBe(false);
-    expect(result.schema.name).toBe("s");
-    expect(result.fullName).toBe("s.c");
-    expect(result.name).toBe("c");
-    expect(result.label).toBe("C");
-    expect(typeof result.is === "function").toBe(true);
-  });
-
-  it("gets mixins applied to an entity class", async () => {
-    const coreClass = {
-      fullName: "s.c",
-      name: "c",
-      schemaItemType: SchemaItemType.EntityClass,
-      mixins: [Promise.resolve({ fullName: "s.m", name: "m", schemaItemType: SchemaItemType.Mixin })],
-    } as unknown as CoreClass;
-
-    const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).toBe(true);
-    if (!result.isEntityClass()) {
-      throw new Error("Expected an entity class.");
-    }
-    const mixins = await result.getMixins();
-    expect(mixins.map((mixin) => mixin.fullName)).toEqual(["s.m"]);
-    expect(mixins[0].isMixin()).toBe(true);
-  });
-
-  it("creates relationship class from core class", async () => {
-    const coreClass = {
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-      schemaItemType: SchemaItemType.RelationshipClass,
-    } as unknown as CoreClass;
-    const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).toBe(false);
-    expect(result.isRelationshipClass()).toBe(true);
-    expect(result.isStructClass()).toBe(false);
-    expect(result.isMixin()).toBe(false);
-    expect(result.schema.name).toBe("s");
-    expect(result.fullName).toBe("s.c");
-    expect(result.name).toBe("c");
-    expect(result.label).toBe("C");
-    expect(typeof result.is === "function").toBe(true);
-  });
-
-  it("creates struct class from core class", async () => {
-    const coreClass = {
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-      schemaItemType: SchemaItemType.StructClass,
-    } as unknown as CoreClass;
-    const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).toBe(false);
-    expect(result.isRelationshipClass()).toBe(false);
-    expect(result.isStructClass()).toBe(true);
-    expect(result.isMixin()).toBe(false);
-    expect(result.schema.name).toBe("s");
-    expect(result.fullName).toBe("s.c");
-    expect(result.name).toBe("c");
-    expect(result.label).toBe("C");
-    expect(typeof result.is === "function").toBe(true);
-  });
-
-  it("creates mixin from core class", async () => {
-    const coreClass = {
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-      schemaItemType: SchemaItemType.Mixin,
-    } as unknown as CoreClass;
-    const result = createECClass(coreClass, schema);
-    expect(result.isEntityClass()).toBe(false);
-    expect(result.isRelationshipClass()).toBe(false);
-    expect(result.isStructClass()).toBe(false);
-    expect(result.isMixin()).toBe(true);
-    expect(result.schema.name).toBe("s");
-    expect(result.fullName).toBe("s.c");
-    expect(result.name).toBe("c");
-    expect(result.label).toBe("C");
-    expect(typeof result.is === "function").toBe(true);
-  });
-
-  it("throws when creating class from non-class core schema item", async () => {
-    const coreClass = {
-      schemaItemType: SchemaItemType.Constant,
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-    } as unknown as CoreClass;
-    expect(() => createECClass(coreClass, schema)).toThrow();
-  });
-
-  describe("baseClass", () => {
-    it("returns base class", async () => {
-      const coreBaseClass = { schemaItemType: SchemaItemType.EntityClass, fullName: "s.b", name: "b" };
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        baseClass: Promise.resolve(coreBaseClass),
-      };
-      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
-      const result = await ecClass.baseClass;
-      expect(result!.fullName).to.eq("s.b");
+describe("createECClassFromSchemaView", () => {
+  it("creates struct class", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([["StructClassX", { name: "StructClassX", schemaName: "ClassSchema", type: "struct" }]]),
     });
-
-    it("returns undefined if core class has no base", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        baseClass: undefined,
-      };
-      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
-      const result = await ecClass.baseClass;
-      expect(result).to.be.undefined;
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
     });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("StructClassX");
+    assert(cls !== undefined);
+    expect(cls.isStructClass()).toBe(true);
+    expect(cls.isEntityClass()).toBe(false);
+    expect(cls.isMixin()).toBe(false);
+    expect(cls.isRelationshipClass()).toBe(false);
   });
 
-  describe("getDerivedClasses", () => {
-    it("returns derived classes", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        getDerivedClasses: async () =>
-          Promise.resolve([{ schemaItemType: SchemaItemType.EntityClass, fullName: "s.d", name: "d" }]),
-      };
-      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
-      const result = await ecClass.getDerivedClasses();
-      expect(result.length).to.eq(1);
-      expect(result[0].fullName).to.eq("s.d");
+  it("creates mixin class", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([["MixinClassX", { name: "MixinClassX", schemaName: "ClassSchema", type: "mixin" }]]),
     });
-
-    it("returns empty list if core class has no derived classes", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        getDerivedClasses: async () => Promise.resolve(undefined),
-      };
-      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
-      const result = await ecClass.getDerivedClasses();
-      expect(result.length).to.eq(0);
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
     });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("MixinClassX");
+    assert(cls !== undefined);
+    expect(cls.isMixin()).toBe(true);
+    expect(cls.isEntityClass()).toBe(false);
   });
 
-  describe("is", () => {
-    const coreClass = {
-      schemaItemType: SchemaItemType.EntityClass,
-      fullName: "s.c",
-      name: "c",
-      label: "C",
-      is: vi.fn().mockResolvedValue(true),
+  it("returns isHidden=true for hidden class", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([["HiddenClassX", { name: "HiddenClassX", schemaName: "ClassSchema", isHidden: true }]]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("HiddenClassX");
+    assert(cls !== undefined);
+    expect(cls.isHidden).toBe(true);
+  });
+
+  it("returns base class within the same schema", () => {
+    const entityAProps: MockClassProps = { name: "EntityA", schemaName: "ClassSchema" };
+    const entityBProps: MockClassProps = {
+      name: "EntityB",
+      schemaName: "ClassSchema",
+      baseClass: () => createMockClass(entityAProps),
+    };
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([
+        ["EntityA", entityAProps],
+        ["EntityB", entityBProps],
+      ]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("EntityB");
+    assert(cls !== undefined);
+    const base = cls.baseClass;
+    assert(base !== undefined);
+    expect(base.name).toBe("EntityA");
+    expect(base.schema.name).toBe("ClassSchema");
+  });
+
+  it("creates schema for base class in a different schema", () => {
+    const classBProps: MockClassProps = { name: "ClassB", schemaName: "SchemaB" };
+    const classAProps: MockClassProps = {
+      name: "ClassA",
+      schemaName: "SchemaA",
+      baseClass: () => createMockClass(classBProps),
     };
 
-    beforeEach(() => {
-      coreClass.is.mockClear();
+    const mockSchemaA = createMockSchema({ name: "SchemaA", classes: new Map([["ClassA", classAProps]]) });
+    const mockSchemaB = createMockSchema({ name: "SchemaB", classes: new Map([["ClassB", classBProps]]) });
+
+    const mockContext = createMockSchemaViewContext({
+      schemaView: {
+        schemaToken: "",
+        isOutdated: false,
+        schemaCount: 2,
+        classCount: 2,
+        getSchema: (name) => (name === "SchemaA" ? mockSchemaA : name === "SchemaB" ? mockSchemaB : undefined),
+        getSchemaByAlias: () => undefined,
+        *getSchemas() {
+          yield mockSchemaA;
+          yield mockSchemaB;
+        },
+        findClass: () => undefined,
+        findEnumeration: () => undefined,
+        findKindOfQuantity: () => undefined,
+        findPropertyCategory: () => undefined,
+      },
     });
 
-    it("handles CoreClass override", async () => {
-      const class1 = createECClass(coreClass as unknown as CoreClass, schema);
-      const class2 = createECClass(
-        {
-          schemaItemType: SchemaItemType.EntityClass,
-          fullName: "s.c2",
-          name: "c2",
-          label: "C2",
-        } as unknown as CoreClass,
-        schema,
-      );
-      const result = await class1.is(class2);
-
-      expect(coreClass.is).toHaveBeenCalledExactlyOnceWith("c2", "s");
-      expect(result).toBe(true);
-    });
-
-    it("handles class and schema names override", async () => {
-      const class1 = createECClass(coreClass as unknown as CoreClass, schema);
-      const result = await class1.is("a", "b");
-
-      expect(coreClass.is).toHaveBeenCalledExactlyOnceWith("a", "b");
-      expect(result).toBe(true);
-    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchemaA, mockContext);
+    const classA = ecSchema.getClass("ClassA");
+    assert(classA !== undefined);
+    const base = classA.baseClass;
+    assert(base !== undefined);
+    expect(base.name).toBe("ClassB");
+    expect(base.schema.name).toBe("SchemaB");
   });
 
-  describe("getProperties", () => {
-    it("returns properties from core class", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        getProperties: vi
-          .fn()
-          .mockResolvedValue([
-            {
-              isArray: () => false,
-              isStruct: () => false,
-              isEnumeration: () => false,
-              isNavigation: () => false,
-              isPrimitive: () => true,
-            },
-          ]),
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
-      const properties = await ecClass.getProperties();
-
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperties).toHaveBeenCalledOnce();
-      expect(properties.length).toBeGreaterThan(0);
+  it("returns derived classes", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([
+        ["EntityA", { name: "EntityA", schemaName: "ClassSchema" }],
+        ["EntityB", { name: "EntityB", schemaName: "ClassSchema" }],
+      ]),
     });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
+      derivedClassNames: ["ClassSchema.EntityB", "NotLoadedSchema.EntityC"],
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("EntityA");
+    assert(cls !== undefined);
+    expect(cls.getDerivedClassNames()).toEqual(["ClassSchema.EntityB", "NotLoadedSchema.EntityC"]);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(mockContext.classHierarchyResolver.getDerivedClassNames).toHaveBeenCalledWith(
+      "ClassSchema.EntityA",
+      undefined,
+    );
   });
 
-  describe("getOwnProperties", () => {
-    it("returns only direct properties from core class", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        getProperties: vi
-          .fn()
-          .mockResolvedValue([
-            {
-              isArray: () => false,
-              isStruct: () => false,
-              isEnumeration: () => false,
-              isNavigation: () => false,
-              isPrimitive: () => true,
-            },
-          ]),
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
-      const properties = await ecClass.getOwnProperties();
-
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperties).toHaveBeenCalledOnce();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperties).toHaveBeenCalledWith(true);
-      expect(properties.length).toBeGreaterThan(0);
+  it("returns undefined baseClass when class has no base", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([["EntityA", { name: "EntityA", schemaName: "ClassSchema" }]]),
     });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("EntityA");
+    assert(cls !== undefined);
+    expect(cls.baseClass).toBeUndefined();
   });
 
-  describe("getProperty", () => {
-    it("returns property from core class", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        getProperty: vi
-          .fn()
-          .mockResolvedValue({
-            isArray: () => false,
-            isStruct: () => false,
-            isEnumeration: () => false,
-            isNavigation: () => false,
-            isPrimitive: () => true,
-          }),
-      };
-      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
-      const prop = await ecClass.getProperty("p");
-
-      expect(coreClass.getProperty).toHaveBeenCalledExactlyOnceWith("p", false);
-      expect(prop).toBeDefined();
+  it("evaluates is() with class object", () => {
+    const entityAProps: MockClassProps = {
+      name: "EntityA",
+      schemaName: "ClassSchema",
+      is: (name) => name === "ClassSchema.EntityA",
+    };
+    const entityBProps: MockClassProps = {
+      name: "EntityB",
+      schemaName: "ClassSchema",
+      is: (name) => name === "ClassSchema.EntityA" || name === "ClassSchema.EntityB",
+    };
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([
+        ["EntityA", entityAProps],
+        ["EntityB", entityBProps],
+      ]),
     });
-
-    it("returns undefined from core class", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        getProperty: vi.fn().mockResolvedValue(undefined),
-      };
-      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
-      const prop = await ecClass.getProperty("p");
-
-      expect(coreClass.getProperty).toHaveBeenCalledExactlyOnceWith("p", false);
-      expect(prop).toBeUndefined();
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
     });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const entityA = ecSchema.getClass("EntityA")!;
+    const entityB = ecSchema.getClass("EntityB")!;
+    expect(entityB.is(entityA)).toBe(true);
+    expect(entityA.is(entityB)).toBe(false);
   });
 
-  describe("getCustomAttributes", () => {
-    it("returns custom attributes from core class", async () => {
-      const ca: EC.CustomAttribute = { className: "schema.class", name: "x", label: "y" };
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        customAttributes: new Map([["schema.class", ca]]),
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
-      const result = await ecClass.getCustomAttributes();
-
-      const entries = [...result];
-      expect(entries.length).to.eq(1);
-      expect(entries[0]).to.deep.eq(["schema.class", ca]);
-      expect(result.get("schema.class")).to.deep.eq(ca);
+  it("evaluates is() with className + schemaName", () => {
+    const entityBProps: MockClassProps = {
+      name: "EntityB",
+      schemaName: "ClassSchema",
+      is: (name) => name === "ClassSchema.EntityA" || name === "ClassSchema.EntityB",
+    };
+    const mockSchema = createMockSchema({ name: "ClassSchema", classes: new Map([["EntityB", entityBProps]]) });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
     });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const entityB = ecSchema.getClass("EntityB")!;
+    expect(entityB.is("EntityA", "ClassSchema")).toBe(true);
+    expect(entityB.is("EntityB", "ClassSchema")).toBe(true);
+    expect(entityB.is("StructClassX", "ClassSchema")).toBe(false);
+  });
 
-    it("returns empty set when core class' custom attributes are not defined", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        customAttributes: undefined,
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
-      const result = await ecClass.getCustomAttributes();
-
-      const entries = [...result];
-      expect(entries.length).to.eq(0);
-      expect(result.get("schema.class")).to.be.undefined;
+  it("returns undefined from getProperty for non-existent name", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([["EntityA", { name: "EntityA", schemaName: "ClassSchema", properties: new Map() }]]),
     });
-
-    it("returns undefined custom attribute when there are custom attributes but the requested one does not exist", async () => {
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        name: "c",
-        label: "C",
-        customAttributes: new Map([["schema.class", { className: "schema.class", name: "x", label: "y" }]]),
-      } as unknown as CoreClass;
-      const ecClass = createECClass(coreClass, schema);
-      const result = await ecClass.getCustomAttributes();
-      expect(result.get("schema.other_class")).to.be.undefined;
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
     });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("EntityA")!;
+    expect(cls.getProperty("NoSuchProp")).toBeUndefined();
+  });
+
+  it("returns all properties via getProperties", () => {
+    const mockProp = createMockProperty({
+      name: "TestProp",
+      isPrimitive: () => true,
+      isEnumeration: () => false,
+      primitiveType: SchemaViewPrimitiveType.String,
+      extendedTypeName: undefined,
+      kindOfQuantity: undefined,
+    } as unknown as SchemaView.Property & { name: string });
+    const mockSchema = createMockSchema({
+      name: "TestSchema",
+      classes: new Map([
+        ["TestClass", { name: "TestClass", schemaName: "TestSchema", properties: new Map([["TestProp", mockProp]]) }],
+      ]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["TestSchema", { name: "TestSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("TestClass")!;
+    const props = cls.getProperties();
+    expect(props.length).toBe(1);
+    expect(props[0].name).toBe("TestProp");
+  });
+
+  it("returns own properties via getOwnProperties", () => {
+    const inheritedProp = createMockProperty({
+      name: "InheritedProp",
+      isPrimitive: () => true,
+      isEnumeration: () => false,
+      primitiveType: SchemaViewPrimitiveType.String,
+      extendedTypeName: undefined,
+      kindOfQuantity: undefined,
+    } as unknown as SchemaView.Property & { name: string });
+    const ownProp = createMockProperty({
+      name: "OwnProp",
+      isPrimitive: () => true,
+      isEnumeration: () => false,
+      primitiveType: SchemaViewPrimitiveType.String,
+      extendedTypeName: undefined,
+      kindOfQuantity: undefined,
+    } as unknown as SchemaView.Property & { name: string });
+    const mockSchema = createMockSchema({
+      name: "TestSchema",
+      classes: new Map([
+        [
+          "TestClass",
+          {
+            name: "TestClass",
+            schemaName: "TestSchema",
+            properties: new Map([
+              ["InheritedProp", inheritedProp],
+              ["OwnProp", ownProp],
+            ]),
+            ownProperties: new Map([["OwnProp", ownProp]]),
+          },
+        ],
+      ]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["TestSchema", { name: "TestSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("TestClass")!;
+    const ownProps = cls.getOwnProperties();
+    expect(ownProps.map((p) => p.name)).toEqual(["OwnProp"]);
+  });
+
+  it("returns mixins from entity class", () => {
+    const mixinAProps: MockClassProps = { name: "MixinA", schemaName: "ClassSchema", type: "mixin" };
+    const mixinBProps: MockClassProps = { name: "MixinB", schemaName: "OtherSchema", type: "mixin" };
+    const entityProps: MockClassProps = {
+      name: "EntityWithMixins",
+      schemaName: "ClassSchema",
+      mixins: () => [createMockClass(mixinAProps), createMockClass(mixinBProps)],
+    };
+    const mockSchema = createMockSchema({ name: "ClassSchema", classes: new Map([["EntityWithMixins", entityProps]]) });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(
+        new Map([
+          ["ClassSchema", { name: "ClassSchema" }],
+          ["OtherSchema", { name: "OtherSchema" }],
+        ]),
+      ),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("EntityWithMixins")! as EC.EntityClass;
+    const mixins = cls.getMixins();
+    expect(mixins.map((m) => m.name)).toEqual(["MixinA", "MixinB"]);
+    expect(mixins[0].schema.name).toBe("ClassSchema");
+    expect(mixins[1].schema.name).toBe("OtherSchema");
   });
 
   describe("Relationship class", () => {
-    const coreRelationshipClass = {
-      schemaItemType: SchemaItemType.RelationshipClass,
-      fullName: "Schema.TestRelationship",
-      name: "TestRelationship",
-      label: "Test relationship",
-    };
-
-    describe("direction", () => {
-      it("returns forward direction from core relationship", async () => {
-        const rel = createECClass(
-          { ...coreRelationshipClass, strengthDirection: StrengthDirection.Forward } as unknown as CoreClass,
-          schema,
-        ) as EC.RelationshipClass;
-        expect(rel.direction).toBe("Forward");
+    it("returns forward direction", () => {
+      const relFwdProps: MockClassProps = {
+        name: "RelFwd",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Forward,
+        source: undefined,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelFwd", relFwdProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
       });
-
-      it("returns backward direction from core relationship", async () => {
-        const rel = createECClass(
-          { ...coreRelationshipClass, strengthDirection: StrengthDirection.Backward } as unknown as CoreClass,
-          schema,
-        ) as EC.RelationshipClass;
-        expect(rel.direction).toBe("Backward");
-      });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const cls = ecSchema.getClass("RelFwd")! as EC.RelationshipClass;
+      expect(cls.isRelationshipClass()).toBe(true);
+      expect(cls.direction).toBe("Forward");
     });
 
-    describe("source & target", () => {
-      it("returns source constraint", () => {
-        const rel = createECClass(
-          { ...coreRelationshipClass, source: {} } as unknown as CoreClass,
-          schema,
-        ) as EC.RelationshipClass;
-        expect(rel.source).toBeDefined();
+    it("returns backward direction", () => {
+      const relBwdProps: MockClassProps = {
+        name: "RelBwd",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Backward,
+        source: undefined,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelBwd", relBwdProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
       });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const cls = ecSchema.getClass("RelBwd")! as EC.RelationshipClass;
+      expect(cls.direction).toBe("Backward");
+    });
 
-      it("returns target constraint", () => {
-        const rel = createECClass(
-          { ...coreRelationshipClass, target: {} } as unknown as CoreClass,
-          schema,
-        ) as EC.RelationshipClass;
-        expect(rel.target).toBeDefined();
+    it("creates source/target constraints with abstract constraint", () => {
+      const entityAProps: MockClassProps = { name: "EntityA", schemaName: "RelSchema" };
+      const entityBProps: MockClassProps = { name: "EntityB", schemaName: "RelSchema" };
+      const sourceConstraint = {
+        polymorphic: true,
+        multiplicityLower: 1,
+        multiplicityUpper: 1,
+        get abstractConstraint() {
+          return createMockClass(entityAProps);
+        },
+      } as unknown as SchemaView.RelConstraint;
+      const targetConstraint = {
+        polymorphic: false,
+        multiplicityLower: 0,
+        multiplicityUpper: -1,
+        get abstractConstraint() {
+          return createMockClass(entityBProps);
+        },
+      } as unknown as SchemaView.RelConstraint;
+
+      const relFwdProps: MockClassProps = {
+        name: "RelFwd",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Forward,
+        source: sourceConstraint,
+        target: targetConstraint,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelFwd", relFwdProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
       });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const rel = ecSchema.getClass("RelFwd")! as EC.RelationshipClass;
 
-      describe("ECRelationshipConstraint implementation", () => {
-        it("returns undefined multiplicity from core constraint", () => {
-          const rel = createECClass(
-            { ...coreRelationshipClass, source: { multiplicity: undefined } } as unknown as CoreClass,
-            schema,
-          ) as EC.RelationshipClass;
-          expect(rel.source.multiplicity).toBeUndefined();
-        });
+      const src = rel.source;
+      expect(src.polymorphic).toBe(true);
+      expect(src.multiplicity.lowerLimit).toBe(1);
+      expect(src.multiplicity.upperLimit).toBe(1);
+      expect(src.abstractConstraint?.name).toBe("EntityA");
 
-        it("returns multiplicity from core constraint", () => {
-          const rel = createECClass(
-            {
-              ...coreRelationshipClass,
-              // eslint-disable-next-line @itwin/no-internal
-              source: { multiplicity: new RelationshipMultiplicity(123, 456) },
-            } as unknown as CoreClass,
-            schema,
-          ) as EC.RelationshipClass;
-          expect(rel.source.multiplicity).toEqual({ lowerLimit: 123, upperLimit: 456 });
-        });
+      const tgt = rel.target;
+      expect(tgt.polymorphic).toBe(false);
+      expect(tgt.multiplicity.lowerLimit).toBe(0);
+      expect(tgt.multiplicity.upperLimit).toBe(-1);
+      expect(tgt.abstractConstraint?.name).toBe("EntityB");
+    });
 
-        it("returns polymorphic flag from core constraint", () => {
-          [
-            { in: false, expectation: false },
-            { in: true, expectation: true },
-          ].forEach((testEntry) => {
-            const rel = createECClass(
-              { ...coreRelationshipClass, source: { polymorphic: testEntry.in } } as unknown as CoreClass,
-              schema,
-            ) as EC.RelationshipClass;
-            expect(rel.source.polymorphic).toBe(testEntry.expectation);
-          });
-        });
-
-        it("returns abstract constraint from core constraint", async () => {
-          const coreAbstractConstraint = {
-            schemaItemType: SchemaItemType.EntityClass,
-            fullName: "Schema.TestAbstractConstraint",
-            name: "TestAbstractConstraint",
-            label: "Test abstract constraint",
-          } as unknown as CoreClass;
-          const rel = createECClass(
-            {
-              ...coreRelationshipClass,
-              source: { abstractConstraint: Promise.resolve(coreAbstractConstraint) },
-            } as unknown as CoreClass,
-            schema,
-          ) as EC.RelationshipClass;
-          const constraint = (await rel.source.abstractConstraint)!;
-          expect(constraint.isEntityClass()).toBe(true);
-          expect(constraint.fullName).toBe(coreAbstractConstraint.fullName);
-        });
+    it("creates empty constraints when none are set on relationship", () => {
+      const relBwdProps: MockClassProps = {
+        name: "RelBwd",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Backward,
+        source: undefined,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelBwd", relBwdProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
       });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const rel = ecSchema.getClass("RelBwd")! as EC.RelationshipClass;
+      expect(rel.source.abstractConstraint).toBeUndefined();
+      expect(rel.target.abstractConstraint).toBeUndefined();
+    });
+
+    it("returns undefined from abstractConstraint getter when no abstract constraint set on constraint", () => {
+      const sourceConstraint = {
+        polymorphic: false,
+        multiplicityLower: 0,
+        multiplicityUpper: -1,
+        constraintClasses: [],
+        get abstractConstraint() {
+          return undefined;
+        },
+      } as unknown as SchemaView.RelConstraint;
+
+      const relProps: MockClassProps = {
+        name: "RelNoAbstract",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Forward,
+        source: sourceConstraint,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelNoAbstract", relProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
+      });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const rel = ecSchema.getClass("RelNoAbstract")! as EC.RelationshipClass;
+      expect(rel.source.abstractConstraint).toBeUndefined();
+    });
+
+    it("falls back to the sole constraint class as abstract constraint when none is explicitly set", () => {
+      const entityAProps: MockClassProps = { name: "EntityA", schemaName: "RelSchema" };
+      const sourceConstraint = {
+        polymorphic: true,
+        multiplicityLower: 1,
+        multiplicityUpper: 1,
+        constraintClasses: [createMockClass(entityAProps)],
+        get abstractConstraint() {
+          return undefined;
+        },
+      } as unknown as SchemaView.RelConstraint;
+
+      const relProps: MockClassProps = {
+        name: "RelSingleConstraint",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Forward,
+        source: sourceConstraint,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelSingleConstraint", relProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
+      });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const rel = ecSchema.getClass("RelSingleConstraint")! as EC.RelationshipClass;
+      expect(rel.source.abstractConstraint?.name).toBe("EntityA");
+    });
+
+    it("returns constraint classes from constraintClasses getter", () => {
+      const entityAProps: MockClassProps = { name: "EntityA", schemaName: "RelSchema" };
+      const entityBProps: MockClassProps = { name: "EntityB", schemaName: "RelSchema" };
+      const sourceConstraint = {
+        polymorphic: true,
+        multiplicityLower: 1,
+        multiplicityUpper: 1,
+        constraintClasses: [createMockClass(entityAProps), createMockClass(entityBProps)],
+        get abstractConstraint() {
+          return undefined;
+        },
+      } as unknown as SchemaView.RelConstraint;
+      const relProps: MockClassProps = {
+        name: "RelWithConstraints",
+        schemaName: "RelSchema",
+        type: "relationship",
+        strengthDirection: StrengthDirection.Forward,
+        source: sourceConstraint,
+        target: undefined,
+      };
+      const mockSchema = createMockSchema({ name: "RelSchema", classes: new Map([["RelWithConstraints", relProps]]) });
+      const mockContext = createMockSchemaViewContext({
+        schemaView: createMockSchemaView(new Map([["RelSchema", { name: "RelSchema" }]])),
+      });
+      const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+      const rel = ecSchema.getClass("RelWithConstraints")! as EC.RelationshipClass;
+      const classes = rel.source.constraintClasses;
+      expect(classes.map((c) => c.name)).toEqual(["EntityA", "EntityB"]);
     });
   });
 });
 
-describe("createECProperty", () => {
-  const propertyClass: EC.Class = {} as unknown as EC.Class;
-  const propertyStub = {
-    isArray: () => false,
-    isEnumeration: () => false,
-    isNavigation: () => false,
-    isPrimitive: () => false,
-    isStruct: () => false,
-    fullName: "",
-    name: "",
+describe("createECClassHierarchyResolver", () => {
+  // Hierarchy used by the tests below:
+  //   A (root)         M (root)
+  //   ├─ B             │
+  //   │  └─ C ─────────┘  (C also derives from M)
+  //   └─ D
+  const hierarchyRows: Array<[string, string | undefined]> = [
+    ["Schema.A", undefined],
+    ["Schema.M", undefined],
+    ["Schema.B", "Schema.A"],
+    ["Schema.C", "Schema.B"],
+    ["Schema.C", "Schema.M"],
+    ["Schema.D", "Schema.A"],
+  ];
+
+  async function createResolver() {
+    const imodel: CoreECSqlReaderFactory = {
+      createQueryReader: () =>
+        (async function* () {
+          for (const row of hierarchyRows) {
+            yield row as unknown as QueryRowProxy;
+          }
+        })(),
+    };
+    return createECClassHierarchyResolver(imodel);
+  }
+
+  describe("classDerivesFrom", () => {
+    it("returns true for a direct base class", async () => {
+      const resolver = await createResolver();
+      expect(resolver.classDerivesFrom("Schema.B", "Schema.A")).toBe(true);
+    });
+
+    it("returns true for a transitive base class", async () => {
+      const resolver = await createResolver();
+      expect(resolver.classDerivesFrom("Schema.C", "Schema.A")).toBe(true);
+    });
+
+    it("returns false when the candidate is not a base class", async () => {
+      const resolver = await createResolver();
+      expect(resolver.classDerivesFrom("Schema.C", "Schema.D")).toBe(false);
+    });
+
+    it("returns false for a class without any base classes", async () => {
+      const resolver = await createResolver();
+      expect(resolver.classDerivesFrom("Schema.A", "Schema.B")).toBe(false);
+    });
+  });
+
+  describe("getDerivedClassNames", () => {
+    it("returns only direct derived classes when `onlyDirect` is set", async () => {
+      const resolver = await createResolver();
+      expect(resolver.getDerivedClassNames("Schema.A", { onlyDirect: true })).toEqual(["Schema.B", "Schema.D"]);
+    });
+
+    it("returns all derived classes recursively", async () => {
+      const resolver = await createResolver();
+      expect(resolver.getDerivedClassNames("Schema.A")).toEqual(["Schema.B", "Schema.C", "Schema.D"]);
+    });
+
+    it("returns an empty array for a class without derived classes", async () => {
+      const resolver = await createResolver();
+      expect(resolver.getDerivedClassNames("Schema.C")).toEqual([]);
+    });
+  });
+});
+
+describe("createECPropertyFromSchemaView", () => {
+  const mockSchemaObj = { name: "PropSchema" } as unknown as SchemaView.Schema;
+  const dummyEcSchema: EC.Schema = {
+    name: "PropSchema",
+    version: { read: 1, write: 0, minor: 0 },
+    isHidden: false,
+    getClass: () => undefined,
+  };
+  const dummyEcClass = {
+    schema: dummyEcSchema,
+    fullName: "PropSchema.MainClass",
+    name: "MainClass",
+    label: undefined,
+    isHidden: undefined,
+    isEntityClass: () => true,
+    isRelationshipClass: () => false,
+    isStructClass: () => false,
+    isMixin: () => false,
+    get baseClass() {
+      return undefined;
+    },
+    is: () => false,
+    getProperty: () => undefined,
+    getProperties: () => [],
+    getDerivedClasses: () => [],
+  } as unknown as EC.Class;
+  const dummyMockContext = {
+    ...createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["PropSchema", { name: "PropSchema" }]])),
+    }),
+    schema: dummyEcSchema,
   };
 
-  describe("getCustomAttributes", () => {
-    it("returns custom attributes from core property", async () => {
-      const ca: EC.CustomAttribute = { className: "schema.class", name: "x", label: "y" };
-      const coreProperty = {
-        ...propertyStub,
-        isPrimitive: () => true,
-        name: "test-property",
-        customAttributes: new Map([["schema.class", ca]]),
-      } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass);
-      const result = await property.getCustomAttributes();
-
-      const entries = [...result];
-      expect(entries.length).to.eq(1);
-      expect(entries[0]).to.deep.eq(["schema.class", ca]);
-      expect(result.get("schema.class")).to.deep.eq(ca);
-    });
-
-    it("returns empty set when core property's custom attributes are not defined", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isPrimitive: () => true,
-        name: "test-property",
-        customAttributes: undefined,
-      } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass);
-      const result = await property.getCustomAttributes();
-
-      const entries = [...result];
-      expect(entries.length).to.eq(0);
-      expect(result.get("schema.class")).to.be.undefined;
-    });
-
-    it("returns undefined custom attribute when there are custom attributes but the requested one does not exist", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isPrimitive: () => true,
-        name: "test-property",
-        customAttributes: new Map([["schema.class", { className: "schema.class", name: "x", label: "y" }]]),
-      } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass);
-      const result = await property.getCustomAttributes();
-      expect(result.get("schema.other_class")).to.be.undefined;
-    });
-  });
-
-  describe("Primitive property", () => {
-    it("creates property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isPrimitive: () => true,
-        name: "test-property",
-        label: "Test property",
-        extendedTypeName: "extended",
-      } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(false);
-      expect(property.isEnumeration()).toBe(false);
-      expect(property.isNavigation()).toBe(false);
-      expect(property.isPrimitive()).toBe(true);
-      expect(property.isStruct()).toBe(false);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
-      expect(property.extendedTypeName).toBe(coreProperty.extendedTypeName);
-    });
-
-    it("maps primitive types", async () => {
-      const types: [PrimitiveType, EC.PrimitiveType][] = [
-        [PrimitiveType.Binary, "Binary"],
-        [PrimitiveType.Boolean, "Boolean"],
-        [PrimitiveType.DateTime, "DateTime"],
-        [PrimitiveType.Double, "Double"],
-        [PrimitiveType.IGeometry, "IGeometry"],
-        [PrimitiveType.Integer, "Integer"],
-        [PrimitiveType.Long, "Long"],
-        [PrimitiveType.Point2d, "Point2d"],
-        [PrimitiveType.Point3d, "Point3d"],
-        [PrimitiveType.String, "String"],
-      ];
-      types.forEach(([coreType, expectation]) => {
-        const coreProperty = {
-          ...propertyStub,
-          isPrimitive: () => true,
-          name: "test-property",
-          primitiveType: coreType,
-        } as unknown as CorePrimitiveProperty;
-        const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
-        expect(property.primitiveType).toBe(expectation);
-      });
-
-      const uninitializedTypes = [undefined, PrimitiveType.Uninitialized];
-      uninitializedTypes.forEach((coreType) => {
-        const uninitializedProperty = createECProperty(
-          {
-            ...propertyStub,
-            isPrimitive: () => true,
-            name: "test-property",
-            primitiveType: coreType,
-          } as unknown as CorePrimitiveProperty,
-          propertyClass,
-        ) as EC.PrimitiveProperty;
-        expect(() => uninitializedProperty.primitiveType).toThrow();
-      });
-    });
-
-    it("maps kind of quantity", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isPrimitive: () => true,
-        name: "test-property",
-        kindOfQuantity: Promise.resolve({ fullName: "SchemaName.TestKoq", schema: stubSchema("SchemaName") }),
-      } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
-      const koq = (await property.kindOfQuantity)!;
-      expect(koq.fullName).toBe("SchemaName.TestKoq");
-
-      expect(
-        await createECProperty({ ...coreProperty, kindOfQuantity: undefined } as CorePrimitiveProperty, propertyClass)
-          .kindOfQuantity,
-      ).toBeUndefined();
-    });
-
-    it("maps category", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isPrimitive: () => true,
-        name: "test-property",
-        category: Promise.resolve({
-          fullName: "SchemaName.TestCategory",
-          name: "TestCategory",
-          label: "Test category",
-          description: "Test category description",
-          priority: 5,
-          schema: stubSchema("SchemaName"),
-        }),
-      } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
-      const category = (await property.category)!;
-      expect(category.fullName).toBe("SchemaName.TestCategory");
-      expect(category.name).toBe("TestCategory");
-      expect(category.label).toBe("Test category");
-      expect(category.description).toBe("Test category description");
-      expect(category.priority).toBe(5);
-
-      expect(
-        await createECProperty({ ...coreProperty, category: undefined } as CorePrimitiveProperty, propertyClass)
-          .category,
-      ).toBeUndefined();
-    });
-  });
-
   describe("Navigation property", () => {
-    it("creates property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
+    it("creates forward navigation property", () => {
+      const relClass = createMockClass({ name: "RelClass", schemaName: "PropSchema", type: "relationship" });
+      const mockProp = createMockProperty({
+        name: "NavFwdProp",
         isNavigation: () => true,
-        name: "test-property",
-        label: "Test property",
-      } as unknown as CoreNavigationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(false);
-      expect(property.isEnumeration()).toBe(false);
-      expect(property.isNavigation()).toBe(true);
-      expect(property.isPrimitive()).toBe(false);
-      expect(property.isStruct()).toBe(false);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
+        direction: StrengthDirection.Forward,
+        relationshipClass: relClass,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isNavigation()).toBe(true);
+      expect(prop.isPrimitive()).toBe(false);
+      expect(prop.isArray()).toBe(false);
+      expect(prop.isStruct()).toBe(false);
+      const nav = prop as EC.NavigationProperty;
+      expect(nav.direction).toBe("Forward");
+      expect(nav.relationshipClass.name).toBe("RelClass");
     });
 
-    it("maps direction", async () => {
-      const map = [
-        [StrengthDirection.Backward, "Backward"],
-        [StrengthDirection.Forward, "Forward"],
-      ];
-      map.forEach(([coreDirection, expectation]) => {
-        const coreProperty = {
-          ...propertyStub,
-          isNavigation: () => true,
-          name: "test-property",
-          direction: coreDirection,
-        } as unknown as CoreNavigationProperty;
-        const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
-        expect(property.direction).toBe(expectation);
-      });
-    });
-
-    it("returns relationship class", async () => {
-      const coreProperty = {
-        ...propertyStub,
+    it("creates backward navigation property", () => {
+      const relClass = createMockClass({ name: "RelClass", schemaName: "PropSchema", type: "relationship" });
+      const mockProp = createMockProperty({
+        name: "NavBwdProp",
         isNavigation: () => true,
-        name: "test-property",
-        relationshipClass: Promise.resolve({
-          fullName: "SchemaName.RelationshipClass",
-          schema: stubSchema("SchemaName"),
-        }),
-      } as unknown as CoreNavigationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
-      const relationshipClass = await property.relationshipClass;
-      expect(relationshipClass.fullName).toBe("SchemaName.RelationshipClass");
+        direction: StrengthDirection.Backward,
+        relationshipClass: relClass,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      const nav = prop as EC.NavigationProperty;
+      expect(nav.direction).toBe("Backward");
     });
   });
 
   describe("Enumeration property", () => {
-    it("creates property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
+    it("creates scalar enumeration property", () => {
+      const mockProp = createMockProperty({
+        name: "EnumScalarProp",
         isEnumeration: () => true,
-        name: "test-property",
-        label: "Test property",
-        extendedTypeName: "extended",
-      } as unknown as CoreEnumerationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(false);
-      expect(property.isEnumeration()).toBe(true);
-      expect(property.isNavigation()).toBe(false);
-      expect(property.isPrimitive()).toBe(false);
-      expect(property.isStruct()).toBe(false);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
-      expect(property.extendedTypeName).toBe(coreProperty.extendedTypeName);
+        isArray: () => false,
+        enumeration: undefined,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isEnumeration()).toBe(true);
+      expect(prop.isArray()).toBe(false);
+      expect(prop.isNavigation()).toBe(false);
+      expect(prop.kindOfQuantity).toBeUndefined();
     });
 
-    it("returns enumeration", async () => {
-      const coreProperty = {
-        ...propertyStub,
+    it("creates enumeration array property with minOccurs/maxOccurs", () => {
+      const mockProp = createMockProperty({
+        name: "EnumArrayProp",
         isEnumeration: () => true,
-        name: "test-property",
-        enumeration: Promise.resolve({ schema: stubSchema("SchemaName") }),
-      } as unknown as CoreEnumerationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
-      expect(await property.enumeration).toBeDefined();
+        isArray: () => true,
+        arrayMinOccurs: 1,
+        arrayMaxOccurs: 5,
+        enumeration: undefined,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isEnumeration()).toBe(true);
+      expect(prop.isArray()).toBe(true);
+      const arr = prop as EC.EnumerationArrayProperty;
+      expect(arr.minOccurs).toBe(1);
+      expect(arr.maxOccurs).toBe(5);
     });
 
-    describe("ECEnumeration implementation", () => {
-      const coreEnumeration = {
-        schema: stubSchema("SchemaName"),
+    it("returns enumeration data", () => {
+      const mockEnum = {
+        fullName: "PropSchema:TestEnum",
+        name: "TestEnum",
+        label: undefined,
+        schema: mockSchemaObj,
+        primitiveType: SchemaViewPrimitiveType.Integer,
+        isStrict: true,
+        getEnumerators: () =>
+          [
+            { name: "Val1", label: undefined, value: 1 },
+            { name: "Val2", label: undefined, value: 2 },
+          ][Symbol.iterator](),
+      } as unknown as SchemaView.Enumeration;
+
+      const mockProp = createMockProperty({
+        name: "EnumScalarProp",
+        isEnumeration: () => true,
+        isArray: () => false,
+        enumeration: mockEnum,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.EnumerationProperty;
+      const en = prop.enumeration;
+      assert(en !== undefined);
+      expect(en.name).toBe("TestEnum");
+      expect(en.type).toBe("Number");
+      expect(en.isStrict).toBe(true);
+      expect(en.enumerators.length).toBe(2);
+      expect(en.enumerators[0].name).toBe("Val1");
+      expect(en.enumerators[1].name).toBe("Val2");
+      expect(en.schema.name).toBe("PropSchema");
+    });
+
+    it("returns extendedTypeName for enumeration property", () => {
+      const mockProp = createMockProperty({
+        name: "EnumKoQProp",
+        isEnumeration: () => true,
+        isArray: () => false,
+        enumeration: undefined,
+        kindOfQuantity: undefined,
+        extendedTypeName: "ExtTypeName",
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.EnumerationProperty;
+      expect(prop.extendedTypeName).toBe("ExtTypeName");
+    });
+
+    it("returns undefined extendedTypeName when not set", () => {
+      const mockProp = createMockProperty({
+        name: "EnumScalarProp",
+        isEnumeration: () => true,
+        isArray: () => false,
+        enumeration: undefined,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.EnumerationProperty;
+      expect(prop.extendedTypeName).toBeUndefined();
+    });
+
+    it("defaults minOccurs to 0 when arrayMinOccurs is undefined", () => {
+      const mockProp = createMockProperty({
+        name: "FakeEnumArrayProp",
+        isEnumeration: () => true,
+        isArray: () => true,
+        arrayMinOccurs: undefined,
+        arrayMaxOccurs: 5,
+        enumeration: undefined,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isArray()).toBe(true);
+      expect((prop as EC.EnumerationArrayProperty).minOccurs).toBe(0);
+    });
+
+    it("returns undefined from enumeration getter when svProp.enumeration is null", () => {
+      const mockProp = createMockProperty({
+        name: "FakeEnumNoRefProp",
+        isEnumeration: () => true,
+        isArray: () => false,
+        enumeration: undefined,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.EnumerationProperty;
+      expect(prop.enumeration).toBeUndefined();
+    });
+
+    it("maps string enumeration type to 'String'", () => {
+      const mockStringEnum = {
+        fullName: "PropSchema:StringEnum",
+        name: "StringEnum",
+        label: undefined,
+        schema: mockSchemaObj,
+        primitiveType: SchemaViewPrimitiveType.String,
         isStrict: false,
-        type: undefined,
-        enumerators: new Array<CoreEnumerator<number>>(),
-      };
-      const coreEnumerationProperty = {
-        ...propertyStub,
+        getEnumerators: () => [][Symbol.iterator](),
+      } as unknown as SchemaView.Enumeration;
+
+      const mockProp = createMockProperty({
+        name: "StringEnumProp",
         isEnumeration: () => true,
-        name: "test-property",
-        enumeration: Promise.resolve(coreEnumeration),
-      } as unknown as CoreEnumerationProperty;
-      let property: EC.EnumerationProperty;
+        isArray: () => false,
+        enumeration: mockStringEnum,
+        kindOfQuantity: undefined,
+        extendedTypeName: undefined,
+      } as unknown as SchemaView.Property & { name: string });
 
-      beforeEach(async () => {
-        property = createECProperty(coreEnumerationProperty, propertyClass) as EC.EnumerationProperty;
-      });
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.EnumerationProperty;
+      expect(prop.enumeration?.type).toBe("String");
+    });
+  });
 
-      it("returns `isStrict` flag", async () => {
-        coreEnumeration.isStrict = true;
-        const enumeration = (await property.enumeration)!;
-        expect(enumeration.isStrict).toBe(true);
-      });
+  describe("Primitive property", () => {
+    it("maps all primitive types", () => {
+      const cases: [string, SchemaViewPrimitiveType, EC.PrimitiveType][] = [
+        ["PrimBoolProp", SchemaViewPrimitiveType.Boolean, "Boolean"],
+        ["PrimBinaryProp", SchemaViewPrimitiveType.Binary, "Binary"],
+        ["PrimDateTimeProp", SchemaViewPrimitiveType.DateTime, "DateTime"],
+        ["PrimDoubleProp", SchemaViewPrimitiveType.Double, "Double"],
+        ["PrimIntProp", SchemaViewPrimitiveType.Integer, "Integer"],
+        ["PrimLongProp", SchemaViewPrimitiveType.Long, "Long"],
+        ["PrimPoint2dProp", SchemaViewPrimitiveType.Point2d, "Point2d"],
+        ["PrimPoint3dProp", SchemaViewPrimitiveType.Point3d, "Point3d"],
+        ["PrimIGeoProp", SchemaViewPrimitiveType.IGeometry, "IGeometry"],
+        ["PrimStringProp", SchemaViewPrimitiveType.String, "String"],
+      ];
+      for (const [name, svType, expected] of cases) {
+        const mockProp = createMockProperty({
+          name,
+          isPrimitive: () => true,
+          isEnumeration: () => false,
+          primitiveType: svType,
+          extendedTypeName: undefined,
+          kindOfQuantity: undefined,
+        } as unknown as SchemaView.Property & { name: string });
 
-      it("maps enumeration type", async () => {
-        const typesMap = [
-          [PrimitiveType.String, "String"],
-          [PrimitiveType.Integer, "Number"],
-          [undefined, "Number"],
-        ];
-        const typeStub = vi.spyOn(coreEnumeration as any, "type", "get");
-        for (const [coreType, expectation] of typesMap) {
-          typeStub.mockReturnValue(coreType);
-          const enumeration = (await property.enumeration)!;
-          expect(enumeration.type).toBe(expectation);
-        }
-      });
+        const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+        expect(prop.isPrimitive()).toBe(true);
+        expect(prop.isEnumeration()).toBe(false);
+        expect((prop as EC.PrimitiveProperty).primitiveType).toBe(expected);
+      }
+    });
 
-      it("returns enumerators", async () => {
-        coreEnumeration.enumerators = [
-          { name: "1", value: 1, label: "One", description: "Test one" },
-          { name: "2", value: 2 },
-        ];
-        const enumeration = (await property.enumeration)!;
-        expect(enumeration.enumerators).toEqual(coreEnumeration.enumerators);
-      });
+    it("creates primitive array property", () => {
+      const mockProp = createMockProperty({
+        name: "PrimArrayProp",
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        isArray: () => true,
+        primitiveType: SchemaViewPrimitiveType.Integer,
+        extendedTypeName: undefined,
+        kindOfQuantity: undefined,
+        arrayMinOccurs: undefined,
+        arrayMaxOccurs: 10,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isPrimitive()).toBe(true);
+      expect(prop.isArray()).toBe(true);
+      const arr = prop as EC.PrimitiveArrayProperty;
+      expect(arr.minOccurs).toBe(0);
+      expect(arr.maxOccurs).toBe(10);
+    });
+
+    it("returns KoQ for primitive property with KoQ", () => {
+      const mockKoq = {
+        fullName: "PropSchema:TestKoQ",
+        name: "TestKoQ",
+        label: undefined,
+        schema: mockSchemaObj,
+      } as unknown as SchemaView.KindOfQuantity;
+
+      const mockProp = createMockProperty({
+        name: "PrimKoQProp",
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.Double,
+        extendedTypeName: "ExtTypeName",
+        kindOfQuantity: mockKoq,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.PrimitiveProperty;
+      expect(prop.kindOfQuantity?.name).toBe("TestKoQ");
+    });
+
+    it("returns extendedTypeName for primitive property", () => {
+      const mockProp = createMockProperty({
+        name: "PrimKoQProp",
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.Double,
+        extendedTypeName: "ExtTypeName",
+        kindOfQuantity: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.PrimitiveProperty;
+      expect(prop.extendedTypeName).toBe("ExtTypeName");
+    });
+
+    it("returns undefined KoQ when not set", () => {
+      const mockProp = createMockProperty({
+        name: "PrimBoolProp",
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.Boolean,
+        extendedTypeName: undefined,
+        kindOfQuantity: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext) as EC.PrimitiveProperty;
+      expect(prop.kindOfQuantity).toBeUndefined();
+    });
+
+    it("returns property category when set", () => {
+      const mockCategory = {
+        fullName: "PropSchema:TestCategory",
+        name: "TestCategory",
+        label: "Test Category",
+        schema: mockSchemaObj,
+      } as unknown as SchemaView.PropertyCategory;
+      const mockProp = createMockProperty({
+        name: "PropWithCategory",
+        category: mockCategory,
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.String,
+        extendedTypeName: undefined,
+        kindOfQuantity: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      const category = prop.category;
+      assert(category !== undefined);
+      expect(category.name).toBe("TestCategory");
+      expect(category.label).toBe("Test Category");
+      expect(category.fullName).toBe("PropSchema.TestCategory");
+      expect(category.schema.name).toBe("PropSchema");
+    });
+
+    it("throws for uninitialized SchemaView primitive type", () => {
+      const mockProp = createMockProperty({
+        name: "UninitializedProp",
+        isPrimitive: () => true,
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.Uninitialized,
+        extendedTypeName: undefined,
+        kindOfQuantity: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      assert(prop.isPrimitive());
+      expect(() => prop.primitiveType).toThrow("Uninitialized CoreSchemaView primitive type");
     });
   });
 
   describe("Struct property", () => {
-    it("creates property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
+    it("creates scalar struct property", () => {
+      const structClass = createMockClass({ name: "StructClassX", schemaName: "PropSchema", type: "struct" });
+      const mockProp = createMockProperty({
+        name: "StructScalarProp",
         isStruct: () => true,
-        name: "test-property",
-        label: "Test property",
-      } as unknown as CoreStructProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(false);
-      expect(property.isEnumeration()).toBe(false);
-      expect(property.isNavigation()).toBe(false);
-      expect(property.isPrimitive()).toBe(false);
-      expect(property.isStruct()).toBe(true);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
+        isArray: () => false,
+        structClass,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isStruct()).toBe(true);
+      expect(prop.isArray()).toBe(false);
+      expect((prop as EC.StructProperty).structClass.name).toBe("StructClassX");
     });
 
-    it("returns struct class", async () => {
-      const coreProperty = {
-        ...propertyStub,
+    it("creates struct array property", () => {
+      const structClass = createMockClass({ name: "StructClassX", schemaName: "PropSchema", type: "struct" });
+      const mockProp = createMockProperty({
+        name: "StructArrayProp",
         isStruct: () => true,
-        name: "test-property",
-        structClass: { fullName: "SchemaName.StructClass", schema: stubSchema("SchemaName") },
-      } as unknown as CoreStructProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
-      expect(property.structClass.fullName).toBe("SchemaName.StructClass");
+        isArray: () => true,
+        arrayMinOccurs: undefined,
+        arrayMaxOccurs: 3,
+        structClass,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isStruct()).toBe(true);
+      expect(prop.isArray()).toBe(true);
+      const arr = prop as EC.StructArrayProperty;
+      expect(arr.minOccurs).toBe(0);
+      expect(arr.maxOccurs).toBe(3);
+      expect(arr.structClass.name).toBe("StructClassX");
     });
   });
 
-  describe("Array property", () => {
-    it("creates primitive array property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isArray: () => true,
+  describe("isHidden", () => {
+    it("reflects isHidden=true on property", () => {
+      const mockProp = createMockProperty({
+        name: "HiddenProp",
+        isHidden: true,
         isPrimitive: () => true,
-        name: "test-property",
-        label: "Test property",
-        minOccurs: 123,
-        maxOccurs: 456,
-      } as unknown as CorePrimitiveArrayProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveArrayProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(true);
-      expect(property.isEnumeration()).toBe(false);
-      expect(property.isNavigation()).toBe(false);
-      expect(property.isPrimitive()).toBe(true);
-      expect(property.isStruct()).toBe(false);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
-      expect(property.minOccurs).toBe(123);
-      expect(property.maxOccurs).toBe(456);
+        isEnumeration: () => false,
+        primitiveType: SchemaViewPrimitiveType.String,
+        extendedTypeName: undefined,
+        kindOfQuantity: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.isHidden).toBe(true);
+    });
+  });
+
+  describe("unexpected kind", () => {
+    it("throws with declaringClass name included in message", () => {
+      const mockClass = { fullName: "TestSchema.TestClass" } as unknown as SchemaView.Class;
+      const mockProp = createMockProperty({ name: "BadProp", declaringClass: mockClass });
+      expect(() => createECPropertyFromSchemaView(mockProp, {} as EC.Class, dummyMockContext)).toThrow(
+        "TestSchema.TestClass",
+      );
     });
 
-    it("creates enumeration array property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isArray: () => true,
-        isEnumeration: () => true,
-        name: "test-property",
-        label: "Test property",
-        minOccurs: 123,
-        maxOccurs: 456,
-      } as unknown as CoreEnumerationArrayProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationArrayProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(true);
-      expect(property.isEnumeration()).toBe(true);
-      expect(property.isNavigation()).toBe(false);
-      expect(property.isPrimitive()).toBe(false);
-      expect(property.isStruct()).toBe(false);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
-      expect(property.minOccurs).toBe(123);
-      expect(property.maxOccurs).toBe(456);
-    });
-
-    it("creates struct array property from core property", async () => {
-      const coreProperty = {
-        ...propertyStub,
-        isArray: () => true,
-        isStruct: () => true,
-        name: "test-property",
-        label: "Test property",
-        minOccurs: 123,
-        maxOccurs: 456,
-      } as unknown as CoreStructArrayProperty;
-      const property = createECProperty(coreProperty, propertyClass) as EC.StructArrayProperty;
-      expect(property.class).toBe(propertyClass);
-      expect(property.isArray()).toBe(true);
-      expect(property.isEnumeration()).toBe(false);
-      expect(property.isNavigation()).toBe(false);
-      expect(property.isPrimitive()).toBe(false);
-      expect(property.isStruct()).toBe(true);
-      expect(property.name).toBe(coreProperty.name);
-      expect(property.label).toBe(coreProperty.label);
-      expect(property.minOccurs).toBe(123);
-      expect(property.maxOccurs).toBe(456);
+    it("throws with <ECCView> fallback when declaringClass is undefined", () => {
+      const mockProp = createMockProperty({ name: "BadProp", declaringClass: undefined });
+      expect(() => createECPropertyFromSchemaView(mockProp, {} as EC.Class, dummyMockContext)).toThrow("<ECCView>");
     });
   });
 });
+
+interface MockSchemaProps {
+  name: string;
+  readVersion?: number;
+  writeVersion?: number;
+  minorVersion?: number;
+  isHidden?: boolean;
+  classes?: Map<string, MockClassProps>;
+}
+
+interface MockClassProps {
+  name: string;
+  schemaName: string;
+  label?: string;
+  isHidden?: boolean | undefined;
+  type?: "entity" | "relationship" | "struct" | "mixin";
+  baseClass?: () => SchemaView.Class | undefined;
+  derivedClasses?: () => readonly SchemaView.Class[];
+  mixins?: () => readonly SchemaView.Class[];
+  is?: (classOrName: string) => boolean;
+  properties?: Map<string, SchemaView.Property>;
+  ownProperties?: Map<string, SchemaView.Property>;
+  strengthDirection?: StrengthDirection;
+  source?: SchemaView.RelConstraint | undefined;
+  target?: SchemaView.RelConstraint | undefined;
+}
+
+function createMockSchema(props: MockSchemaProps): SchemaView.Schema {
+  return {
+    name: props.name,
+    readVersion: props.readVersion ?? 1,
+    writeVersion: props.writeVersion ?? 0,
+    minorVersion: props.minorVersion ?? 0,
+    isHidden: props.isHidden ?? false,
+    getClass(name: string) {
+      const classProps = props.classes?.get(name);
+      return classProps ? createMockClass(classProps) : undefined;
+    },
+  } as unknown as SchemaView.Schema;
+}
+
+function createMockClass(props: MockClassProps): SchemaView.Class {
+  const schema = { name: props.schemaName } as unknown as SchemaView.Schema;
+  return {
+    fullName: `${props.schemaName}:${props.name}`,
+    name: props.name,
+    label: props.label,
+    isHidden: props.isHidden,
+    schema,
+    isEntity: () => (props.type ?? "entity") === "entity",
+    isRelationship: () => props.type === "relationship",
+    isStruct: () => props.type === "struct",
+    isMixin: () => props.type === "mixin",
+    get baseClass() {
+      return props.baseClass ? props.baseClass() : undefined;
+    },
+    get derivedClasses() {
+      return props.derivedClasses ? props.derivedClasses() : [];
+    },
+    get mixins() {
+      return props.mixins ? props.mixins() : [];
+    },
+    is: (classOrName: string) => (props.is ? props.is(classOrName) : false),
+    getProperty: (name: string) => props.properties?.get(name) ?? undefined,
+    getProperties: () => (props.properties ? [...props.properties.values()] : []),
+    getOwnProperties: () => (props.ownProperties ? [...props.ownProperties.values()] : []),
+    strengthDirection: props.strengthDirection ?? StrengthDirection.Forward,
+    source: props.source,
+    target: props.target,
+  } as unknown as SchemaView.Class;
+}
+
+type PublicSchemaView = Awaited<ReturnType<Props<typeof createECSchemaProvider>["getSchemaView"]>>;
+
+function createMockIModel(props?: { schemaView?: PublicSchemaView }) {
+  return {
+    getSchemaView: async () => props?.schemaView ?? createMockSchemaView(new Map()),
+    createQueryReader: () => createCoreECSqlReaderStub(),
+  };
+}
+
+function createMockSchemaViewContext({
+  schemaView,
+  derivedClassNames,
+}: {
+  schemaView: PublicSchemaView;
+  derivedClassNames?: EC.FullClassNameDotNotation[];
+}) {
+  const classHierarchyResolver: ECClassHierarchyResolver = {
+    classDerivesFrom: vi.fn(),
+    getDerivedClassNames: vi.fn().mockReturnValue(derivedClassNames ?? []),
+  };
+  return { schemaView, classHierarchyResolver };
+}
+
+function createMockSchemaView(schemas: Map<string, MockSchemaProps>): PublicSchemaView {
+  const builtSchemas = new Map<string, SchemaView.Schema>();
+  for (const [name, props] of schemas) {
+    builtSchemas.set(name, createMockSchema(props));
+  }
+  return {
+    schemaToken: "",
+    isOutdated: false,
+    schemaCount: builtSchemas.size,
+    classCount: 0,
+    getSchema: (name) => builtSchemas.get(name),
+    getSchemaByAlias: () => undefined,
+    getSchemas: () => builtSchemas.values(),
+    findClass: () => undefined,
+    findEnumeration: () => undefined,
+    findKindOfQuantity: () => undefined,
+    findPropertyCategory: () => undefined,
+  };
+}
+
+function createMockProperty(overrides: Partial<SchemaView.Property> & { name: string }): SchemaView.Property {
+  return {
+    label: undefined,
+    isHidden: false,
+    isArray: () => false,
+    isNavigation: () => false,
+    isEnumeration: () => false,
+    isPrimitive: () => false,
+    isStruct: () => false,
+    declaringClass: undefined,
+    ...overrides,
+  } as unknown as SchemaView.Property;
+}

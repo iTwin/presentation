@@ -25,7 +25,7 @@ describe("hide if no children", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({
+      const provider = await StatelessHierarchyProvider.create({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
           return createPredicateBasedHierarchyDefinition({
@@ -65,7 +65,7 @@ describe("hide if no children", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({
+      const provider = await StatelessHierarchyProvider.create({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
           return createPredicateBasedHierarchyDefinition({

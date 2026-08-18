@@ -131,9 +131,7 @@ export function App() {
       const hiliteSetProvider = createHiliteSetProvider({
         imodelAccess: {
           ...createECSqlQueryExecutor(state.imodel),
-          ...createCachingECClassHierarchyInspector({
-            schemaProvider: createECSchemaProvider(state.imodel.schemaContext),
-          }),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(state.imodel) }),
         },
       });
       from(
@@ -347,7 +345,7 @@ function IModelComponents(props: IModelComponentsProps) {
       enableUnifiedSelectionSyncWithIModel({
         imodelAccess: {
           ...createECSqlQueryExecutor(imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel.schemaContext) }),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) }),
           key: imodel.key,
           hiliteSet: imodel.hilited,
           selectionSet: imodel.selectionSet,

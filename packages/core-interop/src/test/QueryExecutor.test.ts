@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { QueryBinder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
 import { createECSqlQueryExecutor, QUERY_CANCEL_DELAY_MS } from "../core-interop/QueryExecutor.js";
+import { createCoreECSqlReaderStub } from "./Utils.js";
 
 import type { ECSqlBinding } from "@itwin/presentation-shared";
 
@@ -310,23 +311,3 @@ describe("createECSqlQueryExecutor", () => {
     });
   });
 });
-
-function createCoreECSqlReaderStub(rows: object[], opts?: { withReturn?: boolean }) {
-  let curr = -1;
-  const returnFn = opts?.withReturn ? vi.fn(async () => ({ done: true as const, value: undefined })) : undefined;
-  return {
-    next: vi.fn(async () => {
-      ++curr;
-      if (curr < rows.length) {
-        return { done: false as const, value: createQueryRowProxy(rows[curr]) };
-      }
-      return { done: true as const, value: undefined };
-    }),
-    return: returnFn,
-    async *[Symbol.asyncIterator]() {},
-  };
-}
-
-function createQueryRowProxy(data: object) {
-  return { ...data, toArray: () => data, toRow: () => data };
-}

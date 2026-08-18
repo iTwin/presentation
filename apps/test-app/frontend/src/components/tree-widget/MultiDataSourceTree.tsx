@@ -69,7 +69,7 @@ export function MultiDataSourceTree({
 }
 
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     imodelKey: imodel.key,
     ...schemaProvider,

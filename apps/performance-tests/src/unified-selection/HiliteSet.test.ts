@@ -83,10 +83,7 @@ function runHiliteTest(
       const selectables: Selectable[] = [];
       const imodelAccess = {
         ...createECSqlQueryExecutor(iModel),
-        ...createCachingECClassHierarchyInspector({
-          schemaProvider: createECSchemaProvider(iModel.schemaContext),
-          cacheSize: 100,
-        }),
+        ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(iModel), cacheSize: 100 }),
       };
 
       for await (const row of imodelAccess.createQueryReader({ ecsql: testProps.inputQuery })) {
