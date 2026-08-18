@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { InstanceKey, Value } from "@itwin/presentation-shared";
-import type { ContentDescriptor } from "./ContentDescriptor.js";
+import type { ContentDescriptor, ReadonlyContentDescriptor } from "./ContentDescriptor.js";
 import type { Field } from "./Field.js";
 import type { DeepReadonly } from "./Utils.js";
 
@@ -32,7 +32,7 @@ export interface ContentValues {
  */
 export interface ContentItem {
   /** The descriptor that defines the field schema for this item. */
-  readonly descriptor: DeepReadonly<ContentDescriptor>;
+  readonly descriptor: ReadonlyContentDescriptor;
 
   /** The primary instance this row represents. */
   readonly primaryKey: DeepReadonly<InstanceKey>;

@@ -4,16 +4,16 @@
 
 ```ts
 
-import type { ContentDescriptor } from '@itwin/presentation-content';
 import type { EC } from '@itwin/presentation-shared';
-import type { PropertyField } from '@itwin/presentation-content';
+import type { ReadonlyContentDescriptor } from '@itwin/presentation-content';
+import type { ReadonlyPropertyField } from '@itwin/presentation-content';
 
 // @public
 export function createInstanceFilterProperties(input: CreateInstanceFilterPropertiesProps): InstanceFilterProperties;
 
 // @public
 interface CreateInstanceFilterPropertiesProps {
-    descriptor: ContentDescriptor;
+    descriptor: ReadonlyContentDescriptor;
 }
 
 // @public
@@ -38,7 +38,7 @@ export interface InstanceFilterPropertiesInfo extends InstanceFilterProperties {
 // @public
 export interface InstanceFilterProperty {
     availableClassNames: EC.FullClassNameDotNotation[];
-    field: PropertyField;
+    field: ReadonlyPropertyField;
 }
 
 // @public

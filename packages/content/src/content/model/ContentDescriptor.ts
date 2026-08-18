@@ -6,6 +6,7 @@
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "./Category.js";
 import type { Field } from "./Field.js";
+import type { DeepReadonly } from "./Utils.js";
 import type { ValueSelector } from "./ValueSelector.js";
 
 /**
@@ -43,3 +44,9 @@ export interface ContentDescriptor {
    */
   selectors: Record<ValueSelector["id"], ValueSelector>;
 }
+
+/**
+ * Readonly version of {@link ContentDescriptor}.
+ * @public
+ */
+export type ReadonlyContentDescriptor = DeepReadonly<ContentDescriptor>;

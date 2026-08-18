@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ContentDescriptor, ContentSource, PropertyField } from "@itwin/presentation-content";
+import type { ReadonlyContentDescriptor, ReadonlyPropertyField } from "@itwin/presentation-content";
 import type { EC } from "@itwin/presentation-shared";
 
 /**
@@ -23,7 +23,7 @@ export interface InstanceFilterClass {
  */
 export interface InstanceFilterProperty {
   /** The descriptor field used when building a filter for this property. */
-  field: PropertyField;
+  field: ReadonlyPropertyField;
   /**
    * Concrete primary classes that can supply the property.
    *
@@ -50,7 +50,7 @@ export interface InstanceFilterProperties {
  */
 export interface CreateInstanceFilterPropertiesProps {
   /** Descriptor containing the fields to expose as filter properties. */
-  descriptor: ContentDescriptor;
+  descriptor: ReadonlyContentDescriptor;
 }
 
 /**
@@ -86,7 +86,7 @@ export function createInstanceFilterProperties({
   return { classes: candidateClassNames.map((name) => ({ name, label: name })), properties };
 }
 
-function getCandidateClassNames(sources: ContentSource[]): EC.FullClassNameDotNotation[] {
+function getCandidateClassNames(sources: ReadonlyContentDescriptor["sources"]): EC.FullClassNameDotNotation[] {
   const classNames = new Set<EC.FullClassNameDotNotation>();
   for (const source of sources) {
     const resolvedClasses =
@@ -99,8 +99,8 @@ function getCandidateClassNames(sources: ContentSource[]): EC.FullClassNameDotNo
 }
 
 function getRelatedFieldClassNames(
-  field: PropertyField,
-  sources: ContentSource[],
+  field: ReadonlyPropertyField,
+  sources: ReadonlyContentDescriptor["sources"],
   candidateClassNames: EC.FullClassNameDotNotation[],
 ): EC.FullClassNameDotNotation[] {
   const availableClassNames = new Set<EC.FullClassNameDotNotation>();
@@ -120,8 +120,8 @@ function getRelatedFieldClassNames(
 }
 
 function startsWithRelationshipPath(
-  path: PropertyField["pathFromTarget"],
-  prefix: PropertyField["pathFromTarget"],
+  path: ReadonlyPropertyField["pathFromTarget"],
+  prefix: ReadonlyPropertyField["pathFromTarget"],
 ): boolean {
   return (
     path.length >= prefix.length &&

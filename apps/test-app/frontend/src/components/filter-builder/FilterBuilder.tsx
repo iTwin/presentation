@@ -21,7 +21,7 @@ import { bisCoreContentCustomization } from "./BisCoreContentCustomization";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { ContentDescriptor } from "@itwin/presentation-content";
+import type { ReadonlyContentDescriptor } from "@itwin/presentation-content";
 import type { InstanceFilterClass, InstanceFilterProperty } from "@itwin/presentation-content-react";
 
 /**
@@ -43,7 +43,7 @@ const target = { primaryClass: "BisCore.Element" } as const;
  * Loads and renders the presentation-content-backed filter builder.
  */
 function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
-  const [state, setState] = useState<{ descriptor?: ContentDescriptor; error?: unknown }>({});
+  const [state, setState] = useState<{ descriptor?: ReadonlyContentDescriptor; error?: unknown }>({});
 
   useEffect(() => {
     let disposed = false;
@@ -81,7 +81,7 @@ function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
   );
 }
 
-async function loadContent(imodel: IModelConnection): Promise<{ descriptor: ContentDescriptor }> {
+async function loadContent(imodel: IModelConnection): Promise<{ descriptor: ReadonlyContentDescriptor }> {
   const schemaProvider = createECSchemaProvider(imodel);
   const imodelAccess = {
     ...createECSqlQueryExecutor(imodel),
@@ -99,10 +99,10 @@ async function loadContent(imodel: IModelConnection): Promise<{ descriptor: Cont
     sources,
     config: configuration,
   }).getContentDescriptor();
-  return { descriptor: descriptor as ContentDescriptor };
+  return { descriptor };
 }
 
-function LoadedContentFilterBuilder({ descriptor }: { descriptor: ContentDescriptor }) {
+function LoadedContentFilterBuilder({ descriptor }: { descriptor: ReadonlyContentDescriptor }) {
   const { classes, visibleProperties, selectedClasses, onSelectedClassesChanged } = useInstanceFilterPropertiesInfo({
     descriptor,
   });
@@ -164,7 +164,7 @@ function toPropertyDescription(property: InstanceFilterProperty): PropertyDescri
   };
 }
 
-function getCategoryLabel(property: InstanceFilterProperty, descriptor: ContentDescriptor): string {
+function getCategoryLabel(property: InstanceFilterProperty, descriptor: ReadonlyContentDescriptor): string {
   let category = property.field.categoryId ? descriptor.categories[property.field.categoryId] : undefined;
   if (!category) {
     return "Related";

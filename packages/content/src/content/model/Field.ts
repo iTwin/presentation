@@ -6,6 +6,8 @@
 import { type EC, type ECSqlBinding, type RelationshipPath, type ValueDescriptor } from "@itwin/presentation-shared";
 import { serializeRelationshipPath } from "./Utils.js";
 
+import type { DeepReadonly } from "./Utils.js";
+
 /**
  * Base attributes shared by all field kinds.
  *
@@ -169,3 +171,24 @@ export interface ExternalField extends BaseField {
  * @public
  */
 export type Field = PropertyField | CalculatedField | ExternalField;
+
+/**
+ * Readonly version of {@link PropertyField}.
+ * @public
+ */
+export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
+/**
+ * Readonly version of {@link CalculatedField}.
+ * @public
+ */
+export type ReadonlyCalculatedField = DeepReadonly<CalculatedField>;
+/**
+ * Readonly version of {@link ExternalField}.
+ * @public
+ */
+export type ReadonlyExternalField = DeepReadonly<ExternalField>;
+/**
+ * Readonly version of {@link Field}.
+ * @public
+ */
+export type ReadonlyField = ReadonlyPropertyField | ReadonlyCalculatedField | ReadonlyExternalField;
