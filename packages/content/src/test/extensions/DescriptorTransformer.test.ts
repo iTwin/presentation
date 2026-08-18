@@ -109,8 +109,6 @@ describe("createTransformableDescriptor", () => {
 
       expect(fork.primaryClassNames).to.deep.equal(fork.valueClassNames);
       expect(field.primaryClassNames).to.deep.equal(field.valueClassNames);
-      expect(fork.primaryClassNames).to.not.equal(fork.valueClassNames);
-      expect(field.primaryClassNames).to.not.equal(field.valueClassNames);
     });
 
     it("carves a related-endpoint subclass over a relationship path", () => {

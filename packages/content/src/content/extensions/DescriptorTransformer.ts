@@ -206,7 +206,7 @@ export function createTransformableDescriptor(
         ...field,
         id: forkedId,
         valueClassNames: subset,
-        primaryClassNames: isDirect ? subset : field.primaryClassNames,
+        primaryClassNames: isDirect ? [...subset] : field.primaryClassNames,
       };
       descriptor.fields[forkedId] = fork;
       return fork;
