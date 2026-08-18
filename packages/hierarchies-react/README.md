@@ -70,7 +70,7 @@ The hook takes 2 required properties:
   import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
   function createIModelAccess(imodel: IModelConnection) {
-    const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+    const schemaProvider = createECSchemaProvider(imodel);
     return {
       imodelKey: createIModelKey(imodel),
       ...schemaProvider,
@@ -121,7 +121,7 @@ import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-r
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     imodelKey: createIModelKey(imodel),
     ...schemaProvider,

@@ -3,23 +3,47 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
-import { createECSchema } from "./MetadataInternal.js";
+import { bufferTime, filter, firstValueFrom, map, mergeMap, share, Subject } from "rxjs";
+import { SchemaViewPrimitiveType, StrengthDirection } from "@itwin/ecschema-metadata";
+import { type EC, type ECSchemaProvider, normalizeFullClassName } from "@itwin/presentation-shared";
 
-import type { Schema as CoreSchema } from "@itwin/ecschema-metadata";
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { SchemaView as CoreSchemaView } from "@itwin/ecschema-metadata";
+import type { CoreECSqlReaderFactory } from "./QueryExecutor.js";
 
 /**
- * Defines input for `createECSchemaProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)
- * class from `@itwin/ecschema-metadata` package.
+ * Subset of [SchemaView](https://www.itwinjs.org/reference/ecschema-metadata/context/schemaview/) API surface that
+ * is `@public` and can be used by `createECSchemaProvider` function.
+ *
  * @public
  */
-interface CoreSchemaContext {
-  getSchema(key: CoreSchemaKey): Promise<CoreSchema | undefined>;
-}
+type PublicCoreSchemaView = Pick<
+  CoreSchemaView,
+  | "schemaToken"
+  | "isOutdated"
+  | "schemaCount"
+  | "classCount"
+  | "getSchema"
+  | "getSchemaByAlias"
+  | "getSchemas"
+  | "findClass"
+  | "findEnumeration"
+  | "findKindOfQuantity"
+  | "findPropertyCategory"
+>;
 
 /**
- * Creates an `ECSchemaProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
+ * A function that optionally takes a list of schema names and returns a `SchemaView`, containing details about the
+ * requested schemas.
+ *
+ * If no schema names are provided, the function should return a `SchemaView` containing all available schemas.
+ *
+ * @public
+ */
+type CoreSchemaViewGetter = (props?: { schemas?: string[] }) => Promise<PublicCoreSchemaView>;
+
+/**
+ * Creates an `ECSchemaProvider` for a given iModel with [SchemaView](https://www.itwinjs.org/reference/ecschema-metadata/context/schemaview/)
+ * getter and query reader factory.
  *
  * Usage example:
  *
@@ -28,44 +52,479 @@ interface CoreSchemaContext {
  * import { createECSchemaProvider } from "@itwin/presentation-core-interop";
  *
  * const imodel: IModelConnection = getIModel();
- * const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+ * const schemaProvider = createECSchemaProvider(imodel);
  * // the created schema provider may be used in `@itwin/presentation-hierarchies` and other Presentation packages
  * ```
  *
  * @public
  */
-export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider {
-  const schemaRequestsCache = new Map<string, Promise<EC.Schema | undefined>>();
-  async function getSchemaUnprotected(schemaName: string) {
-    const coreSchema = await schemaContext.getSchema(new CoreSchemaKey(schemaName));
-    return coreSchema ? createECSchema(coreSchema) : undefined;
+export function createECSchemaProvider(
+  imodel: { getSchemaView: CoreSchemaViewGetter } & CoreECSqlReaderFactory,
+): ECSchemaProvider {
+  // Accumulates schema names requested within the same frame and issues a single `getSchemaView` request in the next one.
+  const schemaNameSubject = new Subject<string>();
+  const schemaViewBatches = schemaNameSubject.pipe(
+    bufferTime(0),
+    filter((schemaNames) => schemaNames.length > 0),
+    mergeMap(async (schemaNames) => {
+      const schemas = new Set(schemaNames);
+      return { schemas, schemaView: await imodel.getSchemaView({ schemas: [...schemas] }) };
+    }),
+    share(),
+  );
+  async function getSchemaView(schemaName: string): Promise<PublicCoreSchemaView> {
+    const schemaView = firstValueFrom(
+      schemaViewBatches.pipe(
+        filter((batch) => batch.schemas.has(schemaName)),
+        map((batch) => batch.schemaView),
+      ),
+    );
+    schemaNameSubject.next(schemaName);
+    return schemaView;
   }
-  async function getSchemaProtected(schemaName: string, handledExistingSchemaErrors: Set<string>) {
-    // workaround for https://github.com/iTwin/itwinjs-core/issues/6542
-    try {
-      return await getSchemaUnprotected(schemaName);
-    } catch (e) {
-      /* v8 ignore else -- @preserve */
-      if (e instanceof Error) {
-        if (e.message.includes("already exists within this cache") && !handledExistingSchemaErrors.has(schemaName)) {
-          handledExistingSchemaErrors.add(schemaName);
-          return getSchemaProtected(schemaName, handledExistingSchemaErrors);
-        }
-        if (e.message.includes("schema not found")) {
-          return undefined;
-        }
-      }
-      throw e;
-    }
+
+  // Ensures we only create a single `ECClassHierarchyResolver` for the iModel, which is used to resolve derived classes for all schemas.
+  // Cache the promise (not the resolved value) so concurrent `getSchema` calls share one `createECClassHierarchyResolver` invocation.
+  let cachedClassHierarchyResolverPromise: Promise<ECClassHierarchyResolver> | undefined;
+  async function getSchemaProviderContext(schemaName: string) {
+    cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel);
+    const [classHierarchyResolver, schemaView] = await Promise.all([
+      cachedClassHierarchyResolverPromise,
+      getSchemaView(schemaName),
+    ]);
+    return { classHierarchyResolver, schemaView };
   }
+
   return {
     async getSchema(name) {
-      let promise = schemaRequestsCache.get(name);
-      if (!promise) {
-        promise = getSchemaProtected(name, new Set());
-        schemaRequestsCache.set(name, promise);
-      }
-      return promise;
+      const { classHierarchyResolver, schemaView } = await getSchemaProviderContext(name);
+      const svSchema = schemaView.getSchema(name);
+      return svSchema ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver }) : undefined;
     },
   };
+}
+
+interface SchemaViewProviderContext {
+  schemaView: PublicCoreSchemaView;
+  classHierarchyResolver: ECClassHierarchyResolver;
+  schema: EC.Schema;
+}
+
+export function createECSchemaFromSchemaView(
+  svSchema: CoreSchemaView.Schema,
+  context: Omit<SchemaViewProviderContext, "schema">,
+): EC.Schema {
+  const ecSchema: EC.Schema = {
+    name: svSchema.name,
+    description: svSchema.description,
+    version: { read: svSchema.readVersion, write: svSchema.writeVersion, minor: svSchema.minorVersion },
+    isHidden: svSchema.isHidden,
+    getClass(name) {
+      const svClass = svSchema.getClass(name);
+      return svClass ? createECClassFromSchemaView(svClass, { ...context, schema: ecSchema }) : undefined;
+    },
+  };
+  return ecSchema;
+}
+
+export function createECClassFromSchemaView(
+  svClass: CoreSchemaView.Class,
+  context: SchemaViewProviderContext,
+): EC.Class {
+  const { classHierarchyResolver, schema } = context;
+  const fullName = normalizeFullClassName(svClass.fullName);
+  const ecClass: EC.Class = {
+    schema,
+    fullName,
+    name: svClass.name,
+    label: svClass.label,
+    description: svClass.description,
+    isHidden: svClass.isHidden,
+    isEntityClass(): this is EC.EntityClass {
+      return svClass.isEntity();
+    },
+    isRelationshipClass(): this is EC.RelationshipClass {
+      return svClass.isRelationship();
+    },
+    isStructClass(): this is EC.StructClass {
+      return svClass.isStruct();
+    },
+    isMixin(): this is EC.Mixin {
+      return svClass.isMixin();
+    },
+    get baseClass(): EC.Class | undefined {
+      return svClass.baseClass
+        ? createECClassFromSchemaView(svClass.baseClass, {
+            ...context,
+            schema: useOrCreateSchema(svClass.baseClass.schema, context),
+          })
+        : undefined;
+    },
+    is(classOrClassName: EC.Class | string, schemaName?: string): boolean {
+      if (typeof classOrClassName === "string") {
+        return svClass.is(`${schemaName!}.${classOrClassName}`);
+      }
+      return svClass.is(classOrClassName.fullName);
+    },
+    getProperty(name: string): EC.Property | undefined {
+      const svProp = svClass.getProperty(name);
+      return svProp ? createECPropertyFromSchemaView(svProp, ecClass, context) : undefined;
+    },
+    getProperties(): EC.Property[] {
+      return svClass.getProperties().map((p) => createECPropertyFromSchemaView(p, ecClass, context));
+    },
+    getOwnProperties(): EC.Property[] {
+      return svClass.getOwnProperties().map((p) => createECPropertyFromSchemaView(p, ecClass, context));
+    },
+    getDerivedClassNames(props?: { onlyDirect?: boolean }): EC.FullClassNameDotNotation[] {
+      return classHierarchyResolver.getDerivedClassNames(fullName, props);
+    },
+  };
+
+  if (svClass.isEntity()) {
+    const ecEntity: EC.EntityClass = {
+      ...ecClass,
+      getMixins(): EC.Mixin[] {
+        return svClass.mixins.map((m) =>
+          createECClassFromSchemaView(m, { ...context, schema: useOrCreateSchema(m.schema, context) }),
+        );
+      },
+    };
+    return ecEntity;
+  }
+
+  if (svClass.isRelationship()) {
+    const ecRel: EC.RelationshipClass = {
+      ...ecClass,
+      direction: svClass.strengthDirection === StrengthDirection.Forward ? "Forward" : "Backward",
+      source: svClass.source
+        ? createECRelConstraintFromSchemaView(svClass.source, context)
+        : createEmptyRelConstraint(),
+      target: svClass.target
+        ? createECRelConstraintFromSchemaView(svClass.target, context)
+        : createEmptyRelConstraint(),
+    };
+    return ecRel;
+  }
+
+  return ecClass;
+}
+
+function useOrCreateSchema(svSchema: CoreSchemaView.Schema, context: SchemaViewProviderContext): EC.Schema {
+  const { schema: currentSchema, ...schemalessContext } = context;
+  if (svSchema.name === currentSchema.name) {
+    return currentSchema;
+  }
+  return createECSchemaFromSchemaView(svSchema, schemalessContext);
+}
+
+function createEmptyRelConstraint(): EC.RelationshipConstraint {
+  return {
+    multiplicity: { lowerLimit: 0, upperLimit: 0 },
+    polymorphic: false,
+    constraintClasses: [],
+    abstractConstraint: undefined,
+  };
+}
+
+function createECRelConstraintFromSchemaView(
+  svConstraint: CoreSchemaView.RelConstraint,
+  context: SchemaViewProviderContext,
+): EC.RelationshipConstraint {
+  return {
+    multiplicity: { lowerLimit: svConstraint.multiplicityLower, upperLimit: svConstraint.multiplicityUpper },
+    polymorphic: svConstraint.polymorphic,
+    get constraintClasses() {
+      return svConstraint.constraintClasses.map((c) =>
+        createECClassFromSchemaView(c, { ...context, schema: useOrCreateSchema(c.schema, context) }),
+      );
+    },
+    get abstractConstraint(): EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined {
+      // `SchemaView` only exposes an explicitly-defined abstract constraint. To match EC semantics (and the
+      // standard `RelationshipConstraint` implementation), fall back to the sole constraint class when there's exactly one.
+      const svClass =
+        svConstraint.abstractConstraint ??
+        (svConstraint.constraintClasses.length === 1 ? svConstraint.constraintClasses[0] : undefined);
+      if (!svClass) {
+        return undefined;
+      }
+      return createECClassFromSchemaView(svClass, { ...context, schema: useOrCreateSchema(svClass.schema, context) });
+    },
+  };
+}
+
+export function createECPropertyFromSchemaView(
+  svProp: CoreSchemaView.Property,
+  ecClass: EC.Class,
+  context: SchemaViewProviderContext,
+): EC.Property {
+  const base: EC.Property = {
+    class: ecClass,
+    name: svProp.name,
+    description: svProp.description,
+    label: svProp.label,
+    isHidden: svProp.isHidden,
+    get category(): EC.PropertyCategory | undefined {
+      return svProp.category
+        ? createECPropertyCategoryFromSchemaView(svProp.category, useOrCreateSchema(svProp.category.schema, context))
+        : undefined;
+    },
+    isArray(): this is EC.ArrayProperty {
+      return svProp.isArray();
+    },
+    isStruct(): this is EC.StructProperty {
+      return false;
+    },
+    isPrimitive(): this is EC.PrimitiveProperty {
+      return false;
+    },
+    isEnumeration(): this is EC.EnumerationProperty {
+      return false;
+    },
+    isNavigation(): this is EC.NavigationProperty {
+      return false;
+    },
+  };
+
+  if (svProp.isNavigation()) {
+    return {
+      ...base,
+      isNavigation(): this is EC.NavigationProperty {
+        return true;
+      },
+      get direction() {
+        return svProp.direction === StrengthDirection.Forward ? "Forward" : "Backward";
+      },
+      get relationshipClass(): EC.RelationshipClass {
+        return createECClassFromSchemaView(svProp.relationshipClass, {
+          ...context,
+          schema: useOrCreateSchema(svProp.relationshipClass.schema, context),
+        }) as EC.RelationshipClass;
+      },
+    } satisfies EC.NavigationProperty;
+  }
+
+  // Check enumeration before primitive (enum is a facet of primitive in CoreSchemaView, but separate in EC)
+  if (svProp.isEnumeration()) {
+    const arrayFields = svProp.isArray()
+      ? { minOccurs: svProp.arrayMinOccurs ?? 0, maxOccurs: svProp.arrayMaxOccurs }
+      : undefined;
+    return {
+      ...base,
+      ...arrayFields,
+      isEnumeration(): this is EC.EnumerationProperty {
+        return true;
+      },
+      isArray(): this is EC.ArrayProperty {
+        return svProp.isArray();
+      },
+      get extendedTypeName() {
+        return svProp.extendedTypeName;
+      },
+      get enumeration(): EC.Enumeration | undefined {
+        return svProp.enumeration
+          ? createECEnumerationFromSchemaView(svProp.enumeration, useOrCreateSchema(svProp.enumeration.schema, context))
+          : undefined;
+      },
+    } satisfies EC.EnumerationProperty | EC.EnumerationArrayProperty;
+  }
+
+  if (svProp.isPrimitive()) {
+    const arrayFields = svProp.isArray()
+      ? { minOccurs: svProp.arrayMinOccurs ?? 0, maxOccurs: svProp.arrayMaxOccurs }
+      : undefined;
+    return {
+      ...base,
+      ...arrayFields,
+      isPrimitive(): this is EC.PrimitiveProperty {
+        return true;
+      },
+      isArray(): this is EC.ArrayProperty {
+        return svProp.isArray();
+      },
+      get primitiveType() {
+        return mapSchemaViewPrimitiveType(svProp.primitiveType);
+      },
+      get extendedTypeName() {
+        return svProp.extendedTypeName;
+      },
+      get kindOfQuantity(): EC.KindOfQuantity | undefined {
+        return svProp.kindOfQuantity
+          ? createECKoqFromSchemaView(svProp.kindOfQuantity, useOrCreateSchema(svProp.kindOfQuantity.schema, context))
+          : undefined;
+      },
+    } satisfies EC.PrimitiveProperty | EC.PrimitiveArrayProperty;
+  }
+
+  if (svProp.isStruct()) {
+    const arrayFields = svProp.isArray()
+      ? { minOccurs: svProp.arrayMinOccurs ?? 0, maxOccurs: svProp.arrayMaxOccurs }
+      : undefined;
+    return {
+      ...base,
+      ...arrayFields,
+      isStruct(): this is EC.StructProperty {
+        return true;
+      },
+      isArray(): this is EC.ArrayProperty {
+        return svProp.isArray();
+      },
+      get structClass(): EC.StructClass {
+        return createECClassFromSchemaView(svProp.structClass, {
+          ...context,
+          schema: useOrCreateSchema(svProp.structClass.schema, context),
+        });
+      },
+    } satisfies EC.StructProperty | EC.StructArrayProperty;
+  }
+
+  throw new Error(
+    `Unexpected property type for ${svProp.declaringClass ? svProp.declaringClass.fullName : "<ECCView>"}.${svProp.name}`,
+  );
+}
+
+function mapSchemaViewPrimitiveType(svType: SchemaViewPrimitiveType): EC.PrimitiveType {
+  switch (svType) {
+    case SchemaViewPrimitiveType.Binary:
+      return "Binary";
+    case SchemaViewPrimitiveType.Boolean:
+      return "Boolean";
+    case SchemaViewPrimitiveType.DateTime:
+      return "DateTime";
+    case SchemaViewPrimitiveType.Double:
+      return "Double";
+    case SchemaViewPrimitiveType.IGeometry:
+      return "IGeometry";
+    case SchemaViewPrimitiveType.Integer:
+      return "Integer";
+    case SchemaViewPrimitiveType.Long:
+      return "Long";
+    case SchemaViewPrimitiveType.Point2d:
+      return "Point2d";
+    case SchemaViewPrimitiveType.Point3d:
+      return "Point3d";
+    case SchemaViewPrimitiveType.String:
+      return "String";
+  }
+  throw new Error(`Uninitialized CoreSchemaView primitive type: ${svType}`);
+}
+
+function createECEnumerationFromSchemaView(svEnum: CoreSchemaView.Enumeration, schema: EC.Schema): EC.Enumeration {
+  return {
+    schema,
+    fullName: normalizeFullClassName(svEnum.fullName),
+    name: svEnum.name,
+    label: svEnum.label,
+    description: svEnum.description,
+    type: svEnum.primitiveType === SchemaViewPrimitiveType.Integer ? "Number" : "String",
+    isStrict: svEnum.isStrict,
+    enumerators: [...svEnum.getEnumerators()].map((e) => ({ name: e.name, label: e.label, value: e.value })),
+  };
+}
+
+function createECKoqFromSchemaView(svKoq: CoreSchemaView.KindOfQuantity, schema: EC.Schema): EC.KindOfQuantity {
+  return {
+    schema,
+    fullName: normalizeFullClassName(svKoq.fullName),
+    name: svKoq.name,
+    label: svKoq.label,
+    description: svKoq.description,
+  };
+}
+
+function createECPropertyCategoryFromSchemaView(
+  svCategory: CoreSchemaView.PropertyCategory,
+  schema: EC.Schema,
+): EC.PropertyCategory {
+  return {
+    schema,
+    fullName: normalizeFullClassName(svCategory.fullName),
+    name: svCategory.name,
+    label: svCategory.label,
+    description: svCategory.description,
+    priority: svCategory.priority,
+  };
+}
+
+/** @internal */
+export interface ECClassHierarchyResolver {
+  /** Check if the derived class derives from the candidate base class. */
+  classDerivesFrom(
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
+  ): boolean;
+  /** Get names of all derived classes of the specified class. */
+  getDerivedClassNames(
+    classFullName: EC.FullClassNameDotNotation,
+    options?: { onlyDirect?: boolean },
+  ): EC.FullClassNameDotNotation[];
+}
+
+/** @internal */
+export async function createECClassHierarchyResolver(
+  imodel: CoreECSqlReaderFactory,
+): Promise<ECClassHierarchyResolver> {
+  const baseToDerivedMap = new Map<EC.FullClassNameDotNotation, Set<EC.FullClassNameDotNotation>>();
+  const derivedToBaseMap = new Map<EC.FullClassNameDotNotation, Set<EC.FullClassNameDotNotation>>();
+  const ecsql = `
+    SELECT
+      ec_classname(rel.SourceECInstanceId, 's.c'),
+      ec_classname(rel.TargetECInstanceId, 's.c')
+    FROM meta.ClassHasBaseClasses rel
+  `;
+  const reader = imodel.createQueryReader(ecsql);
+  for await (const row of reader) {
+    const derivedClass = row[0] as EC.FullClassNameDotNotation;
+    const baseClass = row[1] as EC.FullClassNameDotNotation;
+
+    let baseToDerivedEntry = baseToDerivedMap.get(baseClass);
+    if (!baseToDerivedEntry) {
+      baseToDerivedEntry = new Set<EC.FullClassNameDotNotation>();
+      baseToDerivedMap.set(baseClass, baseToDerivedEntry);
+    }
+    baseToDerivedEntry.add(derivedClass);
+
+    let derivedToBaseEntry = derivedToBaseMap.get(derivedClass);
+    if (!derivedToBaseEntry) {
+      derivedToBaseEntry = new Set<EC.FullClassNameDotNotation>();
+      derivedToBaseMap.set(derivedClass, derivedToBaseEntry);
+    }
+    derivedToBaseEntry.add(baseClass);
+  }
+
+  /**
+   * TODO: We don't really need this in schema provider, but maybe this function should become part of it? Would allow us to drop
+   * ECClassHierarchyInspector, whose implementation currently has to load schemas (this one doesn't).
+   */
+  function classDerivesFrom(
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
+  ): boolean {
+    const baseClasses = derivedToBaseMap.get(derivedClassFullName);
+    return baseClasses
+      ? baseClasses.has(candidateBaseClassFullName) ||
+          baseClasses.values().some((baseClass) => classDerivesFrom(baseClass, candidateBaseClassFullName))
+      : false;
+  }
+
+  function getDerivedClassNames(
+    classFullName: EC.FullClassNameDotNotation,
+    options?: { onlyDirect?: boolean },
+  ): EC.FullClassNameDotNotation[] {
+    const derivedClasses = baseToDerivedMap.get(classFullName);
+    if (!derivedClasses) {
+      return [];
+    }
+    if (options?.onlyDirect) {
+      return [...derivedClasses];
+    }
+    const allDerivedClasses = new Set<EC.FullClassNameDotNotation>();
+    for (const derivedClass of derivedClasses) {
+      allDerivedClasses.add(derivedClass);
+      getDerivedClassNames(derivedClass, options).forEach((subDerivedClass) => allDerivedClasses.add(subDerivedClass));
+    }
+    return Array.from(allDerivedClasses);
+  }
+
+  return { classDerivesFrom, getDerivedClassNames };
 }

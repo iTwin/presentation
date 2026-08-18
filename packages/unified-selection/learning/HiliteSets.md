@@ -25,7 +25,7 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createHiliteSetProvider } from "@itwin/unified-selection";
 
-  const schemaProvider = createECSchemaProvider(getIModelConnection().schemaContext);
+  const schemaProvider = createECSchemaProvider(getIModelConnection());
   const hiliteProvider = createHiliteSetProvider({
     imodelAccess: {
       ...schemaProvider,

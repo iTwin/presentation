@@ -29,7 +29,7 @@ describe("Core interop", () => {
         }
         // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateECSchemaProvider.Example
         const imodel: IModelConnection = getIModelConnection();
-        const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+        const schemaProvider = createECSchemaProvider(imodel);
         // the created schema provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
         // __PUBLISH_EXTRACT_END__
         expect(await schemaProvider.getSchema("BisCore")).toBeDefined();

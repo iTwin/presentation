@@ -67,7 +67,7 @@ export async function createPrimitivePropertyValueSelectorProps({
   propertyName: string;
 }): Promise<TypedPrimitiveValueSelectorProps> {
   const ecClass = await getClass(schemaProvider, propertyClassName);
-  const property = await ecClass.getProperty(propertyName);
+  const property = ecClass.getProperty(propertyName);
   if (!property) {
     throw new Error(`The property "${propertyName}" not found in class "${propertyClassName}".`);
   }
@@ -106,7 +106,7 @@ export async function createPrimitivePropertyValueSelectorProps({
         ...(extendedType ? { extendedType } : /* v8 ignore next */ {}),
       };
     case "Double":
-      const koqName = (await property.kindOfQuantity)?.fullName;
+      const koqName = property.kindOfQuantity?.fullName;
       return {
         selector: propertySelector,
         type: "Double",

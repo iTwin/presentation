@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass } from "@itwin/presentation-shared";
 import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
-import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
 
@@ -50,7 +49,7 @@ export interface CategorizedField {
  * Shared by direct-property enumeration (zero-length `pathFromTarget`) and related-property
  * enumeration (a non-empty path to the class). The `spec` controls which properties are included
  * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`. Pass
- * `excludeInherited` to enumerate only the properties declared directly on `className` (used by
+ * `excludeInherited` to enumerate only the properties declared directly on `propertiesClass` (used by
  * direct-field enumeration to visit each declaring class exactly once).
  *
  * For each included property whose value type is supported:
@@ -70,16 +69,15 @@ export interface CategorizedField {
  *
  * @internal
  */
-export async function collectClassPropertyFields(props: {
-  imodelAccess: ECSchemaProvider;
+export function collectClassPropertyFields(props: {
   /** The class whose properties are enumerated. */
-  className: EC.FullClassNameDotNotation;
+  propertiesClass: EC.Class;
   /** Concrete value-supplier classes for the produced fields. */
   valueClassNames: EC.FullClassNameDotNotation[];
   /** Information on how to reach related properties or `undefined` for direct properties. */
   relationshipInfo:
     | {
-        /** Relationship path from the content target to `className` (`[]` for direct properties). */
+        /** Relationship path from the content target to `propertiesClass` (`[]` for direct properties). */
         pathFromTarget: RelationshipPath;
         /**
          * Concrete primary classes that have access to the produced fields. Defaults to `valueClassNames`
@@ -93,20 +91,19 @@ export async function collectClassPropertyFields(props: {
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
   anchor: FieldCategorization["anchor"];
-  /** When `true`, enumerate only properties declared directly on `className` (exclude inherited ones). */
+  /** When `true`, enumerate only properties declared directly on `propertiesClass` (exclude inherited ones). */
   excludeInherited?: boolean;
-}): Promise<CategorizedField[]> {
-  const { imodelAccess, className, relationshipInfo, valueClassNames, spec, anchor, excludeInherited } = props;
+}): CategorizedField[] {
+  const { propertiesClass, relationshipInfo, valueClassNames, spec, anchor, excludeInherited } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
-  const ecClass = await getClass(imodelAccess, className);
   const result: CategorizedField[] = [];
-  const properties = excludeInherited ? await ecClass.getOwnProperties() : await ecClass.getProperties();
+  const properties = excludeInherited ? propertiesClass.getOwnProperties() : propertiesClass.getProperties();
   for (const property of properties) {
     if (!isSelected(property.name, spec.select)) {
       continue;
     }
-    const type = await createValueDescriptorFromProperty(property);
+    const type = createValueDescriptorFromProperty(property);
     if (type === undefined) {
       continue;
     }
@@ -136,7 +133,7 @@ export async function collectClassPropertyFields(props: {
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
     } else {
-      const schemaCategory = await property.category;
+      const schemaCategory = property.category;
       if (schemaCategory) {
         categorization.category = {
           source: "schema",

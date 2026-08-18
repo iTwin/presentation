@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { type ECSchemaProvider, getClass, type RelationshipPath } from "@itwin/presentation-shared";
 import { collectInParallel } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
-import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
@@ -95,8 +95,7 @@ async function createFieldsForPath(props: {
   if (properties === undefined) {
     const lastStep = path[path.length - 1];
     return collectClassPropertyFields({
-      imodelAccess,
-      className: lastStep.targetClassName,
+      propertiesClass: await getClass(imodelAccess, lastStep.targetClassName),
       valueClassNames: [lastStep.targetClassName],
       relationshipInfo: { pathFromTarget: path, primaryClassNames },
       spec: { select: "all" },
@@ -130,26 +129,24 @@ async function createFieldsForStep(props: {
   const enumerated: CategorizedField[] = [];
   if (stepSpec.target) {
     enumerated.push(
-      ...(await collectClassPropertyFields({
-        imodelAccess,
-        className: step.targetClassName,
+      ...collectClassPropertyFields({
+        propertiesClass: await getClass(imodelAccess, step.targetClassName),
         valueClassNames: [step.targetClassName],
         relationshipInfo: { pathFromTarget, primaryClassNames },
         spec: stepSpec.target,
         anchor: "targetClass",
-      })),
+      }),
     );
   }
   if (stepSpec.relationship) {
     enumerated.push(
-      ...(await collectClassPropertyFields({
-        imodelAccess,
-        className: step.relationshipName,
+      ...collectClassPropertyFields({
+        propertiesClass: await getClass(imodelAccess, step.relationshipName),
         valueClassNames: [step.relationshipName],
         relationshipInfo: { pathFromTarget, primaryClassNames },
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
-      })),
+      }),
     );
   }
   return enumerated;

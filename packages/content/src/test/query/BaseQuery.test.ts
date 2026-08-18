@@ -21,9 +21,9 @@ import type { CalculatedField, PropertyField } from "../../content/model/Field.j
 // whose name contains `Many` traverses to a 1:many constraint, everything else is 1:1.
 const schemaProvider = {
   getSchema: async (schemaName: string) => ({
-    getClass: async (className: string) => ({
+    getClass: (className: string) => ({
       fullName: `${schemaName}.${className}`,
-      getProperties: async () => [],
+      getProperties: () => [],
       isRelationshipClass: () => className.startsWith("Rel"),
       source: { multiplicity: { lowerLimit: 0, upperLimit: 1 } },
       target: { multiplicity: { lowerLimit: 0, upperLimit: className.includes("Many") ? 2 : 1 } },

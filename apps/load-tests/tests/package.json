@@ -35,6 +35,7 @@
     "artillery": "2.0.33",
     "brotli": "^1.3.3",
     "eslint": "catalog:build-tools",
+    "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
     "@typescript/native": "catalog:build-tools",

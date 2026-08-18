@@ -155,7 +155,7 @@ export interface StubClassFuncProps {
   classLabel?: string;
   baseClass?: EC.Class & Pick<ECClassExtraMembers, "addDerivedClass">;
   properties?: EC.Property[];
-  customAttributes?: ReadonlyMap<string, { [key: string]: any }>;
+  isHidden?: boolean;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
@@ -165,18 +165,14 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 export interface StubbedSchema {
   name: string;
   version: EC.SchemaVersion;
+  isHidden: boolean;
   getClass: EC.Schema["getClass"];
-  getCustomAttributes: EC.Schema["getCustomAttributes"];
 }
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
 export type TStubRelationshipClassFunc = (
   props: StubRelationshipClassFuncProps,
 ) => EC.RelationshipClass & ECClassExtraMembers;
-export type TStubCustomAttributesFunc = (props: {
-  schemaName: string;
-  attributes: Map<EC.FullClassNameDotNotation, EC.CustomAttribute>;
-}) => void;
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, StubbedSchema>();
@@ -186,26 +182,30 @@ export function createECSchemaProviderStub() {
   const classHierarchy = new Dictionary<EC.FullClassNameDotNotation, EC.FullClassNameDotNotation>((a, b) =>
     a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
   ); // className -> baseClassName
-  const customAttributes = new Map<string, Map<EC.FullClassNameDotNotation, EC.CustomAttribute>>(); // schemaName -> (className -> customAttribute)
   const getSchemaImpl = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
       schemaStub = {
         name: schemaName,
         version: { read: 1, write: 0, minor: 0 },
-        getClass: async (className) => classes.get(`${schemaName}.${className}`),
-        getCustomAttributes: async () => customAttributes.get(schemaName) ?? new Map(),
+        isHidden: false,
+        getClass: (className) => classes.get(`${schemaName}.${className}`),
       };
       schemaStubs.set(schemaName, schemaStub);
     }
     return schemaStub;
   };
-  const getDerivedClasses = (classFullName: EC.FullClassNameDotNotation): EC.Class[] => {
-    const derivedClasses = new Array<EC.Class>();
+  const getDerivedClassNames = (
+    classFullName: EC.FullClassNameDotNotation,
+    options?: { onlyDirect?: boolean },
+  ): EC.FullClassNameDotNotation[] => {
+    const derivedClasses = new Array<EC.FullClassNameDotNotation>();
     for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
       if (baseClassName.toLocaleLowerCase() === classFullName.toLocaleLowerCase()) {
-        derivedClasses.push(classes.get(derivedClassName)!);
-        derivedClasses.push(...getDerivedClasses(derivedClassName));
+        derivedClasses.push(derivedClassName);
+        if (!options?.onlyDirect) {
+          derivedClasses.push(...getDerivedClassNames(derivedClassName, options));
+        }
       }
     }
     return derivedClasses;
@@ -230,13 +230,14 @@ export function createECSchemaProviderStub() {
       return `[${props.schemaName}].[${props.className}]`;
     },
     get baseClass() {
-      return Promise.resolve(props.baseClass);
+      return props.baseClass;
     },
     addDerivedClass: (derived: EC.Class) => {
       classHierarchy.set(derived.fullName, `${props.schemaName}.${props.className}`);
     },
-    getDerivedClasses: async () => getDerivedClasses(`${props.schemaName}.${props.className}`),
-    is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
+    getDerivedClassNames: (options?: { onlyDirect?: boolean }) =>
+      getDerivedClassNames(`${props.schemaName}.${props.className}`, options),
+    is: (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       const myName: EC.FullClassNameDotNotation = `${props.schemaName}.${props.className}`;
       const targetName: EC.FullClassNameDotNotation =
         typeof targetClassOrClassName === "string"
@@ -249,12 +250,12 @@ export function createECSchemaProviderStub() {
         )
       );
     },
-    getCustomAttributes: async () => props.customAttributes ?? new Map(),
-    async getProperty(this, propertyName: string): Promise<EC.Property | undefined> {
+    isHidden: props.isHidden,
+    getProperty(this, propertyName: string): EC.Property | undefined {
       const prop = props.properties?.find((p) => p.name.toLocaleLowerCase() === propertyName.toLocaleLowerCase());
       return prop ? { ...prop, class: this as unknown as EC.Class } : undefined;
     },
-    async getProperties(this): Promise<Array<EC.Property>> {
+    getProperties(this): Array<EC.Property> {
       return (props.properties ?? []).map((p) => ({ ...p, class: this as unknown as EC.Class }));
     },
     isEntityClass: () => false,
@@ -273,8 +274,8 @@ export function createECSchemaProviderStub() {
     const res = {
       ...createBaseClassProps(props),
       direction: props.direction ?? "Forward",
-      source: props.source ?? { polymorphic: true, abstractConstraint: async () => undefined },
-      target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
+      source: props.source ?? { polymorphic: true, abstractConstraint: undefined },
+      target: props.target ?? { polymorphic: true, abstractConstraint: undefined },
       isRelationshipClass: () => true,
     } as unknown as ReturnType<TStubRelationshipClassFunc>;
     classes.set(res.fullName, res);
@@ -287,20 +288,10 @@ export function createECSchemaProviderStub() {
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
   };
-  const stubCustomAttribute: TStubCustomAttributesFunc = (props) => {
-    const schemaCustomAttributes =
-      customAttributes.get(props.schemaName) ?? new Map<EC.FullClassNameDotNotation, EC.CustomAttribute>();
-    customAttributes.set(props.schemaName, schemaCustomAttributes);
-    for (const [className, attribute] of props.attributes) {
-      schemaCustomAttributes.set(className, { ...attribute, className });
-    }
-  };
-
   return {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    stubCustomAttribute,
     getSchema: async (name: string) => getSchemaImpl(name),
   };
 }

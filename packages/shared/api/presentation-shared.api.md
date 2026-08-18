@@ -156,22 +156,24 @@ export namespace EC {
     }
     export interface Class extends SchemaItem {
         // (undocumented)
-        baseClass: Promise<Class | undefined>;
+        baseClass?: Class;
         // (undocumented)
-        getCustomAttributes(): Promise<CustomAttributeSet>;
+        getDerivedClassNames(props?: {
+            onlyDirect?: boolean;
+        }): EC.FullClassNameDotNotation[];
+        getOwnProperties(): Array<Property>;
         // (undocumented)
-        getDerivedClasses(): Promise<Class[]>;
-        getOwnProperties(): Promise<Array<Property>>;
+        getProperties(): Array<Property>;
         // (undocumented)
-        getProperties(): Promise<Array<Property>>;
+        getProperty(name: string): Property | undefined;
         // (undocumented)
-        getProperty(name: string): Promise<Property | undefined>;
+        is(className: string, schemaName: string): boolean;
         // (undocumented)
-        is(className: string, schemaName: string): Promise<boolean>;
-        // (undocumented)
-        is(other: Class): Promise<boolean>;
+        is(other: Class): boolean;
         // (undocumented)
         isEntityClass(): this is EntityClass;
+        // (undocumented)
+        isHidden?: boolean;
         // (undocumented)
         isMixin(): this is Mixin;
         // (undocumented)
@@ -179,20 +181,8 @@ export namespace EC {
         // (undocumented)
         isStructClass(): this is StructClass;
     }
-    export interface CustomAttribute {
-        // (undocumented)
-        [propName: string]: any;
-        // (undocumented)
-        className: FullClassNameDotNotation;
-    }
-    export interface CustomAttributeSet {
-        // (undocumented)
-        [Symbol.iterator]: () => IterableIterator<[FullClassNameDotNotation, CustomAttribute]>;
-        // (undocumented)
-        get(className: FullClassNameDotNotation): CustomAttribute | undefined;
-    }
     export interface EntityClass extends Class {
-        getMixins(): Promise<Mixin[]>;
+        getMixins(): Mixin[];
     }
     export interface Enumeration extends SchemaItem {
         // (undocumented)
@@ -205,7 +195,7 @@ export namespace EC {
     export type EnumerationArrayProperty = EnumerationProperty & ArrayPropertyAttributes;
     export interface EnumerationProperty extends Property {
         // (undocumented)
-        enumeration: Promise<Enumeration | undefined>;
+        enumeration?: Enumeration;
         // (undocumented)
         extendedTypeName?: string;
     }
@@ -231,7 +221,7 @@ export namespace EC {
         // (undocumented)
         direction: "Forward" | "Backward";
         // (undocumented)
-        relationshipClass: Promise<RelationshipClass>;
+        relationshipClass: RelationshipClass;
     }
     export type PrimitiveArrayProperty = PrimitiveProperty & ArrayPropertyAttributes;
     export interface PrimitiveProperty extends Property {
@@ -243,15 +233,17 @@ export namespace EC {
     export type PrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
     export interface Property {
         // (undocumented)
-        category: Promise<PropertyCategory | undefined>;
+        category?: PropertyCategory;
         // (undocumented)
         class: Class;
         // (undocumented)
-        getCustomAttributes(): Promise<CustomAttributeSet>;
+        description?: string;
         // (undocumented)
         isArray(): this is ArrayProperty;
         // (undocumented)
         isEnumeration(): this is EnumerationProperty;
+        // (undocumented)
+        isHidden: boolean;
         // (undocumented)
         isNavigation(): this is NavigationProperty;
         // (undocumented)
@@ -259,7 +251,7 @@ export namespace EC {
         // (undocumented)
         isStruct(): this is StructProperty;
         // (undocumented)
-        kindOfQuantity: Promise<KindOfQuantity | undefined>;
+        kindOfQuantity?: KindOfQuantity;
         // (undocumented)
         label?: string;
         // (undocumented)
@@ -278,7 +270,9 @@ export namespace EC {
     }
     export interface RelationshipConstraint {
         // (undocumented)
-        abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
+        abstractConstraint?: EntityClass | Mixin | RelationshipClass;
+        // (undocumented)
+        constraintClasses: Class[];
         // (undocumented)
         multiplicity: RelationshipConstraintMultiplicity;
         // (undocumented)
@@ -292,9 +286,11 @@ export namespace EC {
     }
     export interface Schema {
         // (undocumented)
-        getClass(name: string): Promise<Class | undefined>;
+        description?: string;
         // (undocumented)
-        getCustomAttributes(): Promise<CustomAttributeSet>;
+        getClass(name: string): Class | undefined;
+        // (undocumented)
+        isHidden: boolean;
         // (undocumented)
         name: string;
         version: SchemaVersion;

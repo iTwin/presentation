@@ -49,7 +49,7 @@ describe("Hierarchies React", () => {
             insertPhysicalModelWithPartition({ txn, codeValue: "My Model B" });
           });
         });
-        const schemaProvider = createECSchemaProvider(imodelConnection.schemaContext);
+        const schemaProvider = createECSchemaProvider(imodelConnection);
         const access = {
           imodelKey: createIModelKey(imodelConnection),
           ...schemaProvider,

@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { createSchemaViewGetter } from "presentation-test-utilities";
 import { IModelDb, IModelJsFs, SnapshotDb, StandaloneDb } from "@itwin/core-backend";
 import { OpenMode } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -94,6 +95,17 @@ export async function createChangedIModels<TResultBase extends {}, TResultChange
   };
 }
 
+export function unifyIModelAPIs(imodel: IModelConnection | IModelDb | ECDb) {
+  if (imodel instanceof IModelConnection || imodel instanceof IModelDb) {
+    return imodel;
+  }
+
+  // `ECDb` has no `getSchemaView`, so provide one that reads the schema view blob via `PRAGMA schema_view`.
+  const getSchemaView = createSchemaViewGetter(imodel);
+  return { getSchemaView, createQueryReader: imodel.createQueryReader.bind(imodel) };
+}
+
+// Builds a `SchemaContext` for the given iModel. Used where a `SchemaContext` is still required (e.g. value formatting).
 export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   if (imodel instanceof IModelConnection) {
     return imodel.schemaContext;

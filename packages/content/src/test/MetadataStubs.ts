@@ -24,23 +24,20 @@ export function createPrimitiveProperty(props: {
     name: props.name,
     label: props.label,
     class: { fullName: props.declaringClassName ?? "TestSchema.TestClass" } as unknown as EC.Class,
-    kindOfQuantity: Promise.resolve(props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined),
-    category: Promise.resolve(
-      props.category
-        ? ({
-            fullName: props.category.fullName,
-            name: props.category.fullName.slice(props.category.fullName.indexOf(".") + 1),
-            label: props.category.label,
-          } as unknown as EC.PropertyCategory)
-        : undefined,
-    ),
+    kindOfQuantity: props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined,
+    category: props.category
+      ? ({
+          fullName: props.category.fullName,
+          name: props.category.fullName.slice(props.category.fullName.indexOf(".") + 1),
+          label: props.category.label,
+        } as unknown as EC.PropertyCategory)
+      : undefined,
     isArray: () => props.array ?? false,
     isStruct: () => false,
     isPrimitive: () => true,
     isEnumeration: () => false,
     isNavigation: () => false,
     primitiveType: props.primitiveType ?? "String",
-    getCustomAttributes: async () => new Map() as unknown as EC.CustomAttributeSet,
   } as unknown as EC.Property;
 }
 
@@ -68,18 +65,17 @@ export function createEntityClass(props: {
     fullName: props.fullName,
     name: className,
     label: props.label,
-    baseClass: Promise.resolve(props.baseClass),
-    is: async () => false,
-    getProperty: async (name: string) => props.properties?.find((p) => p.name === name),
-    getProperties: async () => props.properties ?? [],
-    getOwnProperties: async () => props.ownProperties ?? props.properties ?? [],
+    baseClass: props.baseClass,
+    is: () => false,
+    getProperty: (name: string) => props.properties?.find((p) => p.name === name),
+    getProperties: () => props.properties ?? [],
+    getOwnProperties: () => props.ownProperties ?? props.properties ?? [],
     isEntityClass: () => true,
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => false,
-    getMixins: async () => props.mixins ?? [],
-    getDerivedClasses: async () => props.derivedClasses ?? [],
-    getCustomAttributes: async () => new Map() as unknown as EC.CustomAttributeSet,
+    getMixins: () => props.mixins ?? [],
+    getDerivedClassNames: () => (props.derivedClasses ?? []).map((c) => c.fullName),
   } as unknown as EC.EntityClass;
 }
 
@@ -94,17 +90,16 @@ export function createMixinClass(props: {
     schema: { name: schemaName } as unknown as EC.Schema,
     fullName: props.fullName,
     name: className,
-    baseClass: Promise.resolve(props.baseClass),
-    is: async () => false,
-    getProperty: async (name: string) => props.ownProperties?.find((property) => property.name === name),
-    getProperties: async () => props.ownProperties ?? [],
-    getOwnProperties: async () => props.ownProperties ?? [],
+    baseClass: props.baseClass,
+    is: () => false,
+    getProperty: (name: string) => props.ownProperties?.find((property) => property.name === name),
+    getProperties: () => props.ownProperties ?? [],
+    getOwnProperties: () => props.ownProperties ?? [],
     isEntityClass: () => false,
     isRelationshipClass: () => false,
     isStructClass: () => false,
     isMixin: () => true,
-    getDerivedClasses: async () => [],
-    getCustomAttributes: async () => new Map() as unknown as EC.CustomAttributeSet,
+    getDerivedClassNames: () => [],
   } as unknown as EC.Mixin;
 }
 
@@ -118,8 +113,8 @@ export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider & ECCl
     getSchema: async (schemaName: string) => ({
       name: schemaName,
       version: { read: 1, write: 0, minor: 0 },
-      getClass: async (className: string) => byFullName.get(`${schemaName}.${className}`),
-      getCustomAttributes: async () => new Map(),
+      isHidden: false,
+      getClass: (className: string) => byFullName.get(`${schemaName}.${className}`),
     }),
     classDerivesFrom: async (derivedClassFullName, candidateBaseClassFullName) => {
       const target = normalizeFullClassName(candidateBaseClassFullName);
@@ -128,7 +123,7 @@ export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider & ECCl
         if (current.fullName === target) {
           return true;
         }
-        current = await current.baseClass;
+        current = current.baseClass;
       }
       return false;
     },
