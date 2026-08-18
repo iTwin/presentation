@@ -82,7 +82,7 @@ function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
 }
 
 async function loadContent(imodel: IModelConnection): Promise<{ descriptor: ContentDescriptor }> {
-  const schemaProvider = createECSchemaProvider(imodel.schemaContext);
+  const schemaProvider = createECSchemaProvider(imodel);
   const imodelAccess = {
     ...createECSqlQueryExecutor(imodel),
     ...schemaProvider,
