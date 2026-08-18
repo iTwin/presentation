@@ -84,18 +84,12 @@ export function createECSchemaProvider(
   }
 
   // Ensures we only create a single `ECClassHierarchyResolver` for the iModel, which is used to resolve derived classes for all schemas.
-  let cachedClassHierarchyResolver: ECClassHierarchyResolver | undefined;
+  // Cache the promise (not the resolved value) so concurrent `getSchema` calls share one `createECClassHierarchyResolver` invocation.
+  let cachedClassHierarchyResolverPromise: Promise<ECClassHierarchyResolver> | undefined;
   async function getSchemaProviderContext(schemaName: string) {
-    let schemaView;
-    if (cachedClassHierarchyResolver) {
-      schemaView = await getSchemaView(schemaName);
-    } else {
-      [cachedClassHierarchyResolver, schemaView] = await Promise.all([
-        createECClassHierarchyResolver(imodel),
-        getSchemaView(schemaName),
-      ]);
-    }
-    return { classHierarchyResolver: cachedClassHierarchyResolver, schemaView };
+    cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel);
+    const [classHierarchyResolver, schemaView] = await Promise.all([cachedClassHierarchyResolverPromise, getSchemaView(schemaName)]);
+    return { classHierarchyResolver, schemaView };
   }
 
   return {
