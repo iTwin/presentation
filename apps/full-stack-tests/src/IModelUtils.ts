@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { createSchemaViewGetter } from "presentation-test-utilities";
 import { IModelDb, IModelJsFs, SnapshotDb, StandaloneDb } from "@itwin/core-backend";
 import { OpenMode } from "@itwin/core-bentley";
-import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Schema, SchemaContext, SchemaView, schemaViewFormatVersion } from "@itwin/ecschema-metadata";
+import { Schema, SchemaContext } from "@itwin/ecschema-metadata";
 import { createFileNameFromString, getTestName, setupOutputFileLocation } from "./FilenameUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
@@ -100,21 +100,8 @@ export function unifyIModelAPIs(imodel: IModelConnection | IModelDb | ECDb) {
     return imodel;
   }
 
-  // `ECDb` has no `getSchemaView`, so provide one by reading the whole-schema view blob via `PRAGMA schema_view`
-  // and parsing it with `SchemaView.fromBinary`. The blob is self-contained, so a single fetch serves every schema.
-  let schemaViewPromise: Promise<SchemaView> | undefined;
-  async function getSchemaView(): Promise<SchemaView> {
-    schemaViewPromise ??= (async () => {
-      const pragma = `PRAGMA schema_view(${schemaViewFormatVersion})`;
-      const reader = imodel.createQueryReader(pragma, undefined, { rowFormat: QueryRowFormat.UseECSqlPropertyNames });
-      const row = await reader.next();
-      if (row.done) {
-        throw new Error(`${pragma} returned no rows`);
-      }
-      return SchemaView.fromBinary(row.value.data as Uint8Array, row.value.schemaToken as string | undefined);
-    })();
-    return schemaViewPromise;
-  }
+  // `ECDb` has no `getSchemaView`, so provide one that reads the schema view blob via `PRAGMA schema_view`.
+  const getSchemaView = createSchemaViewGetter(imodel);
   return { getSchemaView, createQueryReader: imodel.createQueryReader.bind(imodel) };
 }
 

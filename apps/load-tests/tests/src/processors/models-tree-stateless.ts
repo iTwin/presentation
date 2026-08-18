@@ -6,9 +6,9 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
+import { createSchemaViewGetter } from "presentation-test-utilities";
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlReader, QueryRowFormat } from "@itwin/core-common";
-import { SchemaView, schemaViewFormatVersion } from "@itwin/ecschema-metadata";
+import { ECSqlReader } from "@itwin/core-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
   createIModelHierarchyProvider,
@@ -85,22 +85,7 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
 
   // Loads the whole-schema view blob once via `PRAGMA schema_view` and parses it with `SchemaView.fromBinary`.
   // The blob is self-contained, so a single fetch serves every schema the hierarchy needs.
-  let schemaViewPromise: Promise<SchemaView> | undefined;
-  async function getSchemaView(): Promise<SchemaView> {
-    schemaViewPromise ??= (async () => {
-      const pragma = `PRAGMA schema_view(${schemaViewFormatVersion})`;
-      const reader = new ECSqlReader(schedulingQueryExecutor, pragma, undefined, {
-        rowFormat: QueryRowFormat.UseECSqlPropertyNames,
-      });
-      const row = await reader.next();
-      if (row.done) {
-        throw new Error(`${pragma} returned no rows`);
-      }
-      ENABLE_REQUESTS_LOGGING && console.log(`Received "schema view" response`);
-      return SchemaView.fromBinary(row.value.data as Uint8Array, row.value.schemaToken as string | undefined);
-    })();
-    return schemaViewPromise;
-  }
+  const getSchemaView = createSchemaViewGetter(coreReaderFactory);
 
   const schemaProvider = createECSchemaProvider({ getSchemaView, ...coreReaderFactory });
   const queryExecutor = createECSqlQueryExecutor(coreReaderFactory);
