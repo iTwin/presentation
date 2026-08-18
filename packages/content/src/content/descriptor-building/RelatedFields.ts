@@ -72,7 +72,7 @@ export async function collectRelatedPropertyFields(props: {
             imodelAccess,
             path,
             properties: declaration.properties,
-            primaryClasses: targetClassNames,
+            primaryClassNames: targetClassNames,
           }),
         ),
       );
@@ -87,9 +87,9 @@ async function createFieldsForPath(props: {
   path: RelationshipPath;
   properties: RelatedPropertiesDeclaration["properties"];
   /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
-  primaryClasses: EC.FullClassNameDotNotation[];
+  primaryClassNames: EC.FullClassNameDotNotation[];
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, path, properties, primaryClasses } = props;
+  const { imodelAccess, path, properties, primaryClassNames } = props;
 
   // Default (no per-step specs): all properties of the final step's target class.
   if (properties === undefined) {
@@ -98,7 +98,7 @@ async function createFieldsForPath(props: {
       imodelAccess,
       className: lastStep.targetClassName,
       valueClassNames: [lastStep.targetClassName],
-      relationshipInfo: { pathFromTarget: path, primaryClasses },
+      relationshipInfo: { pathFromTarget: path, primaryClassNames },
       spec: { select: "all" },
       anchor: "targetClass",
     });
@@ -106,7 +106,7 @@ async function createFieldsForPath(props: {
 
   // Opt-in: only the classes explicitly named by each step's `target`/`relationship`.
   const perStep = await Promise.all(
-    properties.map(async (stepSpec) => createFieldsForStep({ imodelAccess, path, stepSpec, primaryClasses })),
+    properties.map(async (stepSpec) => createFieldsForStep({ imodelAccess, path, stepSpec, primaryClassNames })),
   );
   return perStep.flat();
 }
@@ -117,9 +117,9 @@ async function createFieldsForStep(props: {
   path: RelationshipPath;
   stepSpec: StepPropertySpec;
   /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
-  primaryClasses: EC.FullClassNameDotNotation[];
+  primaryClassNames: EC.FullClassNameDotNotation[];
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, path, stepSpec, primaryClasses } = props;
+  const { imodelAccess, path, stepSpec, primaryClassNames } = props;
   if (stepSpec.stepIndex < 0 || stepSpec.stepIndex >= path.length) {
     throw new Error(
       `Related-properties declaration references step index ${stepSpec.stepIndex}, but the resolved path only has ${path.length} step(s).`,
@@ -134,7 +134,7 @@ async function createFieldsForStep(props: {
         imodelAccess,
         className: step.targetClassName,
         valueClassNames: [step.targetClassName],
-        relationshipInfo: { pathFromTarget, primaryClasses },
+        relationshipInfo: { pathFromTarget, primaryClassNames },
         spec: stepSpec.target,
         anchor: "targetClass",
       })),
@@ -146,7 +146,7 @@ async function createFieldsForStep(props: {
         imodelAccess,
         className: step.relationshipName,
         valueClassNames: [step.relationshipName],
-        relationshipInfo: { pathFromTarget, primaryClasses },
+        relationshipInfo: { pathFromTarget, primaryClassNames },
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
       })),

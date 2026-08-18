@@ -80,14 +80,14 @@ export interface PropertyField extends BaseField {
    * are the classes at the path's terminal (related) end.
    *
    * For example, given primary classes `A1`/`A2` both related to `B` over the same relationship,
-   * a property declared on `B` has `valueClassNames: ["B"]` but `primaryClasses: ["A1", "A2"]`. If
+   * a property declared on `B` has `valueClassNames: ["B"]` but `primaryClassNames: ["A1", "A2"]`. If
    * instead `A1` and `A2` relate to distinct concrete classes `B1`/`B2`, separate fields are
-   * created: one with `valueClassNames: ["B1"]`/`primaryClasses: ["A1"]`, the other with
-   * `valueClassNames: ["B2"]`/`primaryClasses: ["A2"]`.
+   * created: one with `valueClassNames: ["B1"]`/`primaryClassNames: ["A1"]`, the other with
+   * `valueClassNames: ["B2"]`/`primaryClassNames: ["A2"]`.
    *
    * Always non-empty, de-duplicated, and sorted by full name.
    */
-  primaryClasses: EC.FullClassNameDotNotation[];
+  primaryClassNames: EC.FullClassNameDotNotation[];
   /**
    * ID of the {@link ValueSelector} (column) this field reads. Equals this field's *base* id (its
    * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so all fork/override

@@ -36,7 +36,7 @@ function propertyField(props: {
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
-    primaryClasses: props.pathFromTarget
+    primaryClassNames: props.pathFromTarget
       ? [props.pathFromTarget[0].sourceClassName]
       : toSortedUniqueClassNames(props.valueClassNames),
   };

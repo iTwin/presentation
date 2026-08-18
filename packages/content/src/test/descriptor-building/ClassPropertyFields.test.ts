@@ -34,7 +34,7 @@ describe("collectClassPropertyFields", () => {
     const fields = await collectFields({
       imodelAccess,
       className: "TestSchema.B",
-      relationshipInfo: { pathFromTarget: path, primaryClasses: ["TestSchema.A"] },
+      relationshipInfo: { pathFromTarget: path, primaryClassNames: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
     });
@@ -54,7 +54,7 @@ describe("collectClassPropertyFields", () => {
         propertyName: "Prop",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.B"],
-        primaryClasses: ["TestSchema.A"],
+        primaryClassNames: ["TestSchema.A"],
       },
     ]);
   });

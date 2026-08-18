@@ -86,7 +86,7 @@ export async function collectClassPropertyFields(props: {
          * (the direct-property case, where the primary class is itself the value origin). Related-property
          * enumeration passes the concrete source classes of the path's first step instead.
          */
-        primaryClasses: EC.FullClassNameDotNotation[];
+        primaryClassNames: EC.FullClassNameDotNotation[];
       }
     | undefined;
   /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
@@ -98,7 +98,7 @@ export async function collectClassPropertyFields(props: {
 }): Promise<CategorizedField[]> {
   const { imodelAccess, className, relationshipInfo, valueClassNames, spec, anchor, excludeInherited } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
-  const primaryClasses = relationshipInfo?.primaryClasses ?? valueClassNames;
+  const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
   const ecClass = await getClass(imodelAccess, className);
   const result: CategorizedField[] = [];
   const properties = excludeInherited ? await ecClass.getOwnProperties() : await ecClass.getProperties();
@@ -123,7 +123,7 @@ export async function collectClassPropertyFields(props: {
       propertyName: property.name,
       pathFromTarget,
       valueClassNames,
-      primaryClasses,
+      primaryClassNames,
     };
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;

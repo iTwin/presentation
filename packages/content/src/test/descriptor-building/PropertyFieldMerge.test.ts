@@ -13,7 +13,7 @@ function createField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
-  primaryClasses?: EC.FullClassNameDotNotation[];
+  primaryClassNames?: EC.FullClassNameDotNotation[];
   label?: string;
   hidden?: boolean;
   readOnly?: boolean;
@@ -37,7 +37,7 @@ function createField(props: {
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames,
-    primaryClasses: props.primaryClasses ?? props.valueClassNames,
+    primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
   };
 }
 
@@ -72,7 +72,7 @@ describe("mergePropertyFieldsByIdentity", () => {
         id,
         selectorId: id,
         valueClassNames: ["Stuff.Door", "Stuff.Window"],
-        primaryClasses: ["Stuff.Door", "Stuff.Window"],
+        primaryClassNames: ["Stuff.Door", "Stuff.Window"],
       },
     });
   });
@@ -109,17 +109,17 @@ describe("mergePropertyFieldsByIdentity", () => {
       propertyClassName: "Stuff.B",
       propertyName: "Prop",
       valueClassNames: ["Stuff.B"],
-      primaryClasses: ["Stuff.A1"],
+      primaryClassNames: ["Stuff.A1"],
     });
     const b = createField({
       propertyClassName: "Stuff.B",
       propertyName: "Prop",
       valueClassNames: ["Stuff.B"],
-      primaryClasses: ["Stuff.A2"],
+      primaryClassNames: ["Stuff.A2"],
     });
     const result = merge([a, b]);
     const id = PropertyField.computeId({ propertyClassName: "Stuff.B", propertyName: "Prop" });
-    expect(result[id].primaryClasses).to.deep.equal(["Stuff.A1", "Stuff.A2"]);
+    expect(result[id].primaryClassNames).to.deep.equal(["Stuff.A1", "Stuff.A2"]);
     expect(result[id].valueClassNames).to.deep.equal(["Stuff.B"]);
   });
 

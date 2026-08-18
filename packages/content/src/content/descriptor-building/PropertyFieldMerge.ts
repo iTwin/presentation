@@ -37,13 +37,13 @@ interface PropertyFieldCandidate extends CategorizedField {
  * - Candidates are grouped by their base ID (`PropertyField.computeId` without a `forkKey`),
  *   i.e. by declared `(propertyClassName, propertyName, pathFromTarget)`. Concrete-endpoint
  *   variants of the same declared property therefore collapse into one field.
- * - Each group produces a single field whose `valueClassNames` and `primaryClasses` are each the
+ * - Each group produces a single field whose `valueClassNames` and `primaryClassNames` are each the
  *   sorted, de-duplicated union of the group's respective value-supplier and primary classes.
  * - Field metadata (`label`, `hidden`, `readOnly`, `type`) and category facts are resolved as follows:
  *   - **Intra-provider** (candidates sharing the same `providerId`) must agree — a divergence is a
  *     provider bug and throws.
  *   - **Inter-provider** (candidates from different providers) may disagree; the candidate with the
- *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClasses`
+ *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClassNames`
  *     are still unioned.
  *
  * The winning candidate's {@link FieldCategorization} is carried on each merged field so the
@@ -68,9 +68,9 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate
     assertNoIntraProviderDivergence(baseId, group);
     const winner = group.reduce((best, candidate) => (priorityOf(candidate) > priorityOf(best) ? candidate : best));
     const valueClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.valueClassNames));
-    const primaryClasses = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.primaryClasses));
+    const primaryClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.primaryClassNames));
     result.push({
-      field: { ...winner.field, id: baseId, selectorId: baseId, valueClassNames, primaryClasses },
+      field: { ...winner.field, id: baseId, selectorId: baseId, valueClassNames, primaryClassNames },
       categorization: winner.categorization,
     });
   }
