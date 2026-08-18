@@ -293,7 +293,7 @@ export function createECPropertyFromSchemaView(
         return true;
       },
       get direction() {
-        return svProp.direction === StrengthDirection.Forward ? ("Forward" as const) : ("Backward" as const);
+        return svProp.direction === StrengthDirection.Forward ? "Forward" : "Backward";
       },
       get relationshipClass(): EC.RelationshipClass {
         return createECClassFromSchemaView(svProp.relationshipClass, {
