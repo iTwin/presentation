@@ -173,7 +173,7 @@ export interface ExternalField extends BaseField {
 export type Field = PropertyField | CalculatedField | ExternalField;
 
 /**
- * Readonly version of {@link PropertyField}.
+ * Readonly version of {@link (PropertyField:interface)}.
  * @public
  */
 export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
