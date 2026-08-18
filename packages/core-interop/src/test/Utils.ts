@@ -10,7 +10,7 @@ import type { QueryRowProxy } from "@itwin/core-common";
 export function createCoreECSqlReaderStub(rows?: object[], opts?: { withReturn?: boolean }) {
   let curr = -1;
   const returnFn = opts?.withReturn ? vi.fn(async () => ({ done: true as const, value: undefined })) : undefined;
-  return {
+  const reader = {
     next: vi.fn(async () => {
       ++curr;
       if (rows && curr < rows.length) {
@@ -19,8 +19,11 @@ export function createCoreECSqlReaderStub(rows?: object[], opts?: { withReturn?:
       return { done: true as const, value: undefined };
     }),
     return: returnFn,
-    async *[Symbol.asyncIterator]() {},
+    [Symbol.asyncIterator]() {
+      return reader;
+    },
   };
+  return reader;
 }
 
 function createQueryRowProxy(data: object) {
