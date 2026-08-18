@@ -97,6 +97,7 @@ export namespace EC {
    */
   export interface Schema {
     name: string;
+    description?: string;
     /** The schema version. Format: `"read.write.minor"`, comparison order: write > read > minor. */
     version: SchemaVersion;
     isHidden: boolean;
@@ -241,6 +242,7 @@ export namespace EC {
    */
   export interface Property {
     name: string;
+    description?: string;
     class: Class;
     label?: string;
     isHidden: boolean;

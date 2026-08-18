@@ -14,3 +14,4 @@ Additional changes:
 - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
 - Added an optional `EC.Property.category` attribute.
 - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+- Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.

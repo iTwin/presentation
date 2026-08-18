@@ -237,6 +237,8 @@ export namespace EC {
         // (undocumented)
         class: Class;
         // (undocumented)
+        description?: string;
+        // (undocumented)
         isArray(): this is ArrayProperty;
         // (undocumented)
         isEnumeration(): this is EnumerationProperty;
@@ -283,6 +285,8 @@ export namespace EC {
         upperLimit: number;
     }
     export interface Schema {
+        // (undocumented)
+        description?: string;
         // (undocumented)
         getClass(name: string): Class | undefined;
         // (undocumented)

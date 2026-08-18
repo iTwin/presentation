@@ -119,6 +119,7 @@ export function createECSchemaFromSchemaView(
 ): EC.Schema {
   const ecSchema: EC.Schema = {
     name: svSchema.name,
+    description: svSchema.description,
     version: { read: svSchema.readVersion, write: svSchema.writeVersion, minor: svSchema.minorVersion },
     isHidden: svSchema.isHidden,
     getClass(name) {
@@ -140,6 +141,7 @@ export function createECClassFromSchemaView(
     fullName,
     name: svClass.name,
     label: svClass.label,
+    description: svClass.description,
     isHidden: svClass.isHidden,
     isEntityClass(): this is EC.EntityClass {
       return svClass.isEntity();
@@ -262,6 +264,7 @@ export function createECPropertyFromSchemaView(
   const base: EC.Property = {
     class: ecClass,
     name: svProp.name,
+    description: svProp.description,
     label: svProp.label,
     isHidden: svProp.isHidden,
     get category(): EC.PropertyCategory | undefined {
