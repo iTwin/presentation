@@ -112,15 +112,15 @@ function LoadedContentFilterBuilder({ descriptor }: { descriptor: ContentDescrip
 
   const propertyRenderer = useCallback(
     (id: string) => {
-      const property = visibleProperties.find((item) => item.id === id);
+      const property = visibleProperties.find((item) => item.field.id === id);
       if (!property) {
         return id;
       }
       return (
         <span className="filter-builder-property">
-          {property.label}
-          {property.isRelated ? (
-            <Badge backgroundColor="montecarlo">{getRelatedCategoryLabel(property, descriptor)}</Badge>
+          {property.field.label}
+          {property.field.categoryId ? (
+            <Badge backgroundColor="montecarlo">{getCategoryLabel(property, descriptor)}</Badge>
           ) : null}
         </span>
       );
@@ -157,10 +157,14 @@ function getSelectedClassNames(selectedNames: string[], classes: InstanceFilterC
 }
 
 function toPropertyDescription(property: InstanceFilterProperty): PropertyDescription {
-  return { name: property.id, displayLabel: property.label, typename: getContentPropertyTypeName(property) };
+  return {
+    name: property.field.id,
+    displayLabel: property.field.label,
+    typename: getContentPropertyTypeName(property),
+  };
 }
 
-function getRelatedCategoryLabel(property: InstanceFilterProperty, descriptor: ContentDescriptor): string {
+function getCategoryLabel(property: InstanceFilterProperty, descriptor: ContentDescriptor): string {
   let category = property.field.categoryId ? descriptor.categories[property.field.categoryId] : undefined;
   if (!category) {
     return "Related";
@@ -184,9 +188,9 @@ function getErrorMessage(error: unknown): string {
  * Maps a content value descriptor to the type-name vocabulary expected by `PropertyFilterBuilderRenderer`.
  */
 function getContentPropertyTypeName(property: InstanceFilterProperty): string {
-  switch (property.type.kind) {
+  switch (property.field.type.kind) {
     case "primitive":
-      switch (property.type.type) {
+      switch (property.field.type.type) {
         case "String":
           return "string";
         case "Integer":

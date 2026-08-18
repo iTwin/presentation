@@ -39,10 +39,6 @@ export interface InstanceFilterPropertiesInfo extends InstanceFilterProperties {
 export interface InstanceFilterProperty {
     availableClassNames: EC.FullClassNameDotNotation[];
     field: PropertyField;
-    id: PropertyField["id"];
-    isRelated: boolean;
-    label: PropertyField["label"];
-    type: PropertyField["type"];
 }
 
 // @public

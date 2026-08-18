@@ -12,7 +12,7 @@ import type { RelationshipPath } from "@itwin/presentation-shared";
 
 describe("createInstanceFilterProperties", () => {
   it("uses the target primary class when source resolution has no concrete classes", () => {
-    const source = createSource({ resolvedPrimaryClasses: [], resolvedPaths: [] });
+    const source = createSource({ targetPrimaryClass: classA, resolvedPrimaryClasses: [], resolvedPaths: [] });
     const directField = createPropertyField({ id: "direct", valueClassNames: [classA] });
 
     const result = createInstanceFilterProperties({ descriptor: createDescriptor(source, [directField]) });
@@ -54,8 +54,8 @@ describe("createInstanceFilterProperties", () => {
 
     expect(result.classes.map((item) => item.name)).toEqual([classA, classB]);
     expect(result.properties).toMatchObject([
-      { id: "related-a", availableClassNames: [classA] },
-      { id: "related-b", availableClassNames: [classB] },
+      { field: { id: "related-a" }, availableClassNames: [classA] },
+      { field: { id: "related-b" }, availableClassNames: [classB] },
     ]);
   });
 
@@ -76,7 +76,7 @@ describe("createInstanceFilterProperties", () => {
       descriptor: createDescriptor(source, [availableDirectField, unavailableDirectField, hiddenField, externalField]),
     });
 
-    expect(result.properties).toMatchObject([{ id: "available", availableClassNames: [classA] }]);
+    expect(result.properties).toMatchObject([{ field: { id: "available" }, availableClassNames: [classA] }]);
     expect(result.properties).toHaveLength(1);
   });
 
@@ -106,17 +106,16 @@ describe("createInstanceFilterProperties", () => {
       pathFromTarget: pathBC,
       valueClassNames: [classC],
     });
-    const hiddenField = createPropertyField({ id: "hidden", hidden: true, valueClassNames: [classA] });
 
     const result = createInstanceFilterProperties({
-      descriptor: createDescriptor(source, [directField, relatedFieldFromA, relatedFieldFromB, hiddenField]),
+      descriptor: createDescriptor(source, [directField, relatedFieldFromA, relatedFieldFromB]),
     });
 
     expect(result.classes.map((item) => item.name)).toEqual([classA, classB]);
     expect(result.properties).toMatchObject([
-      { id: "direct", availableClassNames: [classB], isRelated: false },
-      { id: "related-a", availableClassNames: [classA], isRelated: true },
-      { id: "related-b", availableClassNames: [classB], isRelated: true },
+      { field: { id: "direct", pathFromTarget: [] }, availableClassNames: [classB] },
+      { field: { id: "related-a" }, availableClassNames: [classA] },
+      { field: { id: "related-b" }, availableClassNames: [classB] },
     ]);
     expect(result.properties).toHaveLength(3);
   });

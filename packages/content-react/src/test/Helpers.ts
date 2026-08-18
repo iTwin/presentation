@@ -36,6 +36,7 @@ export function createSource(props: {
 export function createPropertyField(props: {
   id: string;
   valueClassNames: EC.FullClassNameDotNotation[];
+  propertyClassName?: EC.FullClassNameDotNotation;
   pathFromTarget?: RelationshipPath;
   hidden?: boolean;
 }): PropertyField {
@@ -44,7 +45,7 @@ export function createPropertyField(props: {
     id: props.id,
     label: props.id,
     type: { kind: "primitive", type: "String" },
-    propertyClassName: classA,
+    propertyClassName: props.propertyClassName ?? classA,
     propertyName: props.id,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames,

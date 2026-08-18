@@ -24,14 +24,6 @@ export interface InstanceFilterClass {
 export interface InstanceFilterProperty {
   /** The descriptor field used when building a filter for this property. */
   field: PropertyField;
-  /** Stable identity of the descriptor field. */
-  id: PropertyField["id"];
-  /** Text suitable for displaying the property. */
-  label: PropertyField["label"];
-  /** Value shape used by consumers to select operators and value editors. */
-  type: PropertyField["type"];
-  /** Whether the property is reached through one or more relationships from the primary instance. */
-  isRelated: boolean;
   /**
    * Concrete primary classes that can supply the property.
    *
@@ -88,9 +80,7 @@ export function createInstanceFilterProperties({
       ? getRelatedFieldClassNames(field, descriptor.sources, candidateClassNames)
       : field.valueClassNames.filter((className) => candidateClassNameSet.has(className));
 
-    return availableClassNames.length > 0
-      ? [{ field, id: field.id, label: field.label, type: field.type, isRelated, availableClassNames }]
-      : [];
+    return availableClassNames.length > 0 ? [{ field, availableClassNames }] : [];
   });
 
   return { classes: candidateClassNames.map((name) => ({ name, label: name })), properties };
