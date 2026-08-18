@@ -521,12 +521,12 @@ export async function createECClassHierarchyResolver(
     if (options?.onlyDirect) {
       return [...derivedClasses];
     }
-    const allDerivedClasses: EC.FullClassNameDotNotation[] = [];
+    const allDerivedClasses = new Set<EC.FullClassNameDotNotation>();
     for (const derivedClass of derivedClasses) {
-      allDerivedClasses.push(derivedClass);
-      allDerivedClasses.push(...getDerivedClassNames(derivedClass, options));
+      allDerivedClasses.add(derivedClass);
+      getDerivedClassNames(derivedClass, options).forEach((subDerivedClass) => allDerivedClasses.add(subDerivedClass));
     }
-    return allDerivedClasses;
+    return Array.from(allDerivedClasses);
   }
 
   return { classDerivesFrom, getDerivedClassNames };
