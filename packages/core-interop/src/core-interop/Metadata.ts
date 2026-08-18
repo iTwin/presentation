@@ -88,7 +88,10 @@ export function createECSchemaProvider(
   let cachedClassHierarchyResolverPromise: Promise<ECClassHierarchyResolver> | undefined;
   async function getSchemaProviderContext(schemaName: string) {
     cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel);
-    const [classHierarchyResolver, schemaView] = await Promise.all([cachedClassHierarchyResolverPromise, getSchemaView(schemaName)]);
+    const [classHierarchyResolver, schemaView] = await Promise.all([
+      cachedClassHierarchyResolverPromise,
+      getSchemaView(schemaName),
+    ]);
     return { classHierarchyResolver, schemaView };
   }
 
