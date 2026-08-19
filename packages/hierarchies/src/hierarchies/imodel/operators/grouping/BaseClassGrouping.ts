@@ -7,7 +7,7 @@ import { SortedArray } from "@itwin/core-bentley";
 import { createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import type { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
@@ -53,7 +53,7 @@ export async function getBaseClassGroupingECClasses(
 export async function createBaseClassGroupsForSingleBaseClass(
   nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: EC.Class,
-  classHierarchyInspector: ECClassHierarchyInspector,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<GroupingHandlerResult> {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
@@ -141,7 +141,7 @@ function sortByBaseClass(classes: EC.Class[]): EC.Class[] {
 
 /** @internal */
 export async function createBaseClassGroupingHandlers(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandler[]> {

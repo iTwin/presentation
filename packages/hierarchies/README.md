@@ -77,7 +77,7 @@ Here's a simple example of how to create a hierarchy provider and build a hierar
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 import {
   createIModelHierarchyProvider,
@@ -93,10 +93,8 @@ function createIModelAccess(imodel: IModelConnection) {
   return {
     // The key of the iModel we're accessing
     imodelKey: createIModelKey(imodel),
-    // Schema provider provides access to EC information (metadata)
+    // Schema provider provides access to EC information (metadata) and class hierarchy inspection
     ...schemaProvider,
-    // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
     // The second argument is the maximum number of rows the executor will return - this allows us to
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
@@ -106,7 +104,7 @@ function createIModelAccess(imodel: IModelConnection) {
 function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]): HierarchyProvider {
   // Define the hierarchy
   const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-    classHierarchyInspector: imodelAccess,
+    imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
       rootNodes: async ({ createSelectClause }) => [

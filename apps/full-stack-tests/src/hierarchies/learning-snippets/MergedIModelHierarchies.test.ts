@@ -131,9 +131,9 @@ describe("Hierarchies", () => {
         // Create a simple hierarchy definition that uses `BisCore.PhysicalModel` for root nodes and
         // `BisCore.PhysicalElement` for each model's child nodes.
         const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-          // Note: we use the latest version of the iModel as our class hierarchy inspector - that
+          // Note: we use the latest version of the iModel here - that
           // ensures we can find all classes even if they were not present in the base iModel
-          classHierarchyInspector: imodels[imodels.length - 1].imodelAccess,
+          imodelAccess: imodels[imodels.length - 1].imodelAccess,
           hierarchy: {
             rootNodes: async (props) => [
               await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),

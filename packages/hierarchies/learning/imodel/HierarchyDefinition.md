@@ -246,7 +246,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-  classHierarchyInspector: imodelAccess,
+  imodelAccess,
   hierarchy: {
     // For root nodes, simply return one generic node
     rootNodes: async () => [{ node: { key: "physical-elements", label: "Physical elements" } }],

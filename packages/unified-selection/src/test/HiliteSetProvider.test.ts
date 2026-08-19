@@ -406,7 +406,7 @@ describe("HiliteSetProvider", () => {
         expect((await iter.next()).done).toBe(true);
       });
 
-      it("rethrows ECClassHierarchyInspector errors", async () => {
+      it("rethrows classDerivesFrom errors", async () => {
         imodelAccess.classDerivesFrom.mockImplementation((cn, pc) => {
           if (cn === "TestSchema.TestElement" && pc === "BisCore.Element") {
             throw new Error("dummy error");

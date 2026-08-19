@@ -65,7 +65,7 @@ describe("Hierarchies", () => {
           const imodel = emptyIModel;
           const imodelAccess = createIModelAccess(imodel);
           const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-            classHierarchyInspector: imodelAccess,
+            imodelAccess,
             hierarchy: { rootNodes: async () => [{ node: { key: "test", label: "Root node" } }], childNodes: [] },
           });
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderUsage
@@ -86,7 +86,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionUsage
           const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-            classHierarchyInspector: imodelAccess,
+            imodelAccess,
             hierarchy: {
               rootNodes: async () => [
                 /* define root node specifications here */

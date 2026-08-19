@@ -9,7 +9,6 @@ import {
   createECSchemaProvider as createECSchemaProviderInterop,
   createECSqlQueryExecutor,
 } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { unifyIModelAPIs } from "../IModelUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
@@ -23,14 +22,13 @@ import type {
 import type { RelationshipPath } from "@itwin/presentation-shared";
 
 /**
- * Builds the `imodelAccess` object (schema provider + class-hierarchy inspector + ECSQL query executor)
+ * Builds the `imodelAccess` object (schema provider + ECSQL query executor)
  * required by the content pipeline APIs.
  */
 export function createContentIModelAccess(ecdb: ECDb) {
   const schemaProvider = createECSchemaProviderInterop(unifyIModelAPIs(ecdb));
-  const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
   const queryExecutor = createECSqlQueryExecutor(ecdb);
-  return { ...schemaProvider, ...classHierarchyInspector, ...queryExecutor };
+  return { ...schemaProvider, ...queryExecutor };
 }
 
 export type ContentIModelAccess = ReturnType<typeof createContentIModelAccess>;

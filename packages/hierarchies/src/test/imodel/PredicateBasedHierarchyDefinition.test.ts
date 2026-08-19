@@ -41,7 +41,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       createInstanceNodesQueryDefinition(),
     ];
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       hierarchy: { rootNodes: async () => rootHierarchyLevel, childNodes: [] },
     });
     const result = await factory.defineHierarchyLevel({ ...constProps(), parentNode: undefined });
@@ -65,7 +65,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     ];
 
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -114,7 +114,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     ];
 
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -153,7 +153,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
 
     const spy = vi.fn().mockResolvedValue([]);
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [{ parentInstancesNodePredicate: "TestSchema.ClassX", definitions: spy }],
@@ -187,7 +187,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const derivedClassDefs = vi.fn().mockResolvedValue([]);
     const baseClassDefs = vi.fn().mockResolvedValue([]);
     let factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -207,7 +207,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     expect(baseClassDefs).not.toHaveBeenCalled();
 
     factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -229,7 +229,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("uses provided node parser", () => {
     const parseNode = vi.fn();
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       parseNode,
       hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
@@ -239,7 +239,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("uses provided node pre-processor", () => {
     const preprocessor = vi.fn();
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       preProcessNode: preprocessor,
       hierarchy: { rootNodes: async () => [], childNodes: [] },
     });
@@ -249,7 +249,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("uses provided node post-processor", () => {
     const postprocessor = vi.fn();
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: imodelAccess,
+      imodelAccess,
       postProcessNode: postprocessor,
       hierarchy: { rootNodes: async () => [], childNodes: [] },
     });

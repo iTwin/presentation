@@ -16,12 +16,12 @@ import { trimWhitespace } from "../../shared/Utils.js";
 import type { IInstanceLabelSelectClauseFactory } from "../../shared/InstanceLabelSelectClauseFactory.js";
 
 describe("createBisInstanceLabelSelectClauseFactory", () => {
-  const classHierarchyInspector = { classDerivesFrom: vi.fn() };
+  const imodelAccess = { classDerivesFrom: vi.fn() };
   let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    factory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
-    classHierarchyInspector.classDerivesFrom.mockReset();
-    classHierarchyInspector.classDerivesFrom.mockImplementation(async (derived, base) => {
+    factory = createBisInstanceLabelSelectClauseFactory({ imodelAccess });
+    imodelAccess.classDerivesFrom.mockReset();
+    imodelAccess.classDerivesFrom.mockImplementation(async (derived, base) => {
       if (derived === "BisCore.GeometricElement") {
         return base === "BisCore.Element" || base === "BisCore.GeometricElement";
       }

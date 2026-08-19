@@ -10,7 +10,7 @@ import type {
   CreateInstanceLabelSelectClauseProps,
   IInstanceLabelSelectClauseFactory,
 } from "../InstanceLabelSelectClauseFactory.js";
-import type { EC, ECClassHierarchyInspector } from "../Metadata.js";
+import type { EC, ECSchemaProvider } from "../Metadata.js";
 
 /**
  * An association of a class and an instance label select clause factory method.
@@ -29,7 +29,7 @@ export interface ClassBasedLabelSelectClause {
  */
 export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to ECClass hierarchy in the iModel. */
-  classHierarchyInspector: ECClassHierarchyInspector;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 
   /**
    * A prioritized list of instance label selectors associated to classes they should be applied to.
@@ -54,17 +54,17 @@ export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 export function createClassBasedInstanceLabelSelectClauseFactory(
   props: ClassBasedInstanceLabelSelectClauseFactoryProps,
 ): IInstanceLabelSelectClauseFactory {
-  const { classHierarchyInspector, clauses: labelClausesByClass } = props;
+  const { imodelAccess, clauses: labelClausesByClass } = props;
   const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
   async function getLabelClausesForClass(queryClassName: EC.FullClassNameDotNotation) {
     const matchingLabelClauses = await Promise.all(
       labelClausesByClass.map(async (entry) => {
-        if (await classHierarchyInspector.classDerivesFrom(entry.className, queryClassName)) {
+        if (await imodelAccess.classDerivesFrom(entry.className, queryClassName)) {
           // label selector is intended for a more specific class than we're selecting from - need to include it
           // as query results (on polymorphic select) are going to include more specific class instances too
           return entry;
         }
-        if (await classHierarchyInspector.classDerivesFrom(queryClassName, entry.className)) {
+        if (await imodelAccess.classDerivesFrom(queryClassName, entry.className)) {
           // label selector is intended for a base class of what query is selecting - need to include it as
           // we want base class label selectors to apply to subclass instances
           return entry;

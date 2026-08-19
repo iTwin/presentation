@@ -18,7 +18,6 @@ For example, in a React application this function could be used inside a `useEff
 
 ```ts
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
 
 /** An iModel-based component that handles iModel selection directly, through its `SelectionSet` */
@@ -38,9 +37,7 @@ function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStor
         // selection and hilite sets
         imodelAccess: {
           ...createECSqlQueryExecutor(iModelConnection),
-          ...createCachingECClassHierarchyInspector({
-            schemaProvider: createECSchemaProvider(iModelConnection),
-          }),
+          ...createECSchemaProvider(iModelConnection),
           key: createIModelKey(iModelConnection),
           hiliteSet: iModelConnection.hilited,
           selectionSet: iModelConnection.selectionSet,

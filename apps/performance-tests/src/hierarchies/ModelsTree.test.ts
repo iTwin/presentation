@@ -16,17 +16,11 @@ import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type {
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  InstanceKey,
-} from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
 import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) =>
+  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) =>
     new ModelsTreeDefinition({ imodelAccess });
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();

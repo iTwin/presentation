@@ -86,10 +86,22 @@ export function createECSchemaProvider(
   // Ensures we only create a single `ECClassHierarchyResolver` for the iModel, which is used to resolve derived classes for all schemas.
   // Cache the promise (not the resolved value) so concurrent `getSchema` calls share one `createECClassHierarchyResolver` invocation.
   let cachedClassHierarchyResolverPromise: Promise<ECClassHierarchyResolver> | undefined;
+  // Set once the resolver promise settles. Allows `classDerivesFrom` to answer synchronously after the hierarchy is loaded.
+  let cachedClassHierarchyResolver: ECClassHierarchyResolver | undefined;
+  function getClassHierarchyResolver(): ECClassHierarchyResolver | Promise<ECClassHierarchyResolver> {
+    if (cachedClassHierarchyResolver) {
+      return cachedClassHierarchyResolver;
+    }
+    cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel).then((resolver) => {
+      cachedClassHierarchyResolver = resolver;
+      return resolver;
+    });
+    return cachedClassHierarchyResolverPromise;
+  }
+
   async function getSchemaProviderContext(schemaName: string) {
-    cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel);
     const [classHierarchyResolver, schemaView] = await Promise.all([
-      cachedClassHierarchyResolverPromise,
+      getClassHierarchyResolver(),
       getSchemaView(schemaName),
     ]);
     return { classHierarchyResolver, schemaView };
@@ -100,6 +112,19 @@ export function createECSchemaProvider(
       const { classHierarchyResolver, schemaView } = await getSchemaProviderContext(name);
       const svSchema = schemaView.getSchema(name);
       return svSchema ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver }) : undefined;
+    },
+    classDerivesFrom(
+      derivedClassFullName: EC.FullClassNameDotNotation,
+      candidateBaseClassFullName: EC.FullClassNameDotNotation,
+    ): Promise<boolean> | boolean {
+      // A class always derives from itself. This matches the semantics of the deprecated `ECClassHierarchyInspector`.
+      if (derivedClassFullName === candidateBaseClassFullName) {
+        return true;
+      }
+      const resolver = getClassHierarchyResolver();
+      return resolver instanceof Promise
+        ? resolver.then((r) => r.classDerivesFrom(derivedClassFullName, candidateBaseClassFullName))
+        : resolver.classDerivesFrom(derivedClassFullName, candidateBaseClassFullName);
     },
   };
 }

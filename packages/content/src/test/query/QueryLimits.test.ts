@@ -167,6 +167,7 @@ describe("QueryLimits", () => {
               } as unknown as EC.RelationshipClass;
             },
           }) as unknown as EC.Schema,
+        classDerivesFrom: async () => false,
       };
     }
 
