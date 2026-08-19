@@ -119,6 +119,9 @@ export namespace EC {
     version: SchemaVersion;
     isHidden: boolean;
     getClass(name: string): Class | undefined;
+    getEnumeration(name: string): Enumeration | undefined;
+    getKindOfQuantity(name: string): KindOfQuantity | undefined;
+    getPropertyCategory(name: string): PropertyCategory | undefined;
   }
 
   /**

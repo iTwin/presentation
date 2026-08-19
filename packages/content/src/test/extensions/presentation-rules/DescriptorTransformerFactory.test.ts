@@ -83,7 +83,17 @@ function createImodelAccess(props?: {
   return {
     getSchema: async (name: string) => {
       const version = schemas?.get(name);
-      return version ? { name, version, isHidden: false, getClass: () => undefined } : undefined;
+      return version
+        ? {
+            name,
+            version,
+            isHidden: false,
+            getClass: () => undefined,
+            getEnumeration: () => undefined,
+            getKindOfQuantity: () => undefined,
+            getPropertyCategory: () => undefined,
+          }
+        : undefined;
     },
     classDerivesFrom: async (derived: string, base: string) =>
       derived === base || (derivesFrom[derived] ?? []).includes(base),

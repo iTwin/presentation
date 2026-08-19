@@ -290,6 +290,12 @@ export namespace EC {
         // (undocumented)
         getClass(name: string): Class | undefined;
         // (undocumented)
+        getEnumeration(name: string): Enumeration | undefined;
+        // (undocumented)
+        getKindOfQuantity(name: string): KindOfQuantity | undefined;
+        // (undocumented)
+        getPropertyCategory(name: string): PropertyCategory | undefined;
+        // (undocumented)
         isHidden: boolean;
         // (undocumented)
         name: string;
