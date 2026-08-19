@@ -50,14 +50,9 @@ export function createInstanceFilterProperties({
   descriptor,
 }: CreateInstanceFilterPropertiesProps): InstanceFilterProperties {
   const candidateClassNames = getCandidateClassNames(descriptor.sources);
-  const properties = Object.values(descriptor.fields).flatMap((field): ReadonlyPropertyField[] => {
-    if (field.kind !== "property" || field.hidden) {
-      return [];
-    }
-
-    return [field];
-  });
-
+  const properties = Object.values(descriptor.fields).filter(
+    (field): field is ReadonlyPropertyField => field.kind === "property" && !field.hidden,
+  );
   return { classes: candidateClassNames.map((name) => ({ name, label: name })), properties };
 }
 
