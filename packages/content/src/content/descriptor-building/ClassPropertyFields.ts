@@ -72,10 +72,21 @@ export interface CategorizedField {
 export function collectClassPropertyFields(props: {
   /** The class whose properties are enumerated. */
   propertiesClass: EC.Class;
-  /** Relationship path from the content target to `propertiesClass` (`[]` for direct properties). */
-  pathFromTarget: RelationshipPath;
   /** Concrete value-supplier classes for the produced fields. */
   valueClassNames: EC.FullClassNameDotNotation[];
+  /** Information on how to reach related properties or `undefined` for direct properties. */
+  relationshipInfo:
+    | {
+        /** Relationship path from the content target to `propertiesClass`. */
+        pathFromTarget: RelationshipPath;
+        /**
+         * Concrete primary classes that have access to the produced fields. Defaults to `valueClassNames`
+         * (the direct-property case, where the primary class is itself the value origin). Related-property
+         * enumeration passes the concrete source classes of the path's first step instead.
+         */
+        primaryClassNames: EC.FullClassNameDotNotation[];
+      }
+    | undefined;
   /** Property selection + overrides. Pass `{ select: "all" }` to include every property unchanged. */
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
@@ -83,7 +94,9 @@ export function collectClassPropertyFields(props: {
   /** When `true`, enumerate only properties declared directly on `propertiesClass` (exclude inherited ones). */
   excludeInherited?: boolean;
 }): CategorizedField[] {
-  const { propertiesClass, pathFromTarget, valueClassNames, spec, anchor, excludeInherited } = props;
+  const { propertiesClass, relationshipInfo, valueClassNames, spec, anchor, excludeInherited } = props;
+  const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
+  const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
   const result: CategorizedField[] = [];
   const properties = excludeInherited ? propertiesClass.getOwnProperties() : propertiesClass.getProperties();
   for (const property of properties) {
@@ -107,6 +120,7 @@ export function collectClassPropertyFields(props: {
       propertyName: property.name,
       pathFromTarget,
       valueClassNames,
+      primaryClassNames,
     };
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;

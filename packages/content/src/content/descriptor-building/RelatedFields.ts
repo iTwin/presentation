@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { type ECSchemaProvider, getClass, type RelationshipPath } from "@itwin/presentation-shared";
+import { getClass } from "@itwin/presentation-shared";
 import { collectInParallel } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
+import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
@@ -67,8 +68,13 @@ export async function collectRelatedPropertyFields(props: {
         );
       }
       const perPath = await Promise.all(
-        group.paths.map(async ({ path }) =>
-          createFieldsForPath({ imodelAccess, path, properties: declaration.properties }),
+        group.paths.map(async ({ path, targetClassNames }) =>
+          createFieldsForPath({
+            imodelAccess,
+            path,
+            properties: declaration.properties,
+            primaryClassNames: targetClassNames,
+          }),
         ),
       );
       return perPath.flat().map((enumerated) => ({ ...enumerated, provider }));
@@ -81,16 +87,18 @@ async function createFieldsForPath(props: {
   imodelAccess: ECSchemaProvider;
   path: RelationshipPath;
   properties: RelatedPropertiesDeclaration["properties"];
+  /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
+  primaryClassNames: EC.FullClassNameDotNotation[];
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, path, properties } = props;
+  const { imodelAccess, path, properties, primaryClassNames } = props;
 
   // Default (no per-step specs): all properties of the final step's target class.
   if (properties === undefined) {
     const lastStep = path[path.length - 1];
     return collectClassPropertyFields({
       propertiesClass: await getClass(imodelAccess, lastStep.targetClassName),
-      pathFromTarget: path,
       valueClassNames: [lastStep.targetClassName],
+      relationshipInfo: { pathFromTarget: path, primaryClassNames },
       spec: { select: "all" },
       anchor: "targetClass",
     });
@@ -98,7 +106,7 @@ async function createFieldsForPath(props: {
 
   // Opt-in: only the classes explicitly named by each step's `target`/`relationship`.
   const perStep = await Promise.all(
-    properties.map(async (stepSpec) => createFieldsForStep({ imodelAccess, path, stepSpec })),
+    properties.map(async (stepSpec) => createFieldsForStep({ imodelAccess, path, stepSpec, primaryClassNames })),
   );
   return perStep.flat();
 }
@@ -108,8 +116,10 @@ async function createFieldsForStep(props: {
   imodelAccess: ECSchemaProvider;
   path: RelationshipPath;
   stepSpec: StepPropertySpec;
+  /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
+  primaryClassNames: EC.FullClassNameDotNotation[];
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, path, stepSpec } = props;
+  const { imodelAccess, path, stepSpec, primaryClassNames } = props;
   if (stepSpec.stepIndex < 0 || stepSpec.stepIndex >= path.length) {
     throw new Error(
       `Related-properties declaration references step index ${stepSpec.stepIndex}, but the resolved path only has ${path.length} step(s).`,
@@ -122,8 +132,8 @@ async function createFieldsForStep(props: {
     enumerated.push(
       ...collectClassPropertyFields({
         propertiesClass: await getClass(imodelAccess, step.targetClassName),
-        pathFromTarget,
         valueClassNames: [step.targetClassName],
+        relationshipInfo: { pathFromTarget, primaryClassNames },
         spec: stepSpec.target,
         anchor: "targetClass",
       }),
@@ -133,8 +143,8 @@ async function createFieldsForStep(props: {
     enumerated.push(
       ...collectClassPropertyFields({
         propertiesClass: await getClass(imodelAccess, step.relationshipName),
-        pathFromTarget,
         valueClassNames: [step.relationshipName],
+        relationshipInfo: { pathFromTarget, primaryClassNames },
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
       }),

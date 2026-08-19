@@ -31,7 +31,7 @@ describe("collectClassPropertyFields", () => {
 
     const fields = collectFields({
       propertiesClass,
-      pathFromTarget: path,
+      relationshipInfo: { pathFromTarget: path, primaryClassNames: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
     });
@@ -51,6 +51,7 @@ describe("collectClassPropertyFields", () => {
         propertyName: "Prop",
         pathFromTarget: path,
         valueClassNames: ["TestSchema.B"],
+        primaryClassNames: ["TestSchema.A"],
       },
     ]);
   });
@@ -64,8 +65,8 @@ describe("collectClassPropertyFields", () => {
 
     const fields = collectFields({
       propertiesClass,
-      pathFromTarget: [],
       valueClassNames: ["TestSchema.C"],
+      relationshipInfo: undefined,
       spec: { select: "all", overrides: { gamma: { label: "Override Gamma" } } },
     });
 
@@ -80,8 +81,8 @@ describe("collectClassPropertyFields", () => {
 
     const fields = collectFields({
       propertiesClass,
-      pathFromTarget: [],
       valueClassNames: ["TestSchema.C"],
+      relationshipInfo: undefined,
       spec: { select: "all" },
     });
 
@@ -95,8 +96,8 @@ describe("collectClassPropertyFields", () => {
 
     const [field] = collectFields({
       propertiesClass,
-      pathFromTarget: [],
       valueClassNames: ["TestSchema.Derived"],
+      relationshipInfo: undefined,
       spec: { select: "all" },
     });
 
@@ -112,8 +113,8 @@ describe("collectClassPropertyFields", () => {
           createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
           createPrimitiveProperty({ name: "C", declaringClassName: "TestSchema.C" }),
         ]),
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select },
       });
       return fields.map((f) => f.propertyName);
@@ -145,8 +146,8 @@ describe("collectClassPropertyFields", () => {
 
       const results = collectClassPropertyFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all", defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
         anchor: "targetClass",
       });
@@ -166,8 +167,8 @@ describe("collectClassPropertyFields", () => {
 
       const results = collectClassPropertyFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: {
           select: "all",
           defaultOverrides: { categoryId: "default", readOnly: true },
@@ -191,8 +192,8 @@ describe("collectClassPropertyFields", () => {
 
       const [field] = collectFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
       });
 
@@ -214,8 +215,8 @@ describe("collectClassPropertyFields", () => {
 
       const [{ categorization }] = collectClassPropertyFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
         anchor: "none",
       });
@@ -237,8 +238,8 @@ describe("collectClassPropertyFields", () => {
 
       const [{ categorization }] = collectClassPropertyFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
         anchor: "targetClass",
       });
@@ -260,8 +261,8 @@ describe("collectClassPropertyFields", () => {
 
       const [{ categorization }] = collectClassPropertyFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all", overrides: { prop: { categoryId: "custom" } } },
         anchor: "none",
       });
@@ -276,8 +277,8 @@ describe("collectClassPropertyFields", () => {
 
       const [{ categorization }] = collectClassPropertyFields({
         propertiesClass,
-        pathFromTarget: [],
         valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
         spec: { select: "all" },
         anchor: "relationshipClass",
       });

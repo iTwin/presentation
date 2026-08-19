@@ -314,6 +314,7 @@ export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
+    primaryClassNames: EC.FullClassNameDotNotation[];
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     selectorId: string;
