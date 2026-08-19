@@ -7,7 +7,7 @@ import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } 
 import { HierarchyNode } from "../HierarchyNode.js";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { EC, ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
 import type { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 import type {
   DefineHierarchyLevelProps,
@@ -145,7 +145,7 @@ interface PredicateBasedHierarchyDefinitionProps extends Pick<
   "parseNode" | "preProcessNode" | "postProcessNode"
 > {
   /** Access to ECClass hierarchy in the iModel */
-  classHierarchyInspector: ECClassHierarchyInspector;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 
   /** Hierarchy level definitions */
   hierarchy: {
@@ -220,7 +220,7 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
       return firstValueFrom(
         from(groupInstanceIdsByClass(parentNode.key.instanceKeys).entries()).pipe(
           mergeMap(async ([parentNodeClassName, parentNodeInstanceIds]) =>
-            createHierarchyLevelDefinitions(this._props.classHierarchyInspector, instancesParentNodeDefs, {
+            createHierarchyLevelDefinitions(this._props.imodelAccess, instancesParentNodeDefs, {
               ...props,
               parentNodeClassName,
               parentNodeInstanceIds,
@@ -238,7 +238,7 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
 }
 
 async function createHierarchyLevelDefinitions(
-  classHierarchy: ECClassHierarchyInspector,
+  classHierarchy: Pick<ECSchemaProvider, "classDerivesFrom">,
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   requestProps: DefineInstanceNodeChildHierarchyLevelProps,
 ) {

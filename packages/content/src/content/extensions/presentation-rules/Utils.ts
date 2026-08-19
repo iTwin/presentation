@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryDefinition } from "../../model/Category.js";
 import type * as PresentationRules from "./PresentationRules.js";
 
@@ -75,7 +75,7 @@ export async function checkRequiredSchemas(
  * @internal
  */
 export async function classMatchesSpec(
-  imodelAccess: ECClassHierarchyInspector,
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">,
   className: EC.FullClassNameDotNotation,
   classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
 ): Promise<boolean> {

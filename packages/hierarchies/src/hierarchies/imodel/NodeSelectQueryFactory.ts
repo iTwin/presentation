@@ -21,13 +21,7 @@ import type {
   GenericInstanceFilterRuleGroupOperator,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
-import type {
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  IInstanceLabelSelectClauseFactory,
-  Props,
-} from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 import type { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
 
 /**
@@ -261,7 +255,7 @@ export interface NodesQueryClauseFactory {
  * Creates an instance of `NodeSelectQueryFactory`.
  */
 export function createNodesQueryClauseFactory(props: {
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider;
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 }): NodesQueryClauseFactory {
   return new NodeSelectQueryFactory(props);
@@ -269,11 +263,11 @@ export function createNodesQueryClauseFactory(props: {
 
 /** A factory for creating a nodes' select ECSQL query. */
 class NodeSelectQueryFactory {
-  private _imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  private _imodelAccess: ECSchemaProvider;
   private _instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: {
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    imodelAccess: ECSchemaProvider;
     instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
   }) {
     this._imodelAccess = props.imodelAccess;
@@ -351,7 +345,7 @@ class NodeSelectQueryFactory {
  * is returned to make sure the resulting query is valid and doesn't return anything.
  */
 async function createInstanceFilterClauses(props: {
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider;
   contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
   filter: GenericInstanceFilter;
 }): Promise<{ from: EC.FullClassNameDotNotation; where: string[]; joins: string[] }> {
@@ -495,7 +489,7 @@ function isSelector(x: any): x is ECSqlValueSelector {
 
 async function createGroupingSelector(
   grouping: ECSqlSelectClauseGroupingParams,
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
 ): Promise<string> {
   const groupingSelectors = new Array<{ key: string; selector: string }>();
@@ -854,7 +848,7 @@ function assignRelationshipPathAliases(
 }
 
 interface SpecializeContentClassProps {
-  classHierarchyInspector: ECClassHierarchyInspector;
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">;
   contentClassName: EC.FullClassNameDotNotation;
   filterClassNames: EC.FullClassNameDotNotation[];
 }
@@ -875,7 +869,7 @@ async function specializeContentClass(
 }
 
 async function getSpecializedPropertyClass(
-  classHierarchyInspector: ECClassHierarchyInspector,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
   classes: EC.FullClassNameDotNotation[],
 ): Promise<EC.FullClassNameDotNotation | undefined> {
   if (classes.length === 0) {

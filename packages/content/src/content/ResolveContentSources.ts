@@ -12,7 +12,6 @@ import { buildTargetFilter } from "./query/TargetFilter.js";
 import type { Observable } from "rxjs";
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -309,7 +308,7 @@ function resolveTarget({
   providers,
   target,
 }: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   providers: IModelFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
@@ -346,7 +345,7 @@ function resolveTarget({
 // --- Public entry point ---
 
 export async function resolveContentSourcesImpl(props: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   targets: ContentTarget[];
   imodelFieldsProviders: IModelFieldsProvider[];
 }): Promise<ContentSource[]> {

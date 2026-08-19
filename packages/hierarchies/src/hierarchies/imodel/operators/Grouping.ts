@@ -40,7 +40,7 @@ import { createLabelGroups } from "./grouping/LabelGrouping.js";
 import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping.js";
 
 import type { Observable } from "rxjs";
-import type { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import type { ParentHierarchyNode } from "../../HierarchyNode.js";
 import type {
   ProcessedGroupingHierarchyNode,
@@ -60,7 +60,7 @@ const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = createOperatorLoggingNamespace(
 
 /** @internal */
 export function createGroupingOperator(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
@@ -255,7 +255,7 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 }
 
 function createGroupingHandlers(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

@@ -6,7 +6,6 @@
 
 import type { ConcatenatedValue } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
-import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryDef } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
@@ -87,7 +86,7 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 
 // @public
 export interface DefineHierarchyLevelProps extends Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> {
-    imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector & {
+    imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & {
         imodelKey: string;
     };
     instanceFilter?: GenericInstanceFilter;
@@ -531,7 +530,7 @@ export namespace HierarchySearchTree {
 }
 
 // @public (undocumented)
-type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector & {
+type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & {
     imodelKey: string;
 };
 
@@ -700,11 +699,11 @@ type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children
 
 // @public
 interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {
-    classHierarchyInspector: ECClassHierarchyInspector;
     hierarchy: {
         rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
         childNodes: PredicateBasedHierarchyLevelDefinition[];
     };
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 }
 
 // @public

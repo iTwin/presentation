@@ -29,7 +29,7 @@ describe("hide if no children", () => {
         iModel,
         getHierarchyFactory: (imodelAccess) => {
           return createPredicateBasedHierarchyDefinition({
-            classHierarchyInspector: imodelAccess,
+            imodelAccess,
             hierarchy: {
               rootNodes: async ({ createSelectClause }) =>
                 createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
@@ -69,7 +69,7 @@ describe("hide if no children", () => {
         iModel,
         getHierarchyFactory: (imodelAccess) => {
           return createPredicateBasedHierarchyDefinition({
-            classHierarchyInspector: imodelAccess,
+            imodelAccess,
             hierarchy: {
               rootNodes: async ({ createSelectClause }) =>
                 createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),

@@ -23,11 +23,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  createCachingECClassHierarchyInspector,
-  ECSql,
-} from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { SampleRpcInterface } from "@test-app/common";
 
@@ -73,7 +69,6 @@ function createIModelAccess(imodel: IModelConnection) {
   return {
     imodelKey: imodel.key,
     ...schemaProvider,
-    ...createCachingECClassHierarchyInspector({ schemaProvider }),
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
 }
@@ -258,7 +253,7 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
 
 function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }) {
   return createPredicateBasedHierarchyDefinition({
-    classHierarchyInspector: imodelAccess,
+    imodelAccess,
     hierarchy: {
       rootNodes: async ({ createSelectClause }) => [
         {
@@ -343,7 +338,7 @@ async function* getModelsHierarchySearchPaths({
   componentId: string;
   componentName: string;
 }): AsyncIterableIterator<HierarchySearchPath> {
-  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess });
   const [rootSubjectPathPromise, modelPaths] = [
     getRootSubjectSearchedPath({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
     getModelsSearchPaths({ imodelAccess, searchText, labelsFactory, componentId, componentName }),

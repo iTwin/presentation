@@ -47,7 +47,6 @@ import type {
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -81,7 +80,7 @@ export const defaultHierarchyConfiguration: ModelsTreeHierarchyConfiguration = {
 };
 
 interface ModelsTreeDefinitionProps {
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
 }
@@ -93,7 +92,7 @@ export interface ElementsGroupInfo {
 }
 
 interface ModelsTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECClassHierarchyInspector & ECSchemaProvider & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   limit?: number | "unbounded";
@@ -127,7 +126,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   public constructor(props: ModelsTreeDefinitionProps) {
     this._impl = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: props.imodelAccess,
+      imodelAccess: props.imodelAccess,
       hierarchy: {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
         childNodes: [
@@ -565,7 +564,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 }
 
 function createGeometricElementInstanceKeyPaths(
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor,
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & LimitingECSqlQueryExecutor,
   idsCache: ModelsTreeIdsCache,
   hierarchyConfig: ModelsTreeHierarchyConfiguration,
   targetItems: Array<Id64String | ElementsGroupInfo>,

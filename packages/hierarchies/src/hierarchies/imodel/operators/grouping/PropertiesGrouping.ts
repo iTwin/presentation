@@ -13,13 +13,7 @@ import {
 import { HierarchyNode } from "../../../HierarchyNode.js";
 import { HierarchyNodeKey } from "../../../HierarchyNodeKey.js";
 
-import type {
-  ArrayElement,
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  IPrimitiveValueFormatter,
-} from "@itwin/presentation-shared";
+import type { ArrayElement, EC, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
 import type { PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import type {
@@ -70,7 +64,7 @@ export async function createPropertyGroups(
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: ECClassHierarchyInspector,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<GroupingHandlerResult> {
   let otherValuesGrouping: { node: ProcessedInstancesGroupingHierarchyNode; new: boolean } | undefined;
   const getOtherValuesGroupingNode = () => {
@@ -397,7 +391,7 @@ async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: EC.FullClassNameDotNotation,
-  classHierarchyInspector: ECClassHierarchyInspector,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName.toLocaleLowerCase() !==
@@ -477,7 +471,7 @@ export function doRangesMatch(
 
 /** @internal */
 export async function createPropertiesGroupingHandlers(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

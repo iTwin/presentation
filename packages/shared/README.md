@@ -16,7 +16,7 @@ The namespace defines all the [EC](https://www.itwinjs.org/bis/ec/) types that P
 
 ### `ECSchemaProvider` & `getClass`
 
-- `ECSchemaProvider` is an interface for something that knows how to get an [ECSchema](https://www.itwinjs.org/bis/ec/ec-schema/) from an iModel. The package itself doesn't provide an implementation for this interface and instead relies on `@itwin/presentation-core-interop` to do that.
+- `ECSchemaProvider` is an interface for something that knows how to get an [ECSchema](https://www.itwinjs.org/bis/ec/ec-schema/) from an iModel, or check if one class is the same as, or derives from, another. The package itself doesn't provide an implementation for this interface and instead relies on `@itwin/presentation-core-interop` to do that.
 
 - `getClass` is an utility function that makes it easier to get an `EC.Class`, given an `ECSchemaProvider` and a full class name.
 
@@ -36,30 +36,18 @@ const ecClassFromSchema = ecSchema.getClass("MyClass");
 
 // ... or use the `getClass` utility to get straight to the class
 const ecClassFromUtility = await getClass(schemaProvider, "MySchema.MyClass");
+
+// check whether one class derives from another
+const isGeometricElement = await schemaProvider.classDerivesFrom("MySchema.MyClass", "BisCore.GeometricElement");
 ```
 
-### `ECClassHierarchyInspector` & `createCachingECClassHierarchyInspector`
+### `ECClassHierarchyInspector` & `createCachingECClassHierarchyInspector` (deprecated)
 
-- `ECClassHierarchyInspector` is an interface for something that knows how to check whether one `EC.Class` derives from another. While that can be achieved through `ECSchemaProvider` by getting an `EC.Class` and calling its `is` method, using this interface provides a more streamlined and, possibly, more efficient way to do the check. In addition, the `ECClassHierarchyInspector.classDerivesFrom` returns a `Promise<boolean> | boolean`, which lets the implementation return the result synchronously, if it's already known.
+> **Deprecated:** `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` are deprecated. `ECSchemaProvider` now exposes a `classDerivesFrom` method directly, so a separate class hierarchy inspector is no longer needed.
 
-- `createCachingECClassHierarchyInspector` is a factory method that creates `ECClassHierarchyInspector` instance that uses a LRU cache to store the check results. In Presentation library use cases, class inheritance checks are done very frequently to warrant caching these results.
+- `ECClassHierarchyInspector` is an interface for something that knows how to check whether one `EC.Class` derives from another. The same capability is now available directly on `ECSchemaProvider` via its `classDerivesFrom` method. Like the inspector, `ECSchemaProvider.classDerivesFrom` returns a `Promise<boolean> | boolean`, which lets the implementation return the result synchronously when it's already known.
 
-Example usage:
-
-```ts
-import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector } from "@itwin/presentation-shared";
-
-const classHierarchyInspector: ECClassHierarchyInspector = createCachingECClassHierarchyInspector({
-  // provide `ECSchemaProvider` that will be used to access iModels schemas
-  schemaProvider: getMetadataProvider(),
-  // tell how many entries should be cached in LRU cache (0 or `undefined` stand for "no caching")
-  cacheSize: 100,
-});
-const isGeometricElement = await classHierarchyInspector.classDerivesFrom(
-  "MySchema.MyClass",
-  "BisCore.GeometricElement",
-);
-```
+- `createCachingECClassHierarchyInspector` is a factory method that creates an `ECClassHierarchyInspector` instance that uses a LRU cache to store the check results. It is no longer needed - use `ECSchemaProvider.classDerivesFrom` instead.
 
 ## ECSql
 
@@ -345,12 +333,12 @@ Example usage:
 ```ts
 import {
   createClassBasedInstanceLabelSelectClauseFactory,
-  ECClassHierarchyInspector,
+  ECSchemaProvider,
 } from "@itwin/presentation-shared";
 
-const classHierarchyInspector: ECClassHierarchyInspector = getClassHierarchyInspector();
+const imodelAccess: ECSchemaProvider = getSchemaProvider();
 const labelsFactory = createClassBasedInstanceLabelSelectClauseFactory({
-  classHierarchyInspector,
+  imodelAccess,
   clauses: [
     {
       className: "MySchema.MyClass",
@@ -377,10 +365,10 @@ This label selectors factory creates labels according to [BIS instance label rul
 Example usage:
 
 ```ts
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSchemaProvider } from "@itwin/presentation-shared";
 
-const classHierarchyInspector: ECClassHierarchyInspector = getClassHierarchyInspector();
-const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
+const imodelAccess: ECSchemaProvider = getSchemaProvider();
+const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess });
 const ecsql = `SELECT ${await labelsFactory.createSelectClause({ classAlias: "element" })} AS [Label] FROM [BisCore].[Element] AS [element]`;
 // ...
 ```
@@ -397,7 +385,7 @@ Example usage:
 ```ts
 import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-// `imodelAccess` must satisfy `ECSqlQueryExecutor & ECClassHierarchyInspector & ECSchemaProvider`
+// `imodelAccess` must satisfy `ECSqlQueryExecutor & ECSchemaProvider`
 const labelsFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
 const ecsql = `SELECT ${await labelsFactory.createSelectClause({ classAlias: "element" })} AS [Label] FROM [BisCore].[Element] AS [element]`;
 // ...

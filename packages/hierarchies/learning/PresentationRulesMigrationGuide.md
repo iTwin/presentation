@@ -93,7 +93,7 @@ Matching hierarchy definition, created using `createPredicateBasedHierarchyDefin
 import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-  classHierarchyInspector: imodelAccess,
+  imodelAccess,
   hierarchy: {
     rootNodes: async () => [
       /* define root node specifications here */

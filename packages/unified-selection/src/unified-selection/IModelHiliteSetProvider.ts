@@ -11,7 +11,7 @@ import { createHiliteSetProvider } from "./HiliteSetProvider.js";
 import { CLEAR_SELECTION_STORAGE_SOURCE } from "./SelectionStorage.js";
 
 import type { Observable } from "rxjs";
-import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import type { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
 import type { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent.js";
 import type { SelectionStorage } from "./SelectionStorage.js";
@@ -25,7 +25,7 @@ export interface IModelHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
 
   /** A callback that should return iModel access by iModel key. */
-  imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+  imodelProvider: (imodelKey: string) => Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
 
   /** An optional hilite set provider factory. If not provided, defaults to `createHiliteSetProvider` from this package. */
   createHiliteSetProvider?: typeof createHiliteSetProvider;
@@ -76,7 +76,7 @@ class IModelHiliteSetProviderImpl implements IModelHiliteSetProvider {
   private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
-  private _imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+  private _imodelProvider: (imodelKey: string) => Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
   private _createHiliteSetProvider: typeof createHiliteSetProvider;
 
   constructor(props: IModelHiliteSetProviderProps) {

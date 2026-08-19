@@ -34,7 +34,7 @@ describe("NodesQueryClauseFactory", () => {
     });
     const imodelAccess = createIModelAccess(imodelConnection);
 
-    const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+    const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess });
 
     const ecsql = `
       SELECT ${await labelsQueryFactory.createSelectClause({

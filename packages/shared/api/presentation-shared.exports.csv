@@ -9,6 +9,7 @@ public;type;ConcatenatedValuePart
 public;namespace;ConcatenatedValuePart
 public;function;createBisInstanceLabelSelectClauseFactory
 public;function;createCachingECClassHierarchyInspector
+deprecated;function;createCachingECClassHierarchyInspector
 public;function;createClassBasedInstanceLabelSelectClauseFactory
 public;function;createDefaultInstanceLabelSelectClauseFactory
 public;function;createDefaultValueFormatter
@@ -16,6 +17,7 @@ public;function;createIModelInstanceLabelSelectClauseFactory
 public;function;createMainThreadReleaseOnTimePassedHandler
 public;namespace;EC
 public;interface;ECClassHierarchyInspector
+deprecated;interface;ECClassHierarchyInspector
 public;interface;ECSchemaProvider
 public;type;ECSqlBinding
 public;namespace;ECSqlBinding
