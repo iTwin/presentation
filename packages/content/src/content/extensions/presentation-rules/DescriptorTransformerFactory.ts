@@ -5,7 +5,7 @@
 
 import { checkRequiredSchemas, classMatchesSpec, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, Props } from "@itwin/presentation-shared";
 import type { DescriptorTransformer } from "../DescriptorTransformer.js";
 import type * as PresentationRules from "./PresentationRules.js";
 
@@ -132,7 +132,7 @@ export function createDescriptorTransformerFromContentModifierRule({
  * When `classSpec` is undefined the whole set matches.
  */
 async function computeMatchedValueClasses(
-  imodelAccess: ECClassHierarchyInspector & ECSchemaProvider,
+  imodelAccess: ECSchemaProvider,
   field: TransformablePropertyField,
   classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
 ): Promise<EC.FullClassNameDotNotation[]> {

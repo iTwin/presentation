@@ -16,7 +16,6 @@ import {
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common.js";
 
 import type { VUContext, VUEvents } from "artillery";
@@ -92,7 +91,6 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
   const imodelAccess = {
     imodelKey: imodelRpcProps.key,
     ...schemaProvider,
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
     ...createLimitingECSqlQueryExecutor(queryExecutor, 1000),
   };
   const provider = createIModelHierarchyProvider({

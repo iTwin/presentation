@@ -9,7 +9,7 @@ import { createDescriptorTransformerFromContentModifierRule } from "../../../con
 import { PropertyField } from "../../../content/model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../../../content/model/Utils.js";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { CalculatedField, Field } from "../../../content/model/Field.js";
@@ -37,6 +37,9 @@ function propertyField(props: {
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
+    primaryClassNames: props.pathFromTarget
+      ? [props.pathFromTarget[0].sourceClassName]
+      : toSortedUniqueClassNames(props.valueClassNames),
     hidden: props.hidden,
   };
 }
@@ -74,7 +77,7 @@ function createImodelAccess(props?: {
   schemas?: Map<string, EC.SchemaVersion>;
   /** Map of `derivedClass -> list of ancestor classes it derives from` (a class always derives from itself). */
   derivesFrom?: Record<string, string[]>;
-}): ECSchemaProvider & ECClassHierarchyInspector {
+}): ECSchemaProvider {
   const schemas = props?.schemas;
   const derivesFrom = props?.derivesFrom ?? {};
   return {

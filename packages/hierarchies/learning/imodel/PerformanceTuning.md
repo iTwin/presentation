@@ -21,9 +21,3 @@ The library relies on the idea that it makes little sense to show users very lar
 The limiting functionality is achieved through the use of `LimitingECSqlQueryExecutor`, which is an input to `createIModelHierarchyProvider` as part of the `imodelAccess` prop. The executor's factory function `createLimitingECSqlQueryExecutor` takes a required `defaultLimit` argument, which sets the limit, and the recommended value would be around `1k` and up to `10k` - we don't recommend using a higher one.
 
 Then creating a query reader through a limiting query executor, it's possible to specify an override to the default limit. This feature is used by the hierarchy provider - its `getNodes` function takes a `hierarchyLevelSizeLimit` optional prop, which sets the override. This provides ability for components, using the hierarchy provider, to increase the limit per hierarchy level upon a user's request.
-
-## Class hierarchy inspector's cache size
-
-The hierarchy provider heavily relies on `ECClassHierarchyInspector` for checking if one ECClass derives from another. In some cases, the checks are done so often, that it could become a performance problem.
-
-For that reason, the `@itwin/presentation-shared` delivers the [`createCachingECClassHierarchyInspector`](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#ecclasshierarchyinspector--createcachingecclasshierarchyinspector) factory function, which creates an inspector with caching capability. As with all caches, there's a tradeoff of memory consumption VS performance, so the cache size should be limited. The cache size defaults to `0`, but we recommend using at around `100` for most cases.

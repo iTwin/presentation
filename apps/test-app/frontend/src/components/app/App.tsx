@@ -26,7 +26,6 @@ import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metad
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { Root } from "@stratakit/mui";
@@ -129,10 +128,7 @@ export function App() {
       // determine what the viewport is hiliting
       const selectedView = IModelApp.viewManager.selectedView;
       const hiliteSetProvider = createHiliteSetProvider({
-        imodelAccess: {
-          ...createECSqlQueryExecutor(state.imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(state.imodel) }),
-        },
+        imodelAccess: { ...createECSqlQueryExecutor(state.imodel), ...createECSchemaProvider(state.imodel) },
       });
       from(
         hiliteSetProvider.getHiliteSet({
@@ -345,7 +341,7 @@ function IModelComponents(props: IModelComponentsProps) {
       enableUnifiedSelectionSyncWithIModel({
         imodelAccess: {
           ...createECSqlQueryExecutor(imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) }),
+          ...createECSchemaProvider(imodel),
           key: imodel.key,
           hiliteSet: imodel.hilited,
           selectionSet: imodel.selectionSet,

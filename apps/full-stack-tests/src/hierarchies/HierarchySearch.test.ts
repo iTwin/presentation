@@ -1874,7 +1874,7 @@ describe("Hierarchies", () => {
           return createProvider({
             imodelAccess,
             hierarchy: createPredicateBasedHierarchyDefinition({
-              classHierarchyInspector: imodelAccess,
+              imodelAccess,
               hierarchy: {
                 rootNodes: async ({ createSelectClause }) => [
                   {

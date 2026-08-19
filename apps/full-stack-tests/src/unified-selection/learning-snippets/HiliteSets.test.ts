@@ -13,7 +13,6 @@ import {
 } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProviderImports
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.IModelProviderImports
@@ -57,11 +56,7 @@ describe("Unified selection", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
         const schemaProvider = createECSchemaProvider(getIModelConnection());
         const hiliteProvider = createHiliteSetProvider({
-          imodelAccess: {
-            ...schemaProvider,
-            ...createCachingECClassHierarchyInspector({ schemaProvider }),
-            ...createECSqlQueryExecutor(getIModelConnection()),
-          },
+          imodelAccess: { ...schemaProvider, ...createECSqlQueryExecutor(getIModelConnection()) },
         });
         const hiliteSetIterator = hiliteProvider.getHiliteSet({ selectables });
         // __PUBLISH_EXTRACT_END__
@@ -96,7 +91,7 @@ describe("Unified selection", () => {
           if (imodelKey === createIModelKey(imodelConnection)) {
             return {
               ...createECSqlQueryExecutor(imodelConnection),
-              ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelConnection) }),
+              ...createECSchemaProvider(imodelConnection),
               key: imodelKey,
             };
           }

@@ -16,6 +16,7 @@ function propertyField(props: {
   sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
+  primaryClassNames?: EC.FullClassNameDotNotation[];
   pathFromTarget?: PropertyField["pathFromTarget"];
 }): PropertyField {
   const fieldId = PropertyField.computeId({
@@ -33,6 +34,11 @@ function propertyField(props: {
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
+    primaryClassNames:
+      props.primaryClassNames ??
+      (props.pathFromTarget
+        ? [props.pathFromTarget[0].sourceClassName]
+        : toSortedUniqueClassNames(props.valueClassNames)),
   };
 }
 
@@ -93,6 +99,24 @@ describe("createTransformableDescriptor", () => {
       expect(field.id).to.equal(PropertyField.computeId({ propertyClassName: "Stuff.Thing", propertyName: "Height" }));
     });
 
+    it("carves primaryClasses in lockstep with valueClassNames for a direct property", () => {
+      const field = propertyField({
+        sourceClassName: "Stuff.Thing",
+        propertyName: "Height",
+        valueClassNames: ["Stuff.Door", "Stuff.Window", "Stuff.Roof"],
+      });
+      const descriptor = createDescriptor([field]);
+      const transformable = createTransformableDescriptor(descriptor);
+
+      const fork = transformable.forkField(field.id, ["Stuff.Door"]);
+
+      expect(fork.valueClassNames).to.deep.equal(["Stuff.Door"]);
+      expect(fork.primaryClassNames).to.deep.equal(fork.valueClassNames);
+
+      expect(field.valueClassNames).to.deep.equal(["Stuff.Roof", "Stuff.Window"]);
+      expect(field.primaryClassNames).to.deep.equal(field.valueClassNames);
+    });
+
     it("carves a related-endpoint subclass over a relationship path", () => {
       const path: PropertyField["pathFromTarget"] = [
         {
@@ -113,6 +137,30 @@ describe("createTransformableDescriptor", () => {
       const fork = transformable.forkField(field.id, ["BisCore.ExternalSourceAspectX"]);
       expect(fork.valueClassNames).to.deep.equal(["BisCore.ExternalSourceAspectX"]);
       expect(field.valueClassNames).to.deep.equal(["BisCore.ExternalSourceAspectY"]);
+    });
+
+    it("leaves primaryClasses untouched on both sides for a related property fork", () => {
+      const path: PropertyField["pathFromTarget"] = [
+        {
+          sourceClassName: "BisCore.Element",
+          targetClassName: "BisCore.ExternalSourceAspect",
+          relationshipName: "BisCore.ElementOwnsMultiAspects",
+        },
+      ];
+      const field = propertyField({
+        sourceClassName: "BisCore.ExternalSourceAspect",
+        propertyName: "Identifier",
+        pathFromTarget: path,
+        primaryClassNames: ["BisCore.Element"],
+        valueClassNames: ["BisCore.ExternalSourceAspectX", "BisCore.ExternalSourceAspectY"],
+      });
+      const descriptor = createDescriptor([field]);
+      const transformable = createTransformableDescriptor(descriptor);
+
+      const fork = transformable.forkField(field.id, ["BisCore.ExternalSourceAspectX"]);
+
+      expect(fork.primaryClassNames).to.deep.equal(["BisCore.Element"]);
+      expect(field.primaryClassNames).to.deep.equal(["BisCore.Element"]);
     });
 
     it("returns the original field in place when the subset covers all classes", () => {

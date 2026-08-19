@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { vi } from "vitest";
+import { parseFullClassName } from "../shared/Utils.js";
 
 import type { Mock } from "vitest";
 import type { EC } from "../shared/Metadata.js";
@@ -36,6 +37,30 @@ export function createECSchemaProviderStub() {
     getSchema: vi.fn(async (schemaName: string): Promise<EC.Schema | undefined> => {
       return schemaStubs.get(schemaName);
     }),
+    classDerivesFrom: vi.fn(
+      (
+        derivedClassFullName: EC.FullClassNameDotNotation,
+        candidateBaseClassFullName: EC.FullClassNameDotNotation,
+      ): boolean => {
+        if (derivedClassFullName === candidateBaseClassFullName) {
+          return true;
+        }
+        const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derivedClassFullName);
+        const derivedClass = schemaStubs.get(derivedSchemaName)?.classes.get(derivedClassName);
+        if (!derivedClass) {
+          return false;
+        }
+
+        const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(candidateBaseClassFullName);
+        const baseClass = schemaStubs.get(baseSchemaName)?.classes.get(baseClassName);
+
+        if (!baseClass) {
+          return false;
+        }
+
+        return derivedClass.is(baseClass);
+      },
+    ),
   };
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);

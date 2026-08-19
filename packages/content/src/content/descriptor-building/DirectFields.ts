@@ -47,7 +47,7 @@ export async function collectDirectPropertyFields(props: {
     [...derivedConcretesByDeclaringClass].map(async ([declaringClass, derivedConcretes]) =>
       collectClassPropertyFields({
         propertiesClass: await getClass(imodelAccess, declaringClass),
-        pathFromTarget: [],
+        relationshipInfo: undefined,
         // Preserve the resolved-class order (the walk populates the set in arbitrary order).
         valueClassNames: concreteClassNames.filter((concreteClassName) => derivedConcretes.has(concreteClassName)),
         spec: { select: "all" },

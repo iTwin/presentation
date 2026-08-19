@@ -5,7 +5,6 @@
 ```ts
 
 import { EC } from '@itwin/presentation-shared';
-import type { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
@@ -126,7 +125,7 @@ interface ContentProvider {
 // @public
 interface ContentProviderProps {
     config?: ContentConfiguration;
-    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     sources: ContentSource[];
 }
 
@@ -226,7 +225,7 @@ interface DescriptorTransformer {
     priority?: number;
     transform(props: {
         descriptor: TransformableDescriptor;
-        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+        imodelAccess: ECSchemaProvider;
     }): Promise<void>;
 }
 
@@ -292,7 +291,7 @@ interface GetDistinctFieldValuesProps {
 // @public
 interface IModelFieldsProvider extends BaseFieldsProvider {
     getContribution(props: {
-        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+        imodelAccess: ECSchemaProvider;
         target: ContentTarget;
     }): Promise<FieldsProviderContribution | undefined>;
 }
@@ -315,6 +314,7 @@ export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
     pathFromTarget: RelationshipPath;
+    primaryClassNames: EC.FullClassNameDotNotation[];
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     selectorId: string;
@@ -406,7 +406,7 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 // @public
 interface ResolveContentSourcesProps {
     config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
-    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     targets: ContentTarget[];
 }
 

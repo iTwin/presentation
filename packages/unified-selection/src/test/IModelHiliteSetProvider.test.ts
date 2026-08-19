@@ -9,7 +9,7 @@ import { createIModelHiliteSetProvider } from "../unified-selection/IModelHilite
 import { createStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
-import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import type { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
 import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import type { SelectionStorage } from "../unified-selection/SelectionStorage.js";
@@ -23,7 +23,8 @@ describe("createIModelHiliteSetProvider", () => {
   let selectionStorage: SelectionStorage;
   let hiliteSetCache: ReturnType<typeof createIModelHiliteSetProvider>;
   const provider = { getHiliteSet: vi.fn<(props: { imodelKey: string }) => AsyncIterableIterator<HiliteSet>>() };
-  const imodelProvider = vi.fn<(imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor>();
+  const imodelProvider =
+    vi.fn<(imodelKey: string) => Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor>();
   const imodelKey = "iModelKey";
 
   async function loadHiliteSet() {

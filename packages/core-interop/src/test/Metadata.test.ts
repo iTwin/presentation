@@ -141,6 +141,44 @@ describe("createECSchemaProvider", () => {
     await provider.getSchema("SchemaA");
     expect(getSchemaView).toHaveBeenCalledTimes(2);
   });
+
+  describe("classDerivesFrom", () => {
+    function stubIModelWithQueryRows(rows: Array<[string, string]>) {
+      const createQueryReader = vi.fn(() =>
+        (async function* () {
+          for (const row of rows) {
+            yield row as unknown as QueryRowProxy;
+          }
+        })(),
+      );
+      return { getSchemaView: async () => createMockSchemaView(new Map()), createQueryReader };
+    }
+
+    it("returns `true` synchronously when the class names are equal, without loading the hierarchy", () => {
+      const imodel = stubIModelWithQueryRows([]);
+      const provider = createECSchemaProvider(imodel);
+      expect(provider.classDerivesFrom("Schema.A", "Schema.A")).toBe(true);
+      expect(imodel.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("returns a promise on the first call and resolves to `true` for a derived class", async () => {
+      const provider = createECSchemaProvider(stubIModelWithQueryRows([["Schema.B", "Schema.A"]]));
+      const result = provider.classDerivesFrom("Schema.B", "Schema.A");
+      expect(result).toBeInstanceOf(Promise);
+      expect(await result).toBe(true);
+    });
+
+    it("resolves to `false` for unrelated classes", async () => {
+      const provider = createECSchemaProvider(stubIModelWithQueryRows([["Schema.B", "Schema.A"]]));
+      expect(await provider.classDerivesFrom("Schema.B", "Schema.C")).toBe(false);
+    });
+
+    it("answers synchronously once the class hierarchy has been loaded", async () => {
+      const provider = createECSchemaProvider(stubIModelWithQueryRows([["Schema.B", "Schema.A"]]));
+      await provider.classDerivesFrom("Schema.B", "Schema.A");
+      expect(provider.classDerivesFrom("Schema.B", "Schema.A")).toBe(true);
+    });
+  });
 });
 
 describe("createECSchemaFromSchemaView", () => {

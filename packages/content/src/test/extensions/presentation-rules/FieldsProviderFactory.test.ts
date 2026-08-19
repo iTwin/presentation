@@ -6,7 +6,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createFieldsProviderFromContentModifierRule } from "../../../content/extensions/presentation-rules/FieldsProviderFactory.js";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../../content/ContentTarget.js";
 import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 
@@ -72,8 +72,8 @@ function createStubRelationshipClass(props: {
 function createIModelAccess(props?: {
   schemas?: Map<string, EC.Schema>;
   classes?: Map<string, EC.Class>;
-  classDerivesFrom?: ECClassHierarchyInspector["classDerivesFrom"];
-}): ECSchemaProvider & ECClassHierarchyInspector {
+  classDerivesFrom?: ECSchemaProvider["classDerivesFrom"];
+}): ECSchemaProvider {
   const schemas = props?.schemas ?? new Map();
   return {
     getSchema: async (name: string) => schemas.get(name),
@@ -84,7 +84,7 @@ function createIModelAccess(props?: {
 function createIModelAccessFromClasses(
   classes: Map<string, EC.Class>,
   options?: { synthesizeMissing?: boolean },
-): ECSchemaProvider & ECClassHierarchyInspector {
+): ECSchemaProvider {
   const getSchema = async (name: string) =>
     ({
       name,
@@ -92,7 +92,6 @@ function createIModelAccessFromClasses(
       getClass: async (className: string) =>
         classes.get(`${name}.${className}`) ??
         (options?.synthesizeMissing ? createStubClass({ schemaName: name, className }) : undefined),
-      getCustomAttributes: async () => new Map(),
     }) as unknown as EC.Schema;
   return { getSchema, classDerivesFrom: async () => true };
 }
@@ -320,7 +319,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     });
 
     it("returns undefined when classDerivesFrom returns false", async () => {
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(false);
+      const classDerivesFrom = vi.fn<ECSchemaProvider["classDerivesFrom"]>().mockResolvedValue(false);
       const provider = createFieldsProviderFromContentModifierRule({
         rule: { class: { schemaName: "TestSchema", className: "BaseElement" } },
       });
@@ -333,7 +332,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     });
 
     it("returns contribution when classDerivesFrom returns true", async () => {
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(true);
+      const classDerivesFrom = vi.fn<ECSchemaProvider["classDerivesFrom"]>().mockResolvedValue(true);
       const provider = createFieldsProviderFromContentModifierRule({
         rule: {
           class: { schemaName: "TestSchema", className: "BaseElement" },

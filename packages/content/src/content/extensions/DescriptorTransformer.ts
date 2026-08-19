@@ -6,7 +6,7 @@
 import { PropertyField } from "../model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../model/Utils.js";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
@@ -59,10 +59,7 @@ export interface DescriptorTransformer {
    * Runs asynchronously and receives `imodelAccess` for schema and class-hierarchy
    * lookups (e.g. polymorphic class matching via `classDerivesFrom`).
    */
-  transform(props: {
-    descriptor: TransformableDescriptor;
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-  }): Promise<void>;
+  transform(props: { descriptor: TransformableDescriptor; imodelAccess: ECSchemaProvider }): Promise<void>;
 }
 
 /**
@@ -130,6 +127,13 @@ interface TransformableDescriptor {
    * clone is made and the original field is returned for in-place mutation. Forking the
    * same subset twice returns the same field.
    *
+   * For a direct property (empty `pathFromTarget`), `primaryClassNames` coincides with
+   * `valueClassNames` by contract, so `primaryClassNames` is carved along the same subset,
+   * keeping the two in sync on both the fork and the shrunken original. For a related
+   * property `primaryClassNames` is on a different axis (the path's first-step source classes)
+   * and is left untouched — both the fork and the original keep the field's full
+   * `primaryClassNames`.
+   *
    * @throws if `id` is missing or not a property field, if the field itself represents no
    * value-supplier classes, if `valueClassNames` is empty, or if it contains a class not
    * represented by the field.
@@ -186,8 +190,21 @@ export function createTransformableDescriptor(
         // The subset covers every value-supplier class: mutate in place, no fork.
         return field;
       }
-      field.valueClassNames = field.valueClassNames.filter((className) => !subset.includes(className));
-      const fork: PropertyField = { ...field, id: forkedId, valueClassNames: subset };
+      // For a direct property, `primaryClasses` coincides with `valueClassNames` by contract —
+      // carve it along the same subset so the fork and the shrunken original both keep the two in
+      // sync.
+      const isDirect = field.pathFromTarget.length === 0;
+      const remainder = field.valueClassNames.filter((className) => !subset.includes(className));
+      field.valueClassNames = remainder;
+      if (isDirect) {
+        field.primaryClassNames = [...remainder];
+      }
+      const fork: PropertyField = {
+        ...field,
+        id: forkedId,
+        valueClassNames: subset,
+        primaryClassNames: isDirect ? [...subset] : field.primaryClassNames,
+      };
       descriptor.fields[forkedId] = fork;
       return fork;
     },

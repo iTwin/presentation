@@ -22,6 +22,7 @@ export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js
 export type {
   ArrayValueDescriptor,
   EC,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   ECClassHierarchyInspector,
   ECSchemaProvider,
   NavigationValueDescriptor,
@@ -31,7 +32,11 @@ export type {
   StructValueDescriptor,
   ValueDescriptor,
 } from "./shared/Metadata.js";
-export { createCachingECClassHierarchyInspector, getClass } from "./shared/Metadata.js";
+export {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  createCachingECClassHierarchyInspector,
+  getClass,
+} from "./shared/Metadata.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,

@@ -25,7 +25,6 @@ import {
 import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Button, CircularProgress, Stack, Switch, TextField, Typography } from "@mui/material";
@@ -62,7 +61,6 @@ export function StatelessTreeV2({
     setIModelAccess({
       imodelKey: imodel.key,
       ...schemaProvider,
-      ...createCachingECClassHierarchyInspector({ schemaProvider }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);

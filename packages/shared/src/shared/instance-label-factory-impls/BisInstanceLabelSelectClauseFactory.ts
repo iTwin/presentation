@@ -8,7 +8,7 @@ import { createClassBasedInstanceLabelSelectClauseFactory } from "./ClassBasedIn
 import { ALIAS_PREFIX, concatenate, createECInstanceIdSuffixSelectors } from "./Utils.js";
 
 import type { IInstanceLabelSelectClauseFactory } from "../InstanceLabelSelectClauseFactory.js";
-import type { ECClassHierarchyInspector } from "../Metadata.js";
+import type { ECSchemaProvider } from "../Metadata.js";
 import type { ClassBasedLabelSelectClause } from "./ClassBasedInstanceLabelSelectClauseFactory.js";
 
 /**
@@ -16,7 +16,7 @@ import type { ClassBasedLabelSelectClause } from "./ClassBasedInstanceLabelSelec
  * @public
  */
 interface BisInstanceLabelSelectClauseFactoryProps {
-  classHierarchyInspector: ECClassHierarchyInspector;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 }
 
 /**
@@ -28,10 +28,7 @@ export function createBisInstanceLabelSelectClauseFactory(
   props: BisInstanceLabelSelectClauseFactoryProps,
 ): IInstanceLabelSelectClauseFactory {
   const clauses: ClassBasedLabelSelectClause[] = [];
-  const factory = createClassBasedInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: props.classHierarchyInspector,
-    clauses,
-  });
+  const factory = createClassBasedInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess, clauses });
   clauses.push(
     {
       className: "BisCore.GeometricElement",

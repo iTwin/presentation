@@ -37,7 +37,6 @@ import { createContentProviderImpl } from "./CreateContentProvider.js";
 import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 
 import type {
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlQueryExecutor,
   InstanceKey,
@@ -185,7 +184,7 @@ export interface ContentConfiguration {
  */
 interface ResolveContentSourcesProps {
   /** Access to the iModel for schema introspection, class-hierarchy inspection, and path resolution. */
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   /** The content targets to resolve. */
   targets: ContentTarget[];
   /** Extension point configuration (only `imodelFieldsProviders` is used for resolution). */
@@ -222,7 +221,7 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
  */
 interface ContentProviderProps {
   /** Access to the iModel for running ECSQL queries, schema introspection, and class-hierarchy checks. */
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
 
   /** Pre-resolved content sources (output of `resolveContentSources`). */
   sources: ContentSource[];

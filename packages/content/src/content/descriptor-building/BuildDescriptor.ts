@@ -17,7 +17,7 @@ import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { collectRelatedPropertyFields } from "./RelatedFields.js";
 import { collectSelectors } from "./Selectors.js";
 
-import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
@@ -29,7 +29,7 @@ import type { Field, PropertyField } from "../model/Field.js";
  */
 interface BuildContentDescriptorProps {
   /** Schema access used to enumerate fields from EC metadata (Stage 2 is schema-only — no queries). */
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider;
   /** Pre-resolved content sources (output of Stage 1). */
   sources: ContentSource[];
   /** Extension point configuration (fields providers, external providers, transformers). */

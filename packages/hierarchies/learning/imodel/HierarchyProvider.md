@@ -20,17 +20,15 @@ The `createIModelHierarchyProvider` factory function takes an `imodelAccess` pro
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(imodel);
   return {
     // The key of the iModel we're accessing
     imodelKey: createIModelKey(imodel),
-    // Schema provider provides access to EC information (metadata)
+    // Schema provider provides access to EC information (metadata) and class hierarchy inspection
     ...schemaProvider,
-    // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
     // The second argument is the maximum number of rows the executor will return - this allows us to
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),

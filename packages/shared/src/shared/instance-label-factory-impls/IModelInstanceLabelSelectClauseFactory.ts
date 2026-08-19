@@ -23,7 +23,7 @@ import type {
   CreateInstanceLabelSelectClauseProps,
   IInstanceLabelSelectClauseFactory,
 } from "../InstanceLabelSelectClauseFactory.js";
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "../Metadata.js";
+import type { EC, ECSchemaProvider } from "../Metadata.js";
 import type { ClassBasedLabelSelectClause } from "./ClassBasedInstanceLabelSelectClauseFactory.js";
 import type {
   InstanceLabelOverride,
@@ -43,7 +43,7 @@ interface IModelInstanceLabelSelectClauseFactoryProps {
    * Combined access to the iModel for querying PresentationRules rulesets and inspecting class hierarchy.
    * Follows the same combined-access pattern as other iModel-backed factories in this package.
    */
-  imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
 
   /**
    * A fallback label clause factory used when no applicable `InstanceLabelOverride` rules are found
@@ -87,8 +87,7 @@ async function createIModelInstanceLabelSelectClauseFactoryImpl(
   props: IModelInstanceLabelSelectClauseFactoryProps,
 ): Promise<IInstanceLabelSelectClauseFactory> {
   const defaultClauseFactory =
-    props.defaultClauseFactory ??
-    createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
+    props.defaultClauseFactory ?? createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
 
   const rules = await loadOverrideRules(props.imodelAccess);
   if (rules.length === 0) {
@@ -108,7 +107,7 @@ async function createIModelInstanceLabelSelectClauseFactoryImpl(
       }),
   }));
   const innerFactory = createClassBasedInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: props.imodelAccess,
+    imodelAccess: props.imodelAccess,
     clauses,
     defaultClauseFactory,
   });

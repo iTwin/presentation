@@ -22,7 +22,7 @@ import {
   createTestProcessedInstanceNode,
 } from "../Utils.js";
 
-import type { ECClassHierarchyInspector } from "@itwin/presentation-shared";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import type { HierarchySearchTree } from "../../hierarchies/HierarchySearch.js";
 import type {
@@ -39,8 +39,8 @@ import type { RxjsHierarchyDefinition } from "../../hierarchies/internal/RxjsHie
 
 describe("SearchHierarchyDefinition", () => {
   function createStubECClassHierarchyInspector(
-    overrides?: Partial<ECClassHierarchyInspector>,
-  ): ECClassHierarchyInspector {
+    overrides?: Partial<Pick<ECSchemaProvider, "classDerivesFrom">>,
+  ): Pick<ECSchemaProvider, "classDerivesFrom"> {
     return { classDerivesFrom: vi.fn().mockResolvedValue(false), ...overrides };
   }
 
@@ -51,7 +51,7 @@ describe("SearchHierarchyDefinition", () => {
   function createSearchHierarchyDefinition(props: {
     targetPaths: HierarchySearchTree[];
     source?: Partial<RxjsHierarchyDefinition>;
-    imodelAccess?: Partial<ECClassHierarchyInspector>;
+    imodelAccess?: Partial<Pick<ECSchemaProvider, "classDerivesFrom">>;
     sourceName?: string;
   }) {
     return new SearchHierarchyDefinition({
@@ -302,7 +302,7 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("falls back to classDerivesFrom when class names differ", async () => {
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>();
+      const classDerivesFrom = vi.fn<ECSchemaProvider["classDerivesFrom"]>();
       classDerivesFrom.mockImplementation(async (derived, candidate) => {
         if (derived === "Schema.Derived" && candidate === "Schema.Base") {
           return true;
@@ -331,7 +331,7 @@ describe("SearchHierarchyDefinition", () => {
     });
 
     it("doesn't match when classDerivesFrom returns false for both directions", async () => {
-      const classDerivesFrom = vi.fn<ECClassHierarchyInspector["classDerivesFrom"]>().mockResolvedValue(false);
+      const classDerivesFrom = vi.fn<ECSchemaProvider["classDerivesFrom"]>().mockResolvedValue(false);
 
       const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "Schema.Unrelated", id: "0x1" } }];
       const parsedNode = createSourceInstanceNode({

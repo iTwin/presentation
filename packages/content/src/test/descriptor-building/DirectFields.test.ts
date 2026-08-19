@@ -52,6 +52,7 @@ describe("collectDirectPropertyFields", () => {
         propertyName: "CodeValue",
         pathFromTarget: [],
         valueClassNames: ["TestSchema.Element"],
+        primaryClassNames: ["TestSchema.Element"],
       },
     ]);
   });
@@ -77,6 +78,7 @@ describe("collectDirectPropertyFields", () => {
     });
 
     expect(field.valueClassNames).to.deep.equal(["TestSchema.Door", "TestSchema.Window"]);
+    expect(field.primaryClassNames).to.deep.equal(field.valueClassNames);
   });
 
   it("falls back to the normalized primary class when no primary classes were resolved", async () => {
