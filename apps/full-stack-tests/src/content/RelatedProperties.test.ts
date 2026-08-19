@@ -1169,14 +1169,10 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      const propBFields = getPropertyFieldsByName(descriptor, "PropB");
-      expect(propBFields).toHaveLength(1);
-      expect(propBFields[0].valueClassNames).toEqual([setup.schema.items.B.fullName]);
-      expect(propBFields[0].primaryClassNames).toEqual([
-        setup.schema.items.A1.fullName,
-        setup.schema.items.A2.fullName,
-      ]);
-      expect(propBFields[0].pathFromTarget).toEqual([
+      const propBFields = getPropertyFieldByName(descriptor, "PropB");
+      expect(propBFields.valueClassNames).toEqual([setup.schema.items.B.fullName]);
+      expect(propBFields.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
+      expect(propBFields.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B.fullName,
@@ -1259,11 +1255,10 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      const propB1Fields = getPropertyFieldsByName(descriptor, "PropB1");
-      expect(propB1Fields).toHaveLength(1);
-      expect(propB1Fields[0].valueClassNames).toEqual([setup.schema.items.B1.fullName]);
-      expect(propB1Fields[0].primaryClassNames).toEqual([setup.schema.items.A1.fullName]);
-      expect(propB1Fields[0].pathFromTarget).toEqual([
+      const propB1Fields = getPropertyFieldByName(descriptor, "PropB1");
+      expect(propB1Fields.valueClassNames).toEqual([setup.schema.items.B1.fullName]);
+      expect(propB1Fields.primaryClassNames).toEqual([setup.schema.items.A1.fullName]);
+      expect(propB1Fields.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B1.fullName,
@@ -1271,11 +1266,10 @@ describe("Content", () => {
         },
       ]);
 
-      const propB2Fields = getPropertyFieldsByName(descriptor, "PropB2");
-      expect(propB2Fields).toHaveLength(1);
-      expect(propB2Fields[0].valueClassNames).toEqual([setup.schema.items.B2.fullName]);
-      expect(propB2Fields[0].primaryClassNames).toEqual([setup.schema.items.A2.fullName]);
-      expect(propB2Fields[0].pathFromTarget).toEqual([
+      const propB2Fields = getPropertyFieldByName(descriptor, "PropB2");
+      expect(propB2Fields.valueClassNames).toEqual([setup.schema.items.B2.fullName]);
+      expect(propB2Fields.primaryClassNames).toEqual([setup.schema.items.A2.fullName]);
+      expect(propB2Fields.pathFromTarget).toEqual([
         {
           sourceClassName: setup.schema.items.A.fullName,
           targetClassName: setup.schema.items.B2.fullName,

@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { type ECSchemaProvider, getClass, type RelationshipPath } from "@itwin/presentation-shared";
+import { getClass } from "@itwin/presentation-shared";
 import { collectInParallel } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
+import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";

@@ -77,7 +77,7 @@ export function collectClassPropertyFields(props: {
   /** Information on how to reach related properties or `undefined` for direct properties. */
   relationshipInfo:
     | {
-        /** Relationship path from the content target to `propertiesClass` (`[]` for direct properties). */
+        /** Relationship path from the content target to `propertiesClass`. */
         pathFromTarget: RelationshipPath;
         /**
          * Concrete primary classes that have access to the produced fields. Defaults to `valueClassNames`

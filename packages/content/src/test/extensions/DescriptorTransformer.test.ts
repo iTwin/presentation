@@ -16,6 +16,7 @@ function propertyField(props: {
   sourceClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   valueClassNames: EC.FullClassNameDotNotation[];
+  primaryClassNames?: EC.FullClassNameDotNotation[];
   pathFromTarget?: PropertyField["pathFromTarget"];
 }): PropertyField {
   const fieldId = PropertyField.computeId({
@@ -33,9 +34,11 @@ function propertyField(props: {
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
-    primaryClassNames: props.pathFromTarget
-      ? [props.pathFromTarget[0].sourceClassName]
-      : toSortedUniqueClassNames(props.valueClassNames),
+    primaryClassNames:
+      props.primaryClassNames ??
+      (props.pathFromTarget
+        ? [props.pathFromTarget[0].sourceClassName]
+        : toSortedUniqueClassNames(props.valueClassNames)),
   };
 }
 
@@ -107,7 +110,10 @@ describe("createTransformableDescriptor", () => {
 
       const fork = transformable.forkField(field.id, ["Stuff.Door"]);
 
+      expect(fork.valueClassNames).to.deep.equal(["Stuff.Door"]);
       expect(fork.primaryClassNames).to.deep.equal(fork.valueClassNames);
+
+      expect(field.valueClassNames).to.deep.equal(["Stuff.Roof", "Stuff.Window"]);
       expect(field.primaryClassNames).to.deep.equal(field.valueClassNames);
     });
 
@@ -145,6 +151,7 @@ describe("createTransformableDescriptor", () => {
         sourceClassName: "BisCore.ExternalSourceAspect",
         propertyName: "Identifier",
         pathFromTarget: path,
+        primaryClassNames: ["BisCore.Element"],
         valueClassNames: ["BisCore.ExternalSourceAspectX", "BisCore.ExternalSourceAspectY"],
       });
       const descriptor = createDescriptor([field]);
