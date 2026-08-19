@@ -4,6 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { createInstanceFilterProperties } from "./content-react/InstanceFilterProperties.js";
-export type { InstanceFilterClass, InstanceFilterProperty } from "./content-react/InstanceFilterProperties.js";
+export type { InstanceFilterClass } from "./content-react/InstanceFilterProperties.js";
 export { useInstanceFilterPropertiesInfo } from "./content-react/UseInstanceFilterPropertiesInfo.js";
 export type { InstanceFilterPropertiesInfo } from "./content-react/UseInstanceFilterPropertiesInfo.js";

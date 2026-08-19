@@ -25,20 +25,14 @@ export interface InstanceFilterClass {
 // @public
 interface InstanceFilterProperties {
     classes: InstanceFilterClass[];
-    properties: InstanceFilterProperty[];
+    properties: ReadonlyPropertyField[];
 }
 
 // @public
 export interface InstanceFilterPropertiesInfo extends InstanceFilterProperties {
     onSelectedClassesChanged: (classes: EC.FullClassNameDotNotation[]) => void;
     selectedClasses: EC.FullClassNameDotNotation[];
-    visibleProperties: InstanceFilterProperty[];
-}
-
-// @public
-export interface InstanceFilterProperty {
-    availableClassNames: EC.FullClassNameDotNotation[];
-    field: ReadonlyPropertyField;
+    visibleProperties: ReadonlyPropertyField[];
 }
 
 // @public

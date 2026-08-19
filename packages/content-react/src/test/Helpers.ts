@@ -36,6 +36,7 @@ export function createSource(props: {
 export function createPropertyField(props: {
   id: string;
   valueClassNames: EC.FullClassNameDotNotation[];
+  primaryClassNames?: EC.FullClassNameDotNotation[];
   propertyClassName?: EC.FullClassNameDotNotation;
   pathFromTarget?: RelationshipPath;
   hidden?: boolean;
@@ -49,6 +50,7 @@ export function createPropertyField(props: {
     propertyName: props.id,
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames,
+    primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
     selectorId: props.id,
     ...(props.hidden ? { hidden: true } : undefined),
   };

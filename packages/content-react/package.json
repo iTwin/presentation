@@ -34,6 +34,7 @@
     "clean": "rimraf lib",
     "extract-api": "betools extract-api --entry=lib/presentation-content-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "lint": "eslint \"./src/**/*.{ts,tsx}\"",
+    "cover": "npm -s test",
     "test": "vitest run",
     "typecheck": "tsc"
   },

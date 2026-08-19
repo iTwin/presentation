@@ -18,19 +18,19 @@ describe("useInstanceFilterPropertiesInfo", () => {
     ]);
     const { result } = renderHook(() => useInstanceFilterPropertiesInfo({ descriptor }));
 
-    expect(result.current.visibleProperties.map((property) => property.field.id)).toEqual(["a", "b", "both"]);
+    expect(result.current.visibleProperties.map((property) => property.id)).toEqual(["a", "b", "both"]);
 
     act(() => {
       result.current.onSelectedClassesChanged([classB]);
     });
 
-    expect(result.current.visibleProperties.map((property) => property.field.id)).toEqual(["b", "both"]);
+    expect(result.current.visibleProperties.map((property) => property.id)).toEqual(["b", "both"]);
 
     act(() => {
       result.current.onSelectedClassesChanged([classA, classB]);
     });
 
-    expect(result.current.visibleProperties.map((property) => property.field.id)).toEqual(["a", "b", "both"]);
+    expect(result.current.visibleProperties.map((property) => property.id)).toEqual(["a", "b", "both"]);
   });
 
   it("uses initial selected classes and recreates source-scoped properties when the source changes", () => {
@@ -47,12 +47,12 @@ describe("useInstanceFilterPropertiesInfo", () => {
     );
 
     expect(result.current.selectedClasses).toEqual([classA]);
-    expect(result.current.visibleProperties.map((property) => property.field.id)).toEqual(["a"]);
+    expect(result.current.visibleProperties.map((property) => property.id)).toEqual(["a"]);
 
     rerender({ descriptor: descriptorB });
 
     expect(result.current.classes.map((item) => item.name)).toEqual([classB]);
-    expect(result.current.properties.map((property) => property.field.id)).toEqual(["b"]);
+    expect(result.current.properties.map((property) => property.id)).toEqual(["b"]);
     expect(result.current.visibleProperties).toEqual([]);
   });
 });

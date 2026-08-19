@@ -15,14 +15,13 @@ import {
 } from "@itwin/presentation-content";
 import { useInstanceFilterPropertiesInfo } from "@itwin/presentation-content-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { CircularProgress, Stack, Typography } from "@mui/material";
 import { bisCoreContentCustomization } from "./BisCoreContentCustomization";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { ReadonlyContentDescriptor } from "@itwin/presentation-content";
-import type { InstanceFilterClass, InstanceFilterProperty } from "@itwin/presentation-content-react";
+import type { ReadonlyContentDescriptor, ReadonlyPropertyField } from "@itwin/presentation-content";
+import type { InstanceFilterClass } from "@itwin/presentation-content-react";
 
 /**
  * Displays a presentation-content-backed filter builder.
@@ -82,12 +81,7 @@ function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
 }
 
 async function loadContent(imodel: IModelConnection): Promise<{ descriptor: ReadonlyContentDescriptor }> {
-  const schemaProvider = createECSchemaProvider(imodel);
-  const imodelAccess = {
-    ...createECSqlQueryExecutor(imodel),
-    ...schemaProvider,
-    ...createCachingECClassHierarchyInspector({ schemaProvider }),
-  };
+  const imodelAccess = { ...createECSqlQueryExecutor(imodel), ...createECSchemaProvider(imodel) };
   const embeddedConfiguration = await createIModelContentConfiguration({ imodelAccess });
   const configuration = {
     ...embeddedConfiguration,
@@ -112,14 +106,14 @@ function LoadedContentFilterBuilder({ descriptor }: { descriptor: ReadonlyConten
 
   const propertyRenderer = useCallback(
     (id: string) => {
-      const property = visibleProperties.find((item) => item.field.id === id);
+      const property = visibleProperties.find((item) => item.id === id);
       if (!property) {
         return id;
       }
       return (
         <span className="filter-builder-property">
-          {property.field.label}
-          {property.field.categoryId ? (
+          {property.label}
+          {property.categoryId ? (
             <Badge backgroundColor="montecarlo">{getCategoryLabel(property, descriptor)}</Badge>
           ) : null}
         </span>
@@ -156,16 +150,12 @@ function getSelectedClassNames(selectedNames: string[], classes: InstanceFilterC
   return classes.flatMap((item) => (selectedNameSet.has(item.name) ? [item.name] : []));
 }
 
-function toPropertyDescription(property: InstanceFilterProperty): PropertyDescription {
-  return {
-    name: property.field.id,
-    displayLabel: property.field.label,
-    typename: getContentPropertyTypeName(property),
-  };
+function toPropertyDescription(property: ReadonlyPropertyField): PropertyDescription {
+  return { name: property.id, displayLabel: property.label, typename: getContentPropertyTypeName(property) };
 }
 
-function getCategoryLabel(property: InstanceFilterProperty, descriptor: ReadonlyContentDescriptor): string {
-  let category = property.field.categoryId ? descriptor.categories[property.field.categoryId] : undefined;
+function getCategoryLabel(property: ReadonlyPropertyField, descriptor: ReadonlyContentDescriptor): string {
+  let category = property.categoryId ? descriptor.categories[property.categoryId] : undefined;
   if (!category) {
     return "Related";
   }
@@ -187,10 +177,10 @@ function getErrorMessage(error: unknown): string {
 /**
  * Maps a content value descriptor to the type-name vocabulary expected by `PropertyFilterBuilderRenderer`.
  */
-function getContentPropertyTypeName(property: InstanceFilterProperty): string {
-  switch (property.field.type.kind) {
+function getContentPropertyTypeName(property: ReadonlyPropertyField): string {
+  switch (property.type.kind) {
     case "primitive":
-      switch (property.field.type.type) {
+      switch (property.type.type) {
         case "String":
           return "string";
         case "Integer":

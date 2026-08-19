@@ -6,12 +6,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createInstanceFilterProperties } from "./InstanceFilterProperties.js";
 
+import type { ReadonlyPropertyField } from "@itwin/presentation-content";
 import type { EC } from "@itwin/presentation-shared";
-import type {
-  CreateInstanceFilterPropertiesProps,
-  InstanceFilterProperties,
-  InstanceFilterProperty,
-} from "./InstanceFilterProperties.js";
+import type { CreateInstanceFilterPropertiesProps, InstanceFilterProperties } from "./InstanceFilterProperties.js";
 
 /**
  * Input used by {@link useInstanceFilterPropertiesInfo}.
@@ -30,7 +27,7 @@ export interface InstanceFilterPropertiesInfo extends InstanceFilterProperties {
   /**
    * Properties available to at least one selected class, or all `properties` when no classes are selected.
    */
-  visibleProperties: InstanceFilterProperty[];
+  visibleProperties: ReadonlyPropertyField[];
   /** Full names of the classes currently selected to restrict properties. */
   selectedClasses: EC.FullClassNameDotNotation[];
   /** Replaces the selected classes used to restrict `visibleProperties`. */
@@ -60,7 +57,7 @@ export function useInstanceFilterPropertiesInfo({
 
     const selectedClassNameSet = new Set(selectedClasses);
     return properties.filter((property) =>
-      property.availableClassNames.some((className) => selectedClassNameSet.has(className)),
+      property.primaryClassNames.some((className) => selectedClassNameSet.has(className)),
     );
   }, [properties, selectedClasses]);
   const onSelectedClassesChanged = useCallback(

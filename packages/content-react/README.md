@@ -14,4 +14,4 @@ The `@itwin/presentation-content-react` package provides React hooks and UI-neut
 
 - `useInstanceFilterPropertiesInfo` — React hook that derives `classes` and `properties` lists from a `ContentDescriptor` for an instance filter builder.
 - `createInstanceFilterProperties` — UI-neutral helper that derives `classes` and `properties` lists for an instance filter builder.
-- Types: `InstanceFilterClass`, `InstanceFilterProperty`, `InstanceFilterPropertiesInfo`.
+- Types: `InstanceFilterClass`, `InstanceFilterPropertiesInfo`.
