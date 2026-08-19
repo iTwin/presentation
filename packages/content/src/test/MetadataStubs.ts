@@ -5,7 +5,7 @@
 
 import { normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 
 /** Creates a primitive `EC.Property` stub for tests. */
 export function createPrimitiveProperty(props: {
@@ -104,10 +104,10 @@ export function createMixinClass(props: {
 }
 
 /**
- * Creates an `ECSchemaProvider & ECClassHierarchyInspector` stub backed by the given classes,
+ * Creates an `ECSchemaProvider` stub backed by the given classes,
  * looked up by their (normalized) full name. `classDerivesFrom` walks the stubs' `baseClass` chain.
  */
-export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider & ECClassHierarchyInspector {
+export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider {
   const byFullName = new Map(classes.map((cls) => [cls.fullName, cls]));
   return {
     getSchema: async (schemaName: string) => ({

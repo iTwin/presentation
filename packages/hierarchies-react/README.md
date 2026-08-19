@@ -65,7 +65,6 @@ The hook takes 2 required properties:
 
   ```tsx
   import { IModelConnection } from "@itwin/core-frontend";
-  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
   import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
@@ -74,8 +73,6 @@ The hook takes 2 required properties:
     return {
       imodelKey: createIModelKey(imodel),
       ...schemaProvider,
-      // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
       // the second argument is the maximum number of rows the executor will return - this allows us to
       // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
@@ -109,7 +106,6 @@ The component renders a virtualized tree using the `Tree` component from `@strat
 
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
@@ -125,8 +121,6 @@ function createIModelAccess(imodel: IModelConnection) {
   return {
     imodelKey: createIModelKey(imodel),
     ...schemaProvider,
-    // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
     // the second argument is the maximum number of rows the executor will return - this allows us to
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),

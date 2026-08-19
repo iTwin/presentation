@@ -257,7 +257,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-          classHierarchyInspector: imodelAccess,
+          imodelAccess,
           hierarchy: {
             // For root nodes, simply return one generic node
             rootNodes: async () => [{ node: { key: "physical-elements", label: "Physical elements" } }],

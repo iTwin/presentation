@@ -118,7 +118,7 @@ export function createHierarchyDefinitionFactory({
 
   return ({ primaryIModelAccess }) =>
     createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector: primaryIModelAccess,
+      imodelAccess: primaryIModelAccess,
       hierarchy: {
         rootNodes: async (props) => rootNodes(props),
         childNodes: [

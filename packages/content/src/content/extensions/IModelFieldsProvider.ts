@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type {
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryExecutor,
@@ -37,7 +36,7 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
    * Called once per target during source resolution.
    */
   getContribution(props: {
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    imodelAccess: ECSchemaProvider;
     target: ContentTarget;
   }): Promise<FieldsProviderContribution | undefined>;
 }

@@ -8,7 +8,7 @@ import "./DisposePolyfill.js";
 
 import { createIModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
 
-import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import type { createHiliteSetProvider, HiliteSet } from "./HiliteSetProvider.js";
 import type { SelectionStorage } from "./SelectionStorage.js";
 
@@ -22,7 +22,7 @@ export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
 
   /** A callback that should return iModel access by iModel key. */
-  imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+  imodelProvider: (imodelKey: string) => Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
 
   /** An optional hilite set provider factory. If not provided, defaults to `createHiliteSetProvider` from this package. */
   createHiliteSetProvider?: typeof createHiliteSetProvider;

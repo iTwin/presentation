@@ -16,7 +16,7 @@ import { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
-import type { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
 import type { IModelInstanceKey } from "../HierarchyNodeKey.js";
 import type { HierarchySearchTree } from "../HierarchySearch.js";
 import type {
@@ -34,7 +34,7 @@ import type {
 import type { ProcessedGroupingHierarchyNode } from "./IModelHierarchyNode.js";
 
 interface SearchHierarchyDefinitionProps {
-  imodelAccess: ECClassHierarchyInspector;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   source: RxjsHierarchyDefinition;
   sourceName: string;
   targetPaths: HierarchySearchTree[];
@@ -43,7 +43,7 @@ interface SearchHierarchyDefinitionProps {
 
 /** @internal */
 export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
-  private _imodelAccess: ECClassHierarchyInspector;
+  private _imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   private _source: RxjsHierarchyDefinition;
   private _targetPaths: HierarchySearchTree[];
   private _nodesParser: RxjsNodeParser;

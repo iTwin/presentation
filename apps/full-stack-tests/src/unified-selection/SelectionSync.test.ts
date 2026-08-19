@@ -23,7 +23,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { withEditTxn } from "@itwin/core-backend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createStorage, enableUnifiedSelectionSyncWithIModel, Selectables } from "@itwin/unified-selection";
 import { buildTestIModel, unifyIModelAPIs } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
@@ -64,13 +63,11 @@ describe("Unified selection sync with iModel", () => {
 
   function enableSync(props?: { selectionScope?: SelectionScope }): Disposable {
     const schemaProvider = createECSchemaProvider(unifyIModelAPIs(imodelConnection));
-    const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
     const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 123);
     const dispose = enableUnifiedSelectionSyncWithIModel({
       imodelAccess: {
         key: createIModelKey(imodelConnection),
         ...schemaProvider,
-        ...classHierarchyInspector,
         ...queryExecutor,
         selectionSet: imodelConnection.selectionSet,
         hiliteSet: imodelConnection.hilited,

@@ -9,7 +9,6 @@ import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetFilter.js";
 
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
@@ -78,7 +77,7 @@ function createMockIModelAccess(props?: {
   resolvePathsQueryResults?: ECSqlQueryRow[];
   primaryClassScanResults?: ECSqlQueryRow[];
   derivedClasses?: Record<string, string[]>;
-}): ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector {
+}): ECSqlQueryExecutor & ECSchemaProvider {
   const { resolvePathsQueryResults = [], primaryClassScanResults = [], derivedClasses = {} } = props ?? {};
   return {
     createQueryReader: vi.fn((query: ECSqlQueryDef) => {
@@ -1110,7 +1109,7 @@ describe("resolveContentSources", () => {
         relatedProperties: [{ path: pathA }, { path: pathB }],
       });
       let callCount = 0;
-      const imodelAccess: ECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector = {
+      const imodelAccess: ECSqlQueryExecutor & ECSchemaProvider = {
         createQueryReader: vi.fn((_query: ECSqlQueryDef) => {
           callCount++;
           // First declaration gets no results, second gets results

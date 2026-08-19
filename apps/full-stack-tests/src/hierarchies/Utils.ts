@@ -11,7 +11,6 @@ import {
   createIModelKey,
 } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createSchemaContext, unifyIModelAPIs } from "../IModelUtils.js";
 
 import type { ECDb } from "@itwin/core-backend";
@@ -24,12 +23,10 @@ type HierarchySearchPaths = NonNullable<NonNullable<HierarchyProviderProps["sear
 
 export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
   const schemaProvider = createECSchemaProviderInterop(unifyIModelAPIs(imodel));
-  const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
   const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
   return {
     imodelKey: imodel instanceof IModelConnection || imodel instanceof IModelDb ? createIModelKey(imodel) : "ecdb",
     ...schemaProvider,
-    ...classHierarchyInspector,
     ...queryExecutor,
   };
 }

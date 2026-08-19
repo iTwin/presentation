@@ -9,7 +9,7 @@ import { getClass } from "@itwin/presentation-shared";
 
 import type { Mock } from "vitest";
 import type { LogLevel } from "@itwin/core-bentley";
-import type { EC, ECClassHierarchyInspector } from "@itwin/presentation-shared";
+import type { EC } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import type {
   ClassGroupingNodeKey,
@@ -288,37 +288,26 @@ export function createECSchemaProviderStub() {
     props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
   };
-  return {
+  const stubProvider = {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
     getSchema: async (name: string) => getSchemaImpl(name),
-  };
-}
-
-export function createClassHierarchyInspectorStub(
-  schemaProvider = createECSchemaProviderStub(),
-): {
-  stubEntityClass: TStubEntityClassFunc;
-  stubRelationshipClass: TStubRelationshipClassFunc;
-  stubOtherClass: TStubClassFunc;
-} & ECClassHierarchyInspector {
-  return {
-    stubEntityClass: schemaProvider.stubEntityClass,
-    stubRelationshipClass: schemaProvider.stubRelationshipClass,
-    stubOtherClass: schemaProvider.stubOtherClass,
-    classDerivesFrom: async (derived: EC.FullClassNameDotNotation, base: EC.FullClassNameDotNotation) => {
-      const derivedClass = await getClass(schemaProvider, derived);
-      const baseClass = await getClass(schemaProvider, base);
+    classDerivesFrom: async (
+      derived: EC.FullClassNameDotNotation,
+      base: EC.FullClassNameDotNotation,
+    ): Promise<boolean> => {
+      const derivedClass = await getClass(stubProvider, derived);
+      const baseClass = await getClass(stubProvider, base);
       return derivedClass.is(baseClass);
     },
   };
+  return stubProvider;
 }
 
 export function createIModelAccessStub() {
   const createQueryReader: Mock<LimitingECSqlQueryExecutor["createQueryReader"]> = vi.fn();
-  const schemaProvider = createECSchemaProviderStub();
-  return { ...schemaProvider, ...createClassHierarchyInspectorStub(schemaProvider), createQueryReader };
+  return { ...createECSchemaProviderStub(), createQueryReader };
 }
 
 export function createInstanceLabelSelectClauseFactoryStub() {

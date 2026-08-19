@@ -33,6 +33,7 @@ function createIModelAccess(props: {
       const version = schemas?.get(name);
       return version ? ({ name, version } as unknown as EC.Schema) : undefined;
     },
+    classDerivesFrom: async () => false,
   };
 }
 

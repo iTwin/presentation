@@ -14,7 +14,7 @@ import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type {
   EC,
-  ECClassHierarchyInspector,
+  ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
@@ -48,7 +48,7 @@ export interface HiliteSet {
  */
 export interface HiliteSetProviderProps {
   /** An object that provides access to iModel's metadata and allows running ECSQL queries on it. */
-  imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
 }
 
 /**
@@ -74,7 +74,7 @@ export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSe
 }
 
 class HiliteSetProviderImpl implements HiliteSetProvider {
-  private _imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+  private _imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
   // Map between a class name and its type
   private _classRelationCache: Map<string, InstanceIdType | Promise<InstanceIdType>>;
   #componentId: GuidString;

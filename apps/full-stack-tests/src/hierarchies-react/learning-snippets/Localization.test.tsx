@@ -2,12 +2,10 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
 import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
@@ -53,7 +51,6 @@ describe("Hierarchies React", () => {
         const access = {
           imodelKey: createIModelKey(imodelConnection),
           ...schemaProvider,
-          ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 1000),
         };
         const getHierarchyDefinition: Props<typeof useIModelTree>["getHierarchyDefinition"] = () => ({

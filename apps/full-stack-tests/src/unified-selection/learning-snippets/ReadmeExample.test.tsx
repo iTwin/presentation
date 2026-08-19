@@ -20,7 +20,6 @@ import { createStorage, Selectables } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.IModelSelectionSync.Imports
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports
@@ -158,9 +157,7 @@ describe("Unified selection", () => {
                 // selection and hilite sets
                 imodelAccess: {
                   ...createECSqlQueryExecutor(iModelConnection),
-                  ...createCachingECClassHierarchyInspector({
-                    schemaProvider: createECSchemaProvider(iModelConnection),
-                  }),
+                  ...createECSchemaProvider(iModelConnection),
                   key: createIModelKey(iModelConnection),
                   hiliteSet: iModelConnection.hilited,
                   selectionSet: iModelConnection.selectionSet,

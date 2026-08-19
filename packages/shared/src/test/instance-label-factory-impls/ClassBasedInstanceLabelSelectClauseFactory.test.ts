@@ -15,14 +15,14 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       return "default selector";
     },
   };
-  const classHierarchyInspector = { classDerivesFrom: vi.fn() };
+  const imodelAccess = { classDerivesFrom: vi.fn() };
   beforeEach(() => {
-    classHierarchyInspector.classDerivesFrom.mockReset();
+    imodelAccess.classDerivesFrom.mockReset();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      classHierarchyInspector,
+      imodelAccess,
       defaultClauseFactory,
       clauses: [],
     });
@@ -32,21 +32,21 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns default clause when none of given clause classes match query class", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      classHierarchyInspector,
+      imodelAccess,
       defaultClauseFactory,
       clauses: [
         { className: "Schema.ClassA", clause: async () => "a selector" },
         { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.mockResolvedValue(false);
+    imodelAccess.classDerivesFrom.mockResolvedValue(false);
     const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
     expect(result).toBe("default selector");
   });
 
   it("returns combination of all clauses if class name prop is not set", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      classHierarchyInspector,
+      imodelAccess,
       defaultClauseFactory,
       clauses: [
         { className: "Schema.ClassA", clause: async () => "a selector" },
@@ -75,14 +75,14 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns clauses for classes that derive from query class", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      classHierarchyInspector,
+      imodelAccess,
       defaultClauseFactory,
       clauses: [
         { className: "Schema.ClassA", clause: async () => "a selector" },
         { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.mockImplementation(
+    imodelAccess.classDerivesFrom.mockImplementation(
       async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass",
     );
     const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });
@@ -102,14 +102,14 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns clauses for base classes of query class", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      classHierarchyInspector,
+      imodelAccess,
       defaultClauseFactory,
       clauses: [
         { className: "Schema.ClassA", clause: async () => "a selector" },
         { className: "Schema.ClassB", clause: async () => "b selector" },
       ],
     });
-    classHierarchyInspector.classDerivesFrom.mockImplementation(
+    imodelAccess.classDerivesFrom.mockImplementation(
       async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB",
     );
     const result = await factory.createSelectClause({ classAlias: "class-alias", className: "Schema.QueryClass" });

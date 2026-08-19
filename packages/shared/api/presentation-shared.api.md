@@ -22,14 +22,14 @@ export interface ArrayValueDescriptor {
 // @public
 interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
-    classHierarchyInspector: ECClassHierarchyInspector;
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 }
 
 // @public
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
-    classHierarchyInspector: ECClassHierarchyInspector;
     clauses: ClassBasedLabelSelectClause[];
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 }
 
 // @public
@@ -66,7 +66,7 @@ export namespace ConcatenatedValuePart {
 // @public
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
-// @public
+// @public @deprecated
 export function createCachingECClassHierarchyInspector(props: {
     schemaProvider: ECSchemaProvider;
     cacheSize?: number;
@@ -320,7 +320,7 @@ export namespace EC {
     }
 }
 
-// @public
+// @public @deprecated
 export interface ECClassHierarchyInspector {
     // (undocumented)
     classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
@@ -328,6 +328,7 @@ export interface ECClassHierarchyInspector {
 
 // @public
 export interface ECSchemaProvider {
+    classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
     // (undocumented)
     getSchema(schemaName: string): Promise<EC.Schema | undefined>;
 }
@@ -479,7 +480,7 @@ export interface ILogger {
 // @public
 interface IModelInstanceLabelSelectClauseFactoryProps {
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
-    imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & ECSchemaProvider;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
 }
 
 // @public

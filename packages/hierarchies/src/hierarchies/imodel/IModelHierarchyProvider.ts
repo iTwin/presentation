@@ -68,7 +68,6 @@ import type { Observable, ObservableInput, ObservedValueOf } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
 import type {
   ConcatenatedValue,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlQueryDef,
   Event,
@@ -121,7 +120,7 @@ interface IModelHierarchyProviderLocalizedStrings {
 }
 
 /** @public */
-type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector & { imodelKey: string };
+type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
 
 /**
  * Props for `createIModelHierarchyProvider`.
@@ -133,7 +132,6 @@ interface IModelHierarchyProviderProps {
    *
    * @see `ECSchemaProvider`
    * @see `LimitingECSqlQueryExecutor`
-   * @see `ECClassHierarchyInspector`
    */
   imodelAccess: IModelAccess;
 
@@ -224,7 +222,6 @@ interface MergedIModelHierarchyProviderProps extends Omit<
      *
      * @see `ECSchemaProvider`
      * @see `LimitingECSqlQueryExecutor`
-     * @see `ECClassHierarchyInspector`
      */
     imodelAccess: IModelAccess;
 

@@ -6,7 +6,7 @@
 import { PropertyField } from "../model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../model/Utils.js";
 
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
@@ -59,10 +59,7 @@ export interface DescriptorTransformer {
    * Runs asynchronously and receives `imodelAccess` for schema and class-hierarchy
    * lookups (e.g. polymorphic class matching via `classDerivesFrom`).
    */
-  transform(props: {
-    descriptor: TransformableDescriptor;
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-  }): Promise<void>;
+  transform(props: { descriptor: TransformableDescriptor; imodelAccess: ECSchemaProvider }): Promise<void>;
 }
 
 /**

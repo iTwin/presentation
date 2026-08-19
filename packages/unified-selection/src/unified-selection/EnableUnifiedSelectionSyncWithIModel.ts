@@ -15,7 +15,7 @@ import { CoreSelectionSetEventType } from "./types/IModel.js";
 import { safeDispose } from "./Utils.js";
 
 import type { GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
-import type { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import type { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import type { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
 import type { IModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
@@ -44,13 +44,12 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    *
    * ```ts
    * import { createECSqlQueryExecutor, createECSchemaProvider, createIModelKey } from "@itwin/presentation-core-interop";
-   * import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
    * import { IModelConnection } from "@itwin/core-frontend";
    *
    * const imodel: IModelConnection = ...
    * const imodelAccess = {
    *   ...createECSqlQueryExecutor(imodel),
-   *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) }),
+   *   ...createECSchemaProvider(imodel),
    *   key: createIModelKey(imodel),
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,
@@ -58,7 +57,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * ```
    */
   imodelAccess: ECSqlQueryExecutor &
-    ECClassHierarchyInspector & {
+    Pick<ECSchemaProvider, "classDerivesFrom"> & {
       /** Key of the iModel. Generally taken from `IModelConnection.key`. */
       readonly key: string;
       /** The set of currently hilited elements taken from `IModelConnection.hilited`. */

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import type {
   ProcessedGenericHierarchyNode,
@@ -127,7 +127,7 @@ export interface DefineHierarchyLevelProps extends Pick<
   "createSelectClause" | "createFilterClauses"
 > {
   /** The iModel for which the hierarchy definition is being requested for. */
-  imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector & { imodelKey: string };
+  imodelAccess: LimitingECSqlQueryExecutor & ECSchemaProvider & { imodelKey: string };
 
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: HierarchyDefinitionParentNode | undefined;

@@ -16,11 +16,24 @@ import type { ECSqlBinding } from "./ECSqlCore.js";
  */
 export interface ECSchemaProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+
+  /**
+   * Checks whether the class identified by `derivedClassFullName` is the same as, or derives from, the class
+   * identified by `candidateBaseClassFullName`. A class is considered to derive from itself.
+   *
+   * The result may be returned synchronously when the class hierarchy information is already available, or as a
+   * promise otherwise.
+   */
+  classDerivesFrom(
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
+  ): Promise<boolean> | boolean;
 }
 
 /**
  * An interface for a class hierarchy inspector that can be used to determine if one class derives from another.
  * @see `createCachingECClassHierarchyInspector`
+ * @deprecated in 2.0. Use `ECSchemaProvider` instead - it now exposes `classDerivesFrom` directly.
  * @public
  */
 export interface ECClassHierarchyInspector {
@@ -32,13 +45,17 @@ export interface ECClassHierarchyInspector {
 
 /**
  * Creates a new `ECClassHierarchyInspector` that caches results of `derivesFrom` calls.
+ *
  * @public
+ * @deprecated in 2.0. Use `createECSchemaProvider` from `@itwin/presentation-core-interop` instead - the created
+ * `ECSchemaProvider` exposes `classDerivesFrom` directly, without the need for a separate class hierarchy inspector.
  */
 export function createCachingECClassHierarchyInspector(props: {
   /** Schema provider used to load schemas and their classes. */
   schemaProvider: ECSchemaProvider;
   /** Optional cache size, describing the number of derived/base class combinations to store in cache. Defaults to `0`, which means no caching. */
   cacheSize?: number;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
 }): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
   function createCacheKey(derivedClassName: EC.FullClassNameDotNotation, baseClassName: EC.FullClassNameDotNotation) {

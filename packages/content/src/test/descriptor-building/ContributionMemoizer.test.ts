@@ -6,13 +6,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
 
-import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../content/ContentTarget.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 
 type Contribution = Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>;
 
-const imodelAccess = {} as ECSchemaProvider & ECClassHierarchyInspector;
+const imodelAccess = {} as ECSchemaProvider;
 
 function createProvider(id: IModelFieldsProvider["id"], contribution: Contribution) {
   const getContribution = vi.fn<IModelFieldsProvider["getContribution"]>(async () => contribution);

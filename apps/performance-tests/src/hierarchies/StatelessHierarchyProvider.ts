@@ -6,7 +6,6 @@
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { LOGGER } from "../util/Logging.js";
 
 import type { IModelDb } from "@itwin/core-backend";
@@ -17,11 +16,11 @@ import type {
   HierarchySearchTree,
   LimitingECSqlQueryExecutor,
 } from "@itwin/presentation-hierarchies";
-import type { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
+  getHierarchyFactory(imodelAccess: ECSchemaProvider): HierarchyDefinition;
   search?: { paths: HierarchySearchTree[] };
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
@@ -40,9 +39,7 @@ function log(messageOrCallback: string | (() => string)) {
 
 const DEFAULT_ROW_LIMIT = 1000;
 
-export type IModelAccess = ECSchemaProvider &
-  ECClassHierarchyInspector &
-  LimitingECSqlQueryExecutor & { imodelKey: string };
+export type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
 
 export class StatelessHierarchyProvider {
   private constructor(private readonly _provider: HierarchyProvider) {}
@@ -90,7 +87,6 @@ export class StatelessHierarchyProvider {
     const imodelAccess = {
       imodelKey: iModel.key,
       ...schemaProvider,
-      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModel), rowLimitToUse),
     };
     return imodelAccess;
