@@ -331,10 +331,7 @@ This label selectors factory doesn't create labels on its own, but allows assign
 Example usage:
 
 ```ts
-import {
-  createClassBasedInstanceLabelSelectClauseFactory,
-  ECSchemaProvider,
-} from "@itwin/presentation-shared";
+import { createClassBasedInstanceLabelSelectClauseFactory, ECSchemaProvider } from "@itwin/presentation-shared";
 
 const imodelAccess: ECSchemaProvider = getSchemaProvider();
 const labelsFactory = createClassBasedInstanceLabelSelectClauseFactory({
