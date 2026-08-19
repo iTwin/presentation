@@ -15,17 +15,17 @@ import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/present
 
 const schemaProvider = createECSchemaProvider(imodel);
 const imodelAccess = {
-...schemaProvider,
-...createCachingECClassHierarchyInspector({ schemaProvider }),
-...createECSqlQueryExecutor(imodel),
+  ...schemaProvider,
+  ...createCachingECClassHierarchyInspector({ schemaProvider }),
+  ...createECSqlQueryExecutor(imodel),
 };
 
 // After:
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 
 const imodelAccess = {
-...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
-...createECSqlQueryExecutor(imodel),
+  ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+  ...createECSqlQueryExecutor(imodel),
 };
 ```
 
