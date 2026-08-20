@@ -25,11 +25,11 @@ describe("Core interop", () => {
       });
 
       it("creates formatter that formats values with units", async function () {
-        const { imodelConnection, schema } = await buildTestIModel(async (imodel, testName) => {
+        const { imodelConnection, schema } = await buildTestIModel(async (imodelDb, testName) => {
           return {
             schema: await importSchema(
               testName,
-              imodel,
+              imodelDb,
               `
                 <ECSchemaReference name="Formats" version="01.00.00" alias="f"/>
                 <ECSchemaReference name="Units" version="01.00.03" alias="u"/>
