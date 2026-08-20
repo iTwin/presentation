@@ -190,6 +190,11 @@ export interface ContentValues {
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
+export function createHiddenSchemaMembersDescriptorTransformer(props?: {
+    priority?: number;
+}): DescriptorTransformer;
+
+// @public
 export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
 
 // @public

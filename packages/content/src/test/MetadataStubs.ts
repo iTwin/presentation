@@ -15,15 +15,26 @@ export function createPrimitiveProperty(props: {
   koq?: string;
   /** When `true`, the property reports as an array of the given primitive type. */
   array?: boolean;
-  /** Full name of the class that declares the property (defaults to the owning class). */
+  /**
+   * The class that declares the property. Use a full name for simple fixtures, or an `EC.Class` when
+   * a test needs to walk the declaring class's `isHidden`/`baseClass` chain (e.g. `EC.Property.class`).
+   */
+  declaringClass?: EC.FullClassNameDotNotation | EC.Class;
+  /** @deprecated Use `declaringClass` instead. */
   declaringClassName?: EC.FullClassNameDotNotation;
+  /** Whether the property itself is reported as hidden. Defaults to `false`. */
+  isHidden?: boolean;
   /** EC schema property category assigned to the property, if any. */
   category?: { fullName: EC.FullClassNameDotNotation; label?: string };
 }): EC.Property {
   return {
     name: props.name,
     label: props.label,
-    class: { fullName: props.declaringClassName ?? "TestSchema.TestClass" } as unknown as EC.Class,
+    class:
+      typeof props.declaringClass === "string"
+        ? ({ fullName: props.declaringClass } as EC.Class)
+        : (props.declaringClass ?? ({ fullName: props.declaringClassName ?? "TestSchema.TestClass" } as EC.Class)),
+    isHidden: props.isHidden ?? false,
     kindOfQuantity: props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined,
     category: props.category
       ? ({
@@ -58,6 +69,8 @@ export function createEntityClass(props: {
   mixins?: EC.Mixin[];
   /** Classes that derive directly or indirectly from this class. */
   derivedClasses?: EC.Class[];
+  /** Tri-state class visibility. Leave `undefined` to test a class with no defined visibility. */
+  isHidden?: boolean;
 }): EC.EntityClass {
   const { schemaName, className } = parseFullClassName(props.fullName);
   return {
@@ -66,6 +79,7 @@ export function createEntityClass(props: {
     name: className,
     label: props.label,
     baseClass: props.baseClass,
+    isHidden: props.isHidden,
     is: () => false,
     getProperty: (name: string) => props.properties?.find((p) => p.name === name),
     getProperties: () => props.properties ?? [],
@@ -84,6 +98,8 @@ export function createMixinClass(props: {
   fullName: EC.FullClassNameDotNotation;
   ownProperties?: EC.Property[];
   baseClass?: EC.Class;
+  /** Tri-state class visibility. Leave `undefined` to test a class with no defined visibility. */
+  isHidden?: boolean;
 }): EC.Mixin {
   const { schemaName, className } = parseFullClassName(props.fullName);
   return {
@@ -91,6 +107,7 @@ export function createMixinClass(props: {
     fullName: props.fullName,
     name: className,
     baseClass: props.baseClass,
+    isHidden: props.isHidden,
     is: () => false,
     getProperty: (name: string) => props.ownProperties?.find((property) => property.name === name),
     getProperties: () => props.ownProperties ?? [],
