@@ -187,7 +187,10 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/kindofquantity/
    * @public
    */
-  export type KindOfQuantity = SchemaItem;
+  export interface KindOfQuantity extends SchemaItem {
+    relativeError: number;
+    persistenceUnit: string;
+  }
 
   /**
    * Represents a property category used to group related properties.

@@ -466,6 +466,8 @@ function createECKoqFromSchemaView(svKoq: CoreSchemaView.KindOfQuantity, schema:
     name: svKoq.name,
     label: svKoq.label,
     description: svKoq.description,
+    relativeError: svKoq.relativeError,
+    persistenceUnit: svKoq.persistenceUnit,
   };
 }
 

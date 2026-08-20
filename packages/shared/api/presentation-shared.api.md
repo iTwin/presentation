@@ -215,7 +215,12 @@ export namespace EC {
     export type FullClassNameColonNotation = `${string}:${string}`;
     // (undocumented)
     export type FullClassNameDotNotation = `${string}.${string}`;
-    export type KindOfQuantity = SchemaItem;
+    export interface KindOfQuantity extends SchemaItem {
+        // (undocumented)
+        persistenceUnit: string;
+        // (undocumented)
+        relativeError: number;
+    }
     export type Mixin = Class;
     export interface NavigationProperty extends Property {
         // (undocumented)

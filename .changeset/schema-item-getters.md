@@ -3,21 +3,31 @@
 "@itwin/presentation-core-interop": minor
 ---
 
-`EC.Schema`: Add `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` getters to expose schema items other than classes.
+Expose access to enumerations, kind-of-quantities and property categories through `EC.Schema`, and extend `EC.KindOfQuantity` with `relativeError` and `persistenceUnit` attributes. Schemas returned by `createECSchemaProvider` now implement the new getters.
 
-`EC.Schema`, returned by `ECSchemaProvider.getSchema(...)`, now requires `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` methods. Consumers that only use `EC.Schema` are unaffected, but custom implementations of the interface must add these getters. Migration example:
+- `EC.Schema` now requires `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` methods (mirroring the existing `getClass`). Consumers that only use `EC.Schema` are unaffected, but custom implementations of the interface must add these getters:
 
-```ts
-const schema: EC.Schema = {
-  name,
-  version,
-  isHidden,
-  getClass: (className) => classes.get(className),
-  // added:
-  getEnumeration: (enumName) => enumerations.get(enumName),
-  getKindOfQuantity: (koqName) => kindOfQuantities.get(koqName),
-  getPropertyCategory: (categoryName) => categories.get(categoryName),
-};
-```
+  ```ts
+  const schema: EC.Schema = {
+    name,
+    version,
+    isHidden,
+    getClass: (className) => classes.get(className),
+    // added:
+    getEnumeration: (enumName) => enumerations.get(enumName),
+    getKindOfQuantity: (koqName) => kindOfQuantities.get(koqName),
+    getPropertyCategory: (categoryName) => categories.get(categoryName),
+  };
+  ```
 
-`createECSchemaProvider`: The `EC.Schema` returned by the provider now implements the new getters, giving access to enumerations, kind-of-quantities and property categories in addition to classes. Anyone using the provider to get schemas will now be able to access these additional schema items without any changes to their code.
+- `EC.KindOfQuantity` now requires `relativeError` (`number`) and `persistenceUnit` (`string`) attributes. Custom implementations must provide them.
+
+- `createECSchemaProvider`: The `EC.Schema` returned by the provider now implements the new getters, giving access to enumerations, kind-of-quantities and property categories in addition to classes. Existing code keeps working without changes and can now read these additional schema items:
+
+  ```ts
+  const schemaProvider = createECSchemaProvider(imodel);
+  const schema = await schemaProvider.getSchema("BisCore");
+  const enumeration = schema?.getEnumeration("MySchema.MyEnum");
+  const koq = schema?.getKindOfQuantity("MySchema.MyKoq");
+  const category = schema?.getPropertyCategory("MySchema.MyCategory");
+  ```

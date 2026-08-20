@@ -116,7 +116,16 @@ describe("createECSchemaProvider", () => {
             {
               name: "TestSchema",
               kindOfQuantities: new Map([
-                ["TestKoq", { name: "TestKoq", schemaName: "TestSchema", label: "Test Koq" }],
+                [
+                  "TestKoq",
+                  {
+                    name: "TestKoq",
+                    schemaName: "TestSchema",
+                    label: "Test Koq",
+                    relativeError: 0.001,
+                    persistenceUnit: "Units.M",
+                  },
+                ],
               ]),
             },
           ],
@@ -132,6 +141,8 @@ describe("createECSchemaProvider", () => {
     expect(koq.name).toBe("TestKoq");
     expect(koq.fullName).toBe("TestSchema.TestKoq");
     expect(koq.label).toBe("Test Koq");
+    expect(koq.relativeError).toBe(0.001);
+    expect(koq.persistenceUnit).toBe("Units.M");
     expect(koq.schema).toBe(schema);
   });
 
@@ -1331,6 +1342,8 @@ interface MockKoqProps {
   schemaName: string;
   label?: string;
   description?: string;
+  relativeError?: number;
+  persistenceUnit?: string;
 }
 
 interface MockPropertyCategoryProps {
@@ -1406,6 +1419,8 @@ function createMockKoq(props: MockKoqProps): SchemaView.KindOfQuantity {
     label: props.label,
     description: props.description,
     schema,
+    relativeError: props.relativeError ?? 0,
+    persistenceUnit: props.persistenceUnit ?? "",
   } as unknown as SchemaView.KindOfQuantity;
 }
 
