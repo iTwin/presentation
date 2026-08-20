@@ -6,6 +6,8 @@
 
 `SchemaContext` is inefficient on iModels with large domain schemas, so the function no longer depends on it. Sourcing formats from a `FormatsProvider` also lets the consuming application register its own formatting overrides (per organization, per iModel, per user, etc.), achieving cohesive formatting across the whole application - something a bare `SchemaContext` couldn't provide.
 
+Additionally, when a kind of quantity can’t be resolved (e.g. missing schema/KoQ or an unsupported persistence unit name), `createValueFormatter` now falls back to the `baseFormatter` instead of throwing.
+
 Migration: the `schemaContext` prop is removed, provide `formatsProvider`, `unitsProvider` and `imodel` instead:
 
 ```ts
