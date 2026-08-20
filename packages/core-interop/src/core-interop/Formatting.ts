@@ -4,18 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import {
-  KindOfQuantity,
-  OverrideFormat,
-  SchemaKey,
-  SchemaMatchType,
-  SchemaUnitProvider,
-} from "@itwin/ecschema-metadata";
-import { createDefaultValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
+import { createBatchedSchemaViewGetter } from "./Metadata.js";
 
-import type { FormatProps, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
-import type { Format, InvertedUnit, LazyLoadedFormat, SchemaContext, Unit } from "@itwin/ecschema-metadata";
+import type { FormatsProvider, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
+import type { SchemaView } from "@itwin/ecschema-metadata";
 import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
+
+/**
+ * Subset of `SchemaView` used to look up a kind of quantity's persistence unit.
+ * @public
+ */
+type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity">;
 
 /**
  * Props for `createValueFormatter` function.
@@ -23,21 +23,34 @@ import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/prese
  */
 interface CreateValueFormatterProps {
   /**
-   * An instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) for
-   * getting units information. Generally, retrieved directly from `IModelDb` or `IModelConnection` using the `schemaContext` accessor.
+   * Supplies `FormatProps` for a property's kind of quantity, by its full name. On the frontend, `IModelApp.formatsProvider`
+   * satisfies this. `getFormat` returning `undefined` means no format is registered for the kind of quantity - `baseFormatter`
+   * is used in that case.
    */
-  schemaContext: SchemaContext;
+  formatsProvider: Pick<FormatsProvider, "getFormat">;
 
   /**
-   * An optional unit system to use for formatting property values. If not provided, default presentation units are used. If a property
-   * doesn't have a default presentation unit, then persistence unit is used. Finally, if a property doesn't have a unit assigned at all,
-   * `baseFormatter` is used to format the property value.
+   * Resolves units and is used to build format specs. On the frontend, `IModelApp.quantityFormatter` implements this
+   * interface directly.
+   */
+  unitsProvider: UnitsProvider;
+
+  /**
+   * Supplies [SchemaView](https://www.itwinjs.org/reference/ecschema-metadata/context/schemaview/) instances used to look up
+   * a kind of quantity's persistence unit. `IModelDb` and `IModelConnection` satisfy this shape directly.
+   */
+  imodel: { getSchemaView(props?: { schemas?: string[] }): Promise<PersistenceUnitSchemaView> };
+
+  /**
+   * An optional unit system override, forwarded to `formatsProvider.getFormat`. If not provided, `formatsProvider` formats
+   * using whatever unit system it's configured with.
    */
   unitSystem?: UnitSystemKey;
 
   /**
-   * Base primitive value formatter for cases when a property doesn't have any units' information. Defaults to the result of `createDefaultValueFormatter`
-   * from `@itwin/presentation-shared` package.
+   * Base primitive value formatter used whenever a property's value can't be formatted using unit information - e.g. the
+   * property doesn't have a kind of quantity, no format is registered for it, or its kind of quantity doesn't specify a usable
+   * persistence unit. Defaults to the result of `createDefaultValueFormatter` from `@itwin/presentation-shared` package.
    */
   baseFormatter?: IPrimitiveValueFormatter;
 }
@@ -49,25 +62,39 @@ interface CreateValueFormatterProps {
  * Usage example:
  *
  * ```ts
- * import { IModelConnection } from "@itwin/core-frontend";
+ * import { IModelApp, IModelConnection } from "@itwin/core-frontend";
  * import { createValueFormatter } from "@itwin/presentation-core-interop";
  *
  * const imodel: IModelConnection = getIModel();
- * const formatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "metric" });
+ * const formatter = createValueFormatter({
+ *   formatsProvider: IModelApp.formatsProvider,
+ *   unitsProvider: IModelApp.quantityFormatter,
+ *   imodel,
+ *   unitSystem: "metric",
+ * });
  * const formattedValue = await formatter({ type: "Double", value: 1.234, koqName: "MySchema.LengthKindOfQuantity" });
  * ```
+ *
+ * On the backend, where there's no `IModelApp`, construct equivalent `formatsProvider` / `unitsProvider` instances
+ * from the active iModel using `SchemaFormatsProvider` and `SchemaUnitProvider` from `@itwin/ecschema-metadata`,
+ * ideally caching them per iModel.
  *
  * @public
  */
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter {
-  const { schemaContext, unitSystem } = props;
+  const { formatsProvider, unitsProvider, imodel, unitSystem } = props;
   /* v8 ignore next -- @preserve */
   const baseFormatter = props.baseFormatter ?? createDefaultValueFormatter();
-  const unitsProvider = new SchemaUnitProvider(schemaContext);
+  const getSchemaView = createBatchedSchemaViewGetter(imodel);
   return async function (value: TypedPrimitiveValue): Promise<string> {
     if (value.type === "Double" && !!value.koqName) {
-      const koq = await getKindOfQuantity(schemaContext, value.koqName);
-      const spec = await getFormatterSpec(unitsProvider, koq, unitSystem);
+      const spec = await getFormatterSpec({
+        formatsProvider,
+        unitsProvider,
+        getSchemaView,
+        koqName: value.koqName,
+        unitSystem,
+      });
       if (spec) {
         return spec.applyFormatting(value.value);
       }
@@ -76,119 +103,41 @@ export function createValueFormatter(props: CreateValueFormatterProps): IPrimiti
   };
 }
 
-async function getKindOfQuantity(schemas: SchemaContext, fullName: string) {
-  const { schemaName, className: koqName } = parseFullClassName(fullName);
-  const schema = await schemas.getSchema(new SchemaKey(schemaName), SchemaMatchType.Latest);
-  if (!schema) {
-    throw new Error(`Invalid schema "${schemaName}" specified in KoQ full name "${fullName}"`);
-  }
-  const koq = await schema.getItem(koqName, KindOfQuantity);
-  if (!koq) {
-    throw new Error(
-      `Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`,
-    );
-  }
-  return koq;
-}
-
-async function getFormatterSpec(unitsProvider: UnitsProvider, koq: KindOfQuantity, unitSystem?: UnitSystemKey) {
-  const formattingProps = await getFormattingProps(koq, unitSystem);
-  if (!formattingProps) {
+async function getFormatterSpec(props: {
+  formatsProvider: Pick<FormatsProvider, "getFormat">;
+  unitsProvider: UnitsProvider;
+  getSchemaView: (schemaName: string) => Promise<PersistenceUnitSchemaView>;
+  koqName: string;
+  unitSystem?: UnitSystemKey;
+}): Promise<FormatterSpec | undefined> {
+  const { formatsProvider, unitsProvider, getSchemaView, koqName, unitSystem } = props;
+  const formatProps = await formatsProvider.getFormat(koqName, unitSystem);
+  if (!formatProps) {
     return undefined;
   }
-  const { formatProps, persistenceUnitName } = formattingProps;
+  const persistenceUnitName = await getPersistenceUnitName(getSchemaView, koqName);
+  if (!persistenceUnitName) {
+    return undefined;
+  }
   const persistenceUnit = await unitsProvider.findUnitByName(persistenceUnitName);
   const format = await QuantityFormat.createFromJSON("", unitsProvider, formatProps);
   return FormatterSpec.create("", format, unitsProvider, persistenceUnit);
 }
 
-interface FormattingProps {
-  formatProps: FormatProps;
-  persistenceUnitName: string;
-}
-
-async function getFormattingProps(
-  koq: KindOfQuantity,
-  unitSystem?: UnitSystemKey,
-): Promise<FormattingProps | undefined> {
-  const persistenceUnit = await koq.persistenceUnit;
-  if (!persistenceUnit) {
+async function getPersistenceUnitName(
+  getSchemaView: (schemaName: string) => Promise<PersistenceUnitSchemaView>,
+  koqName: string,
+): Promise<string | undefined> {
+  const { schemaName } = parseFullClassName(koqName);
+  const schemaView = await getSchemaView(schemaName);
+  const koq = schemaView.findKindOfQuantity(koqName);
+  if (!koq) {
     return undefined;
   }
-  const formatProps = await getKoqFormatProps(koq, persistenceUnit, unitSystem);
-  if (!formatProps) {
+  try {
+    // Legacy ECDb profiles (pre EC3.2 Units/Formats migration) return persistence units in a format this doesn't understand.
+    return normalizeFullClassName(koq.persistenceUnit);
+  } catch {
     return undefined;
   }
-  return { formatProps, persistenceUnitName: persistenceUnit.fullName };
-}
-
-async function getKoqFormatProps(
-  koq: KindOfQuantity,
-  persistenceUnit: Unit | InvertedUnit,
-  unitSystem?: UnitSystemKey,
-) {
-  const unitSystems = getUnitSystemGroupNames(unitSystem);
-  // use one of KOQ presentation format that matches requested unit system
-  const presentationFormat = await getKoqPresentationFormat(koq, unitSystems);
-  if (presentationFormat) {
-    return getFormatProps(presentationFormat);
-  }
-
-  // use persistence unit format if it matches requested unit system and matching presentation format was not found
-  const persistenceUnitSystem = await persistenceUnit.unitSystem;
-  if (persistenceUnitSystem && unitSystems.includes(persistenceUnitSystem.name.toUpperCase())) {
-    return getPersistenceUnitFormatProps(persistenceUnit);
-  }
-
-  // use default presentation format if persistence unit does not match requested unit system
-  if (koq.defaultPresentationFormat) {
-    return getFormatProps(koq.defaultPresentationFormat);
-  }
-
-  return undefined;
-}
-
-async function getKoqPresentationFormat(koq: KindOfQuantity, unitSystems: string[]) {
-  const presentationFormats = koq.presentationFormats;
-  for (const system of unitSystems) {
-    for (const format of presentationFormats) {
-      const units = format instanceof OverrideFormat ? format.units : (await format).units;
-      const lazyUnit = units && units[0][0];
-      const currentUnitSystem = lazyUnit && (await lazyUnit).unitSystem;
-      if (currentUnitSystem && currentUnitSystem.name.toUpperCase() === system) {
-        return format;
-      }
-    }
-  }
-  return undefined;
-}
-
-async function getFormatProps(format: LazyLoadedFormat | OverrideFormat | Format): Promise<FormatProps> {
-  return format instanceof OverrideFormat ? format.getFormatProps() : (await format).toJSON();
-}
-
-function getPersistenceUnitFormatProps(persistenceUnit: Unit | InvertedUnit): FormatProps {
-  // Same as Format "DefaultRealU" in Formats ecschema
-  return {
-    formatTraits: ["keepSingleZero", "keepDecimalPoint", "showUnitLabel"],
-    precision: 6,
-    type: "Decimal",
-    uomSeparator: " ",
-    decimalSeparator: ".",
-    composite: { units: [{ name: persistenceUnit.fullName, label: persistenceUnit.label }] },
-  };
-}
-
-function getUnitSystemGroupNames(unitSystem?: UnitSystemKey) {
-  switch (unitSystem) {
-    case "imperial":
-      return ["IMPERIAL", "USCUSTOM", "INTERNATIONAL", "FINANCE"];
-    case "metric":
-      return ["SI", "METRIC", "INTERNATIONAL", "FINANCE"];
-    case "usCustomary":
-      return ["USCUSTOM", "INTERNATIONAL", "FINANCE"];
-    case "usSurvey":
-      return ["USSURVEY", "USCUSTOM", "INTERNATIONAL", "FINANCE"];
-  }
-  return [];
 }

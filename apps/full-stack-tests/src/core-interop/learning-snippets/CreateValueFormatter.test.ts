@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Imports
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -42,10 +43,23 @@ describe("Core interop", () => {
           return imodelConnection;
         }
 
+        // The end product is responsible for registering a schema-aware `FormatsProvider` - `createValueFormatter` doesn't do this itself.
+        IModelApp.formatsProvider = new SchemaFormatsProvider(imodelConnection.schemaContext);
+
         // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Example
-        const schemaContext: SchemaContext = getIModelConnection().schemaContext;
-        const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
-        const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
+        const imodel = getIModelConnection();
+        const metricFormatter = createValueFormatter({
+          formatsProvider: IModelApp.formatsProvider,
+          unitsProvider: IModelApp.quantityFormatter,
+          imodel,
+          unitSystem: "metric",
+        });
+        const imperialFormatter = createValueFormatter({
+          formatsProvider: IModelApp.formatsProvider,
+          unitsProvider: IModelApp.quantityFormatter,
+          imodel,
+          unitSystem: "imperial",
+        });
 
         // Define the raw value to be formatted
         const value = 1.234;

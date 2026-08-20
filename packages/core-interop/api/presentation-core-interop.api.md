@@ -7,14 +7,15 @@
 import { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Event as Event_2 } from '@itwin/presentation-shared';
+import type { FormatsProvider } from '@itwin/core-quantity';
 import type { ILogger } from '@itwin/presentation-shared';
 import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import type { QueryOptions } from '@itwin/core-common';
 import type { QueryRowProxy } from '@itwin/core-common';
-import type { SchemaContext } from '@itwin/ecschema-metadata';
 import type { SchemaView } from '@itwin/ecschema-metadata';
+import type { UnitsProvider } from '@itwin/core-quantity';
 import type { UnitSystemKey } from '@itwin/core-quantity';
 
 // @public
@@ -56,7 +57,13 @@ export function createValueFormatter(props: CreateValueFormatterProps): IPrimiti
 // @public
 interface CreateValueFormatterProps {
     baseFormatter?: IPrimitiveValueFormatter;
-    schemaContext: SchemaContext;
+    formatsProvider: Pick<FormatsProvider, "getFormat">;
+    imodel: {
+        getSchemaView(props?: {
+            schemas?: string[];
+        }): Promise<PersistenceUnitSchemaView>;
+    };
+    unitsProvider: UnitsProvider;
     unitSystem?: UnitSystemKey;
 }
 
@@ -80,6 +87,9 @@ interface ICoreTxnManager {
     onCommit: Event_2;
     onCommitted: Event_2;
 }
+
+// @public
+type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity">;
 
 // @public
 type PublicCoreSchemaView = Pick<SchemaView, "schemaToken" | "isOutdated" | "schemaCount" | "classCount" | "getSchema" | "getSchemaByAlias" | "getSchemas" | "findClass" | "findEnumeration" | "findKindOfQuantity" | "findPropertyCategory">;
