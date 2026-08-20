@@ -32,6 +32,8 @@
     "@itwin/itwinui-react": "catalog:itwinui",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-components": "workspace:*",
+    "@itwin/presentation-content": "workspace:*",
+    "@itwin/presentation-content-react": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-frontend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-hierarchies": "workspace:*",

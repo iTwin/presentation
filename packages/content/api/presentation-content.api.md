@@ -108,7 +108,7 @@ export interface ContentDescriptor {
 
 // @public
 export interface ContentItem {
-    readonly descriptor: DeepReadonly<ContentDescriptor>;
+    readonly descriptor: ReadonlyContentDescriptor;
     getValue(field: Field): DeepReadonly<Value>;
     readonly primaryKey: DeepReadonly<InstanceKey>;
     readonly values: DeepReadonly<Record<Field["id"], Value>>;
@@ -116,7 +116,7 @@ export interface ContentItem {
 
 // @public
 interface ContentProvider {
-    getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
+    getContentDescriptor(): Promise<ReadonlyContentDescriptor>;
     getInstanceKeys(options?: Pick<ContentRequestOptions, "filters">): AsyncIterable<InstanceKey>;
     getItems(options?: ContentRequestOptions): AsyncIterable<ContentItem>;
     getSize(options?: Pick<ContentRequestOptions, "filters">): Promise<number>;
@@ -370,6 +370,21 @@ interface QueryFilterer {
         targetAlias: string;
     }): QueryFilterClauses;
 }
+
+// @public
+export type ReadonlyCalculatedField = DeepReadonly<CalculatedField>;
+
+// @public
+export type ReadonlyContentDescriptor = DeepReadonly<ContentDescriptor>;
+
+// @public
+export type ReadonlyExternalField = DeepReadonly<ExternalField>;
+
+// @public
+export type ReadonlyField = ReadonlyPropertyField | ReadonlyCalculatedField | ReadonlyExternalField;
+
+// @public
+export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 
 // @public
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;

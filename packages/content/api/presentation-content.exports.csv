@@ -25,6 +25,11 @@ public;function;mapItems
 public;interface;PropertyField
 public;namespace;PropertyField
 public;interface;PropertyValueSelector
+public;type;ReadonlyCalculatedField
+public;type;ReadonlyContentDescriptor
+public;type;ReadonlyExternalField
+public;type;ReadonlyField
+public;type;ReadonlyPropertyField
 public;function;reduceItems
 public;function;resolveContentSources
 public;type;ValueSelector
