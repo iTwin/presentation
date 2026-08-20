@@ -89,7 +89,7 @@ interface ICoreTxnManager {
 }
 
 // @public
-type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity">;
+type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">;
 
 // @public
 type PublicCoreSchemaView = Pick<SchemaView, "schemaToken" | "isOutdated" | "schemaCount" | "classCount" | "getSchema" | "getSchemaByAlias" | "getSchemas" | "findClass" | "findEnumeration" | "findKindOfQuantity" | "findPropertyCategory">;
