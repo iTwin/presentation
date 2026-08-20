@@ -29,6 +29,9 @@ interface SchemaStub {
   version: EC.SchemaVersion;
   isHidden: boolean;
   getClass: Mock<EC.Schema["getClass"]>;
+  getEnumeration: Mock<EC.Schema["getEnumeration"]>;
+  getKindOfQuantity: Mock<EC.Schema["getKindOfQuantity"]>;
+  getPropertyCategory: Mock<EC.Schema["getPropertyCategory"]>;
   classes: Map<string, EC.Class>;
 }
 export function createECSchemaProviderStub() {
@@ -72,6 +75,9 @@ export function createECSchemaProviderStub() {
         isHidden: false,
         classes: classMap,
         getClass: vi.fn((className: string) => classMap.get(className)),
+        getEnumeration: vi.fn(() => undefined),
+        getKindOfQuantity: vi.fn(() => undefined),
+        getPropertyCategory: vi.fn(() => undefined),
       };
       schemaStubs.set(schemaName, schemaStub);
     }

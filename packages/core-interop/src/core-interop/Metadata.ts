@@ -148,6 +148,18 @@ export function createECSchemaFromSchemaView(
       const svClass = svSchema.getClass(name);
       return svClass ? createECClassFromSchemaView(svClass, { ...context, schema: ecSchema }) : undefined;
     },
+    getEnumeration(name) {
+      const svEnum = svSchema.getEnumeration(name);
+      return svEnum ? createECEnumerationFromSchemaView(svEnum, ecSchema) : undefined;
+    },
+    getKindOfQuantity(name) {
+      const svKoq = svSchema.getKindOfQuantity(name);
+      return svKoq ? createECKoqFromSchemaView(svKoq, ecSchema) : undefined;
+    },
+    getPropertyCategory(name) {
+      const svCategory = svSchema.getPropertyCategory(name);
+      return svCategory ? createECPropertyCategoryFromSchemaView(svCategory, ecSchema) : undefined;
+    },
   };
   return ecSchema;
 }
@@ -454,6 +466,8 @@ function createECKoqFromSchemaView(svKoq: CoreSchemaView.KindOfQuantity, schema:
     name: svKoq.name,
     label: svKoq.label,
     description: svKoq.description,
+    relativeError: svKoq.relativeError,
+    persistenceUnit: svKoq.persistenceUnit,
   };
 }
 

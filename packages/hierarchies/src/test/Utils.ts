@@ -167,6 +167,9 @@ export interface StubbedSchema {
   version: EC.SchemaVersion;
   isHidden: boolean;
   getClass: EC.Schema["getClass"];
+  getEnumeration: EC.Schema["getEnumeration"];
+  getKindOfQuantity: EC.Schema["getKindOfQuantity"];
+  getPropertyCategory: EC.Schema["getPropertyCategory"];
 }
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
@@ -190,6 +193,9 @@ export function createECSchemaProviderStub() {
         version: { read: 1, write: 0, minor: 0 },
         isHidden: false,
         getClass: (className) => classes.get(`${schemaName}.${className}`),
+        getEnumeration: () => undefined,
+        getKindOfQuantity: () => undefined,
+        getPropertyCategory: () => undefined,
       };
       schemaStubs.set(schemaName, schemaStub);
     }
