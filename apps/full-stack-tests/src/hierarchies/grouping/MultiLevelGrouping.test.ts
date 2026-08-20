@@ -152,7 +152,7 @@ describe("Hierarchies", () => {
                     children: [
                       NodeValidators.createForPropertyValueGroupingNode({
                         label: labelGroupName1,
-                        propertyClassName: schema.items.X.fullName,
+                        propertyClassName: schema.items.A.fullName,
                         formattedPropertyValue: labelGroupName1,
                         propertyName: "UserLabel",
                         children: [
