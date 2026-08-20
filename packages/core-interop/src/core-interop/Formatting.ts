@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import { createDefaultValueFormatter, normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 import { createBatchedSchemaViewGetter } from "./Metadata.js";
 
 import type { FormatsProvider, UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
@@ -15,7 +15,7 @@ import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/prese
  * Subset of `SchemaView` used to look up a kind of quantity's persistence unit.
  * @public
  */
-type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity">;
+type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">;
 
 /**
  * Props for `createValueFormatter` function.
@@ -124,6 +124,13 @@ async function getFormatterSpec(props: {
   return FormatterSpec.create("", format, unitsProvider, persistenceUnit);
 }
 
+/**
+ * `Units`/`Formats` are excluded from `SchemaView` by design (see class docs), so `SchemaView.getSchemaByAlias` can never
+ * resolve them. Schemas almost universally reference them using these exact aliases, so fall back to them when
+ * `getSchemaByAlias` can't help.
+ */
+const WELL_KNOWN_SCHEMA_ALIASES: Partial<Record<string, string>> = { u: "Units", f: "Formats" };
+
 async function getPersistenceUnitName(
   getSchemaView: (schemaName: string) => Promise<PersistenceUnitSchemaView>,
   koqName: string,
@@ -135,8 +142,14 @@ async function getPersistenceUnitName(
     return undefined;
   }
   try {
-    // Legacy ECDb profiles (pre EC3.2 Units/Formats migration) return persistence units in a format this doesn't understand.
-    return normalizeFullClassName(koq.persistenceUnit);
+    // Despite `persistenceUnit`'s doc comment, it's returned alias-qualified (e.g. "u:M"), not schema-name-qualified.
+    // Legacy ECDb profiles (pre EC3.2 Units/Formats migration) return it in a format this doesn't understand at all.
+    const { schemaName: aliasOrSchemaName, className: unitName } = parseFullClassName(koq.persistenceUnit);
+    const resolvedSchemaName =
+      schemaView.getSchemaByAlias(aliasOrSchemaName)?.name ??
+      WELL_KNOWN_SCHEMA_ALIASES[aliasOrSchemaName.toLowerCase()] ??
+      aliasOrSchemaName;
+    return `${resolvedSchemaName}.${unitName}`;
   } catch {
     return undefined;
   }

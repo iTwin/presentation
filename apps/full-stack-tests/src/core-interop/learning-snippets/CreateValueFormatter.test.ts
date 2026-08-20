@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
+import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Imports
 import { IModelApp } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
@@ -43,11 +43,14 @@ describe("Core interop", () => {
           return imodelConnection;
         }
 
-        // The end product is responsible for registering a schema-aware `FormatsProvider` - `createValueFormatter` doesn't do this itself.
+        // The end product is responsible for registering schema-aware `FormatsProvider` / `UnitsProvider` instances -
+        // `createValueFormatter` doesn't do this itself.
         IModelApp.formatsProvider = new SchemaFormatsProvider(imodelConnection.schemaContext);
-        using _resetFormatsProvider = {
-          [Symbol.dispose]() {
+        IModelApp.quantityFormatter.unitsProvider = new SchemaUnitProvider(imodelConnection.schemaContext);
+        await using _resetIModelApp = {
+          async [Symbol.asyncDispose]() {
             IModelApp.resetFormatsProvider();
+            await IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
           },
         };
 

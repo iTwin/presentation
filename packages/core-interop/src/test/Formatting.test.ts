@@ -16,7 +16,13 @@ describe("createValueFormatter", () => {
   const findUnitByName = vi.fn();
   const unitsProvider = { findUnitByName } as unknown as UnitsProvider;
   const findKindOfQuantity = vi.fn();
-  const getSchemaView = vi.fn(async (): Promise<Pick<SchemaView, "findKindOfQuantity">> => ({ findKindOfQuantity }));
+  const getSchemaByAlias = vi.fn();
+  const getSchemaView = vi.fn(
+    async (): Promise<Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">> => ({
+      findKindOfQuantity,
+      getSchemaByAlias,
+    }),
+  );
   const imodel = { getSchemaView };
   const defaultFormatter = vi.fn(async () => "DEFAULT");
   let formatter: IPrimitiveValueFormatter;
@@ -37,6 +43,7 @@ describe("createValueFormatter", () => {
     findUnitByName.mockReset();
     getSchemaView.mockClear();
     findKindOfQuantity.mockReset();
+    getSchemaByAlias.mockReset().mockReturnValue(undefined);
     initFormatter();
   });
 
@@ -99,6 +106,39 @@ describe("createValueFormatter", () => {
     expect(createQuantityFormatStub).toHaveBeenCalledExactlyOnceWith("", unitsProvider, formatProps);
     expect(createFormatSpecStub).toHaveBeenCalledExactlyOnceWith("", quantityFormat, unitsProvider, persistenceUnit);
     expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
+  });
+
+  it("resolves an alias-qualified persistence unit via getSchemaByAlias", async () => {
+    initFormatter("metric");
+    const formatProps = {};
+    formatsProvider.getFormat.mockResolvedValue(formatProps);
+    findKindOfQuantity.mockReturnValue({ persistenceUnit: "myAlias:M" });
+    getSchemaByAlias.mockImplementation((alias: string) => (alias === "myAlias" ? { name: "CustomUnits" } : undefined));
+
+    const persistenceUnit = {};
+    findUnitByName.mockResolvedValue(persistenceUnit);
+    vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue({} as unknown as QuantityFormat);
+    vi.spyOn(FormatterSpec, "create").mockResolvedValue({ applyFormatting: vi.fn() } as unknown as FormatterSpec);
+
+    await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" });
+    expect(getSchemaByAlias).toHaveBeenCalledExactlyOnceWith("myAlias");
+    expect(findUnitByName).toHaveBeenCalledExactlyOnceWith("CustomUnits.M");
+  });
+
+  it("falls back to well-known aliases for the excluded Units/Formats schemas", async () => {
+    initFormatter("metric");
+    const formatProps = {};
+    formatsProvider.getFormat.mockResolvedValue(formatProps);
+    // `getSchemaByAlias` can never resolve `Units`/`Formats` - they're excluded from `SchemaView`.
+    findKindOfQuantity.mockReturnValue({ persistenceUnit: "u:M" });
+
+    const persistenceUnit = {};
+    findUnitByName.mockResolvedValue(persistenceUnit);
+    vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue({} as unknown as QuantityFormat);
+    vi.spyOn(FormatterSpec, "create").mockResolvedValue({ applyFormatting: vi.fn() } as unknown as FormatterSpec);
+
+    await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" });
+    expect(findUnitByName).toHaveBeenCalledExactlyOnceWith("Units.M");
   });
 
   it("forwards unitSystem override to formatsProvider.getFormat", async () => {
