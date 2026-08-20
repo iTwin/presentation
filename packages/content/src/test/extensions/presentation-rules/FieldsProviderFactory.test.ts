@@ -11,7 +11,15 @@ import type { ContentTarget } from "../../../content/ContentTarget.js";
 import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
-  return { name, version, isHidden: false, getClass: () => undefined };
+  return {
+    name,
+    version,
+    isHidden: false,
+    getClass: () => undefined,
+    getEnumeration: () => undefined,
+    getKindOfQuantity: () => undefined,
+    getPropertyCategory: () => undefined,
+  };
 }
 
 function createStubClass(props: { schemaName: string; className: string; label?: string }): EC.Class {

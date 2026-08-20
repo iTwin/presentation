@@ -67,6 +67,117 @@ describe("createECSchemaProvider", () => {
     expect(cls.isHidden).toBeUndefined();
   });
 
+  it("returns enumeration from schema view", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              enumerations: new Map([
+                [
+                  "TestEnum",
+                  {
+                    name: "TestEnum",
+                    schemaName: "TestSchema",
+                    label: "Test Enum",
+                    primitiveType: SchemaViewPrimitiveType.Integer,
+                    isStrict: true,
+                    enumerators: [{ name: "One", label: "One Label", value: 1 }],
+                  },
+                ],
+              ]),
+            },
+          ],
+        ]),
+      ),
+    });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    expect(schema.getEnumeration("NonExistent")).toBeUndefined();
+    const enumeration = schema.getEnumeration("TestEnum");
+    assert(enumeration !== undefined);
+    expect(enumeration.name).toBe("TestEnum");
+    expect(enumeration.fullName).toBe("TestSchema.TestEnum");
+    expect(enumeration.schema).toBe(schema);
+    expect(enumeration.type).toBe("Number");
+    expect(enumeration.isStrict).toBe(true);
+    expect(enumeration.enumerators).toEqual([{ name: "One", label: "One Label", value: 1 }]);
+  });
+
+  it("returns kind of quantity from schema view", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              kindOfQuantities: new Map([
+                [
+                  "TestKoq",
+                  {
+                    name: "TestKoq",
+                    schemaName: "TestSchema",
+                    label: "Test Koq",
+                    relativeError: 0.001,
+                    persistenceUnit: "Units.M",
+                  },
+                ],
+              ]),
+            },
+          ],
+        ]),
+      ),
+    });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    expect(schema.getKindOfQuantity("NonExistent")).toBeUndefined();
+    const koq = schema.getKindOfQuantity("TestKoq");
+    assert(koq !== undefined);
+    expect(koq.name).toBe("TestKoq");
+    expect(koq.fullName).toBe("TestSchema.TestKoq");
+    expect(koq.label).toBe("Test Koq");
+    expect(koq.relativeError).toBe(0.001);
+    expect(koq.persistenceUnit).toBe("Units.M");
+    expect(koq.schema).toBe(schema);
+  });
+
+  it("returns property category from schema view", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              propertyCategories: new Map([
+                [
+                  "TestCategory",
+                  { name: "TestCategory", schemaName: "TestSchema", label: "Test Category", priority: 5 },
+                ],
+              ]),
+            },
+          ],
+        ]),
+      ),
+    });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    expect(schema.getPropertyCategory("NonExistent")).toBeUndefined();
+    const category = schema.getPropertyCategory("TestCategory");
+    assert(category !== undefined);
+    expect(category.name).toBe("TestCategory");
+    expect(category.fullName).toBe("TestSchema.TestCategory");
+    expect(category.label).toBe("Test Category");
+    expect(category.priority).toBe(5);
+    expect(category.schema).toBe(schema);
+  });
+
   it("returns property from schema view class", async () => {
     const imodel = createMockIModel({
       schemaView: createMockSchemaView(
@@ -812,6 +923,9 @@ describe("createECPropertyFromSchemaView", () => {
     version: { read: 1, write: 0, minor: 0 },
     isHidden: false,
     getClass: () => undefined,
+    getEnumeration: () => undefined,
+    getKindOfQuantity: () => undefined,
+    getPropertyCategory: () => undefined,
   };
   const dummyEcClass = {
     schema: dummyEcSchema,
@@ -1295,6 +1409,36 @@ interface MockSchemaProps {
   minorVersion?: number;
   isHidden?: boolean;
   classes?: Map<string, MockClassProps>;
+  enumerations?: Map<string, MockEnumerationProps>;
+  kindOfQuantities?: Map<string, MockKoqProps>;
+  propertyCategories?: Map<string, MockPropertyCategoryProps>;
+}
+
+interface MockEnumerationProps {
+  name: string;
+  schemaName: string;
+  label?: string;
+  description?: string;
+  primitiveType?: SchemaViewPrimitiveType;
+  isStrict?: boolean;
+  enumerators?: Array<{ name: string; label?: string; value: string | number }>;
+}
+
+interface MockKoqProps {
+  name: string;
+  schemaName: string;
+  label?: string;
+  description?: string;
+  relativeError?: number;
+  persistenceUnit?: string;
+}
+
+interface MockPropertyCategoryProps {
+  name: string;
+  schemaName: string;
+  label?: string;
+  description?: string;
+  priority?: number;
 }
 
 interface MockClassProps {
@@ -1325,7 +1469,58 @@ function createMockSchema(props: MockSchemaProps): SchemaView.Schema {
       const classProps = props.classes?.get(name);
       return classProps ? createMockClass(classProps) : undefined;
     },
+    getEnumeration(name: string) {
+      const enumProps = props.enumerations?.get(name);
+      return enumProps ? createMockEnumeration(enumProps) : undefined;
+    },
+    getKindOfQuantity(name: string) {
+      const koqProps = props.kindOfQuantities?.get(name);
+      return koqProps ? createMockKoq(koqProps) : undefined;
+    },
+    getPropertyCategory(name: string) {
+      const categoryProps = props.propertyCategories?.get(name);
+      return categoryProps ? createMockPropertyCategory(categoryProps) : undefined;
+    },
   } as unknown as SchemaView.Schema;
+}
+
+function createMockEnumeration(props: MockEnumerationProps): SchemaView.Enumeration {
+  const schema = { name: props.schemaName } as unknown as SchemaView.Schema;
+  return {
+    fullName: `${props.schemaName}:${props.name}`,
+    name: props.name,
+    label: props.label,
+    description: props.description,
+    schema,
+    primitiveType: props.primitiveType ?? SchemaViewPrimitiveType.String,
+    isStrict: props.isStrict ?? true,
+    getEnumerators: () => (props.enumerators ?? [])[Symbol.iterator](),
+  } as unknown as SchemaView.Enumeration;
+}
+
+function createMockKoq(props: MockKoqProps): SchemaView.KindOfQuantity {
+  const schema = { name: props.schemaName } as unknown as SchemaView.Schema;
+  return {
+    fullName: `${props.schemaName}:${props.name}`,
+    name: props.name,
+    label: props.label,
+    description: props.description,
+    schema,
+    relativeError: props.relativeError ?? 0,
+    persistenceUnit: props.persistenceUnit ?? "",
+  } as unknown as SchemaView.KindOfQuantity;
+}
+
+function createMockPropertyCategory(props: MockPropertyCategoryProps): SchemaView.PropertyCategory {
+  const schema = { name: props.schemaName } as unknown as SchemaView.Schema;
+  return {
+    fullName: `${props.schemaName}:${props.name}`,
+    name: props.name,
+    label: props.label,
+    description: props.description,
+    schema,
+    priority: props.priority ?? 0,
+  } as unknown as SchemaView.PropertyCategory;
 }
 
 function createMockClass(props: MockClassProps): SchemaView.Class {

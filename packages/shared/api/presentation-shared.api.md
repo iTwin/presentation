@@ -215,7 +215,12 @@ export namespace EC {
     export type FullClassNameColonNotation = `${string}:${string}`;
     // (undocumented)
     export type FullClassNameDotNotation = `${string}.${string}`;
-    export type KindOfQuantity = SchemaItem;
+    export interface KindOfQuantity extends SchemaItem {
+        // (undocumented)
+        persistenceUnit: string;
+        // (undocumented)
+        relativeError: number;
+    }
     export type Mixin = Class;
     export interface NavigationProperty extends Property {
         // (undocumented)
@@ -289,6 +294,12 @@ export namespace EC {
         description?: string;
         // (undocumented)
         getClass(name: string): Class | undefined;
+        // (undocumented)
+        getEnumeration(name: string): Enumeration | undefined;
+        // (undocumented)
+        getKindOfQuantity(name: string): KindOfQuantity | undefined;
+        // (undocumented)
+        getPropertyCategory(name: string): PropertyCategory | undefined;
         // (undocumented)
         isHidden: boolean;
         // (undocumented)

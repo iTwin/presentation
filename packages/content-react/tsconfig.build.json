@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "lib"
+  },
+  "include": ["src/content-react", "src/presentation-content-react.ts"]
+}

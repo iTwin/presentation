@@ -130,6 +130,9 @@ export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider {
       version: { read: 1, write: 0, minor: 0 },
       isHidden: false,
       getClass: (className: string) => byFullName.get(`${schemaName}.${className}`),
+      getEnumeration: () => undefined,
+      getKindOfQuantity: () => undefined,
+      getPropertyCategory: () => undefined,
     }),
     classDerivesFrom: async (derivedClassFullName, candidateBaseClassFullName) => {
       const target = normalizeFullClassName(candidateBaseClassFullName);

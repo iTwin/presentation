@@ -119,6 +119,9 @@ export namespace EC {
     version: SchemaVersion;
     isHidden: boolean;
     getClass(name: string): Class | undefined;
+    getEnumeration(name: string): Enumeration | undefined;
+    getKindOfQuantity(name: string): KindOfQuantity | undefined;
+    getPropertyCategory(name: string): PropertyCategory | undefined;
   }
 
   /**
@@ -184,7 +187,10 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/kindofquantity/
    * @public
    */
-  export type KindOfQuantity = SchemaItem;
+  export interface KindOfQuantity extends SchemaItem {
+    relativeError: number;
+    persistenceUnit: string;
+  }
 
   /**
    * Represents a property category used to group related properties.
