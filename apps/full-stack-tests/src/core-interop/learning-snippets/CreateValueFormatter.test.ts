@@ -45,6 +45,11 @@ describe("Core interop", () => {
 
         // The end product is responsible for registering a schema-aware `FormatsProvider` - `createValueFormatter` doesn't do this itself.
         IModelApp.formatsProvider = new SchemaFormatsProvider(imodelConnection.schemaContext);
+        using _resetFormatsProvider = {
+          [Symbol.dispose]() {
+            IModelApp.resetFormatsProvider();
+          },
+        };
 
         // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateValueFormatter.Example
         const imodel = getIModelConnection();
