@@ -74,7 +74,7 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.B" })],
       }),
     ]);
     const provider = createProvider("p1_v1", [{ path: [aToB] }]);
@@ -91,7 +91,7 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.B" })],
       }),
     ]);
     const provider = createProvider("p1_v1", [{ path: [aToB] }]);
@@ -115,7 +115,7 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.B" })],
       }),
     ]);
     const provider = createProvider("p1_v1", [{ path: [aToB] }]);
@@ -139,8 +139,8 @@ describe("collectRelatedPropertyFields", () => {
       createEntityClass({
         fullName: "TestSchema.C",
         properties: [
-          createPrimitiveProperty({ name: "Keep", declaringClassName: "TestSchema.C" }),
-          createPrimitiveProperty({ name: "Drop", declaringClassName: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "Keep", declaringClass: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "Drop", declaringClass: "TestSchema.C" }),
         ],
       }),
     ]);
@@ -164,7 +164,7 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.aToB",
-        properties: [createPrimitiveProperty({ name: "Weight", declaringClassName: "TestSchema.aToB" })],
+        properties: [createPrimitiveProperty({ name: "Weight", declaringClass: "TestSchema.aToB" })],
       }),
     ]);
     const declaration: RelatedPropertiesDeclaration = {
@@ -192,10 +192,10 @@ describe("collectRelatedPropertyFields", () => {
         properties: [
           createPrimitiveProperty({
             name: "Prop",
-            declaringClassName: "TestSchema.B",
+            declaringClass: "TestSchema.B",
             category: { fullName: "TestSchema.Geometry", label: "Geometry" },
           }),
-          createPrimitiveProperty({ name: "Uncategorized", declaringClassName: "TestSchema.B" }),
+          createPrimitiveProperty({ name: "Uncategorized", declaringClass: "TestSchema.B" }),
         ],
       }),
     ]);
@@ -220,11 +220,11 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "TargetProp", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "TargetProp", declaringClass: "TestSchema.B" })],
       }),
       createEntityClass({
         fullName: "TestSchema.aToB",
-        properties: [createPrimitiveProperty({ name: "RelProp", declaringClassName: "TestSchema.aToB" })],
+        properties: [createPrimitiveProperty({ name: "RelProp", declaringClass: "TestSchema.aToB" })],
       }),
     ]);
     const declaration: RelatedPropertiesDeclaration = {
@@ -246,7 +246,7 @@ describe("collectRelatedPropertyFields", () => {
       createEntityClass({
         fullName: "TestSchema.aToB",
         label: "A to B",
-        properties: [createPrimitiveProperty({ name: "relProp", declaringClassName: "TestSchema.aToB" })],
+        properties: [createPrimitiveProperty({ name: "relProp", declaringClass: "TestSchema.aToB" })],
       }),
     ]);
     const declaration: RelatedPropertiesDeclaration = {
@@ -273,11 +273,11 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.BDoor",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.BDoor" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.BDoor" })],
       }),
       createEntityClass({
         fullName: "TestSchema.BWindow",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.BWindow" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.BWindow" })],
       }),
     ]);
     const provider = createProvider("p1_v1", [{ path: [aToB] }]);
@@ -303,11 +303,11 @@ describe("collectRelatedPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "BProp", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "BProp", declaringClass: "TestSchema.B" })],
       }),
       createEntityClass({
         fullName: "TestSchema.C",
-        properties: [createPrimitiveProperty({ name: "CProp", declaringClassName: "TestSchema.C" })],
+        properties: [createPrimitiveProperty({ name: "CProp", declaringClass: "TestSchema.C" })],
       }),
     ]);
     // Both providers are gated so we can force the second declaration's provider to fully resolve

@@ -26,7 +26,7 @@ function collectFields(props: Omit<Parameters<typeof collectClassPropertyFields>
 describe("collectClassPropertyFields", () => {
   it("enumerates all selected properties with the given path and value classes", () => {
     const propertiesClass = createPropertiesClass("TestSchema.B", [
-      createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClassName: "TestSchema.B" }),
+      createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" }),
     ]);
 
     const fields = collectFields({
@@ -58,9 +58,9 @@ describe("collectClassPropertyFields", () => {
 
   it("resolves label from override, then property label, then property name", () => {
     const propertiesClass = createPropertiesClass("TestSchema.C", [
-      createPrimitiveProperty({ name: "alpha", declaringClassName: "TestSchema.C" }),
-      createPrimitiveProperty({ name: "beta", label: "Prop Beta", declaringClassName: "TestSchema.C" }),
-      createPrimitiveProperty({ name: "gamma", label: "Prop Gamma", declaringClassName: "TestSchema.C" }),
+      createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
+      createPrimitiveProperty({ name: "beta", label: "Prop Beta", declaringClass: "TestSchema.C" }),
+      createPrimitiveProperty({ name: "gamma", label: "Prop Gamma", declaringClass: "TestSchema.C" }),
     ]);
 
     const fields = collectFields({
@@ -75,8 +75,8 @@ describe("collectClassPropertyFields", () => {
 
   it("skips properties whose value type is unsupported", () => {
     const propertiesClass = createPropertiesClass("TestSchema.C", [
-      createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
-      createPrimitiveProperty({ name: "Geom", primitiveType: "IGeometry", declaringClassName: "TestSchema.C" }),
+      createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
+      createPrimitiveProperty({ name: "Geom", primitiveType: "IGeometry", declaringClass: "TestSchema.C" }),
     ]);
 
     const fields = collectFields({
@@ -91,7 +91,7 @@ describe("collectClassPropertyFields", () => {
 
   it("attributes a property to its declaring class", () => {
     const propertiesClass = createPropertiesClass("TestSchema.Derived", [
-      createPrimitiveProperty({ name: "UserLabel", declaringClassName: "BisCore.Element" }),
+      createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" }),
     ]);
 
     const [field] = collectFields({
@@ -109,9 +109,9 @@ describe("collectClassPropertyFields", () => {
     function selectNames(select: NonNullable<Parameters<typeof collectClassPropertyFields>[0]["spec"]>["select"]) {
       const fields = collectFields({
         propertiesClass: createPropertiesClass("TestSchema.C", [
-          createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
-          createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
-          createPrimitiveProperty({ name: "C", declaringClassName: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "C", declaringClass: "TestSchema.C" }),
         ]),
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
@@ -140,8 +140,8 @@ describe("collectClassPropertyFields", () => {
   describe("overrides", () => {
     it("applies default overrides to every selected property", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
-        createPrimitiveProperty({ name: "B", declaringClassName: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
       ]);
 
       const results = collectClassPropertyFields({
@@ -161,8 +161,8 @@ describe("collectClassPropertyFields", () => {
 
     it("lets per-property overrides take precedence over default overrides", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "alpha", declaringClassName: "TestSchema.C" }),
-        createPrimitiveProperty({ name: "beta", declaringClassName: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "beta", declaringClass: "TestSchema.C" }),
       ]);
 
       const results = collectClassPropertyFields({
@@ -187,7 +187,7 @@ describe("collectClassPropertyFields", () => {
 
     it("omits categoryId/readOnly/hidden when no override provides them", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
       ]);
 
       const [field] = collectFields({
@@ -208,7 +208,7 @@ describe("collectClassPropertyFields", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
         createPrimitiveProperty({
           name: "A",
-          declaringClassName: "TestSchema.C",
+          declaringClass: "TestSchema.C",
           category: { fullName: "TestSchema.GeometryClass", label: "Geometry" },
         }),
       ]);
@@ -231,7 +231,7 @@ describe("collectClassPropertyFields", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
         createPrimitiveProperty({
           name: "A",
-          declaringClassName: "TestSchema.C",
+          declaringClass: "TestSchema.C",
           category: { fullName: "TestSchema.GeometryClass" },
         }),
       ]);
@@ -254,7 +254,7 @@ describe("collectClassPropertyFields", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
         createPrimitiveProperty({
           name: "prop",
-          declaringClassName: "TestSchema.C",
+          declaringClass: "TestSchema.C",
           category: { fullName: "TestSchema.Geometry", label: "Geometry" },
         }),
       ]);
@@ -272,7 +272,7 @@ describe("collectClassPropertyFields", () => {
 
     it("reports no schema category or override when the property has neither", () => {
       const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "A", declaringClassName: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
       ]);
 
       const [{ categorization }] = collectClassPropertyFields({

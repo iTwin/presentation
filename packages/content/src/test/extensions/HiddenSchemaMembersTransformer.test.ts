@@ -87,9 +87,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const imodelAccess: ECSchemaProvider = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Thing",
-        properties: [
-          createPrimitiveProperty({ name: "Height", declaringClassName: "TestSchema.Thing", isHidden: true }),
-        ],
+        properties: [createPrimitiveProperty({ name: "Height", declaringClass: "TestSchema.Thing", isHidden: true })],
       }),
     ]);
     const field = propertyField({
@@ -246,7 +244,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
       createEntityClass({
         fullName: "TestSchema.Aspect",
         properties: [
-          createPrimitiveProperty({ name: "Identifier", declaringClassName: "TestSchema.Aspect", isHidden: true }),
+          createPrimitiveProperty({ name: "Identifier", declaringClass: "TestSchema.Aspect", isHidden: true }),
         ],
       }),
     ]);
@@ -289,9 +287,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const imodelAccess: ECSchemaProvider = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Thing",
-        properties: [
-          createPrimitiveProperty({ name: "Height", declaringClassName: "TestSchema.Thing", isHidden: true }),
-        ],
+        properties: [createPrimitiveProperty({ name: "Height", declaringClass: "TestSchema.Thing", isHidden: true })],
       }),
     ]);
     const field = propertyField({

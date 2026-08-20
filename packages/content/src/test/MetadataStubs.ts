@@ -20,8 +20,6 @@ export function createPrimitiveProperty(props: {
    * a test needs to walk the declaring class's `isHidden`/`baseClass` chain (e.g. `EC.Property.class`).
    */
   declaringClass?: EC.FullClassNameDotNotation | EC.Class;
-  /** @deprecated Use `declaringClass` instead. */
-  declaringClassName?: EC.FullClassNameDotNotation;
   /** Whether the property itself is reported as hidden. Defaults to `false`. */
   isHidden?: boolean;
   /** EC schema property category assigned to the property, if any. */
@@ -33,7 +31,7 @@ export function createPrimitiveProperty(props: {
     class:
       typeof props.declaringClass === "string"
         ? ({ fullName: props.declaringClass } as EC.Class)
-        : (props.declaringClass ?? ({ fullName: props.declaringClassName ?? "TestSchema.TestClass" } as EC.Class)),
+        : (props.declaringClass ?? ({ fullName: "TestSchema.TestClass" } as unknown as EC.Class)),
     isHidden: props.isHidden ?? false,
     kindOfQuantity: props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined,
     category: props.category
