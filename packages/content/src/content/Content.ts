@@ -49,10 +49,9 @@ import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.j
 import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "./extensions/IModelFieldsProvider.js";
 import type { QueryFilterer } from "./extensions/QueryFilterer.js";
-import type { ContentDescriptor } from "./model/ContentDescriptor.js";
+import type { ReadonlyContentDescriptor } from "./model/ContentDescriptor.js";
 import type { ContentItem } from "./model/ContentItem.js";
 import type { CalculatedField, PropertyField } from "./model/Field.js";
-import type { DeepReadonly } from "./model/Utils.js";
 
 /**
  * Sorting specification for content value requests.
@@ -252,7 +251,7 @@ export interface ContentProvider {
    * from the content configuration. It is deeply readonly — modify it by registering a
    * `DescriptorTransformer`, not by mutating the returned object.
    */
-  getContentDescriptor(): Promise<DeepReadonly<ContentDescriptor>>;
+  getContentDescriptor(): Promise<ReadonlyContentDescriptor>;
 
   /**
    * Get the total number of content items matching the configured sources.
