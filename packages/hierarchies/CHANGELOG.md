@@ -1,5 +1,78 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.18
+
+### Major Changes
+
+- [#1491](https://github.com/iTwin/presentation/pull/1491): `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+
+  // After:
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+
+  **Breaking changes:**
+
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+
+    ```ts
+    // Before:
+    const classHierarchyInspector = createCachingECClassHierarchyInspector({
+      schemaProvider: createECSchemaProvider(imodel),
+    });
+    createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy,
+    });
+
+    // After:
+    const imodelAccess = createECSchemaProvider(imodel);
+    createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+    ```
+
+- [#1394](https://github.com/iTwin/presentation/pull/1394): `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+
+  Additional changes:
+
+  - The `EC.Class.getDerivedClasses()` method was replaced with `getDerivedClassNames(props?: { onlyDirect?: boolean })`. `ECSchemaProvider` can be used to load the derived classes by name, if needed.
+  - The `getCustomAttributes()` method has been removed from `EC.Schema`, `EC.Class`, and `EC.Property` and replaced with an `isHidden: boolean` property. `EC.CustomAttributeSet` and `EC.CustomAttribute` types have been removed.
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.13
+
 ## 2.0.0-alpha.17
 
 ### Major Changes
