@@ -287,19 +287,26 @@ export async function createRelationshipPathJoinClause(
  * Render a pre-resolved `RelationshipPathJoinInfo` into an ECSQL JOIN clause (sync, no schema access).
  * @public
  */
-export function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult;
 export function createRelationshipPathJoinClause(
-  arg: CreateRelationshipPathJoinClauseProps | RelationshipPathJoinInfo,
+  props: RenderRelationshipPathJoinClauseProps,
+): RelationshipPathJoinClauseResult;
+export function createRelationshipPathJoinClause(
+  props: CreateRelationshipPathJoinClauseProps | RenderRelationshipPathJoinClauseProps,
 ): Promise<RelationshipPathJoinClauseResult> | RelationshipPathJoinClauseResult {
-  if ("steps" in arg) {
-    return renderRelationshipPathJoinClause(arg);
+  if ("steps" in props) {
+    return renderRelationshipPathJoinClause(props);
   }
-  return createRelationshipPathJoinInfo(arg).then(renderRelationshipPathJoinClause);
+  return createRelationshipPathJoinInfo(props).then(renderRelationshipPathJoinClause);
 }
 
-function renderRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult {
+type RenderRelationshipPathJoinClauseProps = Pick<RelationshipPathJoinInfo, "bindings"> & {
+  steps: Array<Pick<RelationshipPathJoinInfo["steps"][number], "joins">>;
+};
+function renderRelationshipPathJoinClause(
+  props: RenderRelationshipPathJoinClauseProps,
+): RelationshipPathJoinClauseResult {
   let joins = "";
-  const flatJoins = info.steps.flatMap((step) => step.joins);
+  const flatJoins = props.steps.flatMap((step) => step.joins);
   for (const entry of flatJoins) {
     const joinKw = entry.joinType === "outer" ? "OUTER JOIN" : "INNER JOIN";
     if (entry.joinTarget.kind === "class") {
@@ -317,7 +324,7 @@ function renderRelationshipPathJoinClause(info: RelationshipPathJoinInfo): Relat
       `;
     }
   }
-  return { joins, bindings: info.bindings };
+  return { joins, bindings: props.bindings };
 }
 
 function resolveInstanceFilterCondition(step: ResolvedRelationshipPathStep): string {

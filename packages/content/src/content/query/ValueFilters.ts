@@ -21,6 +21,43 @@ interface ValueFilterSelector {
 }
 
 /**
+ * Builds the ECSQL clause and bindings for a single {@link ContentValueFilter}. `filterIndex` seeds the
+ * clause's own binding names (e.g. `pres_vf{filterIndex}`), so callers that build clauses for filters
+ * outside a single {@link buildValueFilterClauses} batch (e.g. one evaluated in its own subquery) must
+ * pass a index that is unique across every filter clause merged into the same query.
+ *
+ * @internal
+ */
+export function buildValueFilterClause(props: {
+  filter: ContentValueFilter;
+  filterIndex: number;
+  /**
+   * Resolves the ECSQL selector (column reference) and value type for a field's column.
+   *
+   * Implementers should return the selector for the raw property column only. For navigation
+   * properties, do **not** append the `.Id` member — this function appends it automatically based on
+   * the field's type. A selector may also carry `bindings` its expression references (e.g. a
+   * calculated field's own bindings); they are merged into the returned bindings.
+   */
+  resolveSelector: (field: PropertyField | CalculatedField, member?: string) => ValueFilterSelector;
+}): { clause: string; selector: string; bindings: Record<string, ECSqlBinding> } {
+  const { filter, filterIndex, resolveSelector } = props;
+  // ignore `member` on navigation properties, since they are structs whose target instance id lives in a `.Id` member
+  const resolved = resolveSelector(filter.field, filter.field.type.kind === "navigation" ? undefined : filter.member);
+  // Navigation properties are structs whose target instance id lives in a `.Id` member, so filter
+  // against that member rather than the raw navigation column.
+  const selector =
+    filter.field.type.kind === "navigation" ? { ...resolved, selector: `${resolved.selector}.[Id]` } : resolved;
+  const bindings: Record<string, ECSqlBinding> = {};
+  // A selector may reference its own bindings (e.g. a calculated field's expression bindings); carry
+  // them into the query. A repeated selector contributes identical bindings, so an identical duplicate
+  // is kept while a name reused with a different value throws.
+  mergeBindings(bindings, selector.bindings);
+  const clause = buildFilterClause({ filter, selector, filterIndex, bindings });
+  return { clause, selector: selector.selector, bindings };
+}
+
+/**
  * Builds the `WHERE` clause and ECSQL bindings for a set of {@link ContentValueFilter}s.
  *
  * @internal
@@ -41,21 +78,9 @@ export function buildValueFilterClauses(props: {
   const bindings: Record<string, ECSqlBinding> = {};
 
   props.filters.forEach((filter, filterIndex) => {
-    // ignore `member` on navigation properties, since they are structs whose target instance id lives in a `.Id` member
-    const resolved = props.resolveSelector(
-      filter.field,
-      filter.field.type.kind === "navigation" ? undefined : filter.member,
-    );
-    // Navigation properties are structs whose target instance id lives in a `.Id` member, so filter
-    // against that member rather than the raw navigation column.
-    const selector =
-      filter.field.type.kind === "navigation" ? { ...resolved, selector: `${resolved.selector}.[Id]` } : resolved;
-    // A selector may reference its own bindings (e.g. a calculated field's expression bindings); carry
-    // them into the query. A repeated selector contributes identical bindings, so an identical duplicate
-    // is kept while a name reused with a different value throws.
-    mergeBindings(bindings, selector.bindings);
-    const clause = buildFilterClause({ filter, selector, filterIndex, bindings });
-    clauses.push(clause);
+    const result = buildValueFilterClause({ filter, filterIndex, resolveSelector: props.resolveSelector });
+    mergeBindings(bindings, result.bindings);
+    clauses.push(result.clause);
   });
 
   if (clauses.length === 0) {
