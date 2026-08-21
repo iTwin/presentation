@@ -5,6 +5,7 @@
 
 import { afterAll, describe, expect, it, test, vi } from "vitest";
 import { Guid, Id64 } from "@itwin/core-bentley";
+import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { ECSql } from "@itwin/presentation-shared";
 import { buildTestECDb } from "../ECDbUtils.js";
@@ -142,7 +143,13 @@ describe("Hierarchies", () => {
           provider: createProvider({
             ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "metric" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "metric",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[123.5 m]`) }],
         });
@@ -150,7 +157,13 @@ describe("Hierarchies", () => {
           provider: createProvider({
             ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "imperial" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "imperial",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[405.0 ft]`) }],
         });
@@ -158,7 +171,13 @@ describe("Hierarchies", () => {
           provider: createProvider({
             ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usCustomary" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "usCustomary",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[405.0 ft]`) }],
         });
@@ -166,7 +185,13 @@ describe("Hierarchies", () => {
           provider: createProvider({
             ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usSurvey" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "usSurvey",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[405.04 ft (US Survey)]`) }],
         });
