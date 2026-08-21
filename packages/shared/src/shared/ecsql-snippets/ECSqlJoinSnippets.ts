@@ -299,6 +299,10 @@ export function createRelationshipPathJoinClause(
   return createRelationshipPathJoinInfo(props).then(renderRelationshipPathJoinClause);
 }
 
+/**
+ * Props for `createRelationshipPathJoinClause` overload that renders a pre-resolved `RelationshipPathJoinInfo` (sync, no schema access).
+ * @public
+ */
 type RenderRelationshipPathJoinClauseProps = Pick<RelationshipPathJoinInfo, "bindings"> & {
   steps: Array<Pick<RelationshipPathJoinInfo["steps"][number], "joins">>;
 };

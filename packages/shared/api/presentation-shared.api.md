@@ -710,7 +710,7 @@ interface RelationshipPathStepJoinInfo {
 // @public
 export function releaseMainThread(): Promise<void>;
 
-// @public (undocumented)
+// @public
 type RenderRelationshipPathJoinClauseProps = Pick<RelationshipPathJoinInfo, "bindings"> & {
     steps: Array<Pick<RelationshipPathJoinInfo["steps"][number], "joins">>;
 };
