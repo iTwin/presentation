@@ -41,7 +41,7 @@ describe("createContentProvider", () => {
     const pump = createEntityClass({
       fullName: "Schema.Pump",
       baseClass: element,
-      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClassName: "Schema.Pump" })],
+      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClass: "Schema.Pump" })],
     });
     derivedClasses.push(pump);
     const polymorphicIModelAccess = {

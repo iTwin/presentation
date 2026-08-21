@@ -612,6 +612,49 @@ describe("createECClassFromSchemaView", () => {
     expect(mixins[1].schema.name).toBe("OtherSchema");
   });
 
+  it("resolves property.class to the base class for a property inherited by a derived entity", () => {
+    const baseClassObj = createMockClass({ name: "BaseClass", schemaName: "BaseSchema" });
+    const inheritedProp = createMockProperty({
+      name: "InheritedProp",
+      isPrimitive: () => true,
+      isEnumeration: () => false,
+      primitiveType: SchemaViewPrimitiveType.String,
+      extendedTypeName: undefined,
+      kindOfQuantity: undefined,
+      declaringClass: baseClassObj,
+    } as unknown as SchemaView.Property & { name: string });
+    const mockSchema = createMockSchema({
+      name: "DerivedSchema",
+      classes: new Map([
+        [
+          "DerivedClass",
+          {
+            name: "DerivedClass",
+            schemaName: "DerivedSchema",
+            baseClass: () => baseClassObj,
+            properties: new Map([["InheritedProp", inheritedProp]]),
+          },
+        ],
+      ]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(
+        new Map([
+          ["DerivedSchema", { name: "DerivedSchema" }],
+          ["BaseSchema", { name: "BaseSchema" }],
+        ]),
+      ),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const derivedClass = ecSchema.getClass("DerivedClass")!;
+    const prop = derivedClass.getProperty("InheritedProp")!;
+    // The property was enumerated from `DerivedClass`, but it's declared by `BaseClass` - `property.class`
+    // must reflect the true source, not the class the property was queried through.
+    expect(prop.class.fullName).toBe("BaseSchema.BaseClass");
+    expect(prop.class.fullName).not.toBe(derivedClass.fullName);
+    expect(prop.class.schema.name).toBe("BaseSchema");
+  });
+
   describe("Relationship class", () => {
     it("returns forward direction", () => {
       const relFwdProps: MockClassProps = {
@@ -908,6 +951,50 @@ describe("createECPropertyFromSchemaView", () => {
     }),
     schema: dummyEcSchema,
   };
+
+  describe("Property class (declaring class)", () => {
+    it("uses declaringClass for property.class, including its own schema context", () => {
+      const declaringClass = createMockClass({ name: "OtherClass", schemaName: "OtherSchema" });
+      const mockProp = createMockProperty({
+        name: "TestProp",
+        isPrimitive: () => true,
+        primitiveType: SchemaViewPrimitiveType.String,
+        declaringClass,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.class).not.toBe(dummyEcClass);
+      expect(prop.class.fullName).toBe("OtherSchema.OtherClass");
+      expect(prop.class.schema.name).toBe("OtherSchema");
+    });
+
+    it("uses the declaring mixin for property.class", () => {
+      const declaringMixin = createMockClass({ name: "MixinClass", schemaName: "MixinSchema", type: "mixin" });
+      const mockProp = createMockProperty({
+        name: "MixinProp",
+        isPrimitive: () => true,
+        primitiveType: SchemaViewPrimitiveType.String,
+        declaringClass: declaringMixin,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.class.fullName).toBe("MixinSchema.MixinClass");
+      expect(prop.class.isMixin()).toBe(true);
+      expect(prop.class.schema.name).toBe("MixinSchema");
+    });
+
+    it("falls back to the enumerated class when declaringClass is undefined (view property)", () => {
+      const mockProp = createMockProperty({
+        name: "ViewProp",
+        isPrimitive: () => true,
+        primitiveType: SchemaViewPrimitiveType.String,
+        declaringClass: undefined,
+      } as unknown as SchemaView.Property & { name: string });
+
+      const prop = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+      expect(prop.class).toBe(dummyEcClass);
+    });
+  });
 
   describe("Navigation property", () => {
     it("creates forward navigation property", () => {

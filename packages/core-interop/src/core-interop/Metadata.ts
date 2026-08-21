@@ -308,7 +308,17 @@ export function createECPropertyFromSchemaView(
   context: SchemaViewProviderContext,
 ): EC.Property {
   const base: EC.Property = {
-    class: ecClass,
+    // `svProp.declaringClass` is the class that declared or contributed this property (a base class for an
+    // inherited property, or a mixin for a mixin-contributed one). It's `undefined` only for view properties,
+    // in which case we fall back to the class the property was enumerated from.
+    get class(): EC.Class {
+      return svProp.declaringClass
+        ? createECClassFromSchemaView(svProp.declaringClass, {
+            ...context,
+            schema: useOrCreateSchema(svProp.declaringClass.schema, context),
+          })
+        : ecClass;
+    },
     name: svProp.name,
     description: svProp.description,
     label: svProp.label,

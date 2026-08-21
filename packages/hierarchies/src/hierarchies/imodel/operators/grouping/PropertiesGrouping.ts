@@ -336,6 +336,7 @@ export async function getUniquePropertiesGroupInfo(
       continue;
     }
 
+    const propertiesClass = await getClass(schemaProvider, byProperties.propertiesClassName);
     let propertyGroupIndex = 0;
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
@@ -350,18 +351,22 @@ export async function getUniquePropertiesGroupInfo(
       let isAlreadyGrouped = false;
       if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
         const groupMatcher = parentPropertyGroupPath[propertyGroupIndex];
+        const propertyClassName =
+          propertiesClass.getProperty(propertyGroup.propertyName)?.class.fullName ?? byProperties.propertiesClassName;
         isAlreadyGrouped = groupMatcher({
-          propertiesClassName: byProperties.propertiesClassName,
+          propertiesClassName: propertyClassName,
           propertyName: propertyGroup.propertyName,
           isRange: !!propertyGroup.ranges,
         });
       }
       if (!isAlreadyGrouped && !uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
-          ecClass: await getClass(schemaProvider, byProperties.propertiesClassName),
+          ecClass: propertiesClass,
           propertyGroup: { propertyName: propertyGroup.propertyName, ranges: propertyGroup.ranges },
           previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
-            propertiesClassName: byProperties.propertiesClassName,
+            propertiesClassName:
+              propertiesClass.getProperty(groupingInfo.propertyGroup.propertyName)?.class.fullName ??
+              byProperties.propertiesClassName,
             propertyName: groupingInfo.propertyGroup.propertyName,
             isRange: !!groupingInfo.propertyGroup.ranges,
           })),

@@ -27,7 +27,7 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
     const sources = [createSource("TestSchema.A")];
@@ -42,11 +42,11 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Door",
-        properties: [createPrimitiveProperty({ name: "UserLabel", declaringClassName: "BisCore.Element" })],
+        properties: [createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" })],
       }),
       createEntityClass({
         fullName: "TestSchema.Window",
-        properties: [createPrimitiveProperty({ name: "UserLabel", declaringClassName: "BisCore.Element" })],
+        properties: [createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" })],
       }),
     ]);
     const sources = [createSource("TestSchema.Door"), createSource("TestSchema.Window")];
@@ -69,15 +69,15 @@ describe("buildContentDescriptor", () => {
       createEntityClass({
         fullName: "TestSchema.Pump",
         properties: [
-          createPrimitiveProperty({ name: "Name", declaringClassName: "BisCore.Element" }),
-          createPrimitiveProperty({ name: "FlowRate", declaringClassName: "TestSchema.Pump" }),
+          createPrimitiveProperty({ name: "Name", declaringClass: "BisCore.Element" }),
+          createPrimitiveProperty({ name: "FlowRate", declaringClass: "TestSchema.Pump" }),
         ],
       }),
       createEntityClass({
         fullName: "TestSchema.Valve",
         properties: [
-          createPrimitiveProperty({ name: "Name", declaringClassName: "BisCore.Element" }),
-          createPrimitiveProperty({ name: "Diameter", declaringClassName: "TestSchema.Valve" }),
+          createPrimitiveProperty({ name: "Name", declaringClass: "BisCore.Element" }),
+          createPrimitiveProperty({ name: "Diameter", declaringClass: "TestSchema.Valve" }),
         ],
       }),
     ]);
@@ -110,11 +110,11 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Direct", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Direct", declaringClass: "TestSchema.A" })],
       }),
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "Related", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "Related", declaringClass: "TestSchema.B" })],
       }),
     ]);
     const path: RelationshipPath = [
@@ -159,7 +159,7 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
     const fieldsProvider: IModelFieldsProvider = {
@@ -190,7 +190,7 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
     const externalProvider: ExternalFieldsProvider<"code"> = {
@@ -218,7 +218,7 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
     const transformer: DescriptorTransformer = {
@@ -243,7 +243,7 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Prop", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
     const order: number[] = [];
@@ -279,11 +279,11 @@ describe("buildContentDescriptor", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.A",
-        properties: [createPrimitiveProperty({ name: "Keep", declaringClassName: "TestSchema.A" })],
+        properties: [createPrimitiveProperty({ name: "Keep", declaringClass: "TestSchema.A" })],
       }),
       createEntityClass({
         fullName: "TestSchema.B",
-        properties: [createPrimitiveProperty({ name: "Rel", declaringClassName: "TestSchema.B" })],
+        properties: [createPrimitiveProperty({ name: "Rel", declaringClass: "TestSchema.B" })],
       }),
     ]);
     const path: RelationshipPath = [

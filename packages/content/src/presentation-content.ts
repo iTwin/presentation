@@ -28,6 +28,7 @@ export {
   defineDescriptorTransformer,
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,
 } from "./content/extensions/DescriptorTransformer.js";
+export { createHiddenSchemaMembersDescriptorTransformer } from "./content/extensions/HiddenSchemaMembersTransformer.js";
 export { defineQueryFilterer } from "./content/extensions/QueryFilterer.js";
 
 // Pipeline

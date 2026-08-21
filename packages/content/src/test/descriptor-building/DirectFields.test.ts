@@ -32,7 +32,7 @@ describe("collectDirectPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Element",
-        properties: [createPrimitiveProperty({ name: "CodeValue", declaringClassName: "TestSchema.Element" })],
+        properties: [createPrimitiveProperty({ name: "CodeValue", declaringClass: "TestSchema.Element" })],
       }),
     ]);
 
@@ -60,8 +60,8 @@ describe("collectDirectPropertyFields", () => {
   it("uses the source's resolved primary classes as value classes", async () => {
     const element = createEntityClass({
       fullName: "TestSchema.Element",
-      properties: [createPrimitiveProperty({ name: "CodeValue", declaringClassName: "TestSchema.Element" })],
-      ownProperties: [createPrimitiveProperty({ name: "CodeValue", declaringClassName: "TestSchema.Element" })],
+      properties: [createPrimitiveProperty({ name: "CodeValue", declaringClass: "TestSchema.Element" })],
+      ownProperties: [createPrimitiveProperty({ name: "CodeValue", declaringClass: "TestSchema.Element" })],
     });
     const imodelAccess = createSchemaAccess([
       element,
@@ -85,7 +85,7 @@ describe("collectDirectPropertyFields", () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
         fullName: "TestSchema.Element",
-        properties: [createPrimitiveProperty({ name: "CodeValue", declaringClassName: "TestSchema.Element" })],
+        properties: [createPrimitiveProperty({ name: "CodeValue", declaringClass: "TestSchema.Element" })],
       }),
     ]);
 
@@ -100,17 +100,17 @@ describe("collectDirectPropertyFields", () => {
   it("enumerates subclass-specific properties for a polymorphic target", async () => {
     const element = createEntityClass({
       fullName: "TestSchema.Element",
-      ownProperties: [createPrimitiveProperty({ name: "CodeValue", declaringClassName: "TestSchema.Element" })],
+      ownProperties: [createPrimitiveProperty({ name: "CodeValue", declaringClass: "TestSchema.Element" })],
     });
     const pump = createEntityClass({
       fullName: "TestSchema.Pump",
       baseClass: element,
-      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClassName: "TestSchema.Pump" })],
+      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClass: "TestSchema.Pump" })],
     });
     const valve = createEntityClass({
       fullName: "TestSchema.Valve",
       baseClass: element,
-      ownProperties: [createPrimitiveProperty({ name: "Diameter", declaringClassName: "TestSchema.Valve" })],
+      ownProperties: [createPrimitiveProperty({ name: "Diameter", declaringClass: "TestSchema.Valve" })],
     });
     const imodelAccess = createSchemaAccess([element, pump, valve]);
 
@@ -134,11 +134,11 @@ describe("collectDirectPropertyFields", () => {
   it("enumerates properties from a mixin applied to a leaf class", async () => {
     const mixin = createMixinClass({
       fullName: "TestSchema.HasCode",
-      ownProperties: [createPrimitiveProperty({ name: "Code", declaringClassName: "TestSchema.HasCode" })],
+      ownProperties: [createPrimitiveProperty({ name: "Code", declaringClass: "TestSchema.HasCode" })],
     });
     const element = createEntityClass({
       fullName: "TestSchema.Element",
-      ownProperties: [createPrimitiveProperty({ name: "Label", declaringClassName: "TestSchema.Element" })],
+      ownProperties: [createPrimitiveProperty({ name: "Label", declaringClass: "TestSchema.Element" })],
       mixins: [mixin],
     });
 
@@ -159,11 +159,11 @@ describe("collectDirectPropertyFields", () => {
   it("attributes shared and concrete-specific mixin properties to the applicable concrete classes", async () => {
     const sharedMixin = createMixinClass({
       fullName: "TestSchema.HasCode",
-      ownProperties: [createPrimitiveProperty({ name: "Code", declaringClassName: "TestSchema.HasCode" })],
+      ownProperties: [createPrimitiveProperty({ name: "Code", declaringClass: "TestSchema.HasCode" })],
     });
     const pumpMixin = createMixinClass({
       fullName: "TestSchema.HasFlowRate",
-      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClassName: "TestSchema.HasFlowRate" })],
+      ownProperties: [createPrimitiveProperty({ name: "FlowRate", declaringClass: "TestSchema.HasFlowRate" })],
       baseClass: sharedMixin,
     });
     const element = createEntityClass({ fullName: "TestSchema.Element", mixins: [sharedMixin] });
@@ -187,7 +187,7 @@ describe("collectDirectPropertyFields", () => {
         ownProperties: [
           createPrimitiveProperty({
             name: "CodeValue",
-            declaringClassName: "TestSchema.Element",
+            declaringClass: "TestSchema.Element",
             category: { fullName: "TestSchema.Identity", label: "Identity" },
           }),
         ],
