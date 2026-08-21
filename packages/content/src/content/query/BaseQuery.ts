@@ -7,7 +7,12 @@ import { assert } from "@itwin/core-bentley";
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
-import { classifyPathCardinality, countJoinTables, partitionPathsByJoinBudget } from "./QueryLimits.js";
+import {
+  classifyPathCardinality,
+  countJoinTables,
+  packPathsWithinBudget,
+  partitionPathsByJoinBudget,
+} from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClause, buildValueFilterClauses } from "./ValueFilters.js";
 
@@ -85,8 +90,8 @@ export interface BaseQuery {
    * The **anchor** group — always present (even for a direct-only source). Owns the primary-key +
    * direct + calculated columns plus its share of 1:1 related columns, and drives ORDER BY + paging.
    * Also carries the primary-restricting clauses (query filterers + value filters), so it additionally
-   * joins every path a value filter references — even one whose selected columns are owned by an
-   * `additional` group — so those predicates are evaluable here.
+   * joins budget-fitting 1:1 paths referenced by value filters — even when their selected columns are
+   * owned by an `additional` group. Overflow 1:1 paths and all 1:many paths use correlated subqueries.
    */
   anchor: BaseQueryGroup;
   /**
@@ -147,13 +152,9 @@ export async function buildBaseQuery(
   const groupPaths = includeRelatedJoins ? collectUniquePaths(source) : [];
   const filterPaths = collectFilterPaths(filters);
 
-  // A value filter on a 1:many related path can't be evaluated by joining that path onto the
-  // primary-owning group: the join would duplicate the primary row once per matching related instance
-  // (SQLite has no de-duplication at that stage). Such paths are evaluated as a correlated `EXISTS`
-  // subquery instead (see `buildExistentialFilterClause`) and are never joined at the top level, so
-  // they're classified up front and excluded from every join-building step below. The classification is
-  // cached by cardinality-hint key (shared with `splitRelatedPaths`'s own classification of `groupPaths`
-  // below), since a path can be both selected and filtered.
+  // 1:many filter paths must use correlated subqueries to avoid duplicating primary rows. 1:1 filter
+  // paths keep join-and-compare evaluation while they fit the anchor's JOIN budget; overflow paths use
+  // the same correlated-subquery fallback. Classification is cached because a path may be selected too.
   const cardinalityCache = new Map<string, CardinalityHint>();
   const classifyCardinality = async (path: RelationshipPath): Promise<CardinalityHint> => {
     const key = serializeRelationshipPath({ path });
@@ -168,11 +169,15 @@ export async function buildBaseQuery(
     }
     return cardinality;
   };
-  const oneToOneFilterPaths = (
-    await Promise.all(filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) })))
-  )
+  const classifiedFilterPaths = await Promise.all(
+    filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) })),
+  );
+  const oneToOneFilterPaths = classifiedFilterPaths
     .filter((entry) => entry.cardinality !== "many")
     .map((entry) => entry.path);
+  const oneToManyFilterPathKeys = classifiedFilterPaths
+    .filter((entry) => entry.cardinality === "many")
+    .map((entry) => serializeJoinPath(entry.path));
 
   // Serialize each path's prefix keys once (memoized by path reference); every alias lookup below reuses
   // them instead of re-serializing path slices.
@@ -232,6 +237,7 @@ export async function buildBaseQuery(
     paths: RelationshipPath[];
     joinType: "inner" | "outer";
     includePrimaryFilters: boolean;
+    existentialFilterPathKeys: Set<string>;
   }): Promise<BaseQueryParts> => {
     const infos = await Promise.all(groupProps.paths.map(async (path) => resolvePathInfo(path, groupProps.joinType)));
     const rendered = ECSql.createRelationshipPathJoinClause(mergeJoinInfos(infos));
@@ -242,7 +248,7 @@ export async function buildBaseQuery(
     const bindings: Record<string, ECSqlBinding> = {};
 
     if (targetFilter.joins) {
-      joinFragments.push(targetFilter.joins);
+      joinFragments.push(...targetFilter.joins);
     }
     if (rendered.joins) {
       joinFragments.push(rendered.joins);
@@ -277,23 +283,19 @@ export async function buildBaseQuery(
           relatedClassAliases: groupAliases,
           isRelationshipClass: isPropertyFieldRelationshipClass,
         });
-      // A 1:many filter's path isn't part of this group's own join set (`groupAliases`), since it's
-      // evaluated as its own subquery below rather than joined onto the group — so its selector must
-      // resolve against the query-wide alias map instead.
+      // An existential filter's path isn't part of this group's join set, so resolve its selector
+      // against the query-wide alias map.
       const resolveExistentialFilterSelector = (field: PropertyField | CalculatedField, member?: string) =>
         resolveSelector({ field, member, relatedClassAliases, isRelationshipClass: isPropertyFieldRelationshipClass });
 
-      // A value filter on a 1:many related path can't be evaluated through a join (see above), so
-      // filters are partitioned by their path's cardinality: 1:1 (and direct/calculated) filters keep
-      // the existing join-and-compare evaluation, while 1:many filters are each rendered as their own
-      // `EXISTS` subquery below.
+      // Direct/calculated and budget-fitting 1:1 filters use join-and-compare evaluation. The
+      // precomputed existential set (1:many plus overflow 1:1) uses independent subqueries.
       const oneToOneFilters: ContentValueFilter[] = [];
-      const oneToManyFilters: { filter: ContentValueFilter; path: RelationshipPath }[] = [];
+      const existentialFilters: { filter: ContentValueFilter; path: RelationshipPath }[] = [];
       for (const filter of filters) {
         const path = filter.field.kind === "property" ? filter.field.pathFromTarget : [];
-        const cardinality = path.length > 0 ? await classifyCardinality(path) : "one";
-        if (cardinality === "many") {
-          oneToManyFilters.push({ filter, path });
+        if (path.length > 0 && groupProps.existentialFilterPathKeys.has(serializeJoinPath(path))) {
+          existentialFilters.push({ filter, path });
         } else {
           oneToOneFilters.push(filter);
         }
@@ -309,7 +311,7 @@ export async function buildBaseQuery(
 
       // Existential filters get their own binding-index space after the join-based filters', so an
       // index can never collide with one `buildValueFilterClauses` assigned internally above.
-      for (const [offset, { filter, path }] of oneToManyFilters.entries()) {
+      for (const [offset, { filter, path }] of existentialFilters.entries()) {
         const existential = await buildExistentialFilterClause({
           filter,
           path,
@@ -333,12 +335,38 @@ export async function buildBaseQuery(
     };
   };
 
+  // Primary FROM, target-filter join, and query-filterer joins cannot spill. Fill remaining budget
+  // with a contiguous prefix of 1:1 filter paths; all overflow filters retain query-wide aliases and
+  // are evaluated in independent correlated subqueries.
+  const fixedReserves =
+    1 +
+    (targetFilter.joins?.length ?? 0) +
+    filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
+  const { fitting: fittingFilterPaths, overflow: overflowFilterPaths } = packPathsWithinBudget({
+    paths: await Promise.all(
+      oneToOneFilterPaths.map(async (path) => ({
+        path,
+        targetClassNames: [],
+        joinInfo: await resolvePathInfo(path, "outer"),
+      })),
+    ),
+    reservedTables: fixedReserves,
+  });
+  const joinedFilterPaths = fittingFilterPaths.map((entry) => entry.path);
+  const existentialFilterPathKeys = new Set([
+    ...oneToManyFilterPathKeys,
+    ...overflowFilterPaths.map((entry) => serializeJoinPath(entry.path)),
+  ]);
+
   // Primaries-only mode: no related columns and never a split — only the joins required to *evaluate*
-  // 1:1 value filters are emitted (outer, so an `is-null` filter still matches primaries with no related
-  // instance); 1:many filters join nothing and are instead evaluated as `EXISTS` subqueries. The single
-  // `anchor` carries all filter clauses either way.
+  // budget-fitting 1:1 value filters are emitted. Other related filters use existential subqueries.
   if (!includeRelatedJoins) {
-    const parts = await buildGroupParts({ paths: oneToOneFilterPaths, joinType: "outer", includePrimaryFilters: true });
+    const parts = await buildGroupParts({
+      paths: joinedFilterPaths,
+      joinType: "outer",
+      includePrimaryFilters: true,
+      existentialFilterPathKeys,
+    });
     return { anchor: { paths: [], parts } };
   }
 
@@ -346,18 +374,10 @@ export async function buildBaseQuery(
   // its share of 1:1 related columns) plus additional groups for budget-overflow 1:1 partitions and each
   // 1:many path (isolated so the anchor stays one row per primary).
   //
-  // The anchor carries the primary-restricting value filters, so every 1:1 path a filter references must
-  // be joined onto it regardless of which group owns that path's selected columns (a 1:many filter path
-  // is instead evaluated as its own `EXISTS` subquery and never joined at the top level). Those
-  // filter-only joins consume the anchor's SQLite JOIN-table budget, so reserve their tables before
-  // packing the 1:1 value paths. (An outer join is used for the count and the render alike, matching how
-  // the filter joins are emitted below.)
-  const filterJoinInfos = await Promise.all(oneToOneFilterPaths.map(async (path) => resolvePathInfo(path, "outer")));
+  // Joined filters reserve anchor tables before selected 1:1 paths are packed. Overflow filters cost no
+  // top-level tables because each opens an independent subquery scope.
   const reservedTables =
-    1 +
-    (targetFilter.joins ? 1 : 0) +
-    filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0) +
-    filterJoinInfos.reduce((count, info) => count + countJoinTables(info), 0);
+    fixedReserves + fittingFilterPaths.reduce((count, entry) => count + countJoinTables(entry.joinInfo), 0);
   const { anchorPaths, additionalGroups } = await splitRelatedPaths({
     resolvePathInfo,
     classifyCardinality,
@@ -367,12 +387,17 @@ export async function buildBaseQuery(
 
   // The anchor owns direct/calculated columns, so its related steps are outer-joined (an inner join
   // would drop a primary missing one related instance and take its direct columns down with it). Its join
-  // set unions the anchor's own value paths with every 1:1 filter-referenced path (a shared prefix is
+  // set unions the anchor's own value paths with each joined filter path (a shared prefix is
   // merged by alias, so a path already selected by the anchor is joined only once).
-  const anchorJoinPaths = unionPaths([...anchorPaths.map((resolved) => resolved.path), ...oneToOneFilterPaths]);
+  const anchorJoinPaths = unionPaths([...anchorPaths.map((resolved) => resolved.path), ...joinedFilterPaths]);
   const anchor: BaseQueryGroup = {
     paths: anchorPaths,
-    parts: await buildGroupParts({ paths: anchorJoinPaths, joinType: "outer", includePrimaryFilters: true }),
+    parts: await buildGroupParts({
+      paths: anchorJoinPaths,
+      joinType: "outer",
+      includePrimaryFilters: true,
+      existentialFilterPathKeys,
+    }),
   };
   if (additionalGroups.length === 0) {
     return { anchor };
@@ -384,6 +409,7 @@ export async function buildBaseQuery(
         paths: group.paths.map((resolved) => resolved.path),
         joinType: group.joinType,
         includePrimaryFilters: false,
+        existentialFilterPathKeys: new Set(),
       }),
     })),
   );
@@ -394,8 +420,8 @@ export async function buildBaseQuery(
  * Splits a source's resolved related paths into the anchor's paths plus additional groups. A 1:many path
  * (a `cardinalityHint`, else schema multiplicity) is isolated into its own inner-joined group so the
  * anchor stays one row per primary; because such a path never shares a query with others, inner-joining
- * it needs no extra join-info resolution. The remaining 1:1 paths are budget-packed under the SQLite
- * JOIN-table limit and stay outer-joined (reusing the join info resolved here for the budget count).
+ * it needs no extra join-info resolution. The remaining 1:1 paths are strictly packed into the anchor,
+ * then overflow is partitioned into additional groups. All stay outer-joined and reuse resolved info.
  */
 async function splitRelatedPaths(props: {
   resolvePathInfo: (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo>;
@@ -423,10 +449,11 @@ async function splitRelatedPaths(props: {
   const oneToOneWithInfo = await Promise.all(
     oneToOne.map(async (resolved) => ({ ...resolved, joinInfo: await props.resolvePathInfo(resolved.path, "outer") })),
   );
-  const [anchorPartition = [], ...extraPartitions] = partitionPathsByJoinBudget({
+  const { fitting: anchorPartition, overflow } = packPathsWithinBudget({
     paths: oneToOneWithInfo,
     reservedTables: props.reservedTables,
   });
+  const extraPartitions = partitionPathsByJoinBudget({ paths: overflow, reservedTables: props.reservedTables });
   const toResolvedPaths = (partition: typeof oneToOneWithInfo): ResolvedPath[] =>
     partition.map((entry) => ({ path: entry.path, targetClassNames: entry.targetClassNames }));
 
@@ -568,10 +595,9 @@ function buildExistentialSkeleton(info: RelationshipPathJoinInfo) {
 }
 
 /**
- * Builds a correlated clause for a value filter on a 1:many related path. Joining such a path onto the
- * primary-owning group would duplicate the primary row once per matching related instance, so the filter
- * is instead evaluated inside a subquery correlated to the primary, keeping the group at one row per
- * primary regardless of how many related instances match.
+ * Builds a correlated clause for a value filter that should not join the primary-owning group. This is
+ * used for every 1:many path (to avoid duplicating primary rows) and for 1:1 paths that exceed the
+ * top-level JOIN budget.
  *
  * `is-null` must match a primary with no related instance at all, or one whose related instance has a
  * null value; that needs a "no related row" check and a "some related row is null" check, which — unlike

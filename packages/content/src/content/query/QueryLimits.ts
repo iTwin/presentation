@@ -103,6 +103,31 @@ export function partitionPathsByJoinBudget(props: {
 }
 
 /**
+ * Packs the longest path prefix that fits the table budget and routes the rest to `overflow`.
+ * Unlike {@link partitionPathsByJoinBudget}, this never forces an oversized path into a group:
+ * filter paths in `overflow` can instead be evaluated through correlated subqueries.
+ *
+ * @internal
+ */
+export function packPathsWithinBudget(props: {
+  paths: readonly ResolvedPathWithJoinInfo[];
+  reservedTables: number;
+  budget?: number;
+}): { fitting: ResolvedPathWithJoinInfo[]; overflow: ResolvedPathWithJoinInfo[] } {
+  const available = (props.budget ?? SQLITE_MAX_JOIN_TABLES) - props.reservedTables;
+  if (available <= 0) {
+    // Fixed tables consume the whole budget, so no path can join the current query.
+    return { fitting: [], overflow: [...props.paths] };
+  }
+  const [first = [], ...rest] = partitionPathsByJoinBudget(props);
+  if (first.reduce((cost, path) => cost + countJoinTables(path.joinInfo), 0) > available) {
+    // The partitioner force-fits an oversized first path; strict packing must spill it and everything after it.
+    return { fitting: [], overflow: [first, ...rest].flat() };
+  }
+  return { fitting: first, overflow: rest.flat() };
+}
+
+/**
  * Determines the effective cardinality of a relationship path — whether each target instance reaches
  * at most one related instance (`"one"`) or possibly many (`"many"`).
  *

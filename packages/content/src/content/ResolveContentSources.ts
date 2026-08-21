@@ -86,7 +86,7 @@ function buildPrimaryEnumerationQuery(target: ContentTarget): ECSqlQueryDef {
   const ecsql = `
     SELECT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')
     FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-    ${targetFilter.joins ?? ""}
+    ${targetFilter.joins?.join("\n") ?? ""}
     ${whereClause}
     GROUP BY [${PRIMARY_CLASS_ALIAS}].[ECClassId]
   `;
@@ -113,7 +113,7 @@ const originalStrategy: ResolutionQueryStrategy = {
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
       FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-      ${joins} ${targetFilter.joins ?? ""}
+      ${joins} ${targetFilter.joins?.join("\n") ?? ""}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
     `;
@@ -167,7 +167,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       INNER JOIN (
         SELECT [${firstHopAlias}].[ECClassId] [FirstHopClassId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
         FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-        ${firstStepJoins} ${targetFilter.joins ?? ""}
+        ${firstStepJoins} ${targetFilter.joins?.join("\n") ?? ""}
         ${instanceFilterClauses}
         GROUP BY [${firstHopAlias}].[ECClassId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
       ) [reachable] ON [reachable].[FirstHopClassId] = [${firstHopAlias}].[ECClassId]
@@ -198,7 +198,7 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
       FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-      ${crossJoins} ${targetFilter.joins ?? ""}
+      ${crossJoins} ${targetFilter.joins?.join("\n") ?? ""}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
     `;

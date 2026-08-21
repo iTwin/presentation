@@ -13,16 +13,18 @@ export const TARGET_FILTER_JOIN_ALIAS = `${ECSQL_PREFIX}TargetInstanceIds`;
 
 /** @internal */
 export function buildTargetFilter(target: ContentTarget): {
-  joins?: string;
+  joins?: string[];
   where?: string;
   bindings?: Record<string, ECSqlBinding>;
 } {
   const bindings: Record<string, ECSqlBinding> = {};
   let where: string | undefined;
-  let joins: string | undefined;
+  const joins: string[] = [];
 
   if (target.instanceIds) {
-    joins = `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]`;
+    joins.push(
+      `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]`,
+    );
     bindings[TARGET_FILTER_JOIN_ALIAS] = { type: "idset", value: target.instanceIds };
   }
 
@@ -40,7 +42,7 @@ export function buildTargetFilter(target: ContentTarget): {
   }
 
   return {
-    ...(joins ? { joins } : undefined),
+    ...(joins.length > 0 ? { joins } : undefined),
     ...(where ? { where } : undefined),
     ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
   };
