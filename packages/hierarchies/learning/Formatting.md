@@ -37,12 +37,22 @@ In the above example, the formatter customizes boolean values' formatting and re
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 
-const schemaContext: SchemaContext = getIModelConnection().schemaContext;
-const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
-const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
+const imodel = getIModelConnection();
+const metricFormatter = createValueFormatter({
+  formatsProvider: IModelApp.formatsProvider,
+  unitsProvider: IModelApp.quantityFormatter,
+  imodel,
+  unitSystem: "metric",
+});
+const imperialFormatter = createValueFormatter({
+  formatsProvider: IModelApp.formatsProvider,
+  unitsProvider: IModelApp.quantityFormatter,
+  imodel,
+  unitSystem: "imperial",
+});
 
 // Define the raw value to be formatted
 const value = 1.234;

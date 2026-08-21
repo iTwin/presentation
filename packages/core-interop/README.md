@@ -76,7 +76,7 @@ const schemaProvider = createECSchemaProvider(imodel);
 
 ### `createValueFormatter`
 
-Creates an instance of `IPrimitiveValueFormatter` that knows how to format primitive property values using their units' information. That information is retrieved from an iModel through `itwinjs-core` [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
+Creates an instance of `IPrimitiveValueFormatter` that knows how to format primitive property values using their units' information. The formats and units used come from a `FormatsProvider` and `UnitsProvider` registered by the end product (e.g. `IModelApp.formatsProvider` / `IModelApp.quantityFormatter` on the frontend), while the kind of quantity's persistence unit is resolved from the iModel itself.
 
 Example:
 
@@ -84,12 +84,22 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 
-const schemaContext: SchemaContext = getIModelConnection().schemaContext;
-const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
-const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
+const imodel = getIModelConnection();
+const metricFormatter = createValueFormatter({
+  formatsProvider: IModelApp.formatsProvider,
+  unitsProvider: IModelApp.quantityFormatter,
+  imodel,
+  unitSystem: "metric",
+});
+const imperialFormatter = createValueFormatter({
+  formatsProvider: IModelApp.formatsProvider,
+  unitsProvider: IModelApp.quantityFormatter,
+  imodel,
+  unitSystem: "imperial",
+});
 
 // Define the raw value to be formatted
 const value = 1.234;

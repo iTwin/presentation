@@ -42,6 +42,38 @@ type PublicCoreSchemaView = Pick<
 type CoreSchemaViewGetter = (props?: { schemas?: string[] }) => Promise<PublicCoreSchemaView>;
 
 /**
+ * Accumulates schema names requested within the same frame and issues a single `getSchemaView` request for all of
+ * them in the next one, returning each caller the batch's result. Used both by `createECSchemaProvider` and by
+ * `createValueFormatter` (which resolves kind of quantity persistence units without needing the class hierarchy).
+ *
+ * @internal
+ */
+export function createBatchedSchemaViewGetter<TSchemaView>(imodel: {
+  getSchemaView: (props?: { schemas?: string[] }) => Promise<TSchemaView>;
+}): (schemaName: string) => Promise<TSchemaView> {
+  const schemaNameSubject = new Subject<string>();
+  const schemaViewBatches = schemaNameSubject.pipe(
+    bufferTime(0),
+    filter((schemaNames) => schemaNames.length > 0),
+    mergeMap(async (schemaNames) => {
+      const schemas = new Set(schemaNames);
+      return { schemas, schemaView: await imodel.getSchemaView({ schemas: [...schemas] }) };
+    }),
+    share(),
+  );
+  return async function getSchemaView(schemaName: string): Promise<TSchemaView> {
+    const schemaView = firstValueFrom(
+      schemaViewBatches.pipe(
+        filter((batch) => batch.schemas.has(schemaName)),
+        map((batch) => batch.schemaView),
+      ),
+    );
+    schemaNameSubject.next(schemaName);
+    return schemaView;
+  };
+}
+
+/**
  * Creates an `ECSchemaProvider` for a given iModel with [SchemaView](https://www.itwinjs.org/reference/ecschema-metadata/context/schemaview/)
  * getter and query reader factory.
  *
@@ -61,27 +93,7 @@ type CoreSchemaViewGetter = (props?: { schemas?: string[] }) => Promise<PublicCo
 export function createECSchemaProvider(
   imodel: { getSchemaView: CoreSchemaViewGetter } & CoreECSqlReaderFactory,
 ): ECSchemaProvider {
-  // Accumulates schema names requested within the same frame and issues a single `getSchemaView` request in the next one.
-  const schemaNameSubject = new Subject<string>();
-  const schemaViewBatches = schemaNameSubject.pipe(
-    bufferTime(0),
-    filter((schemaNames) => schemaNames.length > 0),
-    mergeMap(async (schemaNames) => {
-      const schemas = new Set(schemaNames);
-      return { schemas, schemaView: await imodel.getSchemaView({ schemas: [...schemas] }) };
-    }),
-    share(),
-  );
-  async function getSchemaView(schemaName: string): Promise<PublicCoreSchemaView> {
-    const schemaView = firstValueFrom(
-      schemaViewBatches.pipe(
-        filter((batch) => batch.schemas.has(schemaName)),
-        map((batch) => batch.schemaView),
-      ),
-    );
-    schemaNameSubject.next(schemaName);
-    return schemaView;
-  }
+  const getSchemaView = createBatchedSchemaViewGetter(imodel);
 
   // Ensures we only create a single `ECClassHierarchyResolver` for the iModel, which is used to resolve derived classes for all schemas.
   // Cache the promise (not the resolved value) so concurrent `getSchema` calls share one `createECClassHierarchyResolver` invocation.

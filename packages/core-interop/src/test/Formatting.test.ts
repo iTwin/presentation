@@ -5,40 +5,33 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FormatterSpec, Format as QuantityFormat } from "@itwin/core-quantity";
-import {
-  DelayedPromiseWithProps,
-  OverrideFormat,
-  SchemaItemKey,
-  SchemaItemType,
-  SchemaKey,
-  SchemaUnitProvider,
-} from "@itwin/ecschema-metadata";
-import { parseFullClassName } from "@itwin/presentation-shared";
 import { createValueFormatter } from "../core-interop/Formatting.js";
 
-import type { UnitSystemKey } from "@itwin/core-quantity";
-import type {
-  Format,
-  KindOfQuantity,
-  LazyLoadedFormat,
-  LazyLoadedSchemaItem,
-  Schema,
-  SchemaContext,
-  SchemaItem,
-  SchemaItemFormatProps,
-  Unit,
-  UnitSystem,
-} from "@itwin/ecschema-metadata";
+import type { UnitsProvider, UnitSystemKey } from "@itwin/core-quantity";
+import type { SchemaView } from "@itwin/ecschema-metadata";
 import type { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 describe("createValueFormatter", () => {
-  const schemaContext = { getSchema: vi.fn() };
+  const formatsProvider = { getFormat: vi.fn() };
+  const findUnitByName = vi.fn();
+  const unitsProvider = { findUnitByName } as unknown as UnitsProvider;
+  const findKindOfQuantity = vi.fn();
+  const getSchemaByAlias = vi.fn();
+  const getSchemaView = vi.fn(
+    async (): Promise<Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">> => ({
+      findKindOfQuantity,
+      getSchemaByAlias,
+    }),
+  );
+  const imodel = { getSchemaView };
   const defaultFormatter = vi.fn(async () => "DEFAULT");
   let formatter: IPrimitiveValueFormatter;
 
   function initFormatter(unitSystem?: UnitSystemKey) {
     formatter = createValueFormatter({
-      schemaContext: schemaContext as unknown as SchemaContext,
+      formatsProvider,
+      unitsProvider,
+      imodel,
       unitSystem,
       baseFormatter: defaultFormatter,
     });
@@ -46,6 +39,11 @@ describe("createValueFormatter", () => {
 
   beforeEach(() => {
     defaultFormatter.mockClear();
+    formatsProvider.getFormat.mockReset();
+    findUnitByName.mockReset();
+    getSchemaView.mockClear();
+    findKindOfQuantity.mockReset();
+    getSchemaByAlias.mockReset().mockReturnValue(undefined);
     initFormatter();
   });
 
@@ -53,91 +51,48 @@ describe("createValueFormatter", () => {
     const prop: TypedPrimitiveValue = { type: "Double", value: 1.23 };
     expect(await formatter(prop)).toBe("DEFAULT");
     expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
+    expect(formatsProvider.getFormat).not.toHaveBeenCalled();
   });
 
-  it("throws when property references non-existing schema in KoQ", async () => {
-    schemaContext.getSchema.mockResolvedValue(undefined);
-    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
-    await expect(formatter(prop)).rejects.toThrow("Invalid schema");
+  it("returns default formatter result for non-Double values", async () => {
+    const prop: TypedPrimitiveValue = { type: "String", value: "abc" };
+    expect(await formatter(prop)).toBe("DEFAULT");
+    expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
+    expect(formatsProvider.getFormat).not.toHaveBeenCalled();
   });
 
-  it("throws when property references non-existing KoQ", async () => {
-    schemaContext.getSchema.mockResolvedValue({ name: "X", getItem: async () => undefined });
-    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
-    await expect(formatter(prop)).rejects.toThrow("Invalid kind of quantity");
+  it("returns default formatter result when no format is registered for the KoQ", async () => {
+    formatsProvider.getFormat.mockResolvedValue(undefined);
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "schema.koq" };
+    expect(await formatter(prop)).toBe("DEFAULT");
+    expect(formatsProvider.getFormat).toHaveBeenCalledExactlyOnceWith("schema.koq", undefined);
+    expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
   });
 
-  it("returns default formatter result when KoQ doesn't specify persistence unit", async () => {
-    schemaContext.getSchema.mockResolvedValue({
-      name: "X",
-      getItem: async (name: string) => {
-        if (name === "Y") {
-          return { persistenceUnit: undefined } as unknown as KindOfQuantity;
-        }
-        return undefined;
-      },
-    });
-    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
+  it("returns default formatter result when KoQ is not found in SchemaView", async () => {
+    formatsProvider.getFormat.mockResolvedValue({});
+    findKindOfQuantity.mockReturnValue(undefined);
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "schema.koq" };
     expect(await formatter(prop)).toBe("DEFAULT");
     expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
   });
 
-  it("returns default formatter result when KoQ doesn't specify presentation format", async () => {
-    schemaContext.getSchema.mockResolvedValue({
-      name: "X",
-      getItem: async (name: string) => {
-        if (name === "Y") {
-          return {
-            persistenceUnit: createLazyLoaded({
-              key: new SchemaItemKey("persistence_unit", new SchemaKey("units_schema")),
-              unitSystem: createLazyLoaded({
-                key: new SchemaItemKey("metric", new SchemaKey("units_schema")),
-                name: "metric",
-              } as UnitSystem),
-            } as Unit),
-            presentationFormats: [],
-            defaultPresentationFormat: undefined,
-          } as unknown as KindOfQuantity;
-        }
-        return undefined;
-      },
-    });
-    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "X.Y" };
+  it("returns default formatter result when KoQ's persistence unit can't be normalized (e.g. legacy FUS format)", async () => {
+    formatsProvider.getFormat.mockResolvedValue({});
+    findKindOfQuantity.mockReturnValue({ persistenceUnit: "not-a-valid-full-name" });
+    const prop: TypedPrimitiveValue = { type: "Double", value: 1.23, koqName: "schema.koq" };
     expect(await formatter(prop)).toBe("DEFAULT");
     expect(defaultFormatter).toHaveBeenCalledExactlyOnceWith(prop);
   });
 
-  it("returns koq formatter result when presentation format is found in koq formats list", async () => {
+  it("formats value using resolved format and persistence unit", async () => {
     initFormatter("metric");
-    const persistenceUnit = createUnit("schema.persistence_unit", "metric");
-    const presentationUnit = createUnit("schema.presentation_unit", "metric");
-    const presentationFormatProps = {} as SchemaItemFormatProps;
-    schemaContext.getSchema.mockResolvedValue({
-      name: "schema",
-      getItem: async (name: string) => {
-        if (name === "koq") {
-          return {
-            schemaItemType: SchemaItemType.KindOfQuantity,
-            persistenceUnit: createLazyLoaded(persistenceUnit),
-            presentationFormats: [
-              {
-                units: [[createLazyLoaded(presentationUnit), "presentation unit"]],
-                toJSON: () => presentationFormatProps,
-              } as unknown as LazyLoadedFormat,
-            ],
-            defaultPresentationFormat: undefined,
-          } as unknown as KindOfQuantity;
-        }
-        if (name === "persistence_unit") {
-          return persistenceUnit;
-        }
-        if (name === "presentation_unit") {
-          return presentationUnit;
-        }
-        return undefined;
-      },
-    });
+    const formatProps = {};
+    formatsProvider.getFormat.mockResolvedValue(formatProps);
+    findKindOfQuantity.mockReturnValue({ persistenceUnit: "Units:M" });
 
+    const persistenceUnit = {};
+    findUnitByName.mockResolvedValue(persistenceUnit);
     const koqFormatterStub = vi.fn().mockReturnValue("KOQ FORMAT");
     const quantityFormat = {} as unknown as QuantityFormat;
     const createQuantityFormatStub = vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue(quantityFormat);
@@ -146,231 +101,66 @@ describe("createValueFormatter", () => {
       .mockResolvedValue({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
 
     expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).toBe("KOQ FORMAT");
-    expect(createQuantityFormatStub).toHaveBeenCalledOnce();
-    expect(createQuantityFormatStub.mock.calls[0][0]).toBe("");
-    expect(createQuantityFormatStub.mock.calls[0][1]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createQuantityFormatStub.mock.calls[0][2]).toBe(presentationFormatProps);
-    expect(createFormatSpecStub).toHaveBeenCalledOnce();
-    expect(createFormatSpecStub.mock.calls[0][0]).toBe("");
-    expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
-    expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createFormatSpecStub.mock.calls[0][3]!.name).toBe(persistenceUnit.fullName);
+    expect(formatsProvider.getFormat).toHaveBeenCalledExactlyOnceWith("schema.koq", "metric");
+    expect(findUnitByName).toHaveBeenCalledExactlyOnceWith("Units.M");
+    expect(createQuantityFormatStub).toHaveBeenCalledExactlyOnceWith("", unitsProvider, formatProps);
+    expect(createFormatSpecStub).toHaveBeenCalledExactlyOnceWith("", quantityFormat, unitsProvider, persistenceUnit);
     expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
   });
 
-  it("returns koq formatter result when presentation override format is found in koq formats list", async () => {
+  it("resolves an alias-qualified persistence unit via getSchemaByAlias", async () => {
     initFormatter("metric");
-    const persistenceUnit = createUnit("schema.persistence_unit", "metric");
-    const presentationUnit = createUnit("schema.presentation_unit", "metric");
-    // eslint-disable-next-line @itwin/no-internal
-    const overrideFormat = new OverrideFormat(
-      { fullName: "schema.base_format", toJSON: () => ({}) } as Format,
-      undefined,
-      [[createLazyLoaded(presentationUnit), "presentation unit"]],
-    );
-    schemaContext.getSchema.mockResolvedValue({
-      name: "schema",
-      getItem: async (name: string) => {
-        if (name === "koq") {
-          return {
-            schemaItemType: SchemaItemType.KindOfQuantity,
-            persistenceUnit: createLazyLoaded(persistenceUnit),
-            presentationFormats: [overrideFormat],
-            defaultPresentationFormat: undefined,
-          } as unknown as KindOfQuantity;
-        }
-        if (name === "persistence_unit") {
-          return persistenceUnit;
-        }
-        if (name === "presentation_unit") {
-          return presentationUnit;
-        }
-        return undefined;
-      },
-    });
+    const formatProps = {};
+    formatsProvider.getFormat.mockResolvedValue(formatProps);
+    findKindOfQuantity.mockReturnValue({ persistenceUnit: "myAlias:M" });
+    getSchemaByAlias.mockImplementation((alias: string) => (alias === "myAlias" ? { name: "CustomUnits" } : undefined));
 
-    const koqFormatterStub = vi.fn().mockReturnValue("KOQ FORMAT");
-    const quantityFormat = {} as unknown as QuantityFormat;
-    const createQuantityFormatStub = vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue(quantityFormat);
-    const createFormatSpecStub = vi
-      .spyOn(FormatterSpec, "create")
-      .mockResolvedValue({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
+    const persistenceUnit = {};
+    findUnitByName.mockResolvedValue(persistenceUnit);
+    vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue({} as unknown as QuantityFormat);
+    vi.spyOn(FormatterSpec, "create").mockResolvedValue({ applyFormatting: vi.fn() } as unknown as FormatterSpec);
 
-    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).toBe("KOQ FORMAT");
-    expect(createQuantityFormatStub).toHaveBeenCalledOnce();
-    expect(createQuantityFormatStub.mock.calls[0][0]).toBe("");
-    expect(createQuantityFormatStub.mock.calls[0][1]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createQuantityFormatStub.mock.calls[0][2].composite?.units[0].name).toBe(presentationUnit.fullName);
-    expect(createFormatSpecStub).toHaveBeenCalledOnce();
-    expect(createFormatSpecStub.mock.calls[0][0]).toBe("");
-    expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
-    expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createFormatSpecStub.mock.calls[0][3]?.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
+    await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" });
+    expect(getSchemaByAlias).toHaveBeenCalledExactlyOnceWith("myAlias");
+    expect(findUnitByName).toHaveBeenCalledExactlyOnceWith("CustomUnits.M");
   });
 
-  it("returns koq formatter result when persistence unit system matches requested unit system", async () => {
+  it("falls back to well-known aliases for the excluded Units/Formats schemas", async () => {
+    initFormatter("metric");
+    const formatProps = {};
+    formatsProvider.getFormat.mockResolvedValue(formatProps);
+    // `getSchemaByAlias` can never resolve `Units`/`Formats` - they're excluded from `SchemaView`.
+    findKindOfQuantity.mockReturnValue({ persistenceUnit: "u:M" });
+
+    const persistenceUnit = {};
+    findUnitByName.mockResolvedValue(persistenceUnit);
+    vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue({} as unknown as QuantityFormat);
+    vi.spyOn(FormatterSpec, "create").mockResolvedValue({ applyFormatting: vi.fn() } as unknown as FormatterSpec);
+
+    await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" });
+    expect(findUnitByName).toHaveBeenCalledExactlyOnceWith("Units.M");
+  });
+
+  it("forwards unitSystem override to formatsProvider.getFormat", async () => {
+    formatsProvider.getFormat.mockResolvedValue(undefined);
+    await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" });
+    expect(formatsProvider.getFormat).toHaveBeenCalledExactlyOnceWith("schema.koq", undefined);
+
     initFormatter("imperial");
-
-    const persistenceUnit = createUnit("schema.persistence_unit", "imperial");
-    schemaContext.getSchema.mockResolvedValue({
-      name: "schema",
-      getItem: async (name: string) => {
-        if (name === "koq") {
-          return {
-            schemaItemType: SchemaItemType.KindOfQuantity,
-            persistenceUnit: createLazyLoaded(persistenceUnit),
-            presentationFormats: [],
-            defaultPresentationFormat: undefined,
-          } as unknown as KindOfQuantity;
-        }
-        if (name === "persistence_unit") {
-          return persistenceUnit;
-        }
-        return undefined;
-      },
-    });
-
-    const koqFormatterStub = vi.fn().mockReturnValue("KOQ FORMAT");
-    const quantityFormat = {} as unknown as QuantityFormat;
-    const createQuantityFormatStub = vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue(quantityFormat);
-    const createFormatSpecStub = vi
-      .spyOn(FormatterSpec, "create")
-      .mockResolvedValue({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
-
-    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).toBe("KOQ FORMAT");
-    expect(createQuantityFormatStub).toHaveBeenCalledOnce();
-    expect(createQuantityFormatStub.mock.calls[0][0]).toBe("");
-    expect(createQuantityFormatStub.mock.calls[0][1]).toBeInstanceOf(SchemaUnitProvider);
-    expect((createQuantityFormatStub.mock.calls[0][2] as SchemaItemFormatProps).composite!.units[0].name).toBe(
-      persistenceUnit.fullName,
-    );
-    expect(createFormatSpecStub).toHaveBeenCalledOnce();
-    expect(createFormatSpecStub.mock.calls[0][0]).toBe("");
-    expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
-    expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createFormatSpecStub.mock.calls[0][3]!.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
+    formatsProvider.getFormat.mockResolvedValue(undefined);
+    await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" });
+    expect(formatsProvider.getFormat).toHaveBeenCalledWith("schema.koq", "imperial");
   });
 
-  it("returns koq formatter result when default presentation unit is of requested unit system", async () => {
-    initFormatter("usCustomary");
+  it("batches same-frame getSchemaView requests for different KoQs", async () => {
+    formatsProvider.getFormat.mockResolvedValue({});
+    findKindOfQuantity.mockReturnValue(undefined);
 
-    const persistenceUnit = createUnit("schema.persistence_unit", "imperial");
-    const defaultPresentationUnit = createUnit("schema.presentation_unit", "usCustomary");
-    const defaultPresentationFormatProps = {} as SchemaItemFormatProps;
-    schemaContext.getSchema.mockResolvedValue({
-      name: "schema",
-      getItem: async (name: string) => {
-        if (name === "koq") {
-          return {
-            schemaItemType: SchemaItemType.KindOfQuantity,
-            persistenceUnit: createLazyLoaded(persistenceUnit),
-            presentationFormats: [],
-            defaultPresentationFormat: {
-              units: [[createLazyLoaded(defaultPresentationUnit), "presentation unit"]],
-              toJSON: () => defaultPresentationFormatProps,
-            } as unknown as LazyLoadedFormat,
-          } as unknown as KindOfQuantity;
-        }
-        if (name === "persistence_unit") {
-          return persistenceUnit;
-        }
-        if (name === "presentation_unit") {
-          return defaultPresentationUnit;
-        }
-        return undefined;
-      },
-    });
+    await Promise.all([
+      formatter({ type: "Double", value: 1, koqName: "schemaA.koq1" }),
+      formatter({ type: "Double", value: 2, koqName: "schemaA.koq2" }),
+    ]);
 
-    const koqFormatterStub = vi.fn().mockReturnValue("KOQ FORMAT");
-    const quantityFormat = {} as unknown as QuantityFormat;
-    const createQuantityFormatStub = vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue(quantityFormat);
-    const createFormatSpecStub = vi
-      .spyOn(FormatterSpec, "create")
-      .mockResolvedValue({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
-
-    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).toBe("KOQ FORMAT");
-    expect(createQuantityFormatStub).toHaveBeenCalledOnce();
-    expect(createQuantityFormatStub.mock.calls[0][0]).toBe("");
-    expect(createQuantityFormatStub.mock.calls[0][1]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createQuantityFormatStub.mock.calls[0][2]).toBe(defaultPresentationFormatProps);
-    expect(createFormatSpecStub).toHaveBeenCalledOnce();
-    expect(createFormatSpecStub.mock.calls[0][0]).toBe("");
-    expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
-    expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createFormatSpecStub.mock.calls[0][3]!.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
-  });
-
-  it("returns koq formatter result when koq uses override format as default presentation format", async () => {
-    initFormatter("usSurvey");
-
-    const persistenceUnit = createUnit("schema.persistence_unit", "metric");
-    const presentationUnit = createUnit("schema.presentation_unit", "usSurvey");
-    // eslint-disable-next-line @itwin/no-internal
-    const overrideFormat = new OverrideFormat(
-      { fullName: "schema.base_format", toJSON: () => ({}) } as Format,
-      undefined,
-      [[createLazyLoaded(presentationUnit), "presentation unit"]],
-    );
-    schemaContext.getSchema.mockResolvedValue({
-      name: "schema",
-      getItem: async (name: string) => {
-        if (name === "koq") {
-          return {
-            schemaItemType: SchemaItemType.KindOfQuantity,
-            persistenceUnit: createLazyLoaded(persistenceUnit),
-            presentationFormats: [],
-            defaultPresentationFormat: overrideFormat,
-          } as unknown as KindOfQuantity;
-        }
-        if (name === "persistence_unit") {
-          return persistenceUnit;
-        }
-        if (name === "presentation_unit") {
-          return presentationUnit;
-        }
-        return undefined;
-      },
-    });
-
-    const koqFormatterStub = vi.fn().mockReturnValue("KOQ FORMAT");
-    const quantityFormat = {} as unknown as QuantityFormat;
-    const createQuantityFormatStub = vi.spyOn(QuantityFormat, "createFromJSON").mockResolvedValue(quantityFormat);
-    const createFormatSpecStub = vi
-      .spyOn(FormatterSpec, "create")
-      .mockResolvedValue({ applyFormatting: koqFormatterStub } as unknown as FormatterSpec);
-
-    expect(await formatter({ type: "Double", value: 1.23, koqName: "schema.koq" })).toBe("KOQ FORMAT");
-    expect(createQuantityFormatStub).toHaveBeenCalledOnce();
-    expect(createQuantityFormatStub.mock.calls[0][0]).toBe("");
-    expect(createQuantityFormatStub.mock.calls[0][1]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createQuantityFormatStub.mock.calls[0][2].composite?.units[0].name).toBe(presentationUnit.fullName);
-    expect(createFormatSpecStub).toHaveBeenCalledOnce();
-    expect(createFormatSpecStub.mock.calls[0][0]).toBe("");
-    expect(createFormatSpecStub.mock.calls[0][1]).toBe(quantityFormat);
-    expect(createFormatSpecStub.mock.calls[0][2]).toBeInstanceOf(SchemaUnitProvider);
-    expect(createFormatSpecStub.mock.calls[0][3]?.name).toBe(persistenceUnit.fullName);
-    expect(koqFormatterStub).toHaveBeenCalledExactlyOnceWith(1.23);
+    expect(getSchemaView).toHaveBeenCalledExactlyOnceWith({ schemas: ["schemaA"] });
   });
 });
-
-function createUnit(fullName: string, unitSystem: UnitSystemKey) {
-  const { schemaName, className } = parseFullClassName(fullName);
-  return {
-    schemaItemType: SchemaItemType.Unit,
-    key: new SchemaItemKey(className, new SchemaKey(schemaName)),
-    schema: {} as Schema,
-    fullName,
-    unitSystem: createLazyLoaded({
-      key: new SchemaItemKey(unitSystem, new SchemaKey("units_schema")),
-      name: unitSystem,
-    } as UnitSystem),
-  } as unknown as Unit;
-}
-
-function createLazyLoaded<T extends SchemaItem>(item: T): LazyLoadedSchemaItem<T> {
-  // eslint-disable-next-line @itwin/no-internal
-  return new DelayedPromiseWithProps(item.key, async () => Promise.resolve(item));
-}
