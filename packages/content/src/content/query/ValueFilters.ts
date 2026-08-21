@@ -24,7 +24,7 @@ interface ValueFilterSelector {
  * Builds the ECSQL clause and bindings for a single {@link ContentValueFilter}. `filterIndex` seeds the
  * clause's own binding names (e.g. `pres_vf{filterIndex}`), so callers that build clauses for filters
  * outside a single {@link buildValueFilterClauses} batch (e.g. one evaluated in its own subquery) must
- * pass a index that is unique across every filter clause merged into the same query.
+ * pass an index that is unique across every filter clause merged into the same query.
  *
  * @internal
  */
