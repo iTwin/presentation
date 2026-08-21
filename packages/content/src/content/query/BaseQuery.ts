@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert } from "@itwin/core-bentley";
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
@@ -556,9 +557,7 @@ function buildExistentialSkeleton(info: RelationshipPathJoinInfo) {
   // The path is always resolved with joinType "inner", so `createRelationshipPathJoinInfo` never
   // produces the outer link-table subquery wrapper (`relationship-select`) here. `first` is guaranteed
   // to exist since `collectFilterPaths` only ever collects a non-empty `pathFromTarget`.
-  if (first.joinTarget.kind !== "class") {
-    throw new Error("Expected an existential filter path to resolve to plain class joins.");
-  }
+  assert(first.joinTarget.kind === "class", "Expected a resolved join to a class, not a relationship-select subquery");
   const { joins, bindings } = ECSql.createRelationshipPathJoinClause({ steps: [{ joins: rest }] });
   return {
     from: `${ECSql.createClassSelector(first.joinTarget.className)} [${first.joinAlias}]`,
