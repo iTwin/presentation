@@ -15,7 +15,7 @@ When reviewing pull requests in this repository, check the following:
 
 - Changes must be consistent with the package they live in (see the package table in [`SKILL.md`](.github/skills/repo-context/SKILL.md)).
 - Avoid cross-package coupling beyond the established dependency graph.
-- React code should follow the existing hook/component patterns in `packages/hierarchies-react/` and `packages/components/`.
+- React code should follow the existing hook/component patterns in `packages/hierarchies-react/`, `packages/content-react` and `packages/components/`.
 
 ### Public API
 
@@ -26,7 +26,7 @@ When reviewing pull requests in this repository, check the following:
 
 ### Changelog / Changesets
 
-- Every user-visible change (feature, fix, deprecation, breaking change) requires a changeset file generated with `pnpm change`.
+- Every user-visible change (feature, fix, deprecation, breaking change) to a released package requires a changeset file generated with `pnpm change`. Packages with `"private": true` are not released and do not require a changeset.
 - The changeset format:
 
   ```md
@@ -49,7 +49,6 @@ When reviewing pull requests in this repository, check the following:
 - Ensure all referenced APIs are public and specified within backticks.
 - Ensure internal APIs are not mentioned.
 - Ensure code examples match the actual API signatures and are properly formatted.
-- All breaking changes should have a `**Breaking:**` prefix and describe the reasoning, the impact of the change on consumers and have a migration example.
 - All additions should describe what the added API does.
 
 ### Documentation
