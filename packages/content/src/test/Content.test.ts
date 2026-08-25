@@ -193,11 +193,10 @@ describe("resolveContentSources", () => {
       const queryError = new Error("query failed");
       const imodelAccess = {
         ...createMockIModelAccess(),
-        createQueryReader: vi.fn(
-          (): AsyncIterableIterator<ECSqlQueryRow> =>
-            (async function* (): AsyncGenerator<ECSqlQueryRow> {
-              throw queryError;
-            })(),
+        createQueryReader: vi.fn((): AsyncIterableIterator<ECSqlQueryRow> =>
+          (async function* (): AsyncGenerator<ECSqlQueryRow> {
+            throw queryError;
+          })(),
         ),
       };
       await expect(

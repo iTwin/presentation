@@ -2,9 +2,6 @@ name: PR hierarchies performance benchmark
 
 on:
   pull_request:
-    branches:
-      - master
-      - stable
     paths:
       - apps/performance-tests/hierarchies/**
       - apps/performance-tests/util/**

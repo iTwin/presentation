@@ -62,23 +62,17 @@ Example ruleset:
   "rules": [
     {
       "ruleType": "RootNodes",
-      "specifications": [
-        /* define root node specifications here */
-      ]
+      "specifications": [/* define root node specifications here */]
     },
     {
       "ruleType": "ChildNodes",
       "condition": "ParentNode.Type = \"MyCustomParentNode\"",
-      "specifications": [
-        /* specifications for "MyCustomParentNode" parent node's children go here */
-      ]
+      "specifications": [/* specifications for "MyCustomParentNode" parent node's children go here */]
     },
     {
       "ruleType": "ChildNodes",
       "condition": "ParentNode.IsOfClass(\"BisCore\", \"Model\")",
-      "specifications": [
-        /* specifications for `BisCore.Model` parent node's children go here */
-      ]
+      "specifications": [/* specifications for `BisCore.Model` parent node's children go here */]
     }
   ]
 }
@@ -95,27 +89,19 @@ import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hie
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   imodelAccess,
   hierarchy: {
-    rootNodes: async () => [
-      /* define root node specifications here */
-    ],
+    rootNodes: async () => [/* define root node specifications here */],
     childNodes: [
       {
         parentGenericNodePredicate: async (parentKey) => parentKey.id === "MyCustomParentNodeKey",
-        definitions: async () => [
-          /* definitions for "MyCustomParentNode" parent node's children go here */
-        ],
+        definitions: async () => [/* definitions for "MyCustomParentNode" parent node's children go here */],
       },
       {
         parentInstancesNodePredicate: async () => true,
-        definitions: async () => [
-          /* definitions for all instances' parent nodes children go here */
-        ],
+        definitions: async () => [/* definitions for all instances' parent nodes children go here */],
       },
       {
         parentInstancesNodePredicate: "BisCore.Model",
-        definitions: async () => [
-          /* definitions for `BisCore.Model` parent node's children go here */
-        ],
+        definitions: async () => [/* definitions for `BisCore.Model` parent node's children go here */],
       },
     ],
   },
@@ -137,22 +123,16 @@ import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 const hierarchyDefinition: HierarchyDefinition = {
   defineHierarchyLevel: async ({ parentNode }) => {
     if (!parentNode) {
-      return [
-        /* define root node specifications here */
-      ];
+      return [/* define root node specifications here */];
     }
     if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "MyCustomParentNodeKey") {
-      return [
-        /* definitions for "MyCustomParentNode" parent node's children go here */
-      ];
+      return [/* definitions for "MyCustomParentNode" parent node's children go here */];
     }
     if (HierarchyNode.isInstancesNode(parentNode)) {
       // depending on whether the hierarchy definition requests node merging, an instances node may have one or more
       // instance keys; here, for simplicity, let's assume all nodes only have one instance key
       if (await imodelAccess.classDerivesFrom(parentNode.key.instanceKeys[0].className, "BisCore.Model")) {
-        return [
-          /* definitions for `BisCore.Model` parent node's children go here */
-        ];
+        return [/* definitions for `BisCore.Model` parent node's children go here */];
       }
     }
     return [];

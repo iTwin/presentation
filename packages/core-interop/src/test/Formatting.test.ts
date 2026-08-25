@@ -17,12 +17,10 @@ describe("createValueFormatter", () => {
   const unitsProvider = { findUnitByName } as unknown as UnitsProvider;
   const findKindOfQuantity = vi.fn();
   const getSchemaByAlias = vi.fn();
-  const getSchemaView = vi.fn(
-    async (): Promise<Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">> => ({
-      findKindOfQuantity,
-      getSchemaByAlias,
-    }),
-  );
+  const getSchemaView = vi.fn(async (): Promise<Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">> => ({
+    findKindOfQuantity,
+    getSchemaByAlias,
+  }));
   const imodel = { getSchemaView };
   const defaultFormatter = vi.fn(async () => "DEFAULT");
   let formatter: IPrimitiveValueFormatter;

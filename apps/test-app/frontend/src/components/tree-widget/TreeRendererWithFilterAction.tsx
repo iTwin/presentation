@@ -28,6 +28,7 @@ import type {
 type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
 
 export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttributes, TreeRendererProps>(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   function TreeRendererWithFilterAction(props: TreeRendererProps, forwardedRef) {
     const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } = props;
     const nodesWithError = useMemo(() => {
@@ -127,6 +128,7 @@ function mapNodesHierarchy(nodes: TreeNode[], callback: (node: TreeNode) => Tree
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-shadow
 const CustomAction = memo(function CustomAction({
   node,
   selectedNodes,

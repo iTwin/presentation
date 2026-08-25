@@ -248,6 +248,12 @@
 
   In reality, consumers will likely use `@itwin/presentation-core-interop` package for creating them, and the package has been updated to handle the change, so reacting to the breaking change is as simple as bumping the version of `@itwin/presentation-core-interop` package in the consumer's `package.json`.
 
+## 1.2.20
+
+### Patch Changes
+
+- [#1500](https://github.com/iTwin/presentation/pull/1500): Update iTwin.js core dependencies to ^5.12.4 and refresh related tooling/test dependencies.
+
 ## 1.2.19
 
 ### Patch Changes

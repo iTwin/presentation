@@ -860,13 +860,11 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const hiddenParentNodes = merge(
       genericDefs.pipe(
         filter(({ hierarchyNodesDefinition }) => !!hierarchyNodesDefinition.node.processingParams?.hideInHierarchy),
-        map(
-          ({ hierarchyNodesDefinition }): GenericNodeKey => ({
-            type: "generic",
-            id: hierarchyNodesDefinition.node.key,
-            source: this.#sourceName,
-          }),
-        ),
+        map(({ hierarchyNodesDefinition }): GenericNodeKey => ({
+          type: "generic",
+          id: hierarchyNodesDefinition.node.key,
+          source: this.#sourceName,
+        })),
       ),
       hiddenNodeInstanceKeys.pipe(
         // first merge all keys by class

@@ -57,7 +57,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
    * See LICENSE.md in the project root for license terms and full copyright notice.
    *--------------------------------------------------------------------------------------------*/
   ```
-- Changes require a changeset (`pnpm change`)
+- User-visible changes to released packages require a changeset (`pnpm change`); packages with `"private": true` do not require a changeset.
 - Build order is managed by Lage (`lage build`, dependencies via `^build`)
 
 ## Common Commands

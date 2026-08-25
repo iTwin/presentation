@@ -695,12 +695,10 @@ describe("ViewportSelectionHandler", () => {
 });
 
 const createElementProps = (ids: Id64Arg): ElementProps[] => {
-  return [...Id64.toIdSet(ids)].map(
-    (id: Id64String): ElementProps => ({
-      id,
-      classFullName: "ElementSchema:ElementClass",
-      code: Code.createEmpty(),
-      model: id,
-    }),
-  );
+  return [...Id64.toIdSet(ids)].map((id: Id64String): ElementProps => ({
+    id,
+    classFullName: "ElementSchema:ElementClass",
+    code: Code.createEmpty(),
+    model: id,
+  }));
 };

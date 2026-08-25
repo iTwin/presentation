@@ -165,8 +165,7 @@ First, let's define a sample books service:
 ```ts
 // Define a type for a filter that can be applied to books service queries.
 type BooksServiceFilter<TEntry> =
-  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
-  | Partial<TEntry>;
+  { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.

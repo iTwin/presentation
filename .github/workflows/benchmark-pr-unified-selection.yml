@@ -2,9 +2,6 @@ name: PR unified-selection performance benchmark
 
 on:
   pull_request:
-    branches:
-      - master
-      - stable
     paths:
       - apps/performance-tests/unified-selection/**
       - apps/performance-tests/util/**
