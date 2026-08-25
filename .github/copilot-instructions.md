@@ -15,7 +15,7 @@ When reviewing pull requests in this repository, check the following:
 
 - Changes must be consistent with the package they live in (see the package table in [`SKILL.md`](.github/skills/repo-context/SKILL.md)).
 - Avoid cross-package coupling beyond the established dependency graph.
-- React code should follow the existing hook/component patterns in `packages/hierarchies-react/`, `packages/content-react` and `packages/components/`.
+- React code should follow the existing hook/component patterns in `packages/hierarchies-react/`, `packages/unified-selection-react/`, and `packages/components/`.
 
 ### Public API
 
