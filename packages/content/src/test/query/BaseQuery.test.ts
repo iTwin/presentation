@@ -76,6 +76,33 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
   };
 }
 
+// Shared 1:1 and 1:many related paths + a `Name` field on each, reused by the value-filter tests below
+// (which only vary the filter operator/expected clause) to avoid repeating the same path/field setup.
+function makeOneToOnePath(): RelationshipPath {
+  return [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+}
+function makeOneToOneNameField(path: RelationshipPath = makeOneToOnePath()): PropertyField {
+  return makePropertyField({
+    propertyName: "Name",
+    propertyClassName: "TestSchema.Target",
+    pathFromTarget: path,
+    valueClassNames: ["TestSchema.Target"],
+    primaryClassNames: [primaryClass],
+  });
+}
+function makeOneToManyPath(): RelationshipPath {
+  return [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+}
+function makeOneToManyNameField(path: RelationshipPath = makeOneToManyPath()): PropertyField {
+  return makePropertyField({
+    propertyName: "Name",
+    propertyClassName: "TestSchema.Many",
+    pathFromTarget: path,
+    valueClassNames: ["TestSchema.Many"],
+    primaryClassNames: [primaryClass],
+  });
+}
+
 describe("buildBaseQuery", () => {
   describe("FROM + related JOINs", () => {
     it("builds a direct-only query with no related joins", async () => {
@@ -385,14 +412,8 @@ describe("buildBaseQuery", () => {
     });
 
     it("resolves a related property column against the target alias", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
-      const field = makePropertyField({
-        propertyName: "Name",
-        propertyClassName: "TestSchema.Target",
-        pathFromTarget: path,
-        valueClassNames: ["TestSchema.Target"],
-        primaryClassNames: [primaryClass],
-      });
+      const path = makeOneToOnePath();
+      const field = makeOneToOneNameField(path);
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
@@ -414,6 +435,27 @@ describe("buildBaseQuery", () => {
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
 
       expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}r0].[RelProp] = :${ECSQL_PREFIX}vf0`);
+    });
+
+    it("resolves an `is-null` filter on a 1:1 related property as a plain join", async () => {
+      const path = makeOneToOnePath();
+      const field = makeOneToOneNameField(path);
+      const filters: ContentValueFilter[] = [{ field, operator: "is-null" }];
+
+      const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
+
+      // A 1:1 path has at most one related row, so the outer join alone (no EXISTS) is enough.
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NULL`);
+    });
+
+    it("resolves an `is-not-null` filter on a 1:1 related property as a plain join", async () => {
+      const path = makeOneToOnePath();
+      const field = makeOneToOneNameField(path);
+      const filters: ContentValueFilter[] = [{ field, operator: "is-not-null" }];
+
+      const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
+
+      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NOT NULL`);
     });
 
     it("binds a struct member using the member's declared type", async () => {
@@ -884,41 +926,214 @@ describe("buildBaseQuery", () => {
   });
 
   describe("value filters on split paths", () => {
-    it("joins a schema-`many` filtered path onto the anchor to evaluate a target-property filter", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+    // A value filter on a 1:many path must not be evaluated by a top-level OUTER JOIN of that path onto the anchor.
+    // Such a join duplicates the anchor row once per matching related instance (e.g. a Primary related to two
+    // `Many` rows both named "A" yields the anchor id twice). The filter must instead be expressed as an
+    // existential subquery correlated on the primary, so the anchor stays one row per primary.
+    it.each([
+      {
+        operator: "is-equal",
+        filterProps: { operator: "is-equal" as const, value: "A" },
+        expectedPredicate: `[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`,
+        expectedBindings: { [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "A" } },
+      },
+      {
+        operator: "is-not-null",
+        filterProps: { operator: "is-not-null" as const },
+        expectedPredicate: `[${ECSQL_PREFIX}t0].[Name] IS NOT NULL`,
+        expectedBindings: undefined,
+      },
+    ])(
+      "evaluates a schema-`many` filtered path's $operator filter with a single EXISTS, not a top-level join",
+      async ({ filterProps, expectedPredicate, expectedBindings }) => {
+        const path = makeOneToManyPath();
+        const field = makeOneToManyNameField(path);
+
+        const result = await buildBaseQuery({
+          schemaProvider,
+          source: makeSource([path]),
+          includeRelatedJoins: true,
+          filters: [{ field, ...filterProps }],
+        });
+
+        // The 1:many path's selected columns are owned by an additional group, and the anchor evaluates
+        // the value filter as an EXISTS subquery rather than joining the path onto itself.
+        expect(result.anchor.paths).to.deep.equal([]);
+        expect(result.anchor.parts.joins).to.equal("");
+        expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+          trimWhitespace(`
+            EXISTS (
+              SELECT 1
+              FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
+              INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+              WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND (${expectedPredicate})
+            )
+          `),
+        );
+        expect(result.anchor.parts.bindings).to.deep.equal(expectedBindings);
+        expect(result.additional).to.have.length(1);
+        expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
+      },
+    );
+
+    it.each([
+      {
+        operator: "is-in",
+        filterProps: { operator: "is-in" as const, value: ["A", "B"] },
+        expectedPredicate: `[${ECSQL_PREFIX}t0].[Name] IN (:${ECSQL_PREFIX}vf0_0, :${ECSQL_PREFIX}vf0_1)`,
+        expectedBindings: {
+          [`${ECSQL_PREFIX}vf0_0`]: { type: "string", value: "A" },
+          [`${ECSQL_PREFIX}vf0_1`]: { type: "string", value: "B" },
+        },
+      },
+      {
+        operator: "is-not-in",
+        filterProps: { operator: "is-not-in" as const, value: ["A", "B"] },
+        expectedPredicate: `[${ECSQL_PREFIX}t0].[Name] NOT IN (:${ECSQL_PREFIX}vf0_0, :${ECSQL_PREFIX}vf0_1)`,
+        expectedBindings: {
+          [`${ECSQL_PREFIX}vf0_0`]: { type: "string", value: "A" },
+          [`${ECSQL_PREFIX}vf0_1`]: { type: "string", value: "B" },
+        },
+      },
+    ])(
+      "evaluates a schema-`many` filtered path's $operator list filter inside EXISTS",
+      async ({ filterProps, expectedPredicate, expectedBindings }) => {
+        const path = makeOneToManyPath();
+        const field = makeOneToManyNameField(path);
+
+        const result = await buildBaseQuery({
+          schemaProvider,
+          source: makeSource([path]),
+          includeRelatedJoins: true,
+          filters: [{ field, ...filterProps }],
+        });
+
+        expect(result.anchor.parts.joins).to.equal("");
+        expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+          trimWhitespace(`
+          EXISTS (
+            SELECT 1
+            FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+            WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND (${expectedPredicate})
+          )
+        `),
+        );
+        expect(result.anchor.parts.bindings).to.deep.equal(expectedBindings);
+      },
+    );
+
+    it("uses disjoint binding indices for mixed 1:1 and 1:many filters", async () => {
+      const oneToOnePath = makeOneToOnePath();
+      const oneToManyPath = makeOneToManyPath();
+      const oneToOneField = makeOneToOneNameField(oneToOnePath);
+      const oneToManyField = makeOneToManyNameField(oneToManyPath);
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([oneToOnePath, oneToManyPath]),
+        includeRelatedJoins: true,
+        // Put the 1:many filter first to verify binding spaces are partitioned by cardinality,
+        // not by input order.
+        filters: [
+          { field: oneToManyField, operator: "is-in", value: ["A", "B"] },
+          { field: oneToOneField, operator: "is-equal", value: "X" },
+        ],
+      });
+
+      const oneToOneKey = "TestSchema.Primary-[TestSchema.Rel]->TestSchema.Target";
+      const oneToOneAliases = result.anchor.parts.relatedClassAliases.get(oneToOneKey);
+      expect(oneToOneAliases).to.not.be.undefined;
+      // Aliases are assigned by sorted prefix keys; `RelMany` sorts before `Rel`, so the one-to-many
+      // existential path uses `r0/t0`, while the one-to-one joined path uses `t1`.
+      expect(oneToOneAliases!.target).to.equal(`${ECSQL_PREFIX}t1`);
+
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          ([${ECSQL_PREFIX}t1].[Name] = :${ECSQL_PREFIX}vf0) AND (
+            EXISTS (
+              SELECT 1
+              FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
+              INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+              WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}t0].[Name] IN (:${ECSQL_PREFIX}vf1_0, :${ECSQL_PREFIX}vf1_1))
+            )
+          )
+        `),
+      );
+      expect(result.anchor.parts.bindings).to.deep.equal({
+        [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "X" },
+        [`${ECSQL_PREFIX}vf1_0`]: { type: "string", value: "A" },
+        [`${ECSQL_PREFIX}vf1_1`]: { type: "string", value: "B" },
+      });
+    });
+
+    it("evaluates a 1:many navigation-property filter with a subquery correlated on the nav column", async () => {
+      // The target holds a backward navigation property pointing at the primary, so the step joins via
+      // the nav column (`[target].[Owner].[Id]`) instead of a link table — the existential subquery has
+      // no relationship table and correlates directly on that column.
+      const navClasses = new Map<string, object>([
+        ["Primary", { fullName: "TestSchema.Primary", isRelationshipClass: () => false, getProperties: () => [] }],
+        [
+          "RelManyNav",
+          {
+            fullName: "TestSchema.RelManyNav",
+            isRelationshipClass: () => true,
+            source: { multiplicity: { lowerLimit: 0, upperLimit: 1 } },
+            target: { multiplicity: { lowerLimit: 0, upperLimit: 2 } },
+            getProperties: () => [],
+          },
+        ],
+        [
+          "ManyNav",
+          {
+            fullName: "TestSchema.ManyNav",
+            isRelationshipClass: () => false,
+            getProperties: () => [
+              {
+                isNavigation: () => true,
+                direction: "Backward",
+                name: "Owner",
+                relationshipClass: { fullName: "TestSchema.RelManyNav" },
+              },
+            ],
+          },
+        ],
+      ]);
+      const navSchemaProvider = {
+        getSchema: async () => ({ getClass: (className: string) => navClasses.get(className) }),
+      } as unknown as ECSchemaProvider;
+
+      const path = [makeStep(primaryClass, "TestSchema.RelManyNav", "TestSchema.ManyNav")];
       const field = makePropertyField({
         propertyName: "Name",
-        propertyClassName: "TestSchema.Many",
+        propertyClassName: "TestSchema.ManyNav",
         pathFromTarget: path,
-        valueClassNames: ["TestSchema.Many"],
+        valueClassNames: ["TestSchema.ManyNav"],
         primaryClassNames: [primaryClass],
       });
 
       const result = await buildBaseQuery({
-        schemaProvider,
+        schemaProvider: navSchemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
 
-      // The 1:many path's selected columns are owned by an additional group, but the anchor still joins
-      // it (outer) so the value filter can be evaluated against its target alias.
-      expect(result.anchor.paths).to.deep.equal([]);
-      const key = "TestSchema.Primary-[TestSchema.RelMany]->TestSchema.Many";
-      expect(result.anchor.parts.relatedClassAliases.get(key)).to.deep.equal({
-        target: `${ECSQL_PREFIX}t0`,
-        relationship: `${ECSQL_PREFIX}r0`,
-      });
-      expect(result.anchor.parts.joins).to.include("OUTER JOIN");
-      expect(result.anchor.parts.joins).to.include("[TestSchema].[RelMany]");
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.joins).to.equal("");
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          EXISTS (
+            SELECT 1
+            FROM [TestSchema].[ManyNav] [${ECSQL_PREFIX}t0]
+            WHERE [${ECSQL_PREFIX}t0].[Owner].[Id] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0)
+          )
+        `),
+      );
       expect(result.anchor.parts.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "A" } });
-      expect(result.additional).to.have.length(1);
-      expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
     });
 
-    it("joins a schema-`many` filtered path onto the anchor to evaluate a relationship-property filter", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+    it("evaluates a schema-`many` filtered path's relationship-property predicate against the relationship alias inside the subquery", async () => {
+      const path = makeOneToManyPath();
       const field = makePropertyField({
         propertyName: "RelProp",
         propertyClassName: "TestSchema.RelMany",
@@ -936,11 +1151,20 @@ describe("buildBaseQuery", () => {
 
       expect(result.anchor.paths).to.deep.equal([]);
       // A relationship-class property resolves against the step's relationship alias, not the target.
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}r0].[RelProp] = :${ECSQL_PREFIX}vf0`);
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          EXISTS (
+            SELECT 1
+            FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+            WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}r0].[RelProp] = :${ECSQL_PREFIX}vf0)
+          )
+        `),
+      );
       expect(result.additional).to.have.length(1);
     });
 
-    it("joins a path forced 1:many by a `many` hint onto the anchor for filtering", async () => {
+    it("evaluates a path forced 1:many by a `many` hint with an existential subquery for filtering", async () => {
       const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
       const cardinalityHints = new Map<string, CardinalityHint>([[serializeRelationshipPath({ path }), "many"]]);
       const field = makePropertyField({
@@ -959,9 +1183,18 @@ describe("buildBaseQuery", () => {
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
 
-      // The hint splits the path off for column ownership, yet the anchor still joins it to filter.
+      // The hint splits the path off for column ownership, and the anchor evaluates the filter via EXISTS.
       expect(result.anchor.paths).to.deep.equal([]);
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          EXISTS (
+            SELECT 1
+            FROM [TestSchema].[RelOne] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[One] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+            WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0)
+          )
+        `),
+      );
       expect(result.additional).to.have.length(1);
       expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
     });
@@ -1000,15 +1233,9 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.where).to.equal(`[${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
     });
 
-    it("outer-joins a split path so an `is-null` filter matches primaries with no related instance", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
-      const field = makePropertyField({
-        propertyName: "Name",
-        propertyClassName: "TestSchema.Many",
-        pathFromTarget: path,
-        valueClassNames: ["TestSchema.Many"],
-        primaryClassNames: [primaryClass],
-      });
+    it("evaluates an `is-null` filter on a 1:many path as no-related-instance-or-null-value, via a single aggregate scan", async () => {
+      const path = makeOneToManyPath();
+      const field = makeOneToManyNameField(path);
 
       const result = await buildBaseQuery({
         schemaProvider,
@@ -1017,20 +1244,26 @@ describe("buildBaseQuery", () => {
         filters: [{ field, operator: "is-null" }],
       });
 
-      expect(result.anchor.parts.joins).to.include("OUTER JOIN");
-      expect(result.anchor.parts.joins).to.not.include("INNER JOIN [TestSchema].[RelMany]");
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NULL`);
+      // `is-null` matches a primary with no related instance at all, or one whose related instance has
+      // a null value. Both facts are read off one aggregate scan (`COUNT(*)` = 0, or `COUNT(Name)` <
+      // `COUNT(*)` since `COUNT(column)` skips nulls), so the correlated join runs once rather than
+      // twice (as a `NOT EXISTS (...) OR EXISTS (...)` would).
+      expect(result.anchor.parts.joins).to.equal("");
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          (
+            SELECT COUNT(*) = 0 OR COUNT([${ECSQL_PREFIX}t0].[Name]) < COUNT(*)
+            FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+            WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
+          )
+        `),
+      );
     });
 
     it("joins an anchor-owned 1:1 filtered path only once", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
-      const field = makePropertyField({
-        propertyName: "Name",
-        propertyClassName: "TestSchema.Target",
-        pathFromTarget: path,
-        valueClassNames: ["TestSchema.Target"],
-        primaryClassNames: [primaryClass],
-      });
+      const path = makeOneToOnePath();
+      const field = makeOneToOneNameField(path);
 
       const result = await buildBaseQuery({
         schemaProvider,

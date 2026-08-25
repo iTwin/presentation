@@ -132,7 +132,7 @@ function createRawPropertyValueSelector(classAlias: string, propertyName: string
 function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinClauseResult>;
 
 // @public
-function createRelationshipPathJoinClause(info: RelationshipPathJoinInfo): RelationshipPathJoinClauseResult;
+function createRelationshipPathJoinClause(props: RenderRelationshipPathJoinClauseProps): RelationshipPathJoinClauseResult;
 
 // @public
 interface CreateRelationshipPathJoinClauseProps {
@@ -709,6 +709,11 @@ interface RelationshipPathStepJoinInfo {
 
 // @public
 export function releaseMainThread(): Promise<void>;
+
+// @public
+type RenderRelationshipPathJoinClauseProps = Pick<RelationshipPathJoinInfo, "bindings"> & {
+    steps: Array<Pick<RelationshipPathJoinInfo["steps"][number], "joins">>;
+};
 
 // @public
 interface StructMember {
