@@ -14,6 +14,7 @@ export async function createIModel(name: string, localPath: string, cb: (txn: Ed
   try {
     await withEditTxn(iModel, async (txn) => {
       await cb(txn);
+      iModel.analyze();
     });
   } finally {
     iModel.close();
