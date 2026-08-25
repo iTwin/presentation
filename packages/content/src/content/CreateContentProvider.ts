@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { buildContentDescriptor } from "./descriptor-building/BuildDescriptor.js";
+import { getSize } from "./query/GetSize.js";
 
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";
@@ -26,9 +27,8 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
   }
   return {
     getContentDescriptor,
-    /* v8 ignore next 3 */
-    getSize() {
-      throw new Error("Not implemented");
+    async getSize(options) {
+      return getSize({ imodelAccess, sources, queryFilterers: config?.queryFilterers, filters: options?.filters });
     },
     /* v8 ignore next 3 */
     getInstanceKeys() {
