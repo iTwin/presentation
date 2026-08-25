@@ -1162,6 +1162,44 @@ describe("PropertiesGrouping", () => {
         });
       });
 
+      it("doesn't group nodes when configured class or property name casing differs", async () => {
+        const node = createTestProcessedInstanceNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+          processingParams: {
+            grouping: {
+              byProperties: {
+                // cspell:disable-next-line
+                propertiesClassName: "testschema.class",
+                // cspell:disable-next-line
+                propertyGroups: [{ propertyName: "propertyname", propertyValue: "PropertyValue" }],
+              },
+            },
+          },
+        });
+        const property = {
+          name: "PropertyName",
+          isPrimitive: () => true,
+          isNavigation: () => false,
+          primitiveType: "String",
+        } as unknown as EC.Property;
+        const ecClass = imodelAccess.stubEntityClass({
+          schemaName: "TestSchema",
+          className: "Class",
+          properties: [property],
+        });
+
+        expect(
+          await propertiesGrouping.createPropertyGroups(
+            [node],
+            [],
+            { ecClass, previousPropertiesGroupingInfo: [], propertyGroup: { propertyName: "PropertyName" } },
+            formatter,
+            testLocalizedStrings,
+            imodelAccess,
+          ),
+        ).toEqual({ groupingType: "property", grouped: [], ungrouped: [node] });
+      });
+
       it("creates different property value groups for nodes with different property values", async () => {
         const nodes = [
           createTestProcessedInstanceNode({

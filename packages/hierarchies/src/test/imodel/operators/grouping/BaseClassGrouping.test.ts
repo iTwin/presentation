@@ -222,6 +222,22 @@ describe("BaseClassGrouping", () => {
       });
     });
 
+    it("doesn't group nodes when configured base class casing differs", async () => {
+      const node = createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+        // cspell:disable-next-line
+        processingParams: { grouping: { byBaseClasses: { fullClassNames: ["testschema.parentclass"] } } },
+      });
+      const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ParentClass" });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "A", baseClass });
+
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass([node], baseClass, imodelAccess)).toEqual({
+        groupingType: "base-class",
+        grouped: [],
+        ungrouped: [node],
+      });
+    });
+
     it("groups only nodes for which ECClass is base", async () => {
       const nodes = [
         createTestProcessedInstanceNode({
