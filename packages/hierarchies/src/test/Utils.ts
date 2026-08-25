@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { vi } from "vitest";
-import { Dictionary, Logger } from "@itwin/core-bentley";
+import { Logger } from "@itwin/core-bentley";
 import { getClass } from "@itwin/presentation-shared";
 
 import type { Mock } from "vitest";
@@ -179,12 +179,8 @@ export type TStubRelationshipClassFunc = (
 
 export function createECSchemaProviderStub() {
   const schemaStubs = new Map<string, StubbedSchema>();
-  const classes = new Dictionary<EC.FullClassNameDotNotation, EC.Class>((a, b) =>
-    a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
-  ); // className -> class
-  const classHierarchy = new Dictionary<EC.FullClassNameDotNotation, EC.FullClassNameDotNotation>((a, b) =>
-    a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
-  ); // className -> baseClassName
+  const classes = new Map<EC.FullClassNameDotNotation, EC.Class>(); // className -> class
+  const classHierarchy = new Map<EC.FullClassNameDotNotation, EC.FullClassNameDotNotation>(); // className -> baseClassName
   const getSchemaImpl = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
@@ -206,8 +202,8 @@ export function createECSchemaProviderStub() {
     options?: { onlyDirect?: boolean },
   ): EC.FullClassNameDotNotation[] => {
     const derivedClasses = new Array<EC.FullClassNameDotNotation>();
-    for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
-      if (baseClassName.toLocaleLowerCase() === classFullName.toLocaleLowerCase()) {
+    for (const [derivedClassName, baseClassName] of classHierarchy) {
+      if (baseClassName === classFullName) {
         derivedClasses.push(derivedClassName);
         if (!options?.onlyDirect) {
           derivedClasses.push(...getDerivedClassNames(derivedClassName, options));
@@ -249,16 +245,11 @@ export function createECSchemaProviderStub() {
         typeof targetClassOrClassName === "string"
           ? `${schemaName!}.${targetClassOrClassName}`
           : targetClassOrClassName.fullName;
-      return (
-        targetName.toLocaleLowerCase() === myName.toLocaleLowerCase() ||
-        getBaseClasses(myName).some(
-          (baseClass) => baseClass.fullName.toLocaleLowerCase() === targetName.toLocaleLowerCase(),
-        )
-      );
+      return targetName === myName || getBaseClasses(myName).some((baseClass) => baseClass.fullName === targetName);
     },
     isHidden: props.isHidden,
     getProperty(this, propertyName: string): EC.Property | undefined {
-      const prop = props.properties?.find((p) => p.name.toLocaleLowerCase() === propertyName.toLocaleLowerCase());
+      const prop = props.properties?.find((p) => p.name === propertyName);
       return prop ? { ...prop, class: this as unknown as EC.Class } : undefined;
     },
     getProperties(this): Array<EC.Property> {

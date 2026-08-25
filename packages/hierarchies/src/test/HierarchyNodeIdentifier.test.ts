@@ -146,8 +146,10 @@ describe("HierarchyNodeIdentifier", () => {
       ).toBeGreaterThan(0);
     });
 
-    it("compares instance identifiers case-insensitively by className", () => {
-      expect(HierarchyNodeIdentifier.compare({ className: "S.A", id: "0x1" }, { className: "s.a", id: "0x1" })).toBe(0);
+    it("compares instance identifiers case-sensitively by className", () => {
+      expect(
+        HierarchyNodeIdentifier.compare({ className: "S.A", id: "0x1" }, { className: "s.a", id: "0x1" }),
+      ).not.toBe(0);
     });
   });
 });

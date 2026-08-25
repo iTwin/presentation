@@ -36,7 +36,7 @@ export namespace InstanceKey {
    *- `positive value` if lhs key is more than rhs key
    */
   export function compare(lhs: InstanceKey, rhs: InstanceKey): number {
-    const classNameCompareResult = compareStrings(lhs.className.toLocaleLowerCase(), rhs.className.toLocaleLowerCase());
+    const classNameCompareResult = compareStrings(lhs.className, rhs.className);
     if (classNameCompareResult !== 0) {
       return classNameCompareResult;
     }

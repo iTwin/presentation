@@ -172,7 +172,6 @@ describe("BaseClassGrouping", () => {
     });
 
     it("groups multiple instance nodes", async () => {
-      // note: class names are intentionally in different casing & format to ensure we support that
       const nodes = [
         createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
@@ -182,16 +181,16 @@ describe("BaseClassGrouping", () => {
             grouping: {
               byBaseClasses: {
                 /* cspell:disable-next-line */
-                fullClassNames: ["testschema.parentclass"],
+                fullClassNames: ["TestSchema.ParentClass"],
               },
             },
           },
         }),
         createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "testSchema.b", id: "0x2" }] },
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           label: "2",
-          processingParams: { grouping: { byBaseClasses: { fullClassNames: ["testSchema.parentClass"] } } },
+          processingParams: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema.ParentClass"] } } },
         }),
       ];
 
@@ -220,6 +219,22 @@ describe("BaseClassGrouping", () => {
           }),
         ],
         ungrouped: [],
+      });
+    });
+
+    it("doesn't group nodes when configured base class casing differs", async () => {
+      const node = createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+        // cspell:disable-next-line
+        processingParams: { grouping: { byBaseClasses: { fullClassNames: ["testschema.parentclass"] } } },
+      });
+      const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ParentClass" });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "A", baseClass });
+
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass([node], baseClass, imodelAccess)).toEqual({
+        groupingType: "base-class",
+        grouped: [],
+        ungrouped: [node],
       });
     });
 

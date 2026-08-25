@@ -441,6 +441,21 @@ describe("buildBaseQuery", () => {
       );
     });
 
+    it("throws for a struct member with different casing", async () => {
+      const field = makePropertyField({
+        propertyName: "Address",
+        type: {
+          kind: "struct",
+          members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
+        },
+      });
+      const filters: ContentValueFilter[] = [{ field, member: "street", operator: "is-equal", value: "Main" }];
+
+      await expect(buildBaseQuery({ schemaProvider, source: makeSource([]), filters })).rejects.toThrow(
+        'member "street" that is not a member of the struct field',
+      );
+    });
+
     it("throws for a struct field filtered without a member", async () => {
       const field = makePropertyField({ propertyName: "Address", type: { kind: "struct", members: [] } });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "x" }];

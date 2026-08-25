@@ -595,10 +595,7 @@ function getSelectorValueType(
           `Value filters directly on struct fields are not supported. Provide a member to filter on instead.`,
         );
       }
-      const memberLowercase = member.toLocaleLowerCase();
-      const memberType = type.members.find(
-        (structMember) => structMember.name.toLocaleLowerCase() === memberLowercase,
-      )?.type;
+      const memberType = type.members.find((structMember) => structMember.name === member)?.type;
       if (!memberType) {
         throw new Error(`Value filter references member "${member}" that is not a member of the struct field.`);
       }
