@@ -108,17 +108,15 @@ export function useQuantityValueInput({
       ? applyNumericConstraints({ ...getMinMaxFromPropertyConstraints(constraints), value: parseResult.value })
       : undefined;
 
-    setState(
-      (prev): State => ({
-        ...prev,
-        quantityValue: {
-          highPrecisionFormattedValue: newValue,
-          defaultFormattedValue: defaultFormattedValue ?? newValue,
-          rawValue,
-          roundingError: parseResult.ok ? roundingError : undefined,
-        },
-      }),
-    );
+    setState((prev): State => ({
+      ...prev,
+      quantityValue: {
+        highPrecisionFormattedValue: newValue,
+        defaultFormattedValue: defaultFormattedValue ?? newValue,
+        rawValue,
+        roundingError: parseResult.ok ? roundingError : undefined,
+      },
+    }));
   };
 
   return { quantityValue, inputProps: { onChange, placeholder, disabled: !useFormatterAndParserResult } };
