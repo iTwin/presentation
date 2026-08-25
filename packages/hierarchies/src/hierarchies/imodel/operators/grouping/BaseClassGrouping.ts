@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { SortedArray } from "@itwin/core-bentley";
 import { createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../../HierarchyNode.js";
 
@@ -37,9 +36,7 @@ export async function getBaseClassGroupingECClasses(
 
   if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
     // if we have a class grouping node, we can cut the front of sortedClasses up to a point where our grouping class is
-    const cutPosition = sortedClasses.findIndex(
-      (c) => c.fullName.toLocaleLowerCase() === parentNode.key.className.toLocaleLowerCase(),
-    );
+    const cutPosition = sortedClasses.findIndex((c) => c.fullName === parentNode.key.className);
     if (cutPosition >= 0) {
       return sortedClasses.slice(cutPosition + 1);
     }
@@ -63,9 +60,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     await releaseMainThread();
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
-      !node.processingParams.grouping.byBaseClasses.fullClassNames.some(
-        (className) => className.toLocaleLowerCase() === baseClassFullName.toLocaleLowerCase(),
-      )
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.includes(baseClassFullName)
     ) {
       ungroupedNodes.push(node);
       continue;
@@ -102,19 +97,16 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
 async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]) {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  const baseClasses = new SortedArray<EC.FullClassNameDotNotation>(
-    (a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
-    false,
-  );
+  const baseClasses = new Set<EC.FullClassNameDotNotation>();
   for (const node of nodes) {
     await releaseMainThread();
     if (node.processingParams?.grouping?.byBaseClasses) {
       for (const className of node.processingParams.grouping.byBaseClasses.fullClassNames) {
-        baseClasses.insert(className);
+        baseClasses.add(className);
       }
     }
   }
-  return baseClasses;
+  return [...baseClasses];
 }
 
 function sortByBaseClass(classes: EC.Class[]): EC.Class[] {

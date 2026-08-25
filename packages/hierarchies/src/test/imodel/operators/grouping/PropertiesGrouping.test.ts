@@ -1093,27 +1093,25 @@ describe("PropertiesGrouping", () => {
       });
 
       it("groups multiple nodes when they have the same property value into property value grouping node", async () => {
-        // note: class and property names are intentionally in different casing & format to ensure we support that
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema.class",
-                  propertyGroups: [{ propertyName: "propertyName", propertyValue: "PropertyValue" }],
+                  propertiesClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
             },
           }),
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "testSchema.Class", id: "0x2" }] },
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x2" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema.Class",
-                  /* cspell:disable-next-line */
-                  propertyGroups: [{ propertyName: "propertyname", propertyValue: "PropertyValue" }],
+                  propertiesClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
             },
@@ -1549,33 +1547,30 @@ describe("PropertiesGrouping", () => {
       });
 
       it('groups nodes with different property grouping parameters into a single "other" property grouping node', async () => {
-        // note: class and property names are intentionally in different casing & format to ensure we support that
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class1", id: "0x1" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema.class1",
+                  propertiesClassName: "TestSchema.Class1",
                   createGroupForOutOfRangeValues: true,
                   propertyGroups: [
-                    { propertyName: "propertyName1", propertyValue: 6, ranges: [{ fromValue: 1, toValue: 5 }] },
+                    { propertyName: "PropertyName1", propertyValue: 6, ranges: [{ fromValue: 1, toValue: 5 }] },
                   ],
                 },
               },
             },
           }),
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "testSchema.Class2", id: "0x2" }] },
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class2", id: "0x2" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  /* cspell:disable-next-line */
-                  propertiesClassName: "testschema.class2",
+                  propertiesClassName: "TestSchema.Class2",
                   createGroupForOutOfRangeValues: true,
                   propertyGroups: [
-                    /* cspell:disable-next-line */
-                    { propertyName: "propertyname2", propertyValue: 6, ranges: [{ fromValue: 7, toValue: 10 }] },
+                    { propertyName: "PropertyName2", propertyValue: 6, ranges: [{ fromValue: 7, toValue: 10 }] },
                   ],
                 },
               },
@@ -1874,17 +1869,16 @@ describe("PropertiesGrouping", () => {
       });
 
       it("groups multiple nodes, when property values fit into range", async () => {
-        // note: class and property names are intentionally in different casing & format to ensure we support that
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema.class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [
                     {
-                      propertyName: "propertyName",
+                      propertyName: "PropertyName",
                       propertyValue: 5,
                       ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }],
                     },
@@ -1894,15 +1888,14 @@ describe("PropertiesGrouping", () => {
             },
           }),
           createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "testSchema.class", id: "0x2" }] },
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x2" }] },
             processingParams: {
               grouping: {
                 byProperties: {
-                  propertiesClassName: "testSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [
                     {
-                      /* cspell:disable-next-line */
-                      propertyName: "propertyname",
+                      propertyName: "PropertyName",
                       propertyValue: 2,
                       ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }],
                     },
