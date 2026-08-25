@@ -255,7 +255,7 @@ export namespace HierarchyNodeKey {
       }
       case "class-grouping": {
         assert(rhs.type === "class-grouping");
-        return compareStrings(lhs.className.toLocaleLowerCase(), rhs.className.toLocaleLowerCase());
+        return compareStrings(lhs.className, rhs.className);
       }
       case "label-grouping": {
         assert(rhs.type === "label-grouping");
@@ -271,17 +271,11 @@ export namespace HierarchyNodeKey {
           return lhs.properties.length - rhs.properties.length;
         }
         for (let i = 0; i < lhs.properties.length; ++i) {
-          const classCompareResult = compareStrings(
-            lhs.properties[i].className.toLocaleLowerCase(),
-            rhs.properties[i].className.toLocaleLowerCase(),
-          );
+          const classCompareResult = compareStrings(lhs.properties[i].className, rhs.properties[i].className);
           if (classCompareResult !== 0) {
             return classCompareResult;
           }
-          const nameCompareResult = compareStrings(
-            lhs.properties[i].propertyName.toLocaleLowerCase(),
-            rhs.properties[i].propertyName.toLocaleLowerCase(),
-          );
+          const nameCompareResult = compareStrings(lhs.properties[i].propertyName, rhs.properties[i].propertyName);
           if (nameCompareResult !== 0) {
             return nameCompareResult;
           }
@@ -290,17 +284,11 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:value": {
         assert(rhs.type === "property-grouping:value");
-        const propertyClassNameCompareResult = compareStrings(
-          lhs.propertyClassName.toLocaleLowerCase(),
-          rhs.propertyClassName.toLocaleLowerCase(),
-        );
+        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
         }
-        const propertyNameCompareResult = compareStrings(
-          lhs.propertyName.toLocaleLowerCase(),
-          rhs.propertyName.toLocaleLowerCase(),
-        );
+        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
         if (propertyNameCompareResult !== 0) {
           return propertyNameCompareResult;
         }
@@ -308,17 +296,11 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:range": {
         assert(rhs.type === "property-grouping:range");
-        const propertyClassNameCompareResult = compareStrings(
-          lhs.propertyClassName.toLocaleLowerCase(),
-          rhs.propertyClassName.toLocaleLowerCase(),
-        );
+        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
         }
-        const propertyNameCompareResult = compareStrings(
-          lhs.propertyName.toLocaleLowerCase(),
-          rhs.propertyName.toLocaleLowerCase(),
-        );
+        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
         if (propertyNameCompareResult !== 0) {
           return propertyNameCompareResult;
         }

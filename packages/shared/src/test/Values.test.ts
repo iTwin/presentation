@@ -17,7 +17,7 @@ describe("InstanceKey", () => {
   describe("compare", () => {
     it("compares two keys", () => {
       expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.a", id: "1" })).toBe(0);
-      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "S.A", id: "1" })).toBe(0);
+      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "S.A", id: "1" })).not.toBe(0);
       expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.b", id: "2" })).toBeLessThan(0);
       expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.b", id: "1" })).toBeLessThan(0);
       expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.a", id: "2" })).toBeLessThan(0);

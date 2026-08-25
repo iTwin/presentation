@@ -114,7 +114,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
                   return false;
                 }
-                if (identifier.className.toLocaleLowerCase() === rowInstanceKey.className.toLocaleLowerCase()) {
+                if (identifier.className === rowInstanceKey.className) {
                   return true;
                 }
                 return firstValueFrom(
@@ -212,7 +212,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               for (const entry of entries) {
                 /* v8 ignore else -- @preserve */
                 if (
-                  entry.className.toLocaleLowerCase() === x.className.toLocaleLowerCase() ||
+                  entry.className === x.className ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
                   (await imodelAccess.classDerivesFrom(x.className, entry.className))
                 ) {
@@ -230,7 +230,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 continue;
               }
               if (
-                id.className.toLocaleLowerCase() !== definition.fullClassName.toLocaleLowerCase() &&
+                id.className !== definition.fullClassName &&
                 !(await Promise.all([
                   imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
                   imodelAccess.classDerivesFrom(definition.fullClassName, id.className),

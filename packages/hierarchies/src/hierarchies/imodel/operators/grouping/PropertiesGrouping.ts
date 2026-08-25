@@ -129,7 +129,7 @@ export async function createPropertyGroups(
       if (byProperties.createGroupForUnspecifiedValues) {
         addGroupingToMap(
           groupings.grouped,
-          `${currentProperty.propertyName.toLocaleLowerCase()}:Unspecified`,
+          `${propertyIdentifier.propertyName}:Unspecified`,
           {
             label: localizedStrings.unspecified,
             propertyGroupingNodeKey: {
@@ -173,7 +173,7 @@ export async function createPropertyGroups(
             `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
           addGroupingToMap(
             groupings.grouped,
-            `${currentProperty.propertyName.toLocaleLowerCase()}:[${matchingRange.fromValue}-${matchingRange.toValue}]${matchingRange.rangeLabel ? `(${matchingRange.rangeLabel})` : ""}`,
+            `${propertyIdentifier.propertyName}:[${matchingRange.fromValue}-${matchingRange.toValue}]${matchingRange.rangeLabel ? `(${matchingRange.rangeLabel})` : ""}`,
             {
               label: rangeLabel,
               propertyGroupingNodeKey: {
@@ -197,8 +197,7 @@ export async function createPropertyGroups(
         };
         const hasPropertyIdentifier = groupingNode.key.properties.find(
           (x) =>
-            x.className.toLocaleLowerCase() === thisPropertyIdentifier.className.toLocaleLowerCase() &&
-            x.propertyName.toLocaleLowerCase() === thisPropertyIdentifier.propertyName.toLocaleLowerCase(),
+            x.className === thisPropertyIdentifier.className && x.propertyName === thisPropertyIdentifier.propertyName,
         );
         if (!hasPropertyIdentifier) {
           groupingNode.key.properties.push(thisPropertyIdentifier);
@@ -221,7 +220,7 @@ export async function createPropertyGroups(
 
     addGroupingToMap(
       groupings.grouped,
-      `${currentProperty.propertyName.toLocaleLowerCase()}:${formattedValue}`,
+      `${propertyIdentifier.propertyName}:${formattedValue}`,
       {
         label: formattedValue,
         propertyGroupingNodeKey: {
@@ -302,19 +301,12 @@ function createNodePropertyGroupPathMatchers(
       case "property-grouping:other":
         return (x) =>
           key.properties.some(
-            (p) =>
-              p.className.toLocaleLowerCase() === x.propertiesClassName.toLocaleLowerCase() &&
-              p.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase() &&
-              !!x.isRange,
+            (p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange,
           );
       case "property-grouping:range":
-        return (x) =>
-          key.propertyClassName.toLocaleLowerCase() === x.propertiesClassName.toLocaleLowerCase() &&
-          key.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase();
+        return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
       case "property-grouping:value":
-        return (x) =>
-          key.propertyClassName.toLocaleLowerCase() === x.propertiesClassName.toLocaleLowerCase() &&
-          key.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase();
+        return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
     }
   });
 }
@@ -340,40 +332,41 @@ export async function getUniquePropertiesGroupInfo(
     let propertyGroupIndex = 0;
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
+      const property = propertiesClass.getProperty(propertyGroup.propertyName);
+      const propertyName = property?.name ?? propertyGroup.propertyName;
+      const propertyClassName = property?.class.fullName ?? propertiesClass.fullName;
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       const lastKey =
         previousPropertiesInfo.length > 0
           ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey
           : "";
-      const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
-      const mapKey = `${byProperties.propertiesClassName}:${propertyGroupKey}`.toLocaleLowerCase();
+      const propertyGroupKey = `${lastKey}:${propertyName}(${mapKeyRanges})`;
+      const mapKey = `${propertiesClass.fullName}:${propertyGroupKey}`;
 
       let isAlreadyGrouped = false;
       if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
         const groupMatcher = parentPropertyGroupPath[propertyGroupIndex];
-        const propertyClassName =
-          propertiesClass.getProperty(propertyGroup.propertyName)?.class.fullName ?? byProperties.propertiesClassName;
         isAlreadyGrouped = groupMatcher({
           propertiesClassName: propertyClassName,
-          propertyName: propertyGroup.propertyName,
+          propertyName,
           isRange: !!propertyGroup.ranges,
         });
       }
       if (!isAlreadyGrouped && !uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
           ecClass: propertiesClass,
-          propertyGroup: { propertyName: propertyGroup.propertyName, ranges: propertyGroup.ranges },
+          propertyGroup: { propertyName, ranges: propertyGroup.ranges },
           previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
             propertiesClassName:
               propertiesClass.getProperty(groupingInfo.propertyGroup.propertyName)?.class.fullName ??
-              byProperties.propertiesClassName,
+              propertiesClass.fullName,
             propertyName: groupingInfo.propertyGroup.propertyName,
             isRange: !!groupingInfo.propertyGroup.ranges,
           })),
         });
       }
 
-      previousPropertiesInfo.push({ propertyGroup, propertyGroupKey });
+      previousPropertiesInfo.push({ propertyGroup: { ...propertyGroup, propertyName }, propertyGroupKey });
       ++propertyGroupIndex;
     }
   }
@@ -399,8 +392,7 @@ async function shouldCreatePropertyGroup(
   classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<boolean> {
   if (
-    nodePropertyGroupingParams.propertiesClassName.toLocaleLowerCase() !==
-      handlerGroupingParams.ecClass.fullName.toLocaleLowerCase() ||
+    nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
     nodePropertyGroupingParams.propertyGroups.length < handlerGroupingParams.previousPropertiesGroupingInfo.length + 1
   ) {
     return false;
@@ -408,8 +400,7 @@ async function shouldCreatePropertyGroup(
   const currentProperty =
     nodePropertyGroupingParams.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
   if (
-    currentProperty.propertyName.toLocaleLowerCase() !==
-      handlerGroupingParams.propertyGroup.propertyName.toLocaleLowerCase() ||
+    currentProperty.propertyName !== handlerGroupingParams.propertyGroup.propertyName ||
     !doRangesMatch(currentProperty.ranges, handlerGroupingParams.propertyGroup.ranges)
   ) {
     return false;
@@ -429,10 +420,8 @@ export function doPreviousPropertiesMatch(
     previousPropertiesGroupingInfo.length <= nodesProperties.propertyGroups.length &&
     previousPropertiesGroupingInfo.every(
       (groupingInfo, index) =>
-        groupingInfo.propertiesClassName.toLocaleLowerCase() ===
-          nodesProperties.propertiesClassName.toLocaleLowerCase() &&
-        groupingInfo.propertyName.toLocaleLowerCase() ===
-          nodesProperties.propertyGroups[index].propertyName.toLocaleLowerCase() &&
+        groupingInfo.propertiesClassName === nodesProperties.propertiesClassName &&
+        groupingInfo.propertyName === nodesProperties.propertyGroups[index].propertyName &&
         !!groupingInfo.isRange === !!nodesProperties.propertyGroups[index].ranges,
     )
   );

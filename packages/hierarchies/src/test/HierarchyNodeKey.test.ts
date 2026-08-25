@@ -80,7 +80,7 @@ describe("HierarchyNodeKey", () => {
           { type: "instances", instanceKeys: [{ className: "s.a", id: "0" }] },
           { type: "instances", instanceKeys: [{ className: "S.A", id: "0" }] },
         ),
-      ).toBe(true);
+      ).toBe(false);
       expect(
         HierarchyNodeKey.equals(
           { type: "instances", instanceKeys: [] },
@@ -113,7 +113,7 @@ describe("HierarchyNodeKey", () => {
           { type: "class-grouping", className: "s.x" },
           { type: "class-grouping", className: "S.X" },
         ),
-      ).toBe(true);
+      ).toBe(false);
       expect(
         HierarchyNodeKey.equals(
           { type: "class-grouping", className: "s.x" },
@@ -155,7 +155,13 @@ describe("HierarchyNodeKey", () => {
           { type: "property-grouping:other", properties: [{ className: "s.x", propertyName: "y" }] },
           { type: "property-grouping:other", properties: [{ className: "S.X", propertyName: "Y" }] },
         ),
-      ).toBe(true);
+      ).toBe(false);
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "property-grouping:other", properties: [{ className: "s.x", propertyName: "y" }] },
+          { type: "property-grouping:other", properties: [{ className: "s.x", propertyName: "Y" }] },
+        ),
+      ).toBe(false);
       expect(
         HierarchyNodeKey.equals(
           { type: "property-grouping:other", properties: [] },
@@ -172,7 +178,8 @@ describe("HierarchyNodeKey", () => {
         formattedPropertyValue: "value",
       };
       expect(HierarchyNodeKey.equals(baseValue, baseValue)).toBe(true);
-      expect(HierarchyNodeKey.equals(baseValue, { ...baseValue, propertyClassName: "schema.classname" })).toBe(true);
+      expect(HierarchyNodeKey.equals(baseValue, { ...baseValue, propertyClassName: "schema.classname" })).toBe(false);
+      expect(HierarchyNodeKey.equals(baseValue, { ...baseValue, propertyName: "PROPERTY NAME" })).toBe(false);
       expect(HierarchyNodeKey.equals(baseValue, { ...baseValue, formattedPropertyValue: "value2" })).toBe(false);
       expect(HierarchyNodeKey.equals(baseValue, { ...baseValue, propertyName: "other name" })).toBe(false);
       expect(HierarchyNodeKey.equals(baseValue, { ...baseValue, propertyClassName: "Schema.Other" })).toBe(false);
@@ -189,7 +196,8 @@ describe("HierarchyNodeKey", () => {
       expect(HierarchyNodeKey.equals(baseValueRange, baseValueRange)).toBe(true);
       expect(
         HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertyClassName: "schema.classname" }),
-      ).toBe(true);
+      ).toBe(false);
+      expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertyName: "PROPERTY NAME" })).toBe(false);
       expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, toValue: 3 })).toBe(false);
       expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, fromValue: 2 })).toBe(false);
       expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertyName: "other name" })).toBe(false);

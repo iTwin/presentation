@@ -695,7 +695,7 @@ function createBooksService() {
   }
   async function getAuthors(query?: BooksServiceFilter<(typeof authors)[0]>) {
     return filterEntries(authors, query, (entry, { key, name, hasBooks }) => {
-      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
+      if (key && !entry.key.includes(key)) {
         return false;
       }
       if (name && !entry.name.toLocaleLowerCase().includes(name.toLocaleLowerCase())) {
@@ -709,13 +709,13 @@ function createBooksService() {
   }
   async function getBooks(query?: BooksServiceFilter<(typeof books)[0]>) {
     return filterEntries(books, query, (entry, { key, authorKey, title }) => {
-      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
+      if (authorKey && !entry.authorKey.includes(authorKey)) {
+        return false;
+      }
+      if (key && !entry.key.includes(key)) {
         return false;
       }
       if (title && !entry.title.toLocaleLowerCase().includes(title.toLocaleLowerCase())) {
-        return false;
-      }
-      if (authorKey && !entry.authorKey.toLocaleLowerCase().includes(authorKey.toLocaleLowerCase())) {
         return false;
       }
       return true;

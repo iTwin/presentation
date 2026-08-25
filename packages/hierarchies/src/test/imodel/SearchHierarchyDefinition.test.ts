@@ -250,6 +250,22 @@ describe("SearchHierarchyDefinition", () => {
       expect(result.search).toBeUndefined();
     });
 
+    it("doesn't match when identifier class name casing differs from row class name", async () => {
+      const targetPaths: HierarchySearchTree[] = [{ identifier: { className: "schema.class", id: "0x1" } }];
+      const parsedNode = createSourceInstanceNode({
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Class", id: "0x1" }] }),
+      });
+      const def = createSearchHierarchyDefinition({ targetPaths, source: { parseNode: () => of(parsedNode) } });
+      const result = await firstValueFrom(
+        def.parseNode({
+          row: { [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1", [ECSQL_COLUMN_NAME_SearchClassName]: "Schema.Class" },
+          parentNode: undefined,
+          imodelKey: "imodel",
+        }),
+      );
+      expect(result.search).toBeUndefined();
+    });
+
     it("doesn't match generic node identifier", async () => {
       const targetPaths: HierarchySearchTree[] = [{ identifier: { type: "generic", id: "0x1" } }];
       const parsedNode = createSourceInstanceNode({
