@@ -53,7 +53,7 @@ Not all requests execute every stage. For example, `ContentProvider.getContentDe
 
 The package provides four extension mechanisms, each targeting a different stage of the pipeline:
 
-- **`defineIModelFieldsProvider`** — contribute related properties and calculated fields by declaring relationship paths and ECSQL expressions. The provider is consulted during source resolution and descriptor building.
+- **`defineIModelFieldsProvider`** — contribute related properties and calculated fields by declaring relationship paths and ECSQL expressions. The provider is consulted during source resolution and descriptor building. Setting `applyRecursively: true` additionally applies the provider's `relatedProperties` on every nested anchor — a related-instance class surfaced by any resolved related-properties path (from any provider, including this one) — mirroring the native `ContentModifier.applyOnNestedContent` rule attribute. For example, a provider contributing `Wall` → `WallType` properties and a second, `applyRecursively`-opted-in provider contributing `WallType` → `Aspect` properties will have its `Aspect` properties pulled in for every `Wall` request, fully scoped to the specific `Wall` instances requested (never leaking sibling `WallType`/`Aspect` instances reached only through other `Wall`s). See `IModelFieldsProvider.applyRecursively` for the full contract.
 
 - **`defineDescriptorTransformer`** — customize the descriptor after all fields providers have contributed. Use this to hide fields, override labels, change categories, or apply any cross-cutting metadata adjustments.
 

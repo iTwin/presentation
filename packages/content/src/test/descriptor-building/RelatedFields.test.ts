@@ -5,6 +5,7 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
+import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
 import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
@@ -19,12 +20,12 @@ import type {
 const aToB: RelationshipPath[number] = {
   sourceClassName: "TestSchema.A",
   targetClassName: "TestSchema.B",
-  relationshipName: "TestSchema.aToB",
+  relationshipName: "TestSchema.AToB",
 };
 const bToC: RelationshipPath[number] = {
   sourceClassName: "TestSchema.B",
   targetClassName: "TestSchema.C",
-  relationshipName: "TestSchema.bToC",
+  relationshipName: "TestSchema.BToC",
 };
 
 /** Builds a provider whose id is fixed and whose contribution is the given related-properties declarations. */
@@ -40,14 +41,18 @@ function createProvider(
   };
 }
 
-/** Wires a set of providers into the `(imodelFieldsProvidersById, getContribution)` pair the enumerator expects. */
+/** Wires a set of providers into the `(imodelFieldsProvidersById, getContribution, getAnchorContribution)` shape the enumerator expects. */
 function wireProviders(providers: IModelFieldsProvider[]) {
   const imodelFieldsProvidersById = new Map(providers.map((provider) => [provider.id, provider]));
   const getContribution: Parameters<typeof collectRelatedPropertyFields>[0]["getContribution"] = async ({
     provider,
     target,
   }) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
-  return { imodelFieldsProvidersById, getContribution };
+  const getAnchorContribution: Parameters<typeof collectRelatedPropertyFields>[0]["getAnchorContribution"] = async ({
+    provider,
+    anchorClassName,
+  }) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target: { primaryClass: anchorClassName } });
+  return { imodelFieldsProvidersById, getContribution, getAnchorContribution };
 }
 
 function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"]): ContentSource {
@@ -163,8 +168,8 @@ describe("collectRelatedPropertyFields", () => {
   it("loads relationship class properties opted in by a step spec", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
-        fullName: "TestSchema.aToB",
-        properties: [createPrimitiveProperty({ name: "Weight", declaringClass: "TestSchema.aToB" })],
+        fullName: "TestSchema.AToB",
+        properties: [createPrimitiveProperty({ name: "Weight", declaringClass: "TestSchema.AToB" })],
       }),
     ]);
     const declaration: RelatedPropertiesDeclaration = {
@@ -179,10 +184,10 @@ describe("collectRelatedPropertyFields", () => {
     const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(fields).to.have.lengthOf(1);
-    expect(fields[0].propertyClassName).to.equal("TestSchema.aToB");
+    expect(fields[0].propertyClassName).to.equal("TestSchema.AToB");
     expect(fields[0].propertyName).to.equal("Weight");
     expect(fields[0].pathFromTarget).to.deep.equal([aToB]);
-    expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.aToB"]);
+    expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.AToB"]);
   });
 
   it("reports each related field's category facts with a `targetClass` anchor", async () => {
@@ -223,8 +228,8 @@ describe("collectRelatedPropertyFields", () => {
         properties: [createPrimitiveProperty({ name: "TargetProp", declaringClass: "TestSchema.B" })],
       }),
       createEntityClass({
-        fullName: "TestSchema.aToB",
-        properties: [createPrimitiveProperty({ name: "RelProp", declaringClass: "TestSchema.aToB" })],
+        fullName: "TestSchema.AToB",
+        properties: [createPrimitiveProperty({ name: "RelProp", declaringClass: "TestSchema.AToB" })],
       }),
     ]);
     const declaration: RelatedPropertiesDeclaration = {
@@ -244,9 +249,9 @@ describe("collectRelatedPropertyFields", () => {
   it("reports a relationship field's spec override as a categorization fact", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
-        fullName: "TestSchema.aToB",
+        fullName: "TestSchema.AToB",
         label: "A to B",
-        properties: [createPrimitiveProperty({ name: "relProp", declaringClass: "TestSchema.aToB" })],
+        properties: [createPrimitiveProperty({ name: "relProp", declaringClass: "TestSchema.AToB" })],
       }),
     ]);
     const declaration: RelatedPropertiesDeclaration = {
@@ -383,5 +388,206 @@ describe("collectRelatedPropertyFields", () => {
     await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) })).rejects.toThrow(
       /no longer returns the related-properties declaration at index 0/,
     );
+  });
+});
+
+describe("collectRelatedPropertyFields — nested groups", () => {
+  const bToC1: RelationshipPath[number] = {
+    sourceClassName: "TestSchema.B",
+    targetClassName: "TestSchema.C1",
+    relationshipName: "TestSchema.BToC",
+  };
+
+  it("recovers a nested group's declaration via the synthesized anchor target, not the source's target", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.C" })],
+      }),
+    ]);
+    const targetsSeen: EC.FullClassNameDotNotation[] = [];
+    const provider: IModelFieldsProvider = {
+      id: "p1_v1",
+      applyRecursively: true,
+      async getContribution({ target }) {
+        targetsSeen.push(target.primaryClass);
+        // Only applies at the "TestSchema.B" anchor — never at the source's own "TestSchema.A" target.
+        return target.primaryClass === "TestSchema.B" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+      },
+    };
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
+
+    expect(fields).to.have.lengthOf(1);
+    expect(fields[0].propertyClassName).to.equal("TestSchema.C");
+    expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
+    expect(targetsSeen).to.deep.equal(["TestSchema.B"]);
+  });
+
+  it("offsets a nested declaration's StepPropertySpec.stepIndex by nested.prefixStepCount", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.C" })],
+      }),
+    ]);
+    // `stepIndex: 0` is relative to the nested declaration's own (suffix) path `[bToC]` — with a
+    // `prefixStepCount` of 1, it must resolve to `path[1]` of the full path `[aToB, bToC]`, not `path[0]`.
+    const declaration: RelatedPropertiesDeclaration = {
+      path: [bToC],
+      properties: [{ stepIndex: 0, target: { select: "all" } }],
+    };
+    const provider = createProvider("p1_v1", [declaration]);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
+
+    expect(fields).to.have.lengthOf(1);
+    expect(fields[0].propertyName).to.equal("Prop");
+    expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
+    expect(fields[0].valueClassNames).to.deep.equal(["TestSchema.C"]);
+  });
+
+  it("`primaryClassNames` of a nested field remain the true (near-end) primary classes", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.C" })],
+      }),
+    ]);
+    const provider = createProvider("p1_v1", [{ path: [bToC] }]);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A1", "TestSchema.A2"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
+
+    expect(fields[0].primaryClassNames).to.deep.equal(["TestSchema.A1", "TestSchema.A2"]);
+  });
+
+  it("throws with the nested suffix length when a nested step spec is out of bounds", async () => {
+    const imodelAccess = createSchemaAccess([]);
+    const declaration: RelatedPropertiesDeclaration = {
+      path: [bToC],
+      properties: [{ stepIndex: 1, target: { select: "all" } }],
+    };
+    const provider = createProvider("p1_v1", [declaration]);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) })).rejects.toThrow(
+      /references step index 1, but the resolved nested suffix only has 1 step/,
+    );
+  });
+
+  it("includes the nested anchor class in the missing-provider error", async () => {
+    const imodelAccess = createSchemaAccess([]);
+    const source = createSource([
+      {
+        providerId: "missing_v1",
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([]) })).rejects.toThrow(
+      /missing the iModel fields provider "missing_v1".*\(nested anchor "TestSchema\.B"\)/,
+    );
+  });
+
+  it("includes the nested anchor class in the missing-declaration error", async () => {
+    const imodelAccess = createSchemaAccess([]);
+    const provider = createProvider("p1_v1", []);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    await expect(collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) })).rejects.toThrow(
+      /no longer returns the related-properties declaration at index 0.*\(nested anchor "TestSchema\.B"\)/,
+    );
+  });
+
+  it("recovers two nested groups sharing an anchor with a single memoized getContribution call", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "Prop1", declaringClass: "TestSchema.C" })],
+      }),
+      createEntityClass({
+        fullName: "TestSchema.C1",
+        properties: [createPrimitiveProperty({ name: "Prop2", declaringClass: "TestSchema.C1" })],
+      }),
+    ]);
+    let callCount = 0;
+    const provider: IModelFieldsProvider = {
+      id: "p1_v1",
+      applyRecursively: true,
+      async getContribution() {
+        callCount++;
+        return { relatedProperties: [{ path: [bToC] }, { path: [bToC1] }] };
+      },
+    };
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+      {
+        providerId: provider.id,
+        declarationIndex: 1,
+        paths: [resolvedPath([aToB, bToC1], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+      },
+    ]);
+
+    const { getContribution, getAnchorContribution } = createContributionMemoizer({
+      imodelAccess: createSchemaAccess([]),
+    });
+    const imodelFieldsProvidersById = new Map([[provider.id, provider]]);
+
+    const fields = await enumerate({
+      imodelAccess,
+      source,
+      getContribution,
+      getAnchorContribution,
+      imodelFieldsProvidersById,
+    });
+
+    expect(fields.map((f) => f.propertyName)).to.deep.equal(["Prop1", "Prop2"]);
+    expect(callCount).to.equal(1);
   });
 });
