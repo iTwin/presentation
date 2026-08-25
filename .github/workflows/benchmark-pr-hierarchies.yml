@@ -2,9 +2,6 @@ name: PR hierarchies performance benchmark
 
 on:
   pull_request:
-    branches:
-      - master
-      - stable
     paths:
       - apps/performance-tests/hierarchies/**
       - apps/performance-tests/util/**
@@ -14,7 +11,7 @@ on:
       - packages/shared/**
       - pnpm-lock.yaml
       - .github/workflows/benchmark-pr-hierarchies.yml
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
 
 jobs:
   benchmark:
