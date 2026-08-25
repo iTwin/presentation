@@ -209,9 +209,10 @@ interface ResolvedDeclarationGroup {
 
     /**
      * The effective cardinality of the full path — `"many"` if either the parent path's producing
-     * declaration or this nested declaration hints `"many"`, else `"one"`; `undefined` when neither
-     * declares an explicit `cardinalityHint` (consumers should fall back to schema-multiplicity
-     * inspection of the full path, exactly as they would for a hint-less base declaration).
+     * declaration or this nested declaration hints `"many"`; `"one"` only when **both** hint `"one"`;
+     * `undefined` otherwise (a `"one"` promise can't be made for a chain containing an unhinted —
+     * possibly many — segment, so consumers should fall back to schema-multiplicity inspection of
+     * the full path, exactly as they would for a hint-less base declaration).
      *
      * Computed here (rather than left to Stage 2/3) because, once a nested declaration is itself
      * nested further, later stages no longer have cheap access to every ancestor declaration in the

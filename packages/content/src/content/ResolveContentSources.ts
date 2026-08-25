@@ -356,27 +356,32 @@ function resolveBaseGroups({
 }
 
 /**
- * Combines two optional cardinality hints: `"many"` wins over `"one"`; when neither side declares an
- * explicit hint the result is `undefined` (consumers fall back to schema-multiplicity inspection of
- * the full path, exactly as for a hint-less base declaration — see `ResolvedDeclarationGroup.nested`).
+ * Combines two optional cardinality hints of segments making up a longer path. The full path's
+ * cardinality is the product of its segments, so `"many"` on either side makes the full path
+ * `"many"`, while `"one"` requires **both** sides to promise it. When either side is unhinted the
+ * result is `undefined` — a `"one"` promise can't be made for a chain containing an unhinted
+ * (possibly many) segment, so consumers fall back to schema-multiplicity inspection of the full
+ * path, exactly as for a hint-less base declaration (see `ResolvedDeclarationGroup.nested`).
  */
 function combineCardinalityHint(
   a: CardinalityHint | undefined,
   b: CardinalityHint | undefined,
 ): CardinalityHint | undefined {
-  if (a === undefined && b === undefined) {
-    return undefined;
+  if (a === "many" || b === "many") {
+    return "many";
   }
-  return a === "many" || b === "many" ? "many" : "one";
+  return a === "one" && b === "one" ? "one" : undefined;
 }
 
 /**
  * Creates the nested-expansion queue entries for a declaration's resolved paths — one per
  * (resolved path, anchor step). Anchor steps are the ones that fully expose a related instance and can
- * therefore anchor nested content: the final step when the declaration omits `properties`, or every
- * step whose `target` spec is exactly `{ select: "all" }` — narrower selections and relationship-only
- * steps do not expose the complete instance. `stepIndexOffset` translates a nested declaration's
- * suffix-relative `stepIndex` values into indices of the full path; pass `0` for a direct declaration.
+ * therefore anchor nested content: each resolved path's final step when the declaration omits
+ * `properties` (resolved lengths can differ from the declared length when the declaration uses a
+ * custom `resolve`, so the final step is derived per resolved path), or every step whose `target`
+ * spec is exactly `{ select: "all" }` — narrower selections and relationship-only steps do not expose
+ * the complete instance. `stepIndexOffset` translates a nested declaration's suffix-relative
+ * `stepIndex` values into indices of the full path; pass `0` for a direct declaration.
  */
 function createNestedQueueEntries(props: {
   declaration: RelatedPropertiesDeclaration;
@@ -386,14 +391,12 @@ function createNestedQueueEntries(props: {
   parentCardinalityHint: CardinalityHint | undefined;
 }): NestedQueueEntry[] {
   const { declaration, paths, stepIndexOffset, appliedPairs, parentCardinalityHint } = props;
-  const anchorIndices =
-    declaration.properties === undefined
-      ? [stepIndexOffset + declaration.path.length - 1]
-      : declaration.properties
-          .filter((spec) => spec.target?.select === "all")
-          .map((spec) => stepIndexOffset + spec.stepIndex);
+  const specAnchorIndices = declaration.properties
+    ?.filter((spec) => spec.target?.select === "all")
+    .map((spec) => stepIndexOffset + spec.stepIndex);
   const entries: NestedQueueEntry[] = [];
   for (const resolvedPath of paths) {
+    const anchorIndices = specAnchorIndices ?? [resolvedPath.path.length - 1];
     for (const anchorIdx of anchorIndices) {
       if (anchorIdx < 0 || anchorIdx >= resolvedPath.path.length) {
         continue;

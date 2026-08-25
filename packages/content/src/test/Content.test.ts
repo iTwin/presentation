@@ -1612,9 +1612,9 @@ describe("resolveContentSources", () => {
     });
 
     it("still anchors nested expansion using paths produced by a custom `resolve` declaration", async () => {
-      const customResolve = vi.fn(
-        async (): Promise<ResolvedPath[]> => [{ path: [aToB], targetClassNames: ["TestSchema.ClassA"] }],
-      );
+      const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
+        { path: [aToB], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
       const providerA = createMockIModelFieldsProvider("providerA_v1", {
         relatedProperties: [{ path: [aToB], resolve: customResolve }],
       });
@@ -1651,9 +1651,9 @@ describe("resolveContentSources", () => {
 
     it("skips a nested declaration with a custom `resolve` callback, applying only its non-custom siblings", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
-      const customResolve = vi.fn(
-        async (): Promise<ResolvedPath[]> => [{ path: [bToC], targetClassNames: ["TestSchema.ClassA"] }],
-      );
+      const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
+        { path: [bToC], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
       const providerB: IModelFieldsProvider = {
         id: "providerB_v1",
         applyRecursively: true,
@@ -1766,7 +1766,7 @@ describe("resolveContentSources", () => {
       expect(nested?.nested?.effectiveCardinalityHint).to.equal("many");
     });
 
-    it("computes the effective cardinality hint when only the nested declaration hints, or neither hints 'many'", async () => {
+    it("computes the effective cardinality hint for mixed and matching hint combinations", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", {
         relatedProperties: [{ path: [aToB], cardinalityHint: "one" }],
       });
@@ -1775,7 +1775,13 @@ describe("resolveContentSources", () => {
         applyRecursively: true,
         async getContribution({ target }) {
           return target.primaryClass === "TestSchema.ClassB"
-            ? { relatedProperties: [{ path: [bToC], cardinalityHint: "many" }, { path: [bToD] }] }
+            ? {
+                relatedProperties: [
+                  { path: [bToC], cardinalityHint: "many" },
+                  { path: [bToD] },
+                  { path: [bToC], cardinalityHint: "one" },
+                ],
+              }
             : undefined;
         },
       };
@@ -1814,8 +1820,62 @@ describe("resolveContentSources", () => {
       });
 
       const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
-      // Parent "one" + nested "many" → "many"; parent "one" + nested without a hint → "one".
-      expect(nestedGroups.map((g) => g.nested?.effectiveCardinalityHint)).to.deep.equal(["many", "one"]);
+      // Parent "one" + nested "many" → "many"; parent "one" + nested without a hint → undefined (the
+      // unhinted segment may be schema-many, so no 1:1 promise can be made — consumers fall back to
+      // schema inspection); parent "one" + nested "one" → "one".
+      expect(nestedGroups.map((g) => g.nested?.effectiveCardinalityHint)).to.deep.equal(["many", undefined, "one"]);
+    });
+
+    it("anchors a custom `resolve` declaration's nested expansion at each resolved path's own final step", async () => {
+      // The custom resolver returns a 2-step concrete path for a 1-step declared path — anchors must
+      // derive from the resolved path's final step (ClassC), not the declared path's length (ClassB).
+      const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
+        { path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToB], resolve: customResolve }],
+      });
+      const anchorsSeen: string[] = [];
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          anchorsSeen.push(target.primaryClass);
+          return target.primaryClass === "TestSchema.ClassC" ? { relatedProperties: [{ path: [cToD] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          3: [
+            row(
+              "TestSchema.ClassA",
+              "TestSchema.RelAB",
+              "TestSchema.ClassB",
+              "TestSchema.RelBC",
+              "TestSchema.ClassC",
+              "TestSchema.RelCD",
+              "TestSchema.ClassD",
+            ),
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      // The anchor is the resolved path's final step's class (C) — never the mid-path class (B) that
+      // the declared path's length would point at. C's own nested group then probes its anchor (D).
+      expect(anchorsSeen).to.deep.equal(["TestSchema.ClassA", "TestSchema.ClassC", "TestSchema.ClassD"]);
+      const nested = result.resolvedDeclarations.find((g) => g.nested);
+      expect(nested).to.deep.equal({
+        providerId: "providerB_v1",
+        declarationIndex: 0,
+        paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+        nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+      });
     });
   });
 });
