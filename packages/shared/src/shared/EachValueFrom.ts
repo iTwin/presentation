@@ -13,11 +13,9 @@ export interface Subscribable<T> {
   /**
    * Subscribes to stream notifications.
    */
-  subscribe(observer: {
-    next: (value: T) => void;
-    error: (reason: unknown) => void;
-    complete: () => void;
-  }): { unsubscribe: () => void };
+  subscribe(observer: { next: (value: T) => void; error: (reason: unknown) => void; complete: () => void }): {
+    unsubscribe: () => void;
+  };
 }
 
 /**

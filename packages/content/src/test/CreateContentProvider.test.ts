@@ -212,9 +212,7 @@ describe("createContentProvider", () => {
 
   describe("getInstanceKeys", () => {
     it("queries a source without building its descriptor", async () => {
-      const keysIModelAccess = createInstanceKeysIModelAccess({
-        keyBatches: [[{ id: "0x1", className: "Schema.A" }]],
-      });
+      const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x1", className: "Schema.A" }]] });
       const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
 
       await expect(collect(provider.getInstanceKeys())).resolves.to.deep.equal([{ id: "0x1", className: "Schema.A" }]);
@@ -241,9 +239,7 @@ describe("createContentProvider", () => {
         primaryClassNames: ["Schema.A"],
         selectorId: "Schema.A.Length",
       };
-      const keysIModelAccess = createInstanceKeysIModelAccess({
-        keyBatches: [[{ id: "0x2", className: "Schema.A" }]],
-      });
+      const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });
       const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
 
       await expect(
@@ -261,10 +257,7 @@ describe("createContentProvider", () => {
 
     it("yields keys from separate source queries", async () => {
       const keysIModelAccess = createInstanceKeysIModelAccess({
-        keyBatches: [
-          [{ id: "0x1", className: "Schema.A" }],
-          [{ id: "0x2", className: "Schema.B" }],
-        ],
+        keyBatches: [[{ id: "0x1", className: "Schema.A" }], [{ id: "0x2", className: "Schema.B" }]],
       });
       const provider = createContentProvider({
         imodelAccess: keysIModelAccess,
@@ -273,10 +266,12 @@ describe("createContentProvider", () => {
 
       const keys = await collect(provider.getInstanceKeys());
       expect(keys).toHaveLength(2);
-      expect(keys).toEqual(expect.arrayContaining([
-        { id: "0x1", className: "Schema.A" },
-        { id: "0x2", className: "Schema.B" },
-      ]));
+      expect(keys).toEqual(
+        expect.arrayContaining([
+          { id: "0x1", className: "Schema.A" },
+          { id: "0x2", className: "Schema.B" },
+        ]),
+      );
       expect(keysIModelAccess.createQueryReader).toHaveBeenCalledTimes(2);
     });
 
