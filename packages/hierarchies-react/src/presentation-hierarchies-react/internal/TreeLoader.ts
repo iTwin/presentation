@@ -101,15 +101,13 @@ export class TreeLoader implements ITreeLoader {
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
         return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
-      map(
-        (childNodes): LoadedTreePart => ({
-          parentId: parent.id,
-          loadedNodes:
-            instanceFilter && childNodes.length === 0
-              ? [{ id: `${infoNodeIdBase}-no-filter-matches`, parentId: parent.id, type: "NoFilterMatches" as const }]
-              : childNodes.map(treeModelNodesFactory),
-        }),
-      ),
+      map((childNodes): LoadedTreePart => ({
+        parentId: parent.id,
+        loadedNodes:
+          instanceFilter && childNodes.length === 0
+            ? [{ id: `${infoNodeIdBase}-no-filter-matches`, parentId: parent.id, type: "NoFilterMatches" as const }]
+            : childNodes.map(treeModelNodesFactory),
+      })),
     );
   }
 
