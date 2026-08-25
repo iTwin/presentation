@@ -926,6 +926,121 @@ describe("buildBaseQuery", () => {
   });
 
   describe("value filters on split paths", () => {
+    function makeIndexedOneToOnePath(index: number): RelationshipPath {
+      return [makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`)];
+    }
+
+    function makeIndexedOneToOneFilter(path: RelationshipPath, index: number): ContentValueFilter {
+      return {
+        field: makePropertyField({
+          propertyName: "Name",
+          propertyClassName: `TestSchema.Target${index}`,
+          pathFromTarget: path,
+          valueClassNames: [`TestSchema.Target${index}`],
+          primaryClassNames: [primaryClass],
+        }),
+        operator: "is-equal",
+        value: `value-${index}`,
+      };
+    }
+
+    it("keeps fitting 1:1 filters joined and spills overflow filters to existential subqueries", async () => {
+      const paths = Array.from({ length: 22 }, (_, index) => makeIndexedOneToOnePath(index));
+      const oneToOneFilters = paths.map((path, index) => makeIndexedOneToOneFilter(path, index));
+      const oneToManyPath = makeOneToManyPath();
+      const filters: ContentValueFilter[] = [
+        ...oneToOneFilters,
+        { field: makeOneToManyNameField(oneToManyPath), operator: "is-equal", value: "many" },
+      ];
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([paths[21]]),
+        includeRelatedJoins: true,
+        filters,
+      });
+
+      // FROM consumes one table, leaving room for 21 three-table outer link paths. The 22nd 1:1
+      // filter and the 1:many filter use independent EXISTS scopes.
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[RelMany]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel21]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[RelMany]");
+
+      // Selected overflow path is owned by an additional group instead of being pulled back onto anchor.
+      expect(result.anchor.paths).to.deep.equal([]);
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].paths.map((entry) => entry.path)).to.deep.equal([[...paths[21]]]);
+
+      // 21 joined + overflow 1:1 + 1:many filters each own a distinct binding index.
+      expect(Object.keys(result.anchor.parts.bindings!)).to.have.length(23);
+      for (let index = 0; index < 23; ++index) {
+        expect(result.anchor.parts.bindings).to.have.property(`${ECSQL_PREFIX}vf${index}`);
+      }
+    });
+
+    it("spills overflowing 1:1 filters in primaries-only mode", async () => {
+      const paths = Array.from({ length: 22 }, (_, index) => makeIndexedOneToOnePath(index));
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: false,
+        filters: paths.map((path, index) => makeIndexedOneToOneFilter(path, index)),
+      });
+
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel21]");
+    });
+
+    it("evaluates an overflowing 1:1 is-null filter with the aggregate existential form", async () => {
+      const fittingPaths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
+      const overflowPath = makeIndexedOneToOnePath(21);
+      const filters = fittingPaths.map((path, index) => makeIndexedOneToOneFilter(path, index));
+      filters.push({
+        field: makePropertyField({
+          propertyName: "Name",
+          propertyClassName: "TestSchema.Target21",
+          pathFromTarget: overflowPath,
+          valueClassNames: ["TestSchema.Target21"],
+          primaryClassNames: [primaryClass],
+        }),
+        operator: "is-null",
+      });
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: true,
+        filters,
+      });
+
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
+      const allPaths = [...fittingPaths, overflowPath];
+      const sortedPathKeys = allPaths.map((path) => serializeRelationshipPath({ path })).sort();
+      const targetAlias = (path: RelationshipPath) =>
+        `${ECSQL_PREFIX}t${sortedPathKeys.indexOf(serializeRelationshipPath({ path }))}`;
+      const relationshipAlias = (path: RelationshipPath) =>
+        `${ECSQL_PREFIX}r${sortedPathKeys.indexOf(serializeRelationshipPath({ path }))}`;
+      const joinedPredicates = fittingPaths
+        .map((path, index) => `([${targetAlias(path)}].[Name] = :${ECSQL_PREFIX}vf${index})`)
+        .join(" AND ");
+
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          (${joinedPredicates}) AND (
+            (
+              SELECT COUNT(*) = 0 OR COUNT([${targetAlias(overflowPath)}].[Name]) < COUNT(*)
+              FROM [TestSchema].[Rel21] [${relationshipAlias(overflowPath)}]
+              INNER JOIN [TestSchema].[Target21] [${targetAlias(overflowPath)}] ON [${targetAlias(overflowPath)}].[ECInstanceId] = [${relationshipAlias(overflowPath)}].[TargetECInstanceId]
+              WHERE [${relationshipAlias(overflowPath)}].[SourceECInstanceId] = [this].[ECInstanceId]
+            )
+          )
+        `),
+      );
+    });
+
     // A value filter on a 1:many path must not be evaluated by a top-level OUTER JOIN of that path onto the anchor.
     // Such a join duplicates the anchor row once per matching related instance (e.g. a Primary related to two
     // `Many` rows both named "A" yields the anchor id twice). The filter must instead be expressed as an

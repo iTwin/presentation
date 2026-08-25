@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   chunkCompoundSelects,
   classifyPathCardinality,
+  packPathsWithinBudget,
   partitionPathsByJoinBudget,
   SQLITE_MAX_COMPOUND_SELECT,
   SQLITE_MAX_JOIN_TABLES,
@@ -146,6 +147,48 @@ describe("QueryLimits", () => {
         [big],
         [small],
       ]);
+    });
+
+    describe("packPathsWithinBudget", () => {
+      it("returns empty fitting and overflow arrays for no paths", () => {
+        expect(packPathsWithinBudget({ paths: [], reservedTables: 0 })).to.deep.equal({ fitting: [], overflow: [] });
+      });
+
+      it("keeps all paths when they fit exactly", () => {
+        const a = path({ cost: 2, steps: [step("A", "AtoB", "B")] });
+        const b = path({ cost: 2, steps: [step("A", "AtoC", "C")] });
+        expect(packPathsWithinBudget({ paths: [a, b], reservedTables: 1, budget: 5 })).to.deep.equal({
+          fitting: [a, b],
+          overflow: [],
+        });
+      });
+
+      it("routes the first non-fitting path and all later paths to overflow", () => {
+        const a = path({ cost: 2, steps: [step("A", "AtoB", "B")] });
+        const big = path({ cost: 3, steps: [step("A", "AtoC", "C")] });
+        const small = path({ cost: 1, steps: [step("A", "AtoD", "D")] });
+        expect(packPathsWithinBudget({ paths: [a, big, small], reservedTables: 0, budget: 4 })).to.deep.equal({
+          fitting: [a],
+          overflow: [big, small],
+        });
+      });
+
+      it("routes all paths to overflow when reserved tables consume the budget", () => {
+        const a = path({ cost: 1, steps: [step("A", "AtoB", "B")] });
+        expect(packPathsWithinBudget({ paths: [a], reservedTables: SQLITE_MAX_JOIN_TABLES })).to.deep.equal({
+          fitting: [],
+          overflow: [a],
+        });
+      });
+
+      it("routes an oversized first path to overflow instead of forcing it to fit", () => {
+        const big = path({ cost: 4, steps: [step("A", "AtoB", "B"), step("B", "BtoC", "C")] });
+        const small = path({ cost: 1, steps: [step("A", "AtoD", "D")] });
+        expect(packPathsWithinBudget({ paths: [big, small], reservedTables: 0, budget: 2 })).to.deep.equal({
+          fitting: [],
+          overflow: [big, small],
+        });
+      });
     });
   });
 
