@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createDefaultValueFormatter } from "@itwin/presentation-shared";
 import * as propertiesGrouping from "../../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js";
 import {
@@ -68,29 +68,6 @@ describe("PropertiesGrouping", () => {
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
       expect(result).toHaveLength(1);
       checkPropertyGroupInfo(result[0], "TestSchema.Class", [], { propertyName: "PropertyName", ranges: undefined });
-    });
-
-    it("resolves the same properties class once for multiple nodes", async () => {
-      const className = "TestSchema.Class";
-      const nodes = ["0x1", "0x2"].map((id) =>
-        createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id }] },
-          processingParams: {
-            grouping: {
-              byProperties: {
-                propertiesClassName: className,
-                propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
-              },
-            },
-          },
-        }),
-      );
-      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
-      const getSchema = vi.spyOn(imodelAccess, "getSchema");
-
-      await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
-
-      expect(getSchema).toHaveBeenCalledOnce();
     });
 
     it("extracts propertiesGroupInfo from single node in the order which properties were provided", async () => {

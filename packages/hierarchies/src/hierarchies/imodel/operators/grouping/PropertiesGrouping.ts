@@ -320,7 +320,6 @@ export async function getUniquePropertiesGroupInfo(
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const parentPropertyGroupPath = parentNode ? createNodePropertyGroupPathMatchers(parentNode) : [];
   const uniqueProperties = new Map<string, PropertyGroupInfo>();
-  const propertiesClasses = new Map<EC.FullClassNameDotNotation, EC.Class>();
   for (const node of nodes) {
     await releaseMainThread();
 
@@ -329,11 +328,7 @@ export async function getUniquePropertiesGroupInfo(
       continue;
     }
 
-    let propertiesClass = propertiesClasses.get(byProperties.propertiesClassName);
-    if (!propertiesClass) {
-      propertiesClass = await getClass(schemaProvider, byProperties.propertiesClassName);
-      propertiesClasses.set(byProperties.propertiesClassName, propertiesClass);
-    }
+    const propertiesClass = await getClass(schemaProvider, byProperties.propertiesClassName);
     let propertyGroupIndex = 0;
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
