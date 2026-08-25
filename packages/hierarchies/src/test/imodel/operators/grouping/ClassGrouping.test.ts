@@ -91,7 +91,7 @@ describe("ClassGrouping", () => {
       processingParams: { grouping: { byClass: true } },
     });
     schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "A" });
-    const parentNode = createTestProcessedGroupingNode({ key: { type: "class-grouping", className: "testschema.a" } });
+    const parentNode = createTestProcessedGroupingNode({ key: { type: "class-grouping", className: "TestSchema.a" } });
 
     const result = await createClassGroups(schemaProvider, parentNode, [node]);
 
