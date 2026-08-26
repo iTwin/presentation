@@ -1455,7 +1455,7 @@ describe("resolveContentSources", () => {
         path: [aToB],
         properties: [
           { stepIndex: 0, target: { select: "all" } },
-          // Misdeclared: the path has a single step, so index 5 can never anchor — expansion must
+          // the path has a single step, so index 5 can never anchor — expansion must
           // skip it without failing.
           { stepIndex: 5, target: { select: "all" } },
         ],
