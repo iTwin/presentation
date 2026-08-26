@@ -379,9 +379,10 @@ function combineCardinalityHint(
  * therefore anchor nested content: each resolved path's final step when the declaration omits
  * `properties` (resolved lengths can differ from the declared length when the declaration uses a
  * custom `resolve`, so the final step is derived per resolved path), or every step whose `target`
- * spec is exactly `{ select: "all" }` — narrower selections and relationship-only steps do not expose
- * the complete instance. `stepIndexOffset` translates a nested declaration's suffix-relative
- * `stepIndex` values into indices of the full path; pass `0` for a direct declaration.
+ * selects all properties, possibly excluding a subset. An `include` selection, `"none"`, and
+ * relationship-only steps do not expose the complete instance. `stepIndexOffset` translates a nested
+ * declaration's suffix-relative `stepIndex` values into indices of the full path; pass `0` for a
+ * direct declaration.
  */
 function createNestedQueueEntries(props: {
   declaration: RelatedPropertiesDeclaration;
@@ -392,7 +393,10 @@ function createNestedQueueEntries(props: {
 }): NestedQueueEntry[] {
   const { declaration, paths, stepIndexOffset, appliedPairs, parentCardinalityHint } = props;
   const specAnchorIndices = declaration.properties
-    ?.filter((spec) => spec.target?.select === "all")
+    ?.filter((spec) => {
+      const selection = spec.target?.select;
+      return selection === "all" || (typeof selection === "object" && "exclude" in selection);
+    })
     .map((spec) => stepIndexOffset + spec.stepIndex);
   const entries: NestedQueueEntry[] = [];
   for (const resolvedPath of paths) {

@@ -14,12 +14,14 @@
  *   - Nested expansion: for every provider opted in via `applyRecursively`, re-invokes
  *     `getContribution` with a synthesized `{ primaryClass: anchorClassName }` target at each
  *     *nested anchor* — a related-instance class surfaced by any resolved related-properties path
- *     (final step when the producing declaration omits `properties`, else its `select: "all"`
- *     steps). Nested declarations are still resolved as the **full path from the original
- *     target** (concrete prefix + declared suffix), never from the anchor class alone, so instance
- *     scoping (`instanceIds`/`instanceFilter`) is preserved. Recursive and unbounded — data-driven
- *     termination, guarded per branch by `(providerId, anchorClassName)` against cyclic instance
- *     graphs. See `IModelFieldsProvider.applyRecursively` and `ResolvedDeclarationGroup.nested`.
+ *     (final step when the producing declaration omits `properties`, else steps selecting all target
+ *     properties, optionally with an `exclude` subset). Steps using `include` or `"none"` do not
+ *     anchor nested contributions. Nested declarations are still resolved as the **full path from
+ *     the original target** (concrete prefix + declared suffix), never from the anchor class alone,
+ *     so instance scoping (`instanceIds`/`instanceFilter`) is preserved. Recursive and unbounded —
+ *     data-driven termination, guarded per branch by `(providerId, anchorClassName)` against cyclic
+ *     instance graphs. See `IModelFieldsProvider.applyRecursively` and
+ *     `ResolvedDeclarationGroup.nested`.
  *   - Output: `ContentSource[]` — serializable, cacheable.
  *
  * Stage 2 — Descriptor building (`createContentProvider` → `getContentDescriptor`)

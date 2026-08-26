@@ -1403,12 +1403,13 @@ describe("resolveContentSources", () => {
       ]);
     });
 
-    it('derives nested anchors only from `select: "all"` steps when a declaration provides property specs', async () => {
+    it('derives nested anchors from `select: "all"` and `exclude` steps, but not `include` steps', async () => {
       const declaration: RelatedPropertiesDeclaration = {
-        path: [aToB, bToC],
+        path: [aToB, bToC, cToD],
         properties: [
           { stepIndex: 0, target: { select: "all" } },
-          { stepIndex: 1, target: { select: { include: ["Name"] } } },
+          { stepIndex: 1, target: { select: { exclude: ["Description"] } } },
+          { stepIndex: 2, target: { select: { include: ["Name"] } } },
         ],
       };
       const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [declaration] });
@@ -1424,8 +1425,16 @@ describe("resolveContentSources", () => {
       };
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
-          2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBC", "TestSchema.ClassC"),
+          3: [
+            row(
+              "TestSchema.ClassA",
+              "TestSchema.RelAB",
+              "TestSchema.ClassB",
+              "TestSchema.RelBC",
+              "TestSchema.ClassC",
+              "TestSchema.RelCD",
+              "TestSchema.ClassD",
+            ),
           ],
         }),
       });
@@ -1436,9 +1445,9 @@ describe("resolveContentSources", () => {
         config: { imodelFieldsProviders: [providerA, providerB] },
       });
 
-      // Invoked once for the base target (A) and once for the "select: all" anchor (B) — never for C,
-      // whose step only selects a narrower property subset and therefore never anchors.
-      expect(anchorsSeen).to.deep.equal(["TestSchema.ClassA", "TestSchema.ClassB"]);
+      // Invoked for the base target (A), the "all" anchor (B), and the "exclude" anchor (C) — never
+      // for D, whose step selects only a narrower property subset.
+      expect(anchorsSeen).to.deep.equal(["TestSchema.ClassA", "TestSchema.ClassB", "TestSchema.ClassC"]);
     });
 
     it('skips a `select: "all"` property spec whose step index is out of the resolved path\'s bounds', async () => {

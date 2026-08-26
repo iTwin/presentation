@@ -99,6 +99,7 @@ describe("Content", () => {
                     relationshipName: schema.items.HasPhysicalType.fullName,
                   },
                 ],
+                properties: [{ stepIndex: 0, target: { select: { exclude: ["TypeName"] } } }],
               },
             ],
           };
@@ -136,7 +137,7 @@ describe("Content", () => {
       });
     }
 
-    it("scopes nested aspect fields to the requested wall's own wall type only (no cross-instance leak)", async () => {
+    it("loads and scopes nested aspect fields when the parent excludes a target property", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await buildWallSchema(builder, testName);
         const wall1 = builder.insertInstance(s.items.Wall.fullName, { name: "Wall1" });
