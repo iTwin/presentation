@@ -320,6 +320,17 @@ export async function getUniquePropertiesGroupInfo(
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const parentPropertyGroupPath = parentNode ? createNodePropertyGroupPathMatchers(parentNode) : [];
   const uniqueProperties = new Map<string, PropertyGroupInfo>();
+  // `getClass` resolves the same class for every node sharing a `propertiesClassName`, so resolve each class once and
+  // reuse it across nodes instead of calling `getClass` (schema lookup + class lookup) on every node.
+  const propertiesClassCache = new Map<EC.FullClassNameDotNotation, EC.Class>();
+  const getPropertiesClass = async (fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class> => {
+    let ecClass = propertiesClassCache.get(fullClassName);
+    if (!ecClass) {
+      ecClass = await getClass(schemaProvider, fullClassName);
+      propertiesClassCache.set(fullClassName, ecClass);
+    }
+    return ecClass;
+  };
   for (const node of nodes) {
     await releaseMainThread();
 
@@ -328,7 +339,7 @@ export async function getUniquePropertiesGroupInfo(
       continue;
     }
 
-    const propertiesClass = await getClass(schemaProvider, byProperties.propertiesClassName);
+    const propertiesClass = await getPropertiesClass(byProperties.propertiesClassName);
     let propertyGroupIndex = 0;
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {

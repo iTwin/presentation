@@ -119,11 +119,36 @@ export function createECSchemaProvider(
     return { classHierarchyResolver, schemaView };
   }
 
-  return {
-    async getSchema(name) {
+  // Cache the resolved schema by name so repeated `getSchema`/`getClass` calls reuse it instead of issuing a new
+  // `getSchemaView` request each time. The cached promise doubles as an in-flight guard: concurrent
+  // first-time requests for the same schema share it (and its underlying `getSchemaView` request) instead of each
+  // building the schema. The entry is retained until the schema view it was built from is marked outdated by the host
+  // (a newer view has replaced it), at which point the next access refreshes it.
+  const schemaCache = new Map<string, Promise<{ schemaView: PublicCoreSchemaView; schema: EC.Schema | undefined }>>();
+  async function fetchSchema(name: string) {
+    const entry = (async () => {
       const { classHierarchyResolver, schemaView } = await getSchemaProviderContext(name);
       const svSchema = schemaView.getSchema(name);
-      return svSchema ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver }) : undefined;
+      const schema = svSchema
+        ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver })
+        : undefined;
+      return { schemaView, schema };
+    })();
+    schemaCache.set(name, entry);
+    // Drop rejected entries so a transient failure doesn't get cached permanently.
+    entry.catch(() => {
+      if (schemaCache.get(name) === entry) {
+        schemaCache.delete(name);
+      }
+    });
+    return entry;
+  }
+
+  return {
+    async getSchema(name) {
+      const cached = schemaCache.get(name);
+      const entry = await (cached ?? fetchSchema(name));
+      return entry.schemaView.isOutdated ? (await fetchSchema(name)).schema : entry.schema;
     },
     classDerivesFrom(
       derivedClassFullName: EC.FullClassNameDotNotation,
