@@ -136,6 +136,7 @@ export function createECSchemaProvider(
     })();
     schemaCache.set(name, entry);
     // Drop rejected entries so a transient failure doesn't get cached permanently.
+    /* v8 ignore next 4 -- defensive cleanup for rejected cache entries while a newer entry may have already replaced this one */
     entry.catch(() => {
       if (schemaCache.get(name) === entry) {
         schemaCache.delete(name);
