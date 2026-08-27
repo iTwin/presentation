@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { finalize, from, map, mergeMap } from "rxjs";
-import { eachValueFrom, normalizeFullClassName } from "@itwin/presentation-shared";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { buildBaseQuery } from "./BaseQuery.js";
 import { QUERY_CONCURRENCY } from "./QueryConcurrency.js";
 
@@ -50,7 +50,7 @@ export function getInstanceKeys(props: {
           { rowFormat: "Indexes" },
         );
         return from(reader).pipe(
-          map((row) => ({ id: row[0], className: normalizeFullClassName(row[1]) })),
+          map((row): InstanceKey => ({ id: row[0], className: row[1] })),
           // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
           finalize(() => void reader.return?.(undefined)),
         );
