@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { buildContentDescriptor } from "./descriptor-building/BuildDescriptor.js";
+import { getInstanceKeys } from "./query/GetInstanceKeys.js";
 import { getSize } from "./query/GetSize.js";
 
 import type { Props } from "@itwin/presentation-shared";
@@ -30,9 +31,13 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
     async getSize(options) {
       return getSize({ imodelAccess, sources, queryFilterers: config?.queryFilterers, filters: options?.filters });
     },
-    /* v8 ignore next 3 */
-    getInstanceKeys() {
-      throw new Error("Not implemented");
+    getInstanceKeys(options) {
+      return getInstanceKeys({
+        imodelAccess,
+        sources,
+        queryFilterers: config?.queryFilterers,
+        filters: options?.filters,
+      });
     },
     /* v8 ignore next 3 */
     getItems() {

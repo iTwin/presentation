@@ -15,6 +15,7 @@ public;function;createDefaultInstanceLabelSelectClauseFactory
 public;function;createDefaultValueFormatter
 public;function;createIModelInstanceLabelSelectClauseFactory
 public;function;createMainThreadReleaseOnTimePassedHandler
+public;function;eachValueFrom
 public;namespace;EC
 public;interface;ECClassHierarchyInspector
 deprecated;interface;ECClassHierarchyInspector

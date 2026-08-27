@@ -3,27 +3,28 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defaultIfEmpty, finalize, from, lastValueFrom, map, mergeMap, reduce, take } from "rxjs";
+import { finalize, from, map, mergeMap } from "rxjs";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { buildBaseQuery } from "./BaseQuery.js";
 import { QUERY_CONCURRENCY } from "./QueryConcurrency.js";
 
-import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 
 /**
- * Counts items matching each source and sums their results.
+ * Gets keys of instances matching the supplied sources.
  *
  * @internal
  */
-export async function getSize(props: {
+export function getInstanceKeys(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   sources: ContentSource[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
-}): Promise<number> {
-  return lastValueFrom(
+}): AsyncIterable<InstanceKey> {
+  return eachValueFrom(
     from(props.sources).pipe(
       mergeMap(async (source) =>
         buildBaseQuery({
@@ -36,20 +37,24 @@ export async function getSize(props: {
       mergeMap(({ anchor: { parts } }) => {
         const reader = props.imodelAccess.createQueryReader(
           {
-            ecsql: ["SELECT COUNT(*)", parts.from, parts.joins, parts.where].filter((fragment) => fragment).join(" "),
+            ecsql: [
+              "SELECT [this].[ECInstanceId], ec_classname([this].[ECClassId], 's.c')",
+              parts.from,
+              parts.joins,
+              parts.where,
+            ]
+              .filter((fragment) => fragment)
+              .join(" "),
             bindings: parts.bindings,
           },
           { rowFormat: "Indexes" },
         );
         return from(reader).pipe(
-          take(1),
-          map((row) => row[0]),
-          defaultIfEmpty(0),
+          map((row): InstanceKey => ({ id: row[0], className: row[1] })),
           // Calling `return()` on the iterator should cancel the query execution on the backend and free up resources
           finalize(() => void reader.return?.(undefined)),
         );
       }, QUERY_CONCURRENCY),
-      reduce((sum, count) => sum + count, 0),
     ),
   );
 }
