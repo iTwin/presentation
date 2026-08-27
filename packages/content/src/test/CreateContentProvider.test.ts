@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResolvablePromise } from "presentation-test-utilities";
+import { collect, ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { createContentProvider, resolveContentSources } from "../content/Content.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "./MetadataStubs.js";
@@ -54,14 +54,6 @@ function createInstanceKeysIModelAccess(props: {
     ...createSchemaAccess(props.schemaClasses ?? [createEntityClass({ fullName: "Schema.A" })]),
     createQueryReader,
   };
-}
-
-async function collect<T>(values: AsyncIterable<T>): Promise<T[]> {
-  const result: T[] = [];
-  for await (const value of values) {
-    result.push(value);
-  }
-  return result;
 }
 
 describe("createContentProvider", () => {
