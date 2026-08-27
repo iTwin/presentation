@@ -166,10 +166,8 @@ interface ResolvedDeclarationGroup {
   providerId: BaseFieldsProvider["id"];
 
   /**
-   * 0-based index into the `relatedProperties` array of the `FieldsProviderContribution` returned by
-   * the `IModelFieldsProvider.getContribution()` call — for a `nested` group, the contribution
-   * returned for the synthesized `{ primaryClass: nested.anchorClassName }` target, not this source's
-   * own target.
+   * 0-based index into the `relatedProperties` array of the `FieldsProviderContribution`
+   * returned by the `IModelFieldsProvider.getContribution()` call.
    */
   declarationIndex: number;
 
