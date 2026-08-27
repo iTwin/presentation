@@ -46,7 +46,6 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
    * provider, including this one). A target step is a nested anchor when its declaration omits
    * `properties`, selects `"all"`, or selects all except an `exclude` subset. An `include` selection
    * and `"none"` do not expose the whole related instance and therefore do not create an anchor.
-   * Mirrors the native `ContentModifier.applyOnNestedContent` rule attribute.
    *
    * On a nested anchor, `getContribution` is invoked with a synthesized `ContentTarget` containing
    * only `primaryClass` (the anchor class) — `instanceIds` and `instanceFilter` are always
