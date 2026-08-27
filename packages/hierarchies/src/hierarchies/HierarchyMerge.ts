@@ -7,8 +7,8 @@ import "./internal/DisposePolyfill.js";
 
 import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { safeDispose } from "./internal/Common.js";
-import { eachValueFrom } from "./internal/EachValueFrom.js";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
 
 import type { EventArgs } from "@itwin/presentation-shared";

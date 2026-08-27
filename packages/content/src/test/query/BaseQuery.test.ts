@@ -345,7 +345,7 @@ describe("buildBaseQuery", () => {
         }),
       });
 
-      expect(result.anchor.parts.where).to.equal("[this].Area > :minArea");
+      expect(result.anchor.parts.where).to.equal("WHERE [this].Area > :minArea");
       expect(result.anchor.parts.bindings).to.deep.equal({ minArea: { type: "double", value: 5 } });
     });
 
@@ -356,7 +356,7 @@ describe("buildBaseQuery", () => {
       });
 
       expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
-      expect(result.anchor.parts.where).to.equal("[this].Area > 5");
+      expect(result.anchor.parts.where).to.equal("WHERE [this].Area > 5");
     });
   });
 
@@ -373,7 +373,7 @@ describe("buildBaseQuery", () => {
 
       expect(getFilterClauses).toHaveBeenCalledWith({ targetAlias: "this" });
       expect(result.anchor.parts.joins).to.include("JOIN filterer_table ft");
-      expect(result.anchor.parts.where).to.equal("ft.flag = 1");
+      expect(result.anchor.parts.where).to.equal("WHERE ft.flag = 1");
       expect(result.anchor.parts.bindings).to.deep.equal({ fb: { type: "int", value: 7 } });
     });
 
@@ -387,7 +387,7 @@ describe("buildBaseQuery", () => {
         queryFilterers: [filtererA, filtererB],
       });
 
-      expect(result.anchor.parts.where).to.equal("(a = 1) AND (b = 2)");
+      expect(result.anchor.parts.where).to.equal("WHERE (a = 1) AND (b = 2)");
     });
 
     it("handles a filterer contributing no clauses", async () => {
@@ -407,7 +407,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[this].[Length] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [this].[Length] = :${ECSQL_PREFIX}vf0`);
       expect(result.anchor.parts.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 1 } });
     });
 
@@ -418,7 +418,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
     });
 
     it("resolves a relationship-class property against the relationship alias", async () => {
@@ -434,7 +434,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}r0].[RelProp] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}r0].[RelProp] = :${ECSQL_PREFIX}vf0`);
     });
 
     it("resolves an `is-null` filter on a 1:1 related property as a plain join", async () => {
@@ -445,7 +445,7 @@ describe("buildBaseQuery", () => {
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
 
       // A 1:1 path has at most one related row, so the outer join alone (no EXISTS) is enough.
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NULL`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] IS NULL`);
     });
 
     it("resolves an `is-not-null` filter on a 1:1 related property as a plain join", async () => {
@@ -455,7 +455,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] IS NOT NULL`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] IS NOT NULL`);
     });
 
     it("binds a struct member using the member's declared type", async () => {
@@ -470,7 +470,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[this].[Address].[Street] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [this].[Address].[Street] = :${ECSQL_PREFIX}vf0`);
       expect(result.anchor.parts.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "Main" } });
     });
 
@@ -536,13 +536,13 @@ describe("buildBaseQuery", () => {
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
       expect(result.anchor.parts.where).to.equal(
-        [
+        `WHERE ${[
           `([this].[Origin].[x] = :${ECSQL_PREFIX}vf0)`,
           `([this].[Origin].[y] = :${ECSQL_PREFIX}vf1)`,
           `([this].[Location].[x] = :${ECSQL_PREFIX}vf2)`,
           `([this].[Location].[y] = :${ECSQL_PREFIX}vf3)`,
           `([this].[Location].[z] = :${ECSQL_PREFIX}vf4)`,
-        ].join(" AND "),
+        ].join(" AND ")}`,
       );
       expect(result.anchor.parts.bindings).to.deep.equal({
         [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 1 },
@@ -562,7 +562,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[this].[Location].[z] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [this].[Location].[z] = :${ECSQL_PREFIX}vf0`);
     });
 
     it("validates the coordinate member of a related point property", async () => {
@@ -578,7 +578,7 @@ describe("buildBaseQuery", () => {
 
       const validFilters: ContentValueFilter[] = [{ field, member: "y", operator: "is-equal", value: 1 }];
       const validResult = await buildBaseQuery({ schemaProvider, source: makeSource([path]), filters: validFilters });
-      expect(validResult.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Location].[y] = :${ECSQL_PREFIX}vf0`);
+      expect(validResult.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Location].[y] = :${ECSQL_PREFIX}vf0`);
 
       const invalidFilters: ContentValueFilter[] = [{ field, member: "w", operator: "is-equal", value: 1 }];
       await expect(
@@ -631,7 +631,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`[this].[Parent].[Id] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [this].[Parent].[Id] = :${ECSQL_PREFIX}vf0`);
       expect(result.anchor.parts.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "id", value: "0x1" } });
     });
 
@@ -648,7 +648,9 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`([this].CodeValue || [this].UserLabel) LIKE :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(
+        `WHERE ([this].CodeValue || [this].UserLabel) LIKE :${ECSQL_PREFIX}vf0`,
+      );
     });
 
     it("substitutes a calculated field's custom target alias", async () => {
@@ -665,7 +667,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`([this].CodeValue) LIKE :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE ([this].CodeValue) LIKE :${ECSQL_PREFIX}vf0`);
     });
 
     it("parenthesizes a compound calculated expression before applying the operator", async () => {
@@ -681,7 +683,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`([this].FlagA OR [this].FlagB) = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE ([this].FlagA OR [this].FlagB) = :${ECSQL_PREFIX}vf0`);
     });
 
     it("carries a calculated field's own bindings into the base query", async () => {
@@ -698,7 +700,7 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), filters });
 
-      expect(result.anchor.parts.where).to.equal(`([this].Length * :scale) > :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE ([this].Length * :scale) > :${ECSQL_PREFIX}vf0`);
       expect(result.anchor.parts.bindings).to.deep.equal({
         scale: { type: "double", value: 2 },
         [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 },
@@ -719,7 +721,7 @@ describe("buildBaseQuery", () => {
       });
 
       expect(result.anchor.parts.where).to.equal(
-        `([this].Area > 5) AND (ft.flag = 1) AND ([this].[Length] = :${ECSQL_PREFIX}vf0)`,
+        `WHERE ([this].Area > 5) AND (ft.flag = 1) AND ([this].[Length] = :${ECSQL_PREFIX}vf0)`,
       );
     });
   });
@@ -780,7 +782,7 @@ describe("buildBaseQuery", () => {
           OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
         `),
       );
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
     });
 
     it("de-duplicates filter-referenced paths and ignores direct fields", async () => {
@@ -871,7 +873,7 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
       expect(result.anchor.parts.joins).to.include("JOIN filterer_table ft");
       expect(result.anchor.parts.joins).to.include("OUTER JOIN [TestSchema].[Target]");
-      expect(result.anchor.parts.where).to.equal("(ft.flag = 1) AND (this.Flag = 1)");
+      expect(result.anchor.parts.where).to.equal("WHERE (ft.flag = 1) AND (this.Flag = 1)");
     });
 
     it("isolates a 1:many path (by schema multiplicity) into its own inner-joined group", async () => {
@@ -1029,7 +1031,7 @@ describe("buildBaseQuery", () => {
 
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          (${joinedPredicates}) AND (
+          WHERE (${joinedPredicates}) AND (
             (
               SELECT COUNT(*) = 0 OR COUNT([${targetAlias(overflowPath)}].[Name]) < COUNT(*)
               FROM [TestSchema].[Rel21] [${relationshipAlias(overflowPath)}]
@@ -1077,7 +1079,7 @@ describe("buildBaseQuery", () => {
         expect(result.anchor.parts.joins).to.equal("");
         expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
           trimWhitespace(`
-            EXISTS (
+            WHERE EXISTS (
               SELECT 1
               FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
               INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
@@ -1126,7 +1128,7 @@ describe("buildBaseQuery", () => {
         expect(result.anchor.parts.joins).to.equal("");
         expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
           trimWhitespace(`
-          EXISTS (
+          WHERE EXISTS (
             SELECT 1
             FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
@@ -1165,7 +1167,7 @@ describe("buildBaseQuery", () => {
 
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          ([${ECSQL_PREFIX}t1].[Name] = :${ECSQL_PREFIX}vf0) AND (
+          WHERE ([${ECSQL_PREFIX}t1].[Name] = :${ECSQL_PREFIX}vf0) AND (
             EXISTS (
               SELECT 1
               FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
@@ -1237,7 +1239,7 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.equal("");
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          EXISTS (
+          WHERE EXISTS (
             SELECT 1
             FROM [TestSchema].[ManyNav] [${ECSQL_PREFIX}t0]
             WHERE [${ECSQL_PREFIX}t0].[Owner].[Id] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0)
@@ -1268,7 +1270,7 @@ describe("buildBaseQuery", () => {
       // A relationship-class property resolves against the step's relationship alias, not the target.
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          EXISTS (
+          WHERE EXISTS (
             SELECT 1
             FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
@@ -1302,7 +1304,7 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.paths).to.deep.equal([]);
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          EXISTS (
+          WHERE EXISTS (
             SELECT 1
             FROM [TestSchema].[RelOne] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[One] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
@@ -1345,7 +1347,7 @@ describe("buildBaseQuery", () => {
       const key = "TestSchema.Primary-[TestSchema.Rel39]->TestSchema.Target39";
       const aliases = result.anchor.parts.relatedClassAliases.get(key);
       expect(aliases).to.not.be.undefined;
-      expect(result.anchor.parts.where).to.equal(`[${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
     });
 
     it("evaluates an `is-null` filter on a 1:many path as no-related-instance-or-null-value, via a single aggregate scan", async () => {
@@ -1366,7 +1368,7 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.equal("");
       expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
         trimWhitespace(`
-          (
+          WHERE (
             SELECT COUNT(*) = 0 OR COUNT([${ECSQL_PREFIX}t0].[Name]) < COUNT(*)
             FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
@@ -1392,7 +1394,7 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([path]);
       expect(result.additional).to.be.undefined;
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
-      expect(result.anchor.parts.where).to.equal(`[${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
+      expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
       // A single link-table path renders exactly two `OUTER JOIN`s; a duplicated join would double that.
       expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(2);
     });

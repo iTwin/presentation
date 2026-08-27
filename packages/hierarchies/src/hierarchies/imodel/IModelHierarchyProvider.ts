@@ -30,6 +30,7 @@ import { assert, BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import {
   createDefaultValueFormatter,
   createIModelInstanceLabelSelectClauseFactory,
+  eachValueFrom,
   formatConcatenatedValue,
   InstanceKey,
   normalizeFullClassName,
@@ -45,7 +46,6 @@ import {
   createNodeIdentifierForLogging,
   hasChildren,
 } from "../internal/Common.js";
-import { eachValueFrom } from "../internal/EachValueFrom.js";
 import { doLog, log } from "../internal/LoggingUtils.js";
 import { partition } from "../internal/operators/Partition.js";
 import { reduceToMergeMapList } from "../internal/operators/ReduceToMergeMap.js";

@@ -146,6 +146,9 @@ interface CreateRelationshipPathJoinClauseProps {
 function createRelationshipPathJoinInfo(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinInfo>;
 
 // @public
+export function eachValueFrom<T>(source: Subscribable<T>): AsyncIterableIterator<T>;
+
+// @public
 export namespace EC {
     export type ArrayProperty = StructArrayProperty | EnumerationArrayProperty | PrimitiveArrayProperty;
     export interface ArrayPropertyAttributes {
@@ -733,6 +736,17 @@ export interface StructValueDescriptor {
     // (undocumented)
     kind: "struct";
     members: StructMember[];
+}
+
+// @public
+interface Subscribable<T> {
+    subscribe(observer: {
+        next: (value: T) => void;
+        error: (reason: unknown) => void;
+        complete: () => void;
+    }): {
+        unsubscribe: () => void;
+    };
 }
 
 // @public

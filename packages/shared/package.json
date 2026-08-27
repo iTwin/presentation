@@ -53,6 +53,7 @@
     "eslint": "catalog:build-tools",
     "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
+    "rxjs": "catalog:rxjs",
     "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"

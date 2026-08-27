@@ -41,7 +41,7 @@ interface BaseQueryParts {
   from: string;
   /** IdSet join + merged relationship-path joins + query-filterer joins. */
   joins: string;
-  /** ANDed WHERE conditions (no `WHERE` keyword), or undefined. */
+  /** Complete WHERE clause with ANDed conditions, or undefined. */
   where?: string;
   bindings?: Record<string, ECSqlBinding>;
   /** Alias of the primary class in the FROM clause. Always `"this"`. */
@@ -324,7 +324,9 @@ export async function buildBaseQuery(
       }
     }
 
-    const where = whereConditions.length > 1 ? whereConditions.map((c) => `(${c})`).join(" AND ") : whereConditions[0];
+    const whereConditionsClause =
+      whereConditions.length > 1 ? whereConditions.map((c) => `(${c})`).join(" AND ") : whereConditions[0];
+    const where = whereConditionsClause && `WHERE ${whereConditionsClause}`;
     return {
       from,
       joins: joinFragments.join("\n"),

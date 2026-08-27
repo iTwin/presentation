@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResolvablePromise } from "presentation-test-utilities";
+import { collect, ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { createContentProvider, resolveContentSources } from "../content/Content.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "./MetadataStubs.js";
@@ -31,6 +31,25 @@ function createSizeIModelAccess(props: { schemaClasses?: EC.Class[]; counts: Arr
       }
     })(),
   );
+  return {
+    ...createSchemaAccess(props.schemaClasses ?? [createEntityClass({ fullName: "Schema.A" })]),
+    createQueryReader,
+  };
+}
+
+function createInstanceKeysIModelAccess(props: {
+  schemaClasses?: EC.Class[];
+  keyBatches: Array<Array<{ id: string; className: string }>>;
+}) {
+  const keyBatches = props.keyBatches.map((batch) => [...batch]);
+  const createQueryReader = vi.fn(() => {
+    const sourceKeys = keyBatches.shift() ?? [];
+    return (async function* () {
+      for (const key of sourceKeys) {
+        yield { 0: key.id, 1: key.className };
+      }
+    })();
+  });
   return {
     ...createSchemaAccess(props.schemaClasses ?? [createEntityClass({ fullName: "Schema.A" })]),
     createQueryReader,
@@ -180,6 +199,80 @@ describe("createContentProvider", () => {
       const provider = createContentProvider({ imodelAccess: sizeIModelAccess, sources: [createSource("Schema.A")] });
 
       await expect(provider.getSize()).resolves.to.equal(0);
+    });
+  });
+
+  describe("getInstanceKeys", () => {
+    it("queries a source without building its descriptor", async () => {
+      const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x1", className: "Schema.A" }]] });
+      const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
+
+      await expect(collect(provider.getInstanceKeys())).resolves.to.deep.equal([{ id: "0x1", className: "Schema.A" }]);
+      expect(keysIModelAccess.createQueryReader).toHaveBeenCalledOnce();
+      expect(keysIModelAccess.createQueryReader).toHaveBeenCalledWith(
+        {
+          ecsql: "SELECT [this].[ECInstanceId], ec_classname([this].[ECClassId], 's.c') FROM [Schema].[A] [this]",
+          bindings: undefined,
+        },
+        { rowFormat: "Indexes" },
+      );
+    });
+
+    it("includes value filters in an instance-key query", async () => {
+      const length: PropertyField = {
+        kind: "property",
+        id: "Schema.A.Length",
+        label: "Length",
+        type: { kind: "primitive", type: "Double" },
+        propertyClassName: "Schema.A",
+        propertyName: "Length",
+        pathFromTarget: [],
+        valueClassNames: ["Schema.A"],
+        primaryClassNames: ["Schema.A"],
+        selectorId: "Schema.A.Length",
+      };
+      const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });
+      const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
+
+      await expect(
+        collect(provider.getInstanceKeys({ filters: [{ field: length, operator: "is-equal", value: 10 }] })),
+      ).resolves.to.deep.equal([{ id: "0x2", className: "Schema.A" }]);
+      expect(keysIModelAccess.createQueryReader).toHaveBeenCalledWith(
+        {
+          ecsql:
+            "SELECT [this].[ECInstanceId], ec_classname([this].[ECClassId], 's.c') FROM [Schema].[A] [this] WHERE [this].[Length] = :pres_vf0",
+          bindings: { ["pres_vf0"]: { type: "double", value: 10 } },
+        },
+        { rowFormat: "Indexes" },
+      );
+    });
+
+    it("yields keys from separate source queries", async () => {
+      const keysIModelAccess = createInstanceKeysIModelAccess({
+        keyBatches: [[{ id: "0x1", className: "Schema.A" }], [{ id: "0x2", className: "Schema.B" }]],
+      });
+      const provider = createContentProvider({
+        imodelAccess: keysIModelAccess,
+        sources: [createSource("Schema.A"), createSource("Schema.B")],
+      });
+
+      const keys = await collect(provider.getInstanceKeys());
+      expect(keys).toHaveLength(2);
+      expect(keys).toEqual(
+        expect.arrayContaining([
+          { id: "0x1", className: "Schema.A" },
+          { id: "0x2", className: "Schema.B" },
+        ]),
+      );
+      expect(keysIModelAccess.createQueryReader).toHaveBeenCalledTimes(2);
+    });
+
+    it("does not query when there are no sources", async () => {
+      const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [] });
+      const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [] });
+
+      await expect(collect(provider.getInstanceKeys())).resolves.to.deep.equal([]);
+      expect(keysIModelAccess.createQueryReader).not.toHaveBeenCalled();
     });
   });
 });

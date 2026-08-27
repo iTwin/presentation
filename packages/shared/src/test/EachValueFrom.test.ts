@@ -6,7 +6,7 @@
 import { collect } from "presentation-test-utilities";
 import { from, Subject } from "rxjs";
 import { describe, expect, it } from "vitest";
-import { eachValueFrom } from "../../hierarchies/internal/EachValueFrom.js";
+import { eachValueFrom } from "../shared/EachValueFrom.js";
 
 describe("eachValueFrom", () => {
   it("returns observable values when they're emitted quicker than consumed", async () => {

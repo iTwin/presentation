@@ -263,6 +263,8 @@ export interface ContentProvider {
   /**
    * Get instance keys for all items matching the configured sources.
    *
+   * A key may be returned more than once when configured sources overlap.
+   *
    * @param options - Optional filters (affects which keys are returned).
    */
   getInstanceKeys(options?: Pick<ContentRequestOptions, "filters">): AsyncIterable<InstanceKey>;
