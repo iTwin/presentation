@@ -69,36 +69,38 @@ export async function collectCategories(props: {
   //    source's target); `categories` returned there apply just the same as a base contribution's do.
   //    `getAnchorContribution` is memoized per `(provider, anchor class)`, so repeated anchors across
   //    groups and sources cost a single provider invocation.
-  const contributed = await collectInParallel({
-    inputs: sources,
-    expand: async (source) =>
-      collectInParallel({
-        inputs: imodelFieldsProviders,
-        expand: async (provider) => {
-          const contribution = await getContribution({ provider, target: source.target });
-          if (!contribution?.categories) {
-            return [];
-          }
-          const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
-          return Object.values(contribution.categories).map((category) => ({ category, priority }));
-        },
-      }),
-  });
-  const nestedContributed = await collectInParallel({
-    inputs: sources.flatMap((source) => source.resolvedDeclarations),
-    expand: async (group) => {
-      const provider = group.nested ? imodelFieldsProvidersById.get(group.providerId) : undefined;
-      if (!group.nested || !provider) {
-        return [];
-      }
-      const contribution = await getAnchorContribution({ provider, anchorClassName: group.nested.anchorClassName });
-      if (!contribution?.categories) {
-        return [];
-      }
-      const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
-      return Object.values(contribution.categories).map((category) => ({ category, priority }));
-    },
-  });
+  const [contributed, nestedContributed] = await Promise.all([
+    collectInParallel({
+      inputs: sources,
+      expand: async (source) =>
+        collectInParallel({
+          inputs: imodelFieldsProviders,
+          expand: async (provider) => {
+            const contribution = await getContribution({ provider, target: source.target });
+            if (!contribution?.categories) {
+              return [];
+            }
+            const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
+            return Object.values(contribution.categories).map((category) => ({ category, priority }));
+          },
+        }),
+    }),
+    collectInParallel({
+      inputs: sources.flatMap((source) => source.resolvedDeclarations),
+      expand: async (group) => {
+        const provider = group.nested ? imodelFieldsProvidersById.get(group.providerId) : undefined;
+        if (!group.nested || !provider) {
+          return [];
+        }
+        const contribution = await getAnchorContribution({ provider, anchorClassName: group.nested.anchorClassName });
+        if (!contribution?.categories) {
+          return [];
+        }
+        const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
+        return Object.values(contribution.categories).map((category) => ({ category, priority }));
+      },
+    }),
+  ]);
   const externalContributed = externalFieldsProviders.flatMap((provider) =>
     provider.categories
       ? Object.values(provider.categories).map((category) => ({
