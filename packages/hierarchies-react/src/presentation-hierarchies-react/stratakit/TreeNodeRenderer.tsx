@@ -3,29 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./TreeNodeRenderer.css";
-
-import {
-  cloneElement,
-  forwardRef,
-  isValidElement,
-  memo,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { CircularProgress, FormHelperText, IconButton, Menu, TextField, Typography } from "@mui/material";
-import { Icon } from "@stratakit/mui";
+import { cloneElement, forwardRef, isValidElement, memo, useCallback, useMemo, useState } from "react";
+import { CircularProgress, Menu } from "@mui/material";
 import { unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
+import { LabelEditor } from "./LabelEditor.js";
 import { TreeActionBase } from "./TreeAction.js";
 import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
 
-import checkmarkSvg from "@stratakit/icons/checkmark.svg";
-import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 
 import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, RefAttributes } from "react";
@@ -230,90 +215,6 @@ export const PlaceholderNode: FC<
     },
   ),
 );
-
-function LabelEditor({
-  initialLabel,
-  labelValidationHint,
-  onChange,
-  onCancel,
-  validate,
-}: {
-  initialLabel: string;
-  labelValidationHint?: string;
-  onChange?: (newLabel: string) => void;
-  onCancel?: () => void;
-  validate?: (newLabel: string) => boolean;
-}) {
-  const translate = useTranslation();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [newLabelValue, setNewLabelValue] = useState(initialLabel);
-  const [hasError, setHasError] = useState<boolean>(false);
-  const handleLabelChange = () => {
-    if (validate && !validate(newLabelValue)) {
-      setHasError(true);
-      return;
-    }
-
-    if (initialLabel !== newLabelValue) {
-      onChange?.(newLabelValue);
-      return;
-    }
-    onCancel?.();
-  };
-
-  const cancelLabelChange = () => {
-    setNewLabelValue(initialLabel);
-    onCancel?.();
-  };
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, []);
-
-  const canRename = newLabelValue && newLabelValue !== initialLabel && !hasError;
-  const inputId = useId();
-
-  return (
-    <div key={initialLabel} className="phr-node-label-editor">
-      <div className="phr-node-label-editor-input-row">
-        <TextField
-          fullWidth
-          error={hasError}
-          size="small"
-          id={inputId}
-          inputRef={inputRef}
-          slotProps={{ htmlInput: { "aria-label": translate("newLabel") } }}
-          value={newLabelValue}
-          onChange={(event) => {
-            setNewLabelValue(event.target.value);
-            setHasError(false);
-          }}
-          onKeyUp={(event) => {
-            if (event.key === "Enter") {
-              handleLabelChange();
-            } else if (event.key === "Escape") {
-              cancelLabelChange();
-            }
-          }}
-        />
-        <IconButton aria-label={translate("cancel")} onClick={cancelLabelChange} size="small">
-          <Icon href={dismissSvg} />
-        </IconButton>
-        <IconButton aria-label={translate("confirm")} onClick={handleLabelChange} disabled={!canRename} size="small">
-          <Icon href={checkmarkSvg} />
-        </IconButton>
-      </div>
-      {labelValidationHint !== undefined ? (
-        <FormHelperText error={hasError} style={{ display: "flex" }}>
-          <Typography variant="caption">{labelValidationHint}</Typography>
-        </FormHelperText>
-      ) : undefined}
-    </div>
-  );
-}
 
 function injectActionVariant(actions: ReactNode[], variant: TreeActionBaseAttributes["variant"]) {
   return actions
