@@ -264,6 +264,21 @@ describe("createECSchemaProvider", () => {
     expect(first).toBe(second);
   });
 
+  it("reuses the same `EC.Class` instance for repeated class lookups", async () => {
+    const schemaView = createMockSchemaView(
+      new Map([["TestSchema", { name: "TestSchema", classes: new Map([["TestClass", { name: "TestClass", schemaName: "TestSchema" }]]) }]]),
+    );
+    const getSchemaView = vi.fn(async () => schemaView);
+    const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
+    const provider = createECSchemaProvider(imodel);
+
+    const schema = await provider.getSchema("TestSchema");
+    const first = schema!.getClass("TestClass");
+    const second = schema!.getClass("TestClass");
+    expect(first).toBeDefined();
+    expect(first).toBe(second);
+  });
+
   it("issues a new request when the cached schema view is outdated", async () => {
     const view1 = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
     const view2 = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
@@ -1599,7 +1614,7 @@ function createMockSchemaViewContext({
     classDerivesFrom: vi.fn(),
     getDerivedClassNames: vi.fn().mockReturnValue(derivedClassNames ?? []),
   };
-  return { schemaView, classHierarchyResolver };
+  return { schemaView, classHierarchyResolver, classCache: new Map() };
 }
 
 function createMockSchemaView(schemas: Map<string, MockSchemaProps>): PublicSchemaView {

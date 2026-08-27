@@ -126,11 +126,15 @@ export function createECSchemaProvider(
   // (a newer view has replaced it), at which point the next access refreshes it.
   const schemaCache = new Map<string, Promise<{ schemaView: PublicCoreSchemaView; schema: EC.Schema | undefined }>>();
   async function fetchSchema(name: string) {
+    // Cache built `EC.Class` objects (by full name) for this schema, so repeated accesses (e.g. the
+    // `EC.Property.class` getter, invoked once per grouped node) reuse a single class instead of rebuilding it from
+    // the schema view every time. Scoped to the fetch so a later refetch (when the view is outdated) starts fresh.
+    const classCache = new Map<string, EC.Class>();
     const entry = (async () => {
       const { classHierarchyResolver, schemaView } = await getSchemaProviderContext(name);
       const svSchema = schemaView.getSchema(name);
       const schema = svSchema
-        ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver })
+        ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver, classCache })
         : undefined;
       return { schemaView, schema };
     })();
@@ -171,6 +175,8 @@ interface SchemaViewProviderContext {
   schemaView: PublicCoreSchemaView;
   classHierarchyResolver: ECClassHierarchyResolver;
   schema: EC.Schema;
+  /** Shared cache of built `EC.Class` objects keyed by full class name, to avoid rebuilding them on every access. */
+  classCache: Map<string, EC.Class>;
 }
 
 export function createECSchemaFromSchemaView(
@@ -184,7 +190,7 @@ export function createECSchemaFromSchemaView(
     isHidden: svSchema.isHidden,
     getClass(name) {
       const svClass = svSchema.getClass(name);
-      return svClass ? createECClassFromSchemaView(svClass, { ...context, schema: ecSchema }) : undefined;
+      return svClass ? getECClassFromSchemaView(svClass, { ...context, schema: ecSchema }) : undefined;
     },
     getEnumeration(name) {
       const svEnum = svSchema.getEnumeration(name);
@@ -200,6 +206,22 @@ export function createECSchemaFromSchemaView(
     },
   };
   return ecSchema;
+}
+
+/**
+ * Cache-aware entry point for building an `EC.Class` from a schema view class: returns a previously built class for
+ * the same full name, otherwise builds one via `createECClassFromSchemaView` and stores it in the context's cache.
+ */
+function getECClassFromSchemaView(svClass: CoreSchemaView.Class, context: SchemaViewProviderContext): EC.Class {
+  // Key by the schema view's raw full name: it is a stable identifier for the class, so we avoid normalizing it on
+  // every (hot) cache hit. `createECClassFromSchemaView` normalizes once, on a miss, for the `EC.Class.fullName` field.
+  const cached = context.classCache.get(svClass.fullName);
+  if (cached) {
+    return cached;
+  }
+  const ecClass = createECClassFromSchemaView(svClass, context);
+  context.classCache.set(svClass.fullName, ecClass);
+  return ecClass;
 }
 
 export function createECClassFromSchemaView(
@@ -229,7 +251,7 @@ export function createECClassFromSchemaView(
     },
     get baseClass(): EC.Class | undefined {
       return svClass.baseClass
-        ? createECClassFromSchemaView(svClass.baseClass, {
+        ? getECClassFromSchemaView(svClass.baseClass, {
             ...context,
             schema: useOrCreateSchema(svClass.baseClass.schema, context),
           })
@@ -261,7 +283,7 @@ export function createECClassFromSchemaView(
       ...ecClass,
       getMixins(): EC.Mixin[] {
         return svClass.mixins.map((m) =>
-          createECClassFromSchemaView(m, { ...context, schema: useOrCreateSchema(m.schema, context) }),
+          getECClassFromSchemaView(m, { ...context, schema: useOrCreateSchema(m.schema, context) }),
         );
       },
     };
@@ -311,7 +333,7 @@ function createECRelConstraintFromSchemaView(
     polymorphic: svConstraint.polymorphic,
     get constraintClasses() {
       return svConstraint.constraintClasses.map((c) =>
-        createECClassFromSchemaView(c, { ...context, schema: useOrCreateSchema(c.schema, context) }),
+        getECClassFromSchemaView(c, { ...context, schema: useOrCreateSchema(c.schema, context) }),
       );
     },
     get abstractConstraint(): EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined {
@@ -323,7 +345,7 @@ function createECRelConstraintFromSchemaView(
       if (!svClass) {
         return undefined;
       }
-      return createECClassFromSchemaView(svClass, { ...context, schema: useOrCreateSchema(svClass.schema, context) });
+      return getECClassFromSchemaView(svClass, { ...context, schema: useOrCreateSchema(svClass.schema, context) });
     },
   };
 }
@@ -339,7 +361,7 @@ export function createECPropertyFromSchemaView(
     // in which case we fall back to the class the property was enumerated from.
     get class(): EC.Class {
       return svProp.declaringClass
-        ? createECClassFromSchemaView(svProp.declaringClass, {
+        ? getECClassFromSchemaView(svProp.declaringClass, {
             ...context,
             schema: useOrCreateSchema(svProp.declaringClass.schema, context),
           })
@@ -381,7 +403,7 @@ export function createECPropertyFromSchemaView(
         return svProp.direction === StrengthDirection.Forward ? "Forward" : "Backward";
       },
       get relationshipClass(): EC.RelationshipClass {
-        return createECClassFromSchemaView(svProp.relationshipClass, {
+        return getECClassFromSchemaView(svProp.relationshipClass, {
           ...context,
           schema: useOrCreateSchema(svProp.relationshipClass.schema, context),
         }) as EC.RelationshipClass;
@@ -455,7 +477,7 @@ export function createECPropertyFromSchemaView(
         return svProp.isArray();
       },
       get structClass(): EC.StructClass {
-        return createECClassFromSchemaView(svProp.structClass, {
+        return getECClassFromSchemaView(svProp.structClass, {
           ...context,
           schema: useOrCreateSchema(svProp.structClass.schema, context),
         });
