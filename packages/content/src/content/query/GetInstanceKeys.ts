@@ -41,7 +41,7 @@ export function getInstanceKeys(props: {
               "SELECT [this].[ECInstanceId], ec_classname([this].[ECClassId], 's.c')",
               parts.from,
               parts.joins,
-              parts.where && `WHERE ${parts.where}`,
+              parts.where,
             ]
               .filter((fragment) => fragment)
               .join(" "),

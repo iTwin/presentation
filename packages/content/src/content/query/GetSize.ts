@@ -36,9 +36,7 @@ export async function getSize(props: {
       mergeMap(({ anchor: { parts } }) => {
         const reader = props.imodelAccess.createQueryReader(
           {
-            ecsql: ["SELECT COUNT(*)", parts.from, parts.joins, parts.where && `WHERE ${parts.where}`]
-              .filter((fragment) => fragment)
-              .join(" "),
+            ecsql: ["SELECT COUNT(*)", parts.from, parts.joins, parts.where].filter((fragment) => fragment).join(" "),
             bindings: parts.bindings,
           },
           { rowFormat: "Indexes" },
