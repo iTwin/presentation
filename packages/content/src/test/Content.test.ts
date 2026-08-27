@@ -417,9 +417,9 @@ describe("resolveContentSources", () => {
       ]);
     });
 
-    it("projects the first step's relationship class out of the anchoring subquery for multi-step paths", async () => {
+    it("projects the first step's relationship class and instance out of the anchoring subquery for multi-step paths", async () => {
       // A 2-step path makes the subquery-anchor strategy applicable; its first step's relationship
-      // class is resolved inside the anchoring subquery and projected out as `FirstStepRelClassId`.
+      // class and instance are resolved inside the anchoring subquery.
       const path: RelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
@@ -449,7 +449,10 @@ describe("resolveContentSources", () => {
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
-      expect(queries.some((ecsql) => ecsql.includes("[FirstStepRelClassId]"))).to.equal(true);
+      const anchoringQuery = queries.find((ecsql) => ecsql.includes("[FirstStepRelClassId]"));
+      expect(anchoringQuery).to.not.equal(undefined);
+      expect(anchoringQuery).to.include("[s0].[ECInstanceId] [FirstHopInstanceId]");
+      expect(anchoringQuery).to.include("[reachable].[FirstHopInstanceId] = [s0].[ECInstanceId]");
     });
   });
 

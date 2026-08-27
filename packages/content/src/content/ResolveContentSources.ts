@@ -165,12 +165,12 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       FROM ${ECSql.createClassSelector(firstHopTarget)} [${firstHopAlias}]
       ${remainingJoins}
       INNER JOIN (
-        SELECT [${firstHopAlias}].[ECClassId] [FirstHopClassId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
+        SELECT [${firstHopAlias}].[ECInstanceId] [FirstHopInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
         FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
         ${firstStepJoins} ${targetFilter.joins?.join("\n") ?? ""}
         ${instanceFilterClauses}
-        GROUP BY [${firstHopAlias}].[ECClassId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
-      ) [reachable] ON [reachable].[FirstHopClassId] = [${firstHopAlias}].[ECClassId]
+        GROUP BY [${firstHopAlias}].[ECInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
+      ) [reachable] ON [reachable].[FirstHopInstanceId] = [${firstHopAlias}].[ECInstanceId]
       GROUP BY  [reachable].[FirstStepRelClassId], ${buildClassIdColumns(classSelectors)}
     `;
 
