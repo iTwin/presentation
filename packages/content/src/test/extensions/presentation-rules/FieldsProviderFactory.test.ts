@@ -152,9 +152,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(provider.applyRecursively).toEqual(true);
     });
 
-    it("leaves applyRecursively undefined when rule.applyOnNestedContent is false", () => {
+    it("maps rule.applyOnNestedContent === false onto the provider's applyRecursively", () => {
       const provider = createFieldsProviderFromContentModifierRule({ rule: { applyOnNestedContent: false } });
-      expect(provider.applyRecursively).toBeUndefined();
+      expect(provider.applyRecursively).toEqual(false);
     });
 
     it("leaves applyRecursively undefined when rule has no applyOnNestedContent", () => {

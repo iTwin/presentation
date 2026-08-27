@@ -295,7 +295,7 @@ interface GetDistinctFieldValuesProps {
 
 // @public
 interface IModelFieldsProvider extends BaseFieldsProvider {
-    applyRecursively?: true;
+    applyRecursively?: boolean;
     getContribution(props: {
         imodelAccess: ECSchemaProvider;
         target: ContentTarget;

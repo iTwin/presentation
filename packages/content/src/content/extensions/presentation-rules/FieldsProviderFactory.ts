@@ -60,7 +60,7 @@ export function createFieldsProviderFromContentModifierRule(
   return {
     id: `FieldsProviderFromContentModifierRule_${hashString(stableStringify(rule)).padStart(8, "0")}_v${FACTORY_VERSION}`,
     priority: rule.priority,
-    ...(rule.applyOnNestedContent === true ? { applyRecursively: true as const } : {}),
+    applyRecursively: rule.applyOnNestedContent,
     async getContribution({ imodelAccess, target }) {
       if (!(await checkRequiredSchemas(imodelAccess, rule.requiredSchemas))) {
         return undefined;

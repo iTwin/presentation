@@ -35,7 +35,7 @@ describe("Content", () => {
       await terminate();
     });
 
-    async function buildWallSchema(builder: ECDbBuilder, testName: string) {
+    async function importWallSchema(builder: ECDbBuilder, testName: string) {
       return importSchema(
         testName,
         builder,
@@ -82,7 +82,7 @@ describe("Content", () => {
     }
 
     /** Provider A: `Wall --[HasPhysicalType]--> WallType`, applied on the direct target only. */
-    function createWallToTypeProvider(schema: Awaited<ReturnType<typeof buildWallSchema>>) {
+    function createWallToTypeProvider(schema: Awaited<ReturnType<typeof importWallSchema>>) {
       return defineIModelFieldsProvider({
         id: "wallToType_v1",
         async getContribution({ target }) {
@@ -112,7 +112,7 @@ describe("Content", () => {
      * entirely in terms of `target.primaryClass` — it never mentions `Wall` and has no idea which
      * wall (if any) led to the `WallType` it's being invoked for.
      */
-    function createTypeToAspectProvider(schema: Awaited<ReturnType<typeof buildWallSchema>>) {
+    function createTypeToAspectProvider(schema: Awaited<ReturnType<typeof importWallSchema>>) {
       return defineIModelFieldsProvider({
         id: "typeToAspect_v1",
         applyRecursively: true,
@@ -139,7 +139,7 @@ describe("Content", () => {
 
     it("loads and scopes nested aspect fields when the parent excludes a target property", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
-        const s = await buildWallSchema(builder, testName);
+        const s = await importWallSchema(builder, testName);
         const wall1 = builder.insertInstance(s.items.Wall.fullName, { name: "Wall1" });
         const wallType1 = builder.insertInstance(s.items.WallType.fullName, { typeName: "Type1" });
         const aspectA = builder.insertInstance(s.items.WallTypeAspectA.fullName, { propA: "a" });
@@ -189,7 +189,7 @@ describe("Content", () => {
 
     it("resolves every concrete aspect subclass reachable when the request is not scoped to a single wall", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
-        const s = await buildWallSchema(builder, testName);
+        const s = await importWallSchema(builder, testName);
         const wall1 = builder.insertInstance(s.items.Wall.fullName, { name: "Wall1" });
         const wallType1 = builder.insertInstance(s.items.WallType.fullName, { typeName: "Type1" });
         const aspectA = builder.insertInstance(s.items.WallTypeAspectA.fullName, { propA: "a" });
@@ -220,7 +220,7 @@ describe("Content", () => {
 
     it("does not nest aspect fields when the aspect provider is not opted into applyRecursively", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
-        const s = await buildWallSchema(builder, testName);
+        const s = await importWallSchema(builder, testName);
         const wall1 = builder.insertInstance(s.items.Wall.fullName, { name: "Wall1" });
         const wallType1 = builder.insertInstance(s.items.WallType.fullName, { typeName: "Type1" });
         const aspectA = builder.insertInstance(s.items.WallTypeAspectA.fullName, { propA: "a" });
@@ -231,27 +231,7 @@ describe("Content", () => {
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       const providerA = createWallToTypeProvider(setup.schema);
       // Same declaration as `createTypeToAspectProvider`, but never opts into nested application.
-      const providerBNotOptedIn = defineIModelFieldsProvider({
-        id: "typeToAspect_v1",
-        async getContribution({ target }) {
-          if (target.primaryClass !== setup.schema.items.WallType.fullName) {
-            return undefined;
-          }
-          return {
-            relatedProperties: [
-              {
-                path: [
-                  {
-                    sourceClassName: setup.schema.items.WallType.fullName,
-                    targetClassName: setup.schema.items.Aspect.fullName,
-                    relationshipName: setup.schema.items.HasUniqueAspect.fullName,
-                  },
-                ],
-              },
-            ],
-          };
-        },
-      });
+      const providerBNotOptedIn = { ...createTypeToAspectProvider(setup.schema), applyRecursively: false };
 
       const descriptor = await buildDescriptor({
         imodelAccess,

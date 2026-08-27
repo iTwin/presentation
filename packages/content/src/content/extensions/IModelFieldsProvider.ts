@@ -72,7 +72,7 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
    * relationship), a given `(provider, anchor class)` pair is applied at most once per expansion
    * branch.
    */
-  applyRecursively?: true;
+  applyRecursively?: boolean;
 }
 
 /**
