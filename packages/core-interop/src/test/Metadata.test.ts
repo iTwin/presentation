@@ -266,7 +266,12 @@ describe("createECSchemaProvider", () => {
 
   it("reuses the same `EC.Class` instance for repeated class lookups", async () => {
     const schemaView = createMockSchemaView(
-      new Map([["TestSchema", { name: "TestSchema", classes: new Map([["TestClass", { name: "TestClass", schemaName: "TestSchema" }]]) }]]),
+      new Map([
+        [
+          "TestSchema",
+          { name: "TestSchema", classes: new Map([["TestClass", { name: "TestClass", schemaName: "TestSchema" }]]) },
+        ],
+      ]),
     );
     const getSchemaView = vi.fn(async () => schemaView);
     const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
