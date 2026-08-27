@@ -1293,6 +1293,11 @@ describe("resolveContentSources", () => {
       targetClassName: "TestSchema.ClassB",
       relationshipName: "TestSchema.RelAB",
     };
+    const aToC: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.ClassA",
+      targetClassName: "TestSchema.ClassC",
+      relationshipName: "TestSchema.RelAC",
+    };
     const bToC: RelationshipPath[number] = {
       sourceClassName: "TestSchema.ClassB",
       targetClassName: "TestSchema.ClassC",
@@ -1330,15 +1335,29 @@ describe("resolveContentSources", () => {
       return n;
     }
 
-    // Routes a query to its rows purely by how many path steps it references — sufficient whenever a
-    // test resolves at most one distinct declaration per step count.
-    function routeByStepCount(rowsByStepCount: Record<number, ECSqlQueryRow[]>) {
+    // Routes a query to its rows purely by how many path steps it references and in which order they are queried
+    // Each entry in `rowsByStepCount` is a queue of rows for a given step count; the function returns the next available row for the queried step count.
+    function routeByStepCount(rowsByStepCount: Record<number, ECSqlQueryRow[][]>) {
+      const invocations = new Map<number, number>();
       return (ecsql: string) => {
         const steps = countSteps(ecsql);
         if (!(steps in rowsByStepCount)) {
           throw new Error(`No ECSQL rows are setup for paths with ${steps} steps.`);
         }
-        return rowsByStepCount[steps];
+        const rows = rowsByStepCount[steps];
+        // up to 3 ecsql queries can be run for a particular paths. That depends on the number of steps in the path.
+        // wait for all 3 to happen before moving to the next result setup for this step count.
+        const stepInvocations = invocations.get(steps) ?? Math.min(steps, 3);
+        if (stepInvocations === 0) {
+          rows.shift();
+          invocations.delete(steps);
+        } else {
+          invocations.set(steps, stepInvocations - 1);
+        }
+        if (rows.length === 0) {
+          throw new Error(`No more ECSQL rows are available for paths with ${steps} steps.`);
+        }
+        return rows[0];
       };
     }
 
@@ -1353,9 +1372,17 @@ describe("resolveContentSources", () => {
       };
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
-          1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
           2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBC", "TestSchema.ClassC"),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
           ],
         }),
       });
@@ -1391,7 +1418,7 @@ describe("resolveContentSources", () => {
         },
       };
       const imodelAccess = createRoutedIModelAccess({
-        routeRows: routeByStepCount({ 1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")] }),
+        routeRows: routeByStepCount({ 1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]] }),
       });
 
       const [result] = await resolveContentSources({
@@ -1432,15 +1459,17 @@ describe("resolveContentSources", () => {
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
           3: [
-            row(
-              "TestSchema.ClassA",
-              "TestSchema.RelAB",
-              "TestSchema.ClassB",
-              "TestSchema.RelBC",
-              "TestSchema.ClassC",
-              "TestSchema.RelCD",
-              "TestSchema.ClassD",
-            ),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
           ],
         }),
       });
@@ -1477,7 +1506,7 @@ describe("resolveContentSources", () => {
         },
       };
       const imodelAccess = createRoutedIModelAccess({
-        routeRows: routeByStepCount({ 1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")] }),
+        routeRows: routeByStepCount({ 1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]] }),
       });
 
       await resolveContentSources({
@@ -1501,7 +1530,10 @@ describe("resolveContentSources", () => {
       };
       // The 1-step base path resolves, but the 2-step nested full path matches no instances.
       const imodelAccess = createRoutedIModelAccess({
-        routeRows: routeByStepCount({ 1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")], 2: [] }),
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+          2: [[]],
+        }),
       });
 
       const [result] = await resolveContentSources({
@@ -1538,20 +1570,30 @@ describe("resolveContentSources", () => {
       };
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
-          1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
           2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBC", "TestSchema.ClassC"),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
           ],
           3: [
-            row(
-              "TestSchema.ClassA",
-              "TestSchema.RelAB",
-              "TestSchema.ClassB",
-              "TestSchema.RelBC",
-              "TestSchema.ClassC",
-              "TestSchema.RelCD",
-              "TestSchema.ClassD",
-            ),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
           ],
         }),
       });
@@ -1643,7 +1685,15 @@ describe("resolveContentSources", () => {
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
           2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBC", "TestSchema.ClassC"),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
           ],
         }),
       });
@@ -1664,6 +1714,82 @@ describe("resolveContentSources", () => {
       });
     });
 
+    it("anchors nested expansion to same class reached by different paths", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToC] }, { path: [aToB, bToC] }],
+      });
+      const providerC: IModelFieldsProvider = {
+        id: "providerC_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          if (target.primaryClass !== "TestSchema.ClassC") {
+            return undefined;
+          }
+          return { relatedProperties: [{ path: [cToD] }] };
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAC", "TestSchema.ClassC")]],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerC] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
+      expect(nestedGroups).to.deep.equal([
+        {
+          providerId: "providerC_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 1 },
+        },
+        {
+          providerId: "providerC_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+        },
+      ]);
+    });
+
     it("skips a nested declaration with a custom `resolve` callback, applying only its non-custom siblings", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
       const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
@@ -1681,9 +1807,17 @@ describe("resolveContentSources", () => {
       };
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
-          1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
           2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBD", "TestSchema.ClassD"),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBD",
+                "TestSchema.ClassD",
+              ),
+            ],
           ],
         }),
       });
@@ -1726,9 +1860,20 @@ describe("resolveContentSources", () => {
       };
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
-          1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          1: [
+            [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+            [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          ],
           2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBC", "TestSchema.ClassC"),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
           ],
         }),
       });
@@ -1764,9 +1909,17 @@ describe("resolveContentSources", () => {
       };
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
-          1: [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
           2: [
-            row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB", "TestSchema.RelBC", "TestSchema.ClassC"),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
           ],
         }),
       });
@@ -1862,15 +2015,17 @@ describe("resolveContentSources", () => {
       const imodelAccess = createRoutedIModelAccess({
         routeRows: routeByStepCount({
           3: [
-            row(
-              "TestSchema.ClassA",
-              "TestSchema.RelAB",
-              "TestSchema.ClassB",
-              "TestSchema.RelBC",
-              "TestSchema.ClassC",
-              "TestSchema.RelCD",
-              "TestSchema.ClassD",
-            ),
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
           ],
         }),
       });
