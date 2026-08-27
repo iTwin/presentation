@@ -1333,7 +1333,13 @@ describe("resolveContentSources", () => {
     // Routes a query to its rows purely by how many path steps it references — sufficient whenever a
     // test resolves at most one distinct declaration per step count.
     function routeByStepCount(rowsByStepCount: Record<number, ECSqlQueryRow[]>) {
-      return (ecsql: string) => rowsByStepCount[countSteps(ecsql)] ?? [];
+      return (ecsql: string) => {
+        const steps = countSteps(ecsql);
+        if (!(steps in rowsByStepCount)) {
+          throw new Error(`No ECSQL rows are setup for paths with ${steps} steps.`);
+        }
+        return rowsByStepCount[steps];
+      };
     }
 
     it("applies an opted-in provider's contribution on another provider's resolved anchor", async () => {
