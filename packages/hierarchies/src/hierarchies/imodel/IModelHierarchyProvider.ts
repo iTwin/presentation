@@ -264,9 +264,12 @@ interface RequestContextProp {
 type WithSourceNameOverride<T> = T & { sourceName?: string };
 
 class IModelHierarchyProviderImpl implements HierarchyProvider {
-  private _imodels: Array<
-    MergedIModelHierarchyProviderProps["imodels"][number] & { nodeSelectClauseFactory: NodesQueryClauseFactory }
-  >;
+  private readonly _imodelProps: MergedIModelHierarchyProviderProps["imodels"];
+  private _imodels: Array<{
+    imodelAccess: IModelAccess;
+    imodelChanged?: Event<() => void>;
+    nodeSelectClauseFactory: NodesQueryClauseFactory;
+  }>;
   private _hierarchyChanged: BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _sourceHierarchyDefinition: RxjsHierarchyDefinition;
@@ -289,13 +292,8 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this.#componentId = Guid.createValue();
     this.#componentName = "IModelHierarchyProviderImpl";
     this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
-    this._imodels = props.imodels.map(({ imodelAccess, imodelChanged, instanceLabelSelectClauseFactory }) => {
-      if (!instanceLabelSelectClauseFactory) {
-        instanceLabelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
-      }
-      const nodeSelectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
-      return { imodelAccess, imodelChanged, nodeSelectClauseFactory };
-    });
+    this._imodelProps = props.imodels;
+    this._imodels = props.imodels.map((imodelProps) => this.#createIModelState(imodelProps));
     this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(
       props.hierarchyDefinition,
@@ -317,24 +315,34 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
     const imodelChangeSubscription = from(this._imodels)
       .pipe(
-        mergeMap(({ imodelAccess, imodelChanged }) =>
+        mergeMap(({ imodelAccess, imodelChanged }, index) =>
           imodelChanged
             ? fromEventPattern(
                 (handler) => imodelChanged.addListener(handler),
                 (handler) => imodelChanged.removeListener(handler),
-                () => imodelAccess,
+                () => ({ imodelKey: imodelAccess.imodelKey, index }),
               )
             : EMPTY,
         ),
       )
-      .subscribe(({ imodelKey }) => {
+      .subscribe(({ imodelKey, index }) => {
         this.invalidateHierarchyCache(`Data source changed: "${imodelKey}"`);
         this._dispose.next();
+        // The iModel's schemas may have changed, so re-create the query factories to drop their schema-derived caches.
+        this._imodels[index] = this.#createIModelState(this._imodelProps[index]);
         this._hierarchyChanged.raiseEvent({});
       });
     this._unsubscribe = () => {
       imodelChangeSubscription.unsubscribe();
     };
+  }
+
+  #createIModelState(imodelProps: MergedIModelHierarchyProviderProps["imodels"][number]) {
+    const { imodelAccess, imodelChanged } = imodelProps;
+    const instanceLabelSelectClauseFactory =
+      imodelProps.instanceLabelSelectClauseFactory ?? createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+    const nodeSelectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
+    return { imodelAccess, imodelChanged, nodeSelectClauseFactory };
   }
 
   public [Symbol.dispose]() {
