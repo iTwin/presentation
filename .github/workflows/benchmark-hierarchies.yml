@@ -8,6 +8,7 @@ on:
     paths:
       - apps/performance-tests/hierarchies/**
       - apps/performance-tests/util/**
+      - apps/performance-tests/package.json
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**
