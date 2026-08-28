@@ -42,7 +42,7 @@ export function run<T>(props: RunOptions<T>): void {
   const testFunc = async ({ task }: { task: { meta: TaskMeta } }) => {
     const blockHandler = new MainThreadBlocksDetector();
     const value = await props.setup();
-// Force a full GC after setup so every measured section starts from a clean heap.
+    // Force a full GC after setup so every measured section starts from a clean heap.
     // Otherwise leftover setup/module-eval garbage lingering in the young generation occasionally gets
     // promoted to old space once the load starts churning through short-lived per-node objects. That
     // bloats old space, enlarges the old-to-young remembered set, and makes every subsequent Scavenge
