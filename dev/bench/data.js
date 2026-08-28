@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787906175199,
+  "lastUpdate": 1787906202507,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Unified selection benchmark": [
@@ -48288,6 +48288,162 @@ window.BENCHMARK_DATA = {
             "value": 45,
             "unit": "ms",
             "extra": "count: 8\nmax: 45\np95: 45\nmedian: 30.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "62e255bc8ece789efb13aec9ea6f0704eccdab11",
+          "message": "Stabilize performance benchmarks by forcing GC before each measurement (#1517)\n\n* Stabilize performance benchmarks by forcing GC before each measurement\n\nThe hierarchy benchmarks showed a bimodal ~1.5-2x run-to-run variance. Its cause\nis a V8 GC promotion cascade: leftover setup garbage in the young generation\noccasionally gets promoted to old space when the measured load starts churning\nshort-lived per-node objects, bloating old space and making every subsequent\nScavenge an order of magnitude costlier.\n\nForce a full GC after setup (before the timed section) so each measurement starts\nfrom a clean heap, and run the test scripts with `--expose-gc` so `global.gc`\nis available. Also trigger the benchmark workflows on perf tests' `package.json`\nchanges so this change is exercised in CI.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Apply batched suggestions from code review\n\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-08-28T11:33:35+03:00",
+          "tree_id": "12e42f6a650dfaadc68bf7360fcac41ee5496860",
+          "url": "https://github.com/iTwin/presentation/commit/62e255bc8ece789efb13aec9ea6f0704eccdab11"
+        },
+        "date": 1787906200758,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 7481,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 133,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 133\np95: 133\nmedian: 30"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 34725,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 28,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 28\np95: 28\nmedian: 26.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 199,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 74,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6717,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 81,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 81\np95: 81\nmedian: 76"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2257,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 60,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 60\np95: 60\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 9387,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 46,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 46\np95: 46\nmedian: 33.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9390,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 49,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 49\np95: 49\nmedian: 32"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9853,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 80,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 80\np95: 80\nmedian: 35"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6714,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 59,
+            "unit": "ms",
+            "extra": "count: 14\nmax: 59\np95: 59\nmedian: 33.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 24557,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 39\np95: 39\nmedian: 32"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 4276,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 64,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 64\np95: 64\nmedian: 35"
           }
         ]
       }
