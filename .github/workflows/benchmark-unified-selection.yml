@@ -51,6 +51,8 @@ jobs:
 
       - name: Run benchmark tests
         run: pnpm benchmark:unified-selection
+        env:
+          BENCHMARK_ITERATIONS: 3
 
       - name: Save generated datasets
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
