@@ -13,7 +13,7 @@ import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvide
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field, PropertyField } from "../model/Field.js";
 import type { CategorizedField, FieldCategorization } from "./ClassPropertyFields.js";
-import type { GetContributionFn } from "./ContributionMemoizer.js";
+import type { GetAnchorContributionFn, GetContributionFn } from "./ContributionMemoizer.js";
 
 /**
  * Assembles the descriptor's category registry and assigns every property field's `categoryId` — the
@@ -48,27 +48,59 @@ export async function collectCategories(props: {
   imodelFieldsProviders: IModelFieldsProvider[];
   externalFieldsProviders: ExternalFieldsProvider[];
   getContribution: GetContributionFn;
+  getAnchorContribution: GetAnchorContributionFn;
   fields: CategorizedField[];
 }): Promise<Record<CategoryDefinition["id"], CategoryDefinition>> {
-  const { imodelAccess, sources, imodelFieldsProviders, externalFieldsProviders, getContribution, fields } = props;
+  const {
+    imodelAccess,
+    sources,
+    imodelFieldsProviders,
+    externalFieldsProviders,
+    getAnchorContribution,
+    getContribution,
+    fields,
+  } = props;
   const registry = new Map<CategoryDefinition["id"], { category: CategoryDefinition; priority: number }>();
+  const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
 
-  // 1. Provider-contributed categories (higher priority wins on conflict).
-  const contributed = await collectInParallel({
-    inputs: sources,
-    expand: async (source) =>
-      collectInParallel({
-        inputs: imodelFieldsProviders,
-        expand: async (provider) => {
-          const contribution = await getContribution({ provider, target: source.target });
-          if (!contribution?.categories) {
-            return [];
-          }
-          const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
-          return Object.values(contribution.categories).map((category) => ({ category, priority }));
-        },
-      }),
-  });
+  // 1. Provider-contributed categories (higher priority wins on conflict) — from each source's own
+  //    target, and from every nested anchor referenced by a `nested` declaration group. A nested
+  //    group's contribution is the one its declaring provider returns for the anchor class (not the
+  //    source's target); `categories` returned there apply just the same as a base contribution's do.
+  //    `getAnchorContribution` is memoized per `(provider, anchor class)`, so repeated anchors across
+  //    groups and sources cost a single provider invocation.
+  const [contributed, nestedContributed] = await Promise.all([
+    collectInParallel({
+      inputs: sources,
+      expand: async (source) =>
+        collectInParallel({
+          inputs: imodelFieldsProviders,
+          expand: async (provider) => {
+            const contribution = await getContribution({ provider, target: source.target });
+            if (!contribution?.categories) {
+              return [];
+            }
+            const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
+            return Object.values(contribution.categories).map((category) => ({ category, priority }));
+          },
+        }),
+    }),
+    collectInParallel({
+      inputs: sources.flatMap((source) => source.resolvedDeclarations),
+      expand: async (group) => {
+        const provider = group.nested ? imodelFieldsProvidersById.get(group.providerId) : undefined;
+        if (!group.nested || !provider) {
+          return [];
+        }
+        const contribution = await getAnchorContribution({ provider, anchorClassName: group.nested.anchorClassName });
+        if (!contribution?.categories) {
+          return [];
+        }
+        const priority = provider.priority ?? DEFAULT_FIELDS_PROVIDER_PRIORITY;
+        return Object.values(contribution.categories).map((category) => ({ category, priority }));
+      },
+    }),
+  ]);
   const externalContributed = externalFieldsProviders.flatMap((provider) =>
     provider.categories
       ? Object.values(provider.categories).map((category) => ({
@@ -77,7 +109,7 @@ export async function collectCategories(props: {
         }))
       : [],
   );
-  for (const { category, priority } of [...contributed, ...externalContributed]) {
+  for (const { category, priority } of [...contributed, ...nestedContributed, ...externalContributed]) {
     const existing = registry.get(category.id);
     if (!existing || priority > existing.priority) {
       registry.set(category.id, { category, priority });

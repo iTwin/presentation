@@ -39,6 +39,40 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
     imodelAccess: ECSchemaProvider;
     target: ContentTarget;
   }): Promise<FieldsProviderContribution | undefined>;
+
+  /**
+   * When `true`, this provider's contribution is recursively applied on every **nested anchor** —
+   * the concrete related-instance classes surfaced by any resolved related-properties path (from any
+   * provider, including this one). A target step is a nested anchor when its declaration omits
+   * `properties`, selects `"all"`, or selects all except an `exclude` subset. An `include` selection
+   * and `"none"` do not expose the whole related instance and therefore do not create an anchor.
+   *
+   * On a nested anchor, `getContribution` is invoked with a synthesized `ContentTarget` containing
+   * only `primaryClass` (the anchor class) — `instanceIds` and `instanceFilter` are always
+   * `undefined`. Providers that inspect those members should treat their absence as "not scoped to
+   * specific instances", exactly as they would for an omitted direct target.
+   *
+   * Nested declarations are resolved as the full path from the *original* content target (the
+   * concrete prefix up to and including the anchor, plus the contribution's declared suffix) — never
+   * from the anchor class alone — so instance scoping from the original target's `instanceIds` /
+   * `instanceFilter` carries through correctly.
+   *
+   * Only `relatedProperties` participate in recursive application (and any `categories` they
+   * reference) — `calculatedFields` are never applied on nested content, since recursive application
+   * exists solely to pull in new related targets, which only `relatedProperties` declarations
+   * introduce. Declarations with a custom `resolve` callback are also skipped when used as a nested
+   * suffix, because their resolution logic runs from the target class alone and cannot honor the
+   * prefix; their resolved paths still land in the content source as regular declarations, so they
+   * still anchor other providers' nested contributions when they are themselves a parent.
+   *
+   * Recursion is unbounded — an anchor surfaced by a nested contribution can itself receive nested
+   * contributions from any opted-in provider, including this one. Termination is data-driven: a
+   * nested declaration whose full path matches no instances resolves to zero paths and contributes
+   * nothing further. As a guard against cyclic instance graphs (e.g. a self-referential
+   * relationship), a given `(provider, anchor class)` pair is applied at most once per expansion
+   * branch.
+   */
+  applyRecursively?: boolean;
 }
 
 /**

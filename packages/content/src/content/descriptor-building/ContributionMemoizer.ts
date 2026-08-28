@@ -5,7 +5,7 @@
 
 import { getOrCreate } from "../InternalUtils.js";
 
-import type { Props } from "@itwin/presentation-shared";
+import type { EC, Props } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 
@@ -25,6 +25,19 @@ type ContributionIModelAccess = Props<IModelFieldsProvider["getContribution"]>["
 export type GetContributionFn = (props: {
   provider: IModelFieldsProvider;
   target: ContentTarget;
+}) => GetContributionReturnType;
+
+/**
+ * Re-fetches an `IModelFieldsProvider` contribution for a nested anchor class — the memoized accessor
+ * produced by {@link createContributionMemoizer}. The provider is invoked with a synthesized
+ * `{ primaryClass: anchorClassName }` target (no `instanceIds` / `instanceFilter`), matching how
+ * Stage 1 invoked it when resolving the nested declaration group.
+ *
+ * @internal
+ */
+export type GetAnchorContributionFn = (props: {
+  provider: IModelFieldsProvider;
+  anchorClassName: EC.FullClassNameDotNotation;
 }) => GetContributionReturnType;
 
 /**
@@ -54,19 +67,32 @@ export type GetContributionFn = (props: {
  */
 export function createContributionMemoizer(props: { imodelAccess: ContributionIModelAccess }): {
   getContribution: GetContributionFn;
+  getAnchorContribution: GetAnchorContributionFn;
 } {
   const { imodelAccess } = props;
   const cache = new WeakMap<ContentTarget, Map<IModelFieldsProvider["id"], GetContributionReturnType>>();
-  return {
-    getContribution: async ({ provider, target }) => {
-      const byProvider = getOrCreate({ map: cache, key: target, createFunc: () => new Map() });
-      // Cached values are always promises (truthy), so `undefined` unambiguously means "not cached"
-      // — even when a provider's contribution resolves to `undefined` (not applicable).
-      return getOrCreate({
-        map: byProvider,
-        key: provider.id,
-        createFunc: async () => provider.getContribution({ imodelAccess, target }),
-      });
-    },
+  const getContribution: GetContributionFn = async ({ provider, target }) => {
+    const byProvider = getOrCreate({ map: cache, key: target, createFunc: () => new Map() });
+    // Cached values are always promises (truthy), so `undefined` unambiguously means "not cached"
+    // — even when a provider's contribution resolves to `undefined` (not applicable).
+    return getOrCreate({
+      map: byProvider,
+      key: provider.id,
+      createFunc: async () => provider.getContribution({ imodelAccess, target }),
+    });
   };
+  // Synthesized nested-anchor targets, one instance per anchor class. Reusing the instance funnels
+  // every nested-group reference to the same anchor class through one `getContribution` cache entry,
+  // shared across all sources and consumers (`RelatedFields.ts` and `Categories.ts` alike).
+  const anchorTargets = new Map<EC.FullClassNameDotNotation, ContentTarget>();
+  const getAnchorContribution: GetAnchorContributionFn = async ({ provider, anchorClassName }) =>
+    getContribution({
+      provider,
+      target: getOrCreate({
+        map: anchorTargets,
+        key: anchorClassName,
+        createFunc: () => ({ primaryClass: anchorClassName }),
+      }),
+    });
+  return { getContribution, getAnchorContribution };
 }

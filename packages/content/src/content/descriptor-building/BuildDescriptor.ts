@@ -51,14 +51,20 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
   const imodelFieldsProviders = config?.imodelFieldsProviders ?? [];
   const externalFieldsProviders = config?.externalFieldsProviders ?? [];
   const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
-  const { getContribution } = createContributionMemoizer({ imodelAccess });
+  const { getContribution, getAnchorContribution } = createContributionMemoizer({ imodelAccess });
 
   const candidates = await collectInParallel({
     inputs: sources,
     expand: async (source) => {
       const [direct, related] = await Promise.all([
         collectDirectPropertyFields({ imodelAccess, source }),
-        collectRelatedPropertyFields({ imodelAccess, source, getContribution, imodelFieldsProvidersById }),
+        collectRelatedPropertyFields({
+          imodelAccess,
+          source,
+          getContribution,
+          getAnchorContribution,
+          imodelFieldsProvidersById,
+        }),
       ]);
       return [...direct, ...related];
     },
@@ -74,6 +80,7 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
       imodelFieldsProviders,
       externalFieldsProviders,
       getContribution,
+      getAnchorContribution,
       fields: mergedPropertyFields,
     }),
     collectCalculatedFields({ sources, imodelFieldsProviders, getContribution }),

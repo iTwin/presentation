@@ -5,10 +5,11 @@
 
 import { describe, expect, it } from "vitest";
 import { collectCategories, pruneUnreferencedCategories } from "../../content/descriptor-building/Categories.js";
+import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
 import type { CategorizedField, FieldCategorization } from "../../content/descriptor-building/ClassPropertyFields.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
@@ -55,6 +56,11 @@ function createProvider(
 
 const getContribution: Parameters<typeof collectCategories>[0]["getContribution"] = async ({ provider, target }) =>
   provider.getContribution({ imodelAccess: createSchemaAccess([]), target });
+
+const getAnchorContribution: Parameters<typeof collectCategories>[0]["getAnchorContribution"] = async ({
+  provider,
+  anchorClassName,
+}) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target: { primaryClass: anchorClassName } });
 
 function createExternalProvider(
   id: ExternalFieldsProvider["id"],
@@ -133,6 +139,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categories).to.deep.equal({ cat: { id: "cat", label: "Cat" } });
@@ -151,6 +158,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categories).to.deep.equal({});
@@ -165,6 +173,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [low, high],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categories.cat.label).to.equal("High");
@@ -179,6 +188,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [first, second],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categories.cat.label).to.equal("First");
@@ -197,6 +207,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [imodelProvider],
       externalFieldsProviders: [external],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categories.shared.label).to.equal("From External");
@@ -211,6 +222,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [external],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categories).to.deep.equal({});
@@ -228,6 +240,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [lowerPriorityProvider],
       externalFieldsProviders: [external],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categoriesVsLower.cat.label).to.equal("Ext");
@@ -239,6 +252,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [higherPriorityProvider],
       externalFieldsProviders: [external],
       getContribution,
+      getAnchorContribution,
       fields: [],
     });
     expect(categoriesVsHigher.cat.label).to.equal("Higher");
@@ -252,6 +266,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [field],
     });
     const id = CategoryDefinition.computeId({ path: [aToB] });
@@ -268,6 +283,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [a, b],
     });
     const id = CategoryDefinition.computeId({ path: [aToB] });
@@ -285,6 +301,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [field],
     });
     const dId = CategoryDefinition.computeId({ path: [aToB, bToC, cToD] });
@@ -306,6 +323,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [bField, dField],
     });
     const bId = CategoryDefinition.computeId({ path: [aToB] });
@@ -330,6 +348,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [bField, cField, dField],
     });
     const bId = CategoryDefinition.computeId({ path: [aToB] });
@@ -358,6 +377,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [yField, cField],
     });
     const yId = CategoryDefinition.computeId({ path: [aToY] });
@@ -379,6 +399,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [direct, categorized],
     });
     expect(categories).to.deep.equal({});
@@ -396,6 +417,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [field],
     });
     expect(categories[id].label).to.equal("Provider Category");
@@ -412,6 +434,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [provider],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [field],
     });
     expect(categories[id].label).to.equal("Provider Relationship");
@@ -433,6 +456,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [field],
     });
     expect(field.field.categoryId).to.equal(schemaCategoryId);
@@ -480,6 +504,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [relUn, relCat, targetUn, targetCat],
     });
 
@@ -525,6 +550,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [bField, bcField],
     });
     const bId = CategoryDefinition.computeId({ path: [aToB] });
@@ -560,6 +586,7 @@ describe("collectCategories", () => {
       imodelFieldsProviders: [],
       externalFieldsProviders: [],
       getContribution,
+      getAnchorContribution,
       fields: [abField, bcField],
     });
     const abId = CategoryDefinition.computeId({ path: [aToB], omitTargetClass: true });
@@ -582,6 +609,7 @@ describe("collectCategories", () => {
         imodelFieldsProviders: [],
         externalFieldsProviders: [],
         getContribution,
+        getAnchorContribution,
         fields: [field],
       });
       expect(field.field.categoryId).to.equal("TestSchema.Geometry");
@@ -602,9 +630,130 @@ describe("collectCategories", () => {
         imodelFieldsProviders: [provider],
         externalFieldsProviders: [],
         getContribution,
+        getAnchorContribution,
         fields: [field],
       });
       expect(categories["TestSchema.Geometry"].label).to.equal("Provider Geometry");
+    });
+  });
+
+  describe("nested contributions", () => {
+    function createSourceWithNestedGroup(props: {
+      providerId: IModelFieldsProvider["id"];
+      anchorClassName: EC.FullClassNameDotNotation;
+    }): ContentSource {
+      return {
+        target: { primaryClass: "TestSchema.A" },
+        resolvedPrimaryClasses: ["TestSchema.A"],
+        resolvedDeclarations: [
+          {
+            providerId: props.providerId,
+            declarationIndex: 0,
+            paths: [{ path: [aToB], targetClassNames: ["TestSchema.A"] }],
+            nested: { anchorClassName: props.anchorClassName, prefixStepCount: 1 },
+          },
+        ],
+      };
+    }
+
+    it("collects categories contributed for a nested anchor's synthesized target", async () => {
+      const provider: IModelFieldsProvider = {
+        id: "p_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.B"
+            ? { categories: { cat: { id: "cat", label: "Cat" } } }
+            : undefined;
+        },
+      };
+      const categories = await collectCategories({
+        imodelAccess: createSchemaAccess([]),
+        sources: [createSourceWithNestedGroup({ providerId: provider.id, anchorClassName: "TestSchema.B" })],
+        imodelFieldsProviders: [provider],
+        externalFieldsProviders: [],
+        getContribution,
+        getAnchorContribution,
+        fields: [],
+      });
+      expect(categories).to.deep.equal({ cat: { id: "cat", label: "Cat" } });
+    });
+
+    it("does not throw and contributes nothing when the nested group's provider is no longer configured", async () => {
+      const categories = await collectCategories({
+        imodelAccess: createSchemaAccess([]),
+        sources: [createSourceWithNestedGroup({ providerId: "missing_v1", anchorClassName: "TestSchema.B" })],
+        imodelFieldsProviders: [],
+        externalFieldsProviders: [],
+        getContribution,
+        getAnchorContribution,
+        fields: [],
+      });
+      expect(categories).to.deep.equal({});
+    });
+
+    it("contributes nothing when the nested anchor contribution declares no categories", async () => {
+      const provider: IModelFieldsProvider = {
+        id: "p_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.B" ? { relatedProperties: [] } : undefined;
+        },
+      };
+      const categories = await collectCategories({
+        imodelAccess: createSchemaAccess([]),
+        sources: [createSourceWithNestedGroup({ providerId: provider.id, anchorClassName: "TestSchema.B" })],
+        imodelFieldsProviders: [provider],
+        externalFieldsProviders: [],
+        getContribution,
+        getAnchorContribution,
+        fields: [],
+      });
+      expect(categories).to.deep.equal({});
+    });
+
+    it("fetches a nested anchor's contribution once even when multiple groups share it", async () => {
+      let callCount = 0;
+      const provider: IModelFieldsProvider = {
+        id: "p_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          if (target.primaryClass !== "TestSchema.B") {
+            return undefined;
+          }
+          callCount++;
+          return { categories: { cat: { id: "cat", label: "Cat" } } };
+        },
+      };
+      const source: ContentSource = {
+        target: { primaryClass: "TestSchema.A" },
+        resolvedPrimaryClasses: ["TestSchema.A"],
+        resolvedDeclarations: [
+          {
+            providerId: provider.id,
+            declarationIndex: 0,
+            paths: [{ path: [aToB], targetClassNames: ["TestSchema.A"] }],
+            nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+          },
+          {
+            providerId: provider.id,
+            declarationIndex: 1,
+            paths: [{ path: [aToB], targetClassNames: ["TestSchema.A"] }],
+            nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+          },
+        ],
+      };
+      const memoizer = createContributionMemoizer({ imodelAccess: createSchemaAccess([]) });
+      const categories = await collectCategories({
+        imodelAccess: createSchemaAccess([]),
+        sources: [source],
+        imodelFieldsProviders: [provider],
+        externalFieldsProviders: [],
+        getContribution: memoizer.getContribution,
+        getAnchorContribution: memoizer.getAnchorContribution,
+        fields: [],
+      });
+      expect(categories).to.deep.equal({ cat: { id: "cat", label: "Cat" } });
+      expect(callCount).to.equal(1);
     });
   });
 });

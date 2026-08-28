@@ -295,6 +295,7 @@ interface GetDistinctFieldValuesProps {
 
 // @public
 interface IModelFieldsProvider extends BaseFieldsProvider {
+    applyRecursively?: boolean;
     getContribution(props: {
         imodelAccess: ECSchemaProvider;
         target: ContentTarget;
@@ -418,6 +419,11 @@ interface ResolveContentSourcesProps {
 // @public
 interface ResolvedDeclarationGroup {
     declarationIndex: number;
+    nested?: {
+        anchorClassName: EC.FullClassNameDotNotation;
+        prefixStepCount: number;
+        effectiveCardinalityHint?: CardinalityHint;
+    };
     paths: ResolvedPath[];
     providerId: BaseFieldsProvider["id"];
 }
