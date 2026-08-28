@@ -2,6 +2,6 @@
 "@itwin/presentation-hierarchies": patch
 ---
 
-`createNodesQueryClauseFactory`: Memoize the hidden-classes tree computed for each select class, significantly speeding up hierarchies that repeatedly select broad base classes (e.g. the models tree).
+Improved hierarchy load performance by memoizing the hidden-classes tree per selected class, avoiding repeated traversal of large derived-class hierarchies (notably improving the models tree).
 
-Previously the hidden-classes tree (introduced with hidden classes/properties support) was recomputed on every `createFilterClauses` call, which recursively walks the whole derived-class subtree of the select class and rebuilds class metadata. The result now persists for the lifetime of the query factory. The factory therefore caches schema-derived metadata and must be re-created when the iModel's schemas may have changed - `createIModelHierarchyProvider` does this automatically by re-creating its factories in response to the `imodelChanged` event.
+The memoization persists for the lifetime of the hierarchy provider's query factories. When iModel schemas may have changed, `createIModelHierarchyProvider` now re-creates its per-iModel factories in response to the `imodelChanged` event.
