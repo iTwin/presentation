@@ -308,12 +308,12 @@ describe("createRelationshipPathJoinClause", () => {
         ),
       ).toBe(
         trimWhitespace(`
-          OUTER JOIN (
+          LEFT OUTER JOIN (
             SELECT [r].*
             FROM [${schemaName}].[${relationship.name}] [r]
             INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
           ) [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
-          OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
+          LEFT OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
         `),
       );
     });
