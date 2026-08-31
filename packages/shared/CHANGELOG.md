@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.21
+
+### Patch Changes
+
+- [#1521](https://github.com/iTwin/presentation/pull/1521): `createRelationshipPathJoinClause`: fix produced ECSQL being invalid when joining with `joinType: "outer"`. The produced snippet used `OUTER JOIN`, which ECSQL fails to parse - now it uses `LEFT OUTER JOIN`.
+
 ## 1.2.20
 
 ### Patch Changes
