@@ -57,7 +57,7 @@
     "classnames": "catalog:react",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
-    "fast-xml-parser": "^5.11.0",
+    "fast-xml-parser": "^5.11.1",
     "immer": "^10.2.0",
     "react": "catalog:react",
     "react-dom": "catalog:react",

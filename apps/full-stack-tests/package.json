@@ -57,7 +57,7 @@
     "deep-equal-in-any-order": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
-    "fast-xml-parser": "^5.11.0",
+    "fast-xml-parser": "^5.11.1",
     "happy-dom": "catalog:test-tools",
     "i18next-http-backend": "^3.0.6",
     "object-hash": "^3.0.0",

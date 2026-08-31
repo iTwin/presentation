@@ -39,25 +39,50 @@ export function run<T>(props: RunOptions<T>): void {
     return;
   }
 
+  // Number of times the measured section is run; the fastest run is reported. A single setup/cleanup is
+  // shared across all iterations. Best-of-N guards against the occasional slow run; defaults to 1 so CI
+  // time is unchanged unless explicitly increased via the `BENCHMARK_ITERATIONS` environment variable.
+  const iterations = Math.max(1, Number.parseInt(process.env.BENCHMARK_ITERATIONS ?? "1", 10) || 1);
+
   const testFunc = async ({ task }: { task: { meta: TaskMeta } }) => {
-    const blockHandler = new MainThreadBlocksDetector();
     const value = await props.setup();
-    // Force a full GC after setup so every measured section starts from a clean heap.
-    // Otherwise leftover setup/module-eval garbage lingering in the young generation occasionally gets
-    // promoted to old space once the load starts churning through short-lived per-node objects. That
-    // bloats old space, enlarges the old-to-young remembered set, and makes every subsequent Scavenge
-    // an order of magnitude costlier, producing a bimodal ~1.5-2x run-to-run variance. Starting from a
-    // clean heap keeps measurements stable. Requires running node with `--expose-gc` (wired up via the
-    // package.json test scripts); `global.gc` is left undefined otherwise, so this is a no-op.
-    global.gc?.();
-    const start = Date.now();
     try {
-      blockHandler.start();
-      await props.test(value);
+      let bestDuration = Number.POSITIVE_INFINITY;
+      let bestSummary: Summary = { count: 0 };
+      const durations: number[] = [];
+      for (let iteration = 0; iteration < iterations; ++iteration) {
+        const blockHandler = new MainThreadBlocksDetector();
+        // Force a full GC before each measured section so it starts from a clean heap. Otherwise
+        // leftover setup/module-eval garbage lingering in the young generation occasionally gets
+        // promoted to old space once the load starts churning through short-lived per-node objects.
+        // That bloats old space, enlarges the old-to-young remembered set, and makes every subsequent
+        // Scavenge an order of magnitude costlier - a slow-GC regime that, once entered, persists for
+        // the rest of the worker's life and produces a bimodal ~1.5-2x run-to-run variance. Starting
+        // each measurement from a clean heap prevents the worker from ever tipping into that regime.
+        // Requires running node with `--expose-gc` (wired up via the package.json test scripts);
+        // `global.gc` is left undefined otherwise, so this is a no-op.
+        global.gc?.();
+
+        const start = Date.now();
+        blockHandler.start();
+        try {
+          await props.test(value);
+        } finally {
+          await blockHandler.stop();
+        }
+        const duration = Date.now() - start;
+        durations.push(duration);
+        if (duration < bestDuration) {
+          bestDuration = duration;
+          bestSummary = blockHandler.getSummary();
+        }
+      }
+      task.meta.duration = bestDuration;
+      task.meta.blockingSummary = bestSummary;
+      if (iterations > 1) {
+        console.log(`${props.testName}: best ${bestDuration} ms of ${iterations} runs [${durations.join(", ")} ms]`);
+      }
     } finally {
-      await blockHandler.stop();
-      task.meta.blockingSummary = blockHandler.getSummary();
-      task.meta.duration = Date.now() - start;
       await props.cleanup?.(value);
     }
   };

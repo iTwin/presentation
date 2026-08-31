@@ -129,12 +129,12 @@ describe("buildBaseQuery", () => {
       });
       expect(trimWhitespace(result.anchor.parts.joins)).to.equal(
         trimWhitespace(`
-          OUTER JOIN (
+          LEFT OUTER JOIN (
             SELECT [${ECSQL_PREFIX}r0].*
             FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
           ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
-          OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+          LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
         `),
       );
       expect(result.anchor.paths).to.have.length(1);
@@ -161,18 +161,18 @@ describe("buildBaseQuery", () => {
       // Emitted parents-before-children; the second join sources from the first prefix's target alias.
       expect(trimWhitespace(result.anchor.parts.joins)).to.equal(
         trimWhitespace(`
-          OUTER JOIN (
+          LEFT OUTER JOIN (
             SELECT [${ECSQL_PREFIX}r0].*
             FROM [TestSchema].[Rel1] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Mid] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
           ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
-          OUTER JOIN [TestSchema].[Mid] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-          OUTER JOIN (
+          LEFT OUTER JOIN [TestSchema].[Mid] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+          LEFT OUTER JOIN (
             SELECT [${ECSQL_PREFIX}r1].*
             FROM [TestSchema].[Rel2] [${ECSQL_PREFIX}r1]
             INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t1] ON [${ECSQL_PREFIX}t1].[ECInstanceId] = [${ECSQL_PREFIX}r1].[TargetECInstanceId]
           ) [${ECSQL_PREFIX}r1] ON [${ECSQL_PREFIX}r1].[SourceECInstanceId] = [${ECSQL_PREFIX}t0].[ECInstanceId]
-          OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t1] ON [${ECSQL_PREFIX}t1].[ECInstanceId] = [${ECSQL_PREFIX}r1].[TargetECInstanceId]
+          LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t1] ON [${ECSQL_PREFIX}t1].[ECInstanceId] = [${ECSQL_PREFIX}r1].[TargetECInstanceId]
         `),
       );
     });
@@ -774,12 +774,12 @@ describe("buildBaseQuery", () => {
       // instance; for every other operator a NULL related column fails the predicate, matching an inner join.
       expect(trimWhitespace(result.anchor.parts.joins)).to.equal(
         trimWhitespace(`
-          OUTER JOIN (
+          LEFT OUTER JOIN (
             SELECT [${ECSQL_PREFIX}r0].*
             FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
             INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
           ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
-          OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+          LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
         `),
       );
       expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
