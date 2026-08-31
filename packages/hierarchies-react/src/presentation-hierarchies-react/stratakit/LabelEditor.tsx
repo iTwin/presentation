@@ -13,8 +13,7 @@ import { useTranslation } from "../LocalizationContext.js";
 import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
 
-/** @internal */
-export interface LabelEditorProps {
+interface LabelEditorProps {
   initialLabel: string;
   labelValidationHint?: string;
   onChange?: (newLabel: string) => void;
