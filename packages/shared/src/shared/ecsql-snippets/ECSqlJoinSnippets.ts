@@ -42,12 +42,12 @@ interface CreateRelationshipPathJoinClauseProps {
  *   ```
  * - When outer joining through a non-navigation-property relationship:
  *   ```SQL
- *   LEFT JOIN (
+ *   LEFT OUTER JOIN (
  *     SELECT [relationship_alias].*
  *     FROM [relationship_schema_name].[relationship_class_name] [relationship_alias]
  *     INNER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
  *   ) [relationship_alias]
- *   LEFT JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
+ *   LEFT OUTER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
  *   ```
  * - When inner joining through a non-navigation-property relationship:
  *   ```SQL
@@ -166,7 +166,7 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
 
 function getJoinClause(type: "inner" | "outer" | undefined) {
   if (type === "outer") {
-    return "OUTER JOIN";
+    return "LEFT OUTER JOIN";
   }
   return "INNER JOIN";
 }
