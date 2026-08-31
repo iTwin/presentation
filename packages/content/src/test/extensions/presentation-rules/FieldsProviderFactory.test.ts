@@ -146,6 +146,23 @@ describe("createFieldsProviderFromContentModifierRule", () => {
     });
   });
 
+  describe("applyOnNestedContent", () => {
+    it("maps rule.applyOnNestedContent === true onto the provider's applyRecursively", () => {
+      const provider = createFieldsProviderFromContentModifierRule({ rule: { applyOnNestedContent: true } });
+      expect(provider.applyRecursively).toEqual(true);
+    });
+
+    it("maps rule.applyOnNestedContent === false onto the provider's applyRecursively", () => {
+      const provider = createFieldsProviderFromContentModifierRule({ rule: { applyOnNestedContent: false } });
+      expect(provider.applyRecursively).toEqual(false);
+    });
+
+    it("leaves applyRecursively undefined when rule has no applyOnNestedContent", () => {
+      const provider = createFieldsProviderFromContentModifierRule({ rule: {} });
+      expect(provider.applyRecursively).toBeUndefined();
+    });
+  });
+
   describe("requiredSchemas", () => {
     it("returns contribution when no requiredSchemas specified", async () => {
       const provider = createFieldsProviderFromContentModifierRule({

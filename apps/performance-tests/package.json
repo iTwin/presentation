@@ -10,9 +10,9 @@
     "clean": "rimraf lib temp",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract",
     "lint": "eslint \"./src/**/*.ts\"",
-    "test": "vitest run",
-    "test:hierarchies": "vitest run src/hierarchies",
-    "test:unified-selection": "vitest run src/unified-selection",
+    "test": "cross-env NODE_OPTIONS=--expose-gc vitest run",
+    "test:hierarchies": "cross-env NODE_OPTIONS=--expose-gc vitest run src/hierarchies",
+    "test:unified-selection": "cross-env NODE_OPTIONS=--expose-gc vitest run src/unified-selection",
     "test:recreate": "cross-env RECREATE=true pnpm test"
   },
   "devDependencies": {

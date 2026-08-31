@@ -379,5 +379,126 @@ describe("Content", () => {
         [setup.schema.items.A.fullName, setup.schema.items.C.fullName].sort(),
       );
     });
+
+    it("resolves a serializable nested declaration group when a provider opts into applyRecursively", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECProperty propertyName="PropB" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="C">
+              <ECProperty propertyName="PropC" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+            <ECRelationshipClass typeName="BtoC" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="b to c" polymorphic="true">
+                <Class class="B" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="c to b" polymorphic="true">
+                <Class class="C" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+        const b = builder.insertInstance(s.items.B.fullName, { propB: "b" });
+        const c = builder.insertInstance(s.items.C.fullName, { propC: "c" });
+        builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
+        builder.insertRelationship(s.items.BtoC.fullName, b.id, c.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const providerA = defineIModelFieldsProvider({
+        id: "providerA_v1",
+        async getContribution({ target }) {
+          if (target.primaryClass !== setup.schema.items.A.fullName) {
+            return undefined;
+          }
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: setup.schema.items.A.fullName,
+                    targetClassName: setup.schema.items.B.fullName,
+                    relationshipName: setup.schema.items.AtoB.fullName,
+                  },
+                ],
+              },
+            ],
+          };
+        },
+      });
+      const providerB = defineIModelFieldsProvider({
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          if (target.primaryClass !== setup.schema.items.B.fullName) {
+            return undefined;
+          }
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: setup.schema.items.B.fullName,
+                    targetClassName: setup.schema.items.C.fullName,
+                    relationshipName: setup.schema.items.BtoC.fullName,
+                  },
+                ],
+              },
+            ],
+          };
+        },
+      });
+
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      expect(sources).toHaveLength(1);
+      expect(sources[0].resolvedDeclarations).toHaveLength(2);
+
+      const baseGroup = sources[0].resolvedDeclarations.find((g) => g.providerId === "providerA_v1")!;
+      expect(baseGroup.nested).toBeUndefined();
+      expect(baseGroup.paths).toHaveLength(1);
+
+      const nestedGroup = sources[0].resolvedDeclarations.find((g) => g.providerId === "providerB_v1")!;
+      expect(nestedGroup).toBeDefined();
+      // The group's own shape is a plain, JSON-serializable object (no functions/classes) — a
+      // `ContentSource` produced this way must remain cacheable/reproducible across runs.
+      expect(JSON.parse(JSON.stringify(nestedGroup))).toEqual(nestedGroup);
+      expect(nestedGroup.nested).toEqual({ anchorClassName: setup.schema.items.B.fullName, prefixStepCount: 1 });
+      expect(nestedGroup.paths).toHaveLength(1);
+      // The nested group's path is the *full* path from the original target `A` — the concrete A-to-B
+      // prefix plus the nested declaration's own B-to-C suffix — never just the suffix from `B` alone.
+      expect(nestedGroup.paths[0].path).toHaveLength(2);
+      expect(nestedGroup.paths[0].path[0]).toMatchObject({
+        sourceClassName: setup.schema.items.A.fullName,
+        targetClassName: setup.schema.items.B.fullName,
+        relationshipName: setup.schema.items.AtoB.fullName,
+      });
+      expect(nestedGroup.paths[0].path[1]).toMatchObject({
+        sourceClassName: setup.schema.items.B.fullName,
+        targetClassName: setup.schema.items.C.fullName,
+        relationshipName: setup.schema.items.BtoC.fullName,
+      });
+      expect(nestedGroup.paths[0].targetClassNames).toEqual([setup.schema.items.A.fullName]);
+    });
   });
 });

@@ -249,6 +249,38 @@ describe("createIModelHierarchyProvider", () => {
       evt.raiseEvent();
       expect(spy).toHaveBeenCalledOnce();
     });
+
+    it("re-creates query clause factory to drop schema-derived caches on `imodelChanged` event", async () => {
+      const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+      imodelAccess.stubEntityClass({ schemaName: "s", className: "y1", baseClass: selectClass, isHidden: true });
+      const imodelChanged = new BeEvent();
+
+      let lastFilterClauses: { where?: string } | undefined;
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        imodelChanged,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ createFilterClauses }) {
+            lastFilterClauses = await createFilterClauses({
+              contentClass: { fullName: selectClass.fullName, alias: "this" },
+            });
+            return [];
+          },
+        },
+      });
+
+      await collect(provider.getNodes({ parentNode: undefined }));
+      expect(lastFilterClauses?.where).toEqual("[this].[ECClassId] IS NOT ([s].[y1])");
+
+      // Add another hidden class to schema
+      imodelAccess.stubEntityClass({ schemaName: "s", className: "y2", baseClass: selectClass, isHidden: true });
+
+      // Without imodelChanged event, cached hidden classes tree would be reused if the factory wasn't recreated
+      imodelChanged.raiseEvent();
+
+      await collect(provider.getNodes({ parentNode: undefined }));
+      expect(lastFilterClauses?.where).toEqual("[this].[ECClassId] IS NOT ([s].[y1], [s].[y2])");
+    });
   });
 
   describe("Custom parsing", async () => {

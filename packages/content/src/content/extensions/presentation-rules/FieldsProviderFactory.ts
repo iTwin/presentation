@@ -47,6 +47,10 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
  * - Matches the target class **polymorphically** against `spec.class`.
  * - Maps `relatedProperties`, `calculatedProperties`, and `propertyCategories` into a
  *   `FieldsProviderContribution`.
+ * - Maps `rule.applyOnNestedContent` onto the provider's `applyRecursively` — mirroring native
+ *   `ContentModifier.applyOnNestedContent`, this lets the rule's `relatedProperties` (only)
+ *   additionally apply on nested-content anchors reached by any resolved related-properties path, not
+ *   just the original content target.
  * - Returns `undefined` when the rule produces no fields or categories.
  */
 export function createFieldsProviderFromContentModifierRule(
@@ -56,6 +60,7 @@ export function createFieldsProviderFromContentModifierRule(
   return {
     id: `FieldsProviderFromContentModifierRule_${hashString(stableStringify(rule)).padStart(8, "0")}_v${FACTORY_VERSION}`,
     priority: rule.priority,
+    applyRecursively: rule.applyOnNestedContent,
     async getContribution({ imodelAccess, target }) {
       if (!(await checkRequiredSchemas(imodelAccess, rule.requiredSchemas))) {
         return undefined;

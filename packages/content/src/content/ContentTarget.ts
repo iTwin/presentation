@@ -110,6 +110,16 @@ export interface ContentSource {
    * Each group links back to its originating provider and declaration index,
    * allowing Stage 2 to re-fetch the declaration's property specs and
    * cardinality hint without storing them on the cached source.
+   *
+   * Groups without `nested` are declarations applied directly on this source's target — the
+   * declaration is recovered by re-calling `providerId`'s `getContribution` with this source's
+   * `target`. Groups with `nested` are declarations applied on a *nested anchor* — a related-instance
+   * class surfaced by some resolved related-properties path — via a provider opted in with
+   * `IModelFieldsProvider.applyRecursively`; the declaration is instead recovered by re-calling
+   * `providerId`'s `getContribution` with a synthesized `{ primaryClass: nested.anchorClassName }`
+   * target. Base groups are ordered first (by provider then declaration order), followed by nested
+   * groups in breadth-first expansion order (shallower anchors first); the array is otherwise
+   * deterministic and stable across runs for the same inputs, keeping serialized sources cacheable.
    */
   resolvedDeclarations: ResolvedDeclarationGroup[];
 }
@@ -164,6 +174,48 @@ interface ResolvedDeclarationGroup {
   /**
    * Concrete relationship paths resolved from the declaration's generic path, each with the
    * concrete content-target classes it applies to. All path classes are concrete — no base classes.
+   *
+   * For a `nested` group, every path is the *full* concrete path from this source's target — the
+   * concrete prefix up to and including the anchor step, followed by the nested declaration's own
+   * (now concrete) suffix steps — not just the nested declaration's suffix. `targetClassNames`
+   * remains the near-end (true primary) classes throughout, so `PropertyField.primaryClassNames`
+   * semantics are unchanged for nested fields.
    */
   paths: ResolvedPath[];
+
+  /**
+   * Present when this declaration was applied on a **nested anchor** rather than directly on this
+   * source's target — i.e. the declaration comes from a provider opted in via
+   * `IModelFieldsProvider.applyRecursively`, applied at a related-instance class surfaced by some
+   * (possibly different) provider's resolved related-properties path.
+   */
+  nested?: {
+    /**
+     * The concrete anchor class the contribution was applied on. Stage 2 re-fetches the declaration
+     * by calling `getContribution` with a synthesized `{ primaryClass: anchorClassName }` target
+     * (no `instanceIds` / `instanceFilter`).
+     */
+    anchorClassName: EC.FullClassNameDotNotation;
+
+    /**
+     * How many leading steps of each `paths[i].path` belong to the prefix — the path from this
+     * source's target to the anchor. The remaining (suffix) steps are the nested declaration's own
+     * path. Per-step property specs (`StepPropertySpec.stepIndex`) on the nested declaration are
+     * relative to the suffix; add `prefixStepCount` to translate into an index of the full path.
+     */
+    prefixStepCount: number;
+
+    /**
+     * The effective cardinality of the full path — `"many"` if either the parent path's producing
+     * declaration or this nested declaration hints `"many"`; `"one"` only when **both** hint `"one"`;
+     * `undefined` otherwise (a `"one"` promise can't be made for a chain containing an unhinted —
+     * possibly many — segment, so consumers should fall back to schema-multiplicity inspection of
+     * the full path, exactly as they would for a hint-less base declaration).
+     *
+     * Computed here (rather than left to Stage 2/3) because, once a nested declaration is itself
+     * nested further, later stages no longer have cheap access to every ancestor declaration in the
+     * chain.
+     */
+    effectiveCardinalityHint?: CardinalityHint;
+  };
 }

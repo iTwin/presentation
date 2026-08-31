@@ -16,7 +16,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentTarget, ResolvedPath } from "../content/ContentTarget.js";
-import type { IModelFieldsProvider } from "../content/extensions/IModelFieldsProvider.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../content/extensions/IModelFieldsProvider.js";
 
 // Mock `ECSql.createRelationshipPathJoinInfo` / `ECSql.createRelationshipPathJoinClause` because the
 // real implementations require a functioning ECSchemaProvider that returns actual schema metadata to
@@ -98,6 +98,32 @@ function createMockIModelFieldsProvider(
   contribution: Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>,
 ): IModelFieldsProvider {
   return { id, getContribution: vi.fn(async () => contribution) };
+}
+
+/**
+ * An iModel access whose non-primary-enumeration query results are computed per-call from the
+ * generated ECSQL — needed to test nested expansion, where a single test run resolves several
+ * distinct declaration paths (base + nested, at growing lengths) that each need their own rows.
+ * `routeRows` can tell queries apart by the step aliases they reference (`[s0]`, `[s1]`, `[s2]`, ...
+ * one per path step, present regardless of which racing strategy's query happens to be inspected).
+ */
+function createRoutedIModelAccess(props: {
+  derivedClasses?: Record<string, string[]>;
+  routeRows: (ecsql: string) => ECSqlQueryRow[];
+}): ECSqlQueryExecutor & ECSchemaProvider {
+  const { derivedClasses = {}, routeRows } = props;
+  return {
+    createQueryReader: vi.fn((query: ECSqlQueryDef) => {
+      const rows = isPrimaryEnumerationQuery(query.ecsql) ? [] : routeRows(query.ecsql);
+      return (async function* () {
+        for (const row of rows) {
+          yield row;
+        }
+      })();
+    }),
+    getSchema: createMockGetSchema(derivedClasses),
+    classDerivesFrom: vi.fn(async () => false),
+  };
 }
 
 describe("resolveContentSources", () => {
@@ -391,9 +417,9 @@ describe("resolveContentSources", () => {
       ]);
     });
 
-    it("projects the first step's relationship class out of the anchoring subquery for multi-step paths", async () => {
+    it("projects the first step's relationship class and instance out of the anchoring subquery for multi-step paths", async () => {
       // A 2-step path makes the subquery-anchor strategy applicable; its first step's relationship
-      // class is resolved inside the anchoring subquery and projected out as `FirstStepRelClassId`.
+      // class and instance are resolved inside the anchoring subquery.
       const path: RelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
@@ -423,7 +449,10 @@ describe("resolveContentSources", () => {
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
-      expect(queries.some((ecsql) => ecsql.includes("[FirstStepRelClassId]"))).to.equal(true);
+      const anchoringQuery = queries.find((ecsql) => ecsql.includes("[FirstStepRelClassId]"));
+      expect(anchoringQuery).to.not.equal(undefined);
+      expect(anchoringQuery).to.include("[s0].[ECInstanceId] [FirstHopInstanceId]");
+      expect(anchoringQuery).to.include("[reachable].[FirstHopInstanceId] = [s0].[ECInstanceId]");
     });
   });
 
@@ -1258,6 +1287,768 @@ describe("resolveContentSources", () => {
       });
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal([]);
+    });
+  });
+
+  describe("nested contribution expansion (applyRecursively)", () => {
+    const aToB: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.ClassA",
+      targetClassName: "TestSchema.ClassB",
+      relationshipName: "TestSchema.RelAB",
+    };
+    const aToC: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.ClassA",
+      targetClassName: "TestSchema.ClassC",
+      relationshipName: "TestSchema.RelAC",
+    };
+    const bToC: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.ClassB",
+      targetClassName: "TestSchema.ClassC",
+      relationshipName: "TestSchema.RelBC",
+    };
+    const bToD: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.ClassB",
+      targetClassName: "TestSchema.ClassD",
+      relationshipName: "TestSchema.RelBD",
+    };
+    const cToD: RelationshipPath[number] = {
+      sourceClassName: "TestSchema.ClassC",
+      targetClassName: "TestSchema.ClassD",
+      relationshipName: "TestSchema.RelCD",
+    };
+
+    // Builds a single mock query row: column 0 is the (concrete, `GROUP_CONCAT`-aggregated) near-end
+    // class, followed by one [relationshipClassName, targetClassName] pair per path step.
+    function row(nearEndClass: string, ...stepClassNames: string[]): ECSqlQueryRow {
+      const result: ECSqlQueryRow = { 0: nearEndClass };
+      stepClassNames.forEach((className, i) => {
+        result[i + 1] = className;
+      });
+      return result;
+    }
+
+    // Counts path steps referenced by a query's ECSQL by probing for `[s0]`, `[s1]`, ... column
+    // aliases (see `resolveDeclarationPaths`'s `joinPath` construction) — reliable across every
+    // racing strategy since all of them project one column pair per step regardless of JOIN shape.
+    function countSteps(ecsql: string): number {
+      let n = 0;
+      while (ecsql.includes(`[s${n}]`)) {
+        n++;
+      }
+      return n;
+    }
+
+    // Routes a query to its rows purely by how many path steps it references and in which order they are queried
+    // Each entry in `rowsByStepCount` is a queue of rows for a given step count; the function returns the next available row for the queried step count.
+    function routeByStepCount(rowsByStepCount: Record<number, ECSqlQueryRow[][]>) {
+      const invocations = new Map<number, number>();
+      return (ecsql: string) => {
+        const steps = countSteps(ecsql);
+        if (!(steps in rowsByStepCount)) {
+          throw new Error(`No ECSQL rows are setup for paths with ${steps} steps.`);
+        }
+        const rows = rowsByStepCount[steps];
+        // up to 3 ecsql queries can be run for a particular paths. That depends on the number of steps in the path.
+        // wait for all 3 to happen before moving to the next result setup for this step count.
+        const stepInvocations = invocations.get(steps) ?? Math.min(steps, 3);
+        if (stepInvocations === 0) {
+          rows.shift();
+          invocations.delete(steps);
+        } else {
+          invocations.set(steps, stepInvocations - 1);
+        }
+        if (rows.length === 0) {
+          throw new Error(`No more ECSQL rows are available for paths with ${steps} steps.`);
+        }
+        return rows[0];
+      };
+    }
+
+    it("applies an opted-in provider's contribution on another provider's resolved anchor", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      expect(result.resolvedDeclarations).to.deep.equal([
+        {
+          providerId: "providerA_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB], targetClassNames: ["TestSchema.ClassA"] }],
+        },
+        {
+          providerId: "providerB_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+        },
+      ]);
+    });
+
+    it("does not apply an opted-out provider's contribution on a resolved anchor", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        // `applyRecursively` intentionally omitted — defaults to opted out.
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({ 1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]] }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      expect(result.resolvedDeclarations).to.deep.equal([
+        {
+          providerId: "providerA_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB], targetClassNames: ["TestSchema.ClassA"] }],
+        },
+      ]);
+    });
+
+    it('derives nested anchors from `select: "all"` and `exclude` steps, but not `include` steps', async () => {
+      const declaration: RelatedPropertiesDeclaration = {
+        path: [aToB, bToC, cToD],
+        properties: [
+          { stepIndex: 0, target: { select: "all" } },
+          { stepIndex: 1, target: { select: { exclude: ["Description"] } } },
+          { stepIndex: 2, target: { select: { include: ["Name"] } } },
+        ],
+      };
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [declaration] });
+      const anchorsSeen: string[] = [];
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          anchorsSeen.push(target.primaryClass);
+          // Contributes nothing further — this test only cares which anchors it gets invoked for.
+          return undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      // Invoked for the base target (A), the "all" anchor (B), and the "exclude" anchor (C) — never
+      // for D, whose step selects only a narrower property subset.
+      expect(anchorsSeen).to.deep.equal(["TestSchema.ClassA", "TestSchema.ClassB", "TestSchema.ClassC"]);
+    });
+
+    it('skips a `select: "all"` property spec whose step index is out of the resolved path\'s bounds', async () => {
+      const declaration: RelatedPropertiesDeclaration = {
+        path: [aToB],
+        properties: [
+          { stepIndex: 0, target: { select: "all" } },
+          // the path has a single step, so index 5 can never anchor — expansion must
+          // skip it without failing.
+          { stepIndex: 5, target: { select: "all" } },
+        ],
+      };
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [declaration] });
+      const anchorsSeen: string[] = [];
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          anchorsSeen.push(target.primaryClass);
+          return undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({ 1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]] }),
+      });
+
+      await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      // The in-range spec anchors B; the out-of-bounds spec contributes no anchor.
+      expect(anchorsSeen).to.deep.equal(["TestSchema.ClassA", "TestSchema.ClassB"]);
+    });
+
+    it("terminates expansion when a nested declaration's full path resolves to no instances", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      // The 1-step base path resolves, but the 2-step nested full path matches no instances.
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+          2: [[]],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      // Only the base group remains — the empty nested resolution produces no group and enqueues nothing.
+      expect(result.resolvedDeclarations).to.deep.equal([
+        {
+          providerId: "providerA_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB], targetClassNames: ["TestSchema.ClassA"] }],
+        },
+      ]);
+    });
+
+    it("expands nested contributions recursively across multiple levels", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      const providerC: IModelFieldsProvider = {
+        id: "providerC_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassC" ? { relatedProperties: [{ path: [cToD] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+          ],
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB, providerC] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
+      expect(nestedGroups).to.deep.equal([
+        {
+          providerId: "providerB_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+        },
+        {
+          providerId: "providerC_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+        },
+      ]);
+    });
+
+    it("applies a nested provider at most once per (provider, anchor class) branch, even for a data-driven cycle", async () => {
+      const xToX: RelationshipPath[number] = {
+        sourceClassName: "TestSchema.ClassX",
+        targetClassName: "TestSchema.ClassX",
+        relationshipName: "TestSchema.RelXX",
+      };
+      const targetX: ContentTarget = { primaryClass: "TestSchema.ClassX" };
+      const provider: IModelFieldsProvider = {
+        id: "providerX_v1",
+        applyRecursively: true,
+        getContribution: vi.fn(async () => ({ relatedProperties: [{ path: [xToX] }] })),
+      };
+      // Every query — regardless of how many steps it joins — resolves to the same self-referencing
+      // class, so an unguarded implementation would recurse forever; only the cycle guard stops it.
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: (ecsql) => {
+          const steps = countSteps(ecsql);
+          const cells: ECSqlQueryRow = { 0: "TestSchema.ClassX" };
+          for (let i = 0; i < steps; i++) {
+            cells[1 + i * 2] = "TestSchema.RelXX";
+            cells[2 + i * 2] = "TestSchema.ClassX";
+          }
+          return [cells];
+        },
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetX],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(result.resolvedDeclarations).to.deep.equal([
+        {
+          providerId: "providerX_v1",
+          declarationIndex: 0,
+          paths: [{ path: [xToX], targetClassNames: ["TestSchema.ClassX"] }],
+        },
+        {
+          providerId: "providerX_v1",
+          declarationIndex: 0,
+          paths: [{ path: [xToX, xToX], targetClassNames: ["TestSchema.ClassX"] }],
+          nested: { anchorClassName: "TestSchema.ClassX", prefixStepCount: 1 },
+        },
+      ]);
+    });
+
+    it("still anchors nested expansion using paths produced by a custom `resolve` declaration", async () => {
+      const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
+        { path: [aToB], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToB], resolve: customResolve }],
+      });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      expect(customResolve).toHaveBeenCalledOnce();
+      const nested = result.resolvedDeclarations.find((g) => g.nested);
+      expect(nested).to.deep.equal({
+        providerId: "providerB_v1",
+        declarationIndex: 0,
+        paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
+        nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+      });
+    });
+
+    it("anchors nested expansion to same class reached by different paths", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToC] }, { path: [aToB, bToC] }],
+      });
+      const providerC: IModelFieldsProvider = {
+        id: "providerC_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          if (target.primaryClass !== "TestSchema.ClassC") {
+            return undefined;
+          }
+          return { relatedProperties: [{ path: [cToD] }] };
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAC", "TestSchema.ClassC")]],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerC] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
+      expect(nestedGroups).to.deep.equal([
+        {
+          providerId: "providerC_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 1 },
+        },
+        {
+          providerId: "providerC_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+        },
+      ]);
+    });
+
+    it("skips a nested declaration with a custom `resolve` callback, applying only its non-custom siblings", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
+      const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
+        { path: [bToC], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          if (target.primaryClass !== "TestSchema.ClassB") {
+            return undefined;
+          }
+          return { relatedProperties: [{ path: [bToC], resolve: customResolve }, { path: [bToD] }] };
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      expect(customResolve).not.toHaveBeenCalled();
+      const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
+      // The custom-`resolve` declaration (index 0) is skipped entirely as a nested suffix; only its
+      // non-custom sibling (index 1) is applied — and it keeps its original index (skip-in-place).
+      expect(nestedGroups).to.deep.equal([
+        {
+          providerId: "providerB_v1",
+          declarationIndex: 1,
+          paths: [{ path: [aToB, bToD], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+        },
+      ]);
+    });
+
+    it("memoizes a nested provider's contribution per anchor class, de-duplicating across parent branches that land on it", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToB] }, { path: [aToB] }],
+      });
+      let callCount = 0;
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          if (target.primaryClass !== "TestSchema.ClassB") {
+            return undefined;
+          }
+          callCount++;
+          return { relatedProperties: [{ path: [bToC] }] };
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [
+            [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+            [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+          ],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      expect(callCount).to.equal(1);
+      const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
+      expect(nestedGroups).to.deep.equal([
+        {
+          providerId: "providerB_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
+          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+        },
+      ]);
+    });
+
+    it("computes the nested group's effective cardinality hint by combining the parent and nested hints", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToB], cardinalityHint: "many" }],
+      });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+          2: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      const nested = result.resolvedDeclarations.find((g) => g.nested);
+      expect(nested?.nested?.effectiveCardinalityHint).to.equal("many");
+    });
+
+    it("computes the effective cardinality hint for mixed and matching hint combinations", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToB], cardinalityHint: "one" }],
+      });
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassB"
+            ? {
+                relatedProperties: [
+                  { path: [bToC], cardinalityHint: "many" },
+                  { path: [bToD] },
+                  { path: [bToC], cardinalityHint: "one" },
+                ],
+              }
+            : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: (ecsql: string) => {
+          if (ecsql.includes("RelBD")) {
+            return [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBD",
+                "TestSchema.ClassD",
+              ),
+            ];
+          }
+          if (ecsql.includes("RelBC")) {
+            return [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+              ),
+            ];
+          }
+          return [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")];
+        },
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((g) => g.nested);
+      // Parent "one" + nested "many" → "many"; parent "one" + nested without a hint → undefined (the
+      // unhinted segment may be schema-many, so no 1:1 promise can be made — consumers fall back to
+      // schema inspection); parent "one" + nested "one" → "one".
+      expect(nestedGroups.map((g) => g.nested?.effectiveCardinalityHint)).to.deep.equal(["many", undefined, "one"]);
+    });
+
+    it("anchors a custom `resolve` declaration's nested expansion at each resolved path's own final step", async () => {
+      // The custom resolver returns a 2-step concrete path for a 1-step declared path — anchors must
+      // derive from the resolved path's final step (ClassC), not the declared path's length (ClassB).
+      const customResolve = vi.fn(async (): Promise<ResolvedPath[]> => [
+        { path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] },
+      ]);
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: [{ path: [aToB], resolve: customResolve }],
+      });
+      const anchorsSeen: string[] = [];
+      const providerB: IModelFieldsProvider = {
+        id: "providerB_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          anchorsSeen.push(target.primaryClass);
+          return target.primaryClass === "TestSchema.ClassC" ? { relatedProperties: [{ path: [cToD] }] } : undefined;
+        },
+      };
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerB] },
+      });
+
+      // The anchor is the resolved path's final step's class (C) — never the mid-path class (B) that
+      // the declared path's length would point at. C's own nested group then probes its anchor (D).
+      expect(anchorsSeen).to.deep.equal(["TestSchema.ClassA", "TestSchema.ClassC", "TestSchema.ClassD"]);
+      const nested = result.resolvedDeclarations.find((g) => g.nested);
+      expect(nested).to.deep.equal({
+        providerId: "providerB_v1",
+        declarationIndex: 0,
+        paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+        nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+      });
     });
   });
 });

@@ -242,13 +242,58 @@ describe("createECSchemaProvider", () => {
     expect(getSchemaView).toHaveBeenCalledWith({ schemas: ["SchemaA", "SchemaB"] });
   });
 
-  it("issues a new request for schemas requested in a later frame", async () => {
+  it("reuses the cached schema while the schema view is not outdated", async () => {
     const schemaView = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
     const getSchemaView = vi.fn(async () => schemaView);
     const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
     const provider = createECSchemaProvider(imodel);
 
     await provider.getSchema("SchemaA");
+    await provider.getSchema("SchemaA");
+    expect(getSchemaView).toHaveBeenCalledTimes(1);
+  });
+
+  it("shares a single request between concurrent calls for the same schema", async () => {
+    const schemaView = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
+    const getSchemaView = vi.fn(async () => schemaView);
+    const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
+    const provider = createECSchemaProvider(imodel);
+
+    const [first, second] = await Promise.all([provider.getSchema("SchemaA"), provider.getSchema("SchemaA")]);
+    expect(getSchemaView).toHaveBeenCalledTimes(1);
+    expect(first).toBe(second);
+  });
+
+  it("reuses the same `EC.Class` instance for repeated class lookups", async () => {
+    const schemaView = createMockSchemaView(
+      new Map([
+        [
+          "TestSchema",
+          { name: "TestSchema", classes: new Map([["TestClass", { name: "TestClass", schemaName: "TestSchema" }]]) },
+        ],
+      ]),
+    );
+    const getSchemaView = vi.fn(async () => schemaView);
+    const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
+    const provider = createECSchemaProvider(imodel);
+
+    const schema = await provider.getSchema("TestSchema");
+    const first = schema!.getClass("TestClass");
+    const second = schema!.getClass("TestClass");
+    expect(first).toBeDefined();
+    expect(first).toBe(second);
+  });
+
+  it("issues a new request when the cached schema view is outdated", async () => {
+    const view1 = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
+    const view2 = createMockSchemaView(new Map([["SchemaA", { name: "SchemaA", classes: new Map() }]]));
+    const getSchemaView = vi.fn().mockResolvedValueOnce(view1).mockResolvedValueOnce(view2);
+    const imodel = { getSchemaView, createQueryReader: () => createCoreECSqlReaderStub() };
+    const provider = createECSchemaProvider(imodel);
+
+    await provider.getSchema("SchemaA");
+    // Simulate the host replacing the view with a newer one, marking the cached one outdated.
+    (view1 as { isOutdated: boolean }).isOutdated = true;
     await provider.getSchema("SchemaA");
     expect(getSchemaView).toHaveBeenCalledTimes(2);
   });
@@ -1574,7 +1619,7 @@ function createMockSchemaViewContext({
     classDerivesFrom: vi.fn(),
     getDerivedClassNames: vi.fn().mockReturnValue(derivedClassNames ?? []),
   };
-  return { schemaView, classHierarchyResolver };
+  return { schemaView, classHierarchyResolver, classCache: new Map() };
 }
 
 function createMockSchemaView(schemas: Map<string, MockSchemaProps>): PublicSchemaView {

@@ -11,10 +11,25 @@
  *   - Calls `IModelFieldsProvider.getContribution()` for each target.
  *   - Performs schema introspection and resolves relationship paths
  *     (including provider-declared related properties).
+ *   - Nested expansion: for every provider opted in via `applyRecursively`, re-invokes
+ *     `getContribution` with a synthesized `{ primaryClass: anchorClassName }` target at each
+ *     *nested anchor* — a related-instance class surfaced by any resolved related-properties path
+ *     (final step when the producing declaration omits `properties`, else steps selecting all target
+ *     properties, optionally with an `exclude` subset). Steps using `include` or `"none"` do not
+ *     anchor nested contributions. Nested declarations are still resolved as the **full path from
+ *     the original target** (concrete prefix + declared suffix), never from the anchor class alone,
+ *     so instance scoping (`instanceIds`/`instanceFilter`) is preserved. Recursive and unbounded —
+ *     data-driven termination, guarded per branch by `(providerId, anchorClassName)` against cyclic
+ *     instance graphs. See `IModelFieldsProvider.applyRecursively` and
+ *     `ResolvedDeclarationGroup.nested`.
  *   - Output: `ContentSource[]` — serializable, cacheable.
  *
  * Stage 2 — Descriptor building (`createContentProvider` → `getContentDescriptor`)
  *   - Enumerates iModel fields from the resolved sources.
+ *   - For a `nested` declaration group, recovers the declaration from the contribution returned
+ *     for the synthesized anchor target (not the source's own target), offsetting per-step
+ *     property specs by `nested.prefixStepCount` — only `relatedProperties` (and any `categories`
+ *     they reference) apply to nested groups; `calculatedFields` never do.
  *   - Appends `ExternalFieldsProvider.fields` declarations.
  *   - Runs `DescriptorTransformer.transform()` asynchronously in ascending priority order.
  *   - Output: frozen `ContentDescriptor`.
@@ -26,6 +41,11 @@
  *     - `getSize` and `getInstanceKeys` depend only on Stage 1 (resolved sources).
  *     - `getItems` additionally requires Stage 2 (the descriptor) to know which
  *       columns to SELECT.
+ *   - A `nested` group's `paths` are already full concrete paths from the source's target, so a
+ *     value-query implementation can join `group.paths[i].path` (or a field's `pathFromTarget`) as
+ *     for any other group — no anchor-specific handling is needed here. When a hint is needed for
+ *     join/loading strategy, prefer `nested.effectiveCardinalityHint` (already the combined hint
+ *     across the whole path) over re-deriving it from just the nested declaration.
  *
  * Stage 4 — Query execution and value population (`getItems`)
  *   - Executes the built ECSQL query.

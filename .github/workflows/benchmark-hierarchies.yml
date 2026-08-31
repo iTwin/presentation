@@ -6,8 +6,9 @@ on:
     branches:
       - master
     paths:
-      - apps/performance-tests/hierarchies/**
-      - apps/performance-tests/util/**
+      - apps/performance-tests/src/hierarchies/**
+      - apps/performance-tests/src/util/**
+      - apps/performance-tests/package.json
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**

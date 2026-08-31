@@ -253,6 +253,10 @@ export interface NodesQueryClauseFactory {
 
 /**
  * Creates an instance of `NodeSelectQueryFactory`.
+ *
+ * The created factory caches metadata derived from the iModel's schemas (e.g. the tree of hidden classes for a
+ * given select class). The cache lives for the lifetime of the factory and is not invalidated automatically, so
+ * the factory must be re-created when the iModel's schemas may have changed.
  */
 export function createNodesQueryClauseFactory(props: {
   imodelAccess: ECSchemaProvider;
@@ -265,6 +269,7 @@ export function createNodesQueryClauseFactory(props: {
 class NodeSelectQueryFactory {
   private _imodelAccess: ECSchemaProvider;
   private _instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
+  private _hiddenClassesTreeCache = new Map<string, Promise<HiddenClassNode[]>>();
 
   public constructor(props: {
     imodelAccess: ECSchemaProvider;
@@ -322,8 +327,20 @@ class NodeSelectQueryFactory {
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
       : { from: contentClass.fullName, joins: [], where: [] };
 
-    const fromClass = await getClass(this._imodelAccess, normalizeFullClassName(from));
-    const hiddenClasses = await getHiddenClassesTree(this._imodelAccess, fromClass);
+    const normalizedFrom = normalizeFullClassName(from);
+    const fromClass = await getClass(this._imodelAccess, normalizedFrom);
+    // The hidden-classes tree depends only on the select class and the (static) schema metadata, but it is
+    // expensive to compute (it recursively walks the whole derived-class subtree). The same select classes
+    // recur across every hierarchy level, so memoize the result per class for the lifetime of this factory.
+    let hiddenClassesPromise = this._hiddenClassesTreeCache.get(normalizedFrom);
+    if (!hiddenClassesPromise) {
+      hiddenClassesPromise = getHiddenClassesTree(this._imodelAccess, fromClass);
+      // Don't keep a rejected result cached - drop it so a later call can retry. Until this handler runs, the
+      // entry stays this same promise (concurrent calls get a cache hit), so an unconditional delete is safe.
+      hiddenClassesPromise.catch(() => this._hiddenClassesTreeCache.delete(normalizedFrom));
+      this._hiddenClassesTreeCache.set(normalizedFrom, hiddenClassesPromise);
+    }
+    const hiddenClasses = await hiddenClassesPromise;
     const hiddenClassesWhereClause = createWhereClauseForHiddenClasses(hiddenClasses, contentClass.alias);
     hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
     assert(!hiddenClassesWhereClause.showClause, "`showClause` is expected to always be empty here");

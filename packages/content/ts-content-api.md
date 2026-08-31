@@ -82,3 +82,16 @@ Currently `PropertyField` has a single `sourceClassName: EC.FullClassName`. This
 - Either way, per-property entries should take precedence over the blanket override.
 
 **Decision:** Use `defaultOverrides?: PropertyOverrides` (Option 1). It is applied to all selected properties; per-property entries in `overrides` take precedence.
+
+## `applyRecursively` — applying provider contributions on nested content
+
+A provider's `relatedProperties` can be applied not only on the original content target, but also on every related-instance class surfaced by _any_ related-properties path already resolved for that target (e.g., one provider contributing `Wall` → `WallType` properties, plus a second, recursively-applied provider contributing properties of `WallType`'s own aspects, ends up pulling those aspect properties into every `Wall`'s content). Providers opt in via `IModelFieldsProvider.applyRecursively?: true`.
+
+**Should nested application re-resolve from the anchor class alone, or from the original target?**
+
+**Options:**
+
+1. **Resolve from the anchor class alone** — treat the anchor as an independent, unscoped content target and resolve the nested declaration's path against it directly. Simpler to implement (no path composition), but loses the original target's `instanceIds` / `instanceFilter` scoping: if two different instances of the original target class reach the _same_ anchor class through different related instances (e.g., `Wall1` and `Wall2` both relate to distinct `WallType` instances, each with a different concrete aspect subclass), an anchor-scoped resolution can't tell which aspect subclass belongs to which wall — it would report every aspect subclass reachable through _any_ instance of the anchor class, for every wall (a "leak" across sibling instance chains).
+2. **Resolve as the full path from the original target** — compose the concrete prefix (from the original target, through the anchor step) with the nested declaration's own suffix, and resolve that composed path as a single query scoped by the _original_ target's `instanceIds` / `instanceFilter`. Correctly preserves instance scoping at arbitrary nesting depth, at the cost of longer join chains for deeply nested contributions.
+
+**Decision:** Option 2 — full-path resolution anchored at the original content target. It is the only option that avoids incorrect leakage between sibling instance chains. See `IModelFieldsProvider.applyRecursively` and `ResolvedDeclarationGroup.nested` (`anchorClassName`, `prefixStepCount`) for the resulting shape.

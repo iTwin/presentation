@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trimWhitespace } from "@itwin/presentation-shared";
 import {
   createNodesQueryClauseFactory,
@@ -1418,6 +1418,83 @@ describe("createNodesQueryClauseFactory", () => {
             joins: "",
             where: `[content-class].[ECClassId] IS NOT (${hideClass1.ecsqlSelector}, ${hideClass2.ecsqlSelector})`,
           });
+        });
+      });
+
+      describe("hidden classes tree caching", () => {
+        function stubHiddenClassesTree() {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const hideClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: selectClass,
+            isHidden: true,
+          });
+          // Add a couple more levels so computing the tree walks several classes (and calls `getSchema` repeatedly).
+          imodelAccess.stubEntityClass({ schemaName: "s", className: "z", baseClass: hideClass, isHidden: false });
+          return { selectClass, hideClass };
+        }
+
+        it("computes the hidden classes tree only once per select class across multiple calls", async () => {
+          const { selectClass } = stubHiddenClassesTree();
+          const getSchemaSpy = vi.spyOn(imodelAccess, "getSchema");
+
+          const first = await factory.createFilterClauses({
+            contentClass: { fullName: selectClass.fullName, alias: "content-class" },
+          });
+          const callsAfterFirst = getSchemaSpy.mock.calls.length;
+          expect(callsAfterFirst).toBeGreaterThan(1);
+
+          const second = await factory.createFilterClauses({
+            contentClass: { fullName: selectClass.fullName, alias: "content-class" },
+          });
+          // The second call reuses the cached tree, so it must not walk the derived-class hierarchy again.
+          expect(getSchemaSpy.mock.calls.length - callsAfterFirst).toBeLessThan(callsAfterFirst);
+          expect(second.where).toEqual(first.where);
+        });
+
+        it("computes the hidden classes tree again for a newly created factory", async () => {
+          const { selectClass } = stubHiddenClassesTree();
+          const getSchemaSpy = vi.spyOn(imodelAccess, "getSchema");
+
+          await factory.createFilterClauses({
+            contentClass: { fullName: selectClass.fullName, alias: "content-class" },
+          });
+          const callsAfterFirst = getSchemaSpy.mock.calls.length;
+
+          // The cache is scoped to the factory instance, so re-creating the factory (as the provider does when
+          // the iModel changes) rebuilds the tree from the current metadata.
+          const newFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
+          await newFactory.createFilterClauses({
+            contentClass: { fullName: selectClass.fullName, alias: "content-class" },
+          });
+          expect(getSchemaSpy.mock.calls.length - callsAfterFirst).toBeGreaterThanOrEqual(callsAfterFirst);
+        });
+
+        it("does not cache a failed computation, allowing a later call to retry", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
+          imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass, isHidden: true });
+
+          const originalGetSchema = imodelAccess.getSchema.bind(imodelAccess);
+          let failForHiddenSchema = true;
+          vi.spyOn(imodelAccess, "getSchema").mockImplementation(async (name: string) => {
+            if (name === "s2" && failForHiddenSchema) {
+              failForHiddenSchema = false;
+              throw new Error("transient failure");
+            }
+            return originalGetSchema(name);
+          });
+
+          // First call fails while computing the hidden-classes tree, so nothing should be cached.
+          await expect(
+            factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } }),
+          ).rejects.toThrow("transient failure");
+
+          // The retry recomputes the tree (this time successfully) instead of replaying the cached rejection.
+          const clauses = await factory.createFilterClauses({
+            contentClass: { fullName: selectClass.fullName, alias: "content-class" },
+          });
+          expect(trimWhitespace(clauses.where)).toEqual(`[content-class].[ECClassId] IS NOT ([s2].[y])`);
         });
       });
     });

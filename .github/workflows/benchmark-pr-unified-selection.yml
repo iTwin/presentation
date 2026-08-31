@@ -3,8 +3,9 @@ name: PR unified-selection performance benchmark
 on:
   pull_request:
     paths:
-      - apps/performance-tests/unified-selection/**
-      - apps/performance-tests/util/**
+      - apps/performance-tests/src/unified-selection/**
+      - apps/performance-tests/src/util/**
+      - apps/performance-tests/package.json
       - packages/unified-selection/**
       - packages/shared/**
       - pnpm-lock.yaml
