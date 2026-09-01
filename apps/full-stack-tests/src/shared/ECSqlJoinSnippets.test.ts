@@ -13,10 +13,12 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { ECSql, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECSql } from "@itwin/presentation-shared";
 import { createIModelAccess } from "../hierarchies/Utils.js";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
+
+import type { ECSqlQueryRow } from "@itwin/presentation-shared";
 
 describe("createRelationshipPathJoinClause", () => {
   beforeAll(async () => {
