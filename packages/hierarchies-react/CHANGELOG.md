@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.66
+
+### Patch Changes
+
+- [#1514](https://github.com/iTwin/presentation/pull/1514): Fix label editor validation message size
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.18
+  - @itwin/presentation-shared@2.0.0-alpha.13
+  - @itwin/unified-selection@2.0.0-alpha.1
+
 ## 2.0.0-alpha.65
 
 ### Patch Changes

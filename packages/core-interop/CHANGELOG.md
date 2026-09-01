@@ -1,5 +1,160 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0-alpha.4
+
+### Major Changes
+
+- [#1394](https://github.com/iTwin/presentation/pull/1394): Changed `createECSchemaProvider` to take an object exposing the iModel's `getSchemaView` and `createQueryReader` functions instead of a `SchemaContext`. An `IModelDb` or `IModelConnection` satisfies this shape directly, so you can now pass the iModel itself; you can also pass any object that provides just those two functions.
+
+  Typical migration:
+
+  ```ts
+  const iModel: IModelDb | IModelConnection = ...;
+
+  // previously:
+  const schemaProvider = createECSchemaProvider(iModel.schemaContext);
+
+  // now (pass the iModel directly):
+  const schemaProvider = createECSchemaProvider(iModel);
+
+  // or provide only the required functions:
+  const schemaProvider = createECSchemaProvider({
+    getSchemaView: iModel.getSchemaView.bind(iModel),
+    createQueryReader: iModel.createQueryReader.bind(iModel),
+  });
+  ```
+
+- [#1494](https://github.com/iTwin/presentation/pull/1494): `createValueFormatter`: Changed to take a `formatsProvider`, a `unitsProvider` and the iModel instead of a `SchemaContext`.
+
+  `SchemaContext` is inefficient on iModels with large domain schemas, so the function no longer depends on it. Sourcing formats from a `FormatsProvider` also lets the consuming application register its own formatting overrides (per organization, per iModel, per user, etc.), achieving cohesive formatting across the whole application - something a bare `SchemaContext` couldn't provide.
+
+  Additionally, when a kind of quantity can’t be resolved (e.g. missing schema/KoQ or an unsupported persistence unit name), `createValueFormatter` now falls back to the `baseFormatter` instead of throwing.
+
+  Migration: the `schemaContext` prop is removed, provide `formatsProvider`, `unitsProvider` and `imodel` instead:
+
+  ```ts
+  // previously:
+  const formatter = createValueFormatter({
+    schemaContext: imodel.schemaContext,
+    unitSystem: "metric",
+  });
+
+  // now, on the frontend:
+  const formatter = createValueFormatter({
+    formatsProvider: IModelApp.formatsProvider,
+    unitsProvider: IModelApp.quantityFormatter,
+    imodel,
+    unitSystem: "metric",
+  });
+  ```
+
+  On the backend, where there's no `IModelApp`, construct equivalent providers from the iModel's `SchemaContext`, e.g. `formatsProvider: new SchemaFormatsProvider(schemaContext)` and `unitsProvider: new SchemaUnitProvider(schemaContext)` from `@itwin/ecschema-metadata`, ideally caching them per iModel.
+
+- [#1394](https://github.com/iTwin/presentation/pull/1394): `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+
+  Additional changes:
+
+  - The `EC.Class.getDerivedClasses()` method was replaced with `getDerivedClassNames(props?: { onlyDirect?: boolean })`. `ECSchemaProvider` can be used to load the derived classes by name, if needed.
+  - The `getCustomAttributes()` method has been removed from `EC.Schema`, `EC.Class`, and `EC.Property` and replaced with an `isHidden: boolean` property. `EC.CustomAttributeSet` and `EC.CustomAttribute` types have been removed.
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+
+### Minor Changes
+
+- [#1493](https://github.com/iTwin/presentation/pull/1493): Expose access to enumerations, kind-of-quantities and property categories through `EC.Schema`, and extend `EC.KindOfQuantity` with `relativeError` and `persistenceUnit` attributes. Schemas returned by `createECSchemaProvider` now implement the new getters.
+
+  - `EC.Schema` now requires `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` methods (mirroring the existing `getClass`). Consumers that only use `EC.Schema` are unaffected, but custom implementations of the interface must add these getters:
+
+    ```ts
+    const schema: EC.Schema = {
+      name,
+      version,
+      isHidden,
+      getClass: (className) => classes.get(className),
+      // added:
+      getEnumeration: (enumName) => enumerations.get(enumName),
+      getKindOfQuantity: (koqName) => kindOfQuantities.get(koqName),
+      getPropertyCategory: (categoryName) => categories.get(categoryName),
+    };
+    ```
+
+  - `EC.KindOfQuantity` now requires `relativeError` (`number`) and `persistenceUnit` (`string`) attributes. Custom implementations must provide them.
+
+  - `createECSchemaProvider`: The `EC.Schema` returned by the provider now implements the new getters, giving access to enumerations, kind-of-quantities and property categories in addition to classes. Existing code keeps working without changes and can now read these additional schema items:
+
+    ```ts
+    const schemaProvider = createECSchemaProvider(imodel);
+    const schema = await schemaProvider.getSchema("BisCore");
+    const enumeration = schema?.getEnumeration("MySchema.MyEnum");
+    const koq = schema?.getKindOfQuantity("MySchema.MyKoq");
+    const category = schema?.getPropertyCategory("MySchema.MyCategory");
+    ```
+
+- [#1491](https://github.com/iTwin/presentation/pull/1491): `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+
+  // After:
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+
+  **Breaking changes:**
+
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+
+    ```ts
+    // Before:
+    const classHierarchyInspector = createCachingECClassHierarchyInspector({
+      schemaProvider: createECSchemaProvider(imodel),
+    });
+    createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy,
+    });
+
+    // After:
+    const imodelAccess = createECSchemaProvider(imodel);
+    createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+    ```
+
+### Patch Changes
+
+- [#1495](https://github.com/iTwin/presentation/pull/1495): Fix `createECSchemaProvider` to set `EC.Property.class` to the class that declares or contributes the property (the base class for an inherited property, or the mixin for a mixin-contributed property), instead of the class the property was queried or enumerated through.
+- [#1511](https://github.com/iTwin/presentation/pull/1511): Fixed a performance regression that made property grouping of large hierarchies dramatically slower.
+
+  `createECSchemaProvider` now caches resolved schemas and the `EC.Class` objects built from them, so repeated `getSchema`/`getClass` calls and `EC.Property.class` accesses no longer trigger a new native schema view request or rebuild the class each time. Cached schemas are reused until the underlying schema view becomes outdated, at which point they are refreshed on next access. In addition, property grouping now resolves each properties class once instead of once per grouped node.
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.13
+
 ## 2.0.0-alpha.3
 
 ### Major Changes
