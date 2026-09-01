@@ -17,7 +17,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { CircularProgress, FormHelperText, IconButton, Menu, TextField, Typography } from "@mui/material";
+import { CircularProgress, FormHelperText, IconButton, Menu, Skeleton, TextField, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { unstable_Popover as Popover, Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
@@ -28,7 +28,7 @@ import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 
-import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, RefAttributes } from "react";
+import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, Ref, RefAttributes } from "react";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { TreeActionBaseAttributes } from "./TreeAction.js";
@@ -216,7 +216,6 @@ export const PlaceholderNode: FC<
   >
 > = memo(
   forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     function PlaceholderNode({ ...props }, forwardedRef) {
       const translate = useTranslation();
       return (
@@ -230,6 +229,20 @@ export const PlaceholderNode: FC<
     },
   ),
 );
+
+/**
+ * A lightweight tree item rendered in place of a real node while the tree is being scrolled.
+ * It mirrors the layout of a real node (indentation and height) so that virtualized
+ * measurements stay stable when the real node is rendered after scrolling settles.
+ */
+export function SkeletonNode({
+  ref,
+  ...props
+}: Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
+  ref?: Ref<HTMLElement>;
+}) {
+  return <Tree.Item {...props} ref={ref} label={<Skeleton variant="text" width="60%" />} />;
+}
 
 function LabelEditor({
   initialLabel,
