@@ -1,5 +1,88 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.18
+
+### Major Changes
+
+- [#1503](https://github.com/iTwin/presentation/pull/1503): Full class and property names are now compared case-sensitively. Provide names using the casing defined by their EC schemas.
+- [#1491](https://github.com/iTwin/presentation/pull/1491): `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+
+  // After:
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+
+  **Breaking changes:**
+
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+
+    ```ts
+    // Before:
+    const classHierarchyInspector = createCachingECClassHierarchyInspector({
+      schemaProvider: createECSchemaProvider(imodel),
+    });
+    createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy,
+    });
+
+    // After:
+    const imodelAccess = createECSchemaProvider(imodel);
+    createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+    ```
+
+- [#1394](https://github.com/iTwin/presentation/pull/1394): `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+
+  Additional changes:
+
+  - The `EC.Class.getDerivedClasses()` method was replaced with `getDerivedClassNames(props?: { onlyDirect?: boolean })`. `ECSchemaProvider` can be used to load the derived classes by name, if needed.
+  - The `getCustomAttributes()` method has been removed from `EC.Schema`, `EC.Class`, and `EC.Property` and replaced with an `isHidden: boolean` property. `EC.CustomAttributeSet` and `EC.CustomAttribute` types have been removed.
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+
+### Patch Changes
+
+- [#1495](https://github.com/iTwin/presentation/pull/1495): Fix nested property grouping for inherited properties by consistently using their declaring class.
+- [#1518](https://github.com/iTwin/presentation/pull/1518): Improved hierarchy load performance by memoizing the hidden-classes tree per selected class, avoiding repeated traversal of large derived-class hierarchies (notably improving the models tree).
+
+  The memoization persists for the lifetime of the hierarchy provider's query factories. When iModel schemas may have changed, `createIModelHierarchyProvider` now re-creates its per-iModel factories in response to the `imodelChanged` event.
+
+- [#1511](https://github.com/iTwin/presentation/pull/1511): Fixed a performance regression that made property grouping of large hierarchies dramatically slower.
+
+  `createECSchemaProvider` now caches resolved schemas and the `EC.Class` objects built from them, so repeated `getSchema`/`getClass` calls and `EC.Property.class` accesses no longer trigger a new native schema view request or rebuild the class each time. Cached schemas are reused until the underlying schema view becomes outdated, at which point they are refreshed on next access. In addition, property grouping now resolves each properties class once instead of once per grouped node.
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.13
+
 ## 2.0.0-alpha.17
 
 ### Major Changes

@@ -1,5 +1,111 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.13
+
+### Major Changes
+
+- [#1503](https://github.com/iTwin/presentation/pull/1503): Full class and property names are now compared case-sensitively. Provide names using the casing defined by their EC schemas.
+- [#1493](https://github.com/iTwin/presentation/pull/1493): Expose access to enumerations, kind-of-quantities and property categories through `EC.Schema`, and extend `EC.KindOfQuantity` with `relativeError` and `persistenceUnit` attributes. Schemas returned by `createECSchemaProvider` now implement the new getters.
+
+  - `EC.Schema` now requires `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` methods (mirroring the existing `getClass`). Consumers that only use `EC.Schema` are unaffected, but custom implementations of the interface must add these getters:
+
+    ```ts
+    const schema: EC.Schema = {
+      name,
+      version,
+      isHidden,
+      getClass: (className) => classes.get(className),
+      // added:
+      getEnumeration: (enumName) => enumerations.get(enumName),
+      getKindOfQuantity: (koqName) => kindOfQuantities.get(koqName),
+      getPropertyCategory: (categoryName) => categories.get(categoryName),
+    };
+    ```
+
+  - `EC.KindOfQuantity` now requires `relativeError` (`number`) and `persistenceUnit` (`string`) attributes. Custom implementations must provide them.
+
+  - `createECSchemaProvider`: The `EC.Schema` returned by the provider now implements the new getters, giving access to enumerations, kind-of-quantities and property categories in addition to classes. Existing code keeps working without changes and can now read these additional schema items:
+
+    ```ts
+    const schemaProvider = createECSchemaProvider(imodel);
+    const schema = await schemaProvider.getSchema("BisCore");
+    const enumeration = schema?.getEnumeration("MySchema.MyEnum");
+    const koq = schema?.getKindOfQuantity("MySchema.MyKoq");
+    const category = schema?.getPropertyCategory("MySchema.MyCategory");
+    ```
+
+- [#1491](https://github.com/iTwin/presentation/pull/1491): `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+
+  // After:
+  import {
+    createECSchemaProvider,
+    createECSqlQueryExecutor,
+  } from "@itwin/presentation-core-interop";
+
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+
+  **Breaking changes:**
+
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+
+    ```ts
+    // Before:
+    const classHierarchyInspector = createCachingECClassHierarchyInspector({
+      schemaProvider: createECSchemaProvider(imodel),
+    });
+    createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy,
+    });
+
+    // After:
+    const imodelAccess = createECSchemaProvider(imodel);
+    createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+    ```
+
+- [#1394](https://github.com/iTwin/presentation/pull/1394): `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+
+  Additional changes:
+
+  - The `EC.Class.getDerivedClasses()` method was replaced with `getDerivedClassNames(props?: { onlyDirect?: boolean })`. `ECSchemaProvider` can be used to load the derived classes by name, if needed.
+  - The `getCustomAttributes()` method has been removed from `EC.Schema`, `EC.Class`, and `EC.Property` and replaced with an `isHidden: boolean` property. `EC.CustomAttributeSet` and `EC.CustomAttribute` types have been removed.
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+
+### Minor Changes
+
+- [#1507](https://github.com/iTwin/presentation/pull/1507): Add `eachValueFrom` for consuming subscribable streams through async iteration.
+
+### Patch Changes
+
+- [#1496](https://github.com/iTwin/presentation/pull/1496): `createRelationshipPathJoinClause`: The pre-resolved (sync) overload now accepts a rendering-only input — each step only needs its `joins`, plus an optional top-level `bindings` — instead of the full `RelationshipPathJoinInfo` shape. Callers that only need to render JOINs no longer have to supply the unused `relationshipClassIdSelector`, `sourceClassIdSelector`, and `targetClassIdSelector` fields per step.
+
 ## 2.0.0-alpha.12
 
 ### Major Changes
