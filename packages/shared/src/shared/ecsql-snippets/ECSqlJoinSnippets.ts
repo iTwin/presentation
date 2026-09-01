@@ -261,12 +261,12 @@ interface RelationshipPathJoinClauseResult {
  *   ```
  * - When outer joining through a non-navigation-property relationship:
  *   ```SQL
- *   OUTER JOIN (
+ *   LEFT OUTER JOIN (
  *     SELECT [relationship_alias].*
  *     FROM [relationship_schema_name].[relationship_class_name] [relationship_alias]
  *     INNER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
  *   ) [relationship_alias] ON [relationship_alias].[SourceECInstanceId] = [source_alias].[ECInstanceId]
- *   OUTER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
+ *   LEFT OUTER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
  *   ```
  * - When inner joining through a non-navigation-property relationship:
  *   ```SQL
@@ -312,7 +312,7 @@ function renderRelationshipPathJoinClause(
   let joins = "";
   const flatJoins = props.steps.flatMap((step) => step.joins);
   for (const entry of flatJoins) {
-    const joinKw = entry.joinType === "outer" ? "OUTER JOIN" : "INNER JOIN";
+    const joinKw = entry.joinType === "outer" ? "LEFT OUTER JOIN" : "INNER JOIN";
     if (entry.joinTarget.kind === "class") {
       joins += `
         ${joinKw} ${createClassSelector(entry.joinTarget.className)} [${entry.joinAlias}] ON ${entry.joinCondition}

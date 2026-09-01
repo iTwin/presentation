@@ -290,12 +290,12 @@ describe("createRelationshipPathJoinClause", () => {
       });
       expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
-          OUTER JOIN (
+          LEFT OUTER JOIN (
             SELECT [r].*
             FROM [${schemaName}].[${relationship.name}] [r]
             INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
           ) [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
-          OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
+          LEFT OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId]
         `),
       );
     });
@@ -558,12 +558,12 @@ describe("createRelationshipPathJoinClause", () => {
       });
       expect(trimWhitespace(result.joins)).toBe(
         trimWhitespace(`
-          OUTER JOIN (
+          LEFT OUTER JOIN (
             SELECT [r].*
             FROM [${schemaName}].[${relationship.name}] [r]
             INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Area > 0)
           ) [r] ON [r].[SourceECInstanceId] = [s].[ECInstanceId]
-          OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Area > 0)
+          LEFT OUTER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [r].[TargetECInstanceId] AND ([t].Area > 0)
         `),
       );
       expect(result.bindings).toBeUndefined();
