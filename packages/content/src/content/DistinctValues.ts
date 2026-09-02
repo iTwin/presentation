@@ -141,7 +141,7 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
     [Symbol.asyncIterator]: (): AsyncIterableIterator<Value> => {
       const values$ = from(targets).pipe(
         mergeMap((target) => streamTargetDistinctValues({ imodelAccess, target, field, filters }), QUERY_CONCURRENCY),
-        distinct((value): string => stableStringify(value)),
+        distinct((value): string | undefined => (value === undefined ? value : stableStringify(value))),
       );
       return eachValueFrom(values$);
     },
