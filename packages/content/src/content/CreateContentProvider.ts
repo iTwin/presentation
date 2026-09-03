@@ -6,6 +6,7 @@
 import { buildContentDescriptor } from "./descriptor-building/BuildDescriptor.js";
 import { getInstanceKeys } from "./query/GetInstanceKeys.js";
 import { getSize } from "./query/GetSize.js";
+import { getItems } from "./query/value-loading/GetItems.js";
 
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";
@@ -39,9 +40,15 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
         filters: options?.filters,
       });
     },
-    /* v8 ignore next 3 */
-    getItems() {
-      throw new Error("Not implemented");
+    getItems(options) {
+      return getItems({
+        imodelAccess,
+        getDescriptor: getContentDescriptor,
+        sources,
+        queryFilterers: config?.queryFilterers,
+        filters: options?.filters,
+        sorting: options?.sorting,
+      });
     },
   };
 }

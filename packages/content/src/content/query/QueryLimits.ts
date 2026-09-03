@@ -16,6 +16,15 @@ import type { ResolvedPath } from "../ContentTarget.js";
 export const SQLITE_MAX_JOIN_TABLES = 64;
 
 /**
+ * Number of items the content loader fetches per page. The loader pages itself with a keyset cursor
+ * and a `LIMIT` of this size so the frontend query executor never has to page (and OFFSET) our queries
+ * internally: each query it runs already fits in one page, bounding time-to-first-value.
+ *
+ * @internal
+ */
+export const PAGE_SIZE = 1000;
+
+/**
  * A resolved relationship path paired with the join info the caller resolved for it.
  */
 type ResolvedPathWithJoinInfo = ResolvedPath & {

@@ -6,6 +6,7 @@
 import { collect, ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { createContentProvider, resolveContentSources } from "../content/Content.js";
+import * as BuildDescriptor from "../content/descriptor-building/BuildDescriptor.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSqlQueryExecutor } from "@itwin/presentation-shared";
@@ -275,6 +276,55 @@ describe("createContentProvider", () => {
 
       await expect(collect(provider.getInstanceKeys())).resolves.to.deep.equal([]);
       expect(keysIModelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getItems", () => {
+    it("lazily builds the descriptor once and shares that instance with the loaded items", async () => {
+      const schemaAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "Schema.A",
+          properties: [createPrimitiveProperty({ name: "Code", declaringClass: "Schema.A" })],
+        }),
+      ]);
+      const createQueryReader = vi.fn((query: { ecsql: string }) =>
+        (async function* () {
+          if (query.ecsql.includes("LIMIT")) {
+            yield {
+              ["pres_primary_class"]: "Schema.A",
+              ["pres_primary_id"]: "0x1",
+              ["this"]: JSON.stringify({ ["Code"]: "A1" }),
+            };
+          }
+        })(),
+      );
+      const buildDescriptorSpy = vi.spyOn(BuildDescriptor, "buildContentDescriptor");
+      const provider = createContentProvider({
+        imodelAccess: { ...schemaAccess, createQueryReader },
+        sources: [createSource("Schema.A")],
+      });
+
+      // Creating the provider must not build the descriptor.
+      expect(buildDescriptorSpy).not.toHaveBeenCalled();
+
+      // The first descriptor request builds it exactly once.
+      const descriptor = await provider.getContentDescriptor();
+      expect(buildDescriptorSpy).toHaveBeenCalledOnce();
+
+      const codeField = descriptor.fields["Schema.A.Code"] as PropertyField;
+      const items = [];
+      for await (const item of provider.getItems()) {
+        items.push(item);
+      }
+
+      expect(items).to.have.lengthOf(1);
+      expect(items[0].primaryKey).to.deep.equal({ className: "Schema.A", id: "0x1" });
+      expect(items[0].getValue(codeField)).to.equal("A1");
+
+      // Loading items reuses the cached descriptor instead of rebuilding it...
+      expect(buildDescriptorSpy).toHaveBeenCalledOnce();
+      // ...and hands that same instance to every item.
+      expect(items[0].descriptor).to.equal(descriptor);
     });
   });
 });
