@@ -32,7 +32,7 @@ export function validateCategoryChain(descriptor: Descriptor, field: Field, expe
   const actualLabels = getCategoryLabelChain(descriptor, field);
   if (!isDeepStrictEqual(actualLabels, expectedLabelsRootToField)) {
     throw new Error(
-      `Expected category label chain to be ${JSON.stringify(expectedLabelsRootToField)}, got ${JSON.stringify(actualLabels)}`,
+      `Expected category label chain for field ${field.id} to be ${JSON.stringify(expectedLabelsRootToField)}, got ${JSON.stringify(actualLabels)}`,
     );
   }
 }
