@@ -187,6 +187,9 @@ export interface ContentValues {
 }
 
 // @public
+export function createBisCoreContentConfiguration(): ContentConfiguration;
+
+// @public
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public

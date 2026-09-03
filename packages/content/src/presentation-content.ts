@@ -38,6 +38,7 @@ export { getDistinctFieldValues } from "./content/DistinctValues.js";
 
 // Default iModel configuration
 export { createIModelContentConfiguration } from "./content/extensions/presentation-rules/EmbeddedRulesets.js";
+export { createBisCoreContentConfiguration } from "./content/extensions/biscore/BisCoreContentConfiguration.js";
 
 // Consumer utilities
 export { mapItems, reduceItems } from "./content/Utilities.js";
