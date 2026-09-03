@@ -400,6 +400,102 @@ describe("buildBaseQuery", () => {
     });
   });
 
+  describe("sorting", () => {
+    it("ignores direct and duplicate sort fields when collecting anchor paths", async () => {
+      const path = makeOneToOnePath();
+      const relatedField = makeOneToOneNameField(path);
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        sortFields: [makePropertyField({ propertyName: "Code" }), relatedField, relatedField],
+      });
+
+      expect(result.anchor.parts.relatedClassAliases).to.have.length(1);
+    });
+
+    it("rejects sort paths that exceed the SQLite JOIN-table limit", async () => {
+      const paths = Array.from({ length: 33 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+      ]);
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource(paths),
+          includeRelatedJoins: true,
+          sortFields: paths.map((path) =>
+            makePropertyField({
+              propertyName: "Name",
+              propertyClassName: path[0].targetClassName,
+              pathFromTarget: path,
+              valueClassNames: [path[0].targetClassName],
+            }),
+          ),
+        }),
+      ).rejects.toThrow("Related sort paths exceed the SQLite JOIN-table limit.");
+    });
+
+    it("counts shared sort-path prefixes once against the JOIN-table limit", async () => {
+      // 20 two-step sort paths sharing the same first step. Summed per-path the shared step is counted
+      // 20 times (over the 64-table limit); merged, it is joined once and the paths fit the anchor.
+      const sharedStep = makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared");
+      const paths = Array.from({ length: 20 }, (_, index) => [
+        sharedStep,
+        makeStep("TestSchema.Shared", `TestSchema.RelLeaf${index}`, `TestSchema.Leaf${index}`),
+      ]);
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: true,
+        sortFields: paths.map((path) =>
+          makePropertyField({
+            propertyName: "Name",
+            propertyClassName: path[path.length - 1].targetClassName,
+            pathFromTarget: path,
+            valueClassNames: [path[path.length - 1].targetClassName],
+          }),
+        ),
+      });
+
+      // One shared prefix + 20 distinct leaf prefixes are all joined by the anchor.
+      expect(result.anchor.parts.relatedClassAliases).to.have.length(21);
+    });
+
+    it("keeps an otherwise-overflowed 1:1 sort path on the anchor", async () => {
+      const paths = Array.from({ length: 33 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+      ]);
+      const sortPath = paths[paths.length - 1];
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource(paths),
+        includeRelatedJoins: true,
+        sortFields: [
+          makePropertyField({
+            propertyName: "Name",
+            propertyClassName: sortPath[0].targetClassName,
+            pathFromTarget: sortPath,
+            valueClassNames: [sortPath[0].targetClassName],
+          }),
+        ],
+      });
+
+      expect(result.additional).not.to.be.undefined;
+      expect(result.anchor.parts.relatedClassAliases.has(serializeRelationshipPath({ path: sortPath }))).to.be.true;
+    });
+
+    it("rejects a sort field on a 1:many related path", async () => {
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource([makeOneToManyPath()]),
+          includeRelatedJoins: true,
+          sortFields: [makeOneToManyNameField()],
+        }),
+      ).rejects.toThrow("Cannot sort by a 1:many related path");
+    });
+  });
+
   describe("value filters", () => {
     it("resolves a direct property column against the primary alias", async () => {
       const field = makePropertyField({ propertyName: "Length", type: { kind: "primitive", type: "Double" } });
