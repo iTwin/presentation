@@ -366,7 +366,9 @@ export async function buildBaseQuery(
   const sortPathInfos = await Promise.all(
     sortPaths.map(async (path) => ({ path, joinInfo: await resolvePathInfo(path, "outer") })),
   );
-  const sortJoinCost = sortPathInfos.reduce((count, path) => count + countJoinTables(path.joinInfo), 0);
+  // Sort paths are all merged onto the anchor, so a shared prefix is joined once; count the merged join
+  // info instead of summing per-path costs to avoid over-reserving budget for prefix-sharing paths.
+  const sortJoinCost = countJoinTables(mergeJoinInfos(sortPathInfos.map((entry) => entry.joinInfo)));
   if (fixedReserves + sortJoinCost > SQLITE_MAX_JOIN_TABLES) {
     throw new Error("Related sort paths exceed the SQLite JOIN-table limit.");
   }
