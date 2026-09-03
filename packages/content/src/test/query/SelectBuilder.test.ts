@@ -139,6 +139,39 @@ describe("buildSelectProjection", () => {
     expect(projection.clauses.select).not.to.contain(".$");
   });
 
+  it("projects a related property whose path carries a step instance filter", async () => {
+    const filteredPath: RelationshipPath = [{ ...relatedPath[0], instanceFilter: { expression: "this.Prop > 0" } }];
+    const group: BaseQueryGroup = {
+      paths: [],
+      parts: {
+        from: "",
+        joins: "",
+        primaryClassAlias: "this",
+        relatedClassAliases: new Map([
+          [
+            serializeRelationshipPath({ path: filteredPath, includeInstanceFilters: true }),
+            { target: targetAlias, relationship: relationshipAlias },
+          ],
+        ]),
+      },
+    };
+    const projection = await buildSelectProjection({
+      schemaProvider,
+      descriptor: createDescriptor([
+        {
+          kind: "property",
+          id: "TestSchema.Target.Name",
+          propertyClassName: "TestSchema.Target",
+          propertyName: "Name",
+          pathFromTarget: filteredPath,
+        },
+      ]),
+      group,
+    });
+    expect(projection.clauses.select).to.contain(`[${targetAlias}].$ AS [${targetAlias}]`);
+    expect(projection.columnNames.propertyBlobs).to.deep.equal({ "TestSchema.Target.Name": targetAlias });
+  });
+
   it("selects a shared property alias only once", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,

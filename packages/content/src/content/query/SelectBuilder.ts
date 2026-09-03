@@ -147,7 +147,11 @@ function resolvePropertyAlias(props: {
   if (selector.pathFromTarget.length === 0) {
     return group.parts.primaryClassAlias;
   }
-  const aliases = group.parts.relatedClassAliases.get(serializeRelationshipPath({ path: selector.pathFromTarget }));
+  // Keys in `relatedClassAliases` include per-step `instanceFilter`, so the lookup must serialize the path
+  // the same way; otherwise a filtered path fails to match its alias.
+  const aliases = group.parts.relatedClassAliases.get(
+    serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true }),
+  );
   if (!aliases) {
     return undefined;
   }
