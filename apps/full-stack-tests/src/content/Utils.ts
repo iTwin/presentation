@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "vitest";
 import { createContentProvider, PropertyField, resolveContentSources } from "@itwin/presentation-content";
 import {
   createECSchemaProvider as createECSchemaProviderInterop,
@@ -11,7 +10,8 @@ import {
 } from "@itwin/presentation-core-interop";
 import { unifyIModelAPIs } from "../IModelUtils.js";
 
-import type { ECDb } from "@itwin/core-backend";
+import type { ECDb, IModelDb } from "@itwin/core-backend";
+import type { IModelConnection } from "@itwin/core-frontend";
 import type {
   CalculatedField,
   ContentConfiguration,
@@ -25,15 +25,15 @@ import type { RelationshipPath } from "@itwin/presentation-shared";
  * Builds the `imodelAccess` object (schema provider + ECSQL query executor)
  * required by the content pipeline APIs.
  */
-export function createContentIModelAccess(ecdb: ECDb) {
-  const schemaProvider = createECSchemaProviderInterop(unifyIModelAPIs(ecdb));
-  const queryExecutor = createECSqlQueryExecutor(ecdb);
+export function createContentIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
+  const schemaProvider = createECSchemaProviderInterop(unifyIModelAPIs(imodel));
+  const queryExecutor = createECSqlQueryExecutor(imodel);
   return { ...schemaProvider, ...queryExecutor };
 }
 
 export type ContentIModelAccess = ReturnType<typeof createContentIModelAccess>;
 
-type Descriptor = Awaited<ReturnType<ReturnType<typeof createContentProvider>["getContentDescriptor"]>>;
+export type Descriptor = Awaited<ReturnType<ReturnType<typeof createContentProvider>["getContentDescriptor"]>>;
 
 /**
  * Convenience wrapper running the two wired pipeline stages:
@@ -86,9 +86,39 @@ export function getPropertyFieldByName(descriptor: Descriptor, propertyName: str
   return matches[0];
 }
 
+/**
+ * Returns the property fields whose resolved `pathFromTarget` matches the given path (an empty path,
+ * the default, means the direct/target-class fields). A field is considered to be on `path` when
+ * recomputing its ID with that path (via `PropertyField.computeId`) reproduces the field's own ID —
+ * i.e. the field's canonical path serialization equals `path`'s. Use this to distinguish related
+ * fields that share a property name but reach it via different paths.
+ */
+export function getPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath = []): PropertyField[] {
+  return getPropertyFields(descriptor).filter(
+    (f) =>
+      f.id ===
+      PropertyField.computeId({
+        propertyClassName: f.propertyClassName,
+        propertyName: f.propertyName,
+        pathFromTarget: path,
+      }),
+  );
+}
+
+/**
+ * Returns the *visible* property fields at `path` (an empty path, the default, means the
+ * direct/target-class fields) — i.e. `getPropertyFieldsByPath` filtered down to fields for which
+ * `!field.hidden`. Schema-hidden fields are intentionally excluded here: this helper backs test
+ * assertions that only care about a descriptor's user-facing (visible) field shape, not its
+ * complete (visible + hidden) contents.
+ */
+export function getVisiblePropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath = []): PropertyField[] {
+  return getPropertyFieldsByPath(descriptor, path).filter((f) => !f.hidden);
+}
+
 /** Returns the direct (non-related) property fields — those with an empty `pathFromTarget`. */
 export function getDirectPropertyFields(descriptor: Descriptor): PropertyField[] {
-  return getPropertyFields(descriptor).filter((f) => f.pathFromTarget.length === 0);
+  return getPropertyFieldsByPath(descriptor, []);
 }
 
 /** Returns the related property fields — those with a non-empty `pathFromTarget`. */
@@ -122,32 +152,25 @@ export function getFieldById(descriptor: Descriptor, id: string): Descriptor["fi
  * this to distinguish related fields that share a property name but reach it via different paths.
  */
 export function getRelatedPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath): PropertyField[] {
-  return getRelatedPropertyFields(descriptor).filter(
-    (f) =>
-      f.id ===
-      PropertyField.computeId({
-        propertyClassName: f.propertyClassName,
-        propertyName: f.propertyName,
-        pathFromTarget: path,
-      }),
-  );
+  return getPropertyFieldsByPath(descriptor, path);
 }
 
 /**
- * Asserts that a field's category hierarchy matches the expected category labels, ordered from the
- * root category down to the field's immediate (leaf) category. For example, a field categorized under
- * `Child` nested in `Parent` is validated with `["Parent", "Child"]`. A field with no resolvable
- * category (no `categoryId`, or a dangling reference) is validated with `[]`.
+ * Formats a relationship path compactly for use in validator error messages, e.g.
+ * `"BisCore.PhysicalElement -[BisCore.ElementOwnsUniqueAspect]-> MySchema.MyUniqueAspect"`. An empty
+ * path (the direct/target-class fields) formats as `"<direct>"`. Reversed steps are rendered with a
+ * `<-` arrow to reflect that the step's traversal direction is opposite the relationship's own.
  */
-export function validateCategoryChain(descriptor: Descriptor, field: Field, expectedLabelsRootToField: string[]): void {
-  const labelsLeafToRoot: string[] = [];
-  let id: string | undefined = field.categoryId;
-  const seen = new Set<string>();
-  while (id !== undefined && !seen.has(id) && id in descriptor.categories) {
-    seen.add(id);
-    const category: Descriptor["categories"][string] = descriptor.categories[id];
-    labelsLeafToRoot.push(category.label);
-    id = category.parentId;
+export function formatRelationshipPath(path: RelationshipPath): string {
+  if (path.length === 0) {
+    return "<direct>";
   }
-  expect([...labelsLeafToRoot].reverse()).toEqual(expectedLabelsRootToField);
+  const [{ sourceClassName }] = path;
+  const steps = path
+    .map(
+      (step) =>
+        `${step.relationshipReverse ? "<-" : "-"}[${step.relationshipName}]${step.relationshipReverse ? "-" : "->"} ${step.targetClassName}`,
+    )
+    .join(" ");
+  return `${sourceClassName} ${steps}`;
 }
