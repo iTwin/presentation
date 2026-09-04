@@ -621,7 +621,7 @@ export async function classifyRelationshipClasses(
   const uniqueClassNames = new Set(classNames);
   const relationshipClasses = new Set<EC.FullClassNameDotNotation>();
   await Promise.all(
-    [...uniqueClassNames].map(async (className) => {
+    uniqueClassNames.values().map(async (className) => {
       const ecClass = await getClass(schemaProvider, className);
       if (ecClass.isRelationshipClass()) {
         relationshipClasses.add(className);

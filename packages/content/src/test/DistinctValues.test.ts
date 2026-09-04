@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { trimWhitespace } from "@itwin/presentation-shared";
 import { buildDistinctValuesQuery, getDistinctFieldValues } from "../content/DistinctValues.js";
@@ -48,7 +49,7 @@ const schemaProvider = {
       getProperties: () => [],
       isRelationshipClass: () => className.startsWith("Rel"),
       source: { multiplicity: { lowerLimit: 0, upperLimit: 1 } },
-      target: { multiplicity: { lowerLimit: 0, upperLimit: 1 } },
+      target: { multiplicity: { lowerLimit: 0, upperLimit: className.includes("Many") ? 2 : 1 } },
     }),
   }),
 } as unknown as ECSchemaProvider;
@@ -81,14 +82,6 @@ function createMockIModelAccess(props: {
       return generate();
     }),
   };
-}
-
-async function collect(iterable: AsyncIterable<Value>): Promise<Value[]> {
-  const results: Value[] = [];
-  for await (const value of iterable) {
-    results.push(value);
-  }
-  return results;
 }
 
 describe("getDistinctFieldValues", () => {
@@ -191,12 +184,14 @@ describe("getDistinctFieldValues", () => {
   it("builds and applies value filters, forwarding them into the generated query", async () => {
     const imodelAccess = createMockIModelAccess({ rowsByMarker: new Map([["ClassA", [{ 0: "a" }]]]) });
     const field = makePropertyField({ propertyName: "Name" });
-    const filters: ContentValueFilter[] = [{ field, operator: "is-not-null" }];
+    const filterField = makePropertyField({ propertyName: "Category" });
+    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
 
     await collect(getDistinctFieldValues({ imodelAccess, targets: [targetA], field, filters }));
 
     const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
-    expect(query.ecsql).to.include("IS NOT NULL");
+    expect(query.ecsql).to.include("SELECT DISTINCT [this].[Name]");
+    expect(query.ecsql).to.include("[this].[Category] IS NOT NULL");
   });
 
   it("propagates an error thrown by a query reader", async () => {
@@ -241,10 +236,9 @@ describe("getDistinctFieldValues", () => {
       break;
     }
 
-    // The exact number of rows the underlying reader had already produced before cancellation was
-    // honored is an RxJS/scheduling implementation detail; what matters is that stopping iteration
-    // early reliably triggers reader cleanup (the `finally` block, and thus `reader.return()`, runs).
-    expect(results[0]).to.equal("a");
+    // Stopping iteration early must reliably trigger reader cleanup (the `finally` block, and thus
+    // `reader.return()`, runs), regardless of how many rows the reader had already produced.
+    expect(results).to.deep.equal(["a"]);
     expect(returned).to.equal(true);
   });
 
@@ -348,17 +342,15 @@ describe("buildDistinctValuesQuery", () => {
     );
   });
 
-  it("rejects array and struct fields with a distinct-values-specific error", async () => {
-    const cases: { type: ValueDescriptor; expectedKind: string }[] = [
-      { type: { kind: "array", elementType: { kind: "primitive", type: "String" } }, expectedKind: "array" },
-      { type: { kind: "struct", members: [] }, expectedKind: "struct" },
-    ];
-    for (const { type, expectedKind } of cases) {
-      const field = makePropertyField({ propertyName: "Composite", type });
-      await expect(buildDistinctValuesQuery({ schemaProvider, target, field })).rejects.toThrow(
-        `Getting distinct values for ${expectedKind} fields is not supported.`,
-      );
-    }
+  it.each<{ type: ValueDescriptor; expectedKind: string }>([
+    { type: { kind: "array", elementType: { kind: "primitive", type: "String" } }, expectedKind: "array" },
+    { type: { kind: "struct", members: [] }, expectedKind: "struct" },
+  ])("rejects $expectedKind fields with a distinct-values-specific error", async ({ type, expectedKind }) => {
+    const field = makePropertyField({ propertyName: "Composite", type });
+
+    await expect(buildDistinctValuesQuery({ schemaProvider, target, field })).rejects.toThrow(
+      `Getting distinct values for ${expectedKind} fields is not supported.`,
+    );
   });
 
   it("joins and filters on a related path referenced only by a value filter (not the selected field)", async () => {
@@ -384,6 +376,38 @@ describe("buildDistinctValuesQuery", () => {
           INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
         ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
         LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+        WHERE [${ECSQL_PREFIX}t0].[Flag] = :${ECSQL_PREFIX}vf0
+      `),
+    );
+    expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
+  });
+
+  it("joins and filters on a 1:many related path referenced only by a value filter", async () => {
+    const directField = makePropertyField({ propertyName: "Name" });
+    const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
+    const filterField = makePropertyField({
+      propertyName: "Flag",
+      propertyClassName: "TestSchema.Many",
+      pathFromTarget: path,
+      valueClassNames: ["TestSchema.Many"],
+    });
+    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
+
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field: directField, filters });
+
+    // Unlike `buildBaseQuery` — which spills 1:many filter paths into correlated subqueries to avoid
+    // duplicating primary rows — a 1:many path is joined and compared directly here, because
+    // `SELECT DISTINCT` collapses the duplicate rows the join produces.
+    expect(trimWhitespace(query.ecsql)).to.equal(
+      trimWhitespace(`
+        SELECT DISTINCT [this].[Name]
+        FROM [TestSchema].[Primary] [this]
+        LEFT OUTER JOIN (
+          SELECT [${ECSQL_PREFIX}r0].*
+          FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
+          INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+        ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
+        LEFT OUTER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
         WHERE [${ECSQL_PREFIX}t0].[Flag] = :${ECSQL_PREFIX}vf0
       `),
     );

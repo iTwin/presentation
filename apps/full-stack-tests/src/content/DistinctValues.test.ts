@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { defineIModelFieldsProvider, getDistinctFieldValues } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
@@ -11,14 +12,6 @@ import { importSchema } from "../SchemaUtils.js";
 import { buildDescriptor, createContentIModelAccess, getPropertyFieldByName } from "./Utils.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
-
-async function collect<T>(iterable: AsyncIterable<T>): Promise<T[]> {
-  const results: T[] = [];
-  for await (const value of iterable) {
-    results.push(value);
-  }
-  return results;
-}
 
 describe("Content", () => {
   describe("getDistinctFieldValues", () => {
@@ -153,12 +146,18 @@ describe("Content", () => {
             </ECRelationshipClass>
           `,
         );
+        // Each `A` relates to two `B`s, and "shared" is reachable through both `A`s — so the result
+        // exercises both multiple related values per instance and cross-instance de-duplication.
         const a1 = builder.insertInstance(s.items.A.fullName, { propA: "a1" });
         const a2 = builder.insertInstance(s.items.A.fullName, { propA: "a2" });
         const b1 = builder.insertInstance(s.items.B.fullName, { propB: "shared" });
-        const b2 = builder.insertInstance(s.items.B.fullName, { propB: "unique" });
+        const b2 = builder.insertInstance(s.items.B.fullName, { propB: "unique1" });
+        const b3 = builder.insertInstance(s.items.B.fullName, { propB: "unique2" });
+        const b4 = builder.insertInstance(s.items.B.fullName, { propB: "shared" });
         builder.insertRelationship(s.items.AtoB.fullName, a1.id, b1.id);
-        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b2.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b2.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b3.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b4.id);
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
@@ -186,7 +185,7 @@ describe("Content", () => {
         getDistinctFieldValues({ imodelAccess, targets: [{ primaryClass: setup.schema.items.A.fullName }], field }),
       );
 
-      expect(values.slice().sort()).toEqual(["shared", "unique"].sort());
+      expect(values.slice().sort()).toEqual(["shared", "unique1", "unique2"].sort());
     });
 
     it("applies value filters, restricting which rows contribute distinct values", async () => {
