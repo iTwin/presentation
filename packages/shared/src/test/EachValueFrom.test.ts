@@ -14,6 +14,13 @@ describe("eachValueFrom", () => {
     expect(await collect(eachValueFrom(obs))).toEqual([1, 2, 3]);
   });
 
+  it("returns a buffered `undefined` value rather than treating it as an empty buffer", async () => {
+    // All values are emitted synchronously on subscribe, so they're all buffered before the consumer
+    // requests them — a buffered `undefined` must not be confused with buffer emptiness or completion.
+    const obs = from([undefined, 1, undefined]);
+    expect(await collect(eachValueFrom(obs))).toEqual([undefined, 1, undefined]);
+  });
+
   it("returns observable values when they're consumed quicker than emitted", async () => {
     const sub = new Subject<number>();
     const iter = eachValueFrom(sub);

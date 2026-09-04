@@ -58,9 +58,11 @@ export async function* eachValueFrom<T>(source: Subscribable<T>): AsyncIterableI
   });
   try {
     while (true) {
-      const value = values.pop();
-      if (value !== undefined) {
-        yield value;
+      if (!values.isEmpty) {
+        // The queue is non-empty, so this is an actual buffered value — possibly a legitimately
+        // emitted `undefined`, which is why emptiness is checked explicitly rather than by
+        // comparing the popped value to `undefined`.
+        yield values.pop() as T;
         continue;
       }
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -97,6 +99,10 @@ class QueueEntry<T> {
 class Queue<T> {
   private _front?: QueueEntry<T>;
   private _back?: QueueEntry<T>;
+
+  public get isEmpty(): boolean {
+    return this._front === undefined;
+  }
 
   public push(item: T) {
     const entry = new QueueEntry<T>(item);

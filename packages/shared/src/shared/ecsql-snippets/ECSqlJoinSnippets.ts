@@ -61,7 +61,7 @@ interface JoinTargetRelationshipSelect {
 }
 
 /**
- * One concrete JOIN clause rendered as either `INNER JOIN ... ON ...` or `OUTER JOIN ... ON ...`.
+ * One concrete JOIN clause rendered as either `INNER JOIN ... ON ...` or `LEFT OUTER JOIN ... ON ...`.
  * @public
  */
 interface RelationshipJoinInfo {

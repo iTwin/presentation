@@ -283,13 +283,13 @@ interface FieldsProviderContribution {
 }
 
 // @public
-export function getDistinctFieldValues(_props: GetDistinctFieldValuesProps): AsyncIterable<Value>;
+export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): AsyncIterable<Value>;
 
 // @public
 interface GetDistinctFieldValuesProps {
     field: PropertyField | CalculatedField;
     filters?: ContentValueFilter[];
-    imodelAccess: ECSqlQueryExecutor;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     targets: ContentTarget[];
 }
 
