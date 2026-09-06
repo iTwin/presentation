@@ -1054,7 +1054,7 @@ describe("createRelationshipPathJoinClause", () => {
       },
       target: {
         polymorphic: false,
-        multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
+        multiplicity: { lowerLimit: 0, upperLimit: "unbounded" },
         abstractConstraint: targetClass,
         constraintClasses: [targetClass],
       },
@@ -1105,18 +1105,16 @@ describe("createRelationshipPathJoinClause", () => {
               polymorphic: false,
               abstractConstraint: sourceClass,
               constraintClasses: [sourceClass],
-              multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
+              multiplicity: { lowerLimit: 0, upperLimit: "unbounded" },
             },
             target: {
               polymorphic: false,
               abstractConstraint: targetClass,
               constraintClasses: [targetClass],
-              multiplicity: { lowerLimit: 0, upperLimit: INT32_MAX },
+              multiplicity: { lowerLimit: 0, upperLimit: "unbounded" },
             },
           });
     return { sourceClass, targetClass, relationship };
   }
 });
 
-// taken from `@itwin/ecschema-metadata`
-const INT32_MAX = 2147483647;
