@@ -3,18 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { fireEvent } from "@testing-library/react";
+import { fireEvent, within } from "@testing-library/react";
 
 /** Find a node in `ControlledTree` by label. Throws if the node is not found.  */
 export function getNodeByLabel(htmlContainer: HTMLElement, label: string) {
-  let curr = htmlContainer.querySelector<HTMLElement>(`[title*="${label}"]`);
-  while (curr && !curr.classList.contains("core-tree-node")) {
-    curr = curr.parentElement;
-  }
-  if (!curr || !curr.classList.contains("core-tree-node")) {
+  const node = within(htmlContainer)
+    .queryAllByRole("treeitem")
+    .find((el) => el.textContent?.includes(label));
+  if (!node) {
     throw new Error(`Failed to find node with label "${label}"`);
   }
-  return curr;
+  return node;
 }
 
 /** Is the node represented by given HTML element currently selected in the tree. */
