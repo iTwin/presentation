@@ -96,6 +96,7 @@
     "@types/node": "catalog:build-tools",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
@@ -105,7 +106,6 @@
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

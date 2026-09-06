@@ -59,6 +59,7 @@
     "@itwin/unified-selection": "workspace:^",
     "@testing-library/react": "catalog:test-tools",
     "@types/react": "catalog:react",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "cross-env": "catalog:build-tools",
@@ -67,7 +68,6 @@
     "happy-dom": "catalog:test-tools",
     "react": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }
