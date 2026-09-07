@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 1.8.6
+
+### Patch Changes
+
+- 3d0ee51f427822a8fe676bb2ac93655d8eda58f2: Update iTwin.js core dependencies to `^5.13.0`, AppUI to `^5.34.0` and refresh related tooling/test dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.22
+
 ## 1.8.5
 
 ### Patch Changes
