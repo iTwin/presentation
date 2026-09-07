@@ -109,18 +109,18 @@
     "@types/node": "catalog:build-tools",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
-    "cross-env": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
+    "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
     "happy-dom": "catalog:test-tools",
-    "vitest": "catalog:test-tools",
     "presentation-test-utilities": "workspace:^",
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
-    "typescript": "catalog:build-tools"
+    "typescript": "catalog:build-tools",
+    "vitest": "catalog:test-tools"
   }
 }

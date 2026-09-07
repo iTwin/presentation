@@ -62,12 +62,12 @@
     "@itwin/core-quantity": "catalog:itwinjs-core-dev",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "rxjs-for-await": "catalog:rxjs",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

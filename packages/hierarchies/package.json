@@ -53,7 +53,7 @@
     "@itwin/core-common": "catalog:itwinjs-core",
     "@itwin/core-geometry": "catalog:itwinjs-core",
     "@itwin/presentation-shared": "workspace:^",
-    "natural-compare-lite": "^1.4.0",
+    "natural-compare-lite": "^1.4.1",
     "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
@@ -61,12 +61,12 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/natural-compare-lite": "^1.4.2",
     "@types/node": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "presentation-test-utilities": "workspace:^",
     "rimraf": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }
