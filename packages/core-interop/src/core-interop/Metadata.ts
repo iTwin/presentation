@@ -329,7 +329,11 @@ function createECRelConstraintFromSchemaView(
   context: SchemaViewProviderContext,
 ): EC.RelationshipConstraint {
   return {
-    multiplicity: { lowerLimit: svConstraint.multiplicityLower, upperLimit: svConstraint.multiplicityUpper },
+    multiplicity: {
+      lowerLimit: svConstraint.multiplicityLower,
+      // `SchemaView` reports an unbounded upper limit as `0`.
+      upperLimit: svConstraint.multiplicityUpper === 0 ? "unbounded" : svConstraint.multiplicityUpper,
+    },
     polymorphic: svConstraint.polymorphic,
     get constraintClasses() {
       return svConstraint.constraintClasses.map((c) =>
