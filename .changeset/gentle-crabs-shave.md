@@ -1,6 +1,6 @@
 ---
 "@itwin/presentation-shared": major
-"@itwin/presentation-core-interop": patch
+"@itwin/presentation-core-interop": major
 ---
 
 `EC.RelationshipConstraintMultiplicity`: Changed `upperLimit` type from `number` to `number | "unbounded"`.
