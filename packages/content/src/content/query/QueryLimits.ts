@@ -108,7 +108,7 @@ export function packPathsWithinBudget(props: {
  *
  * A caller-supplied `cardinalityHint` always wins (schema multiplicity is frequently over-declared as
  * `many` where the data is effectively 1:1). Without a hint, the path is `"many"` when any step's
- * traversed constraint has an upper multiplicity limit greater than one, honoring
+ * traversed constraint has an unbounded upper multiplicity limit or an upper limit greater than one, honoring
  * `relationshipReverse` to pick the constraint the traversal lands on.
  *
  * @internal
@@ -130,7 +130,8 @@ export async function classifyPathCardinality(props: {
     // reversed step lands on the `source` constraint. The upper multiplicity limit of that landing
     // end says how many related instances a single source instance reaches.
     const landingConstraint = step.relationshipReverse ? relationship.source : relationship.target;
-    if (landingConstraint.multiplicity.upperLimit > 1) {
+    const { upperLimit } = landingConstraint.multiplicity;
+    if (upperLimit === "unbounded" || upperLimit > 1) {
       return "many";
     }
   }

@@ -752,7 +752,7 @@ describe("createECClassFromSchemaView", () => {
       const targetConstraint = {
         polymorphic: false,
         multiplicityLower: 0,
-        multiplicityUpper: -1,
+        multiplicityUpper: 0,
         get abstractConstraint() {
           return createMockClass(entityBProps);
         },
@@ -782,7 +782,8 @@ describe("createECClassFromSchemaView", () => {
       const tgt = rel.target;
       expect(tgt.polymorphic).toBe(false);
       expect(tgt.multiplicity.lowerLimit).toBe(0);
-      expect(tgt.multiplicity.upperLimit).toBe(-1);
+      // `SchemaView` reports unbounded as `0`.
+      expect(tgt.multiplicity.upperLimit).toBe("unbounded");
       expect(tgt.abstractConstraint?.name).toBe("EntityB");
     });
 

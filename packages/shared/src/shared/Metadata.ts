@@ -209,7 +209,8 @@ export namespace EC {
    */
   export interface RelationshipConstraintMultiplicity {
     lowerLimit: number;
-    upperLimit: number;
+    /** `"unbounded"` when the constraint declares no upper bound (`*`). */
+    upperLimit: number | "unbounded";
   }
 
   /**

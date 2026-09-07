@@ -165,14 +165,15 @@ describe("QueryLimits", () => {
   });
 
   describe("classifyPathCardinality", () => {
-    function createSchemaProvider(relationships: Record<string, { source: number; target: number }>): ECSchemaProvider {
+    type Limit = number | "unbounded";
+    function createSchemaProvider(relationships: Record<string, { source: Limit; target: Limit }>): ECSchemaProvider {
       return {
         getSchema: async (schemaName: string) =>
           ({
             getClass: async (className: string) => {
               const fullName = `${schemaName}.${className}`;
               const limits = relationships[fullName];
-              const constraint = (upperLimit: number): EC.RelationshipConstraint =>
+              const constraint = (upperLimit: Limit): EC.RelationshipConstraint =>
                 ({ multiplicity: { lowerLimit: 0, upperLimit } }) as unknown as EC.RelationshipConstraint;
               return {
                 fullName,
@@ -207,6 +208,11 @@ describe("QueryLimits", () => {
 
     it("classifies as many when the target constraint allows multiple", async () => {
       const schemaProvider = createSchemaProvider({ "TestSchema.AtoB": { source: 1, target: 10 } });
+      expect(await classifyPathCardinality({ schemaProvider, path })).to.equal("many");
+    });
+
+    it("classifies as many when the target constraint is unbounded", async () => {
+      const schemaProvider = createSchemaProvider({ "TestSchema.AtoB": { source: 1, target: "unbounded" } });
       expect(await classifyPathCardinality({ schemaProvider, path })).to.equal("many");
     });
 
