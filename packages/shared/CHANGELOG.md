@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.22
+
+### Patch Changes
+
+- 3d0ee51f427822a8fe676bb2ac93655d8eda58f2: Update iTwin.js core dependencies to `^5.13.0`, AppUI to `^5.34.0` and refresh related tooling/test dependencies.
+
 ## 1.2.21
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.11.6
+
+### Patch Changes
+
+- 3d0ee51f427822a8fe676bb2ac93655d8eda58f2: Update iTwin.js core dependencies to `^5.13.0`, AppUI to `^5.34.0` and refresh related tooling/test dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.21
+  - @itwin/presentation-shared@1.2.22
+  - @itwin/unified-selection@1.8.6
+
 ## 1.11.5
 
 ### Patch Changes
