@@ -5,7 +5,13 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
-import { collectInParallel, getClassLabel, mergeBindings, stableStringify } from "../content/InternalUtils.js";
+import {
+  collectInParallel,
+  getClassLabel,
+  mergeBindings,
+  stableStringify,
+  substituteExpressionAlias,
+} from "../content/InternalUtils.js";
 import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 
 describe("collectInParallel", () => {
@@ -78,6 +84,14 @@ describe("stableStringify", () => {
 
   it("handles objects nested inside arrays", () => {
     expect(stableStringify([{ b: 1, a: 2 }])).to.equal('[{"a":2,"b":1}]');
+  });
+});
+
+describe("substituteExpressionAlias", () => {
+  it("normalizes bare references when aliases are identical", () => {
+    expect(
+      substituteExpressionAlias({ expression: "this.Code || [this].Label", fromAlias: "this", toAlias: "this" }),
+    ).to.equal("[this].Code || [this].Label");
   });
 });
 

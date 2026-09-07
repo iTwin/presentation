@@ -18,31 +18,6 @@ import type { CardinalityHint, ResolvedPath } from "../ContentTarget.js";
 export const SQLITE_MAX_JOIN_TABLES = 64;
 
 /**
- * Maximum number of SELECT statements SQLite allows in a compound (UNION-ed) query. Callers that
- * UNION split groups or chunk queries cap the number of terms below this limit.
- *
- * @internal
- */
-export const SQLITE_MAX_COMPOUND_SELECT = 500;
-
-/**
- * Splits `terms` into chunks small enough to be UNION-ed into a single compound SQLite query without
- * exceeding {@link SQLITE_MAX_COMPOUND_SELECT}. Each returned chunk has at most `maxPerChunk` terms.
- *
- * @internal
- */
-export function chunkCompoundSelects<T>(terms: T[], maxPerChunk: number = SQLITE_MAX_COMPOUND_SELECT): T[][] {
-  if (maxPerChunk < 1) {
-    throw new Error(`\`maxPerChunk\` must be at least 1, but got ${maxPerChunk}.`);
-  }
-  const chunks: T[][] = [];
-  for (let i = 0; i < terms.length; i += maxPerChunk) {
-    chunks.push(terms.slice(i, i + maxPerChunk));
-  }
-  return chunks;
-}
-
-/**
  * A resolved relationship path paired with the join info the caller resolved for it.
  */
 type ResolvedPathWithJoinInfo = ResolvedPath & {
