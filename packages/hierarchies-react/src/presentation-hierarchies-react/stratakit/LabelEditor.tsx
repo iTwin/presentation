@@ -6,12 +6,59 @@
 import "./LabelEditor.css";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { FormHelperText, IconButton, TextField, Typography } from "@mui/material";
+import { FormHelperText, IconButton, Paper, TextField, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { useTranslation } from "../LocalizationContext.js";
 
 import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
+
+import type { CSSProperties } from "react";
+import type { TreeNode } from "../TreeNode.js";
+import type { RenameParameters } from "./TreeNodeRenameAction.js";
+
+/**
+ * Renders the label editor for the node whose rename is in progress. It's rendered once at the tree
+ * level and positioned at the given node's location, so individual rows don't pay the cost of
+ * mounting a popover.
+ *
+ * @internal
+ */
+export function TreeNodeLabelEditorOverlay({
+  node,
+  renameParameters,
+  onCancel,
+  style,
+}: {
+  node: TreeNode;
+  renameParameters: RenameParameters;
+  onCancel?: () => void;
+  /** Placement of the overlay, generally an offset to the node's location within the tree. */
+  style?: CSSProperties;
+}) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // like a popover, dismiss when the user interacts outside the editor
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!overlayRef.current?.contains(e.target as Node)) {
+        onCancel?.();
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [onCancel]);
+  return (
+    <Paper ref={overlayRef} elevation={8} className="phr-node-label-editor-overlay" style={style}>
+      <LabelEditor
+        initialLabel={node.label}
+        onChange={renameParameters.commit}
+        onCancel={onCancel}
+        labelValidationHint={renameParameters.labelValidationHint}
+        validate={renameParameters.validate}
+      />
+    </Paper>
+  );
+}
 
 interface LabelEditorProps {
   initialLabel: string;

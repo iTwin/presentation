@@ -3,13 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { cloneElement, forwardRef, isValidElement, memo, useCallback, useMemo, useState } from "react";
-import { CircularProgress, Menu } from "@mui/material";
-import { unstable_Popover as Popover, Tree } from "@stratakit/structures";
+import { cloneElement, forwardRef, isValidElement, memo, useCallback, useMemo } from "react";
+import { CircularProgress } from "@mui/material";
+import { Tree } from "@stratakit/structures";
 import { useTranslation } from "../LocalizationContext.js";
-import { LabelEditor } from "./LabelEditor.js";
 import { TreeActionBase } from "./TreeAction.js";
-import { useTreeNodeRenameContext } from "./TreeNodeRenameAction.js";
+import { useTreeContextMenu } from "./TreeContextMenu.js";
 
 import refreshSvg from "@stratakit/icons/refresh.svg";
 
@@ -74,10 +73,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       ...treeItemProps
     } = props;
     const translate = useTranslation();
-    const renameContext = useTreeNodeRenameContext();
-    const [contextMenuProps, setContextMenuProps] = useState<
-      { position: { x: number; y: number }; actions: ReactNode[] } | undefined
-    >(undefined);
+    const contextMenu = useTreeContextMenu();
 
     const label = treeItemProps.label ?? node.label;
     const inlineActionItems = useMemo(() => {
@@ -119,77 +115,42 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       return node.isExpanded;
     }, [node]);
 
-    const { renameParameters, cancelRename } = renameContext ?? {};
-    const labelEditor = (
-      <LabelEditor
-        initialLabel={node.label}
-        onChange={renameParameters?.commit}
-        onCancel={cancelRename}
-        labelValidationHint={renameParameters?.labelValidationHint}
-        validate={renameParameters?.validate}
-      />
+    const onExpandedChange = useCallback(
+      (isExpanded: boolean) => {
+        expandNode(node.id, isExpanded);
+      },
+      [node, expandNode],
     );
 
     return (
-      <>
-        <Popover
-          content={labelEditor}
-          placement="bottom"
-          open={renameParameters?.nodeId === node.id}
-          setOpen={cancelRename}
-          unmountOnHide
-        >
-          <Tree.Item
-            {...treeItemProps}
-            ref={forwardedRef}
-            label={label}
-            expanded={expanded}
-            onExpandedChange={useCallback(
-              (isExpanded: boolean) => {
-                expandNode(node.id, isExpanded);
-              },
-              [node, expandNode],
-            )}
-            inlineActions={inlineActionItems}
-            actions={menuActionItems}
-            unstable_decorations={decorations}
-            error={node.errors.length > 0 ? node.errors[0].id : undefined}
-            onContextMenu={(e) => {
-              if (treeItemProps.onContextMenu) {
-                treeItemProps.onContextMenu(e);
-              }
-
-              if (!contextMenuActions) {
-                return;
-              }
-
-              e.preventDefault();
-              const actions = injectActionVariant(contextMenuActions, "context-menu");
-              if (actions.length === 0) {
-                return;
-              }
-
-              setContextMenuProps({ position: { x: e.clientX, y: e.clientY }, actions });
-            }}
-          />
-        </Popover>
-        <Menu
-          open={!!contextMenuProps}
-          onClose={() => setContextMenuProps(undefined)}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            setContextMenuProps(undefined);
-          }}
-          anchorReference="anchorPosition"
-          anchorPosition={
-            contextMenuProps ? { top: contextMenuProps.position.y, left: contextMenuProps.position.x } : undefined
+      <Tree.Item
+        {...treeItemProps}
+        ref={forwardedRef}
+        label={label}
+        expanded={expanded}
+        onExpandedChange={onExpandedChange}
+        inlineActions={inlineActionItems}
+        actions={menuActionItems}
+        unstable_decorations={decorations}
+        error={node.errors.length > 0 ? node.errors[0].id : undefined}
+        onContextMenu={(e) => {
+          if (treeItemProps.onContextMenu) {
+            treeItemProps.onContextMenu(e);
           }
-          aria-label={translate("more")}
-          onClick={() => setContextMenuProps(undefined)}
-        >
-          {contextMenuProps?.actions}
-        </Menu>
-      </>
+
+          if (!contextMenuActions) {
+            return;
+          }
+
+          e.preventDefault();
+          const actions = injectActionVariant(contextMenuActions, "context-menu");
+          if (actions.length === 0) {
+            return;
+          }
+
+          contextMenu?.openContextMenu({ position: { x: e.clientX, y: e.clientY }, actions });
+        }}
+      />
     );
   }),
 );

@@ -9,6 +9,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
+import { TreeNodeLabelEditorOverlay } from "./LabelEditor.js";
+import { TreeContextMenuProvider } from "./TreeContextMenu.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
@@ -174,10 +176,24 @@ export const StrataKitTreeRenderer: FC<
       };
     }, [flatItems, isNodeSelected]);
 
+    const renameParameters = renameContext.renameParameters;
+    const renameOverlayTarget = useMemo(() => {
+      if (!renameParameters) {
+        return undefined;
+      }
+      const virtualItem = items.find(
+        (virtualizedItem) => flatItems[virtualizedItem.index].id === renameParameters.nodeId,
+      );
+      const item = virtualItem ? flatItems[virtualItem.index] : undefined;
+      return virtualItem && item && !isPlaceholderItem(item)
+        ? { node: item.node, offset: virtualItem.start + virtualItem.size }
+        : undefined;
+    }, [renameParameters, items, flatItems]);
+
     return (
-      <>
+      <TreeContextMenuProvider>
         {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
-        <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
+        <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto", position: "relative" }} ref={parentRef}>
           <Tree.Root
             {...treeRootProps}
             style={{
@@ -213,8 +229,22 @@ export const StrataKitTreeRenderer: FC<
               })}
             </TreeNodeRenameContextProvider>
           </Tree.Root>
+          {renameParameters && renameOverlayTarget ? (
+            <TreeNodeLabelEditorOverlay
+              node={renameOverlayTarget.node}
+              renameParameters={renameParameters}
+              onCancel={cancelRename}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                zIndex: 1,
+                transform: `translateY(${renameOverlayTarget.offset}px)`,
+              }}
+            />
+          ) : null}
         </div>
-      </>
+      </TreeContextMenuProvider>
     );
   },
 );
