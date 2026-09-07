@@ -189,8 +189,9 @@ describe("buildBaseQuery", () => {
 
       // The shared prefix step (joining to `Mid`) is emitted exactly once, even though two paths use it.
       const sharedJoinCount =
-        trimWhitespace(result.anchor.parts.joins).split(`OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`)
-          .length - 1;
+        trimWhitespace(result.anchor.parts.joins).split(
+          `LEFT OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`,
+        ).length - 1;
       expect(sharedJoinCount).to.equal(1);
     });
 
@@ -312,8 +313,9 @@ describe("buildBaseQuery", () => {
       // The shared step is joined exactly once — both paths reference it under the same alias, so it is
       // not duplicated (two aliases would produce two `Mid` joins).
       expect(
-        trimWhitespace(result.anchor.parts.joins).split(`OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`)
-          .length - 1,
+        trimWhitespace(result.anchor.parts.joins).split(
+          `LEFT OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`,
+        ).length - 1,
       ).to.equal(1);
     });
   });
@@ -824,10 +826,10 @@ describe("buildBaseQuery", () => {
 
       expect(result.additional).to.be.undefined;
       expect(result.anchor.paths).to.have.length(2);
-      // Both related steps are OUTER-joined (each link-table path renders two `OUTER JOIN`s), so a
+      // Both related steps are OUTER-joined (each link-table path renders two `LEFT OUTER JOIN`s), so a
       // primary missing one related instance keeps the other's columns.
       expect(result.anchor.parts.joins).to.not.include("INNER JOIN [TestSchema].[RelB]");
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(4);
+      expect(trimWhitespace(result.anchor.parts.joins).split("LEFT OUTER JOIN").length - 1).to.equal(4);
     });
 
     it("splits 1:1 paths across groups when they exceed the join budget", async () => {
@@ -850,7 +852,7 @@ describe("buildBaseQuery", () => {
       expect(result.additional![0].paths.some((p) => anchorKeys.has(relationshipName(p)))).to.equal(false);
       // Both groups join more than one path → outer-joined, and share the same FROM.
       expect(result.additional![0].parts.from).to.equal(result.anchor.parts.from);
-      expect(result.additional![0].parts.joins).to.include("OUTER JOIN");
+      expect(result.additional![0].parts.joins).to.include("LEFT OUTER JOIN");
     });
 
     it("shares the target filter and query-filterer joins on the anchor", async () => {
@@ -891,7 +893,7 @@ describe("buildBaseQuery", () => {
       expect(result.additional![0].paths).to.deep.equal([{ path: oneToMany, targetClassNames: ["TestSchema.Many"] }]);
       // A lone 1:many path is INNER-joined — after key-stitching, absent related instances drop out.
       expect(result.additional![0].parts.joins).to.include("INNER JOIN");
-      expect(result.additional![0].parts.joins).to.not.include("OUTER JOIN");
+      expect(result.additional![0].parts.joins).to.not.include("LEFT OUTER JOIN");
     });
 
     it("isolates a 1:many path forced by a `many` cardinality hint", async () => {
