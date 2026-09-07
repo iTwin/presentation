@@ -1117,4 +1117,3 @@ describe("createRelationshipPathJoinClause", () => {
     return { sourceClass, targetClass, relationship };
   }
 });
-
