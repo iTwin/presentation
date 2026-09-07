@@ -133,7 +133,7 @@ export function packPathsWithinBudget(props: {
  *
  * A caller-supplied `cardinalityHint` always wins (schema multiplicity is frequently over-declared as
  * `many` where the data is effectively 1:1). Without a hint, the path is `"many"` when any step's
- * traversed constraint has an unbounded upper multiplicity limit or one greater than one, honoring
+ * traversed constraint has an unbounded upper multiplicity limit or an upper limit greater than one, honoring
  * `relationshipReverse` to pick the constraint the traversal lands on.
  *
  * @internal
