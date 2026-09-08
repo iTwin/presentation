@@ -131,14 +131,15 @@ Each SQL-backed field carries a **`selectorId`** referencing the column it reads
 
 - **`primaryKey`** — `{ className, id }` identifying which instance this row represents.
 - **`values`** — a map of field ID → raw value. All fields (property, SQL calculated, and external) are populated by the pipeline.
+- **`relatedInstances`** — related instances reached by this item, keyed by serialized relationship path (same serialization used in field IDs). For a field whose value is array-shaped due to path cardinality, `values[field.id]` aligns element-for-element with `relatedInstances[path]` (`undefined` holes where a given instance's property is `null`); for single-instance (`"one"`) paths the entry array has length 0 or 1 and the field value is inlined.
 
-This is a plain data bag — serializable, no behavior, no reference to the descriptor.
+This is a plain data bag — serializable, no behavior, no reference to the descriptor. `ContentValues` is formally `@internal` — consumers work with `ContentItem` instead.
 
 **Content item (`ContentItem`)** — an accessor that pairs a descriptor with a `ContentValues` instance, providing ergonomic access, e.g.:
 
 - `getValue(field: Field): unknown` — retrieve a value by field reference.
-- `getFieldsByGroup(path): Array<{ field, value }>` — iterate related field groups with field+value pairs.
-- Access to `primaryKey` and the underlying `descriptor`.
+- `getRelatedInstances({ pathFromTarget })` — retrieve the related instances reached over a relationship path (a raw path, or a property field itself, since fields carry their own `pathFromTarget`), each paired with a `key`, an optional `relationshipKey`, and a scoped `getValue(field)` that reads that instance's value for a field on the same path.
+- Access to `primaryKey`, `relatedInstances` (the raw serialization-level bag), and the underlying `descriptor`.
 
 The pipeline's async iterator yields `ContentItem` instances. Consumers work with `ContentItem`; `ContentValues` is an internal/serialization-level concept (used by external fields providers' `resolve` function, export utilities, etc.).
 
@@ -405,7 +406,15 @@ Output: ContentValues {
     "OperatingParametersAspect.MaxTemp":     180.0,
     "iot.currentFlow":        187.3,
     "iot.lastMaintenance":    "2026-04-22T08:00:00Z",
-  }
+  },
+  relatedInstances: {
+    "ProcessPhysical.Pump-[PumpHasType]->ProcessPhysical.PumpType": [
+      { key: { className: "ProcessPhysical:PumpType", id: "0x50" } },
+    ],
+    "ProcessPhysical.Pump-[PumpOwnsOperatingParameters]->ProcessPhysical.OperatingParametersAspect": [
+      { key: { className: "ProcessPhysical:OperatingParametersAspect", id: "0x51" } },
+    ],
+  },
 }
 
 The consumer iterates ContentItem accessors (descriptor + ContentValues),
@@ -891,3 +900,5 @@ SQLite imposes hard limits that directly constrain the queries this pipeline can
 **JOIN count mitigation — splitting and stitching:** The query builder must detect when a single query would exceed the 64-table JOIN limit and automatically split into multiple queries. The value loader then merges results from all sub-queries into a unified stream of content items. This splitting is transparent to consumers — they see a single result set regardless of how many queries were needed internally.
 
 **Stitching:** When the query is split, each sub-query covers a different subset of JOINed paths but selects from the same primary instances. The results must be stitched back together — matching rows across sub-queries by primary key and combining their column values into a single content item. Each sub-query returns values for some fields; the stitcher assembles the full row. Fields not covered by a given sub-query are `undefined` in that sub-query's result and filled in from the sub-query that owns them.
+
+**`relatedInstances` alignment contract:** For a 1:many path, the loader must accumulate one `RelatedInstanceEntry` per related instance actually reached (in the same order used to build the field's array value — e.g. `ORDER BY` the related ECInstanceId), keyed by the path's serialized form (`serializeRelationshipPath`). Every property field on that path must produce a `values[field.id]` array whose length equals `relatedInstances[path].length`, with element `i` sourced from the same related instance as `relatedInstances[path][i]` (`undefined` for a `null` property on that instance, not a missing array slot). A relationship-class field's related instance carries its `relationshipKey` on the same entry as the target-class instance so both align to one index space. This is a hard invariant the loader must assert — a mismatch means a path's rows were joined/grouped inconsistently across sub-queries.

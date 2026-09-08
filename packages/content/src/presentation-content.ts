@@ -17,7 +17,7 @@ export type {
 } from "./content/model/Field.js";
 export type { ValueSelector, PropertyValueSelector, CalculatedValueSelector } from "./content/model/ValueSelector.js";
 export { CategoryDefinition } from "./content/model/Category.js";
-export type { ContentItem, ContentValues } from "./content/model/ContentItem.js";
+export type { ContentItem } from "./content/model/ContentItem.js";
 export { PropertyField } from "./content/model/Field.js";
 
 // Extension points
