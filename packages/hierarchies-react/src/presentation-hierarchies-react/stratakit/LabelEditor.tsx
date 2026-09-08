@@ -6,7 +6,7 @@
 import "./LabelEditor.css";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { FormHelperText, IconButton, Paper, TextField, Typography } from "@mui/material";
+import { FormHelperText, IconButton, Popover, TextField, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { useTranslation } from "../LocalizationContext.js";
 
@@ -19,8 +19,8 @@ import type { RenameParameters } from "./TreeNodeRenameAction.js";
 
 /**
  * Renders the label editor for the node whose rename is in progress. It's rendered once at the tree
- * level and positioned at the given node's location, so individual rows don't pay the cost of
- * mounting a popover.
+ * level as a popover anchored to an invisible element positioned at the renamed node's label location,
+ * so it doesn't depend on the virtualized row's DOM element.
  *
  * @internal
  */
@@ -33,30 +33,31 @@ export function TreeNodeLabelEditorOverlay({
   node: TreeNode;
   renameParameters: RenameParameters;
   onCancel?: () => void;
-  /** Placement of the overlay, generally an offset to the node's location within the tree. */
+  /** Placement of the anchor, generally an offset to the renamed node's label within the tree. */
   style?: CSSProperties;
 }) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    // like a popover, dismiss when the user interacts outside the editor
-    const handlePointerDown = (e: PointerEvent) => {
-      if (!overlayRef.current?.contains(e.target as Node)) {
-        onCancel?.();
-      }
-    };
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [onCancel]);
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   return (
-    <Paper ref={overlayRef} elevation={8} className="phr-node-label-editor-overlay" style={style}>
-      <LabelEditor
-        initialLabel={node.label}
-        onChange={renameParameters.commit}
-        onCancel={onCancel}
-        labelValidationHint={renameParameters.labelValidationHint}
-        validate={renameParameters.validate}
-      />
-    </Paper>
+    <>
+      <div ref={setAnchorEl} style={style} aria-hidden />
+      <Popover
+        open={anchorEl !== null}
+        anchorEl={anchorEl}
+        onClose={onCancel}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        disableScrollLock
+        marginThreshold={0}
+      >
+        <LabelEditor
+          initialLabel={node.label}
+          onChange={renameParameters.commit}
+          onCancel={onCancel}
+          labelValidationHint={renameParameters.labelValidationHint}
+          validate={renameParameters.validate}
+        />
+      </Popover>
+    </>
   );
 }
 
@@ -121,7 +122,7 @@ export function LabelEditor({ initialLabel, labelValidationHint, onChange, onCan
             setNewLabelValue(event.target.value);
             setHasError(false);
           }}
-          onKeyUp={(event) => {
+          onKeyDown={(event) => {
             if (event.key === "Enter") {
               handleLabelChange();
             } else if (event.key === "Escape") {
@@ -137,7 +138,7 @@ export function LabelEditor({ initialLabel, labelValidationHint, onChange, onCan
         </IconButton>
       </div>
       {labelValidationHint !== undefined ? (
-        <FormHelperText error={hasError} style={{ display: "flex" }}>
+        <FormHelperText render={<div />} error={hasError} style={{ display: "flex" }}>
           <Typography variant="caption-md">{labelValidationHint}</Typography>
         </FormHelperText>
       ) : undefined}

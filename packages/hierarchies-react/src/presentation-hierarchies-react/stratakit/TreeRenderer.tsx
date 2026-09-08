@@ -16,12 +16,13 @@ import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 import type { ComponentProps, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
+import type { VirtualItem } from "@tanstack/react-virtual";
 import type { FlatTreeItem, FlatTreeNodeItem } from "../FlatTreeNode.js";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { SelectionMode } from "../UseSelectionHandler.js";
 import type { TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import type { TreeNodeEditingProps } from "./TreeNodeRenameAction.js";
+import type { RenameParameters, TreeNodeEditingProps } from "./TreeNodeRenameAction.js";
 import type { StrataKitTreeItemProps, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -176,19 +177,11 @@ export const StrataKitTreeRenderer: FC<
       };
     }, [flatItems, isNodeSelected]);
 
-    const renameParameters = renameContext.renameParameters;
-    const renameOverlayTarget = useMemo(() => {
-      if (!renameParameters) {
-        return undefined;
-      }
-      const virtualItem = items.find(
-        (virtualizedItem) => flatItems[virtualizedItem.index].id === renameParameters.nodeId,
-      );
-      const item = virtualItem ? flatItems[virtualItem.index] : undefined;
-      return virtualItem && item && !isPlaceholderItem(item)
-        ? { node: item.node, offset: virtualItem.start + virtualItem.size }
-        : undefined;
-    }, [renameParameters, items, flatItems]);
+    const renameOverlayTarget = getRenameOverlayTarget({
+      renameParameters: renameContext.renameParameters,
+      items,
+      flatItems,
+    });
 
     return (
       <TreeContextMenuProvider>
@@ -229,16 +222,15 @@ export const StrataKitTreeRenderer: FC<
               })}
             </TreeNodeRenameContextProvider>
           </Tree.Root>
-          {renameParameters && renameOverlayTarget ? (
+          {renameContext.renameParameters && renameOverlayTarget ? (
             <TreeNodeLabelEditorOverlay
               node={renameOverlayTarget.node}
-              renameParameters={renameParameters}
+              renameParameters={renameContext.renameParameters}
               onCancel={cancelRename}
               style={{
                 position: "absolute",
                 top: 0,
-                left: 0,
-                zIndex: 1,
+                left: `calc(var(--stratakit-space-x2) + (var(--stratakit-space-x1) + var(--stratakit-space-x05)) * ${renameOverlayTarget.level - 1} + 1.5rem + var(--stratakit-space-x1))`,
                 transform: `translateY(${renameOverlayTarget.offset}px)`,
               }}
             />
@@ -248,6 +240,25 @@ export const StrataKitTreeRenderer: FC<
     );
   },
 );
+
+function getRenameOverlayTarget({
+  renameParameters,
+  items,
+  flatItems,
+}: {
+  renameParameters: RenameParameters | undefined;
+  items: VirtualItem[];
+  flatItems: FlatTreeItem[];
+}) {
+  if (!renameParameters) {
+    return undefined;
+  }
+  const virtualItem = items.find((virtualizedItem) => flatItems[virtualizedItem.index].id === renameParameters.nodeId);
+  const item = virtualItem ? flatItems[virtualItem.index] : undefined;
+  return virtualItem && item && !isPlaceholderItem(item)
+    ? { node: item.node, level: item.level, offset: virtualItem.start + virtualItem.size }
+    : undefined;
+}
 
 function useExpandAndScrollToNode({
   rootNodes,
