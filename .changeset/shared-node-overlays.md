@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-`TreeRenderer`: improved tree node rendering performance by moving per-node overlays to the tree level. Instead of every node mounting its own context menu and label editing popover, the tree now renders a single shared context menu and a single label editor positioned at the renamed node's location.
+Fixed keyboard-initiated node rename instantly closing the label editor. Additionally, improved tree node rendering performance by rendering a single shared context menu and label editor at the tree level instead of mounting them in every node.
