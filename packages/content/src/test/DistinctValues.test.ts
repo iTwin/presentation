@@ -34,6 +34,7 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames ?? ["TestSchema.Primary"],
     primaryClassNames: props.primaryClassNames ?? ["TestSchema.Primary"],
+    pathCardinality: "one",
     selectorId: props.selectorId ?? `selector-${props.propertyName}`,
   };
 }

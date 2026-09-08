@@ -319,6 +319,7 @@ type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
 export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
+    pathCardinality: CardinalityHint;
     pathFromTarget: RelationshipPath;
     primaryClassNames: EC.FullClassNameDotNotation[];
     propertyClassName: EC.FullClassNameDotNotation;

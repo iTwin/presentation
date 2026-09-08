@@ -91,6 +91,39 @@ export function createEntityClass(props: {
   } as unknown as EC.EntityClass;
 }
 
+/**
+ * Creates a relationship `EC.Class` stub for tests. Defaults to a 1:1 relationship; pass
+ * `cardinality: "many"` for a target constraint that reaches many related instances.
+ */
+export function createRelationshipClass(props: {
+  fullName: EC.FullClassNameDotNotation;
+  label?: string;
+  cardinality?: "one" | "many";
+  properties?: EC.Property[];
+}): EC.RelationshipClass {
+  const { schemaName, className } = parseFullClassName(props.fullName);
+  const constraint = (upperLimit: number | "unbounded") =>
+    ({ multiplicity: { lowerLimit: 0, upperLimit } }) as unknown as EC.RelationshipConstraint;
+  return {
+    schema: { name: schemaName } as unknown as EC.Schema,
+    fullName: props.fullName,
+    name: className,
+    label: props.label,
+    is: () => false,
+    getProperty: (name: string) => props.properties?.find((property) => property.name === name),
+    getProperties: () => props.properties ?? [],
+    getOwnProperties: () => props.properties ?? [],
+    isEntityClass: () => false,
+    isRelationshipClass: () => true,
+    isStructClass: () => false,
+    isMixin: () => false,
+    getDerivedClassNames: () => [],
+    direction: "Forward",
+    source: constraint("unbounded"),
+    target: constraint(props.cardinality === "many" ? "unbounded" : 1),
+  } as unknown as EC.RelationshipClass;
+}
+
 /** Creates a mixin class stub for tests. */
 export function createMixinClass(props: {
   fullName: EC.FullClassNameDotNotation;

@@ -6,6 +6,7 @@
 import { type EC, type ECSqlBinding, type RelationshipPath, type ValueDescriptor } from "@itwin/presentation-shared";
 import { serializeRelationshipPath } from "./Utils.js";
 
+import type { CardinalityHint } from "../ContentTarget.js";
 import type { DeepReadonly } from "./Utils.js";
 
 /**
@@ -22,7 +23,12 @@ interface BaseField {
   id: string;
   /** Display name shown to the user. */
   label: string;
-  /** The value shape for this field. */
+  /**
+   * The shape of a *single* value for this field.
+   *
+   * A property field reached over a many-valued path carries one such value per related instance, so
+   * its stored value is an array of this shape — see {@link (PropertyField:interface).pathCardinality}.
+   */
   type: ValueDescriptor;
   /** The category this field belongs to (by ID). */
   categoryId?: string;
@@ -52,6 +58,19 @@ export interface PropertyField extends BaseField {
    * Empty array means the field belongs to the target class directly.
    */
   pathFromTarget: RelationshipPath;
+  /**
+   * Whether one primary instance reaches at most one related instance over
+   * {@link (PropertyField:interface).pathFromTarget} (`"one"`) or possibly several (`"many"`).
+   * Always `"one"` for a direct property.
+   *
+   * `"many"` means the field's stored value is an array carrying one
+   * {@link (PropertyField:interface).type}-shaped element per related instance. The type itself stays
+   * the property's own value shape, so an array-shaped `type` always means a genuine EC array property.
+   *
+   * Taken from the contributing declaration's `cardinalityHint` where given, else from schema
+   * multiplicity of the traversed relationship constraints.
+   */
+  pathCardinality: CardinalityHint;
   /**
    * Concrete classes of the instances that supply this field's value (the field's "value origin").
    *
