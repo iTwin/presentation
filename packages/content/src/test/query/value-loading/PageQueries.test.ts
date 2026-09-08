@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { trimWhitespace } from "@itwin/presentation-shared";
-import { PAGE_SIZE } from "../../../content/query/QueryLimits.js";
+import { PAGE_SIZE, SQLITE_MAX_COMPOUND_SELECT_TERMS } from "../../../content/query/QueryLimits.js";
 import {
   buildAnchorPageQuery,
   buildKeyStreamQuery,
@@ -70,6 +70,23 @@ function createProjection(overrides?: {
 
 const sortColumn = { fieldId: "Schema.A.Code", column: "pres_sort_0", direction: "asc" } as const;
 const sorting: ContentQuerySort[] = [{ field: codeField, direction: "asc" }];
+
+// Number of terms in the largest compound SELECT of the given query, counting each nesting level separately.
+function maxCompoundTerms(ecsql: string): number {
+  const termsPerDepth = [1];
+  let max = 1;
+  for (let i = 0; i < ecsql.length; ++i) {
+    if (ecsql[i] === "(") {
+      termsPerDepth.push(1);
+    } else if (ecsql[i] === ")") {
+      termsPerDepth.pop();
+    } else if (ecsql.startsWith("UNION ALL", i)) {
+      const terms = ++termsPerDepth[termsPerDepth.length - 1];
+      max = Math.max(max, terms);
+    }
+  }
+  return max;
+}
 
 function createPlan(overrides?: {
   anchor?: { baseQuery?: BaseQueryGroup; projection?: SelectProjection; keyProjection?: SelectProjection };
@@ -266,6 +283,16 @@ describe("buildKeyStreamQuery", () => {
       ["pres_keyset_1"]: { type: "string", value: "Schema.A" },
       ["pres_keyset_2"]: { type: "id", value: "0x1" },
     });
+  });
+
+  it("nests the union into groups when there are more sources than a compound SELECT allows", () => {
+    const plans = Array.from({ length: SQLITE_MAX_COMPOUND_SELECT_TERMS * 2 + 1 }, () => createPlan());
+    const query = buildKeyStreamQuery({ plans, sorting });
+
+    // Every source is still a branch of the union...
+    expect(query.ecsql.match(/FROM \[Schema\]\.\[A\] \[this\]/g)).to.have.lengthOf(plans.length);
+    // ...but no single compound SELECT has more terms than the limit.
+    expect(maxCompoundTerms(query.ecsql)).to.be.at.most(SQLITE_MAX_COMPOUND_SELECT_TERMS);
   });
 
   it("throws when a cursor references a non-primitive sort field", () => {

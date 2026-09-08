@@ -649,6 +649,50 @@ describe("Content", () => {
         );
         expect(items.map((item) => item.primaryKey.id)).toEqual([setup.a1.id, setup.b2.id, setup.a3.id, setup.b4.id]);
       });
+
+      it("orders items globally across more sources than a compound SELECT allows", async () => {
+        // SQLite refuses a compound SELECT with more than 500 terms, so the key stream that interleaves the
+        // sources has to nest its `UNION ALL` branches into groups.
+        const sourceCount = 600;
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="Base" modifier="Abstract">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              ${new Array(sourceCount)
+                .fill(0)
+                .map(
+                  (_, i) => `
+                    <ECEntityClass typeName="D${i}">
+                      <BaseClass>Base</BaseClass>
+                    </ECEntityClass>
+                  `,
+                )
+                .join("")}
+            `,
+          );
+          for (let i = 0; i < sourceCount; ++i) {
+            builder.insertInstance(schema.items[`D${i}`].fullName, { score: sourceCount - i });
+          }
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: new Array(sourceCount)
+            .fill(0)
+            .map((_, i) => ({ primaryClass: setup.schema.items[`D${i}`].fullName })),
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(provider.getItems({ sorting: [{ field: scoreField, direction: "asc" }] }));
+        expect(items.map((item) => item.getValue(scoreField))).toEqual(
+          new Array(sourceCount).fill(0).map((_, i) => i + 1),
+        );
+      });
     });
 
     describe("filtering", () => {

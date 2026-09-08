@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { mergeBindings } from "../../InternalUtils.js";
-import { PAGE_SIZE } from "../QueryLimits.js";
+import { PAGE_SIZE, SQLITE_MAX_COMPOUND_SELECT_TERMS } from "../QueryLimits.js";
 import { buildKeysetPredicate } from "./Keyset.js";
 
 import type { Id64String } from "@itwin/core-bentley";
@@ -109,7 +109,7 @@ export function buildKeyStreamQuery(props: {
     mergeBindings(bindings, namespaced.bindings);
     return `SELECT * FROM (${namespaced.sql})`;
   });
-  const union = branches.join(" UNION ALL ");
+  const union = unionAll(branches);
   const where = cursor ? applyKeyset({ projection: plans[0].anchor.keyProjection, sorting, cursor, bindings }) : "";
   return {
     ecsql: `
@@ -155,6 +155,20 @@ export function buildValueQuery(props: {
 function selectFragments(props: { select: string; from: string; joins: string[]; where?: string }): string {
   const { select, from, joins, where } = props;
   return [select, from, ...joins, where].filter((fragment) => fragment).join(" ");
+}
+
+// Combines the branches into a single result set, nesting them into derived tables when there are more of
+// them than one compound SELECT may contain.
+function unionAll(branches: string[]): string {
+  if (branches.length <= SQLITE_MAX_COMPOUND_SELECT_TERMS) {
+    return branches.join(" UNION ALL ");
+  }
+  const groups: string[] = [];
+  for (let i = 0; i < branches.length; i += SQLITE_MAX_COMPOUND_SELECT_TERMS) {
+    const group = branches.slice(i, i + SQLITE_MAX_COMPOUND_SELECT_TERMS);
+    groups.push(`SELECT * FROM (${group.join(" UNION ALL ")})`);
+  }
+  return unionAll(groups);
 }
 
 function applyKeyset(props: {

@@ -16,6 +16,15 @@ import type { ResolvedPath } from "../ContentTarget.js";
 export const SQLITE_MAX_JOIN_TABLES = 64;
 
 /**
+ * Maximum number of `UNION ALL` terms SQLite allows in a compound SELECT (`SQLITE_MAX_COMPOUND_SELECT`).
+ * Larger unions are nested into groups of derived tables — the terms are counted per compound statement,
+ * and a subquery starts a new one.
+ *
+ * @internal
+ */
+export const SQLITE_MAX_COMPOUND_SELECT_TERMS = 500;
+
+/**
  * Number of items the content loader fetches per page. The loader pages itself with a keyset cursor
  * and a `LIMIT` of this size so the frontend query executor never has to page (and OFFSET) our queries
  * internally: each query it runs already fits in one page, bounding time-to-first-value.
