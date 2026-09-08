@@ -324,6 +324,7 @@ export interface PropertyField extends BaseField {
     pathCardinality: CardinalityHint;
     pathFromTarget: RelationshipPath;
     primaryClassNames: EC.FullClassNameDotNotation[];
+    propertyClassKind?: "target" | "relationship";
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     selectorId: string;

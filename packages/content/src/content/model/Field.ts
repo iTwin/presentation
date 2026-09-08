@@ -54,6 +54,11 @@ export interface PropertyField extends BaseField {
   /** The EC property name within the property's class. */
   propertyName: string;
   /**
+   * For a related property, identifies whether the property belongs to the relationship path step's
+   * target class or relationship class. Undefined for a direct property.
+   */
+  propertyClassKind?: "target" | "relationship";
+  /**
    * Relationship path from the content target to this field's property class.
    * Empty array means the field belongs to the target class directly.
    */
