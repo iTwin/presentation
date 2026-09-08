@@ -139,7 +139,7 @@ describe("createContentItem", () => {
       expect(entries[1].getValue(nameField)).to.be.undefined;
     });
 
-    it("inlines the value for a single-instance ('one') path", () => {
+    it("uses the inline value for a single-instance ('one') path", () => {
       const nameField = createTestPropertyField("BisCore.UniqueAspect.Name(path)", {
         propertyName: "Name",
         propertyClassName: "BisCore.UniqueAspect",
