@@ -93,7 +93,8 @@ export function createEntityClass(props: {
 
 /**
  * Creates a relationship `EC.Class` stub for tests. Defaults to a 1:1 relationship; pass
- * `cardinality: "many"` for a target constraint that reaches many related instances.
+ * `cardinality: "many"` for a 1:many one — so a reverse traversal of either lands on a
+ * single-valued constraint.
  */
 export function createRelationshipClass(props: {
   fullName: EC.FullClassNameDotNotation;
@@ -119,7 +120,7 @@ export function createRelationshipClass(props: {
     isMixin: () => false,
     getDerivedClassNames: () => [],
     direction: "Forward",
-    source: constraint("unbounded"),
+    source: constraint(1),
     target: constraint(props.cardinality === "many" ? "unbounded" : 1),
   } as unknown as EC.RelationshipClass;
 }
