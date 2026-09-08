@@ -30,7 +30,7 @@ export function serializeRelationshipPath({
   omitLastTargetClass,
   includeInstanceFilters,
 }: {
-  path: RelationshipPath;
+  path: DeepReadonly<RelationshipPath>;
   omitLastTargetClass?: boolean;
   includeInstanceFilters?: boolean;
 }): string {

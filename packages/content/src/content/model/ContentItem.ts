@@ -113,16 +113,16 @@ export function createContentItem({
     primaryKey: contentValues.primaryKey,
     values: contentValues.values,
     relatedInstances: contentValues.relatedInstances,
-    getValue(field: ReadonlyField): DeepReadonly<Value> {
+    getValue(field: DeepReadonly<ReadonlyField>): DeepReadonly<Value> {
       return contentValues.values[field.id];
     },
-    getRelatedInstances(props: { pathFromTarget: RelationshipPath }) {
+    getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }) {
       const pathKey = serializeRelationshipPath({ path: props.pathFromTarget });
       const entries = contentValues.relatedInstances[pathKey] ?? [];
       return entries.map((entry, index) => ({
         key: entry.key,
         relationshipKey: entry.relationshipKey,
-        getValue(field: PropertyField): Value {
+        getValue(field: DeepReadonly<PropertyField>): DeepReadonly<Value> {
           if (serializeRelationshipPath({ path: field.pathFromTarget }) !== pathKey) {
             return undefined;
           }
