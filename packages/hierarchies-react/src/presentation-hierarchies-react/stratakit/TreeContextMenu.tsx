@@ -13,7 +13,7 @@ interface TreeContextMenuContextValue {
   openContextMenu: (props: { position: { x: number; y: number }; actions: ReactNode[] }) => void;
 }
 
-const TreeContextMenuContext = createContext<TreeContextMenuContextValue | undefined>(undefined);
+const TreeContextMenuContext = createContext<TreeContextMenuContextValue>({ openContextMenu: () => {} });
 
 /** @internal */
 export function useTreeContextMenu() {

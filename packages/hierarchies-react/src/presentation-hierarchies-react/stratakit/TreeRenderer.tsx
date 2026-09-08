@@ -227,12 +227,7 @@ export const StrataKitTreeRenderer: FC<
               node={renameOverlayTarget.node}
               renameParameters={renameContext.renameParameters}
               onCancel={cancelRename}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: `calc(var(--stratakit-space-x2) + (var(--stratakit-space-x1) + var(--stratakit-space-x05)) * ${renameOverlayTarget.level - 1} + 1.5rem + var(--stratakit-space-x1))`,
-                transform: `translateY(${renameOverlayTarget.offset}px)`,
-              }}
+              style={renameOverlayTarget.style}
             />
           ) : null}
         </div>
@@ -255,9 +250,21 @@ function getRenameOverlayTarget({
   }
   const virtualItem = items.find((virtualizedItem) => flatItems[virtualizedItem.index].id === renameParameters.nodeId);
   const item = virtualItem ? flatItems[virtualItem.index] : undefined;
-  return virtualItem && item && !isPlaceholderItem(item)
-    ? { node: item.node, level: item.level, offset: virtualItem.start + virtualItem.size }
-    : undefined;
+  if (!virtualItem || !item || isPlaceholderItem(item)) {
+    return undefined;
+  }
+
+  const levelPadding = `var(--stratakit-space-x2) + (var(--stratakit-space-x1) + var(--stratakit-space-x05)) * ${item.level - 1}`;
+  const expanderWidth = `1.5rem + var(--stratakit-space-x1)`;
+  return {
+    node: item.node,
+    style: {
+      position: "absolute",
+      top: 0,
+      left: `calc(${levelPadding} + ${expanderWidth})`,
+      transform: `translateY(${virtualItem.start + virtualItem.size}px)`,
+    } satisfies CSSProperties,
+  };
 }
 
 function useExpandAndScrollToNode({

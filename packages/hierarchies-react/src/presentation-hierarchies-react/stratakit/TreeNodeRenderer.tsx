@@ -148,7 +148,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             return;
           }
 
-          contextMenu?.openContextMenu({ position: { x: e.clientX, y: e.clientY }, actions });
+          contextMenu.openContextMenu({ position: { x: e.clientX, y: e.clientY }, actions });
         }}
       />
     );
