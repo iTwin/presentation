@@ -360,7 +360,12 @@ describe("Content", () => {
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
       const config = await createIModelContentConfiguration({ imodelAccess });
-      expect(config.imodelFieldsProviders ?? []).toHaveLength(0);
+      // Only BisCore's own fields providers are present — the embedded ruleset above contributed
+      // none, since it isn't supplemental.
+      expect(config.imodelFieldsProviders?.map((provider) => provider.id)).toEqual([
+        "biscore-aspects_v1",
+        "biscore-fields_v1",
+      ]);
 
       const descriptor = await buildDescriptor({
         imodelAccess,

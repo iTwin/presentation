@@ -5,10 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { createTransformableDescriptor } from "../../content/extensions/DescriptorTransformer.js";
-import {
-  createHiddenSchemaMembersDescriptorTransformer,
-  DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY,
-} from "../../content/extensions/HiddenSchemaMembersTransformer.js";
+import { createHiddenSchemaMembersDescriptorTransformer } from "../../content/extensions/HiddenSchemaMembersTransformer.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { toSortedUniqueClassNames } from "../../content/model/Utils.js";
 import { createEntityClass, createMixinClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
@@ -72,17 +69,6 @@ function createDescriptor(fields: Field[]): ContentDescriptor {
 }
 
 describe("createHiddenSchemaMembersDescriptorTransformer", () => {
-  it("defaults to DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY", () => {
-    const transformer = createHiddenSchemaMembersDescriptorTransformer();
-    expect(transformer.priority).to.equal(DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY);
-    expect(DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY).to.equal(500);
-  });
-
-  it("accepts a priority override", () => {
-    const transformer = createHiddenSchemaMembersDescriptorTransformer({ priority: 42 });
-    expect(transformer.priority).to.equal(42);
-  });
-
   it("hides a field whose property itself is hidden", async () => {
     const imodelAccess: ECSchemaProvider = createSchemaAccess([
       createEntityClass({

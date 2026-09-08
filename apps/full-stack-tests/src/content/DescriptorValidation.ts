@@ -76,7 +76,7 @@ export interface PropertyFieldValidator {
   describe: () => string;
 }
 
-export namespace PropertyFieldValidators {
+export namespace PropertyFieldValidator {
   /** Creates a `PropertyFieldValidator` matching a property field structurally, per `expectations`. */
   export function create(expectations: PropertyFieldExpectations): PropertyFieldValidator {
     return {

@@ -3,18 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, expect, it } from "vitest";
 import {
-  bisCoreAspectsFieldsProvider,
-  bisCoreFieldsProvider,
-  createBisCoreFieldsProviders,
+  createBisCoreAspectsFieldsProvider,
+  createBisCoreFieldsProvider,
+  DOCUMENT_LINK_CATEGORY_ID,
+  MODEL_SOURCE_CATEGORY_ID,
+  SECONDARY_SOURCES_CATEGORY_ID,
+  SOURCE_INFORMATION_CATEGORY_ID,
 } from "../../../content/extensions/biscore/BisCoreFieldsProviders.js";
+import { DEFAULT_BIS_CORE_LOCALIZED_STRINGS } from "../../../content/extensions/biscore/BisCoreLocalizedStrings.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../../content/ContentTarget.js";
-
-type Contribution = NonNullable<Awaited<ReturnType<typeof bisCoreFieldsProvider.getContribution>>>;
+import type { FieldsProviderContribution } from "../../../content/extensions/IModelFieldsProvider.js";
 
 const BASE_ELEMENT_PATHS = [
   ["BisCore.ElementHasLinks"],
@@ -52,29 +54,24 @@ function createTarget(primaryClass: EC.FullClassNameDotNotation): ContentTarget 
   return { primaryClass };
 }
 
-async function getContribution(
-  imodelAccess: ECSchemaProvider,
-  primaryClass: EC.FullClassNameDotNotation,
-): Promise<Contribution | undefined> {
-  return bisCoreFieldsProvider.getContribution({ imodelAccess, target: createTarget(primaryClass) });
-}
-
-async function getAspectsContribution(
-  imodelAccess: ECSchemaProvider,
-  primaryClass: EC.FullClassNameDotNotation,
-): Promise<Contribution | undefined> {
-  return bisCoreAspectsFieldsProvider.getContribution({ imodelAccess, target: createTarget(primaryClass) });
-}
-
-function getRelationshipPaths(contribution: Contribution) {
+function getRelationshipPaths(contribution: FieldsProviderContribution) {
   return contribution.relatedProperties?.map((declaration) => declaration.path.map((step) => step.relationshipName));
 }
 
-function expectBaseElementPaths(contribution: Contribution): void {
+function expectBaseElementPaths(contribution: FieldsProviderContribution): void {
   expect(getRelationshipPaths(contribution)).to.deep.equal(BASE_ELEMENT_PATHS);
 }
 
 describe("bisCoreFieldsProvider", () => {
+  const bisCoreFieldsProvider = createBisCoreFieldsProvider(DEFAULT_BIS_CORE_LOCALIZED_STRINGS);
+
+  async function getContribution(
+    imodelAccess: ECSchemaProvider,
+    primaryClass: EC.FullClassNameDotNotation,
+  ): Promise<FieldsProviderContribution | undefined> {
+    return bisCoreFieldsProvider.getContribution({ imodelAccess, target: createTarget(primaryClass) });
+  }
+
   it("is not applied recursively, so its fields don't surface on nested content", () => {
     // The split from `bisCoreAspectsFieldsProvider` exists precisely so that links, external-source
     // information and type-definition fields stay on the direct content target. Opting this provider
@@ -92,23 +89,9 @@ describe("bisCoreFieldsProvider", () => {
     const contribution = await getContribution(createImodelAccess(), "BisCore.Element");
     expect(contribution).to.not.be.undefined;
     expectBaseElementPaths(contribution!);
-    expect(contribution!.categories).to.deep.equal({
-      source_information: { id: "source_information", label: "Source Information" },
-      model_source: { id: "model_source", label: "Model Source", parentId: "source_information" },
-    });
-
-    const modelSourceLink = contribution!.relatedProperties![2];
-    expect(modelSourceLink.properties).to.deep.equal([
-      {
-        stepIndex: 2,
-        target: {
-          select: { include: ["Url", "UserLabel"] },
-          overrides: {
-            Url: { label: "Path", categoryId: "model_source" },
-            UserLabel: { label: "Name", categoryId: "model_source" },
-          },
-        },
-      },
+    expect(Object.keys(contribution!.categories ?? {})).to.have.members([
+      SOURCE_INFORMATION_CATEGORY_ID,
+      MODEL_SOURCE_CATEGORY_ID,
     ]);
   });
 
@@ -183,17 +166,11 @@ describe("bisCoreFieldsProvider", () => {
       ["BisCore.ElementOwnsMultiAspects"],
     ]);
 
+    // The `Kind <> 'Relationship'` filter excludes synchronization-only aspects from the identifier
+    // declaration — a behavioral detail worth its own assertion, unlike the label/category metadata
+    // below, which full-stack tests already verify end-to-end.
     const identifier = contribution!.relatedProperties![3];
     expect(identifier.path[0].instanceFilter).to.deep.equal({ expression: "this.Kind <> 'Relationship'" });
-    expect(identifier.properties).to.deep.equal([
-      {
-        stepIndex: 0,
-        target: {
-          select: { include: ["Identifier"] },
-          overrides: { Identifier: { label: "Source Element ID", categoryId: "source_information" } },
-        },
-      },
-    ]);
   });
 
   it("adds document and secondary-source fields at BisCore 1.0.13", async () => {
@@ -213,28 +190,25 @@ describe("bisCoreFieldsProvider", () => {
         "BisCore.ExternalSourceIsInRepository",
       ],
     ]);
-    expect(contribution!.categories).to.deep.equal({
-      source_information: { id: "source_information", label: "Source Information" },
-      model_source: { id: "model_source", label: "Model Source", parentId: "source_information" },
-      document_link: { id: "document_link", label: "Document Link", parentId: "source_information" },
-      secondary_sources: { id: "secondary_sources", label: "Secondary Sources", parentId: "source_information" },
-    });
-
-    const documentLink = contribution!.relatedProperties![4];
-    expect(documentLink.properties).to.deep.equal([
-      {
-        stepIndex: 2,
-        target: {
-          select: "all",
-          defaultOverrides: { categoryId: "document_link" },
-          overrides: { UserLabel: { label: "Name" }, Url: { label: "Path" }, Model: { hidden: true } },
-        },
-      },
+    expect(Object.keys(contribution!.categories ?? {})).to.have.members([
+      SOURCE_INFORMATION_CATEGORY_ID,
+      MODEL_SOURCE_CATEGORY_ID,
+      DOCUMENT_LINK_CATEGORY_ID,
+      SECONDARY_SOURCES_CATEGORY_ID,
     ]);
   });
 });
 
 describe("bisCoreAspectsFieldsProvider", () => {
+  const bisCoreAspectsFieldsProvider = createBisCoreAspectsFieldsProvider();
+
+  async function getAspectsContribution(
+    imodelAccess: ECSchemaProvider,
+    primaryClass: EC.FullClassNameDotNotation,
+  ): Promise<FieldsProviderContribution | undefined> {
+    return bisCoreAspectsFieldsProvider.getContribution({ imodelAccess, target: createTarget(primaryClass) });
+  }
+
   it("is applied recursively, so owned aspects also surface on nested content", () => {
     expect(bisCoreAspectsFieldsProvider.applyRecursively).to.be.true;
   });
@@ -250,10 +224,6 @@ describe("bisCoreAspectsFieldsProvider", () => {
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ["BisCore.ElementOwnsUniqueAspect"],
       ["BisCore.ElementOwnsMultiAspects"],
-    ]);
-    expect(contribution!.relatedProperties!.map((declaration) => declaration.properties)).to.deep.equal([
-      [{ stepIndex: 0, target: { select: "all" } }],
-      [{ stepIndex: 0, target: { select: "all" } }],
     ]);
     expect(contribution!.categories).to.be.undefined;
   });
@@ -285,14 +255,5 @@ describe("bisCoreAspectsFieldsProvider", () => {
     const genericMultiAspects = contribution!.relatedProperties![1];
     expect(genericMultiAspects.path[0].relationshipName).to.eq("BisCore.ElementOwnsMultiAspects");
     expect(genericMultiAspects.path[0].instanceFilter).to.be.undefined;
-  });
-});
-
-describe("createBisCoreFieldsProviders", () => {
-  it("returns the aspects and the merged BisCore providers", () => {
-    expect(createBisCoreFieldsProviders().map((provider) => provider.id)).to.deep.equal([
-      "biscore-aspects_v1",
-      "biscore-fields_v1",
-    ]);
   });
 });

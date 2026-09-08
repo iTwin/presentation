@@ -21,29 +21,31 @@ import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Code, IModel } from "@itwin/core-common";
 import {
-  createBisCoreContentConfiguration,
   createHiddenSchemaMembersDescriptorTransformer,
+  createIModelContentConfiguration,
 } from "@itwin/presentation-content";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
-import { PropertyFieldValidators, validateVisibleFieldsAtPath } from "./DescriptorValidation.js";
+import { PropertyFieldValidator, validateVisibleFieldsAtPath } from "./DescriptorValidation.js";
 import { buildDescriptor, createContentIModelAccess } from "./Utils.js";
 
 import type { ElementAspectProps, ExternalSourceProps } from "@itwin/core-common";
 import type { ContentConfiguration } from "@itwin/presentation-content";
 import type { RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentIModelAccess } from "./Utils.js";
 
 /**
- * Composes the BisCore content configuration under test with the schema
- * hidden-properties transformer.
+ * Composes the default iModel content configuration (BisCore's own fields providers and
+ * descriptor transformers — these test iModels have no embedded configuration of their own) with
+ * the schema hidden-properties transformer.
  */
-function createConfig(): ContentConfiguration {
-  const bisCore = createBisCoreContentConfiguration();
+async function createConfig(imodelAccess: ContentIModelAccess): Promise<ContentConfiguration> {
+  const config = await createIModelContentConfiguration({ imodelAccess });
   return {
-    imodelFieldsProviders: bisCore.imodelFieldsProviders,
+    imodelFieldsProviders: config.imodelFieldsProviders,
     descriptorTransformers: [
-      ...(bisCore.descriptorTransformers ?? []),
+      ...(config.descriptorTransformers ?? []),
       createHiddenSchemaMembersDescriptorTransformer(),
     ],
   };
@@ -63,33 +65,33 @@ function repositoryLinkFieldValidators(props: {
     ...(modelHidden
       ? []
       : [
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: "BisCore.Element",
             propertyName: "Model",
             label: "Model",
             category,
           }),
         ]),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.Element",
       propertyName: "CodeValue",
       label: "Code",
       category,
     }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.Element",
       propertyName: "UserLabel",
       label: userLabel,
       category,
     }),
-    PropertyFieldValidators.create({ propertyClassName: "BisCore.UrlLink", propertyName: "Url", label: url, category }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({ propertyClassName: "BisCore.UrlLink", propertyName: "Url", label: url, category }),
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.UrlLink",
       propertyName: "Description",
       label: "Description",
       category,
     }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.RepositoryLink",
       propertyName: "Format",
       label: "Format",
@@ -105,13 +107,13 @@ function repositoryLinkFieldValidators(props: {
  */
 function repositoryLinkNameAndPathValidators({ category }: { category: string[] }) {
   return [
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.Element",
       propertyName: "UserLabel",
       label: "Name",
       category,
     }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.UrlLink",
       propertyName: "Url",
       label: "Path",
@@ -126,25 +128,25 @@ function repositoryLinkNameAndPathValidators({ category }: { category: string[] 
 function physicalTypeFieldValidators() {
   const category = ["Physical Type"];
   return [
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.Element",
       propertyName: "Model",
       label: "Model",
       category,
     }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.Element",
       propertyName: "CodeValue",
       label: "Code",
       category,
     }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.Element",
       propertyName: "UserLabel",
       label: "User Label",
       category,
     }),
-    PropertyFieldValidators.create({
+    PropertyFieldValidator.create({
       propertyClassName: "BisCore.PhysicalType",
       propertyName: "PhysicalMaterial",
       label: "Physical Material",
@@ -242,7 +244,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: createConfig(),
+        config: await createConfig(imodelAccess),
       });
 
       const uniqueAspectPath: RelationshipPath = [
@@ -256,7 +258,7 @@ describe("Content", () => {
         descriptor,
         path: uniqueAspectPath,
         expect: [
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: uniqueAspectClassName,
             propertyName: "DesignedBy",
             label: "DesignedBy",
@@ -276,7 +278,7 @@ describe("Content", () => {
         descriptor,
         path: multiAspectPath,
         expect: [
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: multiAspectClassName,
             propertyName: "Note",
             label: "Note",
@@ -363,7 +365,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: createConfig(),
+        config: await createConfig(imodelAccess),
       });
 
       const groupLinkPath: RelationshipPath = [
@@ -466,7 +468,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: createConfig(),
+        config: await createConfig(imodelAccess),
       });
 
       const externalSourceAspectPath: RelationshipPath = [
@@ -476,7 +478,19 @@ describe("Content", () => {
           relationshipName: "BisCore.ElementOwnsMultiAspects",
         },
       ];
-      validateVisibleFieldsAtPath({ descriptor, path: externalSourceAspectPath, expect: [] });
+
+      validateVisibleFieldsAtPath({
+        descriptor,
+        path: externalSourceAspectPath,
+        expect: [
+          PropertyFieldValidator.create({
+            propertyClassName: "BisCore.ExternalSourceAspect",
+            propertyName: "Identifier",
+            label: "Source Element ID",
+            category: ["Source Information"],
+          }),
+        ],
+      });
 
       const documentLinkPath: RelationshipPath = [
         ...externalSourceAspectPath,
@@ -555,7 +569,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: createConfig(),
+        config: await createConfig(imodelAccess),
       });
 
       const typeDefinitionPath: RelationshipPath = [
@@ -617,7 +631,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: createConfig(),
+        config: await createConfig(imodelAccess),
       });
 
       const nestedAspectPath: RelationshipPath = [
@@ -636,7 +650,7 @@ describe("Content", () => {
         descriptor,
         path: nestedAspectPath,
         expect: [
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: uniqueAspectClassName,
             propertyName: "DesignedBy",
             label: "DesignedBy",
@@ -683,7 +697,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: drawingGraphicClassName }],
-        config: createConfig(),
+        config: await createConfig(imodelAccess),
       });
 
       const typeDefinitionPath: RelationshipPath = [
@@ -707,31 +721,31 @@ describe("Content", () => {
         descriptor,
         path: representedElementPath,
         expect: [
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: "BisCore.Element",
             propertyName: "Model",
             label: "Model",
             category,
           }),
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: "BisCore.Element",
             propertyName: "CodeValue",
             label: "Code",
             category,
           }),
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: "BisCore.Element",
             propertyName: "UserLabel",
             label: "User Label",
             category,
           }),
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: "BisCore.GeometricElement3d",
             propertyName: "Category",
             label: "Category",
             category,
           }),
-          PropertyFieldValidators.create({
+          PropertyFieldValidator.create({
             propertyClassName: "BisCore.PhysicalElement",
             propertyName: "PhysicalMaterial",
             label: "Physical Material",

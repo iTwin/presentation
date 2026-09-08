@@ -3,9 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY } from "../HiddenSchemaMembersTransformer.js";
 import { isBisCoreSchemaAtLeast } from "./BisCoreUtils.js";
 
 import type { DescriptorTransformer } from "../DescriptorTransformer.js";
+
+/**
+ * Priority for bis-core descriptor transformers. Higher priority than hidden schema members transformer
+ * to make sure that some of them could be overridden.
+ */
+const BIS_CORE_TRANSFORMER_PRIORITY = HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY + 100;
 
 /**
  * Hides `BisCore:DefinitionElement.IsPrivate` and `BisCore:TypeDefinitionElement.Recipe` before BisCore
@@ -14,6 +21,7 @@ import type { DescriptorTransformer } from "../DescriptorTransformer.js";
  * @internal
  */
 export const hideTypeDefinitionElementInternalPropertiesTransformer: DescriptorTransformer = {
+  priority: BIS_CORE_TRANSFORMER_PRIORITY,
   async transform({ descriptor, imodelAccess }) {
     if (await isBisCoreSchemaAtLeast(imodelAccess, "1.0.15")) {
       return;
@@ -37,6 +45,7 @@ export const hideTypeDefinitionElementInternalPropertiesTransformer: DescriptorT
  * @internal
  */
 export const renamePhysicalTypePhysicalMaterialTransformer: DescriptorTransformer = {
+  priority: BIS_CORE_TRANSFORMER_PRIORITY,
   async transform({ descriptor, imodelAccess }) {
     if (
       !(await isBisCoreSchemaAtLeast(imodelAccess, "1.0.11")) ||
@@ -57,11 +66,21 @@ export const renamePhysicalTypePhysicalMaterialTransformer: DescriptorTransforme
 };
 
 /**
- * Creates the set of `DescriptorTransformer` implementations applying BisCore-specific field
- * metadata adjustments.
+ * Makes `BisCore.ExternalSourceAspect` property `Identifier` visible even though it is hidden by the schema.
  *
  * @internal
  */
-export function createBisCoreDescriptorTransformers(): DescriptorTransformer[] {
-  return [hideTypeDefinitionElementInternalPropertiesTransformer, renamePhysicalTypePhysicalMaterialTransformer];
-}
+export const showExternalSourceAspectPropsTransformer: DescriptorTransformer = {
+  priority: BIS_CORE_TRANSFORMER_PRIORITY,
+  async transform({ descriptor }) {
+    const identifierField = Object.values(descriptor.fields).find(
+      (field) =>
+        field.kind === "property" &&
+        field.propertyClassName === "BisCore.ExternalSourceAspect" &&
+        field.propertyName === "Identifier",
+    );
+    if (identifierField) {
+      identifierField.hidden = false;
+    }
+  },
+};

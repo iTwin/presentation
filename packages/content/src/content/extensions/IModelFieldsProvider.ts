@@ -82,7 +82,7 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
  *
  * @public
  */
-interface FieldsProviderContribution {
+export interface FieldsProviderContribution {
   /** Related properties declarations — paths to navigate and properties to load. */
   relatedProperties?: RelatedPropertiesDeclaration[];
   /** Calculated field declarations — ECSQL expressions evaluated in the query. */

@@ -10,27 +10,39 @@ import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-sha
 import type { ContentTarget } from "../../ContentTarget.js";
 import type { CategoryDefinition } from "../../model/Category.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../IModelFieldsProvider.js";
+import type { BisCoreLocalizedStrings } from "./BisCoreLocalizedStrings.js";
 
 /** A single step of a `RelationshipPath` (not separately exported by `@itwin/presentation-shared`). */
 type RelationshipPathStep = RelationshipPath[number];
 
-/** Category id/label constants shared by contributions that nest fields under "Source Information". */
-const SOURCE_INFORMATION_CATEGORY_ID = "source_information";
-const MODEL_SOURCE_CATEGORY_ID = "model_source";
-const SECONDARY_SOURCES_CATEGORY_ID = "secondary_sources";
-const DOCUMENT_LINK_CATEGORY_ID = "document_link";
+/**
+ * Category id constants shared by contributions that nest fields under "Source Information".
+ *
+ * @internal
+ */
+export const SOURCE_INFORMATION_CATEGORY_ID = "source_information";
+/** @internal */
+export const MODEL_SOURCE_CATEGORY_ID = "model_source";
+/** @internal */
+export const SECONDARY_SOURCES_CATEGORY_ID = "secondary_sources";
+/** @internal */
+export const DOCUMENT_LINK_CATEGORY_ID = "document_link";
 
-function createSourceInformationCategory(): CategoryDefinition {
-  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: "Source Information" };
+function createSourceInformationCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: strings.sourceInformation };
 }
-function createModelSourceCategory(): CategoryDefinition {
-  return { id: MODEL_SOURCE_CATEGORY_ID, label: "Model Source", parentId: SOURCE_INFORMATION_CATEGORY_ID };
+function createModelSourceCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return { id: MODEL_SOURCE_CATEGORY_ID, label: strings.modelSource, parentId: SOURCE_INFORMATION_CATEGORY_ID };
 }
-function createSecondarySourcesCategory(): CategoryDefinition {
-  return { id: SECONDARY_SOURCES_CATEGORY_ID, label: "Secondary Sources", parentId: SOURCE_INFORMATION_CATEGORY_ID };
+function createSecondarySourcesCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return {
+    id: SECONDARY_SOURCES_CATEGORY_ID,
+    label: strings.secondarySources,
+    parentId: SOURCE_INFORMATION_CATEGORY_ID,
+  };
 }
-function createDocumentLinkCategory(): CategoryDefinition {
-  return { id: DOCUMENT_LINK_CATEGORY_ID, label: "Document Link", parentId: SOURCE_INFORMATION_CATEGORY_ID };
+function createDocumentLinkCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return { id: DOCUMENT_LINK_CATEGORY_ID, label: strings.documentLink, parentId: SOURCE_INFORMATION_CATEGORY_ID };
 }
 
 /**
@@ -98,7 +110,10 @@ async function createAspectRelatedProperties(
  * `ModelModelsElement` → `ElementHasLinks`, renamed into the "Model Source" category) related
  * properties declarations and their categories.
  */
-function createLinksContribution(target: ContentTarget): {
+function createLinksContribution(
+  target: ContentTarget,
+  strings: BisCoreLocalizedStrings,
+): {
   relatedProperties: RelatedPropertiesDeclaration[];
   categories: Record<CategoryDefinition["id"], CategoryDefinition>;
 } {
@@ -174,8 +189,8 @@ function createLinksContribution(target: ContentTarget): {
   return {
     relatedProperties,
     categories: {
-      [SOURCE_INFORMATION_CATEGORY_ID]: createSourceInformationCategory(),
-      [MODEL_SOURCE_CATEGORY_ID]: createModelSourceCategory(),
+      [SOURCE_INFORMATION_CATEGORY_ID]: createSourceInformationCategory(strings),
+      [MODEL_SOURCE_CATEGORY_ID]: createModelSourceCategory(strings),
     },
   };
 }
@@ -189,6 +204,7 @@ function createLinksContribution(target: ContentTarget): {
 async function createExternalSourceContribution(
   imodelAccess: ECSchemaProvider,
   target: ContentTarget,
+  strings: BisCoreLocalizedStrings,
 ): Promise<{
   relatedProperties: RelatedPropertiesDeclaration[];
   categories: Record<CategoryDefinition["id"], CategoryDefinition>;
@@ -204,7 +220,7 @@ async function createExternalSourceContribution(
   };
 
   if (await isBisCoreSchemaAtLeast(imodelAccess, "1.0.2")) {
-    categories[SOURCE_INFORMATION_CATEGORY_ID] = createSourceInformationCategory();
+    categories[SOURCE_INFORMATION_CATEGORY_ID] = createSourceInformationCategory(strings);
     relatedProperties.push({
       path: [externalSourceAspectStep],
       cardinalityHint: "many",
@@ -223,9 +239,9 @@ async function createExternalSourceContribution(
   }
 
   if (await isBisCoreSchemaAtLeast(imodelAccess, "1.0.13")) {
-    categories[SOURCE_INFORMATION_CATEGORY_ID] = createSourceInformationCategory();
-    categories[DOCUMENT_LINK_CATEGORY_ID] = createDocumentLinkCategory();
-    categories[SECONDARY_SOURCES_CATEGORY_ID] = createSecondarySourcesCategory();
+    categories[SOURCE_INFORMATION_CATEGORY_ID] = createSourceInformationCategory(strings);
+    categories[DOCUMENT_LINK_CATEGORY_ID] = createDocumentLinkCategory(strings);
+    categories[SECONDARY_SOURCES_CATEGORY_ID] = createSecondarySourcesCategory(strings);
 
     // The source's own document link (repository link).
     relatedProperties.push({
@@ -324,6 +340,18 @@ async function createTypeDefinitionAndRepresentedElementRelatedProperties(
       ],
       cardinalityHint: "one",
     });
+    if (await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.GraphicalElement3d")) {
+      relatedProperties.push({
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.Element",
+            relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
+          },
+        ],
+        cardinalityHint: "many",
+      });
+    }
   }
   if (await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.GeometricElement2d")) {
     relatedProperties.push({
@@ -336,30 +364,18 @@ async function createTypeDefinitionAndRepresentedElementRelatedProperties(
       ],
       cardinalityHint: "one",
     });
-  }
-  if (await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.DrawingGraphic")) {
-    relatedProperties.push({
-      path: [
-        {
-          sourceClassName: target.primaryClass,
-          targetClassName: "BisCore.Element",
-          relationshipName: "BisCore.DrawingGraphicRepresentsElement",
-        },
-      ],
-      cardinalityHint: "many",
-    });
-  }
-  if (await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.GraphicalElement3d")) {
-    relatedProperties.push({
-      path: [
-        {
-          sourceClassName: target.primaryClass,
-          targetClassName: "BisCore.Element",
-          relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
-        },
-      ],
-      cardinalityHint: "many",
-    });
+    if (await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.DrawingGraphic")) {
+      relatedProperties.push({
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.Element",
+            relationshipName: "BisCore.DrawingGraphicRepresentsElement",
+          },
+        ],
+        cardinalityHint: "many",
+      });
+    }
   }
 
   return relatedProperties;
@@ -380,57 +396,50 @@ async function createTypeDefinitionAndRepresentedElementRelatedProperties(
  *
  * @internal
  */
-export const bisCoreAspectsFieldsProvider: IModelFieldsProvider = defineIModelFieldsProvider({
-  id: "biscore-aspects_v1",
-  applyRecursively: true,
-  async getContribution({ imodelAccess, target }) {
-    if (!(await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.Element"))) {
-      return undefined;
-    }
-    return { relatedProperties: await createAspectRelatedProperties(imodelAccess, target) };
-  },
-});
+export function createBisCoreAspectsFieldsProvider(): IModelFieldsProvider {
+  return defineIModelFieldsProvider({
+    id: "biscore-aspects_v1",
+    applyRecursively: true,
+    async getContribution({ imodelAccess, target }) {
+      if (!(await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.Element"))) {
+        return undefined;
+      }
+      return { relatedProperties: await createAspectRelatedProperties(imodelAccess, target) };
+    },
+  });
+}
 
 /**
- * The iModel fields provider contributing BisCore-specific fields for any target deriving from
- * `BisCore.Element`: element and group-member links plus the model-source repository link,
+ * Creates the iModel fields provider contributing BisCore-specific fields for any target deriving
+ * from `BisCore.Element`: element and group-member links plus the model-source repository link,
  * external-source information (source identifier and, on newer `BisCore` versions, document links
  * and secondary sources), and 2d/3d type-definition and represented-element fields.
  *
  * None of these contributions apply on nested content — they're only contributed for the direct
  * content target. Owned aspect fields, which do apply on nested content, are contributed by
  * `bisCoreAspectsFieldsProvider` instead.
- *
- * @internal
  */
-export const bisCoreFieldsProvider: IModelFieldsProvider = defineIModelFieldsProvider({
-  id: "biscore-fields_v1",
-  async getContribution({ imodelAccess, target }) {
-    if (!(await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.Element"))) {
-      return undefined;
-    }
+export function createBisCoreFieldsProvider(strings: BisCoreLocalizedStrings): IModelFieldsProvider {
+  return defineIModelFieldsProvider({
+    id: "biscore-fields_v1",
+    async getContribution({ imodelAccess, target }) {
+      if (!(await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.Element"))) {
+        return undefined;
+      }
 
-    const linksContribution = createLinksContribution(target);
-    const externalSourceContribution = await createExternalSourceContribution(imodelAccess, target);
+      const linksContribution = createLinksContribution(target, strings);
+      const externalSourceContribution = await createExternalSourceContribution(imodelAccess, target, strings);
 
-    const relatedProperties: RelatedPropertiesDeclaration[] = [
-      ...linksContribution.relatedProperties,
-      ...externalSourceContribution.relatedProperties,
-      ...(await createTypeDefinitionAndRepresentedElementRelatedProperties(imodelAccess, target)),
-    ];
+      const relatedProperties: RelatedPropertiesDeclaration[] = [
+        ...linksContribution.relatedProperties,
+        ...externalSourceContribution.relatedProperties,
+        ...(await createTypeDefinitionAndRepresentedElementRelatedProperties(imodelAccess, target)),
+      ];
 
-    return {
-      relatedProperties,
-      categories: { ...linksContribution.categories, ...externalSourceContribution.categories },
-    };
-  },
-});
-
-/**
- * Creates the set of `IModelFieldsProvider` implementations contributing BisCore-specific fields.
- *
- * @internal
- */
-export function createBisCoreFieldsProviders(): IModelFieldsProvider[] {
-  return [bisCoreAspectsFieldsProvider, bisCoreFieldsProvider];
+      return {
+        relatedProperties,
+        categories: { ...linksContribution.categories, ...externalSourceContribution.categories },
+      };
+    },
+  });
 }

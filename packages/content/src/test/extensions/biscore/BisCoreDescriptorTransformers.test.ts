@@ -5,9 +5,9 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  createBisCoreDescriptorTransformers,
   hideTypeDefinitionElementInternalPropertiesTransformer,
   renamePhysicalTypePhysicalMaterialTransformer,
+  showExternalSourceAspectPropsTransformer,
 } from "../../../content/extensions/biscore/BisCoreDescriptorTransformers.js";
 import { createTransformableDescriptor } from "../../../content/extensions/DescriptorTransformer.js";
 import { PropertyField } from "../../../content/model/Field.js";
@@ -113,6 +113,18 @@ describe("hideTypeDefinitionElementInternalPropertiesTransformer", () => {
   it("does not hide fields with the same property names declared by other classes", async () => {
     const unrelatedIsPrivate = propertyField({ propertyClassName: "TestSchema.Other", propertyName: "IsPrivate" });
     const unrelatedRecipe = propertyField({ propertyClassName: "TestSchema.Other", propertyName: "Recipe" });
+    const descriptor = createDescriptor([unrelatedIsPrivate, unrelatedRecipe]);
+
+    await hideTypeDefinitionElementInternalPropertiesTransformer.transform({
+      descriptor: createTransformableDescriptor(descriptor),
+      imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 14 }),
+    });
+
+    expect(descriptor.fields[unrelatedIsPrivate.id].hidden).to.be.undefined;
+    expect(descriptor.fields[unrelatedRecipe.id].hidden).to.be.undefined;
+  });
+
+  it("hides Recipe reached through a related instance (non-empty pathFromTarget)", async () => {
     const relatedRecipe = propertyField({
       propertyClassName: "BisCore.TypeDefinitionElement",
       propertyName: "Recipe",
@@ -124,15 +136,13 @@ describe("hideTypeDefinitionElementInternalPropertiesTransformer", () => {
         },
       ],
     });
-    const descriptor = createDescriptor([unrelatedIsPrivate, unrelatedRecipe, relatedRecipe]);
+    const descriptor = createDescriptor([relatedRecipe]);
 
     await hideTypeDefinitionElementInternalPropertiesTransformer.transform({
       descriptor: createTransformableDescriptor(descriptor),
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 14 }),
     });
 
-    expect(descriptor.fields[unrelatedIsPrivate.id].hidden).to.be.undefined;
-    expect(descriptor.fields[unrelatedRecipe.id].hidden).to.be.undefined;
     expect(descriptor.fields[relatedRecipe.id].hidden).to.be.true;
   });
 });
@@ -161,6 +171,17 @@ describe("renamePhysicalTypePhysicalMaterialTransformer", () => {
       propertyName: "PhysicalMaterial",
       label: "PhysicalMaterial",
     });
+    const descriptor = createDescriptor([wrongClass]);
+
+    await renamePhysicalTypePhysicalMaterialTransformer.transform({
+      descriptor: createTransformableDescriptor(descriptor),
+      imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 11 }),
+    });
+
+    expect(descriptor.fields[wrongClass.id].label).to.equal("PhysicalMaterial");
+  });
+
+  it("renames PhysicalMaterial reached through a related instance (non-empty pathFromTarget)", async () => {
     const related = propertyField({
       propertyClassName: "BisCore.PhysicalType",
       propertyName: "PhysicalMaterial",
@@ -173,14 +194,13 @@ describe("renamePhysicalTypePhysicalMaterialTransformer", () => {
       ],
       label: "PhysicalMaterial",
     });
-    const descriptor = createDescriptor([wrongClass, related]);
+    const descriptor = createDescriptor([related]);
 
     await renamePhysicalTypePhysicalMaterialTransformer.transform({
       descriptor: createTransformableDescriptor(descriptor),
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 11 }),
     });
 
-    expect(descriptor.fields[wrongClass.id].label).to.equal("PhysicalMaterial");
     expect(descriptor.fields[related.id].label).to.equal("Physical Material");
   });
 
@@ -217,11 +237,54 @@ describe("renamePhysicalTypePhysicalMaterialTransformer", () => {
   });
 });
 
-describe("createBisCoreDescriptorTransformers", () => {
-  it("returns both BisCore descriptor transformers", () => {
-    expect(createBisCoreDescriptorTransformers()).to.deep.equal([
-      hideTypeDefinitionElementInternalPropertiesTransformer,
-      renamePhysicalTypePhysicalMaterialTransformer,
-    ]);
+describe("showExternalSourceAspectPropsTransformer", () => {
+  it("shows Identifier declared by ExternalSourceAspect", async () => {
+    const identifier = propertyField({ propertyClassName: "BisCore.ExternalSourceAspect", propertyName: "Identifier" });
+    identifier.hidden = true;
+    const descriptor = createDescriptor([identifier]);
+
+    await showExternalSourceAspectPropsTransformer.transform({
+      descriptor: createTransformableDescriptor(descriptor),
+      imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 2 }),
+    });
+
+    expect(descriptor.fields[identifier.id].hidden).to.be.false;
+  });
+
+  it("shows Identifier reached through a related instance", async () => {
+    const identifier = propertyField({
+      propertyClassName: "BisCore.ExternalSourceAspect",
+      propertyName: "Identifier",
+      pathFromTarget: [
+        {
+          sourceClassName: "BisCore.Element",
+          targetClassName: "BisCore.ExternalSourceAspect",
+          relationshipName: "BisCore.ElementOwnsMultiAspects",
+        },
+      ],
+    });
+    identifier.hidden = true;
+    const descriptor = createDescriptor([identifier]);
+
+    await showExternalSourceAspectPropsTransformer.transform({
+      descriptor: createTransformableDescriptor(descriptor),
+      imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 2 }),
+    });
+
+    expect(descriptor.fields[identifier.id].hidden).to.be.false;
+  });
+
+  it("leaves other fields hidden", async () => {
+    const unrelatedIdentifier = propertyField({ propertyClassName: "TestSchema.Other", propertyName: "Identifier" });
+
+    unrelatedIdentifier.hidden = true;
+    const descriptor = createDescriptor([unrelatedIdentifier]);
+
+    await showExternalSourceAspectPropsTransformer.transform({
+      descriptor: createTransformableDescriptor(descriptor),
+      imodelAccess: createImodelAccess(),
+    });
+
+    expect(descriptor.fields[unrelatedIdentifier.id].hidden).to.be.true;
   });
 });
