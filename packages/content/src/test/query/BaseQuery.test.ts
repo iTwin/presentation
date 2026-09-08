@@ -189,8 +189,9 @@ describe("buildBaseQuery", () => {
 
       // The shared prefix step (joining to `Mid`) is emitted exactly once, even though two paths use it.
       const sharedJoinCount =
-        trimWhitespace(result.anchor.parts.joins).split(`OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`)
-          .length - 1;
+        trimWhitespace(result.anchor.parts.joins).split(
+          `LEFT OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`,
+        ).length - 1;
       expect(sharedJoinCount).to.equal(1);
     });
 
@@ -312,8 +313,9 @@ describe("buildBaseQuery", () => {
       // The shared step is joined exactly once — both paths reference it under the same alias, so it is
       // not duplicated (two aliases would produce two `Mid` joins).
       expect(
-        trimWhitespace(result.anchor.parts.joins).split(`OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`)
-          .length - 1,
+        trimWhitespace(result.anchor.parts.joins).split(
+          `LEFT OUTER JOIN ${ECSql.createClassSelector("TestSchema.Mid")}`,
+        ).length - 1,
       ).to.equal(1);
     });
   });
@@ -397,6 +399,102 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.joins).to.equal("");
       expect(result.anchor.parts.where).to.be.undefined;
       expect(result.anchor.parts.bindings).to.be.undefined;
+    });
+  });
+
+  describe("sorting", () => {
+    it("ignores direct and duplicate sort fields when collecting anchor paths", async () => {
+      const path = makeOneToOnePath();
+      const relatedField = makeOneToOneNameField(path);
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        sortFields: [makePropertyField({ propertyName: "Code" }), relatedField, relatedField],
+      });
+
+      expect(result.anchor.parts.relatedClassAliases).to.have.length(1);
+    });
+
+    it("rejects sort paths that exceed the SQLite JOIN-table limit", async () => {
+      const paths = Array.from({ length: 33 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+      ]);
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource(paths),
+          includeRelatedJoins: true,
+          sortFields: paths.map((path) =>
+            makePropertyField({
+              propertyName: "Name",
+              propertyClassName: path[0].targetClassName,
+              pathFromTarget: path,
+              valueClassNames: [path[0].targetClassName],
+            }),
+          ),
+        }),
+      ).rejects.toThrow("Related sort paths exceed the SQLite JOIN-table limit.");
+    });
+
+    it("counts shared sort-path prefixes once against the JOIN-table limit", async () => {
+      // 20 two-step sort paths sharing the same first step. Summed per-path the shared step is counted
+      // 20 times (over the 64-table limit); merged, it is joined once and the paths fit the anchor.
+      const sharedStep = makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared");
+      const paths = Array.from({ length: 20 }, (_, index) => [
+        sharedStep,
+        makeStep("TestSchema.Shared", `TestSchema.RelLeaf${index}`, `TestSchema.Leaf${index}`),
+      ]);
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: true,
+        sortFields: paths.map((path) =>
+          makePropertyField({
+            propertyName: "Name",
+            propertyClassName: path[path.length - 1].targetClassName,
+            pathFromTarget: path,
+            valueClassNames: [path[path.length - 1].targetClassName],
+          }),
+        ),
+      });
+
+      // One shared prefix + 20 distinct leaf prefixes are all joined by the anchor.
+      expect(result.anchor.parts.relatedClassAliases).to.have.length(21);
+    });
+
+    it("keeps an otherwise-overflowed 1:1 sort path on the anchor", async () => {
+      const paths = Array.from({ length: 33 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+      ]);
+      const sortPath = paths[paths.length - 1];
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource(paths),
+        includeRelatedJoins: true,
+        sortFields: [
+          makePropertyField({
+            propertyName: "Name",
+            propertyClassName: sortPath[0].targetClassName,
+            pathFromTarget: sortPath,
+            valueClassNames: [sortPath[0].targetClassName],
+          }),
+        ],
+      });
+
+      expect(result.additional).not.to.be.undefined;
+      expect(result.anchor.parts.relatedClassAliases.has(serializeRelationshipPath({ path: sortPath }))).to.be.true;
+    });
+
+    it("rejects a sort field on a 1:many related path", async () => {
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource([makeOneToManyPath()]),
+          includeRelatedJoins: true,
+          sortFields: [makeOneToManyNameField()],
+        }),
+      ).rejects.toThrow("Cannot sort by a 1:many related path");
     });
   });
 
@@ -824,10 +922,10 @@ describe("buildBaseQuery", () => {
 
       expect(result.additional).to.be.undefined;
       expect(result.anchor.paths).to.have.length(2);
-      // Both related steps are OUTER-joined (each link-table path renders two `OUTER JOIN`s), so a
+      // Both related steps are OUTER-joined (each link-table path renders two `LEFT OUTER JOIN`s), so a
       // primary missing one related instance keeps the other's columns.
       expect(result.anchor.parts.joins).to.not.include("INNER JOIN [TestSchema].[RelB]");
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(4);
+      expect(trimWhitespace(result.anchor.parts.joins).split("LEFT OUTER JOIN").length - 1).to.equal(4);
     });
 
     it("splits 1:1 paths across groups when they exceed the join budget", async () => {
@@ -850,7 +948,7 @@ describe("buildBaseQuery", () => {
       expect(result.additional![0].paths.some((p) => anchorKeys.has(relationshipName(p)))).to.equal(false);
       // Both groups join more than one path → outer-joined, and share the same FROM.
       expect(result.additional![0].parts.from).to.equal(result.anchor.parts.from);
-      expect(result.additional![0].parts.joins).to.include("OUTER JOIN");
+      expect(result.additional![0].parts.joins).to.include("LEFT OUTER JOIN");
     });
 
     it("shares the target filter and query-filterer joins on the anchor", async () => {
@@ -891,7 +989,7 @@ describe("buildBaseQuery", () => {
       expect(result.additional![0].paths).to.deep.equal([{ path: oneToMany, targetClassNames: ["TestSchema.Many"] }]);
       // A lone 1:many path is INNER-joined — after key-stitching, absent related instances drop out.
       expect(result.additional![0].parts.joins).to.include("INNER JOIN");
-      expect(result.additional![0].parts.joins).to.not.include("OUTER JOIN");
+      expect(result.additional![0].parts.joins).to.not.include("LEFT OUTER JOIN");
     });
 
     it("isolates a 1:many path forced by a `many` cardinality hint", async () => {

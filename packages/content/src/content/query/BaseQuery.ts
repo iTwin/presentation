@@ -12,6 +12,7 @@ import {
   countJoinTables,
   packPathsWithinBudget,
   partitionPathsByJoinBudget,
+  SQLITE_MAX_JOIN_TABLES,
 } from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClause, buildValueFilterClauses } from "./ValueFilters.js";
@@ -25,7 +26,7 @@ import type {
   ValueDescriptor,
 } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../Content.js";
-import type { CardinalityHint, ContentSource, ResolvedPath } from "../ContentTarget.js";
+import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "../ContentTarget.js";
 import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
 
@@ -35,8 +36,10 @@ type RelationshipPathJoinInfo = Awaited<ReturnType<typeof ECSql.createRelationsh
 /**
  * The `FROM` / `JOIN` / `WHERE` fragments (and their bindings) of a base content query, plus the
  * alias information downstream `SELECT` builders need to emit their own columns.
+ *
+ * @internal
  */
-interface BaseQueryParts {
+export interface BaseQueryParts {
   /** `FROM <primary-selector> [this]`. */
   from: string;
   /** IdSet join + merged relationship-path joins + query-filterer joins. */
@@ -60,8 +63,10 @@ interface BaseQueryParts {
 
 /**
  * A single base-query group — a subset of a source's related paths joined onto the shared primaries.
+ *
+ * @internal
  */
-interface BaseQueryGroup {
+export interface BaseQueryGroup {
   /** Subset of the source's resolved paths this group joins (used by Stage 4 stitching). */
   paths: ResolvedPath[];
   parts: BaseQueryParts;
@@ -77,6 +82,8 @@ interface BuildBaseQueryProps {
   queryFilterers?: QueryFilterer[];
   /** Value filters to translate into WHERE (default: none). */
   filters?: ContentValueFilter[];
+  /** Fields whose related paths must be joined by the anchor to support sorting. */
+  sortFields?: (PropertyField | CalculatedField)[];
 }
 
 /**
@@ -151,6 +158,9 @@ export async function buildBaseQuery(
   // predicate is still evaluable even when its selected columns are owned by an additional group.
   const groupPaths = includeRelatedJoins ? collectUniquePaths(source) : [];
   const filterPaths = collectFilterPaths(filters);
+  const sortPaths = collectSortPaths(
+    (props.sortFields ?? []).filter((field): field is PropertyField => field.kind === "property"),
+  );
 
   // 1:many filter paths must use correlated subqueries to avoid duplicating primary rows. 1:1 filter
   // paths keep join-and-compare evaluation while they fit the anchor's JOIN budget; overflow paths use
@@ -169,9 +179,16 @@ export async function buildBaseQuery(
     }
     return cardinality;
   };
-  const classifiedFilterPaths = await Promise.all(
-    filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) })),
-  );
+  const [classifiedFilterPaths, classifiedSortPaths] = await Promise.all([
+    Promise.all(filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) }))),
+    Promise.all(sortPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) }))),
+  ]);
+  const manyValuedSort = classifiedSortPaths.find(({ cardinality }) => cardinality === "many");
+  if (manyValuedSort) {
+    throw new Error(
+      `Cannot sort by a 1:many related path: ${serializeRelationshipPath({ path: manyValuedSort.path })}.`,
+    );
+  }
   const oneToOneFilterPaths = classifiedFilterPaths
     .filter((entry) => entry.cardinality !== "many")
     .map((entry) => entry.path);
@@ -181,54 +198,22 @@ export async function buildBaseQuery(
 
   // Serialize each path's prefix keys once (memoized by path reference); every alias lookup below reuses
   // them instead of re-serializing path slices.
-  const prefixKeysByPath = new Map<RelationshipPath, readonly string[]>();
-  const getPrefixKeys = (path: RelationshipPath): readonly string[] => {
-    let keys = prefixKeysByPath.get(path);
-    if (!keys) {
-      const computed: string[] = [];
-      for (let length = 1; length <= path.length; ++length) {
-        computed.push(serializeJoinPath(path.slice(0, length)));
-      }
-      keys = computed;
-      prefixKeysByPath.set(path, keys);
-    }
-    return keys;
-  };
+  const getPrefixKeys = createPrefixKeyResolver();
 
   // Assign deterministic aliases to every unique related prefix up front. Being stable across the whole
   // query, they let the join info resolved for a path (below) serve both the JOIN-table budget count and
   // the rendered SQL, so a path's join info is never resolved more than once.
   const relatedClassAliases = assignPrefixAliases(
-    includeRelatedJoins ? [...groupPaths.map((p) => p.path), ...filterPaths] : filterPaths,
+    includeRelatedJoins
+      ? [...groupPaths.map((p) => p.path), ...filterPaths, ...sortPaths]
+      : [...filterPaths, ...sortPaths],
     getPrefixKeys,
   );
 
   // Memoized per-(path, join type) join-info resolver. `createRelationshipPathJoinInfo` reads the schema
   // once; the result is reused for the budget count and rendered via the sync `createRelationshipPathJoinClause`
   // overload (which reads no schema).
-  const infoCache = new Map<string, RelationshipPathJoinInfo>();
-  const resolvePathInfo = async (
-    path: RelationshipPath,
-    joinType: "inner" | "outer",
-  ): Promise<RelationshipPathJoinInfo> => {
-    const prefixKeys = getPrefixKeys(path);
-    const cacheKey = `${joinType}:${prefixKeys.length > 0 ? prefixKeys[prefixKeys.length - 1] : ""}`;
-    let info = infoCache.get(cacheKey);
-    if (!info) {
-      info = await ECSql.createRelationshipPathJoinInfo({
-        schemaProvider,
-        path: path.map((step, index) => ({
-          ...step,
-          sourceAlias: index === 0 ? PRIMARY_CLASS_ALIAS : relatedClassAliases.get(prefixKeys[index - 1])!.target,
-          targetAlias: relatedClassAliases.get(prefixKeys[index])!.target,
-          relationshipAlias: relatedClassAliases.get(prefixKeys[index])!.relationship,
-          joinType,
-        })),
-      });
-      infoCache.set(cacheKey, info);
-    }
-    return info;
-  };
+  const resolvePathInfo = createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys });
 
   // Assembles one group's parts: every group shares FROM + target filter and renders its own subset of
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the
@@ -238,112 +223,35 @@ export async function buildBaseQuery(
     joinType: "inner" | "outer";
     includePrimaryFilters: boolean;
     existentialFilterPathKeys: Set<string>;
-  }): Promise<BaseQueryParts> => {
-    const infos = await Promise.all(groupProps.paths.map(async (path) => resolvePathInfo(path, groupProps.joinType)));
-    const rendered = ECSql.createRelationshipPathJoinClause(mergeJoinInfos(infos));
-    const groupAliases = collectPrefixAliases(groupProps.paths, relatedClassAliases, getPrefixKeys);
-
-    const joinFragments: string[] = [];
-    const whereConditions: string[] = [];
-    const bindings: Record<string, ECSqlBinding> = {};
-
-    if (targetFilter.joins) {
-      joinFragments.push(...targetFilter.joins);
-    }
-    if (rendered.joins) {
-      joinFragments.push(rendered.joins);
-    }
-    if (targetFilter.where) {
-      whereConditions.push(targetFilter.where);
-    }
-    mergeBindings(bindings, targetFilter.bindings);
-    mergeBindings(bindings, rendered.bindings);
-
-    if (groupProps.includePrimaryFilters) {
-      // Query filterers inject WHERE/JOIN clauses only (never SELECT), scoped to the primary alias.
-      for (const clauses of filtererClauses) {
-        if (clauses.joins) {
-          joinFragments.push(...clauses.joins);
-        }
-        if (clauses.where) {
-          whereConditions.push(...clauses.where);
-        }
-        mergeBindings(bindings, clauses.bindings);
-      }
-
-      // Value filters resolve relationship-class properties against the step's relationship alias; classify
-      // once up front which of the referenced property classes are relationship classes.
-      const relationshipPropertyClasses = await collectRelationshipPropertyClasses(schemaProvider, filters);
-      const isPropertyFieldRelationshipClass = (className: EC.FullClassNameDotNotation) =>
-        relationshipPropertyClasses.has(className);
-      const resolveFilterSelector = (field: PropertyField | CalculatedField, member?: string) =>
-        resolveSelector({
-          field,
-          member,
-          relatedClassAliases: groupAliases,
-          isRelationshipClass: isPropertyFieldRelationshipClass,
-        });
-      // An existential filter's path isn't part of this group's join set, so resolve its selector
-      // against the query-wide alias map.
-      const resolveExistentialFilterSelector = (field: PropertyField | CalculatedField, member?: string) =>
-        resolveSelector({ field, member, relatedClassAliases, isRelationshipClass: isPropertyFieldRelationshipClass });
-
-      // Direct/calculated and budget-fitting 1:1 filters use join-and-compare evaluation. The
-      // precomputed existential set (1:many plus overflow 1:1) uses independent subqueries.
-      const oneToOneFilters: ContentValueFilter[] = [];
-      const existentialFilters: { filter: ContentValueFilter; path: RelationshipPath }[] = [];
-      for (const filter of filters) {
-        const path = filter.field.kind === "property" ? filter.field.pathFromTarget : [];
-        if (path.length > 0 && groupProps.existentialFilterPathKeys.has(serializeJoinPath(path))) {
-          existentialFilters.push({ filter, path });
-        } else {
-          oneToOneFilters.push(filter);
-        }
-      }
-
-      // Value filters resolve their columns through the alias map (related fields) or `targetAlias`
-      // substitution (calculated fields).
-      const valueFilter = buildValueFilterClauses({ filters: oneToOneFilters, resolveSelector: resolveFilterSelector });
-      if (valueFilter) {
-        whereConditions.push(valueFilter.where);
-        mergeBindings(bindings, valueFilter.bindings);
-      }
-
-      // Existential filters get their own binding-index space after the join-based filters', so an
-      // index can never collide with one `buildValueFilterClauses` assigned internally above.
-      for (const [offset, { filter, path }] of existentialFilters.entries()) {
-        const existential = await buildExistentialFilterClause({
-          filter,
-          path,
-          filterIndex: oneToOneFilters.length + offset,
-          resolvePathInfo,
-          resolveSelector: resolveExistentialFilterSelector,
-        });
-        whereConditions.push(existential.clause);
-        mergeBindings(bindings, existential.bindings);
-      }
-    }
-
-    const whereConditionsClause =
-      whereConditions.length > 1 ? whereConditions.map((c) => `(${c})`).join(" AND ") : whereConditions[0];
-    const where = whereConditionsClause && `WHERE ${whereConditionsClause}`;
-    return {
+  }): Promise<BaseQueryParts> =>
+    buildQueryParts({
+      schemaProvider,
       from,
-      joins: joinFragments.join("\n"),
-      ...(where ? { where } : undefined),
-      ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
-      primaryClassAlias: PRIMARY_CLASS_ALIAS,
-      relatedClassAliases: groupAliases,
-    };
-  };
+      targetFilter,
+      filtererClauses,
+      filters,
+      relatedClassAliases,
+      getPrefixKeys,
+      resolvePathInfo,
+      ...groupProps,
+    });
 
-  // Primary FROM, target-filter join, and query-filterer joins cannot spill. Fill remaining budget
-  // with a contiguous prefix of 1:1 filter paths; all overflow filters retain query-wide aliases and
-  // are evaluated in independent correlated subqueries.
+  // Primary FROM, target-filter join, query-filterer joins, and sort paths cannot spill. Sort paths
+  // must stay on the anchor for ORDER BY, so reserve their complete cost before packing optional 1:1
+  // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
   const fixedReserves =
     1 +
     (targetFilter.joins?.length ?? 0) +
     filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
+  const sortPathInfos = await Promise.all(
+    sortPaths.map(async (path) => ({ path, joinInfo: await resolvePathInfo(path, "outer") })),
+  );
+  // Sort paths are all merged onto the anchor, so a shared prefix is joined once; count the merged join
+  // info instead of summing per-path costs to avoid over-reserving budget for prefix-sharing paths.
+  const sortJoinCost = countJoinTables(mergeJoinInfos(sortPathInfos.map((entry) => entry.joinInfo)));
+  if (fixedReserves + sortJoinCost > SQLITE_MAX_JOIN_TABLES) {
+    throw new Error("Related sort paths exceed the SQLite JOIN-table limit.");
+  }
   const { fitting: fittingFilterPaths, overflow: overflowFilterPaths } = packPathsWithinBudget({
     paths: await Promise.all(
       oneToOneFilterPaths.map(async (path) => ({
@@ -352,7 +260,7 @@ export async function buildBaseQuery(
         joinInfo: await resolvePathInfo(path, "outer"),
       })),
     ),
-    reservedTables: fixedReserves,
+    reservedTables: fixedReserves + sortJoinCost,
   });
   const joinedFilterPaths = fittingFilterPaths.map((entry) => entry.path);
   const existentialFilterPathKeys = new Set([
@@ -379,7 +287,9 @@ export async function buildBaseQuery(
   // Joined filters reserve anchor tables before selected 1:1 paths are packed. Overflow filters cost no
   // top-level tables because each opens an independent subquery scope.
   const reservedTables =
-    fixedReserves + fittingFilterPaths.reduce((count, entry) => count + countJoinTables(entry.joinInfo), 0);
+    fixedReserves +
+    fittingFilterPaths.reduce((count, entry) => count + countJoinTables(entry.joinInfo), 0) +
+    sortJoinCost;
   const { anchorPaths, additionalGroups } = await splitRelatedPaths({
     resolvePathInfo,
     classifyCardinality,
@@ -391,7 +301,11 @@ export async function buildBaseQuery(
   // would drop a primary missing one related instance and take its direct columns down with it). Its join
   // set unions the anchor's own value paths with each joined filter path (a shared prefix is
   // merged by alias, so a path already selected by the anchor is joined only once).
-  const anchorJoinPaths = unionPaths([...anchorPaths.map((resolved) => resolved.path), ...joinedFilterPaths]);
+  const anchorJoinPaths = unionPaths([
+    ...anchorPaths.map((resolved) => resolved.path),
+    ...joinedFilterPaths,
+    ...sortPaths,
+  ]);
   const anchor: BaseQueryGroup = {
     paths: anchorPaths,
     parts: await buildGroupParts({
@@ -494,12 +408,19 @@ function collectUniquePaths(source: ContentSource): ResolvedPath[] {
 
 /** Collects the distinct related paths referenced by value filters (joined to evaluate their predicates). */
 function collectFilterPaths(filters: ContentValueFilter[]): RelationshipPath[] {
+  return collectSortPaths(
+    filters.map(({ field }) => field).filter((field): field is PropertyField => field.kind === "property"),
+  );
+}
+
+/** Collects the distinct related paths that must be joined by the anchor to evaluate sort keys. */
+function collectSortPaths(fields: PropertyField[]): RelationshipPath[] {
   const byKey = new Map<string, RelationshipPath>();
-  for (const filter of filters) {
-    if (filter.field.kind === "property" && filter.field.pathFromTarget.length > 0) {
-      const key = serializeJoinPath(filter.field.pathFromTarget);
+  for (const field of fields) {
+    if (field.pathFromTarget.length > 0) {
+      const key = serializeJoinPath(field.pathFromTarget);
       if (!byKey.has(key)) {
-        byKey.set(key, filter.field.pathFromTarget);
+        byKey.set(key, field.pathFromTarget);
       }
     }
   }
@@ -642,8 +563,12 @@ async function buildExistentialFilterClause(props: {
   return { clause: `EXISTS (SELECT 1 ${renderFrom()} ${renderWhere(predicate.clause)})`, bindings };
 }
 
-/** Resolves a field's raw column selector (without navigation `.Id`) and its value type. */
-function resolveSelector(props: {
+/**
+ * Resolves a field's raw column selector (without navigation `.Id`) and its value type.
+ *
+ * @internal
+ */
+export function resolveSelector(props: {
   field: PropertyField | CalculatedField;
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
@@ -653,8 +578,23 @@ function resolveSelector(props: {
   type: Exclude<PrimitiveValueType, "Point2d" | "Point3d">;
   bindings?: Record<string, ECSqlBinding>;
 } {
+  // Validate the value type first, so a non-scalar-filterable shape is rejected before a selector
+  // is constructed for it.
+  const type = getSelectorValueType(props.field.type, props.member);
+  return { type, ...resolveFieldSelector(props) };
+}
+
+/**
+ * Resolves a field's raw column selector (without navigation `.Id`) without validating that the
+ * addressed value is scalar-filterable.
+ */
+export function resolveFieldSelector(props: {
+  field: PropertyField | CalculatedField;
+  member?: string;
+  relatedClassAliases: Map<string, { target: string; relationship: string }>;
+  isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
+}): { selector: string; bindings?: Record<string, ECSqlBinding> } {
   const { field, member, relatedClassAliases, isRelationshipClass } = props;
-  const type = getSelectorValueType(field.type, member);
   switch (field.kind) {
     case "calculated": {
       // A calculated field is an arbitrary scalar ECSQL expression; `ContentValueFilter` disallows a
@@ -666,16 +606,16 @@ function resolveSelector(props: {
         fromAlias: field.targetAlias ?? PRIMARY_CLASS_ALIAS,
         toAlias: PRIMARY_CLASS_ALIAS,
       });
-      return { selector: `(${expression})`, type, ...(field.bindings ? { bindings: field.bindings } : undefined) };
+      return { selector: `(${expression})`, ...(field.bindings ? { bindings: field.bindings } : undefined) };
     }
     case "property": {
       // Composite access (e.g. a struct member or point `x`) addresses a member of the property column.
       // For a point property, emit the validated, canonical coordinate spelling; other composite
       // members are addressed verbatim.
-      const resolvedMember = isPointType(field.type) ? resolvePointMember(field.type.type, member) : member;
+      const resolvedMember = isPointType(field.type) && member ? resolvePointMember(field.type.type, member) : member;
       const memberSuffix = resolvedMember ? `.[${resolvedMember}]` : "";
       const alias = resolvePropertyAlias({ field, relatedClassAliases, isRelationshipClass });
-      return { selector: `[${alias}].[${field.propertyName}]${memberSuffix}`, type };
+      return { selector: `[${alias}].[${field.propertyName}]${memberSuffix}` };
     }
   }
 }
@@ -709,16 +649,24 @@ async function collectRelationshipPropertyClasses(
   schemaProvider: ECSchemaProvider,
   filters: ContentValueFilter[],
 ): Promise<Set<EC.FullClassNameDotNotation>> {
-  const classNames = new Set(
-    filters.flatMap((filter) =>
-      filter.field.kind === "property" && filter.field.pathFromTarget.length > 0
-        ? [filter.field.propertyClassName]
-        : [],
-    ),
+  const classNames = filters.flatMap((filter) =>
+    filter.field.kind === "property" && filter.field.pathFromTarget.length > 0 ? [filter.field.propertyClassName] : [],
   );
+  return classifyRelationshipClasses(schemaProvider, classNames);
+}
+
+/**
+ * Determines which of `classNames` are relationship classes — a relationship-class property reads
+ * from the step's relationship table (the `relationship` alias) rather than its target table.
+ */
+export async function classifyRelationshipClasses(
+  schemaProvider: ECSchemaProvider,
+  classNames: EC.FullClassNameDotNotation[],
+): Promise<Set<EC.FullClassNameDotNotation>> {
+  const uniqueClassNames = new Set(classNames);
   const relationshipClasses = new Set<EC.FullClassNameDotNotation>();
   await Promise.all(
-    [...classNames].map(async (className) => {
+    uniqueClassNames.values().map(async (className) => {
       const ecClass = await getClass(schemaProvider, className);
       if (ecClass.isRelationshipClass()) {
         relationshipClasses.add(className);
@@ -800,4 +748,230 @@ function formatOrList(items: readonly string[]): string {
     return `${quoted[0]} or ${quoted[1]}`;
   }
   return `${quoted.slice(0, -1).join(", ")}, or ${quoted[quoted.length - 1]}`;
+}
+
+/**
+ * Memoizes each path's prefix serializations (one entry per prefix length) so repeated alias lookups
+ * for the same path reuse the computed keys instead of re-serializing path slices.
+ */
+function createPrefixKeyResolver(): (path: RelationshipPath) => readonly string[] {
+  const prefixKeysByPath = new Map<RelationshipPath, readonly string[]>();
+  return (path: RelationshipPath): readonly string[] => {
+    let keys = prefixKeysByPath.get(path);
+    if (!keys) {
+      const computed: string[] = [];
+      for (let length = 1; length <= path.length; ++length) {
+        computed.push(serializeJoinPath(path.slice(0, length)));
+      }
+      keys = computed;
+      prefixKeysByPath.set(path, keys);
+    }
+    return keys;
+  };
+}
+
+/**
+ * Creates a memoized per-(path, join type) join-info resolver. `createRelationshipPathJoinInfo` reads
+ * the schema once per entry; the memoized result can then serve both a JOIN-table budget count and the
+ * rendered SQL without re-reading the schema.
+ */
+function createPathInfoResolver(props: {
+  schemaProvider: ECSchemaProvider;
+  relatedClassAliases: Map<string, { target: string; relationship: string }>;
+  getPrefixKeys: (path: RelationshipPath) => readonly string[];
+}): (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo> {
+  const { schemaProvider, relatedClassAliases, getPrefixKeys } = props;
+  const infoCache = new Map<string, RelationshipPathJoinInfo>();
+  return async (path, joinType) => {
+    const prefixKeys = getPrefixKeys(path);
+    const cacheKey = `${joinType}:${prefixKeys.length > 0 ? prefixKeys[prefixKeys.length - 1] : ""}`;
+    let info = infoCache.get(cacheKey);
+    if (!info) {
+      info = await ECSql.createRelationshipPathJoinInfo({
+        schemaProvider,
+        path: path.map((step, index) => ({
+          ...step,
+          sourceAlias: index === 0 ? PRIMARY_CLASS_ALIAS : relatedClassAliases.get(prefixKeys[index - 1])!.target,
+          targetAlias: relatedClassAliases.get(prefixKeys[index])!.target,
+          relationshipAlias: relatedClassAliases.get(prefixKeys[index])!.relationship,
+          joinType,
+        })),
+      });
+      infoCache.set(cacheKey, info);
+    }
+    return info;
+  };
+}
+
+/**
+ * Assembles one query's `FROM`/`JOIN`/`WHERE`/bindings parts: renders the given related paths (merged
+ * so a shared prefix is joined once) onto the shared FROM + target filter, and — only when the query
+ * owns the primary-restricting clauses (`includePrimaryFilters`) — additionally applies the
+ * query-filterer and value-filter clauses, evaluating filters on `existentialFilterPathKeys` paths as
+ * correlated subqueries instead of join-and-compare.
+ */
+async function buildQueryParts(props: {
+  schemaProvider: ECSchemaProvider;
+  from: string;
+  targetFilter: ReturnType<typeof buildTargetFilter>;
+  filtererClauses: ReturnType<QueryFilterer["getFilterClauses"]>[];
+  filters: ContentValueFilter[];
+  relatedClassAliases: Map<string, { target: string; relationship: string }>;
+  getPrefixKeys: (path: RelationshipPath) => readonly string[];
+  resolvePathInfo: (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo>;
+  paths: RelationshipPath[];
+  joinType: "inner" | "outer";
+  includePrimaryFilters: boolean;
+  existentialFilterPathKeys: Set<string>;
+}): Promise<BaseQueryParts> {
+  const {
+    schemaProvider,
+    from,
+    targetFilter,
+    filtererClauses,
+    filters,
+    relatedClassAliases,
+    getPrefixKeys,
+    resolvePathInfo,
+  } = props;
+  const infos = await Promise.all(props.paths.map(async (path) => resolvePathInfo(path, props.joinType)));
+  const rendered = ECSql.createRelationshipPathJoinClause(mergeJoinInfos(infos));
+  const groupAliases = collectPrefixAliases(props.paths, relatedClassAliases, getPrefixKeys);
+
+  const joinFragments: string[] = [];
+  const whereConditions: string[] = [];
+  const bindings: Record<string, ECSqlBinding> = {};
+
+  if (targetFilter.joins) {
+    joinFragments.push(...targetFilter.joins);
+  }
+  if (rendered.joins) {
+    joinFragments.push(rendered.joins);
+  }
+  if (targetFilter.where) {
+    whereConditions.push(targetFilter.where);
+  }
+  mergeBindings(bindings, targetFilter.bindings);
+  mergeBindings(bindings, rendered.bindings);
+
+  if (props.includePrimaryFilters) {
+    // Query filterers inject WHERE/JOIN clauses only (never SELECT), scoped to the primary alias.
+    for (const clauses of filtererClauses) {
+      if (clauses.joins) {
+        joinFragments.push(...clauses.joins);
+      }
+      if (clauses.where) {
+        whereConditions.push(...clauses.where);
+      }
+      mergeBindings(bindings, clauses.bindings);
+    }
+
+    // Value filters resolve relationship-class properties against the step's relationship alias; classify
+    // once up front which of the referenced property classes are relationship classes.
+    const relationshipPropertyClasses = await collectRelationshipPropertyClasses(schemaProvider, filters);
+    const isPropertyFieldRelationshipClass = (className: EC.FullClassNameDotNotation) =>
+      relationshipPropertyClasses.has(className);
+    const resolveFilterSelector = (field: PropertyField | CalculatedField, member?: string) =>
+      resolveSelector({
+        field,
+        member,
+        relatedClassAliases: groupAliases,
+        isRelationshipClass: isPropertyFieldRelationshipClass,
+      });
+    // An existential filter's path isn't part of this group's join set, so resolve its selector
+    // against the query-wide alias map.
+    const resolveExistentialFilterSelector = (field: PropertyField | CalculatedField, member?: string) =>
+      resolveSelector({ field, member, relatedClassAliases, isRelationshipClass: isPropertyFieldRelationshipClass });
+
+    // Direct/calculated and budget-fitting 1:1 filters use join-and-compare evaluation. The
+    // precomputed existential set (1:many plus overflow 1:1) uses independent subqueries.
+    const oneToOneFilters: ContentValueFilter[] = [];
+    const existentialFilters: { filter: ContentValueFilter; path: RelationshipPath }[] = [];
+    for (const filter of filters) {
+      const path = filter.field.kind === "property" ? filter.field.pathFromTarget : [];
+      if (path.length > 0 && props.existentialFilterPathKeys.has(serializeJoinPath(path))) {
+        existentialFilters.push({ filter, path });
+      } else {
+        oneToOneFilters.push(filter);
+      }
+    }
+
+    // Value filters resolve their columns through the alias map (related fields) or `targetAlias`
+    // substitution (calculated fields).
+    const valueFilter = buildValueFilterClauses({ filters: oneToOneFilters, resolveSelector: resolveFilterSelector });
+    if (valueFilter) {
+      whereConditions.push(valueFilter.where);
+      mergeBindings(bindings, valueFilter.bindings);
+    }
+
+    // Existential filters get their own binding-index space after the join-based filters', so an
+    // index can never collide with one `buildValueFilterClauses` assigned internally above.
+    for (const [offset, { filter, path }] of existentialFilters.entries()) {
+      const existential = await buildExistentialFilterClause({
+        filter,
+        path,
+        filterIndex: oneToOneFilters.length + offset,
+        resolvePathInfo,
+        resolveSelector: resolveExistentialFilterSelector,
+      });
+      whereConditions.push(existential.clause);
+      mergeBindings(bindings, existential.bindings);
+    }
+  }
+
+  const whereConditionsClause =
+    whereConditions.length > 1 ? whereConditions.map((c) => `(${c})`).join(" AND ") : whereConditions[0];
+  const where = whereConditionsClause && `WHERE ${whereConditionsClause}`;
+  return {
+    from,
+    joins: joinFragments.join("\n"),
+    ...(where ? { where } : undefined),
+    ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
+    primaryClassAlias: PRIMARY_CLASS_ALIAS,
+    relatedClassAliases: groupAliases,
+  };
+}
+
+/**
+ * Builds a target-scoped, non-grouped query scaffold: outer-joins exactly the given related paths
+ * (preserving rows whose related instance is missing) plus whatever the target filter and value
+ * filters need, and returns the `FROM`/`JOIN`/`WHERE`/bindings shape plus the alias map a `SELECT`
+ * builder needs.
+ *
+ * Used by the distinct-values query builder to reuse the existing target-filter and value-filter
+ * building blocks without the source-oriented anchor/additional grouping performed by `buildBaseQuery`.
+ *
+ * @internal
+ */
+export async function buildTargetScopedQuery(props: {
+  schemaProvider: ECSchemaProvider;
+  target: ContentTarget;
+  /**
+   * Related paths to JOIN — e.g. paths referenced by `filters`, plus (for distinct values) the
+   * selected field's own related path. De-duplicated internally by serialized join key.
+   */
+  paths: RelationshipPath[];
+  /** Value filters to translate into WHERE. */
+  filters: ContentValueFilter[];
+}): Promise<BaseQueryParts> {
+  const { schemaProvider, target, filters } = props;
+  const paths = unionPaths([...props.paths, ...collectFilterPaths(filters)]);
+  const getPrefixKeys = createPrefixKeyResolver();
+  const relatedClassAliases = assignPrefixAliases(paths, getPrefixKeys);
+  return buildQueryParts({
+    schemaProvider,
+    from: `FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`,
+    targetFilter: buildTargetFilter(target),
+    filtererClauses: [],
+    filters,
+    relatedClassAliases,
+    getPrefixKeys,
+    resolvePathInfo: createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys }),
+    // Join all paths (the selected field's own path plus filter-referenced ones) with outer joins, and
+    // evaluate every filter with join-and-compare — no grouping, budgets, or existential subqueries.
+    paths,
+    joinType: "outer",
+    includePrimaryFilters: true,
+    existentialFilterPathKeys: new Set(),
+  });
 }
