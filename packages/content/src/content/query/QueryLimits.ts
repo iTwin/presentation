@@ -18,31 +18,6 @@ import type { CardinalityHint, ResolvedPath } from "../ContentTarget.js";
 export const SQLITE_MAX_JOIN_TABLES = 64;
 
 /**
- * Maximum number of SELECT statements SQLite allows in a compound (UNION-ed) query. Callers that
- * UNION split groups or chunk queries cap the number of terms below this limit.
- *
- * @internal
- */
-export const SQLITE_MAX_COMPOUND_SELECT = 500;
-
-/**
- * Splits `terms` into chunks small enough to be UNION-ed into a single compound SQLite query without
- * exceeding {@link SQLITE_MAX_COMPOUND_SELECT}. Each returned chunk has at most `maxPerChunk` terms.
- *
- * @internal
- */
-export function chunkCompoundSelects<T>(terms: T[], maxPerChunk: number = SQLITE_MAX_COMPOUND_SELECT): T[][] {
-  if (maxPerChunk < 1) {
-    throw new Error(`\`maxPerChunk\` must be at least 1, but got ${maxPerChunk}.`);
-  }
-  const chunks: T[][] = [];
-  for (let i = 0; i < terms.length; i += maxPerChunk) {
-    chunks.push(terms.slice(i, i + maxPerChunk));
-  }
-  return chunks;
-}
-
-/**
  * A resolved relationship path paired with the join info the caller resolved for it.
  */
 type ResolvedPathWithJoinInfo = ResolvedPath & {
@@ -133,7 +108,7 @@ export function packPathsWithinBudget(props: {
  *
  * A caller-supplied `cardinalityHint` always wins (schema multiplicity is frequently over-declared as
  * `many` where the data is effectively 1:1). Without a hint, the path is `"many"` when any step's
- * traversed constraint has an upper multiplicity limit greater than one, honoring
+ * traversed constraint has an unbounded upper multiplicity limit or an upper limit greater than one, honoring
  * `relationshipReverse` to pick the constraint the traversal lands on.
  *
  * @internal
@@ -155,7 +130,8 @@ export async function classifyPathCardinality(props: {
     // reversed step lands on the `source` constraint. The upper multiplicity limit of that landing
     // end says how many related instances a single source instance reaches.
     const landingConstraint = step.relationshipReverse ? relationship.source : relationship.target;
-    if (landingConstraint.multiplicity.upperLimit > 1) {
+    const { upperLimit } = landingConstraint.multiplicity;
+    if (upperLimit === "unbounded" || upperLimit > 1) {
       return "many";
     }
   }

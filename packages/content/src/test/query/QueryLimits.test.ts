@@ -5,11 +5,9 @@
 
 import { describe, expect, it, vi } from "vitest";
 import {
-  chunkCompoundSelects,
   classifyPathCardinality,
   packPathsWithinBudget,
   partitionPathsByJoinBudget,
-  SQLITE_MAX_COMPOUND_SELECT,
   SQLITE_MAX_JOIN_TABLES,
 } from "../../content/query/QueryLimits.js";
 
@@ -44,32 +42,6 @@ describe("QueryLimits", () => {
       joinCondition: "1=1",
     };
   }
-
-  describe("chunkCompoundSelects", () => {
-    it("returns empty array for empty input", () => {
-      expect(chunkCompoundSelects([])).to.deep.equal([]);
-    });
-
-    it("keeps a single chunk when under the limit", () => {
-      expect(chunkCompoundSelects([1, 2, 3], 5)).to.deep.equal([[1, 2, 3]]);
-    });
-
-    it("splits into chunks of at most maxPerChunk", () => {
-      expect(chunkCompoundSelects([1, 2, 3, 4, 5], 2)).to.deep.equal([[1, 2], [3, 4], [5]]);
-    });
-
-    it("defaults to the compound-select limit", () => {
-      const terms = Array.from({ length: SQLITE_MAX_COMPOUND_SELECT + 1 }, (_, i) => i);
-      const chunks = chunkCompoundSelects(terms);
-      expect(chunks).to.have.lengthOf(2);
-      expect(chunks[0]).to.have.lengthOf(SQLITE_MAX_COMPOUND_SELECT);
-      expect(chunks[1]).to.have.lengthOf(1);
-    });
-
-    it("throws when maxPerChunk is less than 1", () => {
-      expect(() => chunkCompoundSelects([1], 0)).to.throw("`maxPerChunk` must be at least 1");
-    });
-  });
 
   describe("partitionPathsByJoinBudget", () => {
     function step(source: string, relationship: string, target: string, reverse?: boolean): RelationshipPath[number] {
@@ -193,14 +165,15 @@ describe("QueryLimits", () => {
   });
 
   describe("classifyPathCardinality", () => {
-    function createSchemaProvider(relationships: Record<string, { source: number; target: number }>): ECSchemaProvider {
+    type Limit = number | "unbounded";
+    function createSchemaProvider(relationships: Record<string, { source: Limit; target: Limit }>): ECSchemaProvider {
       return {
         getSchema: async (schemaName: string) =>
           ({
             getClass: async (className: string) => {
               const fullName = `${schemaName}.${className}`;
               const limits = relationships[fullName];
-              const constraint = (upperLimit: number): EC.RelationshipConstraint =>
+              const constraint = (upperLimit: Limit): EC.RelationshipConstraint =>
                 ({ multiplicity: { lowerLimit: 0, upperLimit } }) as unknown as EC.RelationshipConstraint;
               return {
                 fullName,
@@ -235,6 +208,11 @@ describe("QueryLimits", () => {
 
     it("classifies as many when the target constraint allows multiple", async () => {
       const schemaProvider = createSchemaProvider({ "TestSchema.AtoB": { source: 1, target: 10 } });
+      expect(await classifyPathCardinality({ schemaProvider, path })).to.equal("many");
+    });
+
+    it("classifies as many when the target constraint is unbounded", async () => {
+      const schemaProvider = createSchemaProvider({ "TestSchema.AtoB": { source: 1, target: "unbounded" } });
       expect(await classifyPathCardinality({ schemaProvider, path })).to.equal("many");
     });
 

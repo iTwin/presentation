@@ -289,8 +289,7 @@ export namespace EC {
     export interface RelationshipConstraintMultiplicity {
         // (undocumented)
         lowerLimit: number;
-        // (undocumented)
-        upperLimit: number;
+        upperLimit: number | "unbounded";
     }
     export interface Schema {
         // (undocumented)

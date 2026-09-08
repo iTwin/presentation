@@ -12,6 +12,7 @@ import {
   isSchemaVersionBelow,
   mergeBindings,
   stableStringify,
+  substituteExpressionAlias,
 } from "../content/InternalUtils.js";
 import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 
@@ -101,6 +102,14 @@ describe("stableStringify", () => {
 
   it("handles objects nested inside arrays", () => {
     expect(stableStringify([{ b: 1, a: 2 }])).to.equal('[{"a":2,"b":1}]');
+  });
+});
+
+describe("substituteExpressionAlias", () => {
+  it("normalizes bare references when aliases are identical", () => {
+    expect(
+      substituteExpressionAlias({ expression: "this.Code || [this].Label", fromAlias: "this", toAlias: "this" }),
+    ).to.equal("[this].Code || [this].Label");
   });
 });
 
