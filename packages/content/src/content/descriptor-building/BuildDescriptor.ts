@@ -8,6 +8,7 @@ import {
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,
 } from "../extensions/DescriptorTransformer.js";
 import { collectInParallel } from "../InternalUtils.js";
+import { createPathCardinalityClassifier } from "../PathCardinality.js";
 import { collectCalculatedFields } from "./CalculatedFields.js";
 import { collectCategories, pruneUnreferencedCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
@@ -52,6 +53,7 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
   const externalFieldsProviders = config?.externalFieldsProviders ?? [];
   const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
   const { getContribution, getAnchorContribution } = createContributionMemoizer({ imodelAccess });
+  const classifier = createPathCardinalityClassifier(imodelAccess);
 
   const candidates = await collectInParallel({
     inputs: sources,
@@ -64,6 +66,7 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
           getContribution,
           getAnchorContribution,
           imodelFieldsProvidersById,
+          classifier,
         }),
       ]);
       return [...direct, ...related];

@@ -7,7 +7,12 @@ import { describe, expect, it } from "vitest";
 import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
-import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
+import {
+  createEntityClass,
+  createPrimitiveProperty,
+  createRelationshipClass,
+  createSchemaAccess,
+} from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
@@ -108,6 +113,7 @@ describe("buildContentDescriptor", () => {
 
   it("enumerates related property fields from resolved declarations", async () => {
     const imodelAccess = createSchemaAccess([
+      createRelationshipClass({ fullName: "TestSchema.AtoB" }),
       createEntityClass({
         fullName: "TestSchema.A",
         properties: [createPrimitiveProperty({ name: "Direct", declaringClass: "TestSchema.A" })],
@@ -153,6 +159,79 @@ describe("buildContentDescriptor", () => {
     const categoryId = CategoryDefinition.computeId({ path });
     expect(related.categoryId).to.equal(categoryId);
     expect(descriptor.categories[categoryId]).to.deep.equal({ id: categoryId, label: "B" });
+  });
+
+  describe("related path cardinality", () => {
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const relatedFieldId = "TestSchema.B.Related(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)";
+
+    function createContentSource(provider: IModelFieldsProvider): ContentSource {
+      return {
+        target: { primaryClass: "TestSchema.A" },
+        resolvedPrimaryClasses: ["TestSchema.A"],
+        resolvedDeclarations: [
+          { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
+        ],
+      };
+    }
+
+    function createRelatedPropertiesSchemaAccess(cardinality: "one" | "many") {
+      return createSchemaAccess([
+        createRelationshipClass({ fullName: "TestSchema.AtoB", cardinality }),
+        createEntityClass({ fullName: "TestSchema.A" }),
+        createEntityClass({
+          fullName: "TestSchema.B",
+          properties: [createPrimitiveProperty({ name: "Related", declaringClass: "TestSchema.B" })],
+        }),
+      ]);
+    }
+
+    function createRelatedPropertiesProvider(cardinalityHint?: "one" | "many"): IModelFieldsProvider {
+      return {
+        id: "p1_v1",
+        async getContribution() {
+          return { relatedProperties: [{ path, ...(cardinalityHint ? { cardinalityHint } : undefined) }] };
+        },
+      };
+    }
+
+    it("classifies from schema multiplicity when the declaration gives no hint", async () => {
+      const provider = createRelatedPropertiesProvider();
+      const descriptor = await buildContentDescriptor({
+        imodelAccess: createRelatedPropertiesSchemaAccess("many"),
+        sources: [createContentSource(provider)],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      const related = descriptor.fields[relatedFieldId] as PropertyField;
+      expect(related.pathCardinality).to.equal("many");
+      // Cardinality never reshapes the value: an array `type` would mean a genuine EC array property.
+      expect(related.type).to.deep.equal({ kind: "primitive", type: "String" });
+    });
+
+    it("carries a declaration's hint through to the enumerated field", async () => {
+      const provider = createRelatedPropertiesProvider("one");
+      const descriptor = await buildContentDescriptor({
+        imodelAccess: createRelatedPropertiesSchemaAccess("many"),
+        sources: [createContentSource(provider)],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect((descriptor.fields[relatedFieldId] as PropertyField).pathCardinality).to.equal("one");
+    });
+
+    it("reports a direct field as single-valued", async () => {
+      const imodelAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "TestSchema.A",
+          properties: [createPrimitiveProperty({ name: "Direct", declaringClass: "TestSchema.A" })],
+        }),
+      ]);
+      const descriptor = await buildContentDescriptor({ imodelAccess, sources: [createSource("TestSchema.A")] });
+      expect((descriptor.fields["TestSchema.A.Direct"] as PropertyField).pathCardinality).to.equal("one");
+    });
   });
 
   it("appends provider calculated fields with matching value selectors", async () => {
@@ -277,6 +356,7 @@ describe("buildContentDescriptor", () => {
 
   it("drops a removed field's selector and prunes its now-unreferenced category", async () => {
     const imodelAccess = createSchemaAccess([
+      createRelationshipClass({ fullName: "TestSchema.AtoB" }),
       createEntityClass({
         fullName: "TestSchema.A",
         properties: [createPrimitiveProperty({ name: "Keep", declaringClass: "TestSchema.A" })],

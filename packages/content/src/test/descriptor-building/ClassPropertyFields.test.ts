@@ -31,7 +31,7 @@ describe("collectClassPropertyFields", () => {
 
     const fields = collectFields({
       propertiesClass,
-      relationshipInfo: { pathFromTarget: path, primaryClassNames: ["TestSchema.A"] },
+      relationshipInfo: { pathFromTarget: path, pathCardinality: "one", primaryClassNames: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
     });
@@ -52,8 +52,25 @@ describe("collectClassPropertyFields", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.B"],
         primaryClassNames: ["TestSchema.A"],
+        pathCardinality: "one",
       },
     ]);
+  });
+
+  it("reports a many-valued path without changing the property's value shape", () => {
+    const propertiesClass = createPropertiesClass("TestSchema.B", [
+      createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" }),
+    ]);
+
+    const [field] = collectFields({
+      propertiesClass,
+      relationshipInfo: { pathFromTarget: path, pathCardinality: "many", primaryClassNames: ["TestSchema.A"] },
+      valueClassNames: ["TestSchema.B"],
+      spec: { select: "all" },
+    });
+
+    expect(field.pathCardinality).to.equal("many");
+    expect(field.type).to.deep.equal({ kind: "primitive", type: "String" });
   });
 
   it("resolves label from override, then property label, then property name", () => {

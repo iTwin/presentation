@@ -129,6 +129,7 @@ describe("createContentProvider", () => {
         pathFromTarget: [],
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
+        pathCardinality: "one",
         selectorId: "Schema.A.Length",
       };
       const sizeIModelAccess = createSizeIModelAccess({ counts: [2] });
@@ -229,6 +230,7 @@ describe("createContentProvider", () => {
         pathFromTarget: [],
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
+        pathCardinality: "one",
         selectorId: "Schema.A.Length",
       };
       const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });

@@ -107,6 +107,7 @@ function createCategorizedField(props: {
       pathFromTarget: props.pathFromTarget ?? [],
       valueClassNames: ["TestSchema.B"],
       primaryClassNames: props.pathFromTarget?.length ? [props.pathFromTarget[0].sourceClassName] : ["TestSchema.B"],
+      pathCardinality: "one",
     },
     categorization,
   };
@@ -126,6 +127,7 @@ function createFieldWithCategory(props: { id?: string; categoryId?: string }): P
     pathFromTarget: [],
     valueClassNames: ["TestSchema.B"],
     primaryClassNames: ["TestSchema.B"],
+    pathCardinality: "one",
     ...(props.categoryId !== undefined ? { categoryId: props.categoryId } : undefined),
   };
 }

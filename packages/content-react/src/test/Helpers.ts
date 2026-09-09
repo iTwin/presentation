@@ -49,6 +49,7 @@ export function createPropertyField(props: {
     propertyClassName: props.propertyClassName ?? classA,
     propertyName: props.id,
     pathFromTarget: props.pathFromTarget ?? [],
+    pathCardinality: "one",
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
     selectorId: props.id,

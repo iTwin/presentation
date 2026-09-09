@@ -7,6 +7,7 @@ import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
 
@@ -80,6 +81,11 @@ export function collectClassPropertyFields(props: {
         /** Relationship path from the content target to `propertiesClass`. */
         pathFromTarget: RelationshipPath;
         /**
+         * Cardinality of `pathFromTarget` as the contributing declaration sees it. Declarations that
+         * disagree about a shared path are reconciled by `mergePropertyFieldsByIdentity`.
+         */
+        pathCardinality: CardinalityHint;
+        /**
          * Concrete primary classes that have access to the produced fields. Defaults to `valueClassNames`
          * (the direct-property case, where the primary class is itself the value origin). Related-property
          * enumeration passes the concrete source classes of the path's first step instead.
@@ -96,6 +102,7 @@ export function collectClassPropertyFields(props: {
 }): CategorizedField[] {
   const { propertiesClass, relationshipInfo, valueClassNames, spec, anchor, excludeInherited } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
+  const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
   const result: CategorizedField[] = [];
   const properties = excludeInherited ? propertiesClass.getOwnProperties() : propertiesClass.getProperties();
@@ -119,6 +126,7 @@ export function collectClassPropertyFields(props: {
       propertyClassName,
       propertyName: property.name,
       pathFromTarget,
+      pathCardinality,
       valueClassNames,
       primaryClassNames,
     };

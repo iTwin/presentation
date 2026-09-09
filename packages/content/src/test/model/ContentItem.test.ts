@@ -30,6 +30,7 @@ function createTestPropertyField(id: string): PropertyField {
     pathFromTarget: [],
     valueClassNames: ["BisCore.Element"],
     primaryClassNames: ["BisCore.Element"],
+    pathCardinality: "one",
   };
 }
 

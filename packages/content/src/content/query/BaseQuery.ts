@@ -7,8 +7,8 @@ import { assert } from "@itwin/core-bentley";
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
+import { classifyPathCardinality } from "../PathCardinality.js";
 import {
-  classifyPathCardinality,
   countJoinTables,
   packPathsWithinBudget,
   partitionPathsByJoinBudget,
