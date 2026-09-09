@@ -10,7 +10,6 @@ public;interface;ContentDescriptor
 public;interface;ContentItem
 public;interface;ContentSource
 public;interface;ContentTarget
-public;interface;ContentValues
 public;function;createContentProvider
 public;function;createHiddenSchemaMembersDescriptorTransformer
 public;function;createIModelContentConfiguration

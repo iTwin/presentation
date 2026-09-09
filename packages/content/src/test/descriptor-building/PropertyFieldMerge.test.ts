@@ -19,12 +19,14 @@ function createField(props: {
   readOnly?: boolean;
   type?: PropertyField["type"];
   pathFromTarget?: PropertyField["pathFromTarget"];
+  pathCardinality?: PropertyField["pathCardinality"];
 }): PropertyField {
   const id = PropertyField.computeId({
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget,
   });
+  const pathCardinality = props.pathCardinality ?? "one";
   return {
     kind: "property",
     id,
@@ -38,6 +40,7 @@ function createField(props: {
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
+    pathCardinality,
   };
 }
 
@@ -73,6 +76,7 @@ describe("mergePropertyFieldsByIdentity", () => {
         selectorId: id,
         valueClassNames: ["Stuff.Door", "Stuff.Window"],
         primaryClassNames: ["Stuff.Door", "Stuff.Window"],
+        pathCardinality: "one",
       },
     });
   });
@@ -180,6 +184,46 @@ describe("mergePropertyFieldsByIdentity", () => {
     const b = createField({ propertyClassName: "Stuff.Thing", propertyName: "Width", valueClassNames: ["Stuff.Door"] });
     const result = merge([a, b]);
     expect(Object.keys(result)).to.have.length(2);
+  });
+
+  it("merges to `many` when candidates disagree about the path cardinality", () => {
+    // Describing a many-valued path as single-valued would drop every related instance but one, so
+    // `many` wins regardless of candidate order.
+    const path: PropertyField["pathFromTarget"] = [
+      {
+        sourceClassName: "BisCore.Element",
+        targetClassName: "BisCore.ExternalSourceAspect",
+        relationshipName: "BisCore.ElementOwnsMultiAspects",
+      },
+    ];
+    const id = PropertyField.computeId({
+      propertyClassName: "BisCore.ExternalSourceAspect",
+      propertyName: "Identifier",
+      pathFromTarget: path,
+    });
+    const one = createField({
+      propertyClassName: "BisCore.ExternalSourceAspect",
+      propertyName: "Identifier",
+      pathFromTarget: path,
+      pathCardinality: "one",
+      valueClassNames: ["BisCore.ExternalSourceAspect"],
+    });
+    const many = createField({
+      propertyClassName: "BisCore.ExternalSourceAspect",
+      propertyName: "Identifier",
+      pathFromTarget: path,
+      pathCardinality: "many",
+      valueClassNames: ["BisCore.ExternalSourceAspect"],
+    });
+
+    for (const candidates of [
+      [one, many],
+      [many, one],
+    ]) {
+      const merged = merge(candidates)[id];
+      expect(merged.pathCardinality).to.equal("many");
+      expect(merged.type).to.deep.equal({ kind: "primitive", type: "String" });
+    }
   });
 
   it("throws when grouped candidates have divergent metadata", () => {

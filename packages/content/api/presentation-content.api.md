@@ -117,8 +117,16 @@ export interface ContentDescriptor {
 // @public
 export interface ContentItem {
     readonly descriptor: ReadonlyContentDescriptor;
-    getValue(field: Field): DeepReadonly<Value>;
+    getRelatedInstances(props: {
+        pathFromTarget: DeepReadonly<RelationshipPath>;
+    }): ReadonlyArray<{
+        key: DeepReadonly<InstanceKey>;
+        relationshipKey?: DeepReadonly<InstanceKey>;
+        getValue(field: ReadonlyPropertyField): DeepReadonly<Value>;
+    }>;
+    getValue(field: ReadonlyField): DeepReadonly<Value>;
     readonly primaryKey: DeepReadonly<InstanceKey>;
+    readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
     readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
@@ -187,12 +195,6 @@ type ContentValueFilterTarget = {
     field: CalculatedField;
     member?: never;
 };
-
-// @public
-export interface ContentValues {
-    primaryKey: InstanceKey;
-    values: Record<Field["id"], Value>;
-}
 
 // @public
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
@@ -326,8 +328,10 @@ type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
 export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
+    pathCardinality: CardinalityHint;
     pathFromTarget: RelationshipPath;
     primaryClassNames: EC.FullClassNameDotNotation[];
+    propertyClassKind?: "target" | "relationship";
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     selectorId: string;
@@ -401,6 +405,12 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 
 // @public
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
+
+// @public
+interface RelatedInstanceEntry {
+    key: InstanceKey;
+    relationshipKey?: InstanceKey;
+}
 
 // @public
 interface RelatedPropertiesDeclaration {

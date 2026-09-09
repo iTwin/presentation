@@ -8,9 +8,10 @@ import { collectInParallel } from "../InternalUtils.js";
 import { collectClassPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource } from "../ContentTarget.js";
+import type { CardinalityHint, ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
+import type { PathCardinalityClassifier } from "../PathCardinality.js";
 import type { CategorizedField } from "./ClassPropertyFields.js";
 import type { GetAnchorContributionFn, GetContributionFn } from "./ContributionMemoizer.js";
 
@@ -53,8 +54,10 @@ export async function collectRelatedPropertyFields(props: {
   getContribution: GetContributionFn;
   getAnchorContribution: GetAnchorContributionFn;
   imodelFieldsProvidersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
+  /** Classifies the cardinality of the path each enumerated field is reached over. */
+  classifier: PathCardinalityClassifier;
 }): Promise<RelatedCandidate[]> {
-  const { imodelAccess, source, getContribution, getAnchorContribution, imodelFieldsProvidersById } = props;
+  const { imodelAccess, source, getContribution, getAnchorContribution, imodelFieldsProvidersById, classifier } = props;
   // Enumerate each declaration group concurrently, but flatten the results in input order so the
   // candidate order is deterministic across runs — downstream merge tie-breaking (equal-priority
   // inter-provider conflicts) resolves to input order.
@@ -77,10 +80,14 @@ export async function collectRelatedPropertyFields(props: {
         );
       }
       const stepIndexOffset = group.nested?.prefixStepCount ?? 0;
+      // A nested group's `effectiveCardinalityHint` already folds in every ancestor declaration's hint.
+      const cardinalityHint = group.nested ? group.nested.effectiveCardinalityHint : declaration.cardinalityHint;
       const perPath = await Promise.all(
         group.paths.map(async ({ path, targetClassNames }) =>
           createFieldsForPath({
             imodelAccess,
+            classifier,
+            cardinalityHint,
             path,
             properties: declaration.properties,
             primaryClassNames: targetClassNames,
@@ -101,6 +108,9 @@ function describeNestedContext(group: ContentSource["resolvedDeclarations"][numb
 /** Enumerates the property fields of a single concrete relationship path. */
 async function createFieldsForPath(props: {
   imodelAccess: ECSchemaProvider;
+  classifier: PathCardinalityClassifier;
+  /** The owning declaration's cardinality hint, if any. */
+  cardinalityHint: CardinalityHint | undefined;
   path: RelationshipPath;
   properties: RelatedPropertiesDeclaration["properties"];
   /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
@@ -112,17 +122,21 @@ async function createFieldsForPath(props: {
    */
   stepIndexOffset: number;
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, path, properties, primaryClassNames, stepIndexOffset } = props;
+  const { imodelAccess, classifier, cardinalityHint, path, properties, primaryClassNames, stepIndexOffset } = props;
 
   // Default (no per-step specs): all properties of the final step's target class. `path` is always the
   // full path (prefix + suffix for a nested group), so its last step is already the suffix's last step
   // — no offset needed here.
   if (properties === undefined) {
     const lastStep = path[path.length - 1];
+    const [propertiesClass, pathCardinality] = await Promise.all([
+      getClass(imodelAccess, lastStep.targetClassName),
+      classifier.classify({ path, declaredPath: path, hint: cardinalityHint }),
+    ]);
     return collectClassPropertyFields({
-      propertiesClass: await getClass(imodelAccess, lastStep.targetClassName),
+      propertiesClass,
       valueClassNames: [lastStep.targetClassName],
-      relationshipInfo: { pathFromTarget: path, primaryClassNames },
+      relationshipInfo: { pathFromTarget: path, pathCardinality, primaryClassNames },
       spec: { select: "all" },
       anchor: "targetClass",
     });
@@ -131,7 +145,15 @@ async function createFieldsForPath(props: {
   // Opt-in: only the classes explicitly named by each step's `target`/`relationship`.
   const perStep = await Promise.all(
     properties.map(async (stepSpec) =>
-      createFieldsForStep({ imodelAccess, path, stepSpec, primaryClassNames, stepIndexOffset }),
+      createFieldsForStep({
+        imodelAccess,
+        classifier,
+        cardinalityHint,
+        path,
+        stepSpec,
+        primaryClassNames,
+        stepIndexOffset,
+      }),
     ),
   );
   return perStep.flat();
@@ -140,6 +162,8 @@ async function createFieldsForPath(props: {
 /** Enumerates the target-class and relationship-class fields opted in by a single `StepPropertySpec`. */
 async function createFieldsForStep(props: {
   imodelAccess: ECSchemaProvider;
+  classifier: PathCardinalityClassifier;
+  cardinalityHint: CardinalityHint | undefined;
   path: RelationshipPath;
   stepSpec: StepPropertySpec;
   /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
@@ -147,7 +171,7 @@ async function createFieldsForStep(props: {
   /** See {@link createFieldsForPath}. */
   stepIndexOffset: number;
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, path, stepSpec, primaryClassNames, stepIndexOffset } = props;
+  const { imodelAccess, classifier, cardinalityHint, path, stepSpec, primaryClassNames, stepIndexOffset } = props;
   const effectiveStepIndex = stepIndexOffset + stepSpec.stepIndex;
   if (effectiveStepIndex < 0 || effectiveStepIndex >= path.length) {
     if (stepIndexOffset > 0) {
@@ -162,13 +186,18 @@ async function createFieldsForStep(props: {
   }
   const step = path[effectiveStepIndex];
   const pathFromTarget = path.slice(0, effectiveStepIndex + 1);
+  const pathCardinality = await classifier.classify({
+    path: pathFromTarget,
+    declaredPath: path,
+    hint: cardinalityHint,
+  });
   const enumerated: CategorizedField[] = [];
   if (stepSpec.target) {
     enumerated.push(
       ...collectClassPropertyFields({
         propertiesClass: await getClass(imodelAccess, step.targetClassName),
         valueClassNames: [step.targetClassName],
-        relationshipInfo: { pathFromTarget, primaryClassNames },
+        relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
         spec: stepSpec.target,
         anchor: "targetClass",
       }),
@@ -179,7 +208,7 @@ async function createFieldsForStep(props: {
       ...collectClassPropertyFields({
         propertiesClass: await getClass(imodelAccess, step.relationshipName),
         valueClassNames: [step.relationshipName],
-        relationshipInfo: { pathFromTarget, primaryClassNames },
+        relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
       }),

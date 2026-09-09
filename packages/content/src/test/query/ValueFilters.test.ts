@@ -22,6 +22,7 @@ describe("buildValueFilterClauses", () => {
     pathFromTarget: [],
     valueClassNames: ["TestSchema.TestClass"],
     primaryClassNames: ["TestSchema.TestClass"],
+    pathCardinality: "one",
     selectorId: "selector-id",
   };
 

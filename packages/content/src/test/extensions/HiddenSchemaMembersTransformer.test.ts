@@ -35,6 +35,7 @@ function propertyField(props: {
     propertyClassName: props.sourceClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
+    pathCardinality: "one",
     valueClassNames: toSortedUniqueClassNames(props.valueClassNames),
     primaryClassNames: props.pathFromTarget
       ? [props.pathFromTarget[0].sourceClassName]
