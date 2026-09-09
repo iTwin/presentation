@@ -159,6 +159,7 @@ interface ContentSortSpec {
 
 // @public
 export interface ContentSource {
+    externalInputPaths: ResolvedPath[];
     resolvedDeclarations: ResolvedDeclarationGroup[];
     resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
     target: ContentTarget;
@@ -428,7 +429,7 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 
 // @public
 interface ResolveContentSourcesProps {
-    config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
+    config?: Pick<ContentConfiguration, "imodelFieldsProviders" | "externalFieldsProviders">;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     targets: ContentTarget[];
 }

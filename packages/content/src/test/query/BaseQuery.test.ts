@@ -45,6 +45,7 @@ function makeSource(paths: RelationshipPath[], target: ContentTarget = { primary
   return {
     target,
     resolvedPrimaryClasses: [primaryClass],
+    externalInputPaths: [],
     resolvedDeclarations:
       paths.length > 0
         ? [
@@ -226,6 +227,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        externalInputPaths: [],
         resolvedDeclarations: [
           { providerId: "a_v1", declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.Target"] }] },
           { providerId: "b_v1", declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.Target"] }] },
@@ -242,6 +244,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        externalInputPaths: [],
         resolvedDeclarations: [
           {
             providerId: "a_v1",

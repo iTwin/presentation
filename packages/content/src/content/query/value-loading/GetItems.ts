@@ -19,6 +19,7 @@ import { buildBaseQuery } from "../BaseQuery.js";
 import { QUERY_CONCURRENCY } from "../QueryConcurrency.js";
 import { PAGE_SIZE } from "../QueryLimits.js";
 import { buildSelectProjection } from "../SelectBuilder.js";
+import { createExternalValuePopulator } from "./ExternalValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
 import { decodePrimaryKey, decodeSelectorValues, mergeSelectorValues, toContentValues } from "./RowDecoder.js";
 
@@ -26,15 +27,19 @@ import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ContentValueFilter } from "../../Content.js";
 import type { ContentSource } from "../../ContentTarget.js";
+import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProvider.js";
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
+import type { ExternalValuePopulator } from "./ExternalValues.js";
 import type { Cursor, PlannedGroup, SourcePlan } from "./PageQueries.js";
 
 /**
  * Loads content items for the configured sources, paging with a keyset cursor and stitching SQL-backed
- * values into `ContentItem` accessors. External fields are left `undefined` — Stage 5 populates them.
+ * values into `ContentItem` accessors. Once a page's SQL-backed values are stitched, every configured
+ * external fields provider is called once with that page's pre-extracted input values and its declared
+ * fields are merged in before the items are emitted.
  *
  * @internal
  */
@@ -45,6 +50,7 @@ export function getItems(props: {
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
+  externalFieldsProviders?: ExternalFieldsProvider[];
 }): AsyncIterable<ContentItem> {
   return {
     [Symbol.asyncIterator]() {
@@ -60,13 +66,15 @@ function loadItems(props: {
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
+  externalFieldsProviders?: ExternalFieldsProvider[];
 }): Observable<ContentItem> {
-  const { imodelAccess, getDescriptor, sources, queryFilterers, filters } = props;
+  const { imodelAccess, getDescriptor, sources, queryFilterers, filters, externalFieldsProviders } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
   return from(getDescriptor()).pipe(
-    mergeMap((descriptor) =>
-      from(sources).pipe(
+    mergeMap((descriptor) => {
+      const populateExternalValues = createExternalValuePopulator({ descriptor, providers: externalFieldsProviders });
+      return from(sources).pipe(
         mergeMap(async (source) =>
           createSourcePlan({ imodelAccess, descriptor, source, sorting, queryFilterers, filters }),
         ),
@@ -76,15 +84,18 @@ function loadItems(props: {
             // Single source (sorted or not) and multi-source unsorted both page each source's anchor directly and
             // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
             return from(plans).pipe(
-              mergeMap((plan) => pageAnchor({ imodelAccess, descriptor, plan, sorting }), QUERY_CONCURRENCY),
+              mergeMap(
+                (plan) => pageAnchor({ imodelAccess, descriptor, plan, sorting, populateExternalValues }),
+                QUERY_CONCURRENCY,
+              ),
             );
           }
 
           // Multiple sources sorted by a shared key: order and page globally with the two-phase key stream.
-          return pageMultiSourceSorted({ imodelAccess, descriptor, plans, sorting });
+          return pageMultiSourceSorted({ imodelAccess, descriptor, plans, sorting, populateExternalValues });
         }),
-      ),
-    ),
+      );
+    }),
   );
 }
 
@@ -133,48 +144,46 @@ function pageAnchor(props: {
   descriptor: ContentDescriptor;
   plan: SourcePlan;
   sorting: ContentQuerySort[];
+  populateExternalValues: ExternalValuePopulator | undefined;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plan, sorting } = props;
+  const { imodelAccess, descriptor, plan, sorting, populateExternalValues } = props;
   const fetchPage = (cursor: Cursor | undefined): Observable<PageResult> =>
     readRows(imodelAccess, buildAnchorPageQuery({ plan, sorting, cursor })).pipe(
-      mergeMap((rows) => {
-        if (rows.length === 0) {
-          return of<PageResult>({ items: [], next: undefined });
-        }
-        const decoded = rows.map((row) => ({
+      map((rows) =>
+        rows.map((row) => ({
           primaryKey: decodePrimaryKey({ row, columnNames: plan.anchor.projection.columnNames }),
           selectorValues: decodeSelectorValues({ row, descriptor, columnNames: plan.anchor.projection.columnNames }),
           sortValues: readSortValues({ row, sort: plan.anchor.projection.sort }),
-        }));
-        return fetchGroupValues({
+        })),
+      ),
+      mergeMap((decoded) =>
+        fetchGroupValues({
           imodelAccess,
           descriptor,
           groups: plan.additional,
           ids: decoded.map((item) => item.primaryKey.id),
-        }).pipe(
-          map((additionalValuesById): PageResult => {
-            const items = decoded.map((item) => {
-              const additionalValues = additionalValuesById.get(item.primaryKey.id);
-              if (additionalValues) {
-                mergeSelectorValues(item.selectorValues, additionalValues);
-              }
-              return createContentItem({
-                descriptor,
-                contentValues: toContentValues({
-                  descriptor,
-                  primaryKey: item.primaryKey,
-                  selectorValues: item.selectorValues,
-                }),
-              });
-            });
-            if (rows.length < PAGE_SIZE) {
+        }).pipe(map((additionalValuesById) => ({ decoded, additionalValuesById }))),
+      ),
+      map(({ decoded, additionalValuesById }) => {
+        for (const item of decoded) {
+          const additionalValues = additionalValuesById.get(item.primaryKey.id);
+          if (additionalValues) {
+            mergeSelectorValues(item.selectorValues, additionalValues);
+          }
+        }
+        return decoded;
+      }),
+      mergeMap((decoded) =>
+        materializeItems({ descriptor, populateExternalValues, rows: decoded }).pipe(
+          map((items): PageResult => {
+            if (decoded.length < PAGE_SIZE) {
               return { items, next: undefined };
             }
             const last = decoded[decoded.length - 1];
             return { items, next: { sortValues: last.sortValues, primaryKey: last.primaryKey } };
           }),
-        );
-      }),
+        ),
+      ),
     );
 
   return fetchPage(undefined).pipe(
@@ -193,8 +202,9 @@ function pageMultiSourceSorted(props: {
   descriptor: ContentDescriptor;
   plans: SourcePlan[];
   sorting: ContentQuerySort[];
+  populateExternalValues: ExternalValuePopulator | undefined;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plans, sorting } = props;
+  const { imodelAccess, descriptor, plans, sorting, populateExternalValues } = props;
   const keyProjection = plans[0].anchor.keyProjection;
 
   // Phase 1: page the globally ordered key stream. The next cursor is derived from the key rows alone, so
@@ -222,13 +232,14 @@ function pageMultiSourceSorted(props: {
     const ids = keys.map((key) => key.id);
     const groups = plans.flatMap((plan) => [plan.anchor, ...plan.additional]);
     return fetchGroupValues({ imodelAccess, descriptor, groups, ids }).pipe(
-      map((valuesById) =>
-        keys.map((key) => {
-          const selectorValues = valuesById.get(key.id) ?? new Map<string, Value>();
-          return createContentItem({
-            descriptor,
-            contentValues: toContentValues({ descriptor, primaryKey: key, selectorValues }),
-          });
+      mergeMap((valuesById) =>
+        materializeItems({
+          descriptor,
+          populateExternalValues,
+          rows: keys.map((key) => ({
+            primaryKey: key,
+            selectorValues: valuesById.get(key.id) ?? new Map<string, Value>(),
+          })),
         }),
       ),
     );
@@ -243,6 +254,30 @@ function pageMultiSourceSorted(props: {
     mergeMap(step),
     expand((result) => (result.next ? step(result.next) : EMPTY)),
     concatMap((result) => from(result.items)),
+  );
+}
+
+// Maps decoded selector values onto descriptor fields and, when providers are configured, enriches the
+// resulting items with external field values before wrapping them as `ContentItem`s.
+function materializeItems(props: {
+  descriptor: ContentDescriptor;
+  populateExternalValues: ExternalValuePopulator | undefined;
+  rows: Array<{ primaryKey: InstanceKey; selectorValues: Map<string, Value> }>;
+}): Observable<ContentItem[]> {
+  const { descriptor, populateExternalValues, rows } = props;
+  const contentValues = rows.map((row) =>
+    toContentValues({ descriptor, primaryKey: row.primaryKey, selectorValues: row.selectorValues }),
+  );
+  if (!populateExternalValues || rows.length === 0) {
+    return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));
+  }
+  return populateExternalValues(rows).pipe(
+    map((externalValuesByRow) =>
+      contentValues.map((values, index) => {
+        Object.assign(values.values, externalValuesByRow[index]);
+        return createContentItem({ descriptor, contentValues: values });
+      }),
+    ),
   );
 }
 

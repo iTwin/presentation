@@ -392,15 +392,20 @@ function serializeJoinPath(path: RelationshipPath): string {
   return serializeRelationshipPath({ path, includeInstanceFilters: true });
 }
 
-/** Gathers every resolved path across the source's declarations, de-duplicated by serialized path. */
+/**
+ * Gathers every resolved path across the source's declarations, de-duplicated by serialized path.
+ * Includes `externalInputPaths` — paths joined solely to feed an external fields provider's input,
+ * with no field of their own — so their column is selected exactly like any other related path's.
+ */
 function collectUniquePaths(source: ContentSource): ResolvedPath[] {
   const byKey = new Map<string, ResolvedPath>();
-  for (const group of source.resolvedDeclarations) {
-    for (const resolved of group.paths) {
-      const key = serializeJoinPath(resolved.path);
-      if (!byKey.has(key)) {
-        byKey.set(key, resolved);
-      }
+  for (const resolved of [
+    ...source.resolvedDeclarations.flatMap((group) => group.paths),
+    ...source.externalInputPaths,
+  ]) {
+    const key = serializeJoinPath(resolved.path);
+    if (!byKey.has(key)) {
+      byKey.set(key, resolved);
     }
   }
   return [...byKey.values()];

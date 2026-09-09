@@ -48,6 +48,7 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
         queryFilterers: config?.queryFilterers,
         filters: options?.filters,
         sorting: options?.sorting,
+        externalFieldsProviders: config?.externalFieldsProviders,
       });
     },
   };

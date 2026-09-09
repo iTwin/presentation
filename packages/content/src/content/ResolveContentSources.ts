@@ -21,6 +21,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
+import type { ExternalFieldsProvider, InputPropertyDeclaration } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
 // --- Types ---
@@ -276,6 +277,46 @@ async function resolveDeclarationPaths({
       toArray(),
     ),
   );
+}
+
+/**
+ * Resolves the paths declared by external fields providers' related-property `inputs` — the pipeline's
+ * own path-only counterpart to a provider's `relatedProperties` declarations, resolved the same way
+ * (`resolveDeclarationPaths`) but carrying no provider identity: nothing re-derives these afterward, so
+ * they need none of `RelatedPropertiesDeclaration`'s field-shaping members (`properties`,
+ * `cardinalityHint`) and never seed nested-anchor expansion.
+ */
+async function resolveExternalInputPaths({
+  imodelAccess,
+  target,
+  externalFieldsProviders,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  target: ContentTarget;
+  externalFieldsProviders: ExternalFieldsProvider[];
+}): Promise<ResolvedPath[]> {
+  const paths = collectExternalInputPaths(externalFieldsProviders);
+  const resolved = await Promise.all(
+    paths.map(async (path) => resolveDeclarationPaths({ imodelAccess, target, declaration: { path } })),
+  );
+  return resolved.flat();
+}
+
+/** De-duplicates every related path declared as an input across all external fields providers. */
+function collectExternalInputPaths(externalFieldsProviders: ExternalFieldsProvider[]): RelationshipPath[] {
+  const byKey = new Map<string, RelationshipPath>();
+  for (const provider of externalFieldsProviders) {
+    const declarations: ReadonlyArray<InputPropertyDeclaration> = Object.values(provider.inputs ?? {});
+    for (const declaration of declarations) {
+      if (declaration.path && declaration.path.length > 0) {
+        const key = serializeRelationshipPath({ path: declaration.path, includeInstanceFilters: true });
+        if (!byKey.has(key)) {
+          byKey.set(key, declaration.path);
+        }
+      }
+    }
+  }
+  return [...byKey.values()];
 }
 
 // --- Target resolution ---
@@ -620,10 +661,12 @@ async function resolveNestedGroups({
 function resolveTarget({
   imodelAccess,
   providers,
+  externalFieldsProviders,
   target,
 }: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   providers: IModelFieldsProvider[];
+  externalFieldsProviders: ExternalFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
   const resolvedPrimaryClasses = from(resolvePrimaryClasses({ imodelAccess, target }));
@@ -639,7 +682,8 @@ function resolveTarget({
       ];
     }),
   );
-  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations });
+  const externalInputPaths = from(resolveExternalInputPaths({ imodelAccess, target, externalFieldsProviders }));
+  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, externalInputPaths });
 }
 
 // --- Public entry point ---
@@ -648,6 +692,7 @@ export async function resolveContentSourcesImpl(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   targets: ContentTarget[];
   imodelFieldsProviders: IModelFieldsProvider[];
+  externalFieldsProviders: ExternalFieldsProvider[];
 }): Promise<ContentSource[]> {
   if (props.targets.length === 0) {
     return [];
@@ -656,9 +701,12 @@ export async function resolveContentSourcesImpl(props: {
   return lastValueFrom(
     from(props.targets).pipe(
       mergeMap((target, idx) =>
-        resolveTarget({ imodelAccess: props.imodelAccess, providers: props.imodelFieldsProviders, target }).pipe(
-          map((source) => ({ source, idx })),
-        ),
+        resolveTarget({
+          imodelAccess: props.imodelAccess,
+          providers: props.imodelFieldsProviders,
+          externalFieldsProviders: props.externalFieldsProviders,
+          target,
+        }).pipe(map((source) => ({ source, idx }))),
       ),
       toArray(),
       map((items) => {

@@ -24,7 +24,7 @@ function createSource(
   primaryClass: EC.FullClassNameDotNotation,
   resolvedPrimaryClasses: EC.FullClassNameDotNotation[] = [primaryClass],
 ): ContentSource {
-  return { target: { primaryClass }, resolvedPrimaryClasses, resolvedDeclarations: [] };
+  return { target: { primaryClass }, resolvedPrimaryClasses, resolvedDeclarations: [], externalInputPaths: [] };
 }
 
 describe("buildContentDescriptor", () => {
@@ -138,6 +138,7 @@ describe("buildContentDescriptor", () => {
       resolvedDeclarations: [
         { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
       ],
+      externalInputPaths: [],
     };
 
     const descriptor = await buildContentDescriptor({
@@ -381,6 +382,7 @@ describe("buildContentDescriptor", () => {
       resolvedDeclarations: [
         { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
       ],
+      externalInputPaths: [],
     };
     const relatedId = PropertyField.computeId({
       propertyClassName: "TestSchema.B",

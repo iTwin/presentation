@@ -19,6 +19,7 @@ function createSource(props: {
     target: { primaryClass: props.primaryClass },
     resolvedPrimaryClasses: props.resolvedPrimaryClasses ?? [props.primaryClass],
     resolvedDeclarations: [],
+    externalInputPaths: [],
   };
 }
 

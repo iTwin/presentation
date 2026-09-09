@@ -19,7 +19,12 @@ const imodelAccess = { ...createSchemaAccess([createEntityClass({ fullName: "Sch
   ECSqlQueryExecutor;
 
 function createSource(primaryClass: ContentSource["target"]["primaryClass"]): ContentSource {
-  return { target: { primaryClass }, resolvedPrimaryClasses: [primaryClass], resolvedDeclarations: [] };
+  return {
+    target: { primaryClass },
+    resolvedPrimaryClasses: [primaryClass],
+    resolvedDeclarations: [],
+    externalInputPaths: [],
+  };
 }
 
 function createSizeIModelAccess(props: { schemaClasses?: EC.Class[]; counts: Array<number | undefined> }) {
