@@ -37,7 +37,8 @@ export { resolveContentSources, createContentProvider } from "./content/Content.
 export { getDistinctFieldValues } from "./content/DistinctValues.js";
 
 // Default iModel configuration
-export { createIModelContentConfiguration } from "./content/extensions/presentation-rules/EmbeddedRulesets.js";
+export { createIModelContentConfiguration } from "./content/extensions/IModelContentConfiguration.js";
+export type { BisCoreLocalizedStrings } from "./content/extensions/biscore/BisCoreLocalizedStrings.js";
 
 // Consumer utilities
 export { mapItems, reduceItems } from "./content/Utilities.js";

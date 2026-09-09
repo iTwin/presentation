@@ -3,43 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { isSchemaVersionAtLeast, isSchemaVersionBelow } from "../../InternalUtils.js";
+
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryDefinition } from "../../model/Category.js";
 import type * as PresentationRules from "./PresentationRules.js";
-
-/**
- * Returns `true` if `version` is at or above `minVersion` (inclusive).
- * Comparison order: write > read > minor.
- *
- * @internal
- */
-export function isVersionAtLeast(version: EC.SchemaVersion, minVersion: string): boolean {
-  const [minRead, minWrite, minMinor] = minVersion.split(".").map(Number);
-  if (version.write !== minWrite) {
-    return version.write > minWrite;
-  }
-  if (version.read !== minRead) {
-    return version.read > minRead;
-  }
-  return version.minor >= minMinor;
-}
-
-/**
- * Returns `true` if `version` is strictly below `maxVersion` (exclusive).
- * Comparison order: write > read > minor.
- *
- * @internal
- */
-export function isVersionBelow(version: EC.SchemaVersion, maxVersion: string): boolean {
-  const [maxRead, maxWrite, maxMinor] = maxVersion.split(".").map(Number);
-  if (version.write !== maxWrite) {
-    return version.write < maxWrite;
-  }
-  if (version.read !== maxRead) {
-    return version.read < maxRead;
-  }
-  return version.minor < maxMinor;
-}
 
 /**
  * Returns `true` if all required schemas are present in the iModel and satisfy the version constraints.
@@ -58,10 +26,10 @@ export async function checkRequiredSchemas(
     if (!schema) {
       return false;
     }
-    if (req.minVersion && !isVersionAtLeast(schema.version, req.minVersion)) {
+    if (req.minVersion && !isSchemaVersionAtLeast(schema.version, req.minVersion)) {
       return false;
     }
-    if (req.maxVersion && !isVersionBelow(schema.version, req.maxVersion)) {
+    if (req.maxVersion && !isSchemaVersionBelow(schema.version, req.maxVersion)) {
       return false;
     }
   }
