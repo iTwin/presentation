@@ -175,6 +175,7 @@ describe("buildContentDescriptor", () => {
         resolvedDeclarations: [
           { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
         ],
+        externalInputPaths: [],
       };
     }
 

@@ -128,5 +128,6 @@ export function toContentValues(props: {
       values[field.id] = value;
     }
   }
-  return { primaryKey, values };
+  // TODO: Related instance keys are not yet projected by this stage - no path has related instances to report.
+  return { primaryKey, values, relatedInstances: {} };
 }
