@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createBisCoreContentConfiguration } from "./biscore/BisCoreContentConfiguration.js";
+import { createHiddenSchemaMembersDescriptorTransformer } from "./HiddenSchemaMembersTransformer.js";
 import { createEmbeddedPresentationRulesConfiguration } from "./presentation-rules/EmbeddedRulesets.js";
 
 import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
@@ -43,8 +44,13 @@ export async function createIModelContentConfiguration(
   const { imodelAccess, localizedStrings } = props;
   const bisCore = createBisCoreContentConfiguration({ localizedStrings });
   const embedded = await createEmbeddedPresentationRulesConfiguration({ imodelAccess });
+  const hiddenSchemaTransformer = createHiddenSchemaMembersDescriptorTransformer();
   return {
     imodelFieldsProviders: [...bisCore.imodelFieldsProviders, ...embedded.imodelFieldsProviders],
-    descriptorTransformers: [...bisCore.descriptorTransformers, ...embedded.descriptorTransformers],
+    descriptorTransformers: [
+      ...bisCore.descriptorTransformers,
+      ...embedded.descriptorTransformers,
+      hiddenSchemaTransformer,
+    ],
   };
 }

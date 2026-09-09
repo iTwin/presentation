@@ -20,10 +20,7 @@ import {
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Code, IModel } from "@itwin/core-common";
-import {
-  createHiddenSchemaMembersDescriptorTransformer,
-  createIModelContentConfiguration,
-} from "@itwin/presentation-content";
+import { createIModelContentConfiguration } from "@itwin/presentation-content";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
@@ -31,25 +28,7 @@ import { PropertyFieldValidator, validateVisibleFieldsAtPath } from "./Descripto
 import { buildDescriptor, createContentIModelAccess } from "./Utils.js";
 
 import type { ElementAspectProps, ExternalSourceProps } from "@itwin/core-common";
-import type { ContentConfiguration } from "@itwin/presentation-content";
 import type { RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentIModelAccess } from "./Utils.js";
-
-/**
- * Composes the default iModel content configuration (BisCore's own fields providers and
- * descriptor transformers — these test iModels have no embedded configuration of their own) with
- * the schema hidden-properties transformer.
- */
-async function createConfig(imodelAccess: ContentIModelAccess): Promise<ContentConfiguration> {
-  const config = await createIModelContentConfiguration({ imodelAccess });
-  return {
-    imodelFieldsProviders: config.imodelFieldsProviders,
-    descriptorTransformers: [
-      ...(config.descriptorTransformers ?? []),
-      createHiddenSchemaMembersDescriptorTransformer(),
-    ],
-  };
-}
 
 /**
  * `BisCore.RepositoryLink`'s *visible* property-field surface.
@@ -244,7 +223,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: await createConfig(imodelAccess),
+        config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
       const uniqueAspectPath: RelationshipPath = [
@@ -365,7 +344,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: await createConfig(imodelAccess),
+        config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
       const groupLinkPath: RelationshipPath = [
@@ -468,7 +447,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: await createConfig(imodelAccess),
+        config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
       const externalSourceAspectPath: RelationshipPath = [
@@ -569,7 +548,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: await createConfig(imodelAccess),
+        config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
       const typeDefinitionPath: RelationshipPath = [
@@ -631,7 +610,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: await createConfig(imodelAccess),
+        config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
       const nestedAspectPath: RelationshipPath = [
@@ -697,7 +676,7 @@ describe("Content", () => {
       const descriptor = await buildDescriptor({
         imodelAccess,
         targets: [{ primaryClass: drawingGraphicClassName }],
-        config: await createConfig(imodelAccess),
+        config: await createIModelContentConfiguration({ imodelAccess }),
       });
 
       const typeDefinitionPath: RelationshipPath = [

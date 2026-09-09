@@ -44,7 +44,7 @@ describe("createIModelContentConfiguration", () => {
       "biscore-aspects_v1",
       "biscore-fields_v1",
     ]);
-    expect(config.descriptorTransformers?.length).to.equal(3);
+    expect(config.descriptorTransformers?.length).to.equal(4);
   });
 
   it("includes fields providers and descriptor transformers from embedded supplemental rulesets", async () => {
@@ -66,7 +66,7 @@ describe("createIModelContentConfiguration", () => {
     const config = await createIModelContentConfiguration({ imodelAccess });
 
     expect(config.imodelFieldsProviders).to.have.length(3);
-    expect(config.descriptorTransformers).to.have.length(4);
+    expect(config.descriptorTransformers).to.have.length(5);
     expect(config.imodelFieldsProviders![2].id).to.match(/^FieldsProviderFromContentModifierRule_/);
   });
 
