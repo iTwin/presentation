@@ -76,13 +76,17 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@mui/material": "^9.0.0",
-    "@stratakit/mui": "^0.5.0",
+    "@mui/material": "^9.4.0",
+    "@stratakit/foundations": "^1.0.0",
+    "@stratakit/mui": "^1.0.0",
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
     "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@mui/material": {
+      "optional": true
+    },
+    "@stratakit/foundations": {
       "optional": true
     },
     "@stratakit/mui": {
@@ -94,6 +98,7 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@mui/material": "catalog:stratakit",
     "@rolldown/plugin-babel": "catalog:build-tools",
+    "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/mui": "catalog:stratakit",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",

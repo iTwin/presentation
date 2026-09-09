@@ -88,10 +88,11 @@ catalogs:
     rxjs: ^7.8.2
     rxjs-for-await: ^1.0.0
   stratakit:
-    '@mui/material': ^9.0.0
-    '@stratakit/icons': ^0.4.0
-    '@stratakit/mui': ^0.5.4
-    '@stratakit/structures': ^0.5.10
+    '@mui/material': ^9.4.0
+    '@stratakit/foundations': ^1.0.0
+    '@stratakit/icons': ^0.4.3
+    '@stratakit/mui': ^1.0.0
+    '@stratakit/structures': ^0.6.0
   test-tools:
     '@testing-library/dom': ^10.4.1
     '@testing-library/react': ^16.3.3

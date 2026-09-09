@@ -35,6 +35,13 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             instances: [{ browser: "chromium", viewport: { width: 800, height: 600 } }],
+            expect: {
+              toMatchScreenshot: {
+                comparatorName: "pixelmatch",
+                /* Any pixel differing by more than 5% (YIQ color distance) fails; tolerates only subtle antialiasing noise. */
+                comparatorOptions: { threshold: 0.05 },
+              },
+            },
           },
         },
       },
