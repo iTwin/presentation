@@ -34,7 +34,7 @@ A `Field` represents a single loadable value in the content. There are three kin
 
 ### Content item
 
-A `ContentItem` wraps the loaded values for a single instance together with a reference to the descriptor. It provides a `getValue(field)` accessor for retrieving individual field values.
+A `ContentItem` wraps the loaded values for a single instance together with a reference to the descriptor. It provides a `getValue(field)` accessor for retrieving individual field values, and a `getRelatedInstances({ pathFromTarget })` accessor for retrieving the related instances reached over a relationship path, each paired with a scoped `getValue(field)` for that instance's own values.
 
 ### Pipeline stages
 

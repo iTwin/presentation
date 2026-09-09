@@ -73,6 +73,23 @@ describe("collectClassPropertyFields", () => {
     expect(field.type).to.deep.equal({ kind: "primitive", type: "String" });
   });
 
+  it.each([
+    ["targetClass", "target"],
+    ["relationshipClass", "relationship"],
+  ] as const)("reports the related property's class kind for %s fields", (anchor, propertyClassKind) => {
+    const [field] = collectClassPropertyFields({
+      propertiesClass: createPropertiesClass("TestSchema.B", [
+        createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" }),
+      ]),
+      relationshipInfo: { pathFromTarget: path, pathCardinality: "one", primaryClassNames: ["TestSchema.A"] },
+      valueClassNames: ["TestSchema.B"],
+      spec: { select: "all" },
+      anchor,
+    }).map(({ field: result }) => result);
+
+    expect(field.propertyClassKind).to.equal(propertyClassKind);
+  });
+
   it("resolves label from override, then property label, then property name", () => {
     const propertiesClass = createPropertiesClass("TestSchema.C", [
       createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),

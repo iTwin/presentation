@@ -125,6 +125,11 @@ export function collectClassPropertyFields(props: {
       type,
       propertyClassName,
       propertyName: property.name,
+      ...(anchor === "targetClass"
+        ? { propertyClassKind: "target" as const }
+        : anchor === "relationshipClass"
+          ? { propertyClassKind: "relationship" as const }
+          : {}),
       pathFromTarget,
       pathCardinality,
       valueClassNames,
