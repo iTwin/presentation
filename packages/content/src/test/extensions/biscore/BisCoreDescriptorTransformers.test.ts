@@ -39,6 +39,7 @@ function propertyField(props: {
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget ?? [],
+    pathCardinality: "one",
     valueClassNames,
     primaryClassNames: props.pathFromTarget ? [props.pathFromTarget[0].sourceClassName] : valueClassNames,
   };
