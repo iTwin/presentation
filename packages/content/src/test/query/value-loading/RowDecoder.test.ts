@@ -19,6 +19,7 @@ const columnNames: SelectProjection["columnNames"] = {
   primaryKey: { className: "pres_primary_class", id: "pres_primary_id" },
   propertyBlobs: { "Schema.A.Code": "this", "Schema.A.Label": "this" },
   calculatedValues: { "calc:score": "pres_calc_0" },
+  relatedBlobs: {},
 };
 
 const descriptor = {
@@ -123,6 +124,7 @@ describe("RowDecoder", () => {
           primaryKey: columnNames.primaryKey,
           propertyBlobs: { "Schema.A.Unknown": "this" },
           calculatedValues: {},
+          relatedBlobs: {},
         },
       });
       expect(values.size).to.equal(0);

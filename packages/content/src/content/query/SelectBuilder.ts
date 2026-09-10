@@ -49,6 +49,15 @@ export interface SelectProjection {
     propertyBlobs: Record<string, string>;
     /** Calculated selector id -> alias of its scalar column. */
     calculatedValues: Record<string, string>;
+    /**
+     * Projected related `$`-blob column -> its identity columns. One entry per related blob column that
+     * was actually projected (never `this`'s own blob). `pathKey` is the owned join-path key
+     * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`) the blob belongs to; `role`
+     * says whether the blob is the path's target instance or its last step's relationship instance — a
+     * relationship entry exists only where a relationship-class property selector was projected
+     * (nav-property steps never get one). `className` is the blob's `ec_classname(...)` column.
+     */
+    relatedBlobs: Record<string, { className: string; pathKey: string; role: "target" | "relationship" }>;
   };
   /** Private sort-key columns read by the keyset cursor and re-emitted in the ECSQL `ORDER BY`. */
   sort: { fieldId: string; column: string; direction: "asc" | "desc" }[];
@@ -89,6 +98,7 @@ export async function buildSelectProjection(props: {
   );
   const relationshipClassNames = await collectRelationshipClassNames({ schemaProvider, selectors: propertySelectors });
   const projectedAliases = new Set<string>();
+  const relatedBlobs: SelectProjection["columnNames"]["relatedBlobs"] = {};
   for (const selector of propertySelectors) {
     const key = serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true });
     if (!ownedPathKeys.has(key)) {
@@ -98,9 +108,19 @@ export async function buildSelectProjection(props: {
     if (!alias) {
       continue;
     }
+    const isRelated = selector.pathFromTarget.length > 0;
     if (!projectedAliases.has(alias)) {
       select.push(`[${alias}].$ AS [${alias}]`);
       projectedAliases.add(alias);
+      if (isRelated) {
+        const classNameColumn = `${alias}_cls`;
+        select.push(`ec_classname([${alias}].[ECClassId], 's.c') AS [${classNameColumn}]`);
+        relatedBlobs[alias] = {
+          className: classNameColumn,
+          pathKey: key,
+          role: relationshipClassNames.has(selector.propertyClassName) ? "relationship" : "target",
+        };
+      }
     }
     propertyBlobs[selector.id] = alias;
   }
@@ -149,7 +169,7 @@ export async function buildSelectProjection(props: {
   return {
     clauses: { select: `SELECT ${select.join(",\n")}`, ...(orderBy ? { orderBy } : undefined) },
     ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
-    columnNames: { primaryKey, propertyBlobs, calculatedValues },
+    columnNames: { primaryKey, propertyBlobs, calculatedValues, relatedBlobs },
     sort,
   };
 }

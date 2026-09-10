@@ -64,7 +64,7 @@ function createProjection(overrides?: {
   ];
   return {
     clauses: { select: `SELECT ${select.join(", ")}` },
-    columnNames: { primaryKey, propertyBlobs, calculatedValues },
+    columnNames: { primaryKey, propertyBlobs, calculatedValues, relatedBlobs: {} },
     sort,
     ...(overrides?.bindings ? { bindings: overrides.bindings } : undefined),
   };

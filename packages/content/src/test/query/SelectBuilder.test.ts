@@ -106,7 +106,9 @@ describe("buildSelectProjection", () => {
           [this].[ECInstanceId] AS [${primaryIdColumn}],
           [this].$ AS [this],
           [${targetAlias}].$ AS [${targetAlias}],
+          ec_classname([${targetAlias}].[ECClassId], 's.c') AS [${targetAlias}_cls],
           [${relationshipAlias}].$ AS [${relationshipAlias}],
+          ec_classname([${relationshipAlias}].[ECClassId], 's.c') AS [${relationshipAlias}_cls],
           ([this].Code * :factor) AS [${ECSQL_PREFIX}calc_0],
           ([this].[Code] || '-x') AS [${ECSQL_PREFIX}calc_1]
       `),
@@ -123,6 +125,10 @@ describe("buildSelectProjection", () => {
       calculatedValues: {
         "calculations_v1:score": `${ECSQL_PREFIX}calc_0`,
         "calculations_v1:label": `${ECSQL_PREFIX}calc_1`,
+      },
+      relatedBlobs: {
+        [targetAlias]: { className: `${targetAlias}_cls`, pathKey: relatedPathKey, role: "target" },
+        [relationshipAlias]: { className: `${relationshipAlias}_cls`, pathKey: relatedPathKey, role: "relationship" },
       },
     });
     expect(projection.sort).to.deep.equal([]);
@@ -163,6 +169,7 @@ describe("buildSelectProjection", () => {
 
     expect(projection.clauses.select).not.to.contain(".$");
     expect(projection.columnNames.propertyBlobs).to.deep.equal({});
+    expect(projection.columnNames.relatedBlobs).to.deep.equal({});
   });
 
   it("projects a related property whose path carries a step instance filter", async () => {
@@ -196,8 +203,42 @@ describe("buildSelectProjection", () => {
       group,
       ownedPathKeys: new Set([serializeRelationshipPath({ path: filteredPath, includeInstanceFilters: true })]),
     });
+    const filteredPathKey = serializeRelationshipPath({ path: filteredPath, includeInstanceFilters: true });
     expect(projection.clauses.select).to.contain(`[${targetAlias}].$ AS [${targetAlias}]`);
     expect(projection.columnNames.propertyBlobs).to.deep.equal({ "TestSchema.Target.Name": targetAlias });
+    expect(projection.columnNames.relatedBlobs).to.deep.equal({
+      [targetAlias]: { className: `${targetAlias}_cls`, pathKey: filteredPathKey, role: "target" },
+    });
+  });
+
+  it("emits one class-name column for a related alias shared by two property selectors", async () => {
+    const projection = await buildSelectProjection({
+      schemaProvider,
+      descriptor: createDescriptor([
+        {
+          kind: "property",
+          id: "TestSchema.Target.Name",
+          propertyClassName: "TestSchema.Target",
+          propertyName: "Name",
+          pathFromTarget: relatedPath,
+        },
+        {
+          kind: "property",
+          id: "TestSchema.Target.Code",
+          propertyClassName: "TestSchema.Target",
+          propertyName: "Code",
+          pathFromTarget: relatedPath,
+        },
+      ]),
+      group: createBaseQueryGroup(),
+      ownedPathKeys: ownsRelated,
+    });
+
+    const classNameColumn = `${targetAlias}_cls`;
+    expect(projection.clauses.select.match(new RegExp(`AS \\[${classNameColumn}\\]`, "g"))).to.have.lengthOf(1);
+    expect(projection.columnNames.relatedBlobs).to.deep.equal({
+      [targetAlias]: { className: classNameColumn, pathKey: relatedPathKey, role: "target" },
+    });
   });
 
   it("selects a shared property alias only once", async () => {
