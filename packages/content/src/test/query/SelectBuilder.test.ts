@@ -23,6 +23,10 @@ const primaryClassColumn = `${ECSQL_PREFIX}primary_class`;
 const primaryIdColumn = `${ECSQL_PREFIX}primary_id`;
 const targetAlias = `${ECSQL_PREFIX}t0`;
 const relationshipAlias = `${ECSQL_PREFIX}r0`;
+// "" is the direct-property / calculated-selector ownership key (an empty `pathFromTarget` serializes to it).
+const ownsDirectAndRelated = new Set(["", relatedPathKey]);
+const ownsDirect = new Set([""]);
+const ownsRelated = new Set([relatedPathKey]);
 
 const schemaProvider = {
   getSchema: async (schemaName: string) => ({
@@ -36,6 +40,7 @@ const schemaProvider = {
 function createBaseQueryGroup(includeRelatedPath: boolean = true): BaseQueryGroup {
   return {
     paths: [],
+    cardinality: "one",
     parts: {
       from: "",
       joins: "",
@@ -91,6 +96,7 @@ describe("buildSelectProjection", () => {
         { kind: "calculated", id: "calculations_v1:label", expression: "[this].[Code] || '-x'" },
       ]),
       group: createBaseQueryGroup(),
+      ownedPathKeys: ownsDirectAndRelated,
     });
 
     expect(trimWhitespace(projection.clauses.select)).to.equal(
@@ -134,15 +140,36 @@ describe("buildSelectProjection", () => {
       schemaProvider,
       descriptor: createDescriptor([selector]),
       group: createBaseQueryGroup(false),
+      ownedPathKeys: ownsRelated,
     });
 
     expect(projection.clauses.select).not.to.contain(".$");
+  });
+
+  it("does not project a related property selector whose path is resolvable but not owned by this group", async () => {
+    const selector: ValueSelector = {
+      kind: "property",
+      id: "TestSchema.Target.Name",
+      propertyClassName: "TestSchema.Target",
+      propertyName: "Name",
+      pathFromTarget: relatedPath,
+    };
+    const projection = await buildSelectProjection({
+      schemaProvider,
+      descriptor: createDescriptor([selector]),
+      group: createBaseQueryGroup(),
+      ownedPathKeys: new Set(),
+    });
+
+    expect(projection.clauses.select).not.to.contain(".$");
+    expect(projection.columnNames.propertyBlobs).to.deep.equal({});
   });
 
   it("projects a related property whose path carries a step instance filter", async () => {
     const filteredPath: RelationshipPath = [{ ...relatedPath[0], instanceFilter: { expression: "this.Prop > 0" } }];
     const group: BaseQueryGroup = {
       paths: [],
+      cardinality: "one",
       parts: {
         from: "",
         joins: "",
@@ -167,6 +194,7 @@ describe("buildSelectProjection", () => {
         },
       ]),
       group,
+      ownedPathKeys: new Set([serializeRelationshipPath({ path: filteredPath, includeInstanceFilters: true })]),
     });
     expect(projection.clauses.select).to.contain(`[${targetAlias}].$ AS [${targetAlias}]`);
     expect(projection.columnNames.propertyBlobs).to.deep.equal({ "TestSchema.Target.Name": targetAlias });
@@ -192,6 +220,7 @@ describe("buildSelectProjection", () => {
         },
       ]),
       group: createBaseQueryGroup(),
+      ownedPathKeys: ownsDirect,
     });
 
     expect(projection.clauses.select.match(/\[this\]\.\$ AS \[this\]/g)).to.have.lengthOf(1);
@@ -224,6 +253,7 @@ describe("buildSelectProjection", () => {
       schemaProvider,
       descriptor: createDescriptor([]),
       group: createBaseQueryGroup(),
+      ownedPathKeys: new Set(),
       sorting: [
         { field: codeField, direction: "asc" },
         { field: scoreField, direction: "desc" },
@@ -269,6 +299,7 @@ describe("buildSelectProjection", () => {
         schemaProvider,
         descriptor: createDescriptor([]),
         group: createBaseQueryGroup(false),
+        ownedPathKeys: new Set(),
         sorting: [{ field, direction: "asc" }],
       }),
     ).rejects.toThrow(`Cannot sort by field "${field.id}"`);
@@ -279,9 +310,22 @@ describe("buildSelectProjection", () => {
       schemaProvider,
       descriptor: createDescriptor([{ kind: "calculated", id: "provider:score", expression: "1" }]),
       group: createBaseQueryGroup(),
+      ownedPathKeys: ownsDirect,
     });
 
     expect(projection.clauses.select).to.contain(`(1) AS [${ECSQL_PREFIX}calc_0]`);
     expect(projection.columnNames.calculatedValues).to.deep.equal({ "provider:score": `${ECSQL_PREFIX}calc_0` });
+  });
+
+  it("skips calculated selectors when the direct-property key is not owned by this group", async () => {
+    const projection = await buildSelectProjection({
+      schemaProvider,
+      descriptor: createDescriptor([{ kind: "calculated", id: "provider:score", expression: "1" }]),
+      group: createBaseQueryGroup(),
+      ownedPathKeys: ownsRelated,
+    });
+
+    expect(projection.clauses.select).not.to.contain("calc_0");
+    expect(projection.columnNames.calculatedValues).to.deep.equal({});
   });
 });

@@ -664,6 +664,63 @@ describe("getItems", () => {
     expect(items[0].getValue(relNameField)).to.equal("name-1");
   });
 
+  it("owns a sort-only related path on the anchor even though it is not any group's leaf path", async () => {
+    // Joined solely to evaluate ORDER BY — no field/selector reads it, so it can never be a leaf path of
+    // any group and must fall to `assignPathOwnership`'s second pass (first-resolvable-group tie-break).
+    const sortOnlyPath = [
+      {
+        sourceClassName: "TestSchema.Primary",
+        relationshipName: "TestSchema.RelSort",
+        targetClassName: "TestSchema.Sort",
+      },
+    ];
+    const sortField: PropertyField = {
+      kind: "property",
+      id: "sortOnly",
+      label: "SortOnly",
+      type: { kind: "primitive", type: "String" },
+      propertyClassName: "TestSchema.Sort",
+      propertyName: "Name",
+      pathFromTarget: sortOnlyPath as PropertyField["pathFromTarget"],
+      pathCardinality: "one",
+      valueClassNames: ["TestSchema.Sort"],
+      primaryClassNames: ["TestSchema.Primary"],
+      selectorId: "sortOnly",
+    };
+    const { imodelAccess } = createRelationalIModelAccess((query) => {
+      if (query.ecsql.includes("pres_t0")) {
+        // Additional (1:many) group value query — carries only the related `Name` blob.
+        return [
+          {
+            ["pres_primary_class"]: "TestSchema.Primary",
+            ["pres_primary_id"]: "0x1",
+            ["pres_t0"]: JSON.stringify({ ["Name"]: "name-1" }),
+          },
+        ];
+      }
+      // Anchor page query — carries the primary `Code` blob and the sort-only path's ORDER BY column.
+      return [
+        {
+          ["pres_primary_class"]: "TestSchema.Primary",
+          ["pres_primary_id"]: "0x1",
+          ["this"]: JSON.stringify({ ["Code"]: "code-1" }),
+          ["pres_sort_0"]: "sort-value",
+        },
+      ];
+    });
+    const items = await collect(
+      getItems({
+        imodelAccess,
+        getDescriptor: async () => relDescriptor,
+        sources: [createRelationalSource("TestSchema.Primary", true)],
+        sorting: [{ field: sortField, direction: "asc" }],
+      }),
+    );
+    expect(items).to.have.lengthOf(1);
+    expect(items[0].getValue(relCodeField)).to.equal("code-1");
+    expect(items[0].getValue(relNameField)).to.equal("name-1");
+  });
+
   it("populates external field values from the page's decoded input selectors", async () => {
     const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { code: string } }> }) =>
       batch.map((item) => ({ status: `${item.inputValues.code}!` })),

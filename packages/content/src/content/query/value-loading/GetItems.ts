@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, defer, EMPTY, expand, finalize, forkJoin, from, map, mergeMap, of, toArray } from "rxjs";
+import { assert } from "@itwin/core-bentley";
 import {
   eachValueFrom,
   type ECSchemaProvider,
@@ -15,6 +16,8 @@ import {
   type Value,
 } from "@itwin/presentation-shared";
 import { createContentItem } from "../../model/ContentItem.js";
+import { serializeRelationshipPath } from "../../model/Utils.js";
+import { collectPathCardinalities } from "../../PathCardinality.js";
 import { buildBaseQuery } from "../BaseQuery.js";
 import { QUERY_CONCURRENCY } from "../QueryConcurrency.js";
 import { PAGE_SIZE } from "../QueryLimits.js";
@@ -31,6 +34,8 @@ import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProv
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
+import type { PropertyValueSelector } from "../../model/ValueSelector.js";
+import type { BaseQueryGroup } from "../BaseQuery.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { ExternalValuePopulator } from "./ExternalValues.js";
 import type { Cursor, PlannedGroup, SourcePlan } from "./PageQueries.js";
@@ -108,6 +113,10 @@ async function createSourcePlan(props: {
   filters?: ContentValueFilter[];
 }): Promise<SourcePlan> {
   const { imodelAccess, descriptor, source, sorting, queryFilterers, filters } = props;
+  const propertySelectorPaths = Object.values(descriptor.selectors)
+    .filter((selector): selector is PropertyValueSelector => selector.kind === "property")
+    .map((selector) => selector.pathFromTarget)
+    .filter((path) => path.length > 0);
   const { anchor, additional = [] } = await buildBaseQuery({
     schemaProvider: imodelAccess,
     source,
@@ -115,23 +124,80 @@ async function createSourcePlan(props: {
     filters,
     sortFields: sorting.map((sort) => sort.field),
     includeRelatedJoins: true,
+    cardinalityHints: collectPathCardinalities(descriptor),
+    propertySelectorPaths,
   });
+  // [anchor, ...additional] order matters: it is the tie-break order `assignPathOwnership` uses for a
+  // key resolvable in more than one group's alias map but not a leaf path of any of them.
+  const ownedPathKeys = assignPathOwnership(anchor, additional);
   const [anchorProjection, keyProjection, additionalProjections] = await Promise.all([
-    buildSelectProjection({ schemaProvider: imodelAccess, descriptor, group: anchor, sorting }),
+    buildSelectProjection({
+      schemaProvider: imodelAccess,
+      descriptor,
+      group: anchor,
+      sorting,
+      ownedPathKeys: ownedPathKeys.anchor,
+    }),
     buildSelectProjection({
       schemaProvider: imodelAccess,
       descriptor: { ...descriptor, selectors: {} },
       group: anchor,
       sorting,
+      ownedPathKeys: ownedPathKeys.anchor,
     }),
     Promise.all(
-      additional.map(async (group) => buildSelectProjection({ schemaProvider: imodelAccess, descriptor, group })),
+      additional.map(async (group, index) =>
+        buildSelectProjection({
+          schemaProvider: imodelAccess,
+          descriptor,
+          group,
+          ownedPathKeys: ownedPathKeys.additional[index],
+        }),
+      ),
     ),
   ]);
   return {
     anchor: { baseQuery: anchor, projection: anchorProjection, keyProjection },
     additional: additional.map((baseQuery, index) => ({ baseQuery, projection: additionalProjections[index] })),
   };
+}
+
+/**
+ * Assigns every join-path key resolvable by any of `anchor`'s or `additional`'s alias maps to exactly
+ * one owner, so `buildSelectProjection` projects a selector from a single group. The group whose own
+ * `paths` lists the key as a leaf path wins; a key that is nobody's leaf path (a prefix shared with a
+ * longer, differently-grouped path, or a filter/sort-only path) goes to the first group that can resolve
+ * it — `anchor`, then `additional` in order — so the anchor wins ties. Direct properties and calculated
+ * selectors share the key `""` (a direct property's empty `pathFromTarget` serializes to `""`, and
+ * neither kind can overflow into another group), so it is seeded onto the anchor alone.
+ */
+function assignPathOwnership(
+  anchor: BaseQueryGroup,
+  additional: BaseQueryGroup[],
+): { anchor: Set<string>; additional: Set<string>[] } {
+  const groups = [anchor, ...additional];
+  const owned = groups.map(() => new Set<string>());
+  owned[0].add("");
+  const claimed = new Set<string>([""]);
+  for (const [index, group] of groups.entries()) {
+    for (const { path } of group.paths) {
+      const key = serializeRelationshipPath({ path, includeInstanceFilters: true });
+      // `splitRelatedPaths` partitions each unique path into exactly one group, so a leaf path's key is
+      // never already claimed here.
+      assert(!claimed.has(key), `Join-path key "${key}" is a leaf path of more than one group.`);
+      owned[index].add(key);
+      claimed.add(key);
+    }
+  }
+  for (const [index, group] of groups.entries()) {
+    for (const key of group.parts.relatedClassAliases.keys()) {
+      if (!claimed.has(key)) {
+        owned[index].add(key);
+        claimed.add(key);
+      }
+    }
+  }
+  return { anchor: owned[0], additional: owned.slice(1) };
 }
 
 interface PageResult {

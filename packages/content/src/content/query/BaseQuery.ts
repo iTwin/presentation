@@ -6,14 +6,9 @@
 import { assert } from "@itwin/core-bentley";
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
-import { serializeRelationshipPath } from "../model/Utils.js";
+import { serializeRelationshipPath, toSortedUniqueClassNames } from "../model/Utils.js";
 import { classifyPathCardinality } from "../PathCardinality.js";
-import {
-  countJoinTables,
-  packPathsWithinBudget,
-  partitionPathsByJoinBudget,
-  SQLITE_MAX_JOIN_TABLES,
-} from "./QueryLimits.js";
+import { createJoinBudget, mergeJoinInfos, packPathsWithinBudget, partitionPathsByJoinBudget } from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClause, buildValueFilterClauses } from "./ValueFilters.js";
 
@@ -29,9 +24,16 @@ import type { ContentValueFilter } from "../Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "../ContentTarget.js";
 import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
+import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
 
-/** The resolved, render-ready join structure `ECSql.createRelationshipPathJoinInfo` produces for a path. */
-type RelationshipPathJoinInfo = Awaited<ReturnType<typeof ECSql.createRelationshipPathJoinInfo>>;
+/**
+ * Tables reserved for the `IdSet` join `buildValueQuery` (PageQueries.ts) appends when paging a group's
+ * values by primary key — outside the joins `BaseQueryParts` itself renders, so nothing here otherwise
+ * accounts for it. Every additional group's value query needs it, and so does the anchor's whenever
+ * `pageMultiSourceSorted` pages it the same way; reserved unconditionally on both so a group packed to
+ * exactly the JOIN-table limit still leaves room for it. Keep in sync with `buildValueQuery`.
+ */
+const PAGE_ID_SET_JOIN_TABLES = 1;
 
 /**
  * The `FROM` / `JOIN` / `WHERE` fragments (and their bindings) of a base content query, plus the
@@ -69,6 +71,14 @@ export interface BaseQueryParts {
 export interface BaseQueryGroup {
   /** Subset of the source's resolved paths this group joins (used by Stage 4 stitching). */
   paths: ResolvedPath[];
+  /**
+   * `"one"` for the anchor and every 1:1 partition (outer-joined, at most one row per primary); `"many"`
+   * for an isolated 1:many group (inner-joined, zero or more rows per primary). Since `collectGroupPaths`
+   * classifies and packs each selector-driven path independently, a `"many"` group always owns exactly
+   * one leaf path, so this single flag is enough for Stage 4 to decide whether to array-ify the group's
+   * values.
+   */
+  cardinality: CardinalityHint;
   parts: BaseQueryParts;
 }
 
@@ -97,8 +107,9 @@ export interface BaseQuery {
    * The **anchor** group — always present (even for a direct-only source). Owns the primary-key +
    * direct + calculated columns plus its share of 1:1 related columns, and drives ORDER BY + paging.
    * Also carries the primary-restricting clauses (query filterers + value filters), so it additionally
-   * joins budget-fitting 1:1 paths referenced by value filters — even when their selected columns are
-   * owned by an `additional` group. Overflow 1:1 paths and all 1:many paths use correlated subqueries.
+   * joins budget-fitting 1:1 paths referenced by value filters or sorting — a selected path that is also
+   * filtered/sorted is always owned by the anchor and never split into an `additional` group. Overflow
+   * 1:1 paths and all 1:many paths use correlated subqueries for filtering.
    */
   anchor: BaseQueryGroup;
   /**
@@ -110,7 +121,8 @@ export interface BaseQuery {
 }
 
 /**
- * Related-columns mode (`getItems`): collects, merges, aliases, and JOINs the source's related paths.
+ * Related-columns mode (`getItems`): collects, merges, aliases, and JOINs the paths its property
+ * selectors read (see `collectGroupPaths`) — not every path the source resolved.
  *
  * @internal
  */
@@ -123,6 +135,11 @@ export async function buildBaseQuery(
      * inspection. Only meaningful when related joins are built, so it lives on this overload only.
      */
     cardinalityHints?: Map<string, CardinalityHint>;
+    /**
+     * Every path a descriptor property selector reads from directly (its `pathFromTarget`) — the only
+     * path input to related-columns mode; see `collectGroupPaths`. Pass `[]` when the caller has none.
+     */
+    propertySelectorPaths: RelationshipPath[];
   },
 ): Promise<BaseQuery>;
 
@@ -138,7 +155,15 @@ export async function buildBaseQuery(
 ): Promise<Pick<BaseQuery, "anchor">>;
 
 export async function buildBaseQuery(
-  props: BuildBaseQueryProps & { includeRelatedJoins?: boolean; cardinalityHints?: Map<string, CardinalityHint> },
+  props: BuildBaseQueryProps &
+    (
+      | { includeRelatedJoins?: false }
+      | {
+          includeRelatedJoins: true;
+          cardinalityHints?: Map<string, CardinalityHint>;
+          propertySelectorPaths: RelationshipPath[];
+        }
+    ),
 ): Promise<BaseQuery> {
   const { schemaProvider, source } = props;
   const filters = props.filters ?? [];
@@ -156,7 +181,6 @@ export async function buildBaseQuery(
   // filter references (to evaluate it). Value-filter paths are collected in both modes: primaries-only
   // joins exactly them, while related-columns force-joins them onto the anchor so a filtered path's
   // predicate is still evaluable even when its selected columns are owned by an additional group.
-  const groupPaths = includeRelatedJoins ? collectUniquePaths(source) : [];
   const filterPaths = collectFilterPaths(filters);
   const sortPaths = collectSortPaths(
     (props.sortFields ?? []).filter((field): field is PropertyField => field.kind === "property"),
@@ -173,12 +197,15 @@ export async function buildBaseQuery(
       cardinality = await classifyPathCardinality({
         schemaProvider,
         path,
-        cardinalityHint: props.cardinalityHints?.get(key),
+        cardinalityHint: includeRelatedJoins ? props.cardinalityHints?.get(key) : undefined,
       });
       cardinalityCache.set(key, cardinality);
     }
     return cardinality;
   };
+
+  const groupPaths = includeRelatedJoins ? collectGroupPaths(source, props.propertySelectorPaths) : [];
+
   const [classifiedFilterPaths, classifiedSortPaths] = await Promise.all([
     Promise.all(filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) }))),
     Promise.all(sortPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) }))),
@@ -241,16 +268,20 @@ export async function buildBaseQuery(
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
   const fixedReserves =
     1 +
+    PAGE_ID_SET_JOIN_TABLES +
     (targetFilter.joins?.length ?? 0) +
     filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
+  // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
+  // filter paths, then (below, related-columns mode only) selected 1:1 paths — so a path sharing a
+  // prefix with one already added costs only its own unshared suffix, not its full cost again.
+  const anchorBudget = createJoinBudget({ reservedTables: fixedReserves });
   const sortPathInfos = await Promise.all(
     sortPaths.map(async (path) => ({ path, joinInfo: await resolvePathInfo(path, "outer") })),
   );
-  // Sort paths are all merged onto the anchor, so a shared prefix is joined once; count the merged join
-  // info instead of summing per-path costs to avoid over-reserving budget for prefix-sharing paths.
-  const sortJoinCost = countJoinTables(mergeJoinInfos(sortPathInfos.map((entry) => entry.joinInfo)));
-  if (fixedReserves + sortJoinCost > SQLITE_MAX_JOIN_TABLES) {
-    throw new Error("Related sort paths exceed the SQLite JOIN-table limit.");
+  for (const { joinInfo } of sortPathInfos) {
+    if (!anchorBudget.tryAdd(joinInfo)) {
+      throw new Error("Related sort paths exceed the SQLite JOIN-table limit.");
+    }
   }
   const { fitting: fittingFilterPaths, overflow: overflowFilterPaths } = packPathsWithinBudget({
     paths: await Promise.all(
@@ -260,7 +291,7 @@ export async function buildBaseQuery(
         joinInfo: await resolvePathInfo(path, "outer"),
       })),
     ),
-    reservedTables: fixedReserves + sortJoinCost,
+    budget: anchorBudget,
   });
   const joinedFilterPaths = fittingFilterPaths.map((entry) => entry.path);
   const existentialFilterPathKeys = new Set([
@@ -277,25 +308,33 @@ export async function buildBaseQuery(
       includePrimaryFilters: true,
       existentialFilterPathKeys,
     });
-    return { anchor: { paths: [], parts } };
+    return { anchor: { paths: [], cardinality: "one", parts } };
   }
 
   // Related-columns mode: split the resolved paths into the anchor (primary-key + direct + calculated +
   // its share of 1:1 related columns) plus additional groups for budget-overflow 1:1 partitions and each
   // 1:many path (isolated so the anchor stays one row per primary).
   //
-  // Joined filters reserve anchor tables before selected 1:1 paths are packed. Overflow filters cost no
-  // top-level tables because each opens an independent subquery scope.
-  const reservedTables =
-    fixedReserves +
-    fittingFilterPaths.reduce((count, entry) => count + countJoinTables(entry.joinInfo), 0) +
-    sortJoinCost;
-  const { anchorPaths, additionalGroups } = await splitRelatedPaths({
+  // A selected path the anchor already joins to evaluate a value filter or sort costs nothing further
+  // (already reflected in `anchorBudget`) and must never be packed into an overflow group instead —
+  // every such path is `"one"` by construction (a 1:many filter path is always existential, and a
+  // 1:many sort path already threw above), so it bypasses `splitRelatedPaths` and seeds `anchorPaths`.
+  const preJoinedKeys = new Set([...joinedFilterPaths, ...sortPaths].map((path) => serializeJoinPath(path)));
+  const preSeededPaths: ResolvedPath[] = [];
+  const packablePaths: ResolvedPath[] = [];
+  for (const resolved of groupPaths) {
+    (preJoinedKeys.has(serializeJoinPath(resolved.path)) ? preSeededPaths : packablePaths).push(resolved);
+  }
+  const { anchorPaths: packedAnchorPaths, additionalGroups } = await splitRelatedPaths({
     resolvePathInfo,
     classifyCardinality,
-    paths: groupPaths,
-    reservedTables,
+    paths: packablePaths,
+    budget: anchorBudget,
+    // An overflow partition is its own outer-joined group sharing only FROM + the target filter — no
+    // query-filterer joins or sort paths — so it gets a fresh, more modestly reserved budget of its own.
+    overflowReservedTables: 1 + PAGE_ID_SET_JOIN_TABLES + (targetFilter.joins?.length ?? 0),
   });
+  const anchorPaths = [...preSeededPaths, ...packedAnchorPaths];
 
   // The anchor owns direct/calculated columns, so its related steps are outer-joined (an inner join
   // would drop a primary missing one related instance and take its direct columns down with it). Its join
@@ -308,6 +347,7 @@ export async function buildBaseQuery(
   ]);
   const anchor: BaseQueryGroup = {
     paths: anchorPaths,
+    cardinality: "one",
     parts: await buildGroupParts({
       paths: anchorJoinPaths,
       joinType: "outer",
@@ -321,6 +361,7 @@ export async function buildBaseQuery(
   const additional = await Promise.all(
     additionalGroups.map(async (group) => ({
       paths: group.paths,
+      cardinality: group.cardinality,
       parts: await buildGroupParts({
         paths: group.paths.map((resolved) => resolved.path),
         joinType: group.joinType,
@@ -344,17 +385,20 @@ async function splitRelatedPaths(props: {
   /** Shared, cached classifier (see `buildBaseQuery`), so a path already classified for filtering isn't re-read. */
   classifyCardinality: (path: RelationshipPath) => Promise<CardinalityHint>;
   paths: ResolvedPath[];
-  reservedTables: number;
+  /** The anchor's shared, running budget (see `buildBaseQuery`) — mutated in place as paths are packed. */
+  budget: JoinBudget;
+  /** Reserved tables for each fresh overflow partition's own budget (see `buildBaseQuery`). */
+  overflowReservedTables: number;
 }): Promise<{
   anchorPaths: ResolvedPath[];
-  additionalGroups: { paths: ResolvedPath[]; joinType: "inner" | "outer" }[];
+  additionalGroups: { paths: ResolvedPath[]; joinType: "inner" | "outer"; cardinality: CardinalityHint }[];
 }> {
   const oneToOne: ResolvedPath[] = [];
-  const oneToManyGroups: { paths: ResolvedPath[]; joinType: "inner" }[] = [];
+  const oneToManyGroups: { paths: ResolvedPath[]; joinType: "inner"; cardinality: "many" }[] = [];
   for (const resolved of props.paths) {
     const cardinality = await props.classifyCardinality(resolved.path);
     if (cardinality === "many") {
-      oneToManyGroups.push({ paths: [resolved], joinType: "inner" });
+      oneToManyGroups.push({ paths: [resolved], joinType: "inner", cardinality: "many" });
     } else {
       oneToOne.push(resolved);
     }
@@ -367,9 +411,9 @@ async function splitRelatedPaths(props: {
   );
   const { fitting: anchorPartition, overflow } = packPathsWithinBudget({
     paths: oneToOneWithInfo,
-    reservedTables: props.reservedTables,
+    budget: props.budget,
   });
-  const extraPartitions = partitionPathsByJoinBudget({ paths: overflow, reservedTables: props.reservedTables });
+  const extraPartitions = partitionPathsByJoinBudget({ paths: overflow, reservedTables: props.overflowReservedTables });
   const toResolvedPaths = (partition: typeof oneToOneWithInfo): ResolvedPath[] =>
     partition.map((entry) => ({ path: entry.path, targetClassNames: entry.targetClassNames }));
 
@@ -378,7 +422,11 @@ async function splitRelatedPaths(props: {
     // 1:1 partitions stay outer so they reuse the info resolved for the count; only isolated 1:many
     // paths inner-join.
     additionalGroups: [
-      ...extraPartitions.map((partition) => ({ paths: toResolvedPaths(partition), joinType: "outer" as const })),
+      ...extraPartitions.map((partition) => ({
+        paths: toResolvedPaths(partition),
+        joinType: "outer" as const,
+        cardinality: "one" as const,
+      })),
       ...oneToManyGroups,
     ],
   };
@@ -393,20 +441,45 @@ function serializeJoinPath(path: RelationshipPath): string {
 }
 
 /**
- * Gathers every resolved path across the source's declarations, de-duplicated by serialized path.
- * Includes `externalInputPaths` — paths joined solely to feed an external fields provider's input,
- * with no field of their own — so their column is selected exactly like any other related path's.
+ * Builds the candidate set of paths for `splitRelatedPaths` to classify and pack into groups: every
+ * distinct path a property selector reads (`propertySelectorPaths` — includes external-input selectors,
+ * which have a selector but no field, so `externalInputPaths` needs no separate handling), each
+ * validated against the source's resolved paths (`resolvedDeclarations` + `externalInputPaths`) and kept
+ * only if its join key equals a resolved path's or is a strict prefix of one. A selector path that
+ * matches neither can never resolve to a joined alias and is skipped. `targetClassNames` is the
+ * sorted-unique union of every resolved path it validated against.
+ *
+ * A resolved path with no selector on it, or on any prefix of it (a per-step spec targeting only an
+ * intermediate step, a transformer that removed a path's fields, or a leaf class with no properties), is
+ * never joined at all — there is nothing for its column to project. A selected prefix is classified and
+ * packed independently, same as any other path, so it is never dropped when the longer path it prefixes
+ * is inner-joined and has zero related instances.
  */
-function collectUniquePaths(source: ContentSource): ResolvedPath[] {
+function collectGroupPaths(source: ContentSource, propertySelectorPaths: RelationshipPath[]): ResolvedPath[] {
+  const resolvedPaths = [...source.resolvedDeclarations.flatMap((group) => group.paths), ...source.externalInputPaths];
   const byKey = new Map<string, ResolvedPath>();
-  for (const resolved of [
-    ...source.resolvedDeclarations.flatMap((group) => group.paths),
-    ...source.externalInputPaths,
-  ]) {
-    const key = serializeJoinPath(resolved.path);
-    if (!byKey.has(key)) {
-      byKey.set(key, resolved);
+  for (const selectorPath of propertySelectorPaths) {
+    if (selectorPath.length === 0) {
+      continue;
     }
+    const key = serializeJoinPath(selectorPath);
+    if (byKey.has(key)) {
+      continue;
+    }
+    const owners = resolvedPaths.filter(
+      (resolved) =>
+        resolved.path.length >= selectorPath.length &&
+        serializeJoinPath(resolved.path.slice(0, selectorPath.length)) === key,
+    );
+    if (owners.length === 0) {
+      // Not an error: this source's declarations just don't cover the selector's path (e.g. a
+      // polymorphic descriptor's selector that only a different source's declarations resolve).
+      continue;
+    }
+    byKey.set(key, {
+      path: selectorPath,
+      targetClassNames: toSortedUniqueClassNames(owners.flatMap((owner) => owner.targetClassNames)),
+    });
   }
   return [...byKey.values()];
 }
@@ -474,31 +547,6 @@ function collectPrefixAliases(
     }
   }
   return aliases;
-}
-
-/**
- * Concatenates several resolved path join infos into one, dropping duplicate join entries that share a
- * prefix (identified by `joinAlias`, which is stable across paths thanks to {@link assignPrefixAliases})
- * so a shared step is emitted exactly once.
- */
-function mergeJoinInfos(infos: RelationshipPathJoinInfo[]): RelationshipPathJoinInfo {
-  const seenTargets = new Set<string>();
-  const steps: RelationshipPathJoinInfo["steps"] = [];
-  const bindings: Record<string, ECSqlBinding> = {};
-  for (const info of infos) {
-    for (const step of info.steps) {
-      // A step's `targetClassIdSelector` encodes its target alias, which is stable across paths (thanks
-      // to {@link assignPrefixAliases}), so it identifies a shared-prefix step and lets it be emitted once.
-      if (!seenTargets.has(step.targetClassIdSelector)) {
-        seenTargets.add(step.targetClassIdSelector);
-        steps.push(step);
-      }
-    }
-    // Shared-prefix steps contribute identical bindings; keep an identical duplicate but reject a name
-    // reused with a different value.
-    mergeBindings(bindings, info.bindings);
-  }
-  return { steps, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
 }
 
 /**

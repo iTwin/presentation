@@ -9,6 +9,8 @@ import { serializeRelationshipPath } from "./model/Utils.js";
 
 import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "./ContentTarget.js";
+import type { ContentDescriptor } from "./model/ContentDescriptor.js";
+import type { PropertyField } from "./model/Field.js";
 
 /**
  * Determines the effective cardinality of a relationship path — whether each target instance reaches
@@ -91,4 +93,63 @@ export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider):
       });
     },
   };
+}
+
+/**
+ * Folds several cardinality verdicts for the same path into one: `"many"` wins if any of them says so —
+ * describing a many-valued path as single-valued would silently drop every related instance but one.
+ * Shared by `mergePropertyFieldsByIdentity` (candidate fields declaring the same path) and
+ * `collectPathCardinalities` (descriptor fields declaring the same path).
+ *
+ * @internal
+ */
+export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): CardinalityHint {
+  for (const cardinality of cardinalities) {
+    if (cardinality === "many") {
+      return "many";
+    }
+  }
+  return "one";
+}
+
+/**
+ * Derives per-path cardinality hints from a descriptor's property fields, keyed by
+ * `serializeRelationshipPath(pathFromTarget)`, so a query built from the same descriptor classifies
+ * every path exactly as the descriptor's fields already do (feed the result to `buildBaseQuery` as
+ * `cardinalityHints`).
+ *
+ * A `"many"` verdict for a path wins over a `"one"` verdict fields elsewhere may imply for that same
+ * path (see {@link resolveCardinality}). A `"one"` verdict additionally seeds every strict prefix of its
+ * path that has no verdict of its own yet — the same rule `PathCardinalityClassifier` applies (a whole
+ * traversal reaching at most one instance means every prefix does too; a `"many"` traversal implies
+ * nothing about a prefix).
+ *
+ * @internal
+ */
+export function collectPathCardinalities(descriptor: ContentDescriptor): Map<string, CardinalityHint> {
+  const relatedPropertyFields = Object.values(descriptor.fields).filter(
+    (field): field is PropertyField => field.kind === "property" && field.pathFromTarget.length > 0,
+  );
+
+  const cardinalitiesByKey = new Map<string, CardinalityHint[]>();
+  for (const field of relatedPropertyFields) {
+    const key = serializeRelationshipPath({ path: field.pathFromTarget });
+    getOrCreate({ map: cardinalitiesByKey, key, createFunc: () => [] }).push(field.pathCardinality);
+  }
+  const hints = new Map<string, CardinalityHint>();
+  for (const [key, cardinalities] of cardinalitiesByKey) {
+    hints.set(key, resolveCardinality(cardinalities));
+  }
+  for (const field of relatedPropertyFields) {
+    if (field.pathCardinality !== "one") {
+      continue;
+    }
+    for (let length = 1; length < field.pathFromTarget.length; ++length) {
+      const prefixKey = serializeRelationshipPath({ path: field.pathFromTarget.slice(0, length) });
+      if (!hints.has(prefixKey)) {
+        hints.set(prefixKey, "one");
+      }
+    }
+  }
+  return hints;
 }

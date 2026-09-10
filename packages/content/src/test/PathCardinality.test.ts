@@ -4,10 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { classifyPathCardinality, createPathCardinalityClassifier } from "../content/PathCardinality.js";
+import { serializeRelationshipPath } from "../content/model/Utils.js";
+import {
+  classifyPathCardinality,
+  collectPathCardinalities,
+  createPathCardinalityClassifier,
+} from "../content/PathCardinality.js";
 import { createRelationshipClass, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../content/ContentTarget.js";
+import type { ContentDescriptor } from "../content/model/ContentDescriptor.js";
+import type { ExternalField, Field, PropertyField } from "../content/model/Field.js";
 
 describe("createPathCardinalityClassifier", () => {
   const aToB: RelationshipPath[number] = {
@@ -157,5 +165,95 @@ describe("classifyPathCardinality", () => {
     await expect(classifyPathCardinality({ schemaProvider, path: [step("AtoB")] })).rejects.toThrow(
       "TestSchema.AtoB is not a relationship class",
     );
+  });
+});
+
+describe("collectPathCardinalities", () => {
+  const aToB: RelationshipPath[number] = {
+    sourceClassName: "TestSchema.A",
+    targetClassName: "TestSchema.B",
+    relationshipName: "TestSchema.AToB",
+  };
+  const bToC: RelationshipPath[number] = {
+    sourceClassName: "TestSchema.B",
+    targetClassName: "TestSchema.C",
+    relationshipName: "TestSchema.BToC",
+  };
+
+  function makeField(props: {
+    id: string;
+    pathFromTarget: RelationshipPath;
+    pathCardinality: CardinalityHint;
+  }): PropertyField {
+    return {
+      kind: "property",
+      id: props.id,
+      label: props.id,
+      type: { kind: "primitive", type: "String" },
+      propertyClassName: "TestSchema.B",
+      propertyName: "Name",
+      pathFromTarget: props.pathFromTarget,
+      pathCardinality: props.pathCardinality,
+      valueClassNames: ["TestSchema.B"],
+      primaryClassNames: ["TestSchema.A"],
+      selectorId: props.id,
+    };
+  }
+
+  function makeDescriptor(fields: Field[]): ContentDescriptor {
+    return { fields: Object.fromEntries(fields.map((field) => [field.id, field])) } as unknown as ContentDescriptor;
+  }
+
+  it("ignores a direct field and a non-property field", () => {
+    const directField = makeField({ id: "direct", pathFromTarget: [], pathCardinality: "one" });
+    const externalField: ExternalField = {
+      kind: "external",
+      id: "ext",
+      label: "Ext",
+      type: { kind: "primitive", type: "String" },
+      providerId: "provider_v1",
+    };
+
+    expect(collectPathCardinalities(makeDescriptor([directField, externalField])).size).to.equal(0);
+  });
+
+  it("keys a related field's own path with its cardinality", () => {
+    const field = makeField({ id: "b", pathFromTarget: [aToB], pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([field]));
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+
+  it("seeds every unhinted prefix of a `one` path", () => {
+    const field = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([field]));
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("one");
+    expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("one");
+  });
+
+  it("does not seed a prefix of a `many` path", () => {
+    const field = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([field]));
+
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+    expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("many");
+  });
+
+  it("does not overwrite a prefix's own directly-declared verdict", () => {
+    const prefixField = makeField({ id: "b", pathFromTarget: [aToB], pathCardinality: "many" });
+    const fullField = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([prefixField, fullField]));
+
+    // The prefix has its own `many` declaration, so the full path's `one` prefix-seed must not override it.
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+
+  it("resolves disagreeing fields on the same path to `many`", () => {
+    const oneField = makeField({ id: "one", pathFromTarget: [aToB], pathCardinality: "one" });
+    const manyField = makeField({ id: "many", pathFromTarget: [aToB], pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([oneField, manyField]));
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
   });
 });

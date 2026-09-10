@@ -65,8 +65,18 @@ export async function buildSelectProjection(props: {
   descriptor: ContentDescriptor;
   group: BaseQueryGroup;
   sorting?: ContentQuerySort[];
+  /**
+   * Join-path keys (`serializeRelationshipPath(path, { includeInstanceFilters: true })`) this group owns
+   * for `SELECT` projection. A selector whose path is not in this set is skipped even if `group`'s alias
+   * map can resolve it — e.g. a related path that overflowed into another group, a prefix of a path
+   * owned by another (1:many) group, or a direct/calculated selector in a non-anchor group. Direct
+   * properties and calculated selectors share the key `""` (a direct property's `pathFromTarget` is
+   * always empty, which serializes to `""`), so they are owned by whichever group's set contains it —
+   * normally the anchor only.
+   */
+  ownedPathKeys: Set<string>;
 }): Promise<SelectProjection> {
-  const { schemaProvider, descriptor, group, sorting = [] } = props;
+  const { schemaProvider, descriptor, group, sorting = [], ownedPathKeys } = props;
   const primaryKey = { className: `${ECSQL_PREFIX}primary_class`, id: `${ECSQL_PREFIX}primary_id` };
   const select = [
     `ec_classname([${group.parts.primaryClassAlias}].[ECClassId], 's.c') AS [${primaryKey.className}]`,
@@ -80,6 +90,10 @@ export async function buildSelectProjection(props: {
   const relationshipClassNames = await collectRelationshipClassNames({ schemaProvider, selectors: propertySelectors });
   const projectedAliases = new Set<string>();
   for (const selector of propertySelectors) {
+    const key = serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true });
+    if (!ownedPathKeys.has(key)) {
+      continue;
+    }
     const alias = resolvePropertyAlias({ selector, group, relationshipClassNames });
     if (!alias) {
       continue;
@@ -93,7 +107,9 @@ export async function buildSelectProjection(props: {
 
   const bindings: Record<string, ECSqlBinding> = {};
   const calculatedValues: Record<string, string> = {};
-  const calculatedSelectors = Object.values(descriptor.selectors).filter((selector) => selector.kind === "calculated");
+  const calculatedSelectors = ownedPathKeys.has("")
+    ? Object.values(descriptor.selectors).filter((selector) => selector.kind === "calculated")
+    : [];
   for (const [index, selector] of calculatedSelectors.entries()) {
     // Alias by a controlled name rather than the raw selector id so ids with special characters (e.g. `:`)
     // stay addressable under the name-based row format.

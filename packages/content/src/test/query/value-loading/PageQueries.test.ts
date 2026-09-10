@@ -34,6 +34,7 @@ const codeField: PropertyField = {
 function createBaseQueryGroup(overrides?: Partial<BaseQueryGroup["parts"]>): BaseQueryGroup {
   return {
     paths: [],
+    cardinality: "one",
     parts: {
       from: "FROM [Schema].[A] [this]",
       joins: "",
