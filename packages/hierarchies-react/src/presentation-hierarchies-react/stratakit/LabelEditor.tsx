@@ -6,12 +6,60 @@
 import "./LabelEditor.css";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { FormHelperText, IconButton, TextField, Typography } from "@mui/material";
+import { FormHelperText, IconButton, Popover, TextField, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { useTranslation } from "../LocalizationContext.js";
 
 import checkmarkSvg from "@stratakit/icons/checkmark.svg";
 import dismissSvg from "@stratakit/icons/dismiss.svg";
+
+import type { CSSProperties } from "react";
+import type { TreeNode } from "../TreeNode.js";
+import type { RenameParameters } from "./TreeNodeRenameAction.js";
+
+/**
+ * Renders the label editor for the node whose rename is in progress. It's rendered once at the tree
+ * level as a popover anchored to an invisible element positioned at the renamed node's label location,
+ * so it doesn't depend on the virtualized row's DOM element.
+ *
+ * @internal
+ */
+export function TreeNodeLabelEditorOverlay({
+  node,
+  renameParameters,
+  onCancel,
+  style,
+}: {
+  node: TreeNode;
+  renameParameters: RenameParameters;
+  onCancel?: () => void;
+  /** Placement of the anchor, generally an offset to the renamed node's label within the tree. */
+  style?: CSSProperties;
+}) {
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
+  return (
+    <>
+      <div ref={setAnchorEl} style={style} aria-hidden />
+      <Popover
+        open={anchorEl !== null}
+        anchorEl={anchorEl}
+        onClose={onCancel}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        disableScrollLock
+        marginThreshold={0}
+      >
+        <LabelEditor
+          initialLabel={node.label}
+          onChange={renameParameters.commit}
+          onCancel={onCancel}
+          labelValidationHint={renameParameters.labelValidationHint}
+          validate={renameParameters.validate}
+        />
+      </Popover>
+    </>
+  );
+}
 
 interface LabelEditorProps {
   initialLabel: string;
@@ -74,7 +122,7 @@ export function LabelEditor({ initialLabel, labelValidationHint, onChange, onCan
             setNewLabelValue(event.target.value);
             setHasError(false);
           }}
-          onKeyUp={(event) => {
+          onKeyDown={(event) => {
             if (event.key === "Enter") {
               handleLabelChange();
             } else if (event.key === "Escape") {
@@ -90,7 +138,7 @@ export function LabelEditor({ initialLabel, labelValidationHint, onChange, onCan
         </IconButton>
       </div>
       {labelValidationHint !== undefined ? (
-        <FormHelperText error={hasError} style={{ display: "flex" }}>
+        <FormHelperText render={<div />} error={hasError} style={{ display: "flex" }}>
           <Typography variant="caption-md">{labelValidationHint}</Typography>
         </FormHelperText>
       ) : undefined}
