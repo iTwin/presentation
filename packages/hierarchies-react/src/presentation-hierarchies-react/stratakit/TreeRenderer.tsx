@@ -9,17 +9,20 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
+import { TreeNodeLabelEditorOverlay } from "./LabelEditor.js";
+import { TreeContextMenuProvider } from "./TreeContextMenu.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 import type { ComponentProps, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
+import type { VirtualItem } from "@tanstack/react-virtual";
 import type { FlatTreeItem, FlatTreeNodeItem } from "../FlatTreeNode.js";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { SelectionMode } from "../UseSelectionHandler.js";
 import type { TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import type { TreeNodeEditingProps } from "./TreeNodeRenameAction.js";
+import type { RenameParameters, TreeNodeEditingProps } from "./TreeNodeRenameAction.js";
 import type { StrataKitTreeItemProps, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -174,10 +177,16 @@ export const StrataKitTreeRenderer: FC<
       };
     }, [flatItems, isNodeSelected]);
 
+    const renameOverlayTarget = getRenameOverlayTarget({
+      renameParameters: renameContext.renameParameters,
+      items,
+      flatItems,
+    });
+
     return (
-      <>
+      <TreeContextMenuProvider>
         {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
-        <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
+        <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto", position: "relative" }} ref={parentRef}>
           <Tree.Root
             {...treeRootProps}
             style={{
@@ -213,11 +222,50 @@ export const StrataKitTreeRenderer: FC<
               })}
             </TreeNodeRenameContextProvider>
           </Tree.Root>
+          {renameContext.renameParameters && renameOverlayTarget ? (
+            <TreeNodeLabelEditorOverlay
+              node={renameOverlayTarget.node}
+              renameParameters={renameContext.renameParameters}
+              onCancel={cancelRename}
+              style={renameOverlayTarget.style}
+            />
+          ) : null}
         </div>
-      </>
+      </TreeContextMenuProvider>
     );
   },
 );
+
+function getRenameOverlayTarget({
+  renameParameters,
+  items,
+  flatItems,
+}: {
+  renameParameters: RenameParameters | undefined;
+  items: VirtualItem[];
+  flatItems: FlatTreeItem[];
+}) {
+  if (!renameParameters) {
+    return undefined;
+  }
+  const virtualItem = items.find((virtualizedItem) => flatItems[virtualizedItem.index].id === renameParameters.nodeId);
+  const item = virtualItem ? flatItems[virtualItem.index] : undefined;
+  if (!virtualItem || !item || isPlaceholderItem(item)) {
+    return undefined;
+  }
+
+  const levelPadding = `var(--stratakit-space-x2) + (var(--stratakit-space-x1) + var(--stratakit-space-x05)) * ${item.level - 1}`;
+  const expanderWidth = `1.5rem + var(--stratakit-space-x1)`;
+  return {
+    node: item.node,
+    style: {
+      position: "absolute",
+      top: 0,
+      left: `calc(${levelPadding} + ${expanderWidth})`,
+      transform: `translateY(${virtualItem.start + virtualItem.size}px)`,
+    } satisfies CSSProperties,
+  };
+}
 
 function useExpandAndScrollToNode({
   rootNodes,

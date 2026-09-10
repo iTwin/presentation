@@ -34,6 +34,14 @@ interface BaseFieldsProvider {
 }
 
 // @public
+export interface BisCoreLocalizedStrings {
+    documentLink: string;
+    modelSource: string;
+    secondarySources: string;
+    sourceInformation: string;
+}
+
+// @public
 export interface CalculatedField extends BaseField {
     bindings?: Record<string, ECSqlBinding>;
     expression: string;
@@ -192,9 +200,7 @@ type ContentValueFilterTarget = {
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
-export function createHiddenSchemaMembersDescriptorTransformer(props?: {
-    priority?: number;
-}): DescriptorTransformer;
+export function createHiddenSchemaMembersDescriptorTransformer(): DescriptorTransformer;
 
 // @public
 export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
@@ -202,6 +208,7 @@ export function createIModelContentConfiguration(props: CreateIModelContentConfi
 // @public
 interface CreateIModelContentConfigurationProps {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    localizedStrings?: Partial<BisCoreLocalizedStrings>;
 }
 
 // @public

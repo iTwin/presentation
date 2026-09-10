@@ -16,7 +16,7 @@ import type { DescriptorTransformer } from "./DescriptorTransformer.js";
  *
  * @internal
  */
-export const DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY = 500;
+export const HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY = 500;
 
 /**
  * Creates a `DescriptorTransformer` that marks property fields `hidden` based on ECSchema
@@ -46,9 +46,9 @@ export const DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY = 500;
  *
  * @public
  */
-export function createHiddenSchemaMembersDescriptorTransformer(props?: { priority?: number }): DescriptorTransformer {
+export function createHiddenSchemaMembersDescriptorTransformer(): DescriptorTransformer {
   return {
-    priority: props?.priority ?? DEFAULT_HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY,
+    priority: HIDDEN_SCHEMA_MEMBERS_TRANSFORMER_PRIORITY,
     async transform({ descriptor, imodelAccess }) {
       // Class-resolution cache is scoped to this single `transform` call so a transformer instance
       // reused across iModels never retains stale metadata.

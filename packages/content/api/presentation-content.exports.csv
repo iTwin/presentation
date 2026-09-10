@@ -1,5 +1,6 @@
 sep=;
 Release Tag;API Item Type;API Item Name
+public;interface;BisCoreLocalizedStrings
 public;interface;CalculatedField
 public;interface;CalculatedValueSelector
 public;interface;CategoryDefinition

@@ -8,13 +8,13 @@ import { defineIModelFieldsProvider } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
+import { validateCategoryChain } from "./DescriptorValidation.js";
 import {
   buildDescriptor,
   createContentIModelAccess,
   getFieldCategory,
   getPropertyFieldByName,
   getRelatedPropertyFields,
-  validateCategoryChain,
 } from "./Utils.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
