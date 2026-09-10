@@ -14,11 +14,9 @@ import type { IModelFieldsProvider } from "../IModelFieldsProvider.js";
 import type { ContentModifierRule, Ruleset } from "./PresentationRules.js";
 
 /**
- * Props for `createIModelContentConfiguration`.
- *
- * @public
+ * Props for `createEmbeddedPresentationRulesConfiguration`.
  */
-interface CreateIModelContentConfigurationProps {
+interface CreateEmbeddedPresentationRulesConfigurationProps {
   /** Access to the iModel for reading its embedded content configuration and inspecting its schemas. */
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
 }
@@ -30,12 +28,10 @@ interface CreateIModelContentConfigurationProps {
  * to apply the iModel's embedded content customizations when producing content. These customizations
  * add fields (e.g. related and calculated properties) and adjust field metadata (e.g. labels,
  * categories, visibility) for the classes they target.
- *
- * @public
  */
-export async function createIModelContentConfiguration(
-  props: CreateIModelContentConfigurationProps,
-): Promise<ContentConfiguration> {
+export async function createEmbeddedPresentationRulesConfiguration(
+  props: CreateEmbeddedPresentationRulesConfigurationProps,
+): Promise<Required<Pick<ContentConfiguration, "imodelFieldsProviders" | "descriptorTransformers">>> {
   const { imodelAccess } = props;
   const imodelFieldsProviders: IModelFieldsProvider[] = [];
   const descriptorTransformers: DescriptorTransformer[] = [];

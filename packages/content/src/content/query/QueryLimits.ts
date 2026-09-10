@@ -3,10 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass } from "@itwin/presentation-shared";
-
-import type { ECSchemaProvider, ECSql, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, ResolvedPath } from "../ContentTarget.js";
+import type { ECSql } from "@itwin/presentation-shared";
+import type { ResolvedPath } from "../ContentTarget.js";
 
 /**
  * Maximum number of tables SQLite allows to participate in a single JOIN. When the merged
@@ -100,40 +98,4 @@ export function packPathsWithinBudget(props: {
     return { fitting: [], overflow: [first, ...rest].flat() };
   }
   return { fitting: first, overflow: rest.flat() };
-}
-
-/**
- * Determines the effective cardinality of a relationship path — whether each target instance reaches
- * at most one related instance (`"one"`) or possibly many (`"many"`).
- *
- * A caller-supplied `cardinalityHint` always wins (schema multiplicity is frequently over-declared as
- * `many` where the data is effectively 1:1). Without a hint, the path is `"many"` when any step's
- * traversed constraint has an unbounded upper multiplicity limit or an upper limit greater than one, honoring
- * `relationshipReverse` to pick the constraint the traversal lands on.
- *
- * @internal
- */
-export async function classifyPathCardinality(props: {
-  schemaProvider: ECSchemaProvider;
-  path: RelationshipPath;
-  cardinalityHint?: CardinalityHint;
-}): Promise<CardinalityHint> {
-  if (props.cardinalityHint) {
-    return props.cardinalityHint;
-  }
-  for (const step of props.path) {
-    const relationship = await getClass(props.schemaProvider, step.relationshipName);
-    if (!relationship.isRelationshipClass()) {
-      throw new Error(`Class ${step.relationshipName} is not a relationship class.`);
-    }
-    // Traversing the relationship in its declared direction lands on the `target` constraint; a
-    // reversed step lands on the `source` constraint. The upper multiplicity limit of that landing
-    // end says how many related instances a single source instance reaches.
-    const landingConstraint = step.relationshipReverse ? relationship.source : relationship.target;
-    const { upperLimit } = landingConstraint.multiplicity;
-    if (upperLimit === "unbounded" || upperLimit > 1) {
-      return "many";
-    }
-  }
-  return "one";
 }

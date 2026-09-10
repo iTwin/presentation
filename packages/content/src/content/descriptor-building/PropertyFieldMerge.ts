@@ -45,6 +45,8 @@ interface PropertyFieldCandidate extends CategorizedField {
  *   - **Inter-provider** (candidates from different providers) may disagree; the candidate with the
  *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClassNames`
  *     are still unioned.
+ * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority:
+ *   describing a many-valued path as single-valued would drop every related instance but one.
  *
  * The winning candidate's {@link FieldCategorization} is carried on each merged field so the
  * categorization pass can turn it into a `categoryId`. This is the inverse of `forkField`: it merges
@@ -69,8 +71,9 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate
     const winner = group.reduce((best, candidate) => (priorityOf(candidate) > priorityOf(best) ? candidate : best));
     const valueClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.valueClassNames));
     const primaryClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.primaryClassNames));
+    const pathCardinality = group.some((candidate) => candidate.field.pathCardinality === "many") ? "many" : "one";
     result.push({
-      field: { ...winner.field, id: baseId, selectorId: baseId, valueClassNames, primaryClassNames },
+      field: { ...winner.field, id: baseId, selectorId: baseId, pathCardinality, valueClassNames, primaryClassNames },
       categorization: winner.categorization,
     });
   }

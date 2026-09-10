@@ -62,6 +62,40 @@ export function getOrCreate<TKey, TValue>({
 }
 
 /**
+ * Returns whether a schema version is at or above a `read.write.minor` version (inclusive).
+ * Comparison order is write, then read, then minor.
+ *
+ * @internal
+ */
+export function isSchemaVersionAtLeast(version: EC.SchemaVersion, minVersion: string): boolean {
+  const [minRead, minWrite, minMinor] = minVersion.split(".").map(Number);
+  if (version.write !== minWrite) {
+    return version.write > minWrite;
+  }
+  if (version.read !== minRead) {
+    return version.read > minRead;
+  }
+  return version.minor >= minMinor;
+}
+
+/**
+ * Returns whether a schema version is below a `read.write.minor` version (exclusive).
+ * Comparison order is write, then read, then minor.
+ *
+ * @internal
+ */
+export function isSchemaVersionBelow(version: EC.SchemaVersion, maxVersion: string): boolean {
+  const [maxRead, maxWrite, maxMinor] = maxVersion.split(".").map(Number);
+  if (version.write !== maxWrite) {
+    return version.write < maxWrite;
+  }
+  if (version.read !== maxRead) {
+    return version.read < maxRead;
+  }
+  return version.minor < maxMinor;
+}
+
+/**
  * Runs `expand` over every input in parallel and concatenates the resulting arrays into a single
  * flat array (preserving input order). A concise replacement for `(await Promise.all(...)).flat()`.
  *

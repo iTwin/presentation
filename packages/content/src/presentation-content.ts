@@ -17,7 +17,7 @@ export type {
 } from "./content/model/Field.js";
 export type { ValueSelector, PropertyValueSelector, CalculatedValueSelector } from "./content/model/ValueSelector.js";
 export { CategoryDefinition } from "./content/model/Category.js";
-export type { ContentItem, ContentValues } from "./content/model/ContentItem.js";
+export type { ContentItem } from "./content/model/ContentItem.js";
 export { PropertyField } from "./content/model/Field.js";
 
 // Extension points
@@ -37,7 +37,8 @@ export { resolveContentSources, createContentProvider } from "./content/Content.
 export { getDistinctFieldValues } from "./content/DistinctValues.js";
 
 // Default iModel configuration
-export { createIModelContentConfiguration } from "./content/extensions/presentation-rules/EmbeddedRulesets.js";
+export { createIModelContentConfiguration } from "./content/extensions/IModelContentConfiguration.js";
+export type { BisCoreLocalizedStrings } from "./content/extensions/biscore/BisCoreLocalizedStrings.js";
 
 // Consumer utilities
 export { mapItems, reduceItems } from "./content/Utilities.js";

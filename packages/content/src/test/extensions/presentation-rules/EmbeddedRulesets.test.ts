@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { createIModelContentConfiguration } from "../../../content/extensions/presentation-rules/EmbeddedRulesets.js";
+import { createEmbeddedPresentationRulesConfiguration } from "../../../content/extensions/presentation-rules/EmbeddedRulesets.js";
 
 import type { EC, ECSchemaProvider, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import type { Ruleset } from "../../../content/extensions/presentation-rules/PresentationRules.js";
@@ -42,9 +42,9 @@ const supplemental: Pick<Ruleset, "id" | "supplementationInfo"> = {
   supplementationInfo: { supplementationPurpose: "test" },
 };
 
-describe("createIModelContentConfiguration", () => {
+describe("createEmbeddedPresentationRulesConfiguration", () => {
   it("returns an empty configuration when the ruleset class does not exist", async () => {
-    const config = await createIModelContentConfiguration({
+    const config = await createEmbeddedPresentationRulesConfiguration({
       imodelAccess: createIModelAccess({
         queryError: new Error("ECClass 'PresentationRules.Ruleset' does not exist or could not be loaded."),
       }),
@@ -56,12 +56,14 @@ describe("createIModelContentConfiguration", () => {
   it("propagates unexpected query errors", async () => {
     const error = new Error("database is locked");
     await expect(
-      createIModelContentConfiguration({ imodelAccess: createIModelAccess({ queryError: error }) }),
+      createEmbeddedPresentationRulesConfiguration({ imodelAccess: createIModelAccess({ queryError: error }) }),
     ).rejects.toThrow(error);
   });
 
   it("returns an empty configuration when there are no embedded rulesets", async () => {
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets: [] }) });
+    const config = await createEmbeddedPresentationRulesConfiguration({
+      imodelAccess: createIModelAccess({ rulesets: [] }),
+    });
     expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
@@ -70,7 +72,9 @@ describe("createIModelContentConfiguration", () => {
     const rulesets: Ruleset[] = [
       { id: "primary", rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }] },
     ];
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
+    const config = await createEmbeddedPresentationRulesConfiguration({
+      imodelAccess: createIModelAccess({ rulesets }),
+    });
     expect(config.imodelFieldsProviders).to.deep.equal([]);
     expect(config.descriptorTransformers).to.deep.equal([]);
   });
@@ -79,7 +83,9 @@ describe("createIModelContentConfiguration", () => {
     const rulesets: Ruleset[] = [
       { ...supplemental, rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }] },
     ];
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
+    const config = await createEmbeddedPresentationRulesConfiguration({
+      imodelAccess: createIModelAccess({ rulesets }),
+    });
     expect(config.imodelFieldsProviders).to.have.length(1);
     expect(config.descriptorTransformers).to.have.length(1);
   });
@@ -92,7 +98,7 @@ describe("createIModelContentConfiguration", () => {
         rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }],
       },
     ];
-    const config = await createIModelContentConfiguration({
+    const config = await createEmbeddedPresentationRulesConfiguration({
       imodelAccess: createIModelAccess({ rulesets, schemas: new Map() }),
     });
     expect(config.imodelFieldsProviders).to.deep.equal([]);
@@ -107,7 +113,7 @@ describe("createIModelContentConfiguration", () => {
         rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }],
       },
     ];
-    const config = await createIModelContentConfiguration({
+    const config = await createEmbeddedPresentationRulesConfiguration({
       imodelAccess: createIModelAccess({
         rulesets,
         schemas: new Map([["PresentSchema", { read: 1, write: 0, minor: 0 }]]),
@@ -125,7 +131,7 @@ describe("createIModelContentConfiguration", () => {
         rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }],
       },
     ];
-    const config = await createIModelContentConfiguration({
+    const config = await createEmbeddedPresentationRulesConfiguration({
       imodelAccess: createIModelAccess({ rulesets, schemas: new Map() }),
     });
     expect(config.imodelFieldsProviders).to.deep.equal([]);
@@ -140,7 +146,7 @@ describe("createIModelContentConfiguration", () => {
         rules: [{ ruleType: "ContentModifier", calculatedProperties: [{ label: "X", value: "1" }] }],
       },
     ];
-    const config = await createIModelContentConfiguration({
+    const config = await createEmbeddedPresentationRulesConfiguration({
       imodelAccess: createIModelAccess({
         rulesets,
         schemas: new Map([["PresentSchema", { read: 1, write: 0, minor: 0 }]]),
@@ -161,7 +167,9 @@ describe("createIModelContentConfiguration", () => {
         ],
       },
     ];
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
+    const config = await createEmbeddedPresentationRulesConfiguration({
+      imodelAccess: createIModelAccess({ rulesets }),
+    });
     expect(config.imodelFieldsProviders).to.have.length(1);
     expect(config.descriptorTransformers).to.have.length(1);
   });
@@ -177,7 +185,9 @@ describe("createIModelContentConfiguration", () => {
       },
       { ...supplemental, rules: [{ ruleType: "ContentModifier", propertyCategories: [{ id: "cat", label: "Cat" }] }] },
     ];
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
+    const config = await createEmbeddedPresentationRulesConfiguration({
+      imodelAccess: createIModelAccess({ rulesets }),
+    });
     expect(config.imodelFieldsProviders).to.have.length(3);
     expect(config.descriptorTransformers).to.have.length(3);
   });
@@ -189,8 +199,10 @@ describe("createIModelContentConfiguration", () => {
         rules: [{ ruleType: "ContentModifier", priority: 42, propertyOverrides: [{ name: "Prop", isReadOnly: true }] }],
       },
     ];
-    const config = await createIModelContentConfiguration({ imodelAccess: createIModelAccess({ rulesets }) });
-    expect(config.imodelFieldsProviders?.[0].priority).to.equal(42);
-    expect(config.descriptorTransformers?.[0].priority).to.equal(42);
+    const config = await createEmbeddedPresentationRulesConfiguration({
+      imodelAccess: createIModelAccess({ rulesets }),
+    });
+    expect(config.imodelFieldsProviders[0].priority).to.equal(42);
+    expect(config.descriptorTransformers[0].priority).to.equal(42);
   });
 });

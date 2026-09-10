@@ -208,6 +208,7 @@ describe("buildSelectProjection", () => {
       pathFromTarget: [],
       valueClassNames: [primaryClass],
       primaryClassNames: [primaryClass],
+      pathCardinality: "one",
       selectorId: "TestSchema.Primary.Code",
     };
     const scoreField: CalculatedField = {
@@ -259,6 +260,7 @@ describe("buildSelectProjection", () => {
       pathFromTarget: relatedPath,
       valueClassNames: ["TestSchema.Target"],
       primaryClassNames: [primaryClass],
+      pathCardinality: "one",
       selectorId: "TestSchema.Target.Name",
     };
 

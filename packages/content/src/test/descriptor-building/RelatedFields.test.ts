@@ -8,7 +8,13 @@ import { describe, expect, it } from "vitest";
 import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
 import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
 import { PropertyField } from "../../content/model/Field.js";
-import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
+import { createPathCardinalityClassifier } from "../../content/PathCardinality.js";
+import {
+  createSchemaAccess as createBaseSchemaAccess,
+  createEntityClass,
+  createPrimitiveProperty,
+  createRelationshipClass,
+} from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource, ResolvedPath } from "../../content/ContentTarget.js";
@@ -27,6 +33,19 @@ const bToC: RelationshipPath[number] = {
   targetClassName: "TestSchema.C",
   relationshipName: "TestSchema.BToC",
 };
+
+/**
+ * Schema access that also stubs the relationship classes the test paths traverse — path cardinality
+ * classification reads them, and they default to 1:1 so fields stay scalar unless a test says otherwise.
+ */
+function createSchemaAccess(classes: EC.Class[]) {
+  return createBaseSchemaAccess([
+    createRelationshipClass({ fullName: "TestSchema.AToB" }),
+    createRelationshipClass({ fullName: "TestSchema.BToC" }),
+    createRelationshipClass({ fullName: "TestSchema.AToC" }),
+    ...classes,
+  ]);
+}
 
 /** Builds a provider whose id is fixed and whose contribution is the given related-properties declarations. */
 function createProvider(
@@ -52,7 +71,12 @@ function wireProviders(providers: IModelFieldsProvider[]) {
     provider,
     anchorClassName,
   }) => provider.getContribution({ imodelAccess: createSchemaAccess([]), target: { primaryClass: anchorClassName } });
-  return { imodelFieldsProvidersById, getContribution, getAnchorContribution };
+  return {
+    imodelFieldsProvidersById,
+    getContribution,
+    getAnchorContribution,
+    classifier: createPathCardinalityClassifier(createSchemaAccess([])),
+  };
 }
 
 function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"]): ContentSource {
@@ -167,7 +191,7 @@ describe("collectRelatedPropertyFields", () => {
 
   it("loads relationship class properties opted in by a step spec", async () => {
     const imodelAccess = createSchemaAccess([
-      createEntityClass({
+      createRelationshipClass({
         fullName: "TestSchema.AToB",
         properties: [createPrimitiveProperty({ name: "Weight", declaringClass: "TestSchema.AToB" })],
       }),
@@ -227,7 +251,7 @@ describe("collectRelatedPropertyFields", () => {
         fullName: "TestSchema.B",
         properties: [createPrimitiveProperty({ name: "TargetProp", declaringClass: "TestSchema.B" })],
       }),
-      createEntityClass({
+      createRelationshipClass({
         fullName: "TestSchema.AToB",
         properties: [createPrimitiveProperty({ name: "RelProp", declaringClass: "TestSchema.AToB" })],
       }),
@@ -248,7 +272,7 @@ describe("collectRelatedPropertyFields", () => {
 
   it("reports a relationship field's spec override as a categorization fact", async () => {
     const imodelAccess = createSchemaAccess([
-      createEntityClass({
+      createRelationshipClass({
         fullName: "TestSchema.AToB",
         label: "A to B",
         properties: [createPrimitiveProperty({ name: "relProp", declaringClass: "TestSchema.AToB" })],
@@ -303,7 +327,7 @@ describe("collectRelatedPropertyFields", () => {
     const aToC: RelationshipPath[number] = {
       sourceClassName: "TestSchema.A",
       targetClassName: "TestSchema.C",
-      relationshipName: "TestSchema.aToC",
+      relationshipName: "TestSchema.AToC",
     };
     const imodelAccess = createSchemaAccess([
       createEntityClass({
@@ -430,6 +454,31 @@ describe("collectRelatedPropertyFields — nested groups", () => {
     expect(fields[0].propertyClassName).to.equal("TestSchema.C");
     expect(fields[0].pathFromTarget).to.deep.equal([aToB, bToC]);
     expect(targetsSeen).to.deep.equal(["TestSchema.B"]);
+  });
+
+  it("classifies the path by the nested group's `effectiveCardinalityHint`, not the declaration's own", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.C" })],
+      }),
+    ]);
+    // The effective hint already folds in every ancestor's, so it must win: here both the
+    // declaration's own hint and the 1:1 schema constraint would otherwise yield "one".
+    const provider = createProvider("p1_v1", [{ path: [bToC], cardinalityHint: "one" }]);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1, effectiveCardinalityHint: "many" },
+      },
+    ]);
+
+    const fields = await enumerate({ imodelAccess, source, ...wireProviders([provider]) });
+
+    expect(fields).to.have.lengthOf(1);
+    expect(fields[0].pathCardinality).to.equal("many");
   });
 
   it("offsets a nested declaration's StepPropertySpec.stepIndex by nested.prefixStepCount", async () => {
@@ -585,6 +634,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
       getContribution,
       getAnchorContribution,
       imodelFieldsProvidersById,
+      classifier: createPathCardinalityClassifier(imodelAccess),
     });
 
     expect(fields.map((f) => f.propertyName)).to.deep.equal(["Prop1", "Prop2"]);

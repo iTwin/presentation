@@ -72,6 +72,7 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames ?? [primaryClass],
     primaryClassNames: props.primaryClassNames ?? [primaryClass],
+    pathCardinality: "one",
     selectorId: props.selectorId ?? `selector-${props.propertyName}`,
   };
 }
@@ -88,6 +89,7 @@ function makeOneToOneNameField(path: RelationshipPath = makeOneToOnePath()): Pro
     pathFromTarget: path,
     valueClassNames: ["TestSchema.Target"],
     primaryClassNames: [primaryClass],
+    pathCardinality: "one",
   });
 }
 function makeOneToManyPath(): RelationshipPath {
@@ -100,6 +102,7 @@ function makeOneToManyNameField(path: RelationshipPath = makeOneToManyPath()): P
     pathFromTarget: path,
     valueClassNames: ["TestSchema.Many"],
     primaryClassNames: [primaryClass],
+    pathCardinality: "many",
   });
 }
 
@@ -527,6 +530,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Rel"],
         primaryClassNames: [primaryClass],
+        pathCardinality: "one",
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -671,6 +675,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Target"],
         primaryClassNames: [primaryClass],
+        pathCardinality: "one",
         type: { kind: "primitive", type: "Point3d" },
       });
 
@@ -858,6 +863,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.Target"],
         primaryClassNames: [primaryClass],
+        pathCardinality: "one",
       });
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: "abc" }];
 
@@ -1038,6 +1044,7 @@ describe("buildBaseQuery", () => {
           pathFromTarget: path,
           valueClassNames: [`TestSchema.Target${index}`],
           primaryClassNames: [primaryClass],
+          pathCardinality: "one",
         }),
         operator: "is-equal",
         value: `value-${index}`,
@@ -1105,6 +1112,7 @@ describe("buildBaseQuery", () => {
           pathFromTarget: overflowPath,
           valueClassNames: ["TestSchema.Target21"],
           primaryClassNames: [primaryClass],
+          pathCardinality: "one",
         }),
         operator: "is-null",
       });
@@ -1325,6 +1333,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.ManyNav"],
         primaryClassNames: [primaryClass],
+        pathCardinality: "many",
       });
 
       const result = await buildBaseQuery({
@@ -1355,6 +1364,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.RelMany"],
         primaryClassNames: [primaryClass],
+        pathCardinality: "many",
       });
 
       const result = await buildBaseQuery({
@@ -1388,6 +1398,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: path,
         valueClassNames: ["TestSchema.One"],
         primaryClassNames: [primaryClass],
+        pathCardinality: "many",
       });
 
       const result = await buildBaseQuery({
@@ -1426,6 +1437,7 @@ describe("buildBaseQuery", () => {
         pathFromTarget: filteredPath,
         valueClassNames: ["TestSchema.Target39"],
         primaryClassNames: [filteredPath[0].sourceClassName],
+        pathCardinality: "one",
       });
 
       const result = await buildBaseQuery({

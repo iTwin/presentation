@@ -34,6 +34,14 @@ interface BaseFieldsProvider {
 }
 
 // @public
+export interface BisCoreLocalizedStrings {
+    documentLink: string;
+    modelSource: string;
+    secondarySources: string;
+    sourceInformation: string;
+}
+
+// @public
 export interface CalculatedField extends BaseField {
     bindings?: Record<string, ECSqlBinding>;
     expression: string;
@@ -109,8 +117,16 @@ export interface ContentDescriptor {
 // @public
 export interface ContentItem {
     readonly descriptor: ReadonlyContentDescriptor;
-    getValue(field: Field): DeepReadonly<Value>;
+    getRelatedInstances(props: {
+        pathFromTarget: DeepReadonly<RelationshipPath>;
+    }): ReadonlyArray<{
+        key: DeepReadonly<InstanceKey>;
+        relationshipKey?: DeepReadonly<InstanceKey>;
+        getValue(field: ReadonlyPropertyField): DeepReadonly<Value>;
+    }>;
+    getValue(field: ReadonlyField): DeepReadonly<Value>;
     readonly primaryKey: DeepReadonly<InstanceKey>;
+    readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
     readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
@@ -181,18 +197,10 @@ type ContentValueFilterTarget = {
 };
 
 // @public
-export interface ContentValues {
-    primaryKey: InstanceKey;
-    values: Record<Field["id"], Value>;
-}
-
-// @public
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
-export function createHiddenSchemaMembersDescriptorTransformer(props?: {
-    priority?: number;
-}): DescriptorTransformer;
+export function createHiddenSchemaMembersDescriptorTransformer(): DescriptorTransformer;
 
 // @public
 export function createIModelContentConfiguration(props: CreateIModelContentConfigurationProps): Promise<ContentConfiguration>;
@@ -200,6 +208,7 @@ export function createIModelContentConfiguration(props: CreateIModelContentConfi
 // @public
 interface CreateIModelContentConfigurationProps {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    localizedStrings?: Partial<BisCoreLocalizedStrings>;
 }
 
 // @public
@@ -319,8 +328,10 @@ type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
 export interface PropertyField extends BaseField {
     // (undocumented)
     kind: "property";
+    pathCardinality: CardinalityHint;
     pathFromTarget: RelationshipPath;
     primaryClassNames: EC.FullClassNameDotNotation[];
+    propertyClassKind?: "target" | "relationship";
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     selectorId: string;
@@ -394,6 +405,12 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 
 // @public
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
+
+// @public
+interface RelatedInstanceEntry {
+    key: InstanceKey;
+    relationshipKey?: InstanceKey;
+}
 
 // @public
 interface RelatedPropertiesDeclaration {
