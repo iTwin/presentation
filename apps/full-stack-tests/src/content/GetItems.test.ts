@@ -978,6 +978,240 @@ describe("Content", () => {
         expect(item.getValue(relatedField)).toEqual([]);
         expect(item.getRelatedInstances({ pathFromTarget: path })).toEqual([]);
       });
+
+      it("stitches a relationship-class property value onto the item", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECCustomAttributes>
+                  <ClassMap xmlns="ECDbMap.02.00.01">
+                    <MapStrategy>TablePerHierarchy</MapStrategy>
+                  </ClassMap>
+                </ECCustomAttributes>
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECCustomAttributes>
+                  <ClassMap xmlns="ECDbMap.02.00.01">
+                    <MapStrategy>TablePerHierarchy</MapStrategy>
+                  </ClassMap>
+                </ECCustomAttributes>
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <ECProperty propertyName="RelProp" typeName="string" />
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
+          const b = builder.insertInstance(schema.items.B.fullName, { propB: "related" });
+          const rel = builder.insertRelationship(schema.items.AtoB.fullName, a.id, b.id, { relProp: "r" });
+          return { schema, a, b, rel };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path, properties: [{ stepIndex: 0, relationship: { select: "all" } }] }] };
+          },
+        });
+        const config = { imodelFieldsProviders: [fieldsProvider] };
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const relPropField = getPropertyFieldByName(descriptor, "RelProp");
+
+        const [item] = await collect(provider.getItems());
+        // The `AtoB` target is (0..*), so `RelProp` is a 1:many-path field — an array with one element per relationship instance.
+        expect(item.getValue(relPropField)).toEqual(["r"]);
+
+        const relatedInstances = item.getRelatedInstances(relPropField);
+        expect(relatedInstances).toHaveLength(1);
+        expect(relatedInstances[0].relationshipKey).toEqual(setup.rel);
+        expect(relatedInstances[0].key).toEqual(setup.b);
+        expect(relatedInstances[0].getValue(relPropField)).toEqual("r");
+      });
+
+      it("keeps a 1:1 prefix field populated when the extending 1:many leaf has no instances", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C">
+                <ECProperty propertyName="PropC" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+              <ECRelationshipClass typeName="BtoC" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="b to c" polymorphic="true">
+                  <Class class="B" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="c to b" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          // `a` has a `B` but that `B` has zero `C`s — the 1:many leaf's inner join must not blank out `PropB`.
+          const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
+          const b = builder.insertInstance(schema.items.B.fullName, { propB: "b" });
+          builder.insertRelationship(schema.items.AtoB.fullName, a.id, b.id);
+          // A relation elsewhere keeps `PropC` resolvable/discoverable for descriptor building.
+          const other = builder.insertInstance(schema.items.A.fullName, { propA: "other" });
+          const otherB = builder.insertInstance(schema.items.B.fullName, { propB: "other-b" });
+          const c = builder.insertInstance(schema.items.C.fullName, { propC: "unrelated-to-a" });
+          builder.insertRelationship(schema.items.AtoB.fullName, other.id, otherB.id);
+          builder.insertRelationship(schema.items.BtoC.fullName, otherB.id, c.id);
+          return { schema, a };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const pathToB: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const pathToC: RelationshipPath = [
+          ...pathToB,
+          {
+            sourceClassName: setup.schema.items.B.fullName,
+            targetClassName: setup.schema.items.C.fullName,
+            relationshipName: setup.schema.items.BtoC.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path: pathToB }, { path: pathToC }] };
+          },
+        });
+        const config = { imodelFieldsProviders: [fieldsProvider] };
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const propBField = getPropertyFieldByName(descriptor, "PropB");
+        const propCField = getPropertyFieldByName(descriptor, "PropC");
+        expect(propBField.pathCardinality).toEqual("one");
+        expect(propCField.pathCardinality).toEqual("many");
+
+        const items = await collect(provider.getItems());
+        const item = items.find((i) => i.primaryKey.id === setup.a.id)!;
+        expect(item.getValue(propBField)).toBe("b");
+        expect(item.getValue(propCField)).toEqual([]);
+        expect(item.getRelatedInstances({ pathFromTarget: pathToC })).toEqual([]);
+      });
+
+      it("returns a link-table relationship-property array with one entry per relationship instance", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECCustomAttributes>
+                  <ClassMap xmlns="ECDbMap.02.00.01">
+                    <MapStrategy>TablePerHierarchy</MapStrategy>
+                  </ClassMap>
+                </ECCustomAttributes>
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECCustomAttributes>
+                  <ClassMap xmlns="ECDbMap.02.00.01">
+                    <MapStrategy>TablePerHierarchy</MapStrategy>
+                  </ClassMap>
+                </ECCustomAttributes>
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <ECProperty propertyName="Role" typeName="string" />
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
+          const b1 = builder.insertInstance(schema.items.B.fullName, { propB: "first" });
+          const b2 = builder.insertInstance(schema.items.B.fullName, { propB: "second" });
+          // Two link-table relationship instances, each carrying its own `Role` value and target.
+          const rel1 = builder.insertRelationship(schema.items.AtoB.fullName, a.id, b1.id, { role: "primary" });
+          const rel2 = builder.insertRelationship(schema.items.AtoB.fullName, a.id, b2.id, { role: "secondary" });
+          return { schema, a, b1, b2, rel1, rel2 };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path, properties: [{ stepIndex: 0, relationship: { select: "all" } }] }] };
+          },
+        });
+        const config = { imodelFieldsProviders: [fieldsProvider] };
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const roleField = getPropertyFieldByName(descriptor, "Role");
+
+        const [item] = await collect(provider.getItems());
+        expect([...(item.getValue(roleField) as string[])].sort()).toEqual(["primary", "secondary"]);
+
+        const relatedInstances = [...item.getRelatedInstances({ pathFromTarget: path })].sort((x, y) =>
+          x.key.id < y.key.id ? -1 : 1,
+        );
+        const expectedKeys = [setup.b1, setup.b2].sort((x, y) => (x.id < y.id ? -1 : 1));
+        const expectedRelationshipKeys = [setup.rel1, setup.rel2].sort((x, y) => (x.id < y.id ? -1 : 1));
+        expect(relatedInstances.map((entry) => entry.key)).toEqual(expectedKeys);
+        expect(relatedInstances.map((entry) => entry.relationshipKey)).toEqual(expectedRelationshipKeys);
+      });
     });
   });
 });

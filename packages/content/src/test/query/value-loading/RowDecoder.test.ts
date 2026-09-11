@@ -252,6 +252,26 @@ describe("RowDecoder", () => {
         /more than one query group/,
       );
     });
+
+    it("keeps two independent 1:many groups' arrays and related-instance entries separate", () => {
+      // Two unrelated 1:many paths merged onto the same target: their arrays keep independent
+      // lengths and their related-instance entries stay under their own path keys.
+      const cEntry: RelatedInstanceEntry = { key: { className: "Schema.C", id: "0x4" } };
+      const target = values(
+        [["b.Name", ["first", "second"]]],
+        [
+          [
+            "A-[Rel1]->B",
+            [{ key: { className: "Schema.B", id: "0x2" } }, { key: { className: "Schema.B", id: "0x3" } }],
+          ],
+        ],
+      );
+      mergeGroupValues(target, values([["c.Name", ["only"]]], [["A-[Rel2]->C", [cEntry]]]));
+      expect(target.selectorValues.get("b.Name")).to.deep.equal(["first", "second"]);
+      expect(target.selectorValues.get("c.Name")).to.deep.equal(["only"]);
+      expect(target.relatedInstances.get("A-[Rel1]->B")).to.have.lengthOf(2);
+      expect(target.relatedInstances.get("A-[Rel2]->C")).to.deep.equal([cEntry]);
+    });
   });
 
   describe("toContentValues", () => {

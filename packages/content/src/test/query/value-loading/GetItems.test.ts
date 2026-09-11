@@ -17,6 +17,7 @@ import type {
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryRow,
+  RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../../content/ContentTarget.js";
 import type { ExternalFieldsProvider } from "../../../content/extensions/ExternalFieldsProvider.js";
@@ -78,7 +79,7 @@ function createExternalStatusProvider(getValues: ExternalFieldsProvider["getValu
   } as unknown as ExternalFieldsProvider;
 }
 
-const manyPath = [
+const manyPath: RelationshipPath = [
   { sourceClassName: "TestSchema.Primary", relationshipName: "TestSchema.RelMany", targetClassName: "TestSchema.Many" },
 ];
 
@@ -103,7 +104,7 @@ const relNameField: PropertyField = {
   type: { kind: "primitive", type: "String" },
   propertyClassName: "TestSchema.Many",
   propertyName: "Name",
-  pathFromTarget: manyPath as PropertyField["pathFromTarget"],
+  pathFromTarget: manyPath,
   pathCardinality: "many",
   valueClassNames: ["TestSchema.Many"],
   primaryClassNames: ["TestSchema.Primary"],
@@ -532,6 +533,50 @@ describe("getItems", () => {
     expect(items[0].getValue(relNameField)).to.deep.equal(["name-1"]);
   });
 
+  it("aligns index-i field values with index-i related instances across multiple rows of a 1:many group", async () => {
+    const { imodelAccess } = createRelationalIModelAccess((query) => {
+      if (query.ecsql.includes("pres_t0")) {
+        // Additional (1:many) group value query — two rows for the same primary, one missing `Name`.
+        return [
+          {
+            ["pres_primary_class"]: "TestSchema.Primary",
+            ["pres_primary_id"]: "0x1",
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "name-1" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
+          },
+          {
+            ["pres_primary_class"]: "TestSchema.Primary",
+            ["pres_primary_id"]: "0x1",
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x3" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
+          },
+        ];
+      }
+      return [
+        {
+          ["pres_primary_class"]: "TestSchema.Primary",
+          ["pres_primary_id"]: "0x1",
+          ["this"]: JSON.stringify({ ["Code"]: "code-1" }),
+        },
+      ];
+    });
+    const items = await collect(
+      getItems({
+        imodelAccess,
+        getDescriptor: async () => relDescriptor,
+        sources: [createRelationalSource("TestSchema.Primary", true)],
+      }),
+    );
+    expect(items).to.have.lengthOf(1);
+    expect(items[0].getValue(relNameField)).to.deep.equal(["name-1", undefined]);
+
+    const relatedInstances = items[0].getRelatedInstances({ pathFromTarget: manyPath });
+    expect(relatedInstances.map((entry) => entry.key.id)).to.deep.equal(["0x2", "0x3"]);
+    // Index alignment holds end to end: each related instance's own `getValue` sees only its row's hole.
+    expect(relatedInstances[0].getValue(relNameField)).to.equal("name-1");
+    expect(relatedInstances[1].getValue(relNameField)).to.equal(undefined);
+  });
+
   it("populates an external field whose inputs span the anchor query and an additional related group", async () => {
     // Input-only selectors (no backing field) for an external field whose inputs span the anchor's direct
     // `Code` and the 1:many related group's `Name` — mirrors what `collectSelectors` adds for provider inputs.
@@ -542,7 +587,7 @@ describe("getItems", () => {
     const combinedInputNameSelectorId = computePropertySelectorId({
       propertyClassName: "TestSchema.Many",
       propertyName: "Name",
-      pathFromTarget: manyPath as PropertyField["pathFromTarget"],
+      pathFromTarget: manyPath,
     });
     const relExternalDescriptor = {
       sources: [],

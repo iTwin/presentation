@@ -128,6 +128,30 @@ describe("createExternalValuePopulator", () => {
     expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: undefined, name: undefined } }] });
   });
 
+  it("passes a many-valued input's array through unchanged, one element per related instance", async () => {
+    const getValues = vi.fn(async (args: { items: Array<{ inputValues: { code: string; name: string[] } }> }) =>
+      args.items.map((item) => ({ status: item.inputValues.name.join(",") })),
+    );
+    const provider = createProvider({ localFieldIds: ["status"], withInputs: true, getValues });
+    const populate = createExternalValuePopulator({
+      descriptor: createDescriptor(["ext_v1:status"]),
+      providers: [provider],
+    });
+
+    const rows = [
+      {
+        selectorValues: new Map<string, Value>([
+          [codeSelectorId, "A1"],
+          [nameSelectorId, ["B1", "B2"]],
+        ]),
+      },
+    ];
+    const result = await firstValueFrom(populate!(rows));
+
+    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "A1", name: ["B1", "B2"] } }] });
+    expect(result).to.deep.equal([{ "ext_v1:status": "B1,B2" }]);
+  });
+
   it("throws when a provider returns a different number of records than the batch", async () => {
     const provider = createProvider({ localFieldIds: ["status"], getValues: async () => [] });
     const populate = createExternalValuePopulator({
