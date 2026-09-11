@@ -6,7 +6,7 @@
 import { bufferCount, defer, EMPTY, firstValueFrom, forkJoin, from, fromEvent, identity, map, merge, mergeMap, reduce, switchMap, takeUntil } from "rxjs";
 import { assert, Guid } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { createPredicateBasedHierarchyDefinition, ProcessedHierarchyNode } from "@itwin/presentation-hierarchies";
+import { createPredicateBasedHierarchyDefinition, HierarchyNode, HierarchySearchTree, ProcessedHierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql, parseFullClassName } from "@itwin/presentation-shared";
 import {
   CLASS_NAME_Element,
@@ -883,6 +883,36 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         return createInstanceKeyPathsFromTargetItemsObs({ ...props, ...componentInfo });
       }).pipe(props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity),
     );
+  }
+
+  public static async createSearchTree(props: ModelsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
+    const builder = HierarchySearchTree.createBuilder();
+    await firstValueFrom(
+      defer(() => {
+        const componentInfo = { componentId: props.componentId ?? Guid.createValue(), componentName: this.#componentName };
+        if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
+          const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
+          return createInstanceKeyPathsFromInstanceLabelObs({ ...props, ...componentInfo, labelsFactory });
+        }
+        return createInstanceKeyPathsFromTargetItemsObs({ ...props, ...componentInfo });
+      }).pipe(
+        props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
+        releaseMainThreadOnItemsCount(1000),
+        reduce((acc, { path, target }) => {
+          acc.accept({
+            path: {
+              path,
+              options: props.revealTargets
+                ? { reveal: typeof target === "string" ? true : { groupingLevel: HierarchyNode.getGroupingNodeLevel(target.groupingNode) } }
+                : undefined,
+            },
+          });
+          return acc;
+        }, builder),
+      ),
+      { defaultValue: builder },
+    );
+    return builder.getTree();
   }
 
   private supportsFiltering() {

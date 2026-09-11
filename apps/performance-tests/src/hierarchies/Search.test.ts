@@ -13,7 +13,7 @@ import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { DefineHierarchyLevelProps, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { DefineHierarchyLevelProps } from "@itwin/presentation-hierarchies";
 
 describe("search", () => {
   const totalNumberOfSearchPaths = 50000;
@@ -28,25 +28,27 @@ describe("search", () => {
     testName: `searches with ${totalNumberOfSearchPaths} paths`,
     setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-      const search = { paths: new Array<HierarchySearchPath>() };
+      const search = HierarchySearchTree.createBuilder();
       const parentIdsArr = new Array<number>();
       for (let i = 1; i <= totalNumberOfSearchPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);
         for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
-          search.paths.push([
-            {
-              className: `${schemaName}.${defaultClassName}_0`,
-              id: `0x${physicalElementsSmallestDecimalId.toString(16)}`,
-            },
-            {
-              className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
-              id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
-            },
-            {
-              className: `${schemaName}.${defaultClassName}_${Math.floor(j / itemsPerGroup)}`,
-              id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}`,
-            },
-          ]);
+          search.accept({
+            path: [
+              {
+                className: `${schemaName}.${defaultClassName}_0`,
+                id: `0x${physicalElementsSmallestDecimalId.toString(16)}`,
+              },
+              {
+                className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
+                id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
+              },
+              {
+                className: `${schemaName}.${defaultClassName}_${Math.floor(j / itemsPerGroup)}`,
+                id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}`,
+              },
+            ],
+          });
         }
       }
 
@@ -126,7 +128,7 @@ describe("search", () => {
     test: async ({ search, ...props }) => {
       const provider = await StatelessHierarchyProvider.create({
         ...props,
-        search: { paths: await HierarchySearchTree.createFromPathsList(search.paths) },
+        search: { paths: search.getTree() },
         rowLimit: "unbounded",
       });
       const nodeCount = await provider.loadHierarchy();
