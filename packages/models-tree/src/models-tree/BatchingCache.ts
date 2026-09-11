@@ -5,7 +5,7 @@
 
 import { bufferCount, forkJoin, fromEventPattern, map, mergeMap, of, reduce, switchMap, take, tap, timer } from "rxjs";
 import { assert, Guid } from "@itwin/core-bentley";
-import { catchBeSQLiteInterrupts , releaseMainThreadOnItemsCount } from "./Rxjs.js";
+import { catchBeSQLiteInterrupts, releaseMainThreadOnItemsCount } from "./Rxjs.js";
 
 import type { Observable } from "rxjs";
 
@@ -18,12 +18,7 @@ type RequestId = string;
  */
 class OneShotEvent<T extends (...args: any[]) => void> {
   #listeners: Set<T> = new Set();
-  #firedWithArgs?:
-    | {
-        fired: true;
-        args: Parameters<T>;
-      }
-    | { fired: false };
+  #firedWithArgs?: { fired: true; args: Parameters<T> } | { fired: false };
 
   public raiseEvent(...args: Parameters<T>): void {
     this.#firedWithArgs = { fired: true, args };
@@ -90,7 +85,10 @@ export abstract class BatchingCache<TRequest, TResult, TQueryData, TRow> {
 
   /** Pending requests buffer. `batchCompleted` is created lazily on the first `get` call of each batch cycle. */
   #valuesToRequest: { values: TRequest[]; batchCompleted?: OneShotEvent<(error?: Error) => void> } = { values: [] };
-  #requestedValues = new Map<RequestId, { values: TRequest[]; batchCompleted: OneShotEvent<(error?: Error) => void> }>();
+  #requestedValues = new Map<
+    RequestId,
+    { values: TRequest[]; batchCompleted: OneShotEvent<(error?: Error) => void> }
+  >();
   #bufferSize: number;
   #timerDelay: number;
   #releaseOnCount: number;
@@ -112,7 +110,9 @@ export abstract class BatchingCache<TRequest, TResult, TQueryData, TRow> {
   protected abstract getValuesNotInBatch(
     request: TRequest,
     batch: TRequest[],
-  ): { valuesNotInBatch: TRequest; batchContainsValues: boolean } | { valuesNotInBatch: undefined; batchContainsValues: true };
+  ):
+    | { valuesNotInBatch: TRequest; batchContainsValues: boolean }
+    | { valuesNotInBatch: undefined; batchContainsValues: true };
 
   /**
    * Convert batched requests into query data items.
@@ -179,7 +179,15 @@ export abstract class BatchingCache<TRequest, TResult, TQueryData, TRow> {
     return this.getResultAfterEvents(request, [...events, this.#valuesToRequest.batchCompleted]);
   }
 
-  private scheduleBatchExecution({ values, onStart, onDone }: { values: TRequest[]; onStart: () => void; onDone: (error?: Error) => void }): void {
+  private scheduleBatchExecution({
+    values,
+    onStart,
+    onDone,
+  }: {
+    values: TRequest[];
+    onStart: () => void;
+    onDone: (error?: Error) => void;
+  }): void {
     timer(this.#timerDelay)
       .pipe(
         switchMap(() => {
@@ -210,7 +218,10 @@ export abstract class BatchingCache<TRequest, TResult, TQueryData, TRow> {
     );
   }
 
-  private getResultAfterEvents(request: TRequest, events: Array<OneShotEvent<(error?: Error) => void>>): Observable<TResult> {
+  private getResultAfterEvents(
+    request: TRequest,
+    events: Array<OneShotEvent<(error?: Error) => void>>,
+  ): Observable<TResult> {
     return forkJoin(
       events.map((event) =>
         fromEventPattern<Error | undefined>((handler) => {

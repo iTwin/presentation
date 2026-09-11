@@ -3,7 +3,22 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, catchError, concatAll, concatMap, defaultIfEmpty, delay, EMPTY, from, last, mergeMap, Observable, of, scan, takeWhile } from "rxjs";
+import {
+  bufferCount,
+  catchError,
+  concatAll,
+  concatMap,
+  defaultIfEmpty,
+  delay,
+  EMPTY,
+  from,
+  last,
+  mergeMap,
+  Observable,
+  of,
+  scan,
+  takeWhile,
+} from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { getOptimalBatchSize } from "./Utils.js";
 
@@ -30,10 +45,7 @@ export function reduceWhile<TValue, TAccumulator>(
  */
 export async function toVoidPromise(obs: Observable<any>): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    obs.subscribe({
-      complete: () => resolve(),
-      error: reject,
-    });
+    obs.subscribe({ complete: () => resolve(), error: reject });
   });
 }
 
@@ -149,7 +161,9 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
  * @internal
  */
 export function fromWithRelease(props: { source: Id64Arg; releaseOnCount?: number }): Observable<Id64String>;
-export function fromWithRelease<T>(props: ({ source: Set<T> | Array<T> } | { source: Iterable<T>; size: number }) & { releaseOnCount?: number }): Observable<T>;
+export function fromWithRelease<T>(
+  props: ({ source: Set<T> | Array<T> } | { source: Iterable<T>; size: number }) & { releaseOnCount?: number },
+): Observable<T>;
 export function fromWithRelease(props: {
   source: Id64Arg | Set<unknown> | Array<unknown> | Iterable<unknown>;
   size?: number;

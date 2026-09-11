@@ -83,7 +83,11 @@ export class ModeledElementsCache {
       `;
       return this.#queryExecutor.createQueryReader(
         { ecsql: query, bindings: [{ type: "idset", value: this.#nonEmptyModelIds }] },
-        { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/modeled-elements` },
+        {
+          rowFormat: "ECSqlPropertyNames",
+          limit: "unbounded",
+          restartToken: `${this.#componentName}/${this.#componentId}/modeled-elements`,
+        },
       );
     }).pipe(
       catchBeSQLiteInterrupts,
@@ -100,7 +104,10 @@ export class ModeledElementsCache {
 
   public getModeledElementsInfo() {
     this.#modeledElementsInfo ??= this.queryModeledElements().pipe(
-      reduce<QueriedRow, { subModelsTree: SubModelsTree; allSubModels: Set<ElementId>; childSubModels: Map<ElementId, Set<ElementId>> }>(
+      reduce<
+        QueriedRow,
+        { subModelsTree: SubModelsTree; allSubModels: Set<ElementId>; childSubModels: Map<ElementId, Set<ElementId>> }
+      >(
         (acc, { modelId, categoryId, modeledElementId, categoryElementPath }) => {
           ChildrenTree.update({
             tree: acc.subModelsTree,
@@ -108,7 +115,10 @@ export class ModeledElementsCache {
             additionalPropsGetter: ({ id, additionalProps, depth }) => {
               let newAdditionalProps = additionalProps;
               if (!newAdditionalProps) {
-                newAdditionalProps = { type: id === modelId ? "model" : depth % 2 === 1 ? "category" : "element", directSubModels: [] };
+                newAdditionalProps = {
+                  type: id === modelId ? "model" : depth % 2 === 1 ? "category" : "element",
+                  directSubModels: [],
+                };
               }
               if (id === categoryId) {
                 newAdditionalProps.directSubModels.push(modeledElementId);
@@ -118,7 +128,11 @@ export class ModeledElementsCache {
           });
           for (let i = 1; i < categoryElementPath.length; i += 2) {
             const elementId = categoryElementPath[i];
-            const childSubModelsEntry = getOrCreate({ map: acc.childSubModels, key: elementId, createFunc: () => new Set<ElementId>() });
+            const childSubModelsEntry = getOrCreate({
+              map: acc.childSubModels,
+              key: elementId,
+              createFunc: () => new Set<ElementId>(),
+            });
             childSubModelsEntry.add(modeledElementId);
           }
           acc.allSubModels.add(modeledElementId);

@@ -31,7 +31,10 @@ interface CachedData {
   modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
   modelsContainingTopMostNonExcludedElements: Set<ModelId>;
   categoriesContainingNonExcludedElements: Set<CategoryId>;
-  categoryModelsInfo: Map<CategoryId, Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>>;
+  categoryModelsInfo: Map<
+    CategoryId,
+    Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
+  >;
   categoriesWithParentElements: Set<CategoryId>;
   allCategories: Set<CategoryId>;
   allTopMostElementCategories: Set<CategoryId>;
@@ -64,7 +67,10 @@ export class ElementModelCategoriesCache {
     hasElementsFromNonExcludedClasses: boolean;
     isPlanProjectionModel: boolean;
   }> {
-    const excludedClause = createExcludedClassesClause({ alias: "this", excludedClassNames: this.#excludedElementClassNames });
+    const excludedClause = createExcludedClassesClause({
+      alias: "this",
+      excludedClassNames: this.#excludedElementClassNames,
+    });
     return defer(() => {
       const query = `
           SELECT
@@ -81,7 +87,11 @@ export class ElementModelCategoriesCache {
         `;
       return this.#queryExecutor.createQueryReader(
         { ecsql: query },
-        { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/element-models-and-categories` },
+        {
+          rowFormat: "ECSqlPropertyNames",
+          limit: "unbounded",
+          restartToken: `${this.#componentName}/${this.#componentId}/element-models-and-categories`,
+        },
       );
     }).pipe(
       catchBeSQLiteInterrupts,
@@ -110,12 +120,14 @@ export class ElementModelCategoriesCache {
           const categoryModelsEntry = getOrCreate({
             map: acc.categoryModelsInfo,
             key: queriedCategory.categoryId,
-            createFunc: () => new Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>(),
+            createFunc: () =>
+              new Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>(),
           });
           categoryModelsEntry.push({
             id: queriedCategory.modelId,
             categoryIsOfTopMostElement: queriedCategory.isTopMostElementCategory,
-            hasNonExcludedTopMostElements: queriedCategory.hasElementsFromNonExcludedClasses && queriedCategory.isTopMostElementCategory,
+            hasNonExcludedTopMostElements:
+              queriedCategory.hasElementsFromNonExcludedClasses && queriedCategory.isTopMostElementCategory,
           });
           const modelEntry = getOrCreate({
             map: acc.modelsCategoriesInfo,
@@ -153,7 +165,10 @@ export class ElementModelCategoriesCache {
           allCategories: new Set<CategoryId>(),
           modelsContainingTopMostNonExcludedElements: new Set<ModelId>(),
           categoriesContainingNonExcludedElements: new Set<CategoryId>(),
-          categoryModelsInfo: new Map<CategoryId, Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>>(),
+          categoryModelsInfo: new Map<
+            CategoryId,
+            Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
+          >(),
         },
       ),
       tap(() => {

@@ -7,7 +7,11 @@ import { defer, filter, forkJoin, map, mergeMap, of, reduce, shareReplay } from 
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { BaseIdsCacheImpl } from "./BaseIdsCache.js";
-import { CLASS_NAME_GeometricModel3d, CLASS_NAME_InformationPartitionElement, CLASS_NAME_Subject } from "./ClassNameDefinitions.js";
+import {
+  CLASS_NAME_GeometricModel3d,
+  CLASS_NAME_InformationPartitionElement,
+  CLASS_NAME_Subject,
+} from "./ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "./Rxjs.js";
 import { createWhereClause, getOrCreate } from "./Utils.js";
 
@@ -16,8 +20,8 @@ import type { GuidString, Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { InstanceKey } from "@itwin/presentation-shared";
 import type { BaseIdsCacheImplProps } from "./BaseIdsCache.js";
-import type { ModelId, SubjectId } from "./Types.js";
 import type { RequiredModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js";
+import type { ModelId, SubjectId } from "./Types.js";
 
 /**
  * Hierarchy config props needed for ids cache.
@@ -55,7 +59,12 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
     this.#componentName = "ModelsTreeIdsCache";
   }
 
-  private querySubjects(): Observable<{ id: SubjectId; parentId?: SubjectId; targetPartitionId?: ModelId; hideInHierarchy: boolean }> {
+  private querySubjects(): Observable<{
+    id: SubjectId;
+    parentId?: SubjectId;
+    targetPartitionId?: ModelId;
+    hideInHierarchy: boolean;
+  }> {
     return defer(() => {
       const subjectsQuery = `
         SELECT
@@ -84,12 +93,21 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
       `;
       return this.#queryExecutor.createQueryReader(
         { ecsql: subjectsQuery },
-        { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/subjects` },
+        {
+          rowFormat: "ECSqlPropertyNames",
+          limit: "unbounded",
+          restartToken: `${this.#componentName}/${this.#componentId}/subjects`,
+        },
       );
     }).pipe(
       catchBeSQLiteInterrupts,
       map((row) => {
-        return { id: row.id, parentId: row.parentId, targetPartitionId: row.targetPartitionId, hideInHierarchy: !!row.hideInHierarchy };
+        return {
+          id: row.id,
+          parentId: row.parentId,
+          targetPartitionId: row.targetPartitionId,
+          hideInHierarchy: !!row.hideInHierarchy,
+        };
       }),
     );
   }
@@ -104,7 +122,11 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
       `;
       return this.#queryExecutor.createQueryReader(
         { ecsql: modelsQuery },
-        { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}/models` },
+        {
+          rowFormat: "ECSqlPropertyNames",
+          limit: "unbounded",
+          restartToken: `${this.#componentName}/${this.#componentId}/models`,
+        },
       );
     }).pipe(
       catchBeSQLiteInterrupts,
@@ -143,11 +165,7 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
       ),
       modelInfos: this.queryModels().pipe(
         reduce((acc, model) => {
-          const entry = getOrCreate({
-            map: acc,
-            key: model.id,
-            createFunc: () => new Set<SubjectId>(),
-          });
+          const entry = getOrCreate({ map: acc, key: model.id, createFunc: () => new Set<SubjectId>() });
           entry.add(model.parentId);
           return acc;
         }, new Map<ModelId, Set<SubjectId>>()),
@@ -295,7 +313,10 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
     return this.getSubjectInfos().pipe(
       map((subjectInfos) => {
         const result = new Array<InstanceKey>();
-        if (this.#hierarchyConfig.models.withoutElements === "exclude" && !this.subjectHasNestedModels({ subjectId: targetSubjectId, subjectInfos })) {
+        if (
+          this.#hierarchyConfig.models.withoutElements === "exclude" &&
+          !this.subjectHasNestedModels({ subjectId: targetSubjectId, subjectInfos })
+        ) {
           return result;
         }
         let currParentId: SubjectId | undefined = targetSubjectId;
@@ -314,7 +335,13 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
     );
   }
 
-  private subjectHasNestedModels({ subjectId, subjectInfos }: { subjectId: SubjectId; subjectInfos: Map<SubjectId, SubjectInfo> }): boolean {
+  private subjectHasNestedModels({
+    subjectId,
+    subjectInfos,
+  }: {
+    subjectId: SubjectId;
+    subjectInfos: Map<SubjectId, SubjectInfo>;
+  }): boolean {
     const subjectInfo = subjectInfos.get(subjectId);
     if (!subjectInfo) {
       return false;
@@ -344,8 +371,17 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
     });
   }
 
-  public getSearchPathsUpToRootCategory({ categoryId }: { categoryId: Id64String }): Observable<HierarchyNodeIdentifiersPath> {
-    return this.getModels({ categoryId, excludeSubModels: true, includeOnlyTopMostElementCategory: true, excludeIfOnlyExcludedClasses: true }).pipe(
+  public getSearchPathsUpToRootCategory({
+    categoryId,
+  }: {
+    categoryId: Id64String;
+  }): Observable<HierarchyNodeIdentifiersPath> {
+    return this.getModels({
+      categoryId,
+      excludeSubModels: true,
+      includeOnlyTopMostElementCategory: true,
+      excludeIfOnlyExcludedClasses: true,
+    }).pipe(
       mergeMap((categoryModelId) =>
         this.createUpToModelInstanceKeyPaths(categoryModelId).pipe(
           map((modelPath) => [...modelPath, { className: CLASS_NAME_GeometricModel3d, id: categoryModelId }]),

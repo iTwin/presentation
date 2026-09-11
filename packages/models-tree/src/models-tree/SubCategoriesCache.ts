@@ -25,7 +25,10 @@ export class SubCategoriesCache {
   #componentId: GuidString;
   #componentName: string;
   #subCategoriesInfo:
-    | Observable<{ subCategoryCategories: Map<SubCategoryId, CategoryId>; categorySubCategories: Map<CategoryId, Array<SubCategoryId>> }>
+    | Observable<{
+        subCategoryCategories: Map<SubCategoryId, CategoryId>;
+        categorySubCategories: Map<CategoryId, Array<SubCategoryId>>;
+      }>
     | undefined;
   #rowLimit = 7500;
 
@@ -78,11 +81,18 @@ export class SubCategoriesCache {
         reduce(
           (acc, queriedSubCategory) => {
             acc.subCategoryCategories.set(queriedSubCategory.id, queriedSubCategory.parentId);
-            const entry = getOrCreate({ map: acc.categorySubCategories, key: queriedSubCategory.parentId, createFunc: () => new Array<SubCategoryId>() });
+            const entry = getOrCreate({
+              map: acc.categorySubCategories,
+              key: queriedSubCategory.parentId,
+              createFunc: () => new Array<SubCategoryId>(),
+            });
             entry.push(queriedSubCategory.id);
             return acc;
           },
-          { subCategoryCategories: new Map<SubCategoryId, CategoryId>(), categorySubCategories: new Map<CategoryId, Array<SubCategoryId>>() },
+          {
+            subCategoryCategories: new Map<SubCategoryId, CategoryId>(),
+            categorySubCategories: new Map<CategoryId, Array<SubCategoryId>>(),
+          },
         ),
       )
       .pipe(shareReplay());

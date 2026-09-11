@@ -39,7 +39,8 @@ export function setDifference<T>(lhs: ReadonlySet<T>, rhs: ReadonlySet<T>): Set<
 /** @internal */
 export function setIntersection<T>(lhs: ReadonlySet<T>, rhs: ReadonlySet<T>): Set<T> {
   const result = new Set<T>();
-  const { smallerSet, largerSet } = lhs.size < rhs.size ? { smallerSet: lhs, largerSet: rhs } : { smallerSet: rhs, largerSet: lhs };
+  const { smallerSet, largerSet } =
+    lhs.size < rhs.size ? { smallerSet: lhs, largerSet: rhs } : { smallerSet: rhs, largerSet: lhs };
   for (const x of smallerSet) {
     if (largerSet.has(x)) {
       result.add(x);
@@ -54,7 +55,9 @@ export function countInSet(ids: Id64Arg, set: ReadonlySet<Id64String> | undefine
     return 0;
   }
   const { smallerIterable, largerSet } =
-    set.size < Id64.sizeOf(ids) ? { smallerIterable: set, largerSet: Id64.toIdSet(ids) } : { smallerIterable: Id64.iterable(ids), largerSet: set };
+    set.size < Id64.sizeOf(ids)
+      ? { smallerIterable: set, largerSet: Id64.toIdSet(ids) }
+      : { smallerIterable: Id64.iterable(ids), largerSet: set };
   let count = 0;
   for (const id of smallerIterable) {
     if (largerSet.has(id)) {
@@ -65,7 +68,13 @@ export function countInSet(ids: Id64Arg, set: ReadonlySet<Id64String> | undefine
 }
 
 /** @internal */
-export function getOptimalBatchSize({ totalSize, maximumBatchSize }: { totalSize: number; maximumBatchSize: number }): number {
+export function getOptimalBatchSize({
+  totalSize,
+  maximumBatchSize,
+}: {
+  totalSize: number;
+  maximumBatchSize: number;
+}): number {
   return Math.ceil(totalSize / Math.ceil(totalSize / maximumBatchSize));
 }
 
@@ -119,14 +128,25 @@ export function parseIdsSelectorResult(selectorResult: any): Id64Array {
   if (!Array.isArray(selectorResult)) {
     return [];
   }
-  return selectorResult.reduce((arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])], new Array<Id64String>());
+  return selectorResult.reduce(
+    (arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])],
+    new Array<Id64String>(),
+  );
 }
 
 /** @internal */
 export function getClassesByView(viewType: "2d" | "3d") {
   return viewType === "2d"
-    ? ({ categoryClass: CLASS_NAME_DrawingCategory, elementClass: CLASS_NAME_GeometricElement2d, modelClass: CLASS_NAME_GeometricModel2d } as const)
-    : ({ categoryClass: CLASS_NAME_SpatialCategory, elementClass: CLASS_NAME_GeometricElement3d, modelClass: CLASS_NAME_GeometricModel3d } as const);
+    ? ({
+        categoryClass: CLASS_NAME_DrawingCategory,
+        elementClass: CLASS_NAME_GeometricElement2d,
+        modelClass: CLASS_NAME_GeometricModel2d,
+      } as const)
+    : ({
+        categoryClass: CLASS_NAME_SpatialCategory,
+        elementClass: CLASS_NAME_GeometricElement3d,
+        modelClass: CLASS_NAME_GeometricModel3d,
+      } as const);
 }
 
 /** @internal */
@@ -170,7 +190,15 @@ export namespace ChildrenTree {
   }: {
     tree: ChildrenTree<T>;
     idsToAdd: Id64Array;
-    additionalPropsGetter: ({ id, additionalProps, depth }: { id: Id64String; additionalProps?: T; depth: number }) => T;
+    additionalPropsGetter: ({
+      id,
+      additionalProps,
+      depth,
+    }: {
+      id: Id64String;
+      additionalProps?: T;
+      depth: number;
+    }) => T;
   }) {
     let currentTree: ChildrenTree<T> = tree;
     for (let i = 0; i < idsToAdd.length; ++i) {
@@ -195,15 +223,11 @@ export namespace ChildrenTree {
 }
 
 /** @internal */
-export function groupingNodeDataFromChildren(children: ProcessedHierarchyNode[]):
-  | {
-      hasSearchTargetAncestor: true;
-      hasDirectNonSearchTargets: undefined;
-    }
-  | {
-      hasSearchTargetAncestor: false;
-      hasDirectNonSearchTargets: boolean;
-    } {
+export function groupingNodeDataFromChildren(
+  children: ProcessedHierarchyNode[],
+):
+  | { hasSearchTargetAncestor: true; hasDirectNonSearchTargets: undefined }
+  | { hasSearchTargetAncestor: false; hasDirectNonSearchTargets: boolean } {
   if (children.length > 0) {
     assert(!ProcessedHierarchyNode.isGroupingNode(children[0]), "Expected only non-grouping nodes as children");
     if (children[0].search?.hasSearchTargetAncestor) {
@@ -249,13 +273,29 @@ export namespace ParentElementsPath {
   export function getLastParentIds(path: ParentElementsPath): Id64Array | undefined {
     return path.length > 0 ? path[path.length - 1].elementIds : undefined;
   }
-  export function appendToPath({ path, ids, categoryId }: { path: ParentElementsPath; ids: Id64Arg; categoryId: CategoryId }): ParentElementsPath {
+  export function appendToPath({
+    path,
+    ids,
+    categoryId,
+  }: {
+    path: ParentElementsPath;
+    ids: Id64Arg;
+    categoryId: CategoryId;
+  }): ParentElementsPath {
     return [...path, { elementIds: getId64Array(ids), categoryIds: categoryId }];
   }
 }
 
 /** @internal */
-export function getOrCreate<TKey, TValue>({ map, key, createFunc }: { map: Map<TKey, TValue>; key: TKey; createFunc: () => TValue }): TValue {
+export function getOrCreate<TKey, TValue>({
+  map,
+  key,
+  createFunc,
+}: {
+  map: Map<TKey, TValue>;
+  key: TKey;
+  createFunc: () => TValue;
+}): TValue {
   let entry = map.get(key);
   if (entry === undefined) {
     entry = createFunc();
@@ -279,11 +319,26 @@ export function getId64Spreadable(ids: Id64Arg): Id64Array | Id64Set {
  *
  * @internal
  */
-export function mergeWithDefaults<T extends object>({ defaults, overrides }: { defaults: DeepRequired<T>; overrides?: DeepOptional<T> }): DeepRequired<T> {
-  return mergeObjects({ defaults: defaults as Record<string, unknown>, overrides: overrides as Record<string, unknown> | undefined }) as DeepRequired<T>;
+export function mergeWithDefaults<T extends object>({
+  defaults,
+  overrides,
+}: {
+  defaults: DeepRequired<T>;
+  overrides?: DeepOptional<T>;
+}): DeepRequired<T> {
+  return mergeObjects({
+    defaults: defaults as Record<string, unknown>,
+    overrides: overrides as Record<string, unknown> | undefined,
+  }) as DeepRequired<T>;
 }
 
-function mergeObjects({ defaults, overrides }: { defaults: Record<string, unknown>; overrides: Record<string, unknown> | undefined }): Record<string, unknown> {
+function mergeObjects({
+  defaults,
+  overrides,
+}: {
+  defaults: Record<string, unknown>;
+  overrides: Record<string, unknown> | undefined;
+}): Record<string, unknown> {
   const result = { ...defaults };
   if (!overrides) {
     return result;
@@ -295,7 +350,10 @@ function mergeObjects({ defaults, overrides }: { defaults: Record<string, unknow
     }
 
     const defaultValue = defaults[key];
-    result[key] = isMergeableObject(defaultValue) && isMergeableObject(override) ? mergeObjects({ defaults: defaultValue, overrides: override }) : override;
+    result[key] =
+      isMergeableObject(defaultValue) && isMergeableObject(override)
+        ? mergeObjects({ defaults: defaultValue, overrides: override })
+        : override;
   }
   return result;
 }

@@ -92,10 +92,8 @@ function Tree({
   const modelsTree = useMemo(() => setupModelsTree({ imodelAccess }), [imodelAccess]);
 
   const getSearchPaths = useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
-    return async ({ abortSignal }) => searchText ? modelsTree.createSearchTree({
-        label: searchText,
-        abortSignal,
-      }) : undefined;
+    return async ({ abortSignal }) =>
+      searchText ? modelsTree.createSearchTree({ label: searchText, abortSignal }) : undefined;
   }, [searchText, modelsTree]);
 
   const treeRef = useRef<StrataKitTreeRendererAttributes>(null);

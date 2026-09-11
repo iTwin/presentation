@@ -6,7 +6,13 @@
 import { ModelsTreeNode } from "./ModelsTreeNode.js";
 
 import type { Id64Array, Id64String } from "@itwin/core-bentley";
-import type { ClassGroupingNodeKey, GroupingHierarchyNode, HierarchyNode, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type {
+  ClassGroupingNodeKey,
+  GroupingHierarchyNode,
+  HierarchyNode,
+  InstancesNodeKey,
+  NonGroupingHierarchyNode,
+} from "@itwin/presentation-hierarchies";
 import type { ElementId } from "./Types.js";
 import type { ParentElementsPath } from "./Utils.js";
 

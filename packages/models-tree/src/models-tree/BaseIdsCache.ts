@@ -5,13 +5,13 @@
 
 import { EMPTY, filter, forkJoin, from, identity, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { fromWithRelease } from "./Rxjs.js";
-import { ChildrenTree, getOrCreate } from "./Utils.js";
 import { ChildElementsCache } from "./ChildElementsCache.js";
 import { DescendantsCountCache } from "./DescendantsCountCache.js";
 import { ElementModelCategoriesCache } from "./ElementModelCategoriesCache.js";
 import { ModeledElementsCache } from "./ModeledElementsCache.js";
+import { fromWithRelease } from "./Rxjs.js";
 import { SubCategoriesCache } from "./SubCategoriesCache.js";
+import { ChildrenTree, getOrCreate } from "./Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentley";
@@ -41,14 +41,7 @@ export class BaseIdsCache {
   readonly #elementModelCategoriesCache: ElementModelCategoriesCache;
   #categoryModelsInfoWithoutSubModels:
     | Observable<
-        Map<
-          CategoryId,
-          {
-            id: ModelId;
-            categoryIsOfTopMostElement: boolean;
-            hasNonExcludedTopMostElements: boolean;
-          }[]
-        >
+        Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
       >
     | undefined;
   #subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
@@ -247,7 +240,11 @@ export class BaseIdsCache {
             if (modelIds.size === 0) {
               return EMPTY;
             }
-            return this.getCategoryModeledElements({ modelIds, categoryIds: new Set([categoryId]), parentElementsPath: [] });
+            return this.getCategoryModeledElements({
+              modelIds,
+              categoryIds: new Set([categoryId]),
+              parentElementsPath: [],
+            });
           }),
         ),
       ),
@@ -265,7 +262,9 @@ export class BaseIdsCache {
   }
 
   public getAllModels(): Observable<Array<ModelId>> {
-    return this.#elementModelCategoriesCache.getCachedData().pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
+    return this.#elementModelCategoriesCache
+      .getCachedData()
+      .pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
   }
 
   public getPlanProjectionModels(): Observable<Id64Set> {
@@ -295,9 +294,16 @@ export class BaseIdsCache {
       map(({ modelsCategoriesInfo }) => {
         const modelInfo = modelsCategoriesInfo.get(modelId);
         if (excludeIfOnlyExcludedClasses) {
-          return (includeOnlyIfCategoryOfTopMostElement ? modelInfo?.categoriesOfTopMostNonExcludedElements : modelInfo?.nonExcludedCategories) ?? new Set();
+          return (
+            (includeOnlyIfCategoryOfTopMostElement
+              ? modelInfo?.categoriesOfTopMostNonExcludedElements
+              : modelInfo?.nonExcludedCategories) ?? new Set()
+          );
         }
-        return (includeOnlyIfCategoryOfTopMostElement ? modelInfo?.categoriesOfTopMostElements : modelInfo?.allCategories) ?? new Set();
+        return (
+          (includeOnlyIfCategoryOfTopMostElement ? modelInfo?.categoriesOfTopMostElements : modelInfo?.allCategories) ??
+          new Set()
+        );
       }),
     );
   }
@@ -317,7 +323,11 @@ export class BaseIdsCache {
   public getAllCategoriesOfElements(props?: { onlyTopMostElementCategories?: boolean }): Observable<Id64Set> {
     return this.#elementModelCategoriesCache
       .getCachedData()
-      .pipe(map(({ allCategories, allTopMostElementCategories }) => (props?.onlyTopMostElementCategories ? allTopMostElementCategories : allCategories)));
+      .pipe(
+        map(({ allCategories, allTopMostElementCategories }) =>
+          props?.onlyTopMostElementCategories ? allTopMostElementCategories : allCategories,
+        ),
+      );
   }
 
   private getCategoryModelsInfoWithoutSubModels(): Observable<
@@ -354,7 +364,8 @@ export class BaseIdsCache {
     includeOnlyTopMostElementCategory?: boolean;
     excludeIfOnlyExcludedClasses?: boolean;
   }): Observable<ModelId> {
-    let getCategoryModelsInfo = () => this.#elementModelCategoriesCache.getCachedData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
+    let getCategoryModelsInfo = () =>
+      this.#elementModelCategoriesCache.getCachedData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
 
     if (excludeSubModels) {
       getCategoryModelsInfo = () => this.getCategoryModelsInfoWithoutSubModels();
@@ -367,35 +378,49 @@ export class BaseIdsCache {
         }
         return from(categoryModels);
       }),
-      includeOnlyTopMostElementCategory ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement) : identity,
-      excludeIfOnlyExcludedClasses ? filter(({ hasNonExcludedTopMostElements }) => hasNonExcludedTopMostElements) : identity,
+      includeOnlyTopMostElementCategory
+        ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement)
+        : identity,
+      excludeIfOnlyExcludedClasses
+        ? filter(({ hasNonExcludedTopMostElements }) => hasNonExcludedTopMostElements)
+        : identity,
       map(({ id }) => id),
     );
   }
 
   public categoryHasParentElements({ categoryId }: { categoryId: Id64String }): Observable<boolean> {
-    return this.#elementModelCategoriesCache.getCachedData().pipe(map(({ categoriesWithParentElements }) => categoriesWithParentElements.has(categoryId)));
+    return this.#elementModelCategoriesCache
+      .getCachedData()
+      .pipe(map(({ categoriesWithParentElements }) => categoriesWithParentElements.has(categoryId)));
   }
 
   // DescendantsCountCache methods
 
-  public getDescendantsCounts(props: Props<DescendantsCountCache["getDescendantsCounts"]>): ReturnType<DescendantsCountCache["getDescendantsCounts"]> {
+  public getDescendantsCounts(
+    props: Props<DescendantsCountCache["getDescendantsCounts"]>,
+  ): ReturnType<DescendantsCountCache["getDescendantsCounts"]> {
     return this.#descendantsCountCache.getDescendantsCounts(props);
   }
 
   // ChildElementsCache methods
 
-  public getChildElements(props: Props<ChildElementsCache["getChildElements"]>): ReturnType<ChildElementsCache["getChildElements"]> {
+  public getChildElements(
+    props: Props<ChildElementsCache["getChildElements"]>,
+  ): ReturnType<ChildElementsCache["getChildElements"]> {
     return this.#childElementsCache.getChildElements(props);
   }
 
   // SubCategoriesCache methods
   public getSubCategories(props: { categoryId: Id64String }): Observable<Array<SubCategoryId>> {
-    return this.#subCategoriesCache.getSubCategoriesInfo().pipe(map(({ categorySubCategories }) => categorySubCategories.get(props.categoryId) ?? []));
+    return this.#subCategoriesCache
+      .getSubCategoriesInfo()
+      .pipe(map(({ categorySubCategories }) => categorySubCategories.get(props.categoryId) ?? []));
   }
 
   public getCategorySubCategoriesMap(): Observable<Map<CategoryId, SubCategoryId[]>> {
-    return this.#subCategoriesCache.getSubCategoriesInfo().pipe(map(({ categorySubCategories }) => categorySubCategories));
+    return this.#subCategoriesCache
+      .getSubCategoriesInfo()
+      .pipe(map(({ categorySubCategories }) => categorySubCategories));
   }
 
   public getSubCategoryCategories({
@@ -445,7 +470,9 @@ export class BaseIdsCacheImpl {
 
   // Implement IBaseIdsCache by re-exporting BaseIdsCache methods
 
-  public getChildElements(props: Props<BaseIdsCache["getChildElements"]>): ReturnType<BaseIdsCache["getChildElements"]> {
+  public getChildElements(
+    props: Props<BaseIdsCache["getChildElements"]>,
+  ): ReturnType<BaseIdsCache["getChildElements"]> {
     return this.#baseIdsCache.getChildElements(props);
   }
 
@@ -457,11 +484,15 @@ export class BaseIdsCacheImpl {
     return this.#baseIdsCache.modeledElementsLoaded();
   }
 
-  public getSubCategories(props: Props<BaseIdsCache["getSubCategories"]>): ReturnType<BaseIdsCache["getSubCategories"]> {
+  public getSubCategories(
+    props: Props<BaseIdsCache["getSubCategories"]>,
+  ): ReturnType<BaseIdsCache["getSubCategories"]> {
     return this.#baseIdsCache.getSubCategories(props);
   }
 
-  public getSubCategoryCategories(props: Props<BaseIdsCache["getSubCategoryCategories"]>): ReturnType<BaseIdsCache["getSubCategoryCategories"]> {
+  public getSubCategoryCategories(
+    props: Props<BaseIdsCache["getSubCategoryCategories"]>,
+  ): ReturnType<BaseIdsCache["getSubCategoryCategories"]> {
     return this.#baseIdsCache.getSubCategoryCategories(props);
   }
 
@@ -477,7 +508,9 @@ export class BaseIdsCacheImpl {
     return this.#baseIdsCache.getModelsContainingNonExcludedElements();
   }
 
-  public getCategoriesContainingNonExcludedElements(): ReturnType<BaseIdsCache["getCategoriesContainingNonExcludedElements"]> {
+  public getCategoriesContainingNonExcludedElements(): ReturnType<
+    BaseIdsCache["getCategoriesContainingNonExcludedElements"]
+  > {
     return this.#baseIdsCache.getCategoriesContainingNonExcludedElements();
   }
 
@@ -485,7 +518,9 @@ export class BaseIdsCacheImpl {
     return this.#baseIdsCache.hasSubModels(props);
   }
 
-  public getDescendantsCounts(props: Props<BaseIdsCache["getDescendantsCounts"]>): ReturnType<BaseIdsCache["getDescendantsCounts"]> {
+  public getDescendantsCounts(
+    props: Props<BaseIdsCache["getDescendantsCounts"]>,
+  ): ReturnType<BaseIdsCache["getDescendantsCounts"]> {
     return this.#baseIdsCache.getDescendantsCounts(props);
   }
 
@@ -497,11 +532,15 @@ export class BaseIdsCacheImpl {
     return this.#baseIdsCache.getModels(props);
   }
 
-  public categoryHasParentElements(props: Props<BaseIdsCache["categoryHasParentElements"]>): ReturnType<BaseIdsCache["categoryHasParentElements"]> {
+  public categoryHasParentElements(
+    props: Props<BaseIdsCache["categoryHasParentElements"]>,
+  ): ReturnType<BaseIdsCache["categoryHasParentElements"]> {
     return this.#baseIdsCache.categoryHasParentElements(props);
   }
 
-  public getAllCategoriesOfElements(props?: Props<BaseIdsCache["getAllCategoriesOfElements"]>): ReturnType<BaseIdsCache["getAllCategoriesOfElements"]> {
+  public getAllCategoriesOfElements(
+    props?: Props<BaseIdsCache["getAllCategoriesOfElements"]>,
+  ): ReturnType<BaseIdsCache["getAllCategoriesOfElements"]> {
     return this.#baseIdsCache.getAllCategoriesOfElements(props);
   }
 

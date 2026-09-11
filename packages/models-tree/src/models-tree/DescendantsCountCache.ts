@@ -5,8 +5,8 @@
 
 import { defer, EMPTY, from, map, merge, of } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { getOrCreate } from "./Utils.js";
 import { BatchingCache } from "./BatchingCache.js";
+import { getOrCreate } from "./Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
@@ -49,14 +49,23 @@ interface Row {
  * Cache makes requests in batches of 20ms.
  * @internal
  */
-export class DescendantsCountCache extends BatchingCache<DescendantsCountRequest, DescendantsCountResult, WhereClause, Row> {
+export class DescendantsCountCache extends BatchingCache<
+  DescendantsCountRequest,
+  DescendantsCountResult,
+  WhereClause,
+  Row
+> {
   #cachedValues = new Map<ModelId, Map<ElementId | undefined, Map<CategoryId | undefined, DescendantsCountResult>>>();
   #queryExecutor: LimitingECSqlQueryExecutor;
   #elementClassName: string;
   #componentId: GuidString;
   #componentName: string;
 
-  public constructor(props: { queryExecutor: LimitingECSqlQueryExecutor; elementClassName: string; componentId: GuidString }) {
+  public constructor(props: {
+    queryExecutor: LimitingECSqlQueryExecutor;
+    elementClassName: string;
+    componentId: GuidString;
+  }) {
     super();
     this.#componentId = props.componentId;
     this.#queryExecutor = props.queryExecutor;
@@ -71,7 +80,9 @@ export class DescendantsCountCache extends BatchingCache<DescendantsCountRequest
   protected getValuesNotInBatch(
     request: DescendantsCountRequest,
     batch: DescendantsCountRequest[],
-  ): { valuesNotInBatch: DescendantsCountRequest; batchContainsValues: boolean } | { valuesNotInBatch: undefined; batchContainsValues: true } {
+  ):
+    | { valuesNotInBatch: DescendantsCountRequest; batchContainsValues: boolean }
+    | { valuesNotInBatch: undefined; batchContainsValues: true } {
     if (request.categoryId && request.parentElementId === undefined) {
       // This is a root category request.
       // When multiple root category requests are made under different models, then request will include all models and all categories.
@@ -88,7 +99,14 @@ export class DescendantsCountCache extends BatchingCache<DescendantsCountRequest
           return { valuesNotInBatch: undefined, batchContainsValues: true };
         }
       }
-    } else if (batch.some((r) => r.modelId === request.modelId && r.parentElementId === request.parentElementId && r.categoryId === request.categoryId)) {
+    } else if (
+      batch.some(
+        (r) =>
+          r.modelId === request.modelId &&
+          r.parentElementId === request.parentElementId &&
+          r.categoryId === request.categoryId,
+      )
+    ) {
       return { valuesNotInBatch: undefined, batchContainsValues: true };
     }
     return { valuesNotInBatch: request, batchContainsValues: false };
@@ -110,7 +128,11 @@ export class DescendantsCountCache extends BatchingCache<DescendantsCountRequest
         rootCategoryModels.add(modelId);
         continue;
       }
-      const parentEntry = getOrCreate({ map: groupedCategoryIds, key: parentElementId, createFunc: () => new Set<CategoryId>() });
+      const parentEntry = getOrCreate({
+        map: groupedCategoryIds,
+        key: parentElementId,
+        createFunc: () => new Set<CategoryId>(),
+      });
       parentEntry.add(categoryId);
     }
     return merge(
@@ -213,7 +235,11 @@ export class DescendantsCountCache extends BatchingCache<DescendantsCountRequest
     const reqCategory = row.reqCategory ?? undefined;
     const modelEntry = getOrCreate({ map: this.#cachedValues, key: row.modelId, createFunc: () => new Map() });
     const parentEntry = getOrCreate({ map: modelEntry, key: reqParent, createFunc: () => new Map() });
-    const categoryEntry = getOrCreate({ map: parentEntry, key: reqCategory, createFunc: () => new Array<{ categoryId: CategoryId; count: number }>() });
+    const categoryEntry = getOrCreate({
+      map: parentEntry,
+      key: reqCategory,
+      createFunc: () => new Array<{ categoryId: CategoryId; count: number }>(),
+    });
     categoryEntry.push({ categoryId: row.ownCategory, count: row.cnt });
   }
 

@@ -5,8 +5,8 @@
 
 import { defer, EMPTY, from, map, mergeMap, of } from "rxjs";
 import { assert, Guid } from "@itwin/core-bentley";
-import { getOrCreate } from "./Utils.js";
 import { BatchingCache } from "./BatchingCache.js";
+import { getOrCreate } from "./Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -60,7 +60,10 @@ interface Row {
  * @internal
  */
 export class ChildElementsCache extends BatchingCache<ChildElementsRequest, Id64Array, WhereClause, Row> {
-  #cachedValues = new Map<ModelId, Map<ElementId | undefined, Map<CategoryId | undefined, Map<CategoryId, Id64Array>>>>();
+  #cachedValues = new Map<
+    ModelId,
+    Map<ElementId | undefined, Map<CategoryId | undefined, Map<CategoryId, Id64Array>>>
+  >();
   #queryExecutor: LimitingECSqlQueryExecutor;
   #elementClassName: string;
   #componentId: GuidString;
@@ -94,10 +97,14 @@ export class ChildElementsCache extends BatchingCache<ChildElementsRequest, Id64
   protected getValuesNotInBatch(
     request: ChildElementsRequest,
     batch: ChildElementsRequest[],
-  ): { valuesNotInBatch: ChildElementsRequest; batchContainsValues: boolean } | { valuesNotInBatch: undefined; batchContainsValues: true } {
+  ):
+    | { valuesNotInBatch: ChildElementsRequest; batchContainsValues: boolean }
+    | { valuesNotInBatch: undefined; batchContainsValues: true } {
     const { modelId, parentElementId, categoryId, childCategoryIds } = request;
     let missingIds: CategoryId[] = childCategoryIds;
-    const batchedChildCategoryIds = batch.filter((r) => r.modelId === modelId && r.parentElementId === parentElementId && r.categoryId === categoryId);
+    const batchedChildCategoryIds = batch.filter(
+      (r) => r.modelId === modelId && r.parentElementId === parentElementId && r.categoryId === categoryId,
+    );
     if (batchedChildCategoryIds.length === 0) {
       return { valuesNotInBatch: { ...request, childCategoryIds: missingIds }, batchContainsValues: false };
     }
@@ -108,7 +115,10 @@ export class ChildElementsCache extends BatchingCache<ChildElementsRequest, Id64
       return { valuesNotInBatch: undefined, batchContainsValues: true };
     }
 
-    return { valuesNotInBatch: { ...request, childCategoryIds: missingIds }, batchContainsValues: lengthBefore !== missingIds.length };
+    return {
+      valuesNotInBatch: { ...request, childCategoryIds: missingIds },
+      batchContainsValues: lengthBefore !== missingIds.length,
+    };
   }
 
   protected getQueryData(batch: ChildElementsRequest[]): Observable<WhereClause> {
@@ -130,7 +140,11 @@ export class ChildElementsCache extends BatchingCache<ChildElementsRequest, Id64
             const undefinedEntry = categoryMap.get(undefined);
             if (undefinedEntry) {
               assert(parentElementId !== undefined);
-              clauses.push({ whereClause: `Model.Id = ${modelId} AND Parent.Id = ${parentElementId}`, type: "element", childCategoryIds: undefinedEntry });
+              clauses.push({
+                whereClause: `Model.Id = ${modelId} AND Parent.Id = ${parentElementId}`,
+                type: "element",
+                childCategoryIds: undefinedEntry,
+              });
             }
             const allChildCategoryIds = new Set<CategoryId>();
             const categoryMapKeys = new Array<Id64String>();
@@ -261,7 +275,10 @@ export class ChildElementsCache extends BatchingCache<ChildElementsRequest, Id64
     }
   }
 
-  private getNotCachedRequestValues(request: ChildElementsRequest): { cached?: ChildElementsRequest; notCached?: ChildElementsRequest } {
+  private getNotCachedRequestValues(request: ChildElementsRequest): {
+    cached?: ChildElementsRequest;
+    notCached?: ChildElementsRequest;
+  } {
     const { modelId, parentElementId, categoryId, childCategoryIds } = request;
     const cachedEntry = this.#cachedValues.get(modelId)?.get(parentElementId)?.get(categoryId);
     if (!cachedEntry) {

@@ -6,7 +6,12 @@
 import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { ClassGroupingNodeKey, GroupingHierarchyNode, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type {
+  ClassGroupingNodeKey,
+  GroupingHierarchyNode,
+  InstancesNodeKey,
+  NonGroupingHierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 /**
  * Contains utility functions for working with Models Tree nodes.
@@ -14,12 +19,14 @@ import type { ClassGroupingNodeKey, GroupingHierarchyNode, InstancesNodeKey, Non
  */
 export namespace ModelsTreeNode {
   /** Checks if the given node represents a `BisCore.Subject` element. */
-  export const isSubjectNode = (node: Pick<HierarchyNode, "extendedData">): node is NonGroupingHierarchyNode & { key: InstancesNodeKey } =>
-    node.extendedData?.type === "subject";
+  export const isSubjectNode = (
+    node: Pick<HierarchyNode, "extendedData">,
+  ): node is NonGroupingHierarchyNode & { key: InstancesNodeKey } => node.extendedData?.type === "subject";
 
   /** Checks if the given node represents a `BisCore.Model`. */
-  export const isModelNode = (node: Pick<HierarchyNode, "extendedData">): node is NonGroupingHierarchyNode & { key: InstancesNodeKey } =>
-    node.extendedData?.type === "model";
+  export const isModelNode = (
+    node: Pick<HierarchyNode, "extendedData">,
+  ): node is NonGroupingHierarchyNode & { key: InstancesNodeKey } => node.extendedData?.type === "model";
 
   /**
    * Checks if the given node represents a `BisCore.Category` element.
@@ -30,9 +37,7 @@ export namespace ModelsTreeNode {
   export const isCategoryNode = (
     node: Pick<HierarchyNode, "extendedData">,
   ): node is Omit<NonGroupingHierarchyNode, "extendedData"> & { key: InstancesNodeKey } & {
-    extendedData: {
-      modelIds: Id64String[];
-    };
+    extendedData: { modelIds: Id64String[] };
   } => node.extendedData?.type === "category";
 
   /**
@@ -45,10 +50,7 @@ export namespace ModelsTreeNode {
   export const isElementNode = (
     node: Pick<HierarchyNode, "extendedData">,
   ): node is Omit<NonGroupingHierarchyNode, "extendedData"> & { key: InstancesNodeKey } & {
-    extendedData: {
-      modelId: Id64String;
-      categoryId: Id64String;
-    };
+    extendedData: { modelId: Id64String; categoryId: Id64String };
   } => node.extendedData?.type === "element";
 
   /**
@@ -61,14 +63,13 @@ export namespace ModelsTreeNode {
   export const isElementClassGroupingNode = (
     node: Pick<HierarchyNode, "key">,
   ): node is Omit<GroupingHierarchyNode, "extendedData"> & { key: ClassGroupingNodeKey } & {
-    extendedData: {
-      modelId: Id64String;
-      categoryId: Id64String;
-    };
+    extendedData: { modelId: Id64String; categoryId: Id64String };
   } => HierarchyNode.isClassGroupingNode(node);
 
   /** Returns type of the node. */
-  export const getType = (node: HierarchyNode): "subject" | "model" | "category" | "element" | "elements-class-group" | undefined => {
+  export const getType = (
+    node: HierarchyNode,
+  ): "subject" | "model" | "category" | "element" | "elements-class-group" | undefined => {
     if (HierarchyNodeKey.isClassGrouping(node.key)) {
       return "elements-class-group";
     }
