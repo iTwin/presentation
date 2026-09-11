@@ -53,6 +53,7 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
         continue;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (completed) {
         return;
       }

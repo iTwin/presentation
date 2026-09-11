@@ -242,7 +242,7 @@ export namespace ParentElementsPath {
     const lastParentIds = ParentElementsPath.getLastParentIds(path);
     assert(
       () => lastParentIds === undefined || lastParentIds.length === 1,
-      `Expected exactly one parent id at end of path, got ${lastParentIds?.length}. Path: ${JSON.stringify(path)}`,
+      `Expected exactly one parent id at end of path, got ${lastParentIds?.length ?? "undefined"}. Path: ${JSON.stringify(path)}`,
     );
     return lastParentIds?.[0];
   }

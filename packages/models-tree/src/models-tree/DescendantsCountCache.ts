@@ -238,7 +238,7 @@ export class DescendantsCountCache extends BatchingCache<DescendantsCountRequest
       const parentEntry = getOrCreate({ map: modelEntry, key: undefined, createFunc: () => new Map() });
       for (const categoryId of rootCategoryIds) {
         if (!parentEntry.has(categoryId)) {
-          parentEntry.set(categoryId, categoryId === undefined ? [] : [{ categoryId, count: 0 }]);
+          parentEntry.set(categoryId, [{ categoryId, count: 0 }]);
         }
       }
     }
