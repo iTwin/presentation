@@ -20,11 +20,10 @@ import {
   createLimitingECSqlQueryExecutor,
   GenericInstanceFilter,
   HierarchyNodeKey,
-  HierarchySearchTree,
 } from "@itwin/presentation-hierarchies";
 import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { setupModelsTree } from "@itwin/presentation-models-tree";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Button, CircularProgress, Stack, Switch, TextField, Typography } from "@mui/material";
@@ -90,21 +89,14 @@ function Tree({
   treeLabel: string;
 }) {
   const [searchText, setSearchText] = useState("");
+  const modelsTree = useMemo(() => setupModelsTree({ imodelAccess }), [imodelAccess]);
 
   const getSearchPaths = useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
-    return async ({ imodelAccess: searchIModelAccess, abortSignal }) => {
-      if (!searchText) {
-        return undefined;
-      }
-      return HierarchySearchTree.createFromPathsList(
-        await ModelsTreeDefinition.createInstanceKeyPaths({
-          imodelAccess: searchIModelAccess,
-          label: searchText,
-          abortSignal,
-        }),
-      );
-    };
-  }, [searchText]);
+    return async ({ abortSignal }) => searchText ? modelsTree.createSearchTree({
+        label: searchText,
+        abortSignal,
+      }) : undefined;
+  }, [searchText, modelsTree]);
 
   const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
 
@@ -127,7 +119,7 @@ function Tree({
     imodelAccess,
     imodelChanged,
     getSearchPaths,
-    getHierarchyDefinition,
+    getHierarchyDefinition: () => modelsTree.definition,
     getTreeNodeErrors: (node) => {
       return [
         { type: "Unknown", id: `${node.label}-error-1`, message: `test error node`, isNodeExpandable: true },
@@ -290,10 +282,6 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
       callback(args);
     });
   };
-}
-
-function getHierarchyDefinition(props: Parameters<UseIModelTreeProps["getHierarchyDefinition"]>[0]) {
-  return new ModelsTreeDefinition(props);
 }
 
 const customFormatter: IPrimitiveValueFormatter = async ({ value }) => {
