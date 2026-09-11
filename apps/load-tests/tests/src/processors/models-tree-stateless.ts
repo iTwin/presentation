@@ -15,7 +15,7 @@ import {
   createLimitingECSqlQueryExecutor,
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
-import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { setupModelsTree } from "@itwin/presentation-models-tree";
 import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common.js";
 
 import type { VUContext, VUEvents } from "artillery";
@@ -95,7 +95,7 @@ function createModelsTreeProvider(context: VUContext, events: VUEvents) {
   };
   const provider = createIModelHierarchyProvider({
     imodelAccess,
-    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess, hierarchyConfig: defaultHierarchyConfiguration }),
+    hierarchyDefinition: setupModelsTree({ imodelAccess }).definition,
   });
 
   return async (parent: HierarchyNode | undefined) => {

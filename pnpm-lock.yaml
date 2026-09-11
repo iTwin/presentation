@@ -1395,6 +1395,9 @@ importers:
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.12.5
+      '@itwin/core-common':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.12.5(@itwin/core-bentley@5.12.5)(@itwin/core-geometry@5.12.5)
       '@itwin/presentation-shared':
         specifier: workspace:*
         version: link:../shared
