@@ -256,4 +256,38 @@ describe("collectPathCardinalities", () => {
 
     expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
   });
+
+  it("folds in a hinted external input on a path with no field", () => {
+    const hints = collectPathCardinalities(makeDescriptor([]), [
+      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: [aToB], cardinalityHint: "many" },
+    ]);
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+
+  it("ignores an unhinted external input", () => {
+    const hints = collectPathCardinalities(makeDescriptor([]), [
+      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: [aToB] },
+    ]);
+
+    expect(hints.size).to.equal(0);
+  });
+
+  it("seeds prefixes from a `one`-hinted external input the same way a field would", () => {
+    const hints = collectPathCardinalities(makeDescriptor([]), [
+      { propertyClassName: "TestSchema.C", propertyName: "Name", pathFromTarget: [aToB, bToC], cardinalityHint: "one" },
+    ]);
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("one");
+    expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("one");
+  });
+
+  it("resolves a field and an external input disagreeing on the same path to `many`", () => {
+    const oneField = makeField({ id: "one", pathFromTarget: [aToB], pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([oneField]), [
+      { propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: [aToB], cardinalityHint: "many" },
+    ]);
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
 });

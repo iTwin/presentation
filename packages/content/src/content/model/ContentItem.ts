@@ -44,6 +44,10 @@ export interface ContentValues {
    * elements — element `i` comes from `relatedInstances[P][i]`, with `undefined` holes where that
    * instance's property is `null`. For single-instance (`"one"`) paths the entry array has length
    * 0 or 1 and the field value is inlined.
+   *
+   * Order within an entry array is unspecified but consistent across this item's fields and
+   * `relatedInstances` — index `i` always refers to the same related instance for every array-shaped
+   * field on the same path and for the path's own entries.
    */
   relatedInstances: Record<string, RelatedInstanceEntry[]>;
 }
@@ -81,7 +85,9 @@ export interface ContentItem {
    * field's {@link (PropertyField:interface).pathFromTarget}), each paired with a scoped
    * `getValue` that reads that instance's value for a field on the same path.
    *
-   * Returns an empty array when no related instance was reached over the path.
+   * Returns an empty array when no related instance was reached over the path. Order within the
+   * returned array is unspecified but consistent across this item's fields and `relatedInstances` —
+   * index `i` always refers to the same related instance for every array-shaped field on `path`.
    */
   getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }): ReadonlyArray<{
     /** Key of the related instance. */

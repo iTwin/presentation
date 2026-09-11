@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { EC, RelationshipPath, Value, ValueDescriptor } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
 
@@ -17,14 +18,15 @@ import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
  * During value population (`getItems`), `getValues` is called with a batch of
  * items to fill in the external field values.
  *
- * The generic parameter `TInputKeys` constrains the input values received by `getValues`.
- * The generic parameter `TOutputFieldIds` constrains the getValues function to return
+ * The generic parameter `TInputs` constrains the input values received by `getValues` — see
+ * `InputPropertyDeclaration.cardinalityHint` for how an input's declared cardinality narrows
+ * its value type. The generic parameter `TOutputFieldIds` constrains the getValues function to return
  * values for exactly the declared field IDs — no more, no fewer.
  *
  * @public
  */
 export interface ExternalFieldsProvider<
-  TInputKeys extends string = never,
+  TInputs extends Record<string, InputPropertyDeclaration> = Record<never, never>,
   TOutputFieldIds extends readonly string[] = readonly string[],
 > extends BaseFieldsProvider {
   /**
@@ -45,20 +47,33 @@ export interface ExternalFieldsProvider<
    *
    * The system ensures each requested property is queried.
    */
-  inputs?: { [K in TInputKeys]: InputPropertyDeclaration };
+  inputs?: TInputs;
 
   /**
    * Value population callback. Called during Stage 4 with a batch of items
    * after SQL-backed fields are populated.
    *
-   * Each item contains pre-extracted `inputValues` keyed by the names declared in `inputs`.
-   * Must return an array parallel to `items`, where each element contains
-   * values for exactly the declared field IDs.
+   * Each item contains pre-extracted `inputValues` keyed by the names declared in `inputs`. An input
+   * declared with `cardinalityHint: "many"` narrows to `Value[]` — one element per related instance,
+   * `[]` when the item reaches none. An unhinted input stays `Value`: it still may be an array at
+   * runtime, since the effective cardinality can fall back to schema multiplicity (frequently
+   * over-declared as many), so unhinted inputs must be handled as either shape. Must return an array
+   * parallel to `items`, where each element contains values for exactly the declared field IDs.
    */
   getValues(props: {
-    items: Array<{ inputValues: { [K in TInputKeys]: Value } }>;
+    items: Array<{ inputValues: ExternalInputValues<TInputs> }>;
   }): Promise<Array<ExternalFieldValueRecord<TOutputFieldIds>>>;
 }
+
+/**
+ * Maps an input declarations record to the `inputValues` shape `getValues` receives: `Value[]` for an
+ * input declared `cardinalityHint: "many"`, `Value` otherwise.
+ *
+ * @public
+ */
+type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration>> = {
+  [K in keyof TInputs]: TInputs[K] extends { cardinalityHint: "many" } ? Value[] : Value;
+};
 
 /**
  * A request for an iModel property that the external fields provider needs as input.
@@ -79,6 +94,14 @@ export interface InputPropertyDeclaration {
    * Omit for properties directly on the target class.
    */
   path?: RelationshipPath;
+  /**
+   * Hint about how many related instances `path` reaches per target instance — same semantics as
+   * `PropertyField.pathCardinality`. Declaring `"many"` narrows this input's `getValues` value to
+   * `Value[]`; without a hint the value stays typed as `Value`, even though the effective cardinality
+   * may still resolve to many at runtime (schema multiplicity is consulted as a fallback), so an
+   * unhinted input must be handled as either shape.
+   */
+  cardinalityHint?: CardinalityHint;
 }
 
 /**
@@ -122,18 +145,26 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  *   id: "iot-sensors_v1",
  *   fields: [
  *     { id: "currentFlow", label: "Current Flow", type: { kind: "primitive", type: "Double" } },
- *     { id: "lastMaintenance", label: "Last Maintenance", type: { kind: "primitive", type: "DateTime" } },
+ *     { id: "sensorStatus", label: "Sensors' Status", type: { kind: "primitive", type: "String" } },
  *   ],
  *   inputs: {
  *     serialNo: { propertyClassName: "MySchema:Pump", propertyName: "SerialNumber" },
- *     deviceId: { propertyClassName: "MySchema:Device", propertyName: "DeviceId", path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Device", relationshipName: "MySchema:PumpHasDevice" }] },
+ *     // A pump reaches several sensors, so `inputValues.sensorIds` below is typed `Value[]`.
+ *     sensorIds: {
+ *       propertyClassName: "MySchema:Sensor",
+ *       propertyName: "Id",
+ *       path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Sensor", relationshipName: "MySchema:PumpHasSensors" }],
+ *       cardinalityHint: "many",
+ *     },
  *   },
  *   async getValues({ items }) {
- *     const serials = items.map((item) => item.inputValues.serialNo);
- *     const data = await fetchFromIoTService(serials);
- *     return items.map((_, i) => ({
- *       "currentFlow": data[i].flow,
- *       "lastMaintenance": data[i].lastMaintenance,
+ *     const liveData = await fetchFromIoTService({
+ *       serials: items.map((item) => item.inputValues.serialNo),
+ *       sensorIds: items.map((item) => item.inputValues.sensorIds),
+ *     });
+ *     return items.map((item, i) => ({
+ *       "currentFlow": liveData[i].flow,
+ *       "sensorStatus": liveData[i].status,
  *     }));
  *   },
  * });
@@ -143,8 +174,8 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  */
 /* v8 ignore next 6 */
 export function defineExternalFieldsProvider<
-  const TInputKeys extends string,
+  const TInputs extends Record<string, InputPropertyDeclaration>,
   const TOutputFieldIds extends readonly string[],
->(provider: ExternalFieldsProvider<TInputKeys, TOutputFieldIds>): ExternalFieldsProvider<TInputKeys, TOutputFieldIds> {
+>(provider: ExternalFieldsProvider<TInputs, TOutputFieldIds>): ExternalFieldsProvider<TInputs, TOutputFieldIds> {
   return provider;
 }

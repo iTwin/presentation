@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
+import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
 import {
@@ -17,7 +18,6 @@ import {
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
 import type { DescriptorTransformer } from "../../content/extensions/DescriptorTransformer.js";
-import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 
 function createSource(
@@ -274,14 +274,14 @@ describe("buildContentDescriptor", () => {
         properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
-    const externalProvider: ExternalFieldsProvider<"code"> = {
+    const externalProvider = defineExternalFieldsProvider({
       id: "ext_v1",
       fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
       inputs: { code: { propertyClassName: "TestSchema.A", propertyName: "Prop" } },
       async getValues() {
         return [];
       },
-    };
+    });
 
     const descriptor = await buildContentDescriptor({
       imodelAccess,

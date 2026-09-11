@@ -14,6 +14,7 @@ import {
   type InstanceKey,
   type PrimitiveValue,
 } from "@itwin/presentation-shared";
+import { collectExternalFields } from "../../descriptor-building/ExternalFields.js";
 import { createContentItem } from "../../model/ContentItem.js";
 import { serializeRelationshipPath } from "../../model/Utils.js";
 import { collectPathCardinalities } from "../../PathCardinality.js";
@@ -35,6 +36,7 @@ import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ContentValueFilter } from "../../Content.js";
 import type { ContentSource } from "../../ContentTarget.js";
+import type { ExternalInput } from "../../descriptor-building/ExternalFields.js";
 import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProvider.js";
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
@@ -82,6 +84,10 @@ function loadItems(props: {
   const { imodelAccess, getDescriptor, sources, queryFilterers, filters, externalFieldsProviders } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
+  // Cheap, schema-free re-derivation of provider input declarations (same helper Stage 2 uses) — an
+  // external-input-only path has no descriptor field to carry its `cardinalityHint`, so it is folded
+  // into `collectPathCardinalities` alongside field-backed paths.
+  const externalInputs = collectExternalFields(externalFieldsProviders ?? []).inputs;
   return from(getDescriptor()).pipe(
     mergeMap((descriptor) => {
       const populateExternalValues = createExternalValuePopulator({ descriptor, providers: externalFieldsProviders });
@@ -90,7 +96,7 @@ function loadItems(props: {
       const relatedInstanceKeyMap = buildRelatedInstanceKeyMap(descriptor);
       return from(sources).pipe(
         mergeMap(async (source) =>
-          createSourcePlan({ imodelAccess, descriptor, source, sorting, queryFilterers, filters }),
+          createSourcePlan({ imodelAccess, descriptor, source, sorting, queryFilterers, filters, externalInputs }),
         ),
         toArray(),
         mergeMap((plans) => {
@@ -135,8 +141,9 @@ async function createSourcePlan(props: {
   sorting: ContentQuerySort[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
+  externalInputs: ExternalInput[];
 }): Promise<SourcePlan> {
-  const { imodelAccess, descriptor, source, sorting, queryFilterers, filters } = props;
+  const { imodelAccess, descriptor, source, sorting, queryFilterers, filters, externalInputs } = props;
   const propertySelectorPaths = Object.values(descriptor.selectors)
     .filter((selector): selector is PropertyValueSelector => selector.kind === "property")
     .map((selector) => selector.pathFromTarget)
@@ -148,7 +155,7 @@ async function createSourcePlan(props: {
     filters,
     sortFields: sorting.map((sort) => sort.field),
     includeRelatedJoins: true,
-    cardinalityHints: collectPathCardinalities(descriptor),
+    cardinalityHints: collectPathCardinalities(descriptor, externalInputs),
     propertySelectorPaths,
   });
   // [anchor, ...additional] order matters: it is the tie-break order `assignPathOwnership` uses for a
