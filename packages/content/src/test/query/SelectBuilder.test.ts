@@ -241,6 +241,30 @@ describe("buildSelectProjection", () => {
     });
   });
 
+  it("projects the target alias's identity even when only a relationship-class property is selected", async () => {
+    const projection = await buildSelectProjection({
+      schemaProvider,
+      descriptor: createDescriptor([
+        {
+          kind: "property",
+          id: "TestSchema.Rel.Weight",
+          propertyClassName: "TestSchema.Rel",
+          propertyName: "Weight",
+          pathFromTarget: relatedPath,
+        },
+      ]),
+      group: createBaseQueryGroup(),
+      ownedPathKeys: ownsRelated,
+    });
+
+    expect(projection.clauses.select).to.contain(`[${targetAlias}].$ AS [${targetAlias}]`);
+    expect(projection.columnNames.propertyBlobs).to.deep.equal({ "TestSchema.Rel.Weight": relationshipAlias });
+    expect(projection.columnNames.relatedBlobs).to.deep.equal({
+      [targetAlias]: { className: `${targetAlias}_cls`, pathKey: relatedPathKey, role: "target" },
+      [relationshipAlias]: { className: `${relationshipAlias}_cls`, pathKey: relatedPathKey, role: "relationship" },
+    });
+  });
+
   it("selects a shared property alias only once", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,

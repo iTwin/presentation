@@ -13,7 +13,6 @@ import {
   type ECSqlQueryRow,
   type InstanceKey,
   type PrimitiveValue,
-  type Value,
 } from "@itwin/presentation-shared";
 import { createContentItem } from "../../model/ContentItem.js";
 import { serializeRelationshipPath } from "../../model/Utils.js";
@@ -24,7 +23,13 @@ import { PAGE_SIZE } from "../QueryLimits.js";
 import { buildSelectProjection } from "../SelectBuilder.js";
 import { createExternalValuePopulator } from "./ExternalValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
-import { decodePrimaryKey, decodeSelectorValues, mergeSelectorValues, toContentValues } from "./RowDecoder.js";
+import {
+  buildRelatedInstanceKeyMap,
+  decodeGroupRows,
+  decodePrimaryKey,
+  mergeGroupValues,
+  toContentValues,
+} from "./RowDecoder.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -39,6 +44,7 @@ import type { BaseQueryGroup } from "../BaseQuery.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { ExternalValuePopulator } from "./ExternalValues.js";
 import type { Cursor, PlannedGroup, SourcePlan } from "./PageQueries.js";
+import type { GroupValues } from "./RowDecoder.js";
 
 /**
  * Loads content items for the configured sources, paging with a keyset cursor and stitching SQL-backed
@@ -79,6 +85,9 @@ function loadItems(props: {
   return from(getDescriptor()).pipe(
     mergeMap((descriptor) => {
       const populateExternalValues = createExternalValuePopulator({ descriptor, providers: externalFieldsProviders });
+      // A descriptor-level fact (which internal join-path key maps to which public one) built once per
+      // descriptor rather than re-derived for every item.
+      const relatedInstanceKeyMap = buildRelatedInstanceKeyMap(descriptor);
       return from(sources).pipe(
         mergeMap(async (source) =>
           createSourcePlan({ imodelAccess, descriptor, source, sorting, queryFilterers, filters }),
@@ -90,14 +99,29 @@ function loadItems(props: {
             // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
             return from(plans).pipe(
               mergeMap(
-                (plan) => pageAnchor({ imodelAccess, descriptor, plan, sorting, populateExternalValues }),
+                (plan) =>
+                  pageAnchor({
+                    imodelAccess,
+                    descriptor,
+                    plan,
+                    sorting,
+                    populateExternalValues,
+                    relatedInstanceKeyMap,
+                  }),
                 QUERY_CONCURRENCY,
               ),
             );
           }
 
           // Multiple sources sorted by a shared key: order and page globally with the two-phase key stream.
-          return pageMultiSourceSorted({ imodelAccess, descriptor, plans, sorting, populateExternalValues });
+          return pageMultiSourceSorted({
+            imodelAccess,
+            descriptor,
+            plans,
+            sorting,
+            populateExternalValues,
+            relatedInstanceKeyMap,
+          });
         }),
       );
     }),
@@ -211,36 +235,36 @@ function pageAnchor(props: {
   plan: SourcePlan;
   sorting: ContentQuerySort[];
   populateExternalValues: ExternalValuePopulator | undefined;
+  relatedInstanceKeyMap: Map<string, string>;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plan, sorting, populateExternalValues } = props;
+  const { imodelAccess, descriptor, plan, sorting, populateExternalValues, relatedInstanceKeyMap } = props;
+  const { columnNames } = plan.anchor.projection;
   const fetchPage = (cursor: Cursor | undefined): Observable<PageResult> =>
     readRows(imodelAccess, buildAnchorPageQuery({ plan, sorting, cursor })).pipe(
-      map((rows) =>
-        rows.map((row) => ({
-          primaryKey: decodePrimaryKey({ row, columnNames: plan.anchor.projection.columnNames }),
-          selectorValues: decodeSelectorValues({ row, descriptor, columnNames: plan.anchor.projection.columnNames }),
-          sortValues: readSortValues({ row, sort: plan.anchor.projection.sort }),
-        })),
-      ),
-      mergeMap((decoded) =>
-        fetchGroupValues({
+      mergeMap((anchorRows) =>
+        fetchGroupRows({
           imodelAccess,
-          descriptor,
           groups: plan.additional,
-          ids: decoded.map((item) => item.primaryKey.id),
-        }).pipe(map((additionalValuesById) => ({ decoded, additionalValuesById }))),
+          ids: anchorRows.map((row) => row[columnNames.primaryKey.id] as Id64String),
+        }).pipe(map((rowsByGroup) => ({ anchorRows, rowsByGroup }))),
       ),
-      map(({ decoded, additionalValuesById }) => {
-        for (const item of decoded) {
-          const additionalValues = additionalValuesById.get(item.primaryKey.id);
-          if (additionalValues) {
-            mergeSelectorValues(item.selectorValues, additionalValues);
-          }
-        }
-        return decoded;
+      map(({ anchorRows, rowsByGroup }) => {
+        const valuesById = stitchPlans({
+          descriptor,
+          plans: [plan],
+          rowsByGroup: rowsByGroup.set(plan.anchor, anchorRows),
+        });
+        return anchorRows.map((row) => {
+          const primaryKey = decodePrimaryKey({ row, columnNames });
+          return {
+            primaryKey,
+            values: valuesById.get(primaryKey.id)!,
+            sortValues: readSortValues({ row, sort: plan.anchor.projection.sort }),
+          };
+        });
       }),
       mergeMap((decoded) =>
-        materializeItems({ descriptor, populateExternalValues, rows: decoded }).pipe(
+        materializeItems({ descriptor, populateExternalValues, relatedInstanceKeyMap, rows: decoded }).pipe(
           map((items): PageResult => {
             if (decoded.length < PAGE_SIZE) {
               return { items, next: undefined };
@@ -269,8 +293,9 @@ function pageMultiSourceSorted(props: {
   plans: SourcePlan[];
   sorting: ContentQuerySort[];
   populateExternalValues: ExternalValuePopulator | undefined;
+  relatedInstanceKeyMap: Map<string, string>;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plans, sorting, populateExternalValues } = props;
+  const { imodelAccess, descriptor, plans, sorting, populateExternalValues, relatedInstanceKeyMap } = props;
   const keyProjection = plans[0].anchor.keyProjection;
 
   // Phase 1: page the globally ordered key stream. The next cursor is derived from the key rows alone, so
@@ -293,21 +318,22 @@ function pageMultiSourceSorted(props: {
     );
 
   // Phase 2: for a page's keys, pull every plan's anchor and additional groups by an IdSet restriction and
-  // merge their values by id. All groups across all plans share a single QUERY_CONCURRENCY budget.
+  // stitch their values by id. All groups across all plans share a single QUERY_CONCURRENCY budget.
   const fetchValues = (keys: InstanceKey[]): Observable<ContentItem[]> => {
-    const ids = keys.map((key) => key.id);
     const groups = plans.flatMap((plan) => [plan.anchor, ...plan.additional]);
-    return fetchGroupValues({ imodelAccess, descriptor, groups, ids }).pipe(
-      mergeMap((valuesById) =>
-        materializeItems({
+    return fetchGroupRows({ imodelAccess, groups, ids: keys.map((key) => key.id) }).pipe(
+      mergeMap((rowsByGroup) => {
+        const valuesById = stitchPlans({ descriptor, plans, rowsByGroup });
+        return materializeItems({
           descriptor,
           populateExternalValues,
+          relatedInstanceKeyMap,
           rows: keys.map((key) => ({
             primaryKey: key,
-            selectorValues: valuesById.get(key.id) ?? new Map<string, Value>(),
+            values: valuesById.get(key.id) ?? { selectorValues: new Map(), relatedInstances: new Map() },
           })),
-        }),
-      ),
+        });
+      }),
     );
   };
 
@@ -323,21 +349,22 @@ function pageMultiSourceSorted(props: {
   );
 }
 
-// Maps decoded selector values onto descriptor fields and, when providers are configured, enriches the
-// resulting items with external field values before wrapping them as `ContentItem`s.
+// Maps stitched values onto descriptor fields and, when providers are configured, enriches the resulting
+// items with external field values before wrapping them as `ContentItem`s.
 function materializeItems(props: {
   descriptor: ContentDescriptor;
   populateExternalValues: ExternalValuePopulator | undefined;
-  rows: Array<{ primaryKey: InstanceKey; selectorValues: Map<string, Value> }>;
+  relatedInstanceKeyMap: Map<string, string>;
+  rows: Array<{ primaryKey: InstanceKey; values: GroupValues }>;
 }): Observable<ContentItem[]> {
-  const { descriptor, populateExternalValues, rows } = props;
+  const { descriptor, populateExternalValues, relatedInstanceKeyMap, rows } = props;
   const contentValues = rows.map((row) =>
-    toContentValues({ descriptor, primaryKey: row.primaryKey, selectorValues: row.selectorValues }),
+    toContentValues({ descriptor, primaryKey: row.primaryKey, values: row.values, relatedInstanceKeyMap }),
   );
   if (!populateExternalValues || rows.length === 0) {
     return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));
   }
-  return populateExternalValues(rows).pipe(
+  return populateExternalValues(rows.map((row) => row.values)).pipe(
     map((externalValuesByRow) =>
       contentValues.map((values, index) => {
         Object.assign(values.values, externalValuesByRow[index]);
@@ -347,48 +374,73 @@ function materializeItems(props: {
   );
 }
 
-function fetchGroupValues(props: {
+// Runs every group's value query for the page's ids — a flat pipeline sharing a single QUERY_CONCURRENCY
+// budget — and hands back each group's raw rows.
+function fetchGroupRows(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
-  descriptor: ContentDescriptor;
   groups: PlannedGroup[];
   ids: Id64String[];
-}): Observable<Map<Id64String, Map<string, Value>>> {
-  const { imodelAccess, descriptor, groups, ids } = props;
+}): Observable<Map<PlannedGroup, ECSqlQueryRow[]>> {
+  const { imodelAccess, groups, ids } = props;
   if (groups.length === 0 || ids.length === 0) {
     return of(new Map());
   }
   return from(groups).pipe(
     mergeMap(
-      ({ baseQuery, projection }) =>
-        readRows(imodelAccess, buildValueQuery({ baseQuery, projection, ids })).pipe(
-          map((rows) =>
-            rows.map((row) => ({
-              id: row[projection.columnNames.primaryKey.id] as Id64String,
-              selectorValues: decodeSelectorValues({ row, descriptor, columnNames: projection.columnNames }),
-            })),
-          ),
+      (group) =>
+        readRows(imodelAccess, buildValueQuery({ baseQuery: group.baseQuery, projection: group.projection, ids })).pipe(
+          map((rows): [PlannedGroup, ECSqlQueryRow[]] => [group, rows]),
         ),
       QUERY_CONCURRENCY,
     ),
     toArray(),
-    map((perGroup) => {
-      const result = new Map<Id64String, Map<string, Value>>();
-      for (const groupRows of perGroup) {
-        for (const { id, selectorValues } of groupRows) {
-          const existing = result.get(id);
-          if (existing) {
-            // TODO(1:many): a 1:many group returns multiple rows per id, all sharing the same selectors,
-            // so this merge trips the duplicate-selector guard and throws. Accumulate into index-aligned
-            // per-selector arrays instead
-            mergeSelectorValues(existing, selectorValues);
-          } else {
-            result.set(id, selectorValues);
-          }
-        }
-      }
-      return result;
-    }),
+    map((entries) => new Map(entries)),
   );
+}
+
+/**
+ * Stitches every plan's group rows into one `primary id -> values` map. A plan's anchor rows say which of
+ * the page's primaries belong to it, and each of its additional groups is decoded against exactly those
+ * ids — a `"many"` group reports `[]` for a primary of this plan that reached no related instance, and a
+ * row an additional group returned for another plan's primary (possible when sources' targets overlap) is
+ * ignored. Each selector and join-path key is owned by exactly one group (`assignPathOwnership`), so merging
+ * is a disjoint union and `mergeGroupValues` throws only on a planning bug.
+ */
+function stitchPlans(props: {
+  descriptor: ContentDescriptor;
+  plans: SourcePlan[];
+  rowsByGroup: Map<PlannedGroup, ECSqlQueryRow[]>;
+}): Map<Id64String, GroupValues> {
+  const { descriptor, plans, rowsByGroup } = props;
+  const result = new Map<Id64String, GroupValues>();
+  const mergeInto = (groupValues: Map<Id64String, GroupValues>) => {
+    for (const [id, values] of groupValues) {
+      const existing = result.get(id);
+      if (existing) {
+        mergeGroupValues(existing, values);
+      } else {
+        result.set(id, values);
+      }
+    }
+  };
+  const decode = (group: PlannedGroup, ids?: Id64String[]) =>
+    decodeGroupRows({
+      rows: rowsByGroup.get(group) ?? [],
+      descriptor,
+      cardinality: group.baseQuery.cardinality,
+      columnNames: group.projection.columnNames,
+      ids,
+    });
+
+  for (const plan of plans) {
+    const anchorValues = decode(plan.anchor);
+    const ids = [...anchorValues.keys()];
+    mergeInto(anchorValues);
+    for (const group of plan.additional) {
+      mergeInto(decode(group, ids));
+    }
+  }
+  return result;
 }
 
 function readSortValues(props: {

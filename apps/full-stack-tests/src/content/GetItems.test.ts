@@ -847,9 +847,14 @@ describe("Content", () => {
         const [item] = await collect(provider.getItems());
         expect(item.primaryKey.id).toBe(setup.a.id);
         expect(item.getValue(relatedField)).toBe("related");
+
+        const relatedInstances = item.getRelatedInstances(relatedField);
+        expect(relatedInstances).toHaveLength(1);
+        expect(relatedInstances[0].key).toEqual(setup.b);
+        expect(relatedInstances[0].getValue(relatedField)).toBe("related");
       });
 
-      it("returns one item per primary when a 1:many related property is loaded", async () => {
+      it("returns index-aligned array values and related-instance entries for a 1:many related property", async () => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const schema = await importSchema(
             testName,
@@ -872,11 +877,11 @@ describe("Content", () => {
             `,
           );
           const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
-          const c1 = builder.insertInstance(schema.items.C.fullName, { propC: "shared" });
-          const c2 = builder.insertInstance(schema.items.C.fullName, { propC: "shared" });
+          const c1 = builder.insertInstance(schema.items.C.fullName, { propC: "first" });
+          const c2 = builder.insertInstance(schema.items.C.fullName, { propC: "second" });
           builder.insertRelationship(schema.items.AtoC.fullName, a.id, c1.id);
           builder.insertRelationship(schema.items.AtoC.fullName, a.id, c2.id);
-          return { schema, a };
+          return { schema, a, c1, c2 };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
         const path: RelationshipPath = [
@@ -902,9 +907,76 @@ describe("Content", () => {
         // The anchor stays one row per primary even though the primary reaches many related instances.
         const descriptor = await provider.getContentDescriptor();
         const relatedField = getPropertyFieldByName(descriptor, "PropC");
+        expect(relatedField.pathCardinality).toEqual("many");
+
+        const [item] = await collect(provider.getItems());
+        expect(item.primaryKey.id).toBe(setup.a.id);
+
+        expect([...(item.getValue(relatedField) as string[])].sort()).toEqual(["first", "second"]);
+
+        const relatedInstances = [...item.getRelatedInstances({ pathFromTarget: path })].sort((a, b) =>
+          a.key.id < b.key.id ? -1 : 1,
+        );
+        expect(relatedInstances.map((entry) => entry.key)).toEqual([setup.c1, setup.c2]);
+        expect(relatedInstances.map((entry) => entry.getValue(relatedField)).sort()).toEqual(["first", "second"]);
+      });
+
+      it("returns an empty array for a primary with no related instances over a 1:many path", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C">
+                <ECProperty propertyName="PropC" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoC" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to c" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="c to a" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
+          // A relation elsewhere keeps the path resolvable for descriptor building without relating `a`.
+          const other = builder.insertInstance(schema.items.A.fullName, { propA: "other" });
+          const c = builder.insertInstance(schema.items.C.fullName, { propC: "unrelated-to-a" });
+          builder.insertRelationship(schema.items.AtoC.fullName, other.id, c.id);
+          return { schema, a };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.C.fullName,
+            relationshipName: setup.schema.items.AtoC.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path }] };
+          },
+        });
+        const config = { imodelFieldsProviders: [fieldsProvider] };
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const relatedField = getPropertyFieldByName(descriptor, "PropC");
+
         const items = await collect(provider.getItems());
-        expect(items.map((item) => item.primaryKey.id)).toEqual([setup.a.id]);
-        expect(items[0].getValue(relatedField)).toBe("shared");
+        const item = items.find((i) => i.primaryKey.id === setup.a.id)!;
+        expect(item.getValue(relatedField)).toEqual([]);
+        expect(item.getRelatedInstances({ pathFromTarget: path })).toEqual([]);
       });
     });
   });

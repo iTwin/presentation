@@ -53,9 +53,12 @@ export interface SelectProjection {
      * Projected related `$`-blob column -> its identity columns. One entry per related blob column that
      * was actually projected (never `this`'s own blob). `pathKey` is the owned join-path key
      * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`) the blob belongs to; `role`
-     * says whether the blob is the path's target instance or its last step's relationship instance — a
-     * relationship entry exists only where a relationship-class property selector was projected
-     * (nav-property steps never get one). `className` is the blob's `ec_classname(...)` column.
+     * says whether the blob is the path's target instance or its last step's relationship instance. A
+     * `"target"` entry exists for every owned related path key that has at least one projected selector
+     * (target- or relationship-class), even one with only relationship-class selectors, so a
+     * `"relationship"` entry never exists without a paired `"target"` one; a `"relationship"` entry itself
+     * exists only where a relationship-class property selector was projected (nav-property steps never get
+     * one). `className` is the blob's `ec_classname(...)` column.
      */
     relatedBlobs: Record<string, { className: string; pathKey: string; role: "target" | "relationship" }>;
   };
@@ -99,6 +102,27 @@ export async function buildSelectProjection(props: {
   const relationshipClassNames = await collectRelationshipClassNames({ schemaProvider, selectors: propertySelectors });
   const projectedAliases = new Set<string>();
   const relatedBlobs: SelectProjection["columnNames"]["relatedBlobs"] = {};
+  const projectBlob = (alias: string): void => {
+    if (!projectedAliases.has(alias)) {
+      select.push(`[${alias}].$ AS [${alias}]`);
+      projectedAliases.add(alias);
+    }
+  };
+  // Projects an alias's `$` blob plus its class-name column and `relatedBlobs` entry, once per alias.
+  const projectRelatedBlob = (relatedBlobProps: {
+    alias: string;
+    pathKey: string;
+    role: "target" | "relationship";
+  }): void => {
+    const { alias, pathKey, role } = relatedBlobProps;
+    if (alias in relatedBlobs) {
+      return;
+    }
+    projectBlob(alias);
+    const classNameColumn = `${alias}_cls`;
+    select.push(`ec_classname([${alias}].[ECClassId], 's.c') AS [${classNameColumn}]`);
+    relatedBlobs[alias] = { className: classNameColumn, pathKey, role };
+  };
   for (const selector of propertySelectors) {
     const key = serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true });
     if (!ownedPathKeys.has(key)) {
@@ -108,18 +132,14 @@ export async function buildSelectProjection(props: {
     if (!alias) {
       continue;
     }
-    const isRelated = selector.pathFromTarget.length > 0;
-    if (!projectedAliases.has(alias)) {
-      select.push(`[${alias}].$ AS [${alias}]`);
-      projectedAliases.add(alias);
-      if (isRelated) {
-        const classNameColumn = `${alias}_cls`;
-        select.push(`ec_classname([${alias}].[ECClassId], 's.c') AS [${classNameColumn}]`);
-        relatedBlobs[alias] = {
-          className: classNameColumn,
-          pathKey: key,
-          role: relationshipClassNames.has(selector.propertyClassName) ? "relationship" : "target",
-        };
+    if (selector.pathFromTarget.length === 0) {
+      projectBlob(alias);
+    } else {
+      const role = relationshipClassNames.has(selector.propertyClassName) ? "relationship" : "target";
+      projectRelatedBlob({ alias, pathKey: key, role });
+      if (role === "relationship") {
+        const targetAlias = group.parts.relatedClassAliases.get(key)!.target;
+        projectRelatedBlob({ alias: targetAlias, pathKey: key, role: "target" });
       }
     }
     propertyBlobs[selector.id] = alias;

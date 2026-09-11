@@ -506,7 +506,8 @@ describe("getItems", () => {
           {
             ["pres_primary_class"]: "TestSchema.Primary",
             ["pres_primary_id"]: "0x1",
-            ["pres_t0"]: JSON.stringify({ ["Name"]: "name-1" }),
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "name-1" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
           },
         ];
       }
@@ -528,7 +529,7 @@ describe("getItems", () => {
     );
     expect(items).to.have.lengthOf(1);
     expect(items[0].getValue(relCodeField)).to.equal("code-1");
-    expect(items[0].getValue(relNameField)).to.equal("name-1");
+    expect(items[0].getValue(relNameField)).to.deep.equal(["name-1"]);
   });
 
   it("populates an external field whose inputs span the anchor query and an additional related group", async () => {
@@ -596,7 +597,8 @@ describe("getItems", () => {
           {
             ["pres_primary_class"]: "TestSchema.Primary",
             ["pres_primary_id"]: "0x1",
-            ["pres_t0"]: JSON.stringify({ ["Name"]: "name-1" }),
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "name-1" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
           },
         ];
       }
@@ -618,7 +620,7 @@ describe("getItems", () => {
       }),
     );
 
-    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "code-1", name: "name-1" } }] });
+    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "code-1", name: ["name-1"] } }] });
     expect(items[0].getValue(relExternalDescriptor.fields["ext_v1:combined"])).to.equal("code-1+name-1");
   });
 
@@ -633,7 +635,8 @@ describe("getItems", () => {
           {
             ["pres_primary_class"]: "TestSchema.Primary",
             ["pres_primary_id"]: "0x1",
-            ["pres_t0"]: JSON.stringify({ ["Name"]: "name-1" }),
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "name-1" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
           },
         ];
       }
@@ -661,7 +664,7 @@ describe("getItems", () => {
     );
     expect(items).to.have.lengthOf(1);
     expect(items[0].getValue(relCodeField)).to.equal("code-1");
-    expect(items[0].getValue(relNameField)).to.equal("name-1");
+    expect(items[0].getValue(relNameField)).to.deep.equal(["name-1"]);
   });
 
   it("owns a sort-only related path on the anchor even though it is not any group's leaf path", async () => {
@@ -694,7 +697,8 @@ describe("getItems", () => {
           {
             ["pres_primary_class"]: "TestSchema.Primary",
             ["pres_primary_id"]: "0x1",
-            ["pres_t0"]: JSON.stringify({ ["Name"]: "name-1" }),
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "name-1" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
           },
         ];
       }
@@ -718,7 +722,7 @@ describe("getItems", () => {
     );
     expect(items).to.have.lengthOf(1);
     expect(items[0].getValue(relCodeField)).to.equal("code-1");
-    expect(items[0].getValue(relNameField)).to.equal("name-1");
+    expect(items[0].getValue(relNameField)).to.deep.equal(["name-1"]);
   });
 
   it("populates external field values from the page's decoded input selectors", async () => {

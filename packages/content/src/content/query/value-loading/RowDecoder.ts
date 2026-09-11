@@ -4,11 +4,26 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+import { serializeRelationshipPath } from "../../model/Utils.js";
 
-import type { ECSqlQueryRow, InstanceKey, Value } from "@itwin/presentation-shared";
+import type { Id64String } from "@itwin/core-bentley";
+import type { EC, ECSqlQueryRow, InstanceKey, Value } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../../ContentTarget.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
-import type { ContentValues } from "../../model/ContentItem.js";
+import type { ContentValues, RelatedInstanceEntry } from "../../model/ContentItem.js";
 import type { SelectProjection } from "../SelectBuilder.js";
+
+/**
+ * One primary instance's stitched SQL-backed values: `selectorId -> value` and
+ * `join-path key -> related instances`. A `"one"`-cardinality group contributes scalar values and 0/1-entry
+ * arrays; a `"many"`-cardinality group contributes index-aligned arrays (see {@link decodeGroupRows}).
+ *
+ * @internal
+ */
+export interface GroupValues {
+  selectorValues: Map<string, Value>;
+  relatedInstances: Map<string, RelatedInstanceEntry[]>;
+}
 
 /**
  * Reads the primary instance key from a result row using the projection's class and instance column
@@ -26,22 +41,24 @@ export function decodePrimaryKey(props: {
 }
 
 /**
- * Decodes the selector values carried by one result row into a `selectorId -> value` map.
+ * Decodes one result row into its selector values and the related-instance identities carried by its
+ * related `$` blobs.
  *
- * Property selectors sharing a table alias read from the same `$` blob column; the blob is parsed once
- * per column and each selector reads its `propertyName` from it. Calculated selectors are read directly
- * from their scalar column and are never JSON-parsed. Absent columns (a source/class/group that does not
- * supply a value) leave the selector out of the map, so its field decodes to `undefined`.
+ * Property selectors sharing a table alias read from the same `$` blob column; each blob is parsed once and
+ * serves both the selectors that read from it and the identity (`ECInstanceId` + the paired
+ * `ec_classname(...)` column) of the instance it represents. Calculated selectors are read directly from
+ * their scalar column. A `null` blob (an outer-join miss, or a class/group that does not supply the value)
+ * leaves its selectors out of the map and contributes no identity. `buildSelectProjection` always projects a
+ * path's target blob alongside its relationship blob, so a `relationshipKey` never appears without its `key`.
  *
  * @internal
  */
-export function decodeSelectorValues(props: {
+export function decodeRow(props: {
   row: ECSqlQueryRow;
   descriptor: ContentDescriptor;
   columnNames: SelectProjection["columnNames"];
-}): Map<string, Value> {
+}): { selectorValues: Map<string, Value>; relatedInstances: Map<string, RelatedInstanceEntry> } {
   const { row, descriptor, columnNames } = props;
-  const values = new Map<string, Value>();
 
   const parsedBlobs = new Map<string, Record<string, Value> | undefined>();
   const parseBlob = (column: string): Record<string, Value> | undefined => {
@@ -50,9 +67,7 @@ export function decodeSelectorValues(props: {
     }
     const raw: unknown = row[column];
     let parsed: Record<string, Value> | undefined;
-    if (raw === undefined || raw === null) {
-      parsed = undefined;
-    } else {
+    if (raw !== undefined && raw !== null) {
       assert(typeof raw === "string", `Expected JSON blob for column "${column}", got ${typeof raw}.`);
       try {
         parsed = JSON.parse(raw) as Record<string, Value>;
@@ -64,6 +79,7 @@ export function decodeSelectorValues(props: {
     return parsed;
   };
 
+  const selectorValues = new Map<string, Value>();
   for (const [selectorId, column] of Object.entries(columnNames.propertyBlobs)) {
     const blob = parseBlob(column);
     if (!blob) {
@@ -77,57 +93,209 @@ export function decodeSelectorValues(props: {
     assert(selector.kind === "property", `Selector "${selectorId}" is not a property selector.`);
     const value = blob[selector.propertyName];
     if (value !== undefined) {
-      values.set(selectorId, value);
+      selectorValues.set(selectorId, value);
     }
   }
-
   for (const [selectorId, column] of Object.entries(columnNames.calculatedValues)) {
     const value = row[column];
     if (value !== undefined && value !== null) {
-      values.set(selectorId, value);
+      selectorValues.set(selectorId, value);
     }
   }
 
-  return values;
+  const relatedInstances = new Map<string, RelatedInstanceEntry>();
+  const relationshipKeys = new Map<string, InstanceKey>();
+  for (const [column, { className: classNameColumn, pathKey, role }] of Object.entries(columnNames.relatedBlobs)) {
+    const blob = parseBlob(column);
+    if (!blob) {
+      continue;
+    }
+    const id = blob.ECInstanceId;
+    assert(typeof id === "string", `Expected string "ECInstanceId" in blob column "${column}".`);
+    const className: unknown = row[classNameColumn];
+    assert(typeof className === "string", `Expected string class name in column "${classNameColumn}".`);
+    const key: InstanceKey = { className: className as EC.FullClassNameDotNotation, id };
+    if (role === "target") {
+      relatedInstances.set(pathKey, { key });
+    } else {
+      relationshipKeys.set(pathKey, key);
+    }
+  }
+  for (const [pathKey, relationshipKey] of relationshipKeys) {
+    const entry = relatedInstances.get(pathKey);
+    if (entry) {
+      entry.relationshipKey = relationshipKey;
+    }
+  }
+
+  return { selectorValues, relatedInstances };
 }
 
 /**
- * Merges `source` selector values into `target` in place. Each selector must be owned by a single query
- * group, so a selector already present in `target` is a stitching-ownership bug and throws.
+ * Decodes one query group's rows into `primary id -> values`, giving every value the shape the group's
+ * cardinality dictates:
+ *
+ * - `"one"` (the anchor, a 1:1 partition): one row per primary — scalar selector values and a single-entry
+ *   related-instance array per path key.
+ * - `"many"` (an isolated 1:many path): zero or more rows per primary — every projected selector becomes an
+ *   index-aligned array with one element per row (`undefined` where the row lacks the value) and every
+ *   projected path key an equally long array of related instances. Each id in `ids` starts from empty arrays,
+ *   so a primary that reached no related instance ends with `[]` rather than nothing.
+ *
+ * When `ids` is given, it is the complete set of primaries the group describes: rows for any other id are
+ * ignored. A page's ids span every source, and an additional group's query is restricted only by its own
+ * source's target — not by the anchor's query filterers and value filters — so an overlapping source's group
+ * can return rows for a primary that belongs to another source.
  *
  * @internal
  */
-export function mergeSelectorValues(target: Map<string, Value>, source: Map<string, Value>): void {
-  for (const [selectorId, value] of source) {
-    if (target.has(selectorId)) {
+export function decodeGroupRows(props: {
+  rows: ECSqlQueryRow[];
+  descriptor: ContentDescriptor;
+  cardinality: CardinalityHint;
+  columnNames: SelectProjection["columnNames"];
+  /** The primaries this group describes — see above. Omit to accept every row. */
+  ids?: Id64String[];
+}): Map<Id64String, GroupValues> {
+  const { rows, descriptor, cardinality, columnNames, ids } = props;
+  const byId = new Map<Id64String, GroupValues>();
+  const idOf = (row: ECSqlQueryRow) => row[columnNames.primaryKey.id] as Id64String;
+  const allowedIds = ids && new Set(ids);
+  const ownRows = allowedIds ? rows.filter((row) => allowedIds.has(idOf(row))) : rows;
+
+  if (cardinality === "one") {
+    for (const row of ownRows) {
+      const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
+      byId.set(idOf(row), {
+        selectorValues,
+        relatedInstances: new Map(Array.from(relatedInstances, ([pathKey, entry]) => [pathKey, [entry]])),
+      });
+    }
+    return byId;
+  }
+
+  const selectorIds = [...Object.keys(columnNames.propertyBlobs), ...Object.keys(columnNames.calculatedValues)];
+  const pathKeys = [...new Set(Object.values(columnNames.relatedBlobs).map((blob) => blob.pathKey))];
+  const emptyValues = (): GroupValues => ({
+    selectorValues: new Map(selectorIds.map((selectorId) => [selectorId, [] as Value[]])),
+    relatedInstances: new Map(pathKeys.map((pathKey) => [pathKey, [] as RelatedInstanceEntry[]])),
+  });
+  for (const id of ids ?? []) {
+    byId.set(id, emptyValues());
+  }
+  for (const row of ownRows) {
+    const id = idOf(row);
+    let target = byId.get(id);
+    if (!target) {
+      target = emptyValues();
+      byId.set(id, target);
+    }
+    const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
+    for (const selectorId of selectorIds) {
+      (target.selectorValues.get(selectorId) as Value[]).push(selectorValues.get(selectorId));
+    }
+    for (const pathKey of pathKeys) {
+      const entry = relatedInstances.get(pathKey);
+      // The group inner-joins its path, so the target identity is present on every row; a miss would
+      // silently break the `values[i] <-> relatedInstances[i]` alignment.
+      assert(entry !== undefined, `Row for related path "${pathKey}" is missing its target identity.`);
+      target.relatedInstances.get(pathKey)!.push(entry);
+    }
+  }
+  return byId;
+}
+
+/**
+ * Merges `source` into `target` in place. Every selector and every join-path key is owned by exactly one
+ * query group, so one already present in `target` is a stitching-ownership bug and throws.
+ *
+ * @internal
+ */
+export function mergeGroupValues(target: GroupValues, source: GroupValues): void {
+  for (const [selectorId, value] of source.selectorValues) {
+    if (target.selectorValues.has(selectorId)) {
       throw new Error(`Selector "${selectorId}" was populated by more than one query group.`);
     }
-    target.set(selectorId, value);
+    target.selectorValues.set(selectorId, value);
   }
+  for (const [pathKey, entries] of source.relatedInstances) {
+    if (target.relatedInstances.has(pathKey)) {
+      throw new Error(`Related instances for path "${pathKey}" were populated by more than one query group.`);
+    }
+    target.relatedInstances.set(pathKey, entries);
+  }
+}
+
+/**
+ * Builds the internal-join-path-key -> public-path-key map used to re-key `relatedInstances` in
+ * {@link toContentValues}. A descriptor-level fact — built once per descriptor, not per item.
+ *
+ * Internal keys include step instance filters, public keys don't, so paths differing only by a filter share
+ * one public key. For the same property that never yields two internal keys (selector identity ignores
+ * filters, so such candidates already merged into one). For *different* properties it can — a legitimate
+ * configuration whose field values are all correct and only whose related instances are ambiguous. The first
+ * internal key in descriptor selector order wins the public key; the rest are left unmapped and their
+ * entries dropped.
+ *
+ * @internal
+ */
+export function buildRelatedInstanceKeyMap(descriptor: ContentDescriptor): Map<string, string> {
+  const publicKeyByInternalKey = new Map<string, string>();
+  const claimedPublicKeys = new Set<string>();
+  for (const selector of Object.values(descriptor.selectors)) {
+    if (selector.kind !== "property" || selector.pathFromTarget.length === 0) {
+      continue;
+    }
+    const internalKey = serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true });
+    if (publicKeyByInternalKey.has(internalKey)) {
+      continue;
+    }
+    const publicKey = serializeRelationshipPath({ path: selector.pathFromTarget });
+    if (claimedPublicKeys.has(publicKey)) {
+      continue;
+    }
+    claimedPublicKeys.add(publicKey);
+    publicKeyByInternalKey.set(internalKey, publicKey);
+  }
+  return publicKeyByInternalKey;
 }
 
 /**
  * Projects decoded selector values onto descriptor fields through each field's `selectorId`, producing
  * the `ContentValues` for one instance. External fields carry no selector and are left `undefined`.
  *
+ * `relatedInstances` is re-keyed through `relatedInstanceKeyMap` ({@link buildRelatedInstanceKeyMap}, built
+ * once per descriptor) from the internal join-path key to the public key exposed on
+ * `ContentValues.relatedInstances` (no instance filters — the same key a field's `pathFromTarget`
+ * serializes to). An internal key absent from the map is dropped.
+ *
  * @internal
  */
 export function toContentValues(props: {
   descriptor: ContentDescriptor;
   primaryKey: InstanceKey;
-  selectorValues: Map<string, Value>;
+  values: GroupValues;
+  relatedInstanceKeyMap: Map<string, string>;
 }): ContentValues {
-  const { descriptor, primaryKey, selectorValues } = props;
+  const { descriptor, primaryKey, values: groupValues, relatedInstanceKeyMap } = props;
   const values: Record<string, Value> = {};
   for (const field of Object.values(descriptor.fields)) {
     if (field.kind !== "calculated" && field.kind !== "property") {
       continue;
     }
-    const value = selectorValues.get(field.selectorId);
+    const value = groupValues.selectorValues.get(field.selectorId);
     if (value !== undefined) {
       values[field.id] = value;
     }
   }
-  // TODO: Related instance keys are not yet projected by this stage - no path has related instances to report.
-  return { primaryKey, values, relatedInstances: {} };
+
+  const relatedInstances: Record<string, RelatedInstanceEntry[]> = {};
+  for (const [internalKey, entries] of groupValues.relatedInstances) {
+    const publicKey = relatedInstanceKeyMap.get(internalKey);
+    if (publicKey) {
+      relatedInstances[publicKey] = entries;
+    }
+  }
+
+  return { primaryKey, values, relatedInstances };
 }
