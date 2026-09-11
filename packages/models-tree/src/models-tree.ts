@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { BaseIdsCache } from "./models-tree/BaseIdsCache.js";
-import { CLASS_NAME_GeometricElement3d } from "./models-tree/ClassNameDefinitions.js";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./models-tree/ModelsTreeDefinition.js";
 import { ModelsTreeIdsCache } from "./models-tree/ModelsTreeIdsCache.js";
 import { mergeWithDefaults } from "./models-tree/Utils.js";
@@ -26,7 +25,7 @@ export function setupModelsTree(props: {
     baseIdsCache: new BaseIdsCache({
       queryExecutor: props.imodelAccess,
       type: "3d",
-      elementClassName: CLASS_NAME_GeometricElement3d,
+      elementClassName: hierarchyConfig.elements.baseClass,
       excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
     }),
     hierarchyConfig,
