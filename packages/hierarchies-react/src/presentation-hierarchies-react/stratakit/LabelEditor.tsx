@@ -47,7 +47,6 @@ export function TreeNodeLabelEditorOverlay({
         anchorOrigin={{ vertical: "top", horizontal: "left" }}
         transformOrigin={{ vertical: "top", horizontal: "left" }}
         disableScrollLock
-        marginThreshold={0}
       >
         <LabelEditor
           initialLabel={node.label}
