@@ -59,6 +59,10 @@ export interface SelectProjection {
      * `"relationship"` entry never exists without a paired `"target"` one; a `"relationship"` entry itself
      * exists only where a relationship-class property selector was projected (nav-property steps never get
      * one). `className` is the blob's `ec_classname(...)` column.
+     *
+     * Example: a path `A-[Rel]->B` with a projected `B` property and a projected `Rel` property yields two
+     * entries, one per blob column: `{ b_alias: { className: "b_alias_cls", pathKey: "A-[Rel]->B", role:
+     * "target" }, rel_alias: { className: "rel_alias_cls", pathKey: "A-[Rel]->B", role: "relationship" } }`.
      */
     relatedBlobs: Record<string, { className: string; pathKey: string; role: "target" | "relationship" }>;
   };

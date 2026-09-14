@@ -226,6 +226,15 @@ function sortPrimitiveType(sort: ContentQuerySort): PrimitiveValueType {
   return sort.field.type.type;
 }
 
+// Rewrites `:name` binding parameters in `sql` to `:${prefix}name`, so branches from different sources
+// (or the same source at different steps) can share one compound query without colliding on parameter
+// names. Only names in `props.bindings` are rewritten, but the rewrite is a text-level regex match, not
+// SQL-aware — a `:name` that happens to appear inside a string literal of the branch's SQL and coincides
+// with one of its declared binding names would also be rewritten. Binding names come from both this
+// package (`pres_`-prefixed) and the consumer (`instanceFilter` and calculated-field bindings), and the
+// literals they could collide with come from the same consumer-supplied expressions, so a collision
+// requires the consumer to spell a `:name` literal that matches their own binding — accepted as a rare
+// edge case rather than parsing ECSQL string literals to guard against it.
 function namespaceBindings(props: { sql: string; bindings: Record<string, ECSqlBinding>; prefix: string }): {
   sql: string;
   bindings: Record<string, ECSqlBinding>;

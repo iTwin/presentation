@@ -2172,17 +2172,22 @@ describe("resolveContentSources", () => {
   });
 
   describe("overlap detection", () => {
-    // Overlap-check queries route on the inner subquery's distinct alias (`pres_other`); everything
-    // else (there are no providers in these tests) falls back to the primary-class scan bucket.
+    // Overlap-check queries route on the inner subquery's distinct alias (`pres_other`); the primary-class
+    // enumeration scan (only issued for a target whose class has derived classes) gets
+    // `primaryClassScanResults`; everything else (there are no providers in these tests) gets no rows.
     function createOverlapMockIModelAccess(props?: {
       overlapQueryResults?: ECSqlQueryRow[];
+      primaryClassScanResults?: ECSqlQueryRow[];
       derivedClasses?: Record<string, string[]>;
-      classDerivesFrom?: ECSchemaProvider["classDerivesFrom"];
     }): ECSqlQueryExecutor & ECSchemaProvider {
-      const { overlapQueryResults = [], derivedClasses = {}, classDerivesFrom = async () => false } = props ?? {};
+      const { overlapQueryResults = [], primaryClassScanResults = [], derivedClasses = {} } = props ?? {};
       return {
         createQueryReader: vi.fn((query: ECSqlQueryDef) => {
-          const rows = query.ecsql.includes("pres_other") ? overlapQueryResults : [];
+          const rows = query.ecsql.includes("pres_other")
+            ? overlapQueryResults
+            : isPrimaryEnumerationQuery(query.ecsql)
+              ? primaryClassScanResults
+              : [];
           return (async function* () {
             for (const row of rows) {
               yield row;
@@ -2190,8 +2195,14 @@ describe("resolveContentSources", () => {
           })();
         }),
         getSchema: createMockGetSchema(derivedClasses),
-        classDerivesFrom: vi.fn(classDerivesFrom),
+        classDerivesFrom: vi.fn(async () => false),
       };
+    }
+
+    function countOverlapQueries(imodelAccess: ECSqlQueryExecutor): number {
+      return vi
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.filter(([query]) => query.ecsql.includes("pres_other")).length;
     }
 
     it("throws for two unscoped targets on the same class, naming a queried instance id", async () => {
@@ -2276,48 +2287,38 @@ describe("resolveContentSources", () => {
       expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     });
 
-    it("treats resolved classes in the same hierarchy as overlapping, even without an exact name match", async () => {
-      // `ClassB` (target B's resolved class) derives from `ClassA` (target A's resolved class) — no
-      // literal name in common, but an instance of the former is also an instance of the latter.
-      const imodelAccess = createOverlapMockIModelAccess({
-        overlapQueryResults: [{ 0: "0x1" }],
-        classDerivesFrom: async (derived, base) => derived === "TestSchema.ClassB" && base === "TestSchema.ClassA",
-      });
+    it("does not check targets whose resolvedPrimaryClasses are in the same hierarchy but differ by name", async () => {
+      // `resolvedPrimaryClasses` are the concrete classes of actual instances, so two targets that resolved
+      // different names cannot share an instance even when one class derives from the other — the
+      // hierarchy is never consulted and no overlap query is issued.
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
       const targets: ContentTarget[] = [{ primaryClass: "TestSchema.ClassA" }, { primaryClass: "TestSchema.ClassB" }];
 
-      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
-        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassB) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
-      );
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(countOverlapQueries(imodelAccess)).toBe(0);
+      expect(imodelAccess.classDerivesFrom).not.toHaveBeenCalled();
     });
 
-    it("treats the first target's resolved class deriving from the second's as overlapping", async () => {
-      // `ClassB` (target A's resolved class) derives from `ClassA` (target B's resolved class) — the
-      // opposite direction from the case above, exercising the other `classDerivesFrom` leg.
+    it("checks a pair of targets sharing several resolved classes only once", async () => {
+      // Both targets are on polymorphic `ClassA` and both enumerate `ClassB` and `ClassC` instances, so
+      // the pair is a candidate through two class names; it still gets a single overlap query.
       const imodelAccess = createOverlapMockIModelAccess({
-        overlapQueryResults: [{ 0: "0x1" }],
-        classDerivesFrom: async (derived, base) => derived === "TestSchema.ClassB" && base === "TestSchema.ClassA",
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.ClassB", "TestSchema.ClassC"] },
+        primaryClassScanResults: [{ 0: "TestSchema.ClassB" }, { 0: "TestSchema.ClassC" }],
+        overlapQueryResults: [],
       });
-      const targets: ContentTarget[] = [{ primaryClass: "TestSchema.ClassB" }, { primaryClass: "TestSchema.ClassA" }];
+      const targets: ContentTarget[] = [
+        { primaryClass: "TestSchema.ClassA", instanceFilter: { expression: "this.Area > 1" } },
+        { primaryClass: "TestSchema.ClassA", instanceFilter: { expression: "this.Area < 100" } },
+      ];
 
-      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
-        "Content targets #0 (TestSchema.ClassB) and #1 (TestSchema.ClassA) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
-      );
-    });
+      const result = await resolveContentSources({ imodelAccess, targets });
 
-    it("accepts a synchronous boolean result from `classDerivesFrom`", async () => {
-      // `classDerivesFrom` may resolve without awaiting once the hierarchy is cached; this must not be
-      // treated as a truthy `Promise`.
-      const imodelAccess = createOverlapMockIModelAccess({
-        overlapQueryResults: [{ 0: "0x1" }],
-        classDerivesFrom: ((derived: string, base: string) =>
-          derived === "TestSchema.ClassB" &&
-          base === "TestSchema.ClassA") as unknown as ECSchemaProvider["classDerivesFrom"],
-      });
-      const targets: ContentTarget[] = [{ primaryClass: "TestSchema.ClassA" }, { primaryClass: "TestSchema.ClassB" }];
-
-      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
-        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassB) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
-      );
+      expect(result).to.have.length(2);
+      expect(result[0].resolvedPrimaryClasses).toEqual(["TestSchema.ClassB", "TestSchema.ClassC"]);
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
     });
 
     it("throws naming the unscoped-but-covering target's other side's first id, without a query", async () => {

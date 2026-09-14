@@ -5,7 +5,7 @@
 
 import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, take, toArray } from "rxjs";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
+import { ECSQL_PREFIX, getOrCreate, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
 import { buildTargetFilter } from "./query/TargetFilter.js";
@@ -691,36 +691,36 @@ function resolveTarget({
 // --- Overlap detection ---
 
 /**
- * Whether any class in `a` is the same as, or in the same ancestor/descendant hierarchy as, any
- * class in `b` — e.g. `bis.Element` and `bis.PhysicalElement` intersect because an instance of the
- * latter is also an instance of the former. Exact-name matches (the common case, since
- * `resolvedPrimaryClasses` are already concrete classes on both sides) are checked first without
- * any schema lookup; only the remaining cross product falls back to `classDerivesFrom`.
+ * Yields every pair of sources that could share an instance, each pair once, in `(i, j)` order.
+ *
+ * `resolvedPrimaryClasses` holds the *concrete* class of every instance a target reaches (it is
+ * enumerated with `GROUP BY ECClassId`, so a target on `bis.Element` lists `bis.PhysicalObject`, never
+ * `bis.Element` itself). An instance has exactly one concrete class, so two targets can only share an
+ * instance when they resolved the same class name — no hierarchy lookup is needed. Indexing sources by
+ * class name therefore finds candidates in time linear in the number of sources rather than scanning
+ * every pair.
  */
-async function classSetsIntersect(
-  imodelAccess: ECSchemaProvider,
-  a: readonly EC.FullClassNameDotNotation[],
-  b: readonly EC.FullClassNameDotNotation[],
-): Promise<boolean> {
-  const bSet = new Set(b);
-  if (a.some((className) => bSet.has(className))) {
-    return true;
+function* iterateCandidatePairs(sources: readonly ContentSource[]): Generator<[i: number, j: number]> {
+  const sourcesByClass = new Map<EC.FullClassNameDotNotation, number[]>();
+  for (const [index, source] of sources.entries()) {
+    for (const className of source.resolvedPrimaryClasses) {
+      getOrCreate({ map: sourcesByClass, key: className, createFunc: () => [] }).push(index);
+    }
   }
-  for (const x of a) {
-    for (const y of b) {
-      // `classDerivesFrom` is usually synchronous once the hierarchy is loaded — awaiting
-      // unconditionally would schedule a needless microtask on every pair in the common case.
-      const xDerivesFromY = imodelAccess.classDerivesFrom(x, y);
-      if (typeof xDerivesFromY === "boolean" ? xDerivesFromY : await xDerivesFromY) {
-        return true;
-      }
-      const yDerivesFromX = imodelAccess.classDerivesFrom(y, x);
-      if (typeof yDerivesFromX === "boolean" ? yDerivesFromX : await yDerivesFromX) {
-        return true;
+  // Two sources may share more than one class; check each such pair only once. Indices were pushed in
+  // ascending source order, so `indices[a] < indices[b]` already holds.
+  const seen = new Set<string>();
+  for (const indices of sourcesByClass.values()) {
+    for (let a = 0; a < indices.length; ++a) {
+      for (let b = a + 1; b < indices.length; ++b) {
+        const key = `${indices[a]},${indices[b]}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          yield [indices[a], indices[b]];
+        }
       }
     }
   }
-  return false;
 }
 
 // One instance of `a`'s primary class that also satisfies `b`'s scope, if any. Anchored at `a` so
@@ -795,39 +795,23 @@ function findOverlappingInstanceId({
  * Throws when two resolved sources' targets can reach the same instance. Silently letting it
  * through would either emit the instance twice (unsorted paging) or throw later from
  * `mergeGroupValues` on a duplicated direct selector (sorted paging) — and de-duplicating would
- * drop one source's related properties for that instance. Only pairs whose `resolvedPrimaryClasses`
- * intersect (by name or by class hierarchy) are checked — disjoint class hierarchies can never share
- * an instance.
+ * drop one source's related properties for that instance. Only pairs that resolved a common concrete
+ * class are checked (see `iterateCandidatePairs`); their checks run concurrently up to
+ * `QUERY_CONCURRENCY`, and `take(1)` stops at the first confirmed overlap, cancelling the rest.
  */
 async function assertNoOverlappingSources({
   imodelAccess,
   sources,
 }: {
-  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  imodelAccess: ECSqlQueryExecutor;
   sources: ContentSource[];
 }): Promise<void> {
-  function* iteratePairs(): Generator<[i: number, j: number]> {
-    for (let i = 0; i < sources.length; ++i) {
-      for (let j = i + 1; j < sources.length; ++j) {
-        yield [i, j];
-      }
-    }
-  }
-
   const overlap = await lastValueFrom(
-    from(iteratePairs()).pipe(
+    from(iterateCandidatePairs(sources)).pipe(
       mergeMap(
         ([i, j]) =>
-          from(
-            classSetsIntersect(imodelAccess, sources[i].resolvedPrimaryClasses, sources[j].resolvedPrimaryClasses),
-          ).pipe(
-            mergeMap((intersects) =>
-              intersects
-                ? findOverlappingInstanceId({ imodelAccess, a: sources[i].target, b: sources[j].target }).pipe(
-                    map((overlapId) => ({ i, j, overlapId })),
-                  )
-                : EMPTY,
-            ),
+          findOverlappingInstanceId({ imodelAccess, a: sources[i].target, b: sources[j].target }).pipe(
+            map((overlapId) => ({ i, j, overlapId })),
           ),
         QUERY_CONCURRENCY,
       ),
