@@ -11,6 +11,7 @@ allowBuilds:
   unix-dgram: false
 
 overrides:
+  "@itwin/express-server>express": ~4.22.3
   "@opentelemetry/otlp-transformer>protobufjs": ^8.0.2
   "uuid@<14": ^14.0.0
 
@@ -94,6 +95,9 @@ hoistPattern:
   - '*babel*'
   - ignore-styles
   - global-jsdom
+
+minimumReleaseAgeExclude:
+  - express@4.22.3
 
 onlyBuiltDependencies:
   - '@bentley/imodeljs-native'
