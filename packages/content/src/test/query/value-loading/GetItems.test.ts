@@ -338,6 +338,19 @@ describe("getItems", () => {
     ).rejects.toThrow(/column "this"/);
   });
 
+  it("throws when the anchor page query returns a duplicated primary row", async () => {
+    // A "one"-hinted path that really reaches several instances multiplies anchor rows per primary; the
+    // anchor's cardinality is always "one", so `decodeGroupRows` must catch this instead of silently
+    // corrupting paging.
+    const { imodelAccess } = createIModelAccess(() => [
+      valueRow("Schema.A", "0x1", "A1"),
+      valueRow("Schema.A", "0x1", "A1-duplicate"),
+    ]);
+    await expect(
+      collect(getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] })),
+    ).rejects.toThrow(/"0x1"/);
+  });
+
   it("yields nothing when the source page is empty", async () => {
     const { imodelAccess, queries } = createIModelAccess(() => []);
     const items = await collect(

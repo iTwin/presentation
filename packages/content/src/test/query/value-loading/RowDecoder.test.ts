@@ -508,5 +508,16 @@ describe("RowDecoder", () => {
         }),
       ).toThrow(/missing its target identity/);
     });
+
+    it("throws when a `one` group has more than one row for the same primary id", () => {
+      expect(() =>
+        decodeGroupRows({
+          rows: [row("0x1", { id: "0x10", name: "n" }), row("0x1", { id: "0x11", name: "m" })],
+          descriptor: relatedDescriptor,
+          cardinality: "one",
+          columnNames: relatedColumnNames,
+        }),
+      ).toThrow(/"0x1".*A-\[Rel\]->B/);
+    });
   });
 });

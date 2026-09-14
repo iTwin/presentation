@@ -165,8 +165,16 @@ export function decodeGroupRows(props: {
 
   if (cardinality === "one") {
     for (const row of ownRows) {
+      const id = idOf(row);
+      if (byId.has(id)) {
+        const conflictingPathKeys = [...new Set(Object.values(columnNames.relatedBlobs).map((blob) => blob.pathKey))];
+        throw new Error(
+          `Instance "${id}" has more than one row in a "one"-cardinality group (path keys: ${conflictingPathKeys.join(", ")}). ` +
+            `A "one" cardinality hint was given for a path that reaches more than one instance.`,
+        );
+      }
       const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
-      byId.set(idOf(row), {
+      byId.set(id, {
         selectorValues,
         relatedInstances: new Map(Array.from(relatedInstances, ([pathKey, entry]) => [pathKey, [entry]])),
       });
