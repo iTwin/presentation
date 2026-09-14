@@ -2170,4 +2170,124 @@ describe("resolveContentSources", () => {
       expect(result.externalInputPaths).to.deep.equal([]);
     });
   });
+
+  describe("overlap detection", () => {
+    // Overlap-check queries route on the inner subquery's distinct alias (`pres_other`); everything
+    // else (there are no providers in these tests) falls back to the primary-class scan bucket.
+    function createOverlapMockIModelAccess(props?: {
+      overlapQueryResults?: ECSqlQueryRow[];
+      derivedClasses?: Record<string, string[]>;
+      classDerivesFrom?: ECSchemaProvider["classDerivesFrom"];
+    }): ECSqlQueryExecutor & ECSchemaProvider {
+      const { overlapQueryResults = [], derivedClasses = {}, classDerivesFrom = async () => false } = props ?? {};
+      return {
+        createQueryReader: vi.fn((query: ECSqlQueryDef) => {
+          const rows = query.ecsql.includes("pres_other") ? overlapQueryResults : [];
+          return (async function* () {
+            for (const row of rows) {
+              yield row;
+            }
+          })();
+        }),
+        getSchema: createMockGetSchema(derivedClasses),
+        classDerivesFrom: vi.fn(classDerivesFrom),
+      };
+    }
+
+    it("throws for two unscoped targets on the same class, naming a queried instance id", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
+      const targets: ContentTarget[] = [targetA, { primaryClass: targetA.primaryClass }];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
+      );
+    });
+
+    it("does not throw for disjoint instanceIds sets, issuing no query", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x1", "0x2"] },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x3"] },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("throws for intersecting instanceIds sets without issuing a query", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x1", "0x2"] },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x2", "0x3"] },
+      ];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x2 is in both. Merge the targets or make their scopes disjoint.",
+      );
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("issues a query for filter-vs-filter targets and does not throw when it returns no row", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [] });
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 1 } } },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area < :maxArea", bindings: { maxArea: { type: "double", value: 100 } } },
+        },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalled();
+    });
+
+    it("throws for filter-vs-filter targets when the overlap query returns a row", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x5" }] });
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 1 } } },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area < :maxArea", bindings: { maxArea: { type: "double", value: 100 } } },
+        },
+      ];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x5 is in both. Merge the targets or make their scopes disjoint.",
+      );
+    });
+
+    it("does not check targets whose resolvedPrimaryClasses are disjoint", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
+      const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassC" }];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("treats resolved classes in the same hierarchy as overlapping, even without an exact name match", async () => {
+      // `ClassB` (target B's resolved class) derives from `ClassA` (target A's resolved class) — no
+      // literal name in common, but an instance of the former is also an instance of the latter.
+      const imodelAccess = createOverlapMockIModelAccess({
+        overlapQueryResults: [{ 0: "0x1" }],
+        classDerivesFrom: async (derived, base) => derived === "TestSchema.ClassB" && base === "TestSchema.ClassA",
+      });
+      const targets: ContentTarget[] = [{ primaryClass: "TestSchema.ClassA" }, { primaryClass: "TestSchema.ClassB" }];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassB) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
+      );
+    });
+  });
 });

@@ -228,6 +228,11 @@ interface ResolveContentSourcesProps {
  * Cache invalidation: sources become stale when the iModel schema changes
  * or provider declarations change.
  *
+ * @throws when two targets' scopes can reach the same instance (e.g. the same class with
+ * overlapping or missing `instanceIds` / `instanceFilter`) — resolving both would otherwise emit
+ * that instance twice or drop one target's related properties for it. Merge the targets or make
+ * their scopes disjoint.
+ *
  * @public
  */
 export async function resolveContentSources(props: ResolveContentSourcesProps): Promise<ContentSource[]> {
@@ -287,8 +292,6 @@ export interface ContentProvider {
 
   /**
    * Get instance keys for all items matching the configured sources.
-   *
-   * A key may be returned more than once when configured sources overlap.
    *
    * @param options - Optional filters (affects which keys are returned).
    */

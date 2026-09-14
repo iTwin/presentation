@@ -3,13 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, toArray } from "rxjs";
+import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, take, toArray } from "rxjs";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
+import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
+import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
 import { buildTargetFilter } from "./query/TargetFilter.js";
 
 import type { Observable } from "rxjs";
+import type { Id64String } from "@itwin/core-bentley";
 import type {
   EC,
   ECSchemaProvider,
@@ -686,6 +688,160 @@ function resolveTarget({
   return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, externalInputPaths });
 }
 
+// --- Overlap detection ---
+
+/**
+ * Whether any class in `a` is the same as, or in the same ancestor/descendant hierarchy as, any
+ * class in `b` — e.g. `bis.Element` and `bis.PhysicalElement` intersect because an instance of the
+ * latter is also an instance of the former. Exact-name matches (the common case, since
+ * `resolvedPrimaryClasses` are already concrete classes on both sides) are checked first without
+ * any schema lookup; only the remaining cross product falls back to `classDerivesFrom`.
+ */
+async function classSetsIntersect(
+  imodelAccess: ECSchemaProvider,
+  a: readonly EC.FullClassNameDotNotation[],
+  b: readonly EC.FullClassNameDotNotation[],
+): Promise<boolean> {
+  const bSet = new Set(b);
+  if (a.some((className) => bSet.has(className))) {
+    return true;
+  }
+  for (const x of a) {
+    for (const y of b) {
+      // `classDerivesFrom` is usually synchronous once the hierarchy is loaded — awaiting
+      // unconditionally would schedule a needless microtask on every pair in the common case.
+      const xDerivesFromY = imodelAccess.classDerivesFrom(x, y);
+      if (typeof xDerivesFromY === "boolean" ? xDerivesFromY : await xDerivesFromY) {
+        return true;
+      }
+      const yDerivesFromX = imodelAccess.classDerivesFrom(y, x);
+      if (typeof yDerivesFromX === "boolean" ? yDerivesFromX : await yDerivesFromX) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// One instance of `a`'s primary class that also satisfies `b`'s scope, if any. Anchored at `a` so
+// the outer scan can reuse `a`'s own instance-id join / filter; `b`'s scope is checked via a
+// subquery, built at a distinct alias so both targets' `instanceIds` joins/bindings can coexist.
+function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
+  /** The distinct alias used for the "other" target's scope in an overlap-check query's inner subquery. */
+  const OVERLAP_OTHER_ALIAS = `${ECSQL_PREFIX}other`;
+
+  const outerFilter = buildTargetFilter(a);
+  const innerFilter = buildTargetFilter(b, OVERLAP_OTHER_ALIAS);
+  const ecsql = `
+    SELECT [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]
+    FROM ${ECSql.createClassSelector(a.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
+    ${outerFilter.joins?.join("\n") ?? ""}
+    WHERE [${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
+      SELECT [${OVERLAP_OTHER_ALIAS}].[ECInstanceId]
+      FROM ${ECSql.createClassSelector(b.primaryClass)} [${OVERLAP_OTHER_ALIAS}]
+      ${innerFilter.joins?.join("\n") ?? ""}
+      ${innerFilter.where ? `WHERE ${innerFilter.where}` : ""}
+    )
+      ${outerFilter.where ? ` AND ${outerFilter.where}` : ""}
+    LIMIT 1
+  `;
+  const bindings = { ...outerFilter.bindings, ...innerFilter.bindings };
+  return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : {}) };
+}
+
+/**
+ * Emits an instance id shared by `a` and `b`'s scopes, or nothing when their scopes are disjoint.
+ * Cheap tiers avoid a query where the answer follows from the targets' shapes alone: both scoped
+ * by `instanceIds` intersect in JS; either target scoped by neither `instanceIds` nor
+ * `instanceFilter` covers every instance of the (already known to intersect) shared class, so any
+ * id the other target's `instanceIds` names is shared too. Anything else — e.g. `instanceFilter` on
+ * one or both sides, or neither side naming concrete ids — needs a query to know for sure.
+ *
+ * Returned as an `Observable` rather than a `Promise` so `assertNoOverlappingSources` can race every
+ * candidate pair and, on unsubscribing after the first hit, cancel every other pair's still-running
+ * query via `finalize`.
+ */
+function findOverlappingInstanceId({
+  imodelAccess,
+  a,
+  b,
+}: {
+  imodelAccess: ECSqlQueryExecutor;
+  a: ContentTarget;
+  b: ContentTarget;
+}): Observable<Id64String> {
+  if (a.instanceIds && b.instanceIds) {
+    const bIds = new Set(b.instanceIds);
+    const sharedId = a.instanceIds.find((id) => bIds.has(id));
+    return sharedId !== undefined ? of(sharedId) : EMPTY;
+  }
+  const aCoversAll = !a.instanceIds && !a.instanceFilter;
+  const bCoversAll = !b.instanceIds && !b.instanceFilter;
+  if (aCoversAll && b.instanceIds) {
+    return of(b.instanceIds[0]);
+  }
+  if (bCoversAll && a.instanceIds) {
+    return of(a.instanceIds[0]);
+  }
+
+  const reader = imodelAccess.createQueryReader(buildOverlapQuery(a, b), { rowFormat: "Indexes" });
+  return from(reader).pipe(
+    map((row) => row[0] as Id64String),
+    finalize(() => void reader.return?.(undefined)),
+  );
+}
+
+/**
+ * Throws when two resolved sources' targets can reach the same instance. Silently letting it
+ * through would either emit the instance twice (unsorted paging) or throw later from
+ * `mergeGroupValues` on a duplicated direct selector (sorted paging) — and de-duplicating would
+ * drop one source's related properties for that instance. Only pairs whose `resolvedPrimaryClasses`
+ * intersect (by name or by class hierarchy) are checked — disjoint class hierarchies can never share
+ * an instance.
+ */
+async function assertNoOverlappingSources({
+  imodelAccess,
+  sources,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  sources: ContentSource[];
+}): Promise<void> {
+  function* iteratePairs(): Generator<[i: number, j: number]> {
+    for (let i = 0; i < sources.length; ++i) {
+      for (let j = i + 1; j < sources.length; ++j) {
+        yield [i, j];
+      }
+    }
+  }
+
+  const overlap = await lastValueFrom(
+    from(iteratePairs()).pipe(
+      mergeMap(
+        ([i, j]) =>
+          from(
+            classSetsIntersect(imodelAccess, sources[i].resolvedPrimaryClasses, sources[j].resolvedPrimaryClasses),
+          ).pipe(
+            mergeMap((intersects) =>
+              intersects
+                ? findOverlappingInstanceId({ imodelAccess, a: sources[i].target, b: sources[j].target }).pipe(
+                    map((overlapId) => ({ i, j, overlapId })),
+                  )
+                : EMPTY,
+            ),
+          ),
+        QUERY_CONCURRENCY,
+      ),
+      take(1),
+    ),
+    { defaultValue: undefined },
+  );
+  if (overlap) {
+    throw new Error(
+      `Content targets #${overlap.i} (${sources[overlap.i].target.primaryClass}) and #${overlap.j} (${sources[overlap.j].target.primaryClass}) overlap: instance ${overlap.overlapId} is in both. Merge the targets or make their scopes disjoint.`,
+    );
+  }
+}
+
 // --- Public entry point ---
 
 export async function resolveContentSourcesImpl(props: {
@@ -712,6 +868,10 @@ export async function resolveContentSourcesImpl(props: {
       map((items) => {
         items.sort((a, b) => a.idx - b.idx);
         return items.map(({ source }) => source);
+      }),
+      mergeMap(async (sources) => {
+        await assertNoOverlappingSources({ imodelAccess: props.imodelAccess, sources });
+        return sources;
       }),
     ),
   );
