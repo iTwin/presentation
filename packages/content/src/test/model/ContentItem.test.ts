@@ -308,5 +308,28 @@ describe("createContentItem", () => {
       expect(byField[0].key).to.deep.equal(byPath[0].key);
       expect(byField[0].getValue(nameField)).to.equal(byPath[0].getValue(nameField));
     });
+
+    it("keys entries by a path's step instance filter, distinct from the unfiltered form of the same path", () => {
+      const filteredPath: RelationshipPath = [{ ...testPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
+      const filteredPathKey = serializeRelationshipPath({ path: filteredPath, includeInstanceFilters: true });
+      const nameField = createTestPropertyField("BisCore.ElementAspect.Name(path)", {
+        propertyName: "Name",
+        propertyClassName: "BisCore.ElementAspect",
+        pathFromTarget: filteredPath,
+        pathCardinality: "many",
+      });
+      const descriptor = createTestDescriptor([nameField]);
+      const aspectKey: InstanceKey = { className: "BisCore.ElementAspect", id: "0x10" };
+      const contentValues: ContentValues = {
+        primaryKey: { className: "BisCore.Element", id: "0x1" },
+        values: { [nameField.id]: ["First"] },
+        relatedInstances: { [filteredPathKey]: [{ key: aspectKey }] },
+      };
+
+      const item = createContentItem({ descriptor, contentValues });
+
+      expect(item.getRelatedInstances({ pathFromTarget: filteredPath })).to.have.lengthOf(1);
+      expect(item.getRelatedInstances({ pathFromTarget: testPath })).to.have.lengthOf(0);
+    });
   });
 });

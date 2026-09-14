@@ -24,13 +24,7 @@ import { PAGE_SIZE } from "../QueryLimits.js";
 import { buildSelectProjection } from "../SelectBuilder.js";
 import { createExternalValuePopulator } from "./ExternalValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
-import {
-  buildRelatedInstanceKeyMap,
-  decodeGroupRows,
-  decodePrimaryKey,
-  mergeGroupValues,
-  toContentValues,
-} from "./RowDecoder.js";
+import { decodeGroupRows, decodePrimaryKey, mergeGroupValues, toContentValues } from "./RowDecoder.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -91,9 +85,6 @@ function loadItems(props: {
   return from(getDescriptor()).pipe(
     mergeMap((descriptor) => {
       const populateExternalValues = createExternalValuePopulator({ descriptor, providers: externalFieldsProviders });
-      // A descriptor-level fact (which internal join-path key maps to which public one) built once per
-      // descriptor rather than re-derived for every item.
-      const relatedInstanceKeyMap = buildRelatedInstanceKeyMap(descriptor);
       return from(sources).pipe(
         mergeMap(async (source) =>
           createSourcePlan({ imodelAccess, descriptor, source, sorting, queryFilterers, filters, externalInputs }),
@@ -105,29 +96,14 @@ function loadItems(props: {
             // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
             return from(plans).pipe(
               mergeMap(
-                (plan) =>
-                  pageAnchor({
-                    imodelAccess,
-                    descriptor,
-                    plan,
-                    sorting,
-                    populateExternalValues,
-                    relatedInstanceKeyMap,
-                  }),
+                (plan) => pageAnchor({ imodelAccess, descriptor, plan, sorting, populateExternalValues }),
                 QUERY_CONCURRENCY,
               ),
             );
           }
 
           // Multiple sources sorted by a shared key: order and page globally with the two-phase key stream.
-          return pageMultiSourceSorted({
-            imodelAccess,
-            descriptor,
-            plans,
-            sorting,
-            populateExternalValues,
-            relatedInstanceKeyMap,
-          });
+          return pageMultiSourceSorted({ imodelAccess, descriptor, plans, sorting, populateExternalValues });
         }),
       );
     }),
@@ -242,9 +218,8 @@ function pageAnchor(props: {
   plan: SourcePlan;
   sorting: ContentQuerySort[];
   populateExternalValues: ExternalValuePopulator | undefined;
-  relatedInstanceKeyMap: Map<string, string>;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plan, sorting, populateExternalValues, relatedInstanceKeyMap } = props;
+  const { imodelAccess, descriptor, plan, sorting, populateExternalValues } = props;
   const { columnNames } = plan.anchor.projection;
   const fetchPage = (cursor: Cursor | undefined): Observable<PageResult> =>
     readRows(imodelAccess, buildAnchorPageQuery({ plan, sorting, cursor })).pipe(
@@ -271,7 +246,7 @@ function pageAnchor(props: {
         });
       }),
       mergeMap((decoded) =>
-        materializeItems({ descriptor, populateExternalValues, relatedInstanceKeyMap, rows: decoded }).pipe(
+        materializeItems({ descriptor, populateExternalValues, rows: decoded }).pipe(
           map((items): PageResult => {
             if (decoded.length < PAGE_SIZE) {
               return { items, next: undefined };
@@ -300,9 +275,8 @@ function pageMultiSourceSorted(props: {
   plans: SourcePlan[];
   sorting: ContentQuerySort[];
   populateExternalValues: ExternalValuePopulator | undefined;
-  relatedInstanceKeyMap: Map<string, string>;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plans, sorting, populateExternalValues, relatedInstanceKeyMap } = props;
+  const { imodelAccess, descriptor, plans, sorting, populateExternalValues } = props;
   const keyProjection = plans[0].anchor.keyProjection;
 
   // Phase 1: page the globally ordered key stream. The next cursor is derived from the key rows alone, so
@@ -334,7 +308,6 @@ function pageMultiSourceSorted(props: {
         return materializeItems({
           descriptor,
           populateExternalValues,
-          relatedInstanceKeyMap,
           rows: keys.map((key) => ({
             primaryKey: key,
             values: valuesById.get(key.id) ?? { selectorValues: new Map(), relatedInstances: new Map() },
@@ -361,12 +334,11 @@ function pageMultiSourceSorted(props: {
 function materializeItems(props: {
   descriptor: ContentDescriptor;
   populateExternalValues: ExternalValuePopulator | undefined;
-  relatedInstanceKeyMap: Map<string, string>;
   rows: Array<{ primaryKey: InstanceKey; values: GroupValues }>;
 }): Observable<ContentItem[]> {
-  const { descriptor, populateExternalValues, relatedInstanceKeyMap, rows } = props;
+  const { descriptor, populateExternalValues, rows } = props;
   const contentValues = rows.map((row) =>
-    toContentValues({ descriptor, primaryKey: row.primaryKey, values: row.values, relatedInstanceKeyMap }),
+    toContentValues({ descriptor, primaryKey: row.primaryKey, values: row.values }),
   );
   if (!populateExternalValues || rows.length === 0) {
     return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));

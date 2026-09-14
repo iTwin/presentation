@@ -1212,6 +1212,86 @@ describe("Content", () => {
         expect(relatedInstances.map((entry) => entry.key)).toEqual(expectedKeys);
         expect(relatedInstances.map((entry) => entry.relationshipKey)).toEqual(expectedRelationshipKeys);
       });
+
+      it("keeps two same-path declarations with different step instance filters distinctly keyed", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Kind" typeName="int" />
+                <ECProperty propertyName="PropB1" typeName="string" />
+                <ECProperty propertyName="PropB2" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
+          const b1 = builder.insertInstance(schema.items.B.fullName, { kind: 1, propB1: "one", propB2: "unused-1" });
+          const b2 = builder.insertInstance(schema.items.B.fullName, { kind: 2, propB1: "unused-2", propB2: "two" });
+          builder.insertRelationship(schema.items.AtoB.fullName, a.id, b1.id);
+          builder.insertRelationship(schema.items.AtoB.fullName, a.id, b2.id);
+          return { schema, a, b1, b2 };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const basePathStep = {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        };
+        const pathKind1: RelationshipPath = [{ ...basePathStep, instanceFilter: { expression: "this.Kind = 1" } }];
+        const pathKind2: RelationshipPath = [{ ...basePathStep, instanceFilter: { expression: "this.Kind = 2" } }];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return {
+              relatedProperties: [
+                {
+                  path: pathKind1,
+                  cardinalityHint: "one",
+                  properties: [{ stepIndex: 0, target: { select: { include: ["PropB1"] } } }],
+                },
+                {
+                  path: pathKind2,
+                  cardinalityHint: "one",
+                  properties: [{ stepIndex: 0, target: { select: { include: ["PropB2"] } } }],
+                },
+              ],
+            };
+          },
+        });
+        const config = { imodelFieldsProviders: [fieldsProvider] };
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const propB1Field = getPropertyFieldByName(descriptor, "PropB1");
+        const propB2Field = getPropertyFieldByName(descriptor, "PropB2");
+
+        const [item] = await collect(provider.getItems());
+        expect(item.getValue(propB1Field)).toBe("one");
+        expect(item.getValue(propB2Field)).toBe("two");
+
+        const b1Entries = item.getRelatedInstances(propB1Field);
+        const b2Entries = item.getRelatedInstances(propB2Field);
+        expect(b1Entries.map((entry) => entry.key)).toEqual([setup.b1]);
+        expect(b2Entries.map((entry) => entry.key)).toEqual([setup.b2]);
+        expect(b1Entries[0].getValue(propB1Field)).toBe("one");
+        expect(b2Entries[0].getValue(propB2Field)).toBe("two");
+      });
     });
   });
 });

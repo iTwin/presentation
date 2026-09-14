@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
+import { serializeRelationshipPath } from "../../../content/model/Utils.js";
 import {
-  buildRelatedInstanceKeyMap,
   decodeGroupRows,
   decodePrimaryKey,
   decodeRow,
@@ -286,7 +286,6 @@ describe("RowDecoder", () => {
           ]),
           relatedInstances: new Map(),
         },
-        relatedInstanceKeyMap: buildRelatedInstanceKeyMap(descriptor),
       });
       expect(contentValues.primaryKey).to.deep.equal({ className: "Schema.A", id: "0x1" });
       expect(contentValues.values).to.deep.equal({ "Schema.A.Code": "A1", "calc:score": 42 });
@@ -294,119 +293,25 @@ describe("RowDecoder", () => {
       expect(contentValues.relatedInstances).to.deep.equal({});
     });
 
-    it("re-keys related instances from the internal join-path key to the public path key", () => {
-      const relatedDescriptor = {
-        selectors: {
-          "Schema.B.Name": {
-            kind: "property",
-            id: "Schema.B.Name",
-            propertyClassName: "Schema.B",
-            propertyName: "Name",
-            pathFromTarget: [
-              {
-                sourceClassName: "Schema.A",
-                relationshipName: "Schema.Rel",
-                targetClassName: "Schema.B",
-                instanceFilter: { expression: "this.Kind = 1" },
-              },
-            ],
-          },
-        },
-        fields: { "Schema.B.Name": { kind: "property", id: "Schema.B.Name", selectorId: "Schema.B.Name" } },
-      } as unknown as ContentDescriptor;
-      const relatedInstanceKeyMap = buildRelatedInstanceKeyMap(relatedDescriptor);
-      const [internalKey, publicKey] = [...relatedInstanceKeyMap][0];
-      expect(internalKey).not.to.equal(publicKey);
-      expect(publicKey).to.equal("Schema.A-[Schema.Rel]->Schema.B");
-
+    it("passes related-instance entries through verbatim, keyed by the filter-aware join-path key", () => {
       const entries: RelatedInstanceEntry[] = [{ key: { className: "Schema.B", id: "0x2" } }];
-      const contentValues = toContentValues({
-        descriptor: relatedDescriptor,
-        primaryKey: { className: "Schema.A", id: "0x1" },
-        values: { selectorValues: new Map(), relatedInstances: new Map([[internalKey, entries]]) },
-        relatedInstanceKeyMap,
+      const pathKey = serializeRelationshipPath({
+        path: [
+          {
+            sourceClassName: "Schema.A",
+            relationshipName: "Schema.Rel",
+            targetClassName: "Schema.B",
+            instanceFilter: { expression: "this.Kind = 1" },
+          },
+        ],
+        includeInstanceFilters: true,
       });
-      expect(contentValues.relatedInstances).to.deep.equal({ [publicKey]: entries });
-    });
-
-    it("drops related instances for a path key no selector reads", () => {
       const contentValues = toContentValues({
         descriptor,
         primaryKey: { className: "Schema.A", id: "0x1" },
-        values: {
-          selectorValues: new Map(),
-          relatedInstances: new Map([
-            ["Schema.A-[Schema.Rel]->Schema.B", [{ key: { className: "Schema.B", id: "0x2" } }]],
-          ]),
-        },
-        relatedInstanceKeyMap: buildRelatedInstanceKeyMap(descriptor),
+        values: { selectorValues: new Map(), relatedInstances: new Map([[pathKey, entries]]) },
       });
-      expect(contentValues.relatedInstances).to.deep.equal({});
-    });
-  });
-
-  describe("buildRelatedInstanceKeyMap", () => {
-    it("collapses two selectors sharing one path into a single map entry", () => {
-      const relatedDescriptor = {
-        selectors: {
-          "Schema.B.Name": {
-            kind: "property",
-            id: "Schema.B.Name",
-            propertyClassName: "Schema.B",
-            propertyName: "Name",
-            pathFromTarget: [
-              { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" },
-            ],
-          },
-          "Schema.B.Code": {
-            kind: "property",
-            id: "Schema.B.Code",
-            propertyClassName: "Schema.B",
-            propertyName: "Code",
-            pathFromTarget: [
-              { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" },
-            ],
-          },
-        },
-        fields: {},
-      } as unknown as ContentDescriptor;
-
-      const map = buildRelatedInstanceKeyMap(relatedDescriptor);
-      expect(map.size).to.equal(1);
-      expect(map.get("Schema.A-[Schema.Rel]->Schema.B")).to.equal("Schema.A-[Schema.Rel]->Schema.B");
-    });
-
-    it("ignores direct and calculated selectors", () => {
-      expect(buildRelatedInstanceKeyMap(descriptor).size).to.equal(0);
-    });
-
-    it("lets the first of two filter-variant paths sharing a public key win, without throwing", () => {
-      const step = { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" };
-      const filteredDescriptor = {
-        selectors: {
-          "Schema.B.Name": {
-            kind: "property",
-            id: "Schema.B.Name",
-            propertyClassName: "Schema.B",
-            propertyName: "Name",
-            pathFromTarget: [{ ...step, instanceFilter: { expression: "this.Kind = 1" } }],
-          },
-          "Schema.B.Code": {
-            kind: "property",
-            id: "Schema.B.Code",
-            propertyClassName: "Schema.B",
-            propertyName: "Code",
-            pathFromTarget: [{ ...step, instanceFilter: { expression: "this.Kind = 2" } }],
-          },
-        },
-        fields: {},
-      } as unknown as ContentDescriptor;
-
-      const map = buildRelatedInstanceKeyMap(filteredDescriptor);
-      expect(map.size).to.equal(1);
-      const [internalKey, publicKey] = [...map][0];
-      expect(internalKey).to.contain("this.Kind = 1");
-      expect(publicKey).to.equal("Schema.A-[Schema.Rel]->Schema.B");
+      expect(contentValues.relatedInstances).to.deep.equal({ [pathKey]: entries });
     });
   });
 

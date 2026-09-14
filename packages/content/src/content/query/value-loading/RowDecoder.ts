@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { serializeRelationshipPath } from "../../model/Utils.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlQueryRow, InstanceKey, Value } from "@itwin/presentation-shared";
@@ -235,47 +234,8 @@ export function mergeGroupValues(target: GroupValues, source: GroupValues): void
 }
 
 /**
- * Builds the internal-join-path-key -> public-path-key map used to re-key `relatedInstances` in
- * {@link toContentValues}. A descriptor-level fact — built once per descriptor, not per item.
- *
- * Internal keys include step instance filters, public keys don't, so paths differing only by a filter share
- * one public key. For the same property that never yields two internal keys (selector identity ignores
- * filters, so such candidates already merged into one). For *different* properties it can — a legitimate
- * configuration whose field values are all correct and only whose related instances are ambiguous. The first
- * internal key in descriptor selector order wins the public key; the rest are left unmapped and their
- * entries dropped.
- *
- * @internal
- */
-export function buildRelatedInstanceKeyMap(descriptor: ContentDescriptor): Map<string, string> {
-  const publicKeyByInternalKey = new Map<string, string>();
-  const claimedPublicKeys = new Set<string>();
-  for (const selector of Object.values(descriptor.selectors)) {
-    if (selector.kind !== "property" || selector.pathFromTarget.length === 0) {
-      continue;
-    }
-    const internalKey = serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true });
-    if (publicKeyByInternalKey.has(internalKey)) {
-      continue;
-    }
-    const publicKey = serializeRelationshipPath({ path: selector.pathFromTarget });
-    if (claimedPublicKeys.has(publicKey)) {
-      continue;
-    }
-    claimedPublicKeys.add(publicKey);
-    publicKeyByInternalKey.set(internalKey, publicKey);
-  }
-  return publicKeyByInternalKey;
-}
-
-/**
  * Projects decoded selector values onto descriptor fields through each field's `selectorId`, producing
  * the `ContentValues` for one instance. External fields carry no selector and are left `undefined`.
- *
- * `relatedInstances` is re-keyed through `relatedInstanceKeyMap` ({@link buildRelatedInstanceKeyMap}, built
- * once per descriptor) from the internal join-path key to the public key exposed on
- * `ContentValues.relatedInstances` (no instance filters — the same key a field's `pathFromTarget`
- * serializes to). An internal key absent from the map is dropped.
  *
  * @internal
  */
@@ -283,9 +243,8 @@ export function toContentValues(props: {
   descriptor: ContentDescriptor;
   primaryKey: InstanceKey;
   values: GroupValues;
-  relatedInstanceKeyMap: Map<string, string>;
 }): ContentValues {
-  const { descriptor, primaryKey, values: groupValues, relatedInstanceKeyMap } = props;
+  const { descriptor, primaryKey, values: groupValues } = props;
   const values: Record<string, Value> = {};
   for (const field of Object.values(descriptor.fields)) {
     if (field.kind !== "calculated" && field.kind !== "property") {
@@ -297,13 +256,5 @@ export function toContentValues(props: {
     }
   }
 
-  const relatedInstances: Record<string, RelatedInstanceEntry[]> = {};
-  for (const [internalKey, entries] of groupValues.relatedInstances) {
-    const publicKey = relatedInstanceKeyMap.get(internalKey);
-    if (publicKey) {
-      relatedInstances[publicKey] = entries;
-    }
-  }
-
-  return { primaryKey, values, relatedInstances };
+  return { primaryKey, values, relatedInstances: Object.fromEntries(groupValues.relatedInstances) };
 }

@@ -36,8 +36,9 @@ export interface ContentValues {
   /** Map of field ID → raw value. */
   values: Record<Field["id"], Value>;
   /**
-   * Related instances reached by this item, keyed by serialized relationship path
-   * ({@link serializeRelationshipPath} — same serialization used in field IDs).
+   * Related instances reached by this item, keyed by the exact relationship path the values were
+   * loaded over, including step instance filters and their binding values
+   * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`).
    *
    * Alignment contract: for a field whose `pathFromTarget` serializes to key `P` and whose value
    * is array-shaped due to path cardinality, `values[field.id]` has exactly `relatedInstances[P].length`
@@ -69,8 +70,9 @@ export interface ContentItem {
   readonly values: DeepReadonly<Record<Field["id"], Value>>;
 
   /**
-   * Related instances reached by this item, keyed by serialized relationship path.
-   * See {@link (ContentItem:interface).getRelatedInstances} for an ergonomic accessor.
+   * Related instances reached by this item, keyed by the exact relationship path the values were
+   * loaded over, including step instance filters. See {@link (ContentItem:interface).getRelatedInstances}
+   * for an ergonomic accessor.
    */
   readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
 
@@ -123,13 +125,13 @@ export function createContentItem({
       return contentValues.values[field.id];
     },
     getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }) {
-      const pathKey = serializeRelationshipPath({ path: props.pathFromTarget });
+      const pathKey = serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true });
       const entries = contentValues.relatedInstances[pathKey] ?? [];
       return entries.map((entry, index) => ({
         key: entry.key,
         relationshipKey: entry.relationshipKey,
         getValue(field: DeepReadonly<PropertyField>): DeepReadonly<Value> {
-          if (serializeRelationshipPath({ path: field.pathFromTarget }) !== pathKey) {
+          if (serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true }) !== pathKey) {
             return undefined;
           }
           const rawValue = contentValues.values[field.id];
