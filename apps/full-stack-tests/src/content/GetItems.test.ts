@@ -332,7 +332,7 @@ describe("Content", () => {
         );
       });
 
-      it("returns a key more than once when configured sources overlap", async () => {
+      it("throws when configured sources overlap", async () => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const schema = await importSchema(
             testName,
@@ -346,21 +346,20 @@ describe("Content", () => {
               </ECEntityClass>
             `,
           );
-          const derived = builder.insertInstance(schema.items.Derived.fullName, { prop: "x" });
-          return { schema, derived };
+          builder.insertInstance(schema.items.Derived.fullName, { prop: "x" });
+          return { schema };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
         // `Base` (polymorphic) and `Derived` both select the same instance.
-        const provider = await createProvider({
-          imodelAccess,
-          targets: [
-            { primaryClass: setup.schema.items.Base.fullName },
-            { primaryClass: setup.schema.items.Derived.fullName },
-          ],
-        });
-
-        const items = await collect(provider.getItems());
-        expect(items.map((item) => item.primaryKey.id)).toEqual([setup.derived.id, setup.derived.id]);
+        await expect(
+          createProvider({
+            imodelAccess,
+            targets: [
+              { primaryClass: setup.schema.items.Base.fullName },
+              { primaryClass: setup.schema.items.Derived.fullName },
+            ],
+          }),
+        ).rejects.toThrow(/overlap/);
       });
     });
 
