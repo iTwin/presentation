@@ -5,7 +5,6 @@
 
 import { assert } from "@itwin/core-bentley";
 
-import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlQueryRow, InstanceKey, Value } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../ContentTarget.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
@@ -37,6 +36,17 @@ export function decodePrimaryKey(props: {
 }): InstanceKey {
   const { row, columnNames } = props;
   return { className: row[columnNames.primaryKey.className], id: row[columnNames.primaryKey.id] };
+}
+
+/**
+ * Serializes an instance key into a string that's unique across classes, unlike `ECInstanceId` alone —
+ * e.g. a `bis.Model` and the `bis.Element` it models share an `ECInstanceId`, so keying by id alone would
+ * merge their values.
+ *
+ * @internal
+ */
+export function toInstanceKeyString(key: InstanceKey): string {
+  return `${key.className}:${key.id}`;
 }
 
 /**
@@ -131,20 +141,21 @@ export function decodeRow(props: {
 }
 
 /**
- * Decodes one query group's rows into `primary id -> values`, giving every value the shape the group's
- * cardinality dictates:
+ * Decodes one query group's rows into `instance key -> values` (keyed by {@link toInstanceKeyString},
+ * giving every value the shape the group's cardinality dictates:
  *
  * - `"one"` (the anchor, a 1:1 partition): one row per primary — scalar selector values and a single-entry
  *   related-instance array per path key.
  * - `"many"` (an isolated 1:many path): zero or more rows per primary — every projected selector becomes an
  *   index-aligned array with one element per row (`undefined` where the row lacks the value) and every
- *   projected path key an equally long array of related instances. Each id in `ids` starts from empty arrays,
- *   so a primary that reached no related instance ends with `[]` rather than nothing.
+ *   projected path key an equally long array of related instances. Each key in `keys` starts from empty
+ *   arrays, so a primary that reached no related instance ends with `[]` rather than nothing.
  *
- * When `ids` is given, it is the complete set of primaries the group describes: rows for any other id are
- * ignored. A page's ids span every source, and an additional group's query is restricted only by its own
- * source's target — not by the anchor's query filterers and value filters — so an overlapping source's group
- * can return rows for a primary that belongs to another source.
+ * When `keys` is given, it is the complete set of primaries the group describes: rows for any other instance
+ * key are ignored. A page's ids span every source, and an additional group's query is restricted only by an
+ * `ECInstanceId` IN-list and its own source's target — not by class, nor by the anchor's query filterers and
+ * value filters — so an overlapping source's group can return rows for a primary that belongs to another
+ * source, or, when two classes share an `ECInstanceId`, to a different plan entirely.
  *
  * @internal
  */
@@ -154,31 +165,31 @@ export function decodeGroupRows(props: {
   cardinality: CardinalityHint;
   columnNames: SelectProjection["columnNames"];
   /** The primaries this group describes — see above. Omit to accept every row. */
-  ids?: Id64String[];
-}): Map<Id64String, GroupValues> {
-  const { rows, descriptor, cardinality, columnNames, ids } = props;
-  const byId = new Map<Id64String, GroupValues>();
-  const idOf = (row: ECSqlQueryRow) => row[columnNames.primaryKey.id] as Id64String;
-  const allowedIds = ids && new Set(ids);
-  const ownRows = allowedIds ? rows.filter((row) => allowedIds.has(idOf(row))) : rows;
+  keys?: readonly InstanceKey[];
+}): Map<string, GroupValues> {
+  const { rows, descriptor, cardinality, columnNames, keys } = props;
+  const byKey = new Map<string, GroupValues>();
+  const keyOf = (row: ECSqlQueryRow) => toInstanceKeyString(decodePrimaryKey({ row, columnNames }));
+  const allowedKeys = keys && new Set(keys.map(toInstanceKeyString));
+  const ownRows = allowedKeys ? rows.filter((row) => allowedKeys.has(keyOf(row))) : rows;
 
   if (cardinality === "one") {
     for (const row of ownRows) {
-      const id = idOf(row);
-      if (byId.has(id)) {
+      const key = keyOf(row);
+      if (byKey.has(key)) {
         const conflictingPathKeys = [...new Set(Object.values(columnNames.relatedBlobs).map((blob) => blob.pathKey))];
         throw new Error(
-          `Instance "${id}" has more than one row in a "one"-cardinality group (path keys: ${conflictingPathKeys.join(", ")}). ` +
+          `Instance "${key}" has more than one row in a "one"-cardinality group (path keys: ${conflictingPathKeys.join(", ")}). ` +
             `A "one" cardinality hint was given for a path that reaches more than one instance.`,
         );
       }
       const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
-      byId.set(id, {
+      byKey.set(key, {
         selectorValues,
         relatedInstances: new Map(Array.from(relatedInstances, ([pathKey, entry]) => [pathKey, [entry]])),
       });
     }
-    return byId;
+    return byKey;
   }
 
   const selectorIds = [...Object.keys(columnNames.propertyBlobs), ...Object.keys(columnNames.calculatedValues)];
@@ -187,15 +198,15 @@ export function decodeGroupRows(props: {
     selectorValues: new Map(selectorIds.map((selectorId) => [selectorId, [] as Value[]])),
     relatedInstances: new Map(pathKeys.map((pathKey) => [pathKey, [] as RelatedInstanceEntry[]])),
   });
-  for (const id of ids ?? []) {
-    byId.set(id, emptyValues());
+  for (const key of keys ?? []) {
+    byKey.set(toInstanceKeyString(key), emptyValues());
   }
   for (const row of ownRows) {
-    const id = idOf(row);
-    let target = byId.get(id);
+    const key = keyOf(row);
+    let target = byKey.get(key);
     if (!target) {
       target = emptyValues();
-      byId.set(id, target);
+      byKey.set(key, target);
     }
     const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
     for (const selectorId of selectorIds) {
@@ -209,7 +220,7 @@ export function decodeGroupRows(props: {
       target.relatedInstances.get(pathKey)!.push(entry);
     }
   }
-  return byId;
+  return byKey;
 }
 
 /**

@@ -338,23 +338,23 @@ describe("RowDecoder", () => {
     });
 
     it("decodes a `one` group to scalar values and single-entry related-instance arrays", () => {
-      const byId = decodeGroupRows({
+      const byKey = decodeGroupRows({
         rows: [row("0x1", { id: "0x10", name: "n", code: "c" }), row("0x2", null)],
         descriptor: relatedDescriptor,
         cardinality: "one",
         columnNames: relatedColumnNames,
       });
-      expect(byId.get("0x1")!.selectorValues.get("Schema.B.Name")).to.equal("n");
-      expect(byId.get("0x1")!.relatedInstances.get("A-[Rel]->B")).to.deep.equal([
+      expect(byKey.get("Schema.A:0x1")!.selectorValues.get("Schema.B.Name")).to.equal("n");
+      expect(byKey.get("Schema.A:0x1")!.relatedInstances.get("A-[Rel]->B")).to.deep.equal([
         { key: { className: "Schema.B", id: "0x10" } },
       ]);
       // An outer-join miss: the primary is present, its related values and identity are absent.
-      expect(byId.get("0x2")!.selectorValues.size).to.equal(0);
-      expect(byId.get("0x2")!.relatedInstances.size).to.equal(0);
+      expect(byKey.get("Schema.A:0x2")!.selectorValues.size).to.equal(0);
+      expect(byKey.get("Schema.A:0x2")!.relatedInstances.size).to.equal(0);
     });
 
-    it("decodes a `many` group to index-aligned arrays with `undefined` holes, seeding `[]` for ids without rows", () => {
-      const byId = decodeGroupRows({
+    it("decodes a `many` group to index-aligned arrays with `undefined` holes, seeding `[]` for keys without rows", () => {
+      const byKey = decodeGroupRows({
         rows: [
           row("0x1", { id: "0x10", name: "first", code: "c1" }),
           row("0x1", { id: "0x11", name: undefined, code: "c2" }),
@@ -363,9 +363,12 @@ describe("RowDecoder", () => {
         descriptor: relatedDescriptor,
         cardinality: "many",
         columnNames: relatedColumnNames,
-        ids: ["0x1", "0x2"],
+        keys: [
+          { className: "Schema.A", id: "0x1" },
+          { className: "Schema.A", id: "0x2" },
+        ],
       });
-      const first = byId.get("0x1")!;
+      const first = byKey.get("Schema.A:0x1")!;
       expect(first.selectorValues.get("Schema.B.Name")).to.deep.equal(["first", undefined, "third"]);
       expect(first.selectorValues.get("Schema.B.Code")).to.deep.equal(["c1", "c2", undefined]);
       expect(first.relatedInstances.get("A-[Rel]->B")!.map((entry) => entry.key.id)).to.deep.equal([
@@ -373,34 +376,48 @@ describe("RowDecoder", () => {
         "0x11",
         "0x12",
       ]);
-      const second = byId.get("0x2")!;
+      const second = byKey.get("Schema.A:0x2")!;
       expect(second.selectorValues.get("Schema.B.Name")).to.deep.equal([]);
       expect(second.selectorValues.get("Schema.B.Code")).to.deep.equal([]);
       expect(second.relatedInstances.get("A-[Rel]->B")).to.deep.equal([]);
     });
 
-    it("ignores rows for ids outside `ids` in both cardinalities", () => {
+    it("ignores rows for keys outside `keys` in both cardinalities", () => {
       const rows = [row("0x9", { id: "0x10", name: "n" }), row("0x1", { id: "0x11", name: "m" })];
       for (const cardinality of ["one", "many"] as const) {
-        const byId = decodeGroupRows({
+        const byKey = decodeGroupRows({
           rows,
           descriptor: relatedDescriptor,
           cardinality,
           columnNames: relatedColumnNames,
-          ids: ["0x1"],
+          keys: [{ className: "Schema.A", id: "0x1" }],
         });
-        expect([...byId.keys()]).to.deep.equal(["0x1"]);
+        expect([...byKey.keys()]).to.deep.equal(["Schema.A:0x1"]);
       }
     });
 
-    it("accepts every row when `ids` is omitted", () => {
-      const byId = decodeGroupRows({
+    it("ignores a row belonging to another class that happens to share an id with an allowed key", () => {
+      // A `bis.Model` and its modeled `bis.Element` share an `ECInstanceId`; a class-only allowed key must not
+      // pick up a same-id row from an unrelated class.
+      const byKey = decodeGroupRows({
+        rows: [row("0x1", { id: "0x10", name: "n" })],
+        descriptor: relatedDescriptor,
+        cardinality: "many",
+        columnNames: relatedColumnNames,
+        keys: [{ className: "Schema.Other", id: "0x1" }],
+      });
+      expect(byKey.get("Schema.A:0x1")).to.equal(undefined);
+      expect(byKey.get("Schema.Other:0x1")!.selectorValues.get("Schema.B.Name")).to.deep.equal([]);
+    });
+
+    it("accepts every row when `keys` is omitted", () => {
+      const byKey = decodeGroupRows({
         rows: [row("0x9", { id: "0x10", name: "n" })],
         descriptor: relatedDescriptor,
         cardinality: "many",
         columnNames: relatedColumnNames,
       });
-      expect(byId.get("0x9")!.selectorValues.get("Schema.B.Name")).to.deep.equal(["n"]);
+      expect(byKey.get("Schema.A:0x9")!.selectorValues.get("Schema.B.Name")).to.deep.equal(["n"]);
     });
 
     it("throws when a `many` row lacks its target identity", () => {
@@ -422,7 +439,7 @@ describe("RowDecoder", () => {
           cardinality: "one",
           columnNames: relatedColumnNames,
         }),
-      ).toThrow(/"0x1".*A-\[Rel\]->B/);
+      ).toThrow(/"Schema.A:0x1".*A-\[Rel\]->B/);
     });
   });
 });

@@ -693,6 +693,49 @@ describe("Content", () => {
           new Array(sourceCount).fill(0).map((_, i) => i + 1),
         );
       });
+
+      it("keeps values distinct for same-id instances of unrelated classes across sorted sources", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+            `,
+          );
+          // Unrelated classes can legitimately share an `ECInstanceId` (e.g. a `bis.Model` and its modeled
+          // `bis.Element`) — force that here to exercise stitching that keys by id alone.
+          const a = builder.insertInstance(schema.items.A.fullName, { ecInstanceId: "0x1", score: 1 });
+          const b = builder.insertInstance(schema.items.B.fullName, { ecInstanceId: "0x1", score: 2 });
+          return { schema, a, b };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }, { primaryClass: setup.schema.items.B.fullName }],
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const scoreFields = getPropertyFieldsByName(descriptor, "Score");
+        const aScoreField = scoreFields.find((field) => field.propertyClassName === setup.schema.items.A.fullName)!;
+        const bScoreField = scoreFields.find((field) => field.propertyClassName === setup.schema.items.B.fullName)!;
+
+        const items = await collect(
+          provider.getItems({ sorting: scoreFields.map((field) => ({ field, direction: "asc" as const })) }),
+        );
+        expectKeys(
+          items.map((item) => item.primaryKey),
+          [setup.a, setup.b],
+        );
+        const aItem = items.find((item) => item.primaryKey.className === setup.schema.items.A.fullName)!;
+        const bItem = items.find((item) => item.primaryKey.className === setup.schema.items.B.fullName)!;
+        expect(aItem.getValue(aScoreField)).toBe(1);
+        expect(bItem.getValue(bScoreField)).toBe(2);
+      });
     });
 
     describe("filtering", () => {

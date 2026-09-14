@@ -24,7 +24,13 @@ import { PAGE_SIZE } from "../QueryLimits.js";
 import { buildSelectProjection } from "../SelectBuilder.js";
 import { createExternalValuePopulator } from "./ExternalValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
-import { decodeGroupRows, decodePrimaryKey, mergeGroupValues, toContentValues } from "./RowDecoder.js";
+import {
+  decodeGroupRows,
+  decodePrimaryKey,
+  mergeGroupValues,
+  toContentValues,
+  toInstanceKeyString,
+} from "./RowDecoder.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -231,7 +237,7 @@ function pageAnchor(props: {
         }).pipe(map((rowsByGroup) => ({ anchorRows, rowsByGroup }))),
       ),
       map(({ anchorRows, rowsByGroup }) => {
-        const valuesById = stitchPlans({
+        const valuesByKey = stitchPlans({
           descriptor,
           plans: [plan],
           rowsByGroup: rowsByGroup.set(plan.anchor, anchorRows),
@@ -240,7 +246,7 @@ function pageAnchor(props: {
           const primaryKey = decodePrimaryKey({ row, columnNames });
           return {
             primaryKey,
-            values: valuesById.get(primaryKey.id)!,
+            values: valuesByKey.get(toInstanceKeyString(primaryKey))!,
             sortValues: readSortValues({ row, sort: plan.anchor.projection.sort }),
           };
         });
@@ -304,13 +310,16 @@ function pageMultiSourceSorted(props: {
     const groups = plans.flatMap((plan) => [plan.anchor, ...plan.additional]);
     return fetchGroupRows({ imodelAccess, groups, ids: keys.map((key) => key.id) }).pipe(
       mergeMap((rowsByGroup) => {
-        const valuesById = stitchPlans({ descriptor, plans, rowsByGroup });
+        const valuesByKey = stitchPlans({ descriptor, plans, rowsByGroup });
         return materializeItems({
           descriptor,
           populateExternalValues,
           rows: keys.map((key) => ({
             primaryKey: key,
-            values: valuesById.get(key.id) ?? { selectorValues: new Map(), relatedInstances: new Map() },
+            values: valuesByKey.get(toInstanceKeyString(key)) ?? {
+              selectorValues: new Map(),
+              relatedInstances: new Map(),
+            },
           })),
         });
       }),
@@ -378,45 +387,49 @@ function fetchGroupRows(props: {
 }
 
 /**
- * Stitches every plan's group rows into one `primary id -> values` map. A plan's anchor rows say which of
- * the page's primaries belong to it, and each of its additional groups is decoded against exactly those
- * ids — a `"many"` group reports `[]` for a primary of this plan that reached no related instance, and a
- * row an additional group returned for another plan's primary (possible when sources' targets overlap) is
- * ignored. Each selector and join-path key is owned by exactly one group (`assignPathOwnership`), so merging
- * is a disjoint union and `mergeGroupValues` throws only on a planning bug.
+ * Stitches every plan's group rows into one `instance key -> values` map, keyed by class+id
+ * ({@link toInstanceKeyString}). A plan's anchor rows say which
+ * of the page's primaries belong to it, and each of its additional groups is decoded against exactly those
+ * keys — a `"many"` group reports `[]` for a primary of this plan that reached no related instance, and a
+ * row an additional group returned for another plan's primary (possible when sources' targets overlap, or
+ * when two classes share an id) is ignored. Each selector and join-path key is owned by exactly one group
+ * (`assignPathOwnership`), so merging is a disjoint union and `mergeGroupValues` throws only on a planning
+ * bug.
  */
 function stitchPlans(props: {
   descriptor: ContentDescriptor;
   plans: SourcePlan[];
   rowsByGroup: Map<PlannedGroup, ECSqlQueryRow[]>;
-}): Map<Id64String, GroupValues> {
+}): Map<string, GroupValues> {
   const { descriptor, plans, rowsByGroup } = props;
-  const result = new Map<Id64String, GroupValues>();
-  const mergeInto = (groupValues: Map<Id64String, GroupValues>) => {
-    for (const [id, values] of groupValues) {
-      const existing = result.get(id);
+  const result = new Map<string, GroupValues>();
+  const mergeInto = (groupValues: Map<string, GroupValues>) => {
+    for (const [key, values] of groupValues) {
+      const existing = result.get(key);
       if (existing) {
         mergeGroupValues(existing, values);
       } else {
-        result.set(id, values);
+        result.set(key, values);
       }
     }
   };
-  const decode = (group: PlannedGroup, ids?: Id64String[]) =>
+  const decode = (group: PlannedGroup, keys?: InstanceKey[]) =>
     decodeGroupRows({
       rows: rowsByGroup.get(group) ?? [],
       descriptor,
       cardinality: group.baseQuery.cardinality,
       columnNames: group.projection.columnNames,
-      ids,
+      keys,
     });
 
   for (const plan of plans) {
-    const anchorValues = decode(plan.anchor);
-    const ids = [...anchorValues.keys()];
-    mergeInto(anchorValues);
+    const anchorRows = rowsByGroup.get(plan.anchor) ?? [];
+    const anchorKeys = anchorRows.map((row) =>
+      decodePrimaryKey({ row, columnNames: plan.anchor.projection.columnNames }),
+    );
+    mergeInto(decode(plan.anchor));
     for (const group of plan.additional) {
-      mergeInto(decode(group, ids));
+      mergeInto(decode(group, anchorKeys));
     }
   }
   return result;

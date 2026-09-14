@@ -348,7 +348,7 @@ describe("getItems", () => {
     ]);
     await expect(
       collect(getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] })),
-    ).rejects.toThrow(/"0x1"/);
+    ).rejects.toThrow(/"Schema.A:0x1"/);
   });
 
   it("yields nothing when the source page is empty", async () => {
@@ -445,18 +445,21 @@ describe("getItems", () => {
     expect(keyStreamQueries[1].ecsql).to.contain("IS NULL");
   });
 
-  it("merges values for a primary key supplied by more than one sorted source", async () => {
+  it("keeps values separate for an id shared by two different-class sorted sources", async () => {
+    // A `bis.Model` and its modeled `bis.Element` can share an `ECInstanceId`; stitching must key by
+    // class+id, not id alone, or one class's values would leak into the other's item.
     const labelField: PropertyField = {
       ...codeField,
-      id: "Schema.A.Label",
+      id: "Schema.B.Label",
       label: "Label",
+      propertyClassName: "Schema.B",
       propertyName: "Label",
-      selectorId: "Schema.A.Label",
+      selectorId: "Schema.B.Label",
     };
     const twoFieldDescriptor = {
       sources: [],
       categories: {},
-      fields: { "Schema.A.Code": codeField, "Schema.A.Label": labelField },
+      fields: { "Schema.A.Code": codeField, "Schema.B.Label": labelField },
       selectors: {
         "Schema.A.Code": {
           kind: "property",
@@ -465,10 +468,10 @@ describe("getItems", () => {
           propertyName: "Code",
           pathFromTarget: [],
         },
-        "Schema.A.Label": {
+        "Schema.B.Label": {
           kind: "property",
-          id: "Schema.A.Label",
-          propertyClassName: "Schema.A",
+          id: "Schema.B.Label",
+          propertyClassName: "Schema.B",
           propertyName: "Label",
           pathFromTarget: [],
         },
@@ -477,7 +480,7 @@ describe("getItems", () => {
     const sorting: ContentQuerySort[] = [{ field: codeField, direction: "asc" }];
     const { imodelAccess } = createIModelAccess((query) => {
       if (query.ecsql.includes("UNION ALL")) {
-        return [keyRow("Schema.A", "0x1", "A")];
+        return [keyRow("Schema.A", "0x1", "A"), keyRow("Schema.B", "0x1", "B")];
       }
       if (query.ecsql.includes("[Schema].[A]")) {
         return [
@@ -507,9 +510,13 @@ describe("getItems", () => {
         sorting,
       }),
     );
-    expect(items).to.have.lengthOf(1);
-    expect(items[0].getValue(codeField)).to.equal("code-1");
-    expect(items[0].getValue(labelField)).to.equal("label-1");
+    expect(items).to.have.lengthOf(2);
+    const aItem = items.find((item) => item.primaryKey.className === "Schema.A")!;
+    const bItem = items.find((item) => item.primaryKey.className === "Schema.B")!;
+    expect(aItem.getValue(codeField)).to.equal("code-1");
+    expect(aItem.getValue(labelField)).to.equal(undefined);
+    expect(bItem.getValue(labelField)).to.equal("label-1");
+    expect(bItem.getValue(codeField)).to.equal(undefined);
   });
 
   it("stitches a 1:many related group's values into the anchor page item", async () => {
