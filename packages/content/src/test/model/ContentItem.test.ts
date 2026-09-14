@@ -331,5 +331,27 @@ describe("createContentItem", () => {
       expect(item.getRelatedInstances({ pathFromTarget: filteredPath })).to.have.lengthOf(1);
       expect(item.getRelatedInstances({ pathFromTarget: testPath })).to.have.lengthOf(0);
     });
+
+    it("returns an entry for a path declared only as an external fields provider input, with no field aligned to it", () => {
+      const descriptor = createTestDescriptor([]);
+      const aspectKey: InstanceKey = { className: "BisCore.ElementAspect", id: "0x10" };
+      const contentValues: ContentValues = {
+        primaryKey: { className: "BisCore.Element", id: "0x1" },
+        values: {},
+        relatedInstances: { [testPathKey]: [{ key: aspectKey }] },
+      };
+      const unrelatedField = createTestPropertyField("BisCore.ElementAspect.Name", {
+        propertyName: "Name",
+        propertyClassName: "BisCore.ElementAspect",
+        pathFromTarget: testPath,
+      });
+
+      const item = createContentItem({ descriptor, contentValues });
+      const entries = item.getRelatedInstances({ pathFromTarget: testPath });
+
+      expect(entries).to.have.lengthOf(1);
+      expect(entries[0].key).to.deep.equal(aspectKey);
+      expect(entries[0].getValue(unrelatedField)).to.be.undefined;
+    });
   });
 });

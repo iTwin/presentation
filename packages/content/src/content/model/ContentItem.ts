@@ -49,6 +49,10 @@ export interface ContentValues {
    * Order within an entry array is unspecified but consistent across this item's fields and
    * `relatedInstances` — index `i` always refers to the same related instance for every array-shaped
    * field on the same path and for the path's own entries.
+   *
+   * Entries exist for every related path the item was loaded over — those read by a field and those
+   * declared only as an external fields provider input — so a path key may be present with no field
+   * aligned to it.
    */
   relatedInstances: Record<string, RelatedInstanceEntry[]>;
 }
@@ -73,6 +77,10 @@ export interface ContentItem {
    * Related instances reached by this item, keyed by the exact relationship path the values were
    * loaded over, including step instance filters. See {@link (ContentItem:interface).getRelatedInstances}
    * for an ergonomic accessor.
+   *
+   * Entries exist for every related path the item was loaded over — those read by a field and those
+   * declared only as an external fields provider input — so a path key may be present with no field
+   * aligned to it.
    */
   readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
 
