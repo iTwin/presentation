@@ -2277,6 +2277,33 @@ describe("resolveContentSources", () => {
       );
     });
 
+    it("keeps same-named bindings from independent target filters separate", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Prop = :value", bindings: { value: { type: "string", value: "left" } } },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Prop = :value", bindings: { value: { type: "string", value: "right" } } },
+        },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      const query = vi
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.find(([q]) => q.ecsql.includes("pres_other"))![0];
+      expect(query.ecsql).toContain("[this].Prop = :outer_value");
+      expect(query.ecsql).toContain("[pres_other].Prop = :inner_value");
+      expect(query.bindings).toEqual({
+        ["outer_value"]: { type: "string", value: "left" },
+        ["inner_value"]: { type: "string", value: "right" },
+      });
+    });
+
     it("does not check targets whose resolvedPrimaryClasses are disjoint", async () => {
       const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
       const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassC" }];

@@ -7,6 +7,7 @@ import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, 
 import { ECSql, getClass } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX, getOrCreate, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
+import { namespaceBindings } from "./query/NamespaceBindings.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
 import { buildTargetFilter } from "./query/TargetFilter.js";
 
@@ -730,20 +731,41 @@ function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
 
   const outerFilter = buildTargetFilter(a);
   const innerFilter = buildTargetFilter(b, OVERLAP_OTHER_ALIAS);
+  const outerJoins = namespaceBindings({
+    sql: outerFilter.joins?.join("\n") ?? "",
+    bindings: outerFilter.bindings ?? {},
+    prefix: "outer_",
+  });
+  const outerWhere = namespaceBindings({
+    sql: outerFilter.where ?? "",
+    bindings: outerFilter.bindings ?? {},
+    prefix: "outer_",
+  });
+  const innerJoins = namespaceBindings({
+    sql: innerFilter.joins?.join("\n") ?? "",
+    bindings: innerFilter.bindings ?? {},
+    prefix: "inner_",
+  });
+  const innerWhere = namespaceBindings({
+    sql: innerFilter.where ?? "",
+    bindings: innerFilter.bindings ?? {},
+    prefix: "inner_",
+  });
   const ecsql = `
     SELECT [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]
     FROM ${ECSql.createClassSelector(a.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
-    ${outerFilter.joins?.join("\n") ?? ""}
+    ${outerJoins.sql}
     WHERE [${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
       SELECT [${OVERLAP_OTHER_ALIAS}].[ECInstanceId]
       FROM ${ECSql.createClassSelector(b.primaryClass)} [${OVERLAP_OTHER_ALIAS}]
-      ${innerFilter.joins?.join("\n") ?? ""}
-      ${innerFilter.where ? `WHERE ${innerFilter.where}` : ""}
+      ${innerJoins.sql}
+      ${innerWhere.sql ? `WHERE ${innerWhere.sql}` : ""}
     )
-      ${outerFilter.where ? ` AND ${outerFilter.where}` : ""}
+      ${outerWhere.sql ? ` AND ${outerWhere.sql}` : ""}
     LIMIT 1
   `;
-  const bindings = { ...outerFilter.bindings, ...innerFilter.bindings };
+  const bindings = { ...outerJoins.bindings, ...innerJoins.bindings };
+  Object.assign(bindings, outerWhere.bindings, innerWhere.bindings);
   return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : {}) };
 }
 
