@@ -446,7 +446,7 @@ describe("buildDistinctValuesQuery", () => {
     expect(query.bindings).to.deep.equal({ scale: { type: "double", value: 2 } });
   });
 
-  it("joins the navigation target class polymorphically and selects its key and label", async () => {
+  it("wraps the distinct-ids query and joins them to the navigation target class polymorphically, selecting its key and label", async () => {
     const field = makePropertyField({
       propertyName: "Parent",
       type: { kind: "navigation", targetClassName: "TestSchema.Target" },
@@ -456,11 +456,27 @@ describe("buildDistinctValuesQuery", () => {
 
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT DISTINCT [this].[Parent].[Id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
-        FROM [TestSchema].[Primary] [this]
-        LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [this].[Parent].[Id]
+        SELECT [navIds].[id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
+        FROM (
+          SELECT DISTINCT [this].[Parent].[Id] AS [id] FROM [TestSchema].[Primary] [this]
+        ) [navIds]
+        LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]
       `),
     );
+  });
+
+  it("carries a value filter's bindings through to the wrapped navigation query", async () => {
+    const field = makePropertyField({
+      propertyName: "Parent",
+      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
+    });
+    const filterField = makePropertyField({ propertyName: "Category" });
+    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
+
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters, labelsFactory });
+
+    expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
+    expect(trimWhitespace(query.ecsql)).to.contain(`WHERE [this].[Category] = :${ECSQL_PREFIX}vf0`);
   });
 
   it("defaults to a class-metadata-based label clause when called directly without a `labelsFactory`", async () => {
@@ -477,7 +493,7 @@ describe("buildDistinctValuesQuery", () => {
     expect(query.ecsql).to.include("[meta].[ECClassDef]");
   });
 
-  it("joins the navigation target class onto a related navigation property's own path", async () => {
+  it("wraps the inner query's own related path joins when the navigation property itself is related", async () => {
     const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Other")];
     const field = makePropertyField({
       propertyName: "Parent",
@@ -489,10 +505,13 @@ describe("buildDistinctValuesQuery", () => {
 
     const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
 
+    // The related path's own join stays inside the inner (now-wrapped) query; the outer query joins the
+    // navigation target class to the inner query's `id` column, not to the related alias directly.
     expect(trimWhitespace(query.ecsql)).to.contain(
-      trimWhitespace(
-        `LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [${ECSQL_PREFIX}t0].[Parent].[Id]`,
-      ),
+      trimWhitespace(`SELECT DISTINCT [${ECSQL_PREFIX}t0].[Parent].[Id] AS [id]`),
+    );
+    expect(trimWhitespace(query.ecsql)).to.contain(
+      trimWhitespace(`LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]`),
     );
   });
 
@@ -512,36 +531,6 @@ describe("buildDistinctValuesQuery", () => {
       className: "TestSchema.Target",
     });
     expect(query.ecsql).to.include(`'TestSchema.Target' || [navTarget].[Code]`);
-  });
-
-  it("counts the navigation target join against the SQLite JOIN-table budget", async () => {
-    // Each link-table step outer-joins 3 tables, so 21 steps + the primary `FROM` table exactly fill the
-    // 64-table budget — leaving no room for the navigation target join.
-    const path = Array.from({ length: 21 }, (_, index) =>
-      makeStep(
-        index === 0 ? primaryClass : `TestSchema.T${index - 1}`,
-        `TestSchema.Rel${index}`,
-        `TestSchema.T${index}`,
-      ),
-    );
-    const fieldProps = {
-      propertyName: "Parent",
-      propertyClassName: "TestSchema.T20" as EC.FullClassNameDotNotation,
-      pathFromTarget: path,
-      valueClassNames: ["TestSchema.T20" as EC.FullClassNameDotNotation],
-    };
-
-    await expect(
-      buildDistinctValuesQuery({ schemaProvider, target, field: makePropertyField(fieldProps) }),
-    ).resolves.toBeDefined();
-    await expect(
-      buildDistinctValuesQuery({
-        schemaProvider,
-        target,
-        field: makePropertyField({ ...fieldProps, type: { kind: "navigation", targetClassName: "TestSchema.Target" } }),
-        labelsFactory,
-      }),
-    ).rejects.toThrow("Query joins exceed the SQLite JOIN-table limit.");
   });
 
   it("selects a whole point column", async () => {

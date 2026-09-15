@@ -953,36 +953,20 @@ export async function buildTargetScopedQuery(props: {
   paths: RelationshipPath[];
   /** Value filters to translate into WHERE. */
   filters: ContentValueFilter[];
-  /**
-   * Number of tables the caller joins onto the returned parts itself, counted against the SQLite JOIN-table budget (default: 0).
-   */
-  reservedTables?: number;
 }): Promise<BaseQueryParts> {
-  const { schemaProvider, target, filters, reservedTables = 0 } = props;
+  const { schemaProvider, target, filters } = props;
   const paths = unionPaths([...props.paths, ...collectFilterPaths(filters)]);
   const getPrefixKeys = createPrefixKeyResolver();
   const relatedClassAliases = assignPrefixAliases(paths, getPrefixKeys);
-  const resolvePathInfo = createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys });
-
-  // The primary `FROM` table, the target filter's joins and the caller's own joins are all fixed — the
-  // paths are joined on top of them, and a path cannot be dropped without changing the query's meaning.
-  const targetFilter = buildTargetFilter(target);
-  const joinInfos = await Promise.all(paths.map(async (path) => resolvePathInfo(path, "outer")));
-  const totalTables =
-    1 + (targetFilter.joins?.length ?? 0) + reservedTables + countJoinTables(mergeJoinInfos(joinInfos));
-  if (totalTables > SQLITE_MAX_JOIN_TABLES) {
-    throw new Error("Query joins exceed the SQLite JOIN-table limit.");
-  }
-
   return buildQueryParts({
     schemaProvider,
     from: `FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`,
-    targetFilter,
+    targetFilter: buildTargetFilter(target),
     filtererClauses: [],
     filters,
     relatedClassAliases,
     getPrefixKeys,
-    resolvePathInfo,
+    resolvePathInfo: createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys }),
     // Join all paths (the selected field's own path plus filter-referenced ones) with outer joins, and
     // evaluate every filter with join-and-compare — no grouping or existential subqueries.
     paths,

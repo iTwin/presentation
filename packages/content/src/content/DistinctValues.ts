@@ -40,6 +40,13 @@ import type { CalculatedField, PropertyField } from "./model/Field.js";
 const NAVIGATION_TARGET_ALIAS = "navTarget";
 
 /**
+ * Alias assigned to the inner distinct-ids derived table a navigation field's query wraps (see
+ * `buildNavigationValuesQuery`). Carries no `ECSQL_PREFIX` for the same reason as
+ * {@link NAVIGATION_TARGET_ALIAS}.
+ */
+const NAVIGATION_IDS_ALIAS = "navIds";
+
+/**
  * Props for `getDistinctFieldValues`.
  *
  * @public
@@ -68,6 +75,12 @@ interface GetDistinctFieldValuesProps {
 
 /**
  * Builds a single-target `SELECT DISTINCT <field selector>` query for `getDistinctFieldValues`.
+ *
+ * For a non-navigation field, this *is* the whole query. For a navigation field, it is instead built as
+ * the inner half of {@link buildNavigationValuesQuery}: reducing to the distinct id set first — before
+ * joining the (few) resulting ids to the navigation target class for their class name and label — keeps
+ * the source scan as cheap as the non-navigation case, paying the join + label cost once per distinct
+ * value rather than once per source row.
  */
 export async function buildDistinctValuesQuery(props: {
   schemaProvider: ECSchemaProvider;
@@ -85,14 +98,7 @@ export async function buildDistinctValuesQuery(props: {
 
   const navigationTargetClassName = field.type.kind === "navigation" ? field.type.targetClassName : undefined;
   const fieldPath = field.kind === "property" ? field.pathFromTarget : undefined;
-  const parts = await buildTargetScopedQuery({
-    schemaProvider,
-    target,
-    paths: fieldPath ? [fieldPath] : [],
-    filters,
-    // The navigation target join is emitted below, on top of this query's own joins.
-    reservedTables: navigationTargetClassName ? 1 : 0,
-  });
+  const parts = await buildTargetScopedQuery({ schemaProvider, target, paths: fieldPath ? [fieldPath] : [], filters });
 
   const relationshipPropertyClasses =
     field.kind === "property" && field.pathFromTarget.length > 0
@@ -108,35 +114,49 @@ export async function buildDistinctValuesQuery(props: {
   const bindings: Record<string, ECSqlBinding> = { ...parts.bindings };
   mergeBindings(bindings, resolved.bindings);
 
-  const { selector, joins } = navigationTargetClassName
-    ? await createNavigationValueSelector({
-        idSelector: `${resolved.selector}.[Id]`,
-        targetClassName: navigationTargetClassName,
-        labelsFactory: props.labelsFactory ?? createDefaultInstanceLabelSelectClauseFactory(),
-      })
-    : { selector: resolved.selector, joins: "" };
+  // Non-navigation: this selector *is* the query. Navigation: it's just the id reduction — the
+  // `.[Id]` member is aliased so the wrapping query below can reference it as a plain column.
+  const innerSelector = navigationTargetClassName ? `${resolved.selector}.[Id] AS [id]` : resolved.selector;
+  const innerEcsql = `SELECT DISTINCT ${innerSelector} ${parts.from} ${parts.joins}${parts.where ? ` ${parts.where}` : ""}`;
 
-  const ecsql = `SELECT DISTINCT ${selector} ${parts.from} ${parts.joins}${joins}${parts.where ? ` ${parts.where}` : ""}`;
+  if (!navigationTargetClassName) {
+    return { ecsql: innerEcsql, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
+  }
+
+  const ecsql = await buildNavigationValuesQuery({
+    innerEcsql,
+    targetClassName: navigationTargetClassName,
+    labelsFactory: props.labelsFactory ?? createDefaultInstanceLabelSelectClauseFactory(),
+  });
   return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
 }
 
 /**
- * Creates the navigation field's `SELECT` columns (target instance id, class name and label) plus the
- * `LEFT JOIN` that makes the class name and label resolvable.
+ * Wraps `innerEcsql` (a `SELECT DISTINCT <id> AS [id] ...` query) as a derived table and left-joins its
+ * distinct ids to the navigation target class — polymorphically (no `ONLY`), so a subclass instance
+ * resolves, and outer, so an id with no matching instance (e.g. a dangling reference) still contributes
+ * its row rather than being silently dropped; `rowValueToNavigationValue` then surfaces such a row the
+ * same way as a `NULL` navigation value — as `undefined` — since `ec_classname` comes back `NULL` too.
+ *
+ * Deliberately a single query, not a second round trip: `getDistinctFieldValues` streams one query's
+ * results as they arrive, and a separate lookup query would force buffering the entire id set in memory
+ * first. Measurements also showed this single nested-subquery shape edges out an equivalent two-query
+ * `IdSet`-bound lookup, on top of preserving the streaming behavior.
  */
-async function createNavigationValueSelector(props: {
-  idSelector: string;
+async function buildNavigationValuesQuery(props: {
+  innerEcsql: string;
   targetClassName: EC.FullClassNameDotNotation;
   labelsFactory: IInstanceLabelSelectClauseFactory;
-}): Promise<{ selector: string; joins: string }> {
+}): Promise<string> {
   const labelSelector = await props.labelsFactory.createSelectClause({
     classAlias: NAVIGATION_TARGET_ALIAS,
     className: props.targetClassName,
   });
-  return {
-    selector: `${props.idSelector}, ec_classname([${NAVIGATION_TARGET_ALIAS}].[ECClassId], 's.c'), ${labelSelector}`,
-    joins: ` LEFT JOIN ${ECSql.createClassSelector(props.targetClassName)} [${NAVIGATION_TARGET_ALIAS}] ON [${NAVIGATION_TARGET_ALIAS}].[ECInstanceId] = ${props.idSelector}`,
-  };
+  return `
+    SELECT [${NAVIGATION_IDS_ALIAS}].[id], ec_classname([${NAVIGATION_TARGET_ALIAS}].[ECClassId], 's.c'), ${labelSelector}
+    FROM (${props.innerEcsql}) [${NAVIGATION_IDS_ALIAS}]
+    LEFT JOIN ${ECSql.createClassSelector(props.targetClassName)} [${NAVIGATION_TARGET_ALIAS}] ON [${NAVIGATION_TARGET_ALIAS}].[ECInstanceId] = [${NAVIGATION_IDS_ALIAS}].[id]
+  `;
 }
 
 /**
