@@ -247,6 +247,33 @@ describe("buildKeyStreamQuery", () => {
     expect(Object.keys(query.bindings ?? {})).to.have.members(["s0_minCode", "s1_minCode"]);
   });
 
+  it.each([false, true])(
+    "does not cascade parameter namespacing for prefix-overlapping bindings (reversed order: %s)",
+    (reverse) => {
+      const bindings = Object.fromEntries(
+        (reverse ? ["s0_x", "x"] : ["x", "s0_x"]).map((name) => [name, { type: "string" as const, value: name }]),
+      );
+      const plan = createPlan({
+        anchor: {
+          baseQuery: createBaseQueryGroup({
+            where: "WHERE [this].Code = :x OR [this].Code = :s0_x OR [this].Code = :x_suffix OR [this].Note = ':x'",
+            bindings,
+          }),
+        },
+      });
+
+      const query = buildKeyStreamQuery({ plans: [plan], sorting: [] });
+
+      expect(query.ecsql).toContain(
+        "WHERE [this].Code = :s0_x OR [this].Code = :s0_s0_x OR [this].Code = :x_suffix OR [this].Note = ':x'",
+      );
+      expect(query.bindings).toEqual({
+        ["s0_x"]: { type: "string", value: "x" },
+        ["s0_s0_x"]: { type: "string", value: "s0_x" },
+      });
+    },
+  );
+
   it("adds a keyset WHERE seeded from the cursor", () => {
     const makePlan = () =>
       createPlan({ anchor: { keyProjection: createProjection({ propertyBlobs: {}, sort: [sortColumn] }) } });

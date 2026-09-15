@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { mergeBindings } from "../../InternalUtils.js";
+import { namespaceBindings } from "../NamespaceBindings.js";
 import { PAGE_SIZE, SQLITE_MAX_COMPOUND_SELECT_TERMS } from "../QueryLimits.js";
 import { buildKeysetPredicate } from "./Keyset.js";
 
@@ -218,32 +219,4 @@ function sortPrimitiveType(sort: ContentQuerySort): PrimitiveValueType {
     throw new Error(`Cannot sort by field "${sort.field.id}" because its value is not a primitive.`);
   }
   return sort.field.type.type;
-}
-
-// Rewrites `:name` binding parameters in `sql` to `:${prefix}name`, so branches from different sources
-// (or the same source at different steps) can share one compound query without colliding on parameter
-// names. Only names in `props.bindings` are rewritten, but the rewrite is a text-level regex match, not
-// SQL-aware — a `:name` that happens to appear inside a string literal of the branch's SQL and coincides
-// with one of its declared binding names would also be rewritten. Binding names come from both this
-// package (`pres_`-prefixed) and the consumer (`instanceFilter` and calculated-field bindings), and the
-// literals they could collide with come from the same consumer-supplied expressions, so a collision
-// requires the consumer to spell a `:name` literal that matches their own binding — accepted as a rare
-// edge case rather than parsing ECSQL string literals to guard against it.
-function namespaceBindings(props: { sql: string; bindings: Record<string, ECSqlBinding>; prefix: string }): {
-  sql: string;
-  bindings: Record<string, ECSqlBinding>;
-} {
-  let sql = props.sql;
-  const bindings: Record<string, ECSqlBinding> = {};
-  for (const [name, binding] of Object.entries(props.bindings)) {
-    const namespaced = `${props.prefix}${name}`;
-    sql = sql.replace(new RegExp(`:${escapeRegExp(name)}(?![A-Za-z0-9_])`, "g"), `:${namespaced}`);
-    bindings[namespaced] = binding;
-  }
-  return { sql, bindings };
-}
-
-// Escapes characters that have special meaning in a regular expression so `value` matches literally.
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
