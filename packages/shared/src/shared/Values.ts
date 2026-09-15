@@ -6,6 +6,7 @@
 import { compareStrings, Id64 } from "@itwin/core-bentley";
 
 import type { Id64String } from "@itwin/core-bentley";
+import type { ConcatenatedValue } from "./ConcatenatedValue.js";
 import type { EC, PrimitiveValueType } from "./Metadata.js";
 
 /**
@@ -195,7 +196,20 @@ export interface StructValue {
 export type ArrayValue = Value[];
 
 /**
- * Any value that can be assigned to an ECInstance — a primitive, struct, array, or undefined (null/empty).
+ * A value representing a navigation value pointing to another instance.
  * @public
  */
-export type Value = PrimitiveValue | StructValue | ArrayValue | undefined;
+export interface NavigationValue {
+  /**
+   * Key of the instance the navigation value points to.
+   */
+  key: InstanceKey;
+  /** Unformatted label of the instance the navigation value points to. */
+  label: ConcatenatedValue | string;
+}
+
+/**
+ * Any value that can be assigned to an ECInstance — a primitive, struct, array, navigation value, or undefined (null/empty).
+ * @public
+ */
+export type Value = PrimitiveValue | StructValue | ArrayValue | NavigationValue | undefined;

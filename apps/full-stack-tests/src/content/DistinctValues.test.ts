@@ -124,6 +124,77 @@ describe("Content", () => {
       expect(values.slice().sort()).toEqual([1, 2]);
     });
 
+    it("returns navigation values with their target instances' keys and labels", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECNavigationProperty propertyName="NavToB" relationshipName="AtoB" direction="Forward" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="Label" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="BSub">
+              <BaseClass>B</BaseClass>
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        // Two different target instances, of different classes, sharing the same label.
+        const b = builder.insertInstance(s.items.B.fullName, { label: "shared" });
+        const bSub = builder.insertInstance(s.items.BSub.fullName, { label: "shared" });
+        builder.insertInstance(s.items.A.fullName, { "NavToB.Id": b.id });
+        builder.insertInstance(s.items.A.fullName, { "NavToB.Id": bSub.id });
+        // A second reference to the same target instance, plus one without a navigation value at all.
+        builder.insertInstance(s.items.A.fullName, { "NavToB.Id": b.id });
+        builder.insertInstance(s.items.A.fullName);
+        return { schema: s, bId: b.id, bSubId: bSub.id };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+      const field = getPropertyFieldByName(descriptor, "NavToB");
+
+      const values = await collect(
+        getDistinctFieldValues({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          field,
+          labelsFactory: { createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]` },
+        }),
+      );
+
+      // Same-labeled instances are separate entries (de-duplication is by target instance id), the
+      // subclass instance resolves through the polymorphic join, and the NULL navigation value comes
+      // through as `undefined`.
+      expect(values).toHaveLength(3);
+      expect(values).toContainEqual({
+        key: { className: setup.schema.items.B.fullName, id: setup.bId },
+        label: "shared",
+      });
+      expect(values).toContainEqual({
+        key: { className: setup.schema.items.BSub.fullName, id: setup.bSubId },
+        label: "shared",
+      });
+      expect(values).toContainEqual(undefined);
+    });
+
     it("returns distinct values for a related property, joining through the relationship path", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(

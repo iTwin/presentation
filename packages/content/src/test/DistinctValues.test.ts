@@ -15,6 +15,7 @@ import type {
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryRow,
+  IInstanceLabelSelectClauseFactory,
   RelationshipPath,
   Value,
   ValueDescriptor,
@@ -84,6 +85,14 @@ function createMockIModelAccess(props: {
     }),
   };
 }
+
+/**
+ * A labels factory stub that selects a single column, so a test's expected ECSQL doesn't depend on the
+ * real label clause factories' output.
+ */
+const labelsFactory: IInstanceLabelSelectClauseFactory = {
+  createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]`,
+};
 
 describe("getDistinctFieldValues", () => {
   const targetA: ContentTarget = { primaryClass: "TestSchema.ClassA" };
@@ -253,6 +262,123 @@ describe("getDistinctFieldValues", () => {
     expect(await collect(iterable)).to.deep.equal(["a"]);
     expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
   });
+
+  describe("navigation fields", () => {
+    const navigationField = makePropertyField({
+      propertyName: "Parent",
+      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
+    });
+
+    it("yields the target instances' keys and labels", async () => {
+      const imodelAccess = createMockIModelAccess({
+        rowsByMarker: new Map([
+          [
+            "ClassA",
+            [
+              { 0: "0x1", 1: "TestSchema.Target", 2: "Target 1" },
+              // A JSON label selector's result is parsed back into a `ConcatenatedValue`.
+              { 0: "0x2", 1: "TestSchema.SubTarget", 2: `[{"type":"String","value":"Target"}," 2"]` },
+            ],
+          ],
+        ]),
+      });
+
+      const results = await collect(
+        getDistinctFieldValues({ imodelAccess, targets: [targetA], field: navigationField, labelsFactory }),
+      );
+
+      expect(results).to.deep.equal([
+        { key: { className: "TestSchema.Target", id: "0x1" }, label: "Target 1" },
+        { key: { className: "TestSchema.SubTarget", id: "0x2" }, label: [{ type: "String", value: "Target" }, " 2"] },
+      ]);
+    });
+
+    it("yields two target instances sharing a label as separate entries", async () => {
+      const imodelAccess = createMockIModelAccess({
+        rowsByMarker: new Map([
+          [
+            "ClassA",
+            [
+              { 0: "0x1", 1: "TestSchema.Target", 2: "shared label" },
+              { 0: "0x2", 1: "TestSchema.Target", 2: "shared label" },
+            ],
+          ],
+        ]),
+      });
+
+      const results = await collect(
+        getDistinctFieldValues({ imodelAccess, targets: [targetA], field: navigationField, labelsFactory }),
+      );
+
+      // Instances are de-duplicated by id, not by label — grouping same-labeled instances is the
+      // consumer's job.
+      expect(results).to.deep.equal([
+        { key: { className: "TestSchema.Target", id: "0x1" }, label: "shared label" },
+        { key: { className: "TestSchema.Target", id: "0x2" }, label: "shared label" },
+      ]);
+    });
+
+    it("de-duplicates by target instance id, even when the label differs between rows", async () => {
+      const imodelAccess = createMockIModelAccess({
+        rowsByMarker: new Map([
+          ["ClassA", [{ 0: "0x1", 1: "TestSchema.Target", 2: "label" }]],
+          ["ClassB", [{ 0: "0x1", 1: "TestSchema.Target", 2: "a different label" }]],
+        ]),
+      });
+
+      const results = await collect(
+        getDistinctFieldValues({ imodelAccess, targets: [targetA, targetB], field: navigationField, labelsFactory }),
+      );
+
+      expect(results).to.deep.equal([{ key: { className: "TestSchema.Target", id: "0x1" }, label: "label" }]);
+    });
+
+    it("yields a NULL navigation value as `undefined`", async () => {
+      const imodelAccess = createMockIModelAccess({
+        rowsByMarker: new Map([
+          [
+            "ClassA",
+            [
+              { 0: undefined, 1: undefined, 2: undefined },
+              { 0: "0x1", 1: "TestSchema.Target", 2: "Target 1" },
+            ],
+          ],
+        ]),
+      });
+
+      const results = await collect(
+        getDistinctFieldValues({ imodelAccess, targets: [targetA], field: navigationField, labelsFactory }),
+      );
+
+      expect(results).to.deep.equal([
+        undefined,
+        { key: { className: "TestSchema.Target", id: "0x1" }, label: "Target 1" },
+      ]);
+    });
+
+    it("uses the supplied labels factory to select the target instances' labels", async () => {
+      const imodelAccess = createMockIModelAccess({ rowsByMarker: new Map([["ClassA", []]]) });
+      const customLabelsFactory: IInstanceLabelSelectClauseFactory = {
+        createSelectClause: vi.fn(async ({ classAlias }) => `[${classAlias}].[MyLabel]`),
+      };
+
+      await collect(
+        getDistinctFieldValues({
+          imodelAccess,
+          targets: [targetA],
+          field: navigationField,
+          labelsFactory: customLabelsFactory,
+        }),
+      );
+
+      expect(customLabelsFactory.createSelectClause).toHaveBeenCalledWith({
+        classAlias: "navTarget",
+        className: "TestSchema.Target",
+      });
+      const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
+      expect(query.ecsql).to.include("[navTarget].[MyLabel]");
+    });
+  });
 });
 
 describe("buildDistinctValuesQuery", () => {
@@ -320,7 +446,43 @@ describe("buildDistinctValuesQuery", () => {
     expect(query.bindings).to.deep.equal({ scale: { type: "double", value: 2 } });
   });
 
-  it("appends the `.Id` member for a navigation property selection", async () => {
+  it("wraps the distinct-ids query and joins them to the navigation target class polymorphically, selecting its key and label", async () => {
+    const field = makePropertyField({
+      propertyName: "Parent",
+      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
+    });
+
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
+
+    expect(trimWhitespace(query.ecsql)).to.equal(
+      trimWhitespace(`
+        SELECT [navIds].[id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
+        FROM (
+          SELECT DISTINCT [this].[Parent].[Id] AS [id] FROM [TestSchema].[Primary] [this]
+        ) [navIds]
+        LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]
+      `),
+    );
+  });
+
+  it("carries a value filter's bindings through to the wrapped navigation query", async () => {
+    const field = makePropertyField({
+      propertyName: "Parent",
+      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
+    });
+    const filterField = makePropertyField({ propertyName: "Category" });
+    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
+
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters, labelsFactory });
+
+    expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
+    expect(trimWhitespace(query.ecsql)).to.contain(`WHERE [this].[Category] = :${ECSQL_PREFIX}vf0`);
+  });
+
+  it("defaults to a class-metadata-based label clause when called directly without a `labelsFactory`", async () => {
+    // `getDistinctFieldValues` always supplies its own default (`createIModelInstanceLabelSelectClauseFactory`);
+    // `buildDistinctValuesQuery`'s own fallback (`createDefaultInstanceLabelSelectClauseFactory`) only
+    // applies to direct use of the query builder itself, with no query executor available.
     const field = makePropertyField({
       propertyName: "Parent",
       type: { kind: "navigation", targetClassName: "TestSchema.Target" },
@@ -328,9 +490,47 @@ describe("buildDistinctValuesQuery", () => {
 
     const query = await buildDistinctValuesQuery({ schemaProvider, target, field });
 
-    expect(trimWhitespace(query.ecsql)).to.equal(
-      `SELECT DISTINCT [this].[Parent].[Id] FROM [TestSchema].[Primary] [this]`,
+    expect(query.ecsql).to.include("[meta].[ECClassDef]");
+  });
+
+  it("wraps the inner query's own related path joins when the navigation property itself is related", async () => {
+    const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Other")];
+    const field = makePropertyField({
+      propertyName: "Parent",
+      propertyClassName: "TestSchema.Other",
+      pathFromTarget: path,
+      valueClassNames: ["TestSchema.Other"],
+      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
+    });
+
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
+
+    // The related path's own join stays inside the inner (now-wrapped) query; the outer query joins the
+    // navigation target class to the inner query's `id` column, not to the related alias directly.
+    expect(trimWhitespace(query.ecsql)).to.contain(
+      trimWhitespace(`SELECT DISTINCT [${ECSQL_PREFIX}t0].[Parent].[Id] AS [id]`),
     );
+    expect(trimWhitespace(query.ecsql)).to.contain(
+      trimWhitespace(`LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]`),
+    );
+  });
+
+  it("uses the supplied labels factory for the navigation target's label", async () => {
+    const field = makePropertyField({
+      propertyName: "Parent",
+      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
+    });
+    const customLabelsFactory: IInstanceLabelSelectClauseFactory = {
+      createSelectClause: vi.fn(async ({ classAlias, className }) => `'${className}' || [${classAlias}].[Code]`),
+    };
+
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory: customLabelsFactory });
+
+    expect(customLabelsFactory.createSelectClause).toHaveBeenCalledWith({
+      classAlias: "navTarget",
+      className: "TestSchema.Target",
+    });
+    expect(query.ecsql).to.include(`'TestSchema.Target' || [navTarget].[Code]`);
   });
 
   it("selects a whole point column", async () => {
