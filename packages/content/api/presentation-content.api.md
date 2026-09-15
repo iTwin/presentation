@@ -9,6 +9,7 @@ import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Id64String } from '@itwin/core-bentley';
+import type { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
 import type { InstanceKey } from '@itwin/presentation-shared';
 import type { Point2dValue } from '@itwin/presentation-shared';
 import type { Point3dValue } from '@itwin/presentation-shared';
@@ -299,6 +300,7 @@ interface GetDistinctFieldValuesProps {
     field: PropertyField | CalculatedField;
     filters?: ContentValueFilter[];
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    labelsFactory?: IInstanceLabelSelectClauseFactory;
     targets: ContentTarget[];
 }
 
