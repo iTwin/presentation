@@ -215,6 +215,22 @@ describe("collectCategories", () => {
     expect(categories.extOnly).to.deep.equal({ id: "extOnly", label: "Ext Only" });
   });
 
+  it("reuses category IDs across filtered paths that share the same relationship", () => {
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+    ];
+
+    expect(CategoryDefinition.computeId({ path: filteredA })).to.equal(
+      CategoryDefinition.computeId({ path: filteredB }),
+    );
+    expect(CategoryDefinition.computeId({ path: filteredA, omitTargetClass: true })).to.equal(
+      CategoryDefinition.computeId({ path: filteredB, omitTargetClass: true }),
+    );
+  });
+
   it("ignores external fields providers that declare no categories", async () => {
     const external = createExternalProvider("ext_v1");
     const categories = await collectCategories({

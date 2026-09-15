@@ -81,7 +81,7 @@ export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider):
       const applicableHint = hint === "many" && path.length < declaredPath.length ? undefined : hint;
       return getOrCreate({
         map: cache,
-        key: `${serializeRelationshipPath({ path })}|${applicableHint ?? ""}`,
+        key: `${serializeRelationshipPath({ path, includeInstanceFilters: false })}|${applicableHint ?? ""}`,
         createFunc: async () =>
           classifyPathCardinality({ schemaProvider: imodelAccess, path, cardinalityHint: applicableHint }),
       });
@@ -131,7 +131,7 @@ export function collectPathCardinalities(
 
   const cardinalitiesByKey = new Map<string, CardinalityHint[]>();
   for (const { path, cardinality } of declarations) {
-    const key = serializeRelationshipPath({ path });
+    const key = serializeRelationshipPath({ path, includeInstanceFilters: true });
     getOrCreate({ map: cardinalitiesByKey, key, createFunc: () => [] }).push(cardinality);
   }
   const hints = new Map<string, CardinalityHint>();
@@ -147,7 +147,7 @@ export function collectPathCardinalities(
     // strict prefix that has no verdict of its own yet — same rule `PathCardinalityClassifier` applies.
     // A `"many"` traversal implies nothing about a prefix, so it seeds nothing here.
     for (let length = 1; length < path.length; ++length) {
-      const prefixKey = serializeRelationshipPath({ path: path.slice(0, length) });
+      const prefixKey = serializeRelationshipPath({ path: path.slice(0, length), includeInstanceFilters: true });
       if (!hints.has(prefixKey)) {
         hints.set(prefixKey, "one");
       }

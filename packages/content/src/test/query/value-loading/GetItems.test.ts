@@ -6,6 +6,7 @@
 import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { computePropertySelectorId } from "../../../content/definition-building/ValueSelector.js";
+import { PropertyField } from "../../../content/model/Field.js";
 import { PAGE_SIZE } from "../../../content/query/QueryLimits.js";
 import { getItems } from "../../../content/query/value-loading/GetItems.js";
 import { createPropertyValueDecoder } from "../../../content/query/value-loading/RowDecoder.js";
@@ -26,7 +27,6 @@ import type {
   InputPropertyDeclaration,
 } from "../../../content/extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
-import type { PropertyField } from "../../../content/model/Field.js";
 import type { ContentQuerySort } from "../../../content/query/SelectBuilder.js";
 
 function createTestDefinition(
@@ -42,7 +42,11 @@ function createTestDefinition(
     }
     const selector: PropertyValueSelector = {
       kind: "property",
-      id: field.id,
+      id: computePropertySelectorId({
+        propertyClassName: field.propertyClassName,
+        propertyName: field.propertyName,
+        pathFromTarget: field.pathFromTarget,
+      }),
       propertyClassName: field.propertyClassName,
       propertyName: field.propertyName,
       pathFromTarget: field.pathFromTarget,
@@ -198,6 +202,32 @@ const relDescriptor = {
   fields: { code: relCodeField, name: relNameField },
 } as unknown as ContentDescriptor;
 
+const filteredManyPathA: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
+const filteredManyPathB: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 2" } }];
+const filteredNameFieldA: PropertyField = {
+  ...relNameField,
+  id: PropertyField.computeId({
+    propertyClassName: "TestSchema.Many",
+    propertyName: "Name",
+    pathFromTarget: filteredManyPathA,
+  }),
+  pathFromTarget: filteredManyPathA,
+};
+const filteredNameFieldB: PropertyField = {
+  ...relNameField,
+  id: PropertyField.computeId({
+    propertyClassName: "TestSchema.Many",
+    propertyName: "Name",
+    pathFromTarget: filteredManyPathB,
+  }),
+  pathFromTarget: filteredManyPathB,
+};
+const filteredPathsDescriptor = {
+  sources: [],
+  categories: {},
+  fields: { code: relCodeField, filteredNameA: filteredNameFieldA, filteredNameB: filteredNameFieldB },
+} as unknown as ContentDescriptor;
+
 function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, related: boolean): ContentSource {
   return {
     target: { primaryClass },
@@ -211,6 +241,24 @@ function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, relat
           },
         ]
       : [],
+    externalInputPaths: [],
+  } as unknown as ContentSource;
+}
+
+function createFilteredPathsSource(primaryClass: EC.FullClassNameDotNotation): ContentSource {
+  return {
+    target: { primaryClass },
+    resolvedPrimaryClasses: [primaryClass],
+    resolvedDeclarations: [
+      {
+        providerId: "provider_v1",
+        declarationIndex: 0,
+        paths: [
+          { path: filteredManyPathA, targetClassNames: ["TestSchema.Many"] },
+          { path: filteredManyPathB, targetClassNames: ["TestSchema.Many"] },
+        ],
+      },
+    ],
     externalInputPaths: [],
   } as unknown as ContentSource;
 }
@@ -631,6 +679,51 @@ describe("getItems", () => {
     expect(items).to.have.lengthOf(1);
     expect(items[0].getValue(relCodeField)).to.equal("code-1");
     expect(items[0].getValue(relNameField)).to.deep.equal(["name-1"]);
+  });
+
+  it("loads the same related property separately through differently filtered paths", async () => {
+    const { imodelAccess, queries } = createRelationalIModelAccess((query) => {
+      if (query.ecsql.includes("Kind = 1")) {
+        return [
+          {
+            ["pres_primary_class"]: "TestSchema.Primary",
+            ["pres_primary_id"]: "0x1",
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "first" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
+          },
+        ];
+      }
+      if (query.ecsql.includes("Kind = 2")) {
+        return [
+          {
+            ["pres_primary_class"]: "TestSchema.Primary",
+            ["pres_primary_id"]: "0x1",
+            ["pres_t1"]: JSON.stringify({ ["ECInstanceId"]: "0x3", ["Name"]: "second" }),
+            ["pres_t1_cls"]: "TestSchema.Many",
+          },
+        ];
+      }
+      return [
+        {
+          ["pres_primary_class"]: "TestSchema.Primary",
+          ["pres_primary_id"]: "0x1",
+          ["this"]: JSON.stringify({ ["Code"]: "code-1" }),
+        },
+      ];
+    });
+    const items = await collect(
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createTestDefinition(filteredPathsDescriptor),
+        sources: [createFilteredPathsSource("TestSchema.Primary")],
+      }),
+    );
+
+    expect(filteredNameFieldA.id).to.not.equal(filteredNameFieldB.id);
+    expect(items).to.have.lengthOf(1);
+    expect(items[0].getValue(filteredNameFieldA)).to.deep.equal(["first"]);
+    expect(items[0].getValue(filteredNameFieldB)).to.deep.equal(["second"]);
+    expect(queries.filter((query) => query.ecsql.includes("Kind"))).to.have.lengthOf(2);
   });
 
   it("aligns index-i field values with index-i related instances across multiple rows of a 1:many group", async () => {

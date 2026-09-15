@@ -223,6 +223,67 @@ describe("collectPathCardinalities", () => {
     expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
   });
 
+  it("keeps differently filtered paths isolated when only one path is hinted", () => {
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+    ];
+    const fieldA = makeField({ id: "filtered-a", pathFromTarget: filteredA, pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([fieldA]));
+
+    expect(hints.get(serializeRelationshipPath({ path: filteredA }))).to.equal("one");
+    expect(hints.has(serializeRelationshipPath({ path: filteredB }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+  });
+
+  it("does not leak a `one` hint across filtered prefixes or into the unfiltered path", () => {
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+      bToC,
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+      bToC,
+    ];
+    const fieldA = makeField({ id: "a", pathFromTarget: filteredA, pathCardinality: "one" });
+    const fieldB = makeField({ id: "b", pathFromTarget: filteredB, pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([fieldA, fieldB]));
+
+    expect(hints.get(serializeRelationshipPath({ path: filteredA }))).to.equal("one");
+    expect(hints.get(serializeRelationshipPath({ path: filteredB }))).to.equal("many");
+    expect(hints.get(serializeRelationshipPath({ path: filteredA.slice(0, 1) }))).to.equal("one");
+    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+  });
+
+  it("reuses the schema-cardinality cache for equivalent filtered lookups", async () => {
+    const getClass = vi.fn(async () => ({
+      fullName: "TestSchema.AToB",
+      isRelationshipClass: () => true,
+      source: { multiplicity: { upperLimit: 1 } },
+      target: { multiplicity: { upperLimit: 1 } },
+    }));
+    const schemaProvider = {
+      getSchema: vi.fn(async () => ({ getClass })),
+      classDerivesFrom: async () => false,
+    } as unknown as ECSchemaProvider;
+
+    const classifier = createPathCardinalityClassifier(schemaProvider);
+    const pathA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+    ];
+    const pathB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+    ];
+
+    await expect(classifier.classify({ path: pathA, declaredPath: pathA })).resolves.to.equal("one");
+    await expect(classifier.classify({ path: pathB, declaredPath: pathB })).resolves.to.equal("one");
+    expect(getClass).toHaveBeenCalledTimes(1);
+  });
+
   it("seeds every unhinted prefix of a `one` path", () => {
     const field = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "one" });
     const hints = collectPathCardinalities(makeDescriptor([field]));
