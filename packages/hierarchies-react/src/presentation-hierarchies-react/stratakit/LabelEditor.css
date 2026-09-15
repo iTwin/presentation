@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 .phr-node-label-editor {
-  padding: var(--stratakit-space-x1);
+  padding: var(--stratakit-space-100);
   width: 300px;
   display: grid;
-  gap: var(--stratakit-space-x1);
+  gap: var(--stratakit-space-100);
   grid-template-rows: auto auto;
 
   .phr-node-label-editor-input-row {
     display: grid;
-    gap: var(--stratakit-space-x1);
+    gap: var(--stratakit-space-100);
     grid-template-columns: 1fr auto auto;
 
     .with-error {

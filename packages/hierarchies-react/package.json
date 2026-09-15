@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
-  "version": "2.0.0-alpha.65",
+  "version": "2.0.0-alpha.66",
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
   "author": {
@@ -76,13 +76,17 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@mui/material": "^9.0.0",
-    "@stratakit/mui": "^0.5.0",
-    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    "@mui/material": "^9.4.0",
+    "@stratakit/foundations": "^1.0.0",
+    "@stratakit/mui": "^1.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "@mui/material": {
+      "optional": true
+    },
+    "@stratakit/foundations": {
       "optional": true
     },
     "@stratakit/mui": {
@@ -94,6 +98,7 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@mui/material": "catalog:stratakit",
     "@rolldown/plugin-babel": "catalog:build-tools",
+    "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/mui": "catalog:stratakit",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
@@ -103,6 +108,7 @@
     "@types/react-dom": "catalog:react",
     "@vitejs/plugin-react": "catalog:build-tools",
     "@vitest/browser-playwright": "catalog:test-tools",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "axe-core": "catalog:test-tools",
     "babel-plugin-react-compiler": "catalog:build-tools",
@@ -116,7 +122,6 @@
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
     "tsdown": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools",
     "vitest-browser-react": "catalog:test-tools"
