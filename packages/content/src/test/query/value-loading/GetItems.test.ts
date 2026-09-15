@@ -5,21 +5,20 @@
 
 import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
-import { computePropertySelectorId } from "../../../content/model/ValueSelector.js";
 import { PAGE_SIZE } from "../../../content/query/QueryLimits.js";
 import { getItems } from "../../../content/query/value-loading/GetItems.js";
-import { createEntityClass, createSchemaAccess } from "../../MetadataStubs.js";
+import { createPropertyValueDecoder } from "../../../content/query/value-loading/RowDecoder.js";
+import {
+  createEntityClass,
+  createPrimitiveProperty,
+  createRelationshipClass,
+  createSchemaAccess,
+} from "../../MetadataStubs.js";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type {
-  EC,
-  ECSchemaProvider,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryRow,
-  RelationshipPath,
-} from "@itwin/presentation-shared";
+import type { EC, ECSqlQueryDef, ECSqlQueryRow, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../../content/ContentTarget.js";
+import type { ContentDefinition } from "../../../content/descriptor-building/BuildDescriptor.js";
 import type { ExternalFieldsProvider } from "../../../content/extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { PropertyField } from "../../../content/model/Field.js";
@@ -36,22 +35,12 @@ const codeField: PropertyField = {
   pathCardinality: "one",
   valueClassNames: ["Schema.A"],
   primaryClassNames: ["Schema.A"],
-  selectorId: "Schema.A.Code",
 };
 
 const descriptor = {
   sources: [],
   categories: {},
   fields: { "Schema.A.Code": codeField },
-  selectors: {
-    "Schema.A.Code": {
-      kind: "property",
-      id: "Schema.A.Code",
-      propertyClassName: "Schema.A",
-      propertyName: "Code",
-      pathFromTarget: [],
-    },
-  },
 } as unknown as ContentDescriptor;
 
 const externalDescriptor = {
@@ -67,7 +56,6 @@ const externalDescriptor = {
       providerId: "ext_v1",
     },
   },
-  selectors: descriptor.selectors,
 } as unknown as ContentDescriptor;
 
 function createExternalStatusProvider(getValues: ExternalFieldsProvider["getValues"]): ExternalFieldsProvider {
@@ -94,7 +82,6 @@ const relCodeField: PropertyField = {
   pathCardinality: "one",
   valueClassNames: ["TestSchema.Primary"],
   primaryClassNames: ["TestSchema.Primary"],
-  selectorId: "code",
 };
 
 const relNameField: PropertyField = {
@@ -108,29 +95,12 @@ const relNameField: PropertyField = {
   pathCardinality: "many",
   valueClassNames: ["TestSchema.Many"],
   primaryClassNames: ["TestSchema.Primary"],
-  selectorId: "name",
 };
 
 const relDescriptor = {
   sources: [],
   categories: {},
   fields: { code: relCodeField, name: relNameField },
-  selectors: {
-    code: {
-      kind: "property",
-      id: "code",
-      propertyClassName: "TestSchema.Primary",
-      propertyName: "Code",
-      pathFromTarget: [],
-    },
-    name: {
-      kind: "property",
-      id: "name",
-      propertyClassName: "TestSchema.Many",
-      propertyName: "Name",
-      pathFromTarget: manyPath,
-    },
-  },
 } as unknown as ContentDescriptor;
 
 function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, related: boolean): ContentSource {
@@ -151,19 +121,23 @@ function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, relat
 }
 
 function createRelationalIModelAccess(handler: (query: ECSqlQueryDef) => ECSqlQueryRow[]) {
-  // A schema provider modelled after `BaseQuery.test.ts`: a relationship class whose name contains `Many`
-  // traverses a 1:many constraint (so it splits into an `additional` group), everything else is 1:1.
-  const relationalSchemaProvider = {
-    getSchema: async (schemaName: string) => ({
-      getClass: (className: string) => ({
-        fullName: `${schemaName}.${className}`,
-        getProperties: () => [],
-        isRelationshipClass: () => className.startsWith("Rel"),
-        source: { multiplicity: { lowerLimit: 0, upperLimit: 1 } },
-        target: { multiplicity: { lowerLimit: 0, upperLimit: className.includes("Many") ? 2 : 1 } },
-      }),
+  const relationalSchemaProvider = createSchemaAccess([
+    createEntityClass({
+      fullName: "TestSchema.Primary",
+      properties: [createPrimitiveProperty({ name: "Code", declaringClass: "TestSchema.Primary" })],
     }),
-  };
+    createEntityClass({
+      fullName: "TestSchema.Many",
+      properties: [createPrimitiveProperty({ name: "Name", declaringClass: "TestSchema.Many" })],
+    }),
+    createEntityClass({
+      fullName: "TestSchema.Sort",
+      properties: [createPrimitiveProperty({ name: "Name", declaringClass: "TestSchema.Sort" })],
+    }),
+    createEntityClass({ fullName: "TestSchema.Other" }),
+    createRelationshipClass({ fullName: "TestSchema.RelMany", cardinality: "many" }),
+    createRelationshipClass({ fullName: "TestSchema.RelSort" }),
+  ]);
   const queries: ECSqlQueryDef[] = [];
   const createQueryReader = vi.fn((query: ECSqlQueryDef) => {
     queries.push(query);
@@ -174,8 +148,7 @@ function createRelationalIModelAccess(handler: (query: ECSqlQueryDef) => ECSqlQu
       }
     })();
   });
-  const imodelAccess = { ...relationalSchemaProvider, createQueryReader } as unknown as ECSchemaProvider &
-    ECSqlQueryExecutor;
+  const imodelAccess = { ...relationalSchemaProvider, createQueryReader };
   return { imodelAccess, queries };
 }
 
@@ -224,10 +197,13 @@ function createIModelAccess(handler: (query: ECSqlQueryDef) => ECSqlQueryRow[]) 
     };
     return iterator;
   });
-  const imodelAccess = {
-    ...createSchemaAccess([createEntityClass({ fullName: "Schema.A" }), createEntityClass({ fullName: "Schema.B" })]),
-    createQueryReader,
-  } as ECSchemaProvider & ECSqlQueryExecutor;
+  const codeProperty = createPrimitiveProperty({ name: "Code", declaringClass: "Schema.A" });
+  const classA = createEntityClass({ fullName: "Schema.A", properties: [codeProperty] });
+  const classB = createEntityClass({
+    fullName: "Schema.B",
+    properties: [codeProperty, createPrimitiveProperty({ name: "Label", declaringClass: "Schema.B" })],
+  });
+  const imodelAccess = { ...createSchemaAccess([classA, classB]), createQueryReader };
   return {
     imodelAccess,
     queries,
@@ -454,28 +430,11 @@ describe("getItems", () => {
       label: "Label",
       propertyClassName: "Schema.B",
       propertyName: "Label",
-      selectorId: "Schema.B.Label",
     };
     const twoFieldDescriptor = {
       sources: [],
       categories: {},
       fields: { "Schema.A.Code": codeField, "Schema.B.Label": labelField },
-      selectors: {
-        "Schema.A.Code": {
-          kind: "property",
-          id: "Schema.A.Code",
-          propertyClassName: "Schema.A",
-          propertyName: "Code",
-          pathFromTarget: [],
-        },
-        "Schema.B.Label": {
-          kind: "property",
-          id: "Schema.B.Label",
-          propertyClassName: "Schema.B",
-          propertyName: "Label",
-          pathFromTarget: [],
-        },
-      },
     } as unknown as ContentDescriptor;
     const sorting: ContentQuerySort[] = [{ field: codeField, direction: "asc" }];
     const { imodelAccess } = createIModelAccess((query) => {
@@ -598,17 +557,8 @@ describe("getItems", () => {
   });
 
   it("populates an external field whose inputs span the anchor query and an additional related group", async () => {
-    // Input-only selectors (no backing field) for an external field whose inputs span the anchor's direct
-    // `Code` and the 1:many related group's `Name` — mirrors what `collectSelectors` adds for provider inputs.
-    const combinedInputCodeSelectorId = computePropertySelectorId({
-      propertyClassName: "TestSchema.Primary",
-      propertyName: "Code",
-    });
-    const combinedInputNameSelectorId = computePropertySelectorId({
-      propertyClassName: "TestSchema.Many",
-      propertyName: "Name",
-      pathFromTarget: manyPath,
-    });
+    // Input-only requirements (no backing field) for an external field whose inputs span the anchor's direct
+    // `Code` and the 1:many related group's `Name`.
     const relExternalDescriptor = {
       sources: [],
       categories: {},
@@ -620,23 +570,6 @@ describe("getItems", () => {
           label: "Combined",
           type: { kind: "primitive", type: "String" },
           providerId: "ext_v1",
-        },
-      },
-      selectors: {
-        ...relDescriptor.selectors,
-        [combinedInputCodeSelectorId]: {
-          kind: "property",
-          id: combinedInputCodeSelectorId,
-          propertyClassName: "TestSchema.Primary",
-          propertyName: "Code",
-          pathFromTarget: [],
-        },
-        [combinedInputNameSelectorId]: {
-          kind: "property",
-          id: combinedInputNameSelectorId,
-          propertyClassName: "TestSchema.Many",
-          propertyName: "Name",
-          pathFromTarget: manyPath,
         },
       },
     } as unknown as ContentDescriptor;
@@ -753,7 +686,6 @@ describe("getItems", () => {
       pathCardinality: "one",
       valueClassNames: ["TestSchema.Sort"],
       primaryClassNames: ["TestSchema.Primary"],
-      selectorId: "sortOnly",
     };
     const { imodelAccess } = createRelationalIModelAccess((query) => {
       if (query.ecsql.includes("pres_t0")) {
@@ -812,6 +744,45 @@ describe("getItems", () => {
       "A1!",
       "A2!",
     ]);
+  });
+
+  it("projects and decodes private prepared selectors absent from the public descriptor", async () => {
+    const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { code: string } }> }) =>
+      batch.map((item) => ({ status: `${item.inputValues.code}!` })),
+    );
+    const provider = createExternalStatusProvider(getValues);
+    const publicDescriptor = externalDescriptor;
+    const definition = {
+      descriptor: publicDescriptor,
+      selectors: {
+        "Schema.A.Code": {
+          kind: "property",
+          id: "Schema.A.Code",
+          propertyClassName: "Schema.A",
+          propertyName: "Code",
+          pathFromTarget: [],
+        },
+      },
+      propertyDecoders: { "Schema.A.Code": createPropertyValueDecoder(codeField.type) },
+      fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code" },
+      externalInputs: [],
+      externalProviders: [
+        {
+          provider,
+          inputs: [{ key: "code", selectorId: "Schema.A.Code" }],
+          outputs: [{ localId: "status", fieldId: "ext_v1:status" }],
+        },
+      ],
+    } satisfies ContentDefinition;
+    const { imodelAccess, queries } = createIModelAccess(() => [valueRow("Schema.A", "0x1", "A1")]);
+
+    const items = await collect(
+      getItems({ imodelAccess, getContentDefinition: async () => definition, sources: [createSource("Schema.A")] }),
+    );
+
+    expect(queries[0].ecsql).to.contain("[this].$ AS [this]");
+    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "A1" } }] });
+    expect(items[0].getValue(publicDescriptor.fields["ext_v1:status"])).to.equal("A1!");
   });
 
   it("calls an external fields provider once per loaded page", async () => {

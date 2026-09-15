@@ -14,7 +14,10 @@ import {
   type InstanceKey,
   type PrimitiveValue,
 } from "@itwin/presentation-shared";
+import { preparePropertyDecoders } from "../../descriptor-building/BuildDescriptor.js";
 import { collectExternalFields } from "../../descriptor-building/ExternalFields.js";
+import { collectValueRequirements } from "../../descriptor-building/Selectors.js";
+import { computePropertySelectorId } from "../../descriptor-building/ValueSelector.js";
 import { createContentItem } from "../../model/ContentItem.js";
 import { serializeRelationshipPath } from "../../model/Utils.js";
 import { collectPathCardinalities } from "../../PathCardinality.js";
@@ -25,6 +28,7 @@ import { buildSelectProjection } from "../SelectBuilder.js";
 import { createExternalValuePopulator } from "./ExternalValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
 import {
+  createRowDecoder,
   decodeGroupRows,
   decodePrimaryKey,
   mergeGroupValues,
@@ -36,12 +40,13 @@ import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ContentValueFilter } from "../../Content.js";
 import type { ContentSource } from "../../ContentTarget.js";
+import type { ContentDefinition } from "../../descriptor-building/BuildDescriptor.js";
 import type { ExternalInput } from "../../descriptor-building/ExternalFields.js";
-import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProvider.js";
+import type { PropertyValueSelector } from "../../descriptor-building/ValueSelector.js";
+import type { ExternalFieldsProvider, InputPropertyDeclaration } from "../../extensions/ExternalFieldsProvider.js";
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
-import type { PropertyValueSelector } from "../../model/ValueSelector.js";
 import type { BaseQueryGroup } from "../BaseQuery.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { ExternalValuePopulator } from "./ExternalValues.js";
@@ -56,7 +61,8 @@ import type { GroupValues } from "./RowDecoder.js";
  */
 export function getItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
-  getDescriptor: () => Promise<ContentDescriptor>;
+  getContentDefinition?: () => Promise<ContentDefinition>;
+  getDescriptor?: () => Promise<ContentDescriptor>;
   sources: ContentSource[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
@@ -72,26 +78,91 @@ export function getItems(props: {
 
 function loadItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
-  getDescriptor: () => Promise<ContentDescriptor>;
+  getContentDefinition?: () => Promise<ContentDefinition>;
+  getDescriptor?: () => Promise<ContentDescriptor>;
   sources: ContentSource[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
   externalFieldsProviders?: ExternalFieldsProvider[];
 }): Observable<ContentItem> {
-  const { imodelAccess, getDescriptor, sources, queryFilterers, filters, externalFieldsProviders } = props;
+  const {
+    imodelAccess,
+    getContentDefinition,
+    getDescriptor,
+    sources,
+    queryFilterers,
+    filters,
+    externalFieldsProviders,
+  } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
-  // Cheap, schema-free re-derivation of provider input declarations (same helper Stage 2 uses) — an
-  // external-input-only path has no descriptor field to carry its `cardinalityHint`, so it is folded
-  // into `collectPathCardinalities` alongside field-backed paths.
-  const externalInputs = collectExternalFields(externalFieldsProviders ?? []).inputs;
-  return from(getDescriptor()).pipe(
-    mergeMap((descriptor) => {
-      const populateExternalValues = createExternalValuePopulator({ descriptor, providers: externalFieldsProviders });
+  const getDefinition =
+    getContentDefinition ??
+    (async () => {
+      const descriptor = await (
+        getDescriptor ??
+        (() => {
+          throw new Error("No descriptor or content-definition source was supplied.");
+        })
+      )();
+      const { inputs } = collectExternalFields(externalFieldsProviders ?? []);
+      const { selectors, fieldSelectorIds } = collectValueRequirements({
+        fields: Object.values(descriptor.fields),
+        externalInputs: inputs,
+      });
+      const externalProviders = (externalFieldsProviders ?? [])
+        .map((provider) => {
+          const outputs = provider.fields
+            .map((declaration) => ({ localId: declaration.id, fieldId: `${provider.id}:${declaration.id}` }))
+            .filter((output) => output.fieldId in descriptor.fields);
+          if (outputs.length === 0) {
+            return undefined;
+          }
+          const providerInputs: [string, InputPropertyDeclaration][] = Object.entries(provider.inputs ?? {});
+          return {
+            provider,
+            inputs: providerInputs.map(([key, declaration]) => ({
+              key,
+              selectorId: computePropertySelectorId({
+                propertyClassName: declaration.propertyClassName,
+                propertyName: declaration.propertyName,
+                pathFromTarget: declaration.path,
+              }),
+            })),
+            outputs,
+          };
+        })
+        .filter((provider): provider is NonNullable<typeof provider> => provider !== undefined);
+      return {
+        descriptor,
+        selectors,
+        propertyDecoders: await preparePropertyDecoders({ imodelAccess, selectors, fields: descriptor.fields }),
+        fieldSelectorIds,
+        externalInputs: inputs,
+        externalProviders,
+      } satisfies ContentDefinition;
+    });
+  return from(getDefinition()).pipe(
+    mergeMap(({ descriptor, selectors, propertyDecoders, fieldSelectorIds, externalInputs, externalProviders }) => {
+      const populateExternalValues = createExternalValuePopulator({
+        descriptor,
+        prepared: externalProviders,
+        providers: externalFieldsProviders,
+      });
       return from(sources).pipe(
         mergeMap(async (source) =>
-          createSourcePlan({ imodelAccess, descriptor, source, sorting, queryFilterers, filters, externalInputs }),
+          createSourcePlan({
+            imodelAccess,
+            descriptor,
+            selectors,
+            propertyDecoders,
+            source,
+            sorting,
+            queryFilterers,
+            filters,
+            externalInputs,
+          }),
         ),
         toArray(),
         mergeMap((plans) => {
@@ -100,14 +171,22 @@ function loadItems(props: {
             // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
             return from(plans).pipe(
               mergeMap(
-                (plan) => pageAnchor({ imodelAccess, descriptor, plan, sorting, populateExternalValues }),
+                (plan) =>
+                  pageAnchor({ imodelAccess, descriptor, fieldSelectorIds, plan, sorting, populateExternalValues }),
                 QUERY_CONCURRENCY,
               ),
             );
           }
 
           // Multiple sources sorted by a shared key: order and page globally with the two-phase key stream.
-          return pageMultiSourceSorted({ imodelAccess, descriptor, plans, sorting, populateExternalValues });
+          return pageMultiSourceSorted({
+            imodelAccess,
+            descriptor,
+            fieldSelectorIds,
+            plans,
+            sorting,
+            populateExternalValues,
+          });
         }),
       );
     }),
@@ -117,14 +196,26 @@ function loadItems(props: {
 async function createSourcePlan(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
+  selectors: ContentDefinition["selectors"];
+  propertyDecoders: ContentDefinition["propertyDecoders"];
   source: ContentSource;
   sorting: ContentQuerySort[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   externalInputs: ExternalInput[];
 }): Promise<SourcePlan> {
-  const { imodelAccess, descriptor, source, sorting, queryFilterers, filters, externalInputs } = props;
-  const propertySelectorPaths = Object.values(descriptor.selectors)
+  const {
+    imodelAccess,
+    descriptor,
+    selectors,
+    propertyDecoders,
+    source,
+    sorting,
+    queryFilterers,
+    filters,
+    externalInputs,
+  } = props;
+  const propertySelectorPaths = Object.values(selectors)
     .filter((selector): selector is PropertyValueSelector => selector.kind === "property")
     .map((selector) => selector.pathFromTarget)
     .filter((path) => path.length > 0);
@@ -144,14 +235,14 @@ async function createSourcePlan(props: {
   const [anchorProjection, keyProjection, additionalProjections] = await Promise.all([
     buildSelectProjection({
       schemaProvider: imodelAccess,
-      descriptor,
+      selectors,
       group: anchor,
       sorting,
       ownedPathKeys: ownedPathKeys.anchor,
     }),
     buildSelectProjection({
       schemaProvider: imodelAccess,
-      descriptor: { ...descriptor, selectors: {} },
+      selectors: {},
       group: anchor,
       sorting,
       ownedPathKeys: ownedPathKeys.anchor,
@@ -160,16 +251,27 @@ async function createSourcePlan(props: {
       additional.map(async (group, index) =>
         buildSelectProjection({
           schemaProvider: imodelAccess,
-          descriptor,
+          selectors,
           group,
           ownedPathKeys: ownedPathKeys.additional[index],
         }),
       ),
     ),
   ]);
+  const createDecoder = (projection: SelectProjection) =>
+    createRowDecoder({ columnNames: projection.columnNames, selectors, propertyDecoders });
   return {
-    anchor: { baseQuery: anchor, projection: anchorProjection, keyProjection },
-    additional: additional.map((baseQuery, index) => ({ baseQuery, projection: additionalProjections[index] })),
+    anchor: {
+      baseQuery: anchor,
+      projection: anchorProjection,
+      rowDecoder: createDecoder(anchorProjection),
+      keyProjection,
+    },
+    additional: additional.map((baseQuery, index) => ({
+      baseQuery,
+      projection: additionalProjections[index],
+      rowDecoder: createDecoder(additionalProjections[index]),
+    })),
   };
 }
 
@@ -220,11 +322,12 @@ interface PageResult {
 function pageAnchor(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
+  fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
   plan: SourcePlan;
   sorting: ContentQuerySort[];
   populateExternalValues: ExternalValuePopulator | undefined;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plan, sorting, populateExternalValues } = props;
+  const { imodelAccess, descriptor, fieldSelectorIds, plan, sorting, populateExternalValues } = props;
   const { columnNames } = plan.anchor.projection;
   const fetchPage = (cursor: Cursor | undefined): Observable<PageResult> =>
     readRows(imodelAccess, buildAnchorPageQuery({ plan, sorting, cursor })).pipe(
@@ -236,11 +339,7 @@ function pageAnchor(props: {
         }).pipe(map((rowsByGroup) => ({ anchorRows, rowsByGroup }))),
       ),
       map(({ anchorRows, rowsByGroup }) => {
-        const valuesByKey = stitchPlans({
-          descriptor,
-          plans: [plan],
-          rowsByGroup: rowsByGroup.set(plan.anchor, anchorRows),
-        });
+        const valuesByKey = stitchPlans({ plans: [plan], rowsByGroup: rowsByGroup.set(plan.anchor, anchorRows) });
         return anchorRows.map((row) => {
           const primaryKey = decodePrimaryKey({ row, columnNames });
           return {
@@ -251,7 +350,7 @@ function pageAnchor(props: {
         });
       }),
       mergeMap((decoded) =>
-        materializeItems({ descriptor, populateExternalValues, rows: decoded }).pipe(
+        materializeItems({ descriptor, fieldSelectorIds, populateExternalValues, rows: decoded }).pipe(
           map((items): PageResult => {
             if (decoded.length < PAGE_SIZE) {
               return { items, next: undefined };
@@ -277,11 +376,12 @@ interface KeyPage {
 function pageMultiSourceSorted(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
+  fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
   plans: SourcePlan[];
   sorting: ContentQuerySort[];
   populateExternalValues: ExternalValuePopulator | undefined;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, plans, sorting, populateExternalValues } = props;
+  const { imodelAccess, descriptor, fieldSelectorIds, plans, sorting, populateExternalValues } = props;
   const keyProjection = plans[0].anchor.keyProjection;
 
   // Phase 1: page the globally ordered key stream. The next cursor is derived from the key rows alone, so
@@ -309,9 +409,10 @@ function pageMultiSourceSorted(props: {
     const groups = plans.flatMap((plan) => [plan.anchor, ...plan.additional]);
     return fetchGroupRows({ imodelAccess, groups, ids: keys.map((key) => key.id) }).pipe(
       mergeMap((rowsByGroup) => {
-        const valuesByKey = stitchPlans({ descriptor, plans, rowsByGroup });
+        const valuesByKey = stitchPlans({ plans, rowsByGroup });
         return materializeItems({
           descriptor,
+          fieldSelectorIds,
           populateExternalValues,
           rows: keys.map((key) => ({
             primaryKey: key,
@@ -341,12 +442,13 @@ function pageMultiSourceSorted(props: {
 // items with external field values before wrapping them as `ContentItem`s.
 function materializeItems(props: {
   descriptor: ContentDescriptor;
+  fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
   populateExternalValues: ExternalValuePopulator | undefined;
   rows: Array<{ primaryKey: InstanceKey; values: GroupValues }>;
 }): Observable<ContentItem[]> {
-  const { descriptor, populateExternalValues, rows } = props;
+  const { descriptor, fieldSelectorIds, populateExternalValues, rows } = props;
   const contentValues = rows.map((row) =>
-    toContentValues({ descriptor, primaryKey: row.primaryKey, values: row.values }),
+    toContentValues({ descriptor, fieldSelectorIds, primaryKey: row.primaryKey, values: row.values }),
   );
   if (!populateExternalValues || rows.length === 0) {
     return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));
@@ -390,11 +492,10 @@ function fetchGroupRows(props: {
  * ({@link toInstanceKeyString}).
  */
 function stitchPlans(props: {
-  descriptor: ContentDescriptor;
   plans: SourcePlan[];
   rowsByGroup: Map<PlannedGroup, ECSqlQueryRow[]>;
 }): Map<string, GroupValues> {
-  const { descriptor, plans, rowsByGroup } = props;
+  const { plans, rowsByGroup } = props;
   const result = new Map<string, GroupValues>();
   const mergeInto = (groupValues: Map<string, GroupValues>) => {
     for (const [key, values] of groupValues) {
@@ -411,7 +512,7 @@ function stitchPlans(props: {
   const decode = (group: PlannedGroup, keys?: InstanceKey[]) =>
     decodeGroupRows({
       rows: rowsByGroup.get(group) ?? [],
-      descriptor,
+      rowDecoder: group.rowDecoder,
       cardinality: group.baseQuery.cardinality,
       columnNames: group.projection.columnNames,
       keys,

@@ -17,14 +17,13 @@ function createTestDescriptor(fields: Field[]): ContentDescriptor {
   for (const f of fields) {
     fieldMap[f.id] = f;
   }
-  return { sources: [], fields: fieldMap, categories: {}, selectors: {} };
+  return { sources: [], fields: fieldMap, categories: {} };
 }
 
 function createTestPropertyField(id: string, overrides?: Partial<PropertyField>): PropertyField {
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: id,
     type: { kind: "primitive", type: "String" },
     propertyClassName: "BisCore.Element",

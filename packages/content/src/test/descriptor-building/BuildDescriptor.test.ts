@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it } from "vitest";
-import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
+import { describe, expect, it, vi } from "vitest";
+import { buildContentDefinition, buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
@@ -254,17 +254,17 @@ describe("buildContentDescriptor", () => {
       },
     };
 
-    const descriptor = await buildContentDescriptor({
+    const definition = await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
       config: { imodelFieldsProviders: [fieldsProvider] },
     });
+    const { descriptor } = definition;
 
     expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
     expect(descriptor.fields["calc_v1:sum"].kind).to.equal("calculated");
-    // Both the property field and the calculated field back a selector.
-    expect(Object.keys(descriptor.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
-    expect(descriptor.selectors["calc_v1:sum"].kind).to.equal("calculated");
+    expect(Object.keys(definition.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
+    expect(definition.selectors["calc_v1:sum"].kind).to.equal("calculated");
   });
 
   it("appends external fields without selectors and keeps external input columns", async () => {
@@ -283,17 +283,108 @@ describe("buildContentDescriptor", () => {
       },
     });
 
-    const descriptor = await buildContentDescriptor({
+    const definition = await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
       config: { externalFieldsProviders: [externalProvider] },
     });
+    const { descriptor } = definition;
 
     expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "ext_v1:status"]);
     expect(descriptor.fields["ext_v1:status"].kind).to.equal("external");
-    // External fields have no selector; the input reuses the property field's column selector.
-    expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
+    // External fields have no selector; the input reuses the property field's private requirement.
+    expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
   });
+
+  it("prepares input-only decoders with one schema lookup for properties from the same class", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.A",
+        properties: [
+          createPrimitiveProperty({ name: "First", declaringClass: "TestSchema.A" }),
+          createPrimitiveProperty({ name: "Second", declaringClass: "TestSchema.A" }),
+        ],
+      }),
+    ]);
+    const getSchema = vi.spyOn(imodelAccess, "getSchema");
+    const externalProvider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: {
+        first: { propertyClassName: "TestSchema.A", propertyName: "First" },
+        second: { propertyClassName: "TestSchema.A", propertyName: "Second" },
+      },
+      async getValues() {
+        return [];
+      },
+    });
+    const transformer: DescriptorTransformer = {
+      async transform({ descriptor }) {
+        descriptor.removeField("TestSchema.A.First");
+        descriptor.removeField("TestSchema.A.Second");
+        getSchema.mockClear();
+      },
+    };
+
+    const definition = await buildContentDefinition({
+      imodelAccess,
+      sources: [createSource("TestSchema.A")],
+      config: { externalFieldsProviders: [externalProvider], descriptorTransformers: [transformer] },
+    });
+
+    expect(Object.keys(definition.descriptor.fields)).to.deep.equal(["ext_v1:status"]);
+    expect(definition.propertyDecoders["TestSchema.A.First"]("first")).to.equal("first");
+    expect(definition.propertyDecoders["TestSchema.A.Second"]("second")).to.equal("second");
+    expect(getSchema).toHaveBeenCalledOnce();
+  });
+
+  it("rejects an input-only property that does not exist", async () => {
+    const imodelAccess = createSchemaAccess([createEntityClass({ fullName: "TestSchema.A" })]);
+    const externalProvider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: { missing: { propertyClassName: "TestSchema.A", propertyName: "Missing" } },
+      async getValues() {
+        return [];
+      },
+    });
+
+    await expect(
+      buildContentDefinition({
+        imodelAccess,
+        sources: [createSource("TestSchema.A")],
+        config: { externalFieldsProviders: [externalProvider] },
+      }),
+    ).rejects.toThrow('Property "TestSchema.A.Missing" was not found.');
+  });
+
+  it.each(["Binary", "IGeometry"] as const)(
+    "rejects an input-only property with unsupported %s type",
+    async (primitiveType) => {
+      const imodelAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "TestSchema.A",
+          properties: [createPrimitiveProperty({ name: "Unsupported", primitiveType })],
+        }),
+      ]);
+      const externalProvider = defineExternalFieldsProvider({
+        id: "ext_v1",
+        fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+        inputs: { value: { propertyClassName: "TestSchema.A", propertyName: "Unsupported" } },
+        async getValues() {
+          return [];
+        },
+      });
+
+      await expect(
+        buildContentDefinition({
+          imodelAccess,
+          sources: [createSource("TestSchema.A")],
+          config: { externalFieldsProviders: [externalProvider] },
+        }),
+      ).rejects.toThrow('Property "TestSchema.A.Unsupported" has an unsupported value type.');
+    },
+  );
 
   it("applies descriptor transformer metadata changes", async () => {
     const imodelAccess = createSchemaAccess([
@@ -396,15 +487,16 @@ describe("buildContentDescriptor", () => {
       },
     };
 
-    const descriptor = await buildContentDescriptor({
+    const definition = await buildContentDefinition({
       imodelAccess,
       sources: [source],
       config: { imodelFieldsProviders: [provider], descriptorTransformers: [transformer] },
     });
+    const { descriptor } = definition;
 
-    // The related field (and thus its selector and auto category) is gone; the direct field remains.
+    // The related field (and thus its private requirement and auto category) is gone; the direct field remains.
     expect(Object.keys(descriptor.fields)).to.deep.equal(["TestSchema.A.Keep"]);
-    expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Keep"]);
+    expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Keep"]);
     expect(descriptor.categories).to.deep.equal({});
   });
 });

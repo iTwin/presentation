@@ -196,7 +196,6 @@ describe("collectPathCardinalities", () => {
       pathCardinality: props.pathCardinality,
       valueClassNames: ["TestSchema.B"],
       primaryClassNames: ["TestSchema.A"],
-      selectorId: props.id,
     };
   }
 

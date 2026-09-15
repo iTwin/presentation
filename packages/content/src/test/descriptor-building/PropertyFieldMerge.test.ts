@@ -30,7 +30,6 @@ function createField(props: {
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: props.label ?? "Label",
     type: props.type ?? { kind: "primitive", type: "String" },
     hidden: props.hidden,
@@ -73,7 +72,6 @@ describe("mergePropertyFieldsByIdentity", () => {
       [id]: {
         ...field,
         id,
-        selectorId: id,
         valueClassNames: ["Stuff.Door", "Stuff.Window"],
         primaryClassNames: ["Stuff.Door", "Stuff.Window"],
         pathCardinality: "one",

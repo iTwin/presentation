@@ -78,6 +78,35 @@ describe("createContentProvider", () => {
       expect(first).to.equal(second);
     });
 
+    it("builds the content definition once and shares it across concurrent item loads", async () => {
+      const schemaAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "Schema.A",
+          properties: [createPrimitiveProperty({ name: "Code", declaringClass: "Schema.A" })],
+        }),
+      ]);
+      const createQueryReader = vi.fn((query: { ecsql: string }) =>
+        (async function* () {
+          if (query.ecsql.includes("LIMIT")) {
+            yield {
+              ["pres_primary_class"]: "Schema.A",
+              ["pres_primary_id"]: "0x1",
+              ["this"]: JSON.stringify({ ["Code"]: "A1" }),
+            };
+          }
+        })(),
+      );
+      const buildDefinitionSpy = vi.spyOn(BuildDescriptor, "buildContentDefinition");
+      const provider = createContentProvider({
+        imodelAccess: { ...schemaAccess, createQueryReader },
+        sources: [createSource("Schema.A")],
+      });
+
+      await Promise.all([collect(provider.getItems()), collect(provider.getItems())]);
+
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
+    });
+
     it("includes subclass fields for a provider-free polymorphic target", async () => {
       const derivedClasses: EC.Class[] = [];
       const element = createEntityClass({ fullName: "Schema.Element", derivedClasses });
@@ -136,7 +165,6 @@ describe("createContentProvider", () => {
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
         pathCardinality: "one",
-        selectorId: "Schema.A.Length",
       };
       const sizeIModelAccess = createSizeIModelAccess({ counts: [2] });
       const provider = createContentProvider({ imodelAccess: sizeIModelAccess, sources: [createSource("Schema.A")] });
@@ -237,7 +265,6 @@ describe("createContentProvider", () => {
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
         pathCardinality: "one",
-        selectorId: "Schema.A.Length",
       };
       const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });
       const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
@@ -285,7 +312,7 @@ describe("createContentProvider", () => {
   });
 
   describe("getItems", () => {
-    it("lazily builds the descriptor once and shares that instance with the loaded items", async () => {
+    it("lazily builds the content definition once and shares its descriptor with the loaded items", async () => {
       const schemaAccess = createSchemaAccess([
         createEntityClass({
           fullName: "Schema.A",
@@ -303,18 +330,16 @@ describe("createContentProvider", () => {
           }
         })(),
       );
-      const buildDescriptorSpy = vi.spyOn(BuildDescriptor, "buildContentDescriptor");
+      const buildDefinitionSpy = vi.spyOn(BuildDescriptor, "buildContentDefinition");
       const provider = createContentProvider({
         imodelAccess: { ...schemaAccess, createQueryReader },
         sources: [createSource("Schema.A")],
       });
 
-      // Creating the provider must not build the descriptor.
-      expect(buildDescriptorSpy).not.toHaveBeenCalled();
+      expect(buildDefinitionSpy).not.toHaveBeenCalled();
 
-      // The first descriptor request builds it exactly once.
       const descriptor = await provider.getContentDescriptor();
-      expect(buildDescriptorSpy).toHaveBeenCalledOnce();
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
 
       const codeField = descriptor.fields["Schema.A.Code"] as PropertyField;
       const items = [];
@@ -325,10 +350,7 @@ describe("createContentProvider", () => {
       expect(items).to.have.lengthOf(1);
       expect(items[0].primaryKey).to.deep.equal({ className: "Schema.A", id: "0x1" });
       expect(items[0].getValue(codeField)).to.equal("A1");
-
-      // Loading items reuses the cached descriptor instead of rebuilding it...
-      expect(buildDescriptorSpy).toHaveBeenCalledOnce();
-      // ...and hands that same instance to every item.
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
       expect(items[0].descriptor).to.equal(descriptor);
     });
   });

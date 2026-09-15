@@ -71,7 +71,6 @@ describe("collectCalculatedFields", () => {
       "p_v1:flow": {
         kind: "calculated",
         id: "p_v1:flow",
-        selectorId: "p_v1:flow",
         label: "Flow",
         expression: "this.FlowRate * 2",
         type: { kind: "primitive", type: "Double" },

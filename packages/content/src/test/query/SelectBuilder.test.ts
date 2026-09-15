@@ -8,10 +8,10 @@ import { type EC, type ECSchemaProvider, type RelationshipPath, trimWhitespace }
 import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 import { buildSelectProjection } from "../../content/query/SelectBuilder.js";
+import { createPrimitiveProperty } from "../MetadataStubs.js";
 
-import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
+import type { ValueSelector } from "../../content/descriptor-building/ValueSelector.js";
 import type { CalculatedField, PropertyField } from "../../content/model/Field.js";
-import type { ValueSelector } from "../../content/model/ValueSelector.js";
 import type { BaseQueryGroup } from "../../content/query/BaseQuery.js";
 
 const primaryClass: EC.FullClassNameDotNotation = "TestSchema.Primary";
@@ -33,6 +33,7 @@ const schemaProvider = {
     getClass: (className: string) => ({
       fullName: `${schemaName}.${className}`,
       isRelationshipClass: () => className === "Rel",
+      getProperty: (name: string) => createPrimitiveProperty({ name }),
     }),
   }),
 } as unknown as ECSchemaProvider;
@@ -52,20 +53,15 @@ function createBaseQueryGroup(includeRelatedPath: boolean = true): BaseQueryGrou
   };
 }
 
-function createDescriptor(selectors: ValueSelector[]): ContentDescriptor {
-  return {
-    sources: [],
-    fields: {},
-    categories: {},
-    selectors: Object.fromEntries(selectors.map((selector) => [selector.id, selector])),
-  };
+function createSelectors(selectors: ValueSelector[]): Record<ValueSelector["id"], ValueSelector> {
+  return Object.fromEntries(selectors.map((selector) => [selector.id, selector]));
 }
 
 describe("buildSelectProjection", () => {
   it("selects each property alias once and calculated fields as scalar columns", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([
+      selectors: createSelectors([
         {
           kind: "property",
           id: "TestSchema.Primary.Code",
@@ -144,7 +140,7 @@ describe("buildSelectProjection", () => {
     };
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([selector]),
+      selectors: createSelectors([selector]),
       group: createBaseQueryGroup(false),
       ownedPathKeys: ownsRelated,
     });
@@ -162,7 +158,7 @@ describe("buildSelectProjection", () => {
     };
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([selector]),
+      selectors: createSelectors([selector]),
       group: createBaseQueryGroup(),
       ownedPathKeys: new Set(),
     });
@@ -191,7 +187,7 @@ describe("buildSelectProjection", () => {
     };
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([
+      selectors: createSelectors([
         {
           kind: "property",
           id: "TestSchema.Target.Name",
@@ -214,7 +210,7 @@ describe("buildSelectProjection", () => {
   it("emits one class-name column for a related alias shared by two property selectors", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([
+      selectors: createSelectors([
         {
           kind: "property",
           id: "TestSchema.Target.Name",
@@ -244,7 +240,7 @@ describe("buildSelectProjection", () => {
   it("projects the target alias's identity even when only a relationship-class property is selected", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([
+      selectors: createSelectors([
         {
           kind: "property",
           id: "TestSchema.Rel.Weight",
@@ -268,7 +264,7 @@ describe("buildSelectProjection", () => {
   it("selects a shared property alias only once", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([
+      selectors: createSelectors([
         {
           kind: "property",
           id: "TestSchema.Primary.Code",
@@ -303,7 +299,6 @@ describe("buildSelectProjection", () => {
       valueClassNames: [primaryClass],
       primaryClassNames: [primaryClass],
       pathCardinality: "one",
-      selectorId: "TestSchema.Primary.Code",
     };
     const scoreField: CalculatedField = {
       kind: "calculated",
@@ -312,11 +307,10 @@ describe("buildSelectProjection", () => {
       type: { kind: "primitive", type: "Integer" },
       expression: "this.Code * :factor",
       bindings: { factor: { type: "int", value: 2 } },
-      selectorId: "calculations_v1:score",
     };
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([]),
+      selectors: createSelectors([]),
       group: createBaseQueryGroup(),
       ownedPathKeys: new Set(),
       sorting: [
@@ -356,13 +350,12 @@ describe("buildSelectProjection", () => {
       valueClassNames: ["TestSchema.Target"],
       primaryClassNames: [primaryClass],
       pathCardinality: "one",
-      selectorId: "TestSchema.Target.Name",
     };
 
     await expect(
       buildSelectProjection({
         schemaProvider,
-        descriptor: createDescriptor([]),
+        selectors: createSelectors([]),
         group: createBaseQueryGroup(false),
         ownedPathKeys: new Set(),
         sorting: [{ field, direction: "asc" }],
@@ -373,7 +366,7 @@ describe("buildSelectProjection", () => {
   it("aliases calculated selectors with generated column names", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([{ kind: "calculated", id: "provider:score", expression: "1" }]),
+      selectors: createSelectors([{ kind: "calculated", id: "provider:score", expression: "1" }]),
       group: createBaseQueryGroup(),
       ownedPathKeys: ownsDirect,
     });
@@ -385,7 +378,7 @@ describe("buildSelectProjection", () => {
   it("skips calculated selectors when the direct-property key is not owned by this group", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      descriptor: createDescriptor([{ kind: "calculated", id: "provider:score", expression: "1" }]),
+      selectors: createSelectors([{ kind: "calculated", id: "provider:score", expression: "1" }]),
       group: createBaseQueryGroup(),
       ownedPathKeys: ownsRelated,
     });

@@ -5,7 +5,7 @@
 
 import { firstValueFrom } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
-import { computePropertySelectorId } from "../../../content/model/ValueSelector.js";
+import { computePropertySelectorId } from "../../../content/descriptor-building/ValueSelector.js";
 import { createExternalValuePopulator } from "../../../content/query/value-loading/ExternalValues.js";
 
 import type { Value } from "@itwin/presentation-shared";

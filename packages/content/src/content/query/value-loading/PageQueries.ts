@@ -18,6 +18,7 @@ import type {
 import type { BaseQueryGroup } from "../BaseQuery.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { KeysetOrderColumn } from "./Keyset.js";
+import type { RowDecoder } from "./RowDecoder.js";
 
 /**
  * A base-query group paired with the projection that selects its columns.
@@ -25,6 +26,7 @@ import type { KeysetOrderColumn } from "./Keyset.js";
 export interface PlannedGroup {
   baseQuery: BaseQueryGroup;
   projection: SelectProjection;
+  rowDecoder: RowDecoder;
 }
 
 /**

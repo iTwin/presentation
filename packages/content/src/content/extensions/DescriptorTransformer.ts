@@ -85,7 +85,7 @@ type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
  * A field exposed to descriptor transformers with everything except display metadata made readonly.
  *
  * Transformers may only modify metadata (`label`, `categoryId`, `hidden`, `readOnly`). Identity
- * (`id`, `selectorId`), value shape (`type`), and the column-defining properties a field reads
+ * (`id`), value shape (`type`), and the column-defining properties a field reads
  * (`propertyClassName`/`propertyName`/`pathFromTarget` for property fields,
  * `expression`/`targetAlias`/`bindings` for calculated fields) are deeply readonly, so a transformer
  * can never silently change the column a field selects — not even by mutating a nested array or
@@ -149,7 +149,6 @@ interface TransformableDescriptor {
  * `categories`) — value selectors are derived after transforms run and are intentionally out of
  * reach here.
  *
- * @internal
  */
 export function createTransformableDescriptor(
   descriptor: Pick<ContentDescriptor, "sources" | "fields" | "categories">,

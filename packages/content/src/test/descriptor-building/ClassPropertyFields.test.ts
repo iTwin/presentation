@@ -40,11 +40,6 @@ describe("collectClassPropertyFields", () => {
       {
         kind: "property",
         id: PropertyField.computeId({ propertyClassName: "TestSchema.B", propertyName: "Prop", pathFromTarget: path }),
-        selectorId: PropertyField.computeId({
-          propertyClassName: "TestSchema.B",
-          propertyName: "Prop",
-          pathFromTarget: path,
-        }),
         label: "Prop",
         type: { kind: "primitive", type: "String" },
         propertyClassName: "TestSchema.B",

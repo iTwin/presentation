@@ -58,7 +58,7 @@ export interface CategorizedField {
  *   inherited property is attributed to its declaring class;
  * - `label` resolves to the override label, else the property's label, else its name;
  * - `readOnly`/`hidden` come from the merged overrides when present;
- * - `id`/`selectorId` are derived from `(propertyClassName, propertyName, pathFromTarget)`.
+ * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
  *
  * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
  * property category and/or spec override, plus the given `anchor`) — but no `categoryId` is assigned
@@ -68,7 +68,6 @@ export interface CategorizedField {
  * fields are candidates whose identity is finalized (and same-property variants merged) by
  * `mergePropertyFieldsByIdentity`.
  *
- * @internal
  */
 export function collectClassPropertyFields(props: {
   /** The class whose properties are enumerated. */
@@ -120,7 +119,6 @@ export function collectClassPropertyFields(props: {
     const field: PropertyField = {
       kind: "property",
       id,
-      selectorId: id,
       label: overrides.label ?? property.label ?? property.name,
       type,
       propertyClassName,

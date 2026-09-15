@@ -5,8 +5,10 @@
 
 import { assert } from "@itwin/core-bentley";
 
-import type { EC, ECSqlQueryRow, InstanceKey, Value } from "@itwin/presentation-shared";
+import type { EC, ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../ContentTarget.js";
+import type { ContentDefinition } from "../../descriptor-building/BuildDescriptor.js";
+import type { ValueSelector } from "../../descriptor-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentValues, RelatedInstanceEntry } from "../../model/ContentItem.js";
 import type { SelectProjection } from "../SelectBuilder.js";
@@ -43,16 +45,39 @@ export function toInstanceKeyString(key: InstanceKey): string {
   return `${key.className}:${key.id}`;
 }
 
+export type RowDecoder = (row: ECSqlQueryRow) => {
+  selectorValues: Map<string, Value>;
+  relatedInstances: Map<string, RelatedInstanceEntry>;
+};
+
+export function createRowDecoder(props: {
+  columnNames: SelectProjection["columnNames"];
+  selectors: Record<ValueSelector["id"], ValueSelector>;
+  propertyDecoders: ContentDefinition["propertyDecoders"];
+}): RowDecoder {
+  const { columnNames, selectors, propertyDecoders } = props;
+  const propertyReads = Object.entries(columnNames.propertyBlobs).map(([selectorId, column]) => {
+    assert(Object.hasOwn(selectors, selectorId), `Missing selector "${selectorId}".`);
+    const selector = selectors[selectorId];
+    assert(selector.kind === "property", `Selector "${selectorId}" is not a property selector.`);
+    assert(Object.hasOwn(propertyDecoders, selectorId), `Missing property decoder for selector "${selectorId}".`);
+    const decode = propertyDecoders[selectorId];
+    return { selectorId, column, propertyName: selector.propertyName, decode };
+  });
+
+  return (row) => decodeRow({ row, columnNames, propertyReads });
+}
+
 /**
  * Decodes one result row into its selector values and the related-instance identities carried by its
  * related `$` blobs.
  */
-export function decodeRow(props: {
+function decodeRow(props: {
   row: ECSqlQueryRow;
-  descriptor: ContentDescriptor;
   columnNames: SelectProjection["columnNames"];
+  propertyReads: Array<{ selectorId: string; column: string; propertyName: string; decode: PropertyValueDecoder }>;
 }): { selectorValues: Map<string, Value>; relatedInstances: Map<string, RelatedInstanceEntry> } {
-  const { row, descriptor, columnNames } = props;
+  const { row, columnNames, propertyReads } = props;
 
   // Property selectors sharing a table alias read from the same `$` blob column, so each blob is parsed
   // once here and reused both for those selectors' values and for the related-instance identity below. A
@@ -67,29 +92,26 @@ export function decodeRow(props: {
     let parsed: Record<string, Value> | undefined;
     if (raw !== undefined && raw !== null) {
       assert(typeof raw === "string", `Expected JSON blob for column "${column}", got ${typeof raw}.`);
+      let value: unknown;
       try {
-        parsed = JSON.parse(raw) as Record<string, Value>;
+        value = JSON.parse(raw);
       } catch {
         throw new Error(`Failed to parse instance JSON for column "${column}".`);
       }
+      assert(isPropertyObject(value), `Expected an instance JSON object for column "${column}".`);
+      parsed = value;
     }
     parsedBlobs.set(column, parsed);
     return parsed;
   };
 
   const selectorValues = new Map<string, Value>();
-  for (const [selectorId, column] of Object.entries(columnNames.propertyBlobs)) {
+  for (const { selectorId, column, propertyName, decode } of propertyReads) {
     const blob = parseBlob(column);
     if (!blob) {
       continue;
     }
-    const selector = descriptor.selectors[selectorId];
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!selector) {
-      continue;
-    }
-    assert(selector.kind === "property", `Selector "${selectorId}" is not a property selector.`);
-    const value = blob[selector.propertyName];
+    const value = decode(blob[propertyName]);
     if (value !== undefined) {
       selectorValues.set(selectorId, value);
     }
@@ -132,6 +154,66 @@ export function decodeRow(props: {
   return { selectorValues, relatedInstances };
 }
 
+function isPropertyObject(value: unknown): value is Record<string, Value> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export type PropertyValueDecoder = (value: Value | null) => Value;
+
+export function createPropertyValueDecoder(type: ValueDescriptor): PropertyValueDecoder {
+  const decode = createNonNullPropertyValueDecoder(type);
+  return (value) => (value === undefined || value === null ? undefined : decode(value));
+}
+
+function createNonNullPropertyValueDecoder(type: ValueDescriptor): (value: NonNullable<Value>) => Value {
+  switch (type.kind) {
+    case "navigation":
+      return (value) => {
+        assert(
+          isPropertyObject(value) && typeof value.Id === "string",
+          "Expected a navigation property object with a string Id.",
+        );
+        return value.Id;
+      };
+    case "array": {
+      const decodeElement = createPropertyValueDecoder(type.elementType);
+      return (value) => {
+        assert(Array.isArray(value), "Expected an array property value.");
+        return value.map(decodeElement);
+      };
+    }
+    case "struct": {
+      const members = type.members.map((member) => ({
+        name: member.name,
+        decode: createPropertyValueDecoder(member.type),
+      }));
+      return (value) => {
+        assert(isPropertyObject(value), "Expected a struct property object.");
+        return Object.fromEntries(
+          members
+            .filter((member) => value[member.name] !== undefined)
+            .map((member) => [member.name, member.decode(value[member.name])]),
+        );
+      };
+    }
+    case "primitive":
+      if (type.type === "Point2d" || type.type === "Point3d") {
+        return (value) => {
+          assert(
+            isPropertyObject(value) && typeof value.X === "number" && typeof value.Y === "number",
+            "Expected a point property object with numeric X and Y coordinates.",
+          );
+          if (type.type === "Point3d") {
+            assert(typeof value.Z === "number", "Expected a point property object with a numeric Z coordinate.");
+            return { x: value.X, y: value.Y, z: value.Z };
+          }
+          return { x: value.X, y: value.Y };
+        };
+      }
+      return (value) => value;
+  }
+}
+
 /**
  * Decodes one query group's rows into `instance key -> values` (keyed by {@link toInstanceKeyString}),
  * giving every value the shape the group's cardinality dictates: `"one"` (the anchor, a 1:1 partition)
@@ -140,7 +222,7 @@ export function decodeRow(props: {
  */
 export function decodeGroupRows(props: {
   rows: ECSqlQueryRow[];
-  descriptor: ContentDescriptor;
+  rowDecoder: RowDecoder;
   cardinality: CardinalityHint;
   columnNames: SelectProjection["columnNames"];
   /**
@@ -152,7 +234,7 @@ export function decodeGroupRows(props: {
    */
   keys?: readonly InstanceKey[];
 }): Map<string, GroupValues> {
-  const { rows, descriptor, cardinality, columnNames, keys } = props;
+  const { rows, rowDecoder, cardinality, columnNames, keys } = props;
   const byKey = new Map<string, GroupValues>();
   const keyOf = (row: ECSqlQueryRow) => toInstanceKeyString(decodePrimaryKey({ row, columnNames }));
   const allowedKeys = keys && new Set(keys.map(toInstanceKeyString));
@@ -169,7 +251,7 @@ export function decodeGroupRows(props: {
             `A "one" cardinality hint was given for a path that reaches more than one instance.`,
         );
       }
-      const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
+      const { selectorValues, relatedInstances } = rowDecoder(row);
       byKey.set(key, {
         selectorValues,
         relatedInstances: new Map(Array.from(relatedInstances, ([pathKey, entry]) => [pathKey, [entry]])),
@@ -196,7 +278,7 @@ export function decodeGroupRows(props: {
       target = emptyValues();
       byKey.set(key, target);
     }
-    const { selectorValues, relatedInstances } = decodeRow({ row, descriptor, columnNames });
+    const { selectorValues, relatedInstances } = rowDecoder(row);
     for (const selectorId of selectorIds) {
       (target.selectorValues.get(selectorId) as Value[]).push(selectorValues.get(selectorId));
     }
@@ -231,21 +313,23 @@ export function mergeGroupValues(target: GroupValues, source: GroupValues): void
 }
 
 /**
- * Projects decoded selector values onto descriptor fields through each field's `selectorId`, producing
- * the `ContentValues` for one instance. External fields carry no selector and are left `undefined`.
+ * Projects decoded selector values onto descriptor fields through private field bindings, producing
+ * the `ContentValues` for one instance. External fields have no binding and are left `undefined`.
  */
 export function toContentValues(props: {
   descriptor: ContentDescriptor;
+  fieldSelectorIds: Partial<Record<string, string>>;
   primaryKey: InstanceKey;
   values: GroupValues;
 }): ContentValues {
-  const { descriptor, primaryKey, values: groupValues } = props;
+  const { descriptor, fieldSelectorIds, primaryKey, values: groupValues } = props;
   const values: Record<string, Value> = {};
   for (const field of Object.values(descriptor.fields)) {
-    if (field.kind !== "calculated" && field.kind !== "property") {
+    const selectorId = fieldSelectorIds[field.id];
+    if (selectorId === undefined) {
       continue;
     }
-    const value = groupValues.selectorValues.get(field.selectorId);
+    const value = groupValues.selectorValues.get(selectorId);
     if (value !== undefined) {
       values[field.id] = value;
     }

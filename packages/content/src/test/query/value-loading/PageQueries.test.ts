@@ -28,7 +28,6 @@ const codeField: PropertyField = {
   pathCardinality: "one",
   valueClassNames: ["Schema.A"],
   primaryClassNames: ["Schema.A"],
-  selectorId: "Schema.A.Code",
 };
 
 function createBaseQueryGroup(overrides?: Partial<BaseQueryGroup["parts"]>): BaseQueryGroup {
@@ -98,6 +97,7 @@ function createPlan(overrides?: {
     anchor: {
       baseQuery: overrides?.anchor?.baseQuery ?? createBaseQueryGroup(),
       projection: overrides?.anchor?.projection ?? createProjection(),
+      rowDecoder: () => ({ selectorValues: new Map(), relatedInstances: new Map() }),
       keyProjection: overrides?.anchor?.keyProjection ?? createProjection({ propertyBlobs: {} }),
     },
     additional: overrides?.additional ?? [],

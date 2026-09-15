@@ -33,7 +33,6 @@ function propertyField(props: {
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: props.label ?? "Label",
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName,
@@ -46,12 +45,7 @@ function propertyField(props: {
 }
 
 function createDescriptor(fields: Field[]): ContentDescriptor {
-  return {
-    sources: [],
-    categories: {},
-    selectors: {},
-    fields: Object.fromEntries(fields.map((field) => [field.id, field])),
-  };
+  return { sources: [], categories: {}, fields: Object.fromEntries(fields.map((field) => [field.id, field])) };
 }
 
 function createImodelAccess(bisCoreVersion?: EC.SchemaVersion): ECSchemaProvider {

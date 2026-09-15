@@ -100,7 +100,6 @@ function createCategorizedField(props: {
     field: {
       kind: "property",
       id,
-      selectorId: id,
       label: "Field",
       type: { kind: "primitive", type: "String" },
       propertyClassName: "TestSchema.B",
@@ -120,7 +119,6 @@ function createFieldWithCategory(props: { id?: string; categoryId?: string }): P
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: "Field",
     type: { kind: "primitive", type: "String" },
     propertyClassName: "TestSchema.B",

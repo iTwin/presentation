@@ -4,8 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createContentProvider, defineIModelFieldsProvider, resolveContentSources } from "@itwin/presentation-content";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  createContentProvider,
+  defineExternalFieldsProvider,
+  defineIModelFieldsProvider,
+  resolveContentSources,
+} from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
@@ -189,13 +194,99 @@ describe("Content", () => {
         expect(item.getValue(getPropertyFieldByName(descriptor, "BoolProp"))).toBe(true);
         expect(item.getValue(getPropertyFieldByName(descriptor, "LongProp"))).toBe(12345);
         expect(item.getValue(getPropertyFieldByName(descriptor, "DateTimeProp"))).toContain("2021-01-01T00:00:00");
-        const point2d = item.getValue(getPropertyFieldByName(descriptor, "Point2dProp")) as Record<string, number>;
-        expect(Object.values(point2d)).toEqual([1, 2]);
-        const point3d = item.getValue(getPropertyFieldByName(descriptor, "Point3dProp")) as Record<string, number>;
-        expect(Object.values(point3d)).toEqual([1, 2, 3]);
+        expect(item.getValue(getPropertyFieldByName(descriptor, "Point2dProp"))).toEqual({ x: 1, y: 2 });
+        expect(item.getValue(getPropertyFieldByName(descriptor, "Point3dProp"))).toEqual({ x: 1, y: 2, z: 3 });
         // Enumerations decode to their raw backing value.
         expect(item.getValue(getPropertyFieldByName(descriptor, "IntEnumProp"))).toBe(2);
         expect(item.getValue(getPropertyFieldByName(descriptor, "StrEnumProp"))).toBe("b");
+      });
+
+      it.each([
+        { externalOnly: false, scenario: "visible fields and external inputs" },
+        { externalOnly: true, scenario: "external inputs only" },
+      ])("decodes nested point values and navigation IDs for $scenario", async ({ externalOnly }) => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECStructClass typeName="Inner">
+                <ECProperty propertyName="Point" typeName="point3d" />
+                <ECProperty propertyName="X" typeName="double" />
+              </ECStructClass>
+              <ECStructClass typeName="Outer">
+                <ECStructProperty propertyName="Nested" typeName="Inner" />
+                <ECArrayProperty propertyName="Points" typeName="point2d" />
+              </ECStructClass>
+              <ECEntityClass typeName="A">
+                <ECNavigationProperty propertyName="NavToB" relationshipName="AtoB" direction="Forward" />
+                <ECArrayProperty propertyName="Points" typeName="point2d" />
+                <ECStructArrayProperty propertyName="Payloads" typeName="Outer" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B" />
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const b = builder.insertInstance(schema.items.B.fullName);
+          const points = [
+            { x: 1, y: 2 },
+            { x: 3, y: 4 },
+          ];
+          const payloads = [{ ["Nested"]: { ["Point"]: { x: 5, y: 6, z: 7 }, ["X"]: 8 }, ["Points"]: points }];
+          builder.insertInstance(schema.items.A.fullName, { "NavToB.Id": b.id, points, payloads });
+          return { schema, b, points, payloads };
+        });
+        const getValues = vi.fn(async () => [{ checked: "yes" }]);
+        const provider = await createProvider({
+          imodelAccess: createContentIModelAccess(setup.ecdb),
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: {
+            externalFieldsProviders: [
+              defineExternalFieldsProvider({
+                id: "decoded_v1",
+                fields: [{ id: "checked", label: "Checked", type: { kind: "primitive", type: "String" } }],
+                inputs: {
+                  nav: { propertyClassName: setup.schema.items.A.fullName, propertyName: "NavToB" },
+                  points: { propertyClassName: setup.schema.items.A.fullName, propertyName: "Points" },
+                  payloads: { propertyClassName: setup.schema.items.A.fullName, propertyName: "Payloads" },
+                },
+                getValues,
+              }),
+            ],
+            descriptorTransformers: externalOnly
+              ? [
+                  {
+                    async transform({ descriptor: mutable }) {
+                      for (const field of Object.values(mutable.fields)) {
+                        if (field.kind === "property") {
+                          mutable.removeField(field.id);
+                        }
+                      }
+                    },
+                  },
+                ]
+              : [],
+          },
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const [item] = await collect(provider.getItems());
+        expect(getValues).toHaveBeenCalledExactlyOnceWith({
+          items: [{ inputValues: { nav: setup.b.id, points: setup.points, payloads: setup.payloads } }],
+        });
+        if (externalOnly) {
+          expect(Object.values(descriptor.fields).every((field) => field.kind === "external")).toBe(true);
+        } else {
+          expect(item.getValue(getPropertyFieldByName(descriptor, "NavToB"))).toBe(setup.b.id);
+          expect(item.getValue(getPropertyFieldByName(descriptor, "Points"))).toEqual(setup.points);
+          expect(item.getValue(getPropertyFieldByName(descriptor, "Payloads"))).toEqual(setup.payloads);
+        }
       });
 
       it("omits null values so their fields decode to undefined", async () => {

@@ -46,7 +46,6 @@ describe("collectDirectPropertyFields", () => {
       {
         kind: "property",
         id: "TestSchema.Element.CodeValue",
-        selectorId: "TestSchema.Element.CodeValue",
         label: "CodeValue",
         type: { kind: "primitive", type: "String" },
         propertyClassName: "TestSchema.Element",

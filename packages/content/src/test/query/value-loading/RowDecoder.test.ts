@@ -6,51 +6,122 @@
 import { describe, expect, it } from "vitest";
 import { serializeRelationshipPath } from "../../../content/model/Utils.js";
 import {
-  decodeGroupRows,
+  createPropertyValueDecoder,
+  createRowDecoder,
+  decodeGroupRows as decodePreparedGroupRows,
   decodePrimaryKey,
-  decodeRow,
   mergeGroupValues,
   toContentValues,
 } from "../../../content/query/value-loading/RowDecoder.js";
 
-import type { Value } from "@itwin/presentation-shared";
+import type { ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../../../content/ContentTarget.js";
+import type { ValueSelector } from "../../../content/descriptor-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { RelatedInstanceEntry } from "../../../content/model/ContentItem.js";
 import type { SelectProjection } from "../../../content/query/SelectBuilder.js";
 import type { GroupValues } from "../../../content/query/value-loading/RowDecoder.js";
 
+const stringType = { kind: "primitive", type: "String" } as const;
 const columnNames: SelectProjection["columnNames"] = {
   primaryKey: { className: "pres_primary_class", id: "pres_primary_id" },
   propertyBlobs: { "Schema.A.Code": "this", "Schema.A.Label": "this" },
   calculatedValues: { "calc:score": "pres_calc_0" },
   relatedBlobs: {},
 };
+const defaultDecoderTypes: Record<string, ValueDescriptor> = {
+  "Schema.A.Code": stringType,
+  "Schema.A.Label": stringType,
+  "Schema.B.Name": stringType,
+  "Schema.B.Code": stringType,
+};
+
+const selectors: Record<ValueSelector["id"], ValueSelector> = {
+  "Schema.A.Code": {
+    kind: "property",
+    id: "Schema.A.Code",
+    propertyClassName: "Schema.A",
+    propertyName: "Code",
+    pathFromTarget: [],
+  },
+  "Schema.A.Label": {
+    kind: "property",
+    id: "Schema.A.Label",
+    propertyClassName: "Schema.A",
+    propertyName: "Label",
+    pathFromTarget: [],
+  },
+  "calc:score": { kind: "calculated", id: "calc:score", expression: "1" },
+  "Schema.B.Name": {
+    kind: "property",
+    id: "Schema.B.Name",
+    propertyClassName: "Schema.B",
+    propertyName: "Name",
+    pathFromTarget: [],
+  },
+  "Schema.B.Code": {
+    kind: "property",
+    id: "Schema.B.Code",
+    propertyClassName: "Schema.B",
+    propertyName: "Code",
+    pathFromTarget: [],
+  },
+};
 
 const descriptor = {
-  selectors: {
-    "Schema.A.Code": {
-      kind: "property",
-      id: "Schema.A.Code",
-      propertyClassName: "Schema.A",
-      propertyName: "Code",
-      pathFromTarget: [],
-    },
-    "Schema.A.Label": {
-      kind: "property",
-      id: "Schema.A.Label",
-      propertyClassName: "Schema.A",
-      propertyName: "Label",
-      pathFromTarget: [],
-    },
-    "calc:score": { kind: "calculated", id: "calc:score", expression: "1" },
-  },
+  sources: [],
+  categories: {},
   fields: {
-    "Schema.A.Code": { kind: "property", id: "Schema.A.Code", selectorId: "Schema.A.Code" },
-    "Schema.A.Label": { kind: "property", id: "Schema.A.Label", selectorId: "Schema.A.Label" },
-    "calc:score": { kind: "calculated", id: "calc:score", selectorId: "calc:score" },
+    "Schema.A.Code": { kind: "property", id: "Schema.A.Code" },
+    "Schema.A.Label": { kind: "property", id: "Schema.A.Label" },
+    "calc:score": { kind: "calculated", id: "calc:score" },
     "ext:note": { kind: "external", id: "ext:note", providerId: "ext" },
   },
 } as unknown as ContentDescriptor;
+
+function createTestRowDecoder(props: {
+  descriptor: ContentDescriptor;
+  selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
+  columnNames: SelectProjection["columnNames"];
+  decoderTypes?: Record<string, ValueDescriptor>;
+}) {
+  return createRowDecoder({
+    columnNames: props.columnNames,
+    selectors: props.selectors ?? selectors,
+    propertyDecoders: Object.fromEntries(
+      Object.entries(props.decoderTypes ?? defaultDecoderTypes).map(([selectorId, type]) => [
+        selectorId,
+        createPropertyValueDecoder(type),
+      ]),
+    ),
+  });
+}
+
+function decodeRow(props: {
+  row: ECSqlQueryRow;
+  descriptor: ContentDescriptor;
+  selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
+  columnNames: SelectProjection["columnNames"];
+  decoderTypes?: Record<string, ValueDescriptor>;
+}) {
+  return createTestRowDecoder(props)(props.row);
+}
+
+function decodeGroupRows(props: {
+  rows: ECSqlQueryRow[];
+  descriptor: ContentDescriptor;
+  selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
+  cardinality: CardinalityHint;
+  columnNames: SelectProjection["columnNames"];
+  keys?: readonly InstanceKey[];
+}) {
+  const { descriptor: contentDescriptor, columnNames: projectionColumns, ...rest } = props;
+  return decodePreparedGroupRows({
+    ...rest,
+    columnNames: projectionColumns,
+    rowDecoder: createTestRowDecoder({ descriptor: contentDescriptor, columnNames: projectionColumns }),
+  });
+}
 
 describe("RowDecoder", () => {
   describe("decodePrimaryKey", () => {
@@ -62,6 +133,126 @@ describe("RowDecoder", () => {
   });
 
   describe("decodeRow — selector values", () => {
+    it("rejects projected selectors without prepared property decoders", () => {
+      expect(() => decodeRow({ row: {}, descriptor, columnNames, decoderTypes: {} })).toThrow(
+        'Missing property decoder for selector "Schema.A.Code".',
+      );
+    });
+
+    it.each([
+      { type: { kind: "navigation", targetClassName: "Schema.B" }, raw: "0x1", message: /navigation property/ },
+      { type: { kind: "navigation", targetClassName: "Schema.B" }, raw: {}, message: /navigation property/ },
+      {
+        type: { kind: "navigation", targetClassName: "Schema.B" },
+        raw: { ["Id"]: 123 },
+        message: /navigation property/,
+      },
+      { type: { kind: "primitive", type: "Point2d" }, raw: [1, 2], message: /point property/ },
+      { type: { kind: "primitive", type: "Point2d" }, raw: {}, message: /point property/ },
+      { type: { kind: "primitive", type: "Point2d" }, raw: { ["X"]: "1", ["Y"]: 2 }, message: /point property/ },
+      { type: { kind: "primitive", type: "Point3d" }, raw: { ["X"]: 1, ["Y"]: 2 }, message: /numeric Z coordinate/ },
+      { type: { kind: "struct", members: [] }, raw: "value", message: /struct property/ },
+      { type: { kind: "struct", members: [] }, raw: [], message: /struct property/ },
+      {
+        type: { kind: "array", elementType: { kind: "primitive", type: "Point2d" } },
+        raw: [{ ["X"]: 1 }],
+        message: /point property/,
+      },
+      { type: { kind: "array", elementType: stringType }, raw: "value", message: /array property/ },
+      {
+        type: {
+          kind: "struct",
+          members: [{ name: "Nav", label: "Nav", type: { kind: "navigation", targetClassName: "Schema.B" } }],
+        },
+        raw: { ["Nav"]: { ["Id"]: false } },
+        message: /navigation property/,
+      },
+    ] satisfies { type: ValueDescriptor; raw: unknown; message: RegExp }[])(
+      "rejects malformed typed JSON: $type $raw",
+      ({ type, raw, message }) => {
+        expect(() =>
+          decodeRow({
+            row: { ["pres_primary_class"]: "Schema.A", ["this"]: JSON.stringify({ ["Code"]: raw }) },
+            descriptor,
+            columnNames,
+            decoderTypes: { ...defaultDecoderTypes, "Schema.A.Code": type },
+          }),
+        ).toThrow(message);
+      },
+    );
+
+    it.each([
+      { type: { kind: "primitive", type: "Point2d" }, raw: { ["X"]: 1, ["Y"]: 2 }, expected: { x: 1, y: 2 } },
+      {
+        type: { kind: "primitive", type: "Point3d" },
+        raw: { ["X"]: 1, ["Y"]: 2, ["Z"]: 3 },
+        expected: { x: 1, y: 2, z: 3 },
+      },
+      {
+        type: { kind: "navigation", targetClassName: "Schema.B" },
+        raw: { ["Id"]: "0x2", ["RelECClassId"]: "0x3" },
+        expected: "0x2",
+      },
+      {
+        type: { kind: "array", elementType: { kind: "primitive", type: "Point2d" } },
+        raw: [{ ["X"]: 1, ["Y"]: 2 }, null, { ["X"]: 3, ["Y"]: 4 }],
+        expected: [{ x: 1, y: 2 }, undefined, { x: 3, y: 4 }],
+      },
+      {
+        type: {
+          kind: "array",
+          elementType: {
+            kind: "struct",
+            members: [
+              {
+                name: "Nested",
+                label: "Nested",
+                type: {
+                  kind: "struct",
+                  members: [
+                    { name: "Point", label: "Point", type: { kind: "primitive", type: "Point3d" } },
+                    { name: "Nav", label: "Nav", type: { kind: "navigation", targetClassName: "Schema.B" } },
+                    { name: "Missing", label: "Missing", type: { kind: "primitive", type: "String" } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        raw: [
+          {
+            ["Nested"]: {
+              ["Point"]: { ["X"]: 1, ["Y"]: 2, ["Z"]: 3 },
+              ["Nav"]: { ["Id"]: "0x2", ["RelECClassId"]: "0x3" },
+            },
+          },
+        ],
+        expected: [{ ["Nested"]: { ["Point"]: { x: 1, y: 2, z: 3 }, ["Nav"]: "0x2" } }],
+      },
+      {
+        type: {
+          kind: "struct",
+          members: [
+            { name: "X", label: "X", type: { kind: "primitive", type: "Double" } },
+            { name: "Y", label: "Y", type: { kind: "primitive", type: "Double" } },
+          ],
+        },
+        raw: { ["X"]: 1, ["Y"]: 2 },
+        expected: { ["X"]: 1, ["Y"]: 2 },
+      },
+    ] satisfies { type: ValueDescriptor; raw: unknown; expected: Value }[])(
+      "decodes schema-described values without requiring a field: $type",
+      ({ type, raw, expected }) => {
+        const { selectorValues } = decodeRow({
+          row: { ["pres_primary_class"]: "Schema.A", ["this"]: JSON.stringify({ ["Code"]: raw }) },
+          descriptor: { ...descriptor, fields: {} },
+          columnNames,
+          decoderTypes: { ...defaultDecoderTypes, "Schema.A.Code": type },
+        });
+        expect(selectorValues.get("Schema.A.Code")).to.deep.equal(expected);
+      },
+    );
+
     it("reads shared-blob property selectors and scalar calculated selectors", () => {
       const { selectorValues: values } = decodeRow({
         row: {
@@ -116,22 +307,19 @@ describe("RowDecoder", () => {
       expect(values.has("Schema.A.Label")).to.equal(false);
     });
 
-    it("skips a blob selector missing from the descriptor", () => {
-      const { selectorValues: values } = decodeRow({
-        row: {
-          ["pres_primary_class"]: "Schema.A",
-          ["pres_primary_id"]: "0x1",
-          ["this"]: JSON.stringify({ ["Code"]: "A1" }),
-        },
-        descriptor,
-        columnNames: {
-          primaryKey: columnNames.primaryKey,
-          propertyBlobs: { "Schema.A.Unknown": "this" },
-          calculatedValues: {},
-          relatedBlobs: {},
-        },
-      });
-      expect(values.size).to.equal(0);
+    it("rejects a projected selector missing from the prepared requirements", () => {
+      expect(() =>
+        decodeRow({
+          row: {},
+          descriptor,
+          columnNames: {
+            primaryKey: columnNames.primaryKey,
+            propertyBlobs: { "Schema.A.Unknown": "this" },
+            calculatedValues: {},
+            relatedBlobs: {},
+          },
+        }),
+      ).toThrow('Missing selector "Schema.A.Unknown".');
     });
 
     it("omits property values missing from the blob", () => {
@@ -154,6 +342,12 @@ describe("RowDecoder", () => {
           descriptor,
           columnNames,
         }),
+      ).toThrow(/column "this"/);
+    });
+
+    it.each(["null", "[]", "123", '"text"'])("rejects non-object instance JSON: %s", (raw) => {
+      expect(() =>
+        decodeRow({ row: { ["pres_primary_class"]: "Schema.A", ["this"]: raw }, descriptor, columnNames }),
       ).toThrow(/column "this"/);
     });
   });
@@ -232,9 +426,9 @@ describe("RowDecoder", () => {
   describe("mergeGroupValues", () => {
     const entry: RelatedInstanceEntry = { key: { className: "Schema.B", id: "0x2" } };
     const values = (
-      selectors: Array<[string, Value]>,
+      selectorEntries: Array<[string, Value]>,
       related: Array<[string, RelatedInstanceEntry[]]> = [],
-    ): GroupValues => ({ selectorValues: new Map(selectors), relatedInstances: new Map(related) });
+    ): GroupValues => ({ selectorValues: new Map(selectorEntries), relatedInstances: new Map(related) });
 
     it("adds new selector values and related-instance entries", () => {
       const target = values([["a", 1]]);
@@ -275,9 +469,49 @@ describe("RowDecoder", () => {
   });
 
   describe("toContentValues", () => {
+    it("uses prepared fieldSelectorIds for field lookup, including shared reads across field forks", () => {
+      const forkedDescriptor = {
+        sources: [],
+        categories: {},
+        fields: {
+          "Schema.A.Code": { kind: "property", id: "Schema.A.Code" },
+          "Schema.A.Code#Door": { kind: "property", id: "Schema.A.Code#Door" },
+          "calc:score": { kind: "calculated", id: "calc:score" },
+        },
+      } as unknown as ContentDescriptor;
+
+      const contentValues = toContentValues({
+        descriptor: forkedDescriptor,
+        primaryKey: { className: "Schema.A", id: "0x1" },
+        values: {
+          selectorValues: new Map<string, Value>([
+            ["Schema.A.Code", "A1"],
+            ["calc:score", 42],
+          ]),
+          relatedInstances: new Map(),
+        },
+        fieldSelectorIds: {
+          "Schema.A.Code": "Schema.A.Code",
+          "Schema.A.Code#Door": "Schema.A.Code",
+          "calc:score": "calc:score",
+        },
+      });
+
+      expect(contentValues.values).to.deep.equal({
+        "Schema.A.Code": "A1",
+        "Schema.A.Code#Door": "A1",
+        "calc:score": 42,
+      });
+    });
+
     it("maps selector values onto fields and leaves external fields undefined", () => {
       const contentValues = toContentValues({
         descriptor,
+        fieldSelectorIds: {
+          "Schema.A.Code": "Schema.A.Code",
+          "Schema.A.Label": "Schema.A.Label",
+          "calc:score": "calc:score",
+        },
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
           selectorValues: new Map<string, Value>([
@@ -308,6 +542,7 @@ describe("RowDecoder", () => {
       });
       const contentValues = toContentValues({
         descriptor,
+        fieldSelectorIds: {},
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: { selectorValues: new Map(), relatedInstances: new Map([[pathKey, entries]]) },
       });
@@ -322,12 +557,7 @@ describe("RowDecoder", () => {
       calculatedValues: {},
       relatedBlobs: { t0: { className: "t0_cls", pathKey: "A-[Rel]->B", role: "target" } },
     };
-    const relatedDescriptor = {
-      selectors: {
-        "Schema.B.Name": { kind: "property", id: "Schema.B.Name", propertyName: "Name", pathFromTarget: [] },
-        "Schema.B.Code": { kind: "property", id: "Schema.B.Code", propertyName: "Code", pathFromTarget: [] },
-      },
-    } as unknown as ContentDescriptor;
+    const relatedDescriptor = { sources: [], categories: {}, fields: {} } as ContentDescriptor;
     const row = (primaryId: string, related: { id: string; name?: string; code?: string } | null) => ({
       ["pres_primary_class"]: "Schema.A",
       ["pres_primary_id"]: primaryId,

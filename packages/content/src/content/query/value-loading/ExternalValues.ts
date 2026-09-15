@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forkJoin, from, map } from "rxjs";
-import { computePropertySelectorId } from "../../model/ValueSelector.js";
+import { computePropertySelectorId } from "../../descriptor-building/ValueSelector.js";
 
 import type { Observable } from "rxjs";
 import type { Value } from "@itwin/presentation-shared";
@@ -42,11 +42,14 @@ interface ProviderPlan {
 export function createExternalValuePopulator(props: {
   descriptor: ContentDescriptor;
   providers?: ExternalFieldsProvider[];
+  prepared?: ProviderPlan[];
 }): ExternalValuePopulator | undefined {
-  const { descriptor, providers = [] } = props;
-  const plans = providers
-    .map((provider) => createProviderPlan({ descriptor, provider }))
-    .filter((plan): plan is ProviderPlan => plan !== undefined);
+  const { descriptor, providers = [], prepared } = props;
+  const plans =
+    prepared ??
+    providers
+      .map((provider) => createProviderPlan({ descriptor, provider }))
+      .filter((plan): plan is ProviderPlan => plan !== undefined);
   assertEveryExternalFieldIsProvided({ descriptor, plans });
   if (plans.length === 0) {
     return undefined;

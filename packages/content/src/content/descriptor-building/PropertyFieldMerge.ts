@@ -73,7 +73,7 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate
     const primaryClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.primaryClassNames));
     const pathCardinality = resolveCardinality(group.map((candidate) => candidate.field.pathCardinality));
     result.push({
-      field: { ...winner.field, id: baseId, selectorId: baseId, pathCardinality, valueClassNames, primaryClassNames },
+      field: { ...winner.field, id: baseId, pathCardinality, valueClassNames, primaryClassNames },
       categorization: winner.categorization,
     });
   }
