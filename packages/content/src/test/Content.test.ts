@@ -16,6 +16,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { ContentTarget, ResolvedPath } from "../content/ContentTarget.js";
+import type { ExternalFieldsProvider } from "../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../content/extensions/IModelFieldsProvider.js";
 
 // Mock `ECSql.createRelationshipPathJoinInfo` / `ECSql.createRelationshipPathJoinClause` because the
@@ -142,11 +143,13 @@ describe("resolveContentSources", () => {
       expect(result[0]).to.deep.equal({
         target: targets[0],
         resolvedPrimaryClasses: ["TestSchema.ClassA"],
+        externalInputPaths: [],
         resolvedDeclarations: [],
       });
       expect(result[1]).to.deep.equal({
         target: targets[1],
         resolvedPrimaryClasses: ["TestSchema.ClassB"],
+        externalInputPaths: [],
         resolvedDeclarations: [],
       });
     });
@@ -162,6 +165,7 @@ describe("resolveContentSources", () => {
       expect(result).to.deep.equal({
         target: targetA,
         resolvedPrimaryClasses: ["TestSchema.ConcreteA"],
+        externalInputPaths: [],
         resolvedDeclarations: [],
       });
     });
@@ -258,6 +262,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
+          externalInputPaths: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -306,6 +311,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
+          externalInputPaths: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -357,7 +363,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const allQueries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
       const queries = allQueries.filter((ecsql) => !isPrimaryEnumerationQuery(ecsql));
       expect(queries.length).to.be.greaterThan(0);
@@ -447,7 +452,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
       const anchoringQuery = queries.find((ecsql) => ecsql.includes("[FirstStepRelClassId]"));
       expect(anchoringQuery).to.not.equal(undefined);
@@ -490,6 +494,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
+          externalInputPaths: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -554,7 +559,7 @@ describe("resolveContentSources", () => {
       });
 
       // 3 strategies are applicable for a 3-step path: original, subquery-anchor, cross-join
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(3);
 
       // Verify the final resolved paths are correct regardless of which strategy won the race
@@ -562,6 +567,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
+          externalInputPaths: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -730,7 +736,7 @@ describe("resolveContentSources", () => {
 
     expect(resolveFn).toHaveBeenCalledOnce();
     expect(resolveFn).toHaveBeenCalledWith({ imodelAccess, target: targetA });
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     expect(result[0].resolvedDeclarations).to.deep.equal([
       { providerId: "test_v1", declarationIndex: 0, paths: customPaths },
@@ -880,9 +886,8 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include(
@@ -914,9 +919,8 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include("[this].Area > :minArea");
@@ -944,7 +948,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include('[this].Name = "test"');
@@ -972,7 +975,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include('[this].Name = "test"');
@@ -1022,7 +1024,7 @@ describe("resolveContentSources", () => {
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // All 3 strategies should include the filter bindings in their queries
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0]);
       expect(queries).to.have.length(3);
       for (const query of queries) {
@@ -1079,7 +1081,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets, config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(provider.getContribution).toHaveBeenCalledTimes(2);
     });
   });
@@ -1188,7 +1189,7 @@ describe("resolveContentSources", () => {
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.ClassA"]);
       // Only the path-resolution query runs — no primary-enumeration scan for a leaf class.
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
       expect(queries.some((ecsql) => isPrimaryEnumerationQuery(ecsql))).to.equal(false);
     });
@@ -1271,7 +1272,7 @@ describe("resolveContentSources", () => {
       });
 
       const scanQuery = vi
-        // eslint-disable-next-line @typescript-eslint/unbound-method
+
         .mocked(imodelAccess.createQueryReader)
         .mock.calls.map((c) => c[0])
         .find((q) => isPrimaryEnumerationQuery(q.ecsql));
@@ -2049,6 +2050,395 @@ describe("resolveContentSources", () => {
         paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
         nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
       });
+    });
+  });
+
+  describe("external fields provider input paths", () => {
+    function createExternalProvider(path: RelationshipPath): ExternalFieldsProvider {
+      return {
+        id: "ext_v1",
+        fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
+        inputs: { related: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path } },
+        async getValues() {
+          return [];
+        },
+      };
+    }
+
+    it("resolves a related path declared only as an external fields provider input", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const queryRow: ECSqlQueryRow = {
+        0: "TestSchema.ClassA",
+        1: "TestSchema.ConcreteRelAB",
+        2: "TestSchema.ConcreteB",
+      };
+      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [createExternalProvider(path)] },
+      });
+
+      // The path is joined (and its resolved classes captured) but contributes no field declaration.
+      expect(result.resolvedDeclarations).to.deep.equal([]);
+      expect(result.externalInputPaths).to.deep.equal([
+        {
+          path: [
+            {
+              sourceClassName: "TestSchema.ClassA",
+              targetClassName: "TestSchema.ConcreteB",
+              relationshipName: "TestSchema.ConcreteRelAB",
+            },
+          ],
+          targetClassNames: ["TestSchema.ClassA"],
+        },
+      ]);
+    });
+
+    it("resolves an identical input path declared by multiple external fields providers only once", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const queryRow: ECSqlQueryRow = {
+        0: "TestSchema.ClassA",
+        1: "TestSchema.ConcreteRelAB",
+        2: "TestSchema.ConcreteB",
+      };
+      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
+      const providerOne = { ...createExternalProvider(path), id: "ext_one_v1" as ExternalFieldsProvider["id"] };
+      const providerTwo = { ...createExternalProvider(path), id: "ext_two_v1" as ExternalFieldsProvider["id"] };
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [providerOne, providerTwo] },
+      });
+
+      expect(result.externalInputPaths).to.have.length(1);
+      // A single-step path only ever runs the "original" resolution strategy, so a single query
+      // proves the two providers' identical paths were de-duplicated before resolution ran.
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores an external fields provider input with no path (direct property)", async () => {
+      const provider: ExternalFieldsProvider = {
+        id: "ext_v1",
+        fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
+        inputs: { direct: { propertyClassName: "TestSchema.ClassA", propertyName: "Prop" } },
+        async getValues() {
+          return [];
+        },
+      };
+      const imodelAccess = createMockIModelAccess();
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [provider] },
+      });
+
+      expect(result.externalInputPaths).to.deep.equal([]);
+    });
+
+    it("ignores an external fields provider that declares no inputs at all", async () => {
+      const provider: ExternalFieldsProvider = {
+        id: "ext_v1",
+        fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
+        async getValues() {
+          return [];
+        },
+      };
+      const imodelAccess = createMockIModelAccess();
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [provider] },
+      });
+
+      expect(result.externalInputPaths).to.deep.equal([]);
+    });
+  });
+
+  describe("overlap detection", () => {
+    // Overlap-check queries route on the inner subquery's distinct alias (`pres_other`); the primary-class
+    // enumeration scan (only issued for a target whose class has derived classes) gets
+    // `primaryClassScanResults`; everything else (there are no providers in these tests) gets no rows.
+    function createOverlapMockIModelAccess(props?: {
+      overlapQueryResults?: ECSqlQueryRow[];
+      primaryClassScanResults?: ECSqlQueryRow[];
+      derivedClasses?: Record<string, string[]>;
+    }): ECSqlQueryExecutor & ECSchemaProvider {
+      const { overlapQueryResults = [], primaryClassScanResults = [], derivedClasses = {} } = props ?? {};
+      return {
+        createQueryReader: vi.fn((query: ECSqlQueryDef) => {
+          const rows = query.ecsql.includes("pres_other")
+            ? overlapQueryResults
+            : isPrimaryEnumerationQuery(query.ecsql)
+              ? primaryClassScanResults
+              : [];
+          return (async function* () {
+            for (const row of rows) {
+              yield row;
+            }
+          })();
+        }),
+        getSchema: createMockGetSchema(derivedClasses),
+        classDerivesFrom: vi.fn(async () => false),
+      };
+    }
+
+    function countOverlapQueries(imodelAccess: ECSqlQueryExecutor): number {
+      return vi
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.filter(([query]) => query.ecsql.includes("pres_other")).length;
+    }
+
+    it("throws for two unscoped targets on the same class, naming a queried instance id", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
+      const targets: ContentTarget[] = [targetA, { primaryClass: targetA.primaryClass }];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
+      );
+    });
+
+    it("does not throw for disjoint instanceIds sets, issuing no query", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x1", "0x2"] },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x3"] },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("queries intersecting instanceIds so class and filter scopes are verified", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x2" }] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x1", "0x2"] },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x2", "0x3"] },
+      ];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x2 is in both. Merge the targets or make their scopes disjoint.",
+      );
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+
+    it("does not throw when intersecting instanceIds are excluded by a target filter", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [] });
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceIds: ["0x2"],
+          instanceFilter: { expression: "this.Prop = 'left'" },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceIds: ["0x2"],
+          instanceFilter: { expression: "this.Prop = 'right'" },
+        },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+
+    it("does not query when either instanceIds set is empty", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x2" }] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: [] },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x2"] },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("does not query an unscoped target against an empty instanceIds set", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x2" }] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass },
+        { primaryClass: targetA.primaryClass, instanceIds: [] },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("issues a query for filter-vs-filter targets and does not throw when it returns no row", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [] });
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 1 } } },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area < :maxArea", bindings: { maxArea: { type: "double", value: 100 } } },
+        },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalled();
+    });
+
+    it("throws for filter-vs-filter targets when the overlap query returns a row", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x5" }] });
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 1 } } },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Area < :maxArea", bindings: { maxArea: { type: "double", value: 100 } } },
+        },
+      ];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x5 is in both. Merge the targets or make their scopes disjoint.",
+      );
+    });
+
+    it("keeps same-named bindings from independent target filters separate", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Prop = :value", bindings: { value: { type: "string", value: "left" } } },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Prop = :value", bindings: { value: { type: "string", value: "right" } } },
+        },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      const query = vi
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.find(([q]) => q.ecsql.includes("pres_other"))![0];
+      expect(query.ecsql).toContain("[this].Prop = :outer_value");
+      expect(query.ecsql).toContain("[pres_other].Prop = :inner_value");
+      expect(query.bindings).toEqual({
+        ["outer_value"]: { type: "string", value: "left" },
+        ["inner_value"]: { type: "string", value: "right" },
+      });
+    });
+
+    it("groups an outer OR filter before intersecting scopes", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Prop = 'one' OR this.Prop = 'two'" },
+        },
+        { primaryClass: targetA.primaryClass, instanceFilter: { expression: "this.Prop = 'other'" } },
+      ];
+
+      await resolveContentSources({ imodelAccess, targets });
+
+      const query = vi
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.find(([q]) => q.ecsql.includes("pres_other"))![0];
+      expect(query.ecsql.replace(/\s+/g, " ")).toContain(
+        "WHERE ([this].Prop = 'one' OR [this].Prop = 'two') AND [this].[ECInstanceId] IN",
+      );
+    });
+
+    it("does not check targets whose resolvedPrimaryClasses are disjoint", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
+      const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassC" }];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("does not check targets whose resolvedPrimaryClasses are in the same hierarchy but differ by name", async () => {
+      // `resolvedPrimaryClasses` are the concrete classes of actual instances, so two targets that resolved
+      // different names cannot share an instance even when one class derives from the other — the
+      // hierarchy is never consulted and no overlap query is issued.
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
+      const targets: ContentTarget[] = [{ primaryClass: "TestSchema.ClassA" }, { primaryClass: "TestSchema.ClassB" }];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(countOverlapQueries(imodelAccess)).toBe(0);
+      expect(imodelAccess.classDerivesFrom).not.toHaveBeenCalled();
+    });
+
+    it("checks a pair of targets sharing several resolved classes only once", async () => {
+      // Both targets are on polymorphic `ClassA` and both enumerate `ClassB` and `ClassC` instances, so
+      // the pair is a candidate through two class names; it still gets a single overlap query.
+      const imodelAccess = createOverlapMockIModelAccess({
+        derivedClasses: { "TestSchema.ClassA": ["TestSchema.ClassB", "TestSchema.ClassC"] },
+        primaryClassScanResults: [{ 0: "TestSchema.ClassB" }, { 0: "TestSchema.ClassC" }],
+        overlapQueryResults: [],
+      });
+      const targets: ContentTarget[] = [
+        { primaryClass: "TestSchema.ClassA", instanceFilter: { expression: "this.Area > 1" } },
+        { primaryClass: "TestSchema.ClassA", instanceFilter: { expression: "this.Area < 100" } },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(result[0].resolvedPrimaryClasses).toEqual(["TestSchema.ClassB", "TestSchema.ClassC"]);
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+
+    it("queries an unscoped target against named IDs to verify existence and class", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x7" }] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x7", "0x8"] },
+      ];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x7 is in both. Merge the targets or make their scopes disjoint.",
+      );
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+
+    it("does not throw when named IDs do not exist in the complete target scope", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x9"] },
+        { primaryClass: targetA.primaryClass },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
     });
   });
 });

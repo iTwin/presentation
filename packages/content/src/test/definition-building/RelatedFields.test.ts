@@ -5,8 +5,8 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
-import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
-import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
+import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
+import { collectRelatedPropertyFields } from "../../content/definition-building/RelatedFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createPathCardinalityClassifier } from "../../content/PathCardinality.js";
 import {
@@ -80,7 +80,12 @@ function wireProviders(providers: IModelFieldsProvider[]) {
 }
 
 function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"]): ContentSource {
-  return { target: { primaryClass: "TestSchema.A" }, resolvedPrimaryClasses: ["TestSchema.A"], resolvedDeclarations };
+  return {
+    target: { primaryClass: "TestSchema.A" },
+    resolvedPrimaryClasses: ["TestSchema.A"],
+    resolvedDeclarations,
+    externalInputPaths: [],
+  };
 }
 
 function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassNameDotNotation[]): ResolvedPath {

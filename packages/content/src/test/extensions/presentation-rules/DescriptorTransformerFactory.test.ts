@@ -30,7 +30,6 @@ function propertyField(props: {
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: props.label ?? "Label",
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.sourceClassName,
@@ -56,7 +55,7 @@ function calculatedField(id: string): CalculatedField {
 }
 
 function createDescriptor(fields: Field[]): ContentDescriptor {
-  return { sources: [], categories: {}, selectors: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
+  return { sources: [], categories: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
 }
 
 function forkedId(props: {

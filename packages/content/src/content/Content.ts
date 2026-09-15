@@ -207,8 +207,12 @@ interface ResolveContentSourcesProps {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   /** The content targets to resolve. */
   targets: ContentTarget[];
-  /** Extension point configuration (only `imodelFieldsProviders` is used for resolution). */
-  config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
+  /**
+   * Extension point configuration. Only `imodelFieldsProviders` contributes fields directly, but
+   * `externalFieldsProviders` is also read here: a provider input declared over a related path needs
+   * that path joined during resolution.
+   */
+  config?: Pick<ContentConfiguration, "imodelFieldsProviders" | "externalFieldsProviders">;
 }
 
 /**
@@ -224,6 +228,11 @@ interface ResolveContentSourcesProps {
  * Cache invalidation: sources become stale when the iModel schema changes
  * or provider declarations change.
  *
+ * @throws when two targets' scopes can reach the same instance (e.g. the same class with
+ * overlapping or missing `instanceIds` / `instanceFilter`) — resolving both would otherwise emit
+ * that instance twice or drop one target's related properties for it. Merge the targets or make
+ * their scopes disjoint.
+ *
  * @public
  */
 export async function resolveContentSources(props: ResolveContentSourcesProps): Promise<ContentSource[]> {
@@ -231,6 +240,7 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
     imodelAccess: props.imodelAccess,
     targets: props.targets,
     imodelFieldsProviders: props.config?.imodelFieldsProviders ?? [],
+    externalFieldsProviders: props.config?.externalFieldsProviders ?? [],
   });
 }
 
@@ -282,8 +292,6 @@ export interface ContentProvider {
 
   /**
    * Get instance keys for all items matching the configured sources.
-   *
-   * A key may be returned more than once when configured sources overlap.
    *
    * @param options - Optional filters (affects which keys are returned).
    */

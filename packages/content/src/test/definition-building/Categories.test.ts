@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectCategories, pruneUnreferencedCategories } from "../../content/descriptor-building/Categories.js";
-import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
+import { collectCategories, pruneUnreferencedCategories } from "../../content/definition-building/Categories.js";
+import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
-import type { CategorizedField, FieldCategorization } from "../../content/descriptor-building/ClassPropertyFields.js";
+import type { CategorizedField, FieldCategorization } from "../../content/definition-building/ClassPropertyFields.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../../content/model/Field.js";
@@ -37,6 +37,7 @@ function createSource(): ContentSource {
     target: { primaryClass: "TestSchema.A" },
     resolvedPrimaryClasses: ["TestSchema.A"],
     resolvedDeclarations: [],
+    externalInputPaths: [],
   };
 }
 
@@ -99,7 +100,6 @@ function createCategorizedField(props: {
     field: {
       kind: "property",
       id,
-      selectorId: id,
       label: "Field",
       type: { kind: "primitive", type: "String" },
       propertyClassName: "TestSchema.B",
@@ -119,7 +119,6 @@ function createFieldWithCategory(props: { id?: string; categoryId?: string }): P
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: "Field",
     type: { kind: "primitive", type: "String" },
     propertyClassName: "TestSchema.B",
@@ -214,6 +213,22 @@ describe("collectCategories", () => {
     });
     expect(categories.shared.label).to.equal("From External");
     expect(categories.extOnly).to.deep.equal({ id: "extOnly", label: "Ext Only" });
+  });
+
+  it("reuses category IDs across filtered paths that share the same relationship", () => {
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+    ];
+
+    expect(CategoryDefinition.computeId({ path: filteredA })).to.equal(
+      CategoryDefinition.computeId({ path: filteredB }),
+    );
+    expect(CategoryDefinition.computeId({ path: filteredA, omitTargetClass: true })).to.equal(
+      CategoryDefinition.computeId({ path: filteredB, omitTargetClass: true }),
+    );
   });
 
   it("ignores external fields providers that declare no categories", async () => {
@@ -655,6 +670,7 @@ describe("collectCategories", () => {
             nested: { anchorClassName: props.anchorClassName, prefixStepCount: 1 },
           },
         ],
+        externalInputPaths: [],
       };
     }
 
@@ -743,6 +759,7 @@ describe("collectCategories", () => {
             nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
           },
         ],
+        externalInputPaths: [],
       };
       const memoizer = createContributionMemoizer({ imodelAccess: createSchemaAccess([]) });
       const categories = await collectCategories({

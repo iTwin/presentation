@@ -14,15 +14,13 @@ import type { GetContributionFn } from "./ContributionMemoizer.js";
  * Collects the `CalculatedField`s contributed by the configured providers.
  *
  * Each provider's contribution (re-fetched per source target) may declare calculated fields — ECSQL
- * expressions evaluated in the query. A field's global id is `${providerId}:${localId}`, and its
- * `selectorId` equals that id (each calculated field backs its own selector). A provider may
- * contribute the same local id for several targets; because the id doubles as the selector id, the
+ * expressions evaluated in the query. A field's global id is `${providerId}:${localId}` and privately
+ * identifies the field's value requirement. A provider may contribute the same local id for several targets; the
  * same calculated field must be one field/one selector across the descriptor. Declarations that
  * collapse to the same id are therefore deduplicated, but only after asserting they are structurally
  * identical — a divergence (different expression, type, category, etc. under one id) is a provider
  * bug and throws, mirroring the intra-provider check in `mergePropertyFieldsByIdentity`.
  *
- * @internal
  */
 export async function collectCalculatedFields(props: {
   sources: ContentSource[];
@@ -54,7 +52,6 @@ export async function collectCalculatedFields(props: {
       label: declaration.label,
       type: declaration.type,
       expression: declaration.expression,
-      selectorId: id,
     };
     if (declaration.targetAlias !== undefined) {
       field.targetAlias = declaration.targetAlias;

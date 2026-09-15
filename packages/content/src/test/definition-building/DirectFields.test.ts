@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectDirectPropertyFields } from "../../content/descriptor-building/DirectFields.js";
+import { collectDirectPropertyFields } from "../../content/definition-building/DirectFields.js";
 import { createEntityClass, createMixinClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC } from "@itwin/presentation-shared";
@@ -19,6 +19,7 @@ function createSource(props: {
     target: { primaryClass: props.primaryClass },
     resolvedPrimaryClasses: props.resolvedPrimaryClasses ?? [props.primaryClass],
     resolvedDeclarations: [],
+    externalInputPaths: [],
   };
 }
 
@@ -45,7 +46,6 @@ describe("collectDirectPropertyFields", () => {
       {
         kind: "property",
         id: "TestSchema.Element.CodeValue",
-        selectorId: "TestSchema.Element.CodeValue",
         label: "CodeValue",
         type: { kind: "primitive", type: "String" },
         propertyClassName: "TestSchema.Element",

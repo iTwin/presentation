@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { mergePropertyFieldsByIdentity } from "../../content/descriptor-building/PropertyFieldMerge.js";
+import { mergePropertyFieldsByIdentity } from "../../content/definition-building/PropertyFieldMerge.js";
 import { PropertyField } from "../../content/model/Field.js";
 
 import type { EC } from "@itwin/presentation-shared";
@@ -30,7 +30,6 @@ function createField(props: {
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: props.label ?? "Label",
     type: props.type ?? { kind: "primitive", type: "String" },
     hidden: props.hidden,
@@ -73,7 +72,6 @@ describe("mergePropertyFieldsByIdentity", () => {
       [id]: {
         ...field,
         id,
-        selectorId: id,
         valueClassNames: ["Stuff.Door", "Stuff.Window"],
         primaryClassNames: ["Stuff.Door", "Stuff.Window"],
         pathCardinality: "one",
@@ -184,6 +182,45 @@ describe("mergePropertyFieldsByIdentity", () => {
     const b = createField({ propertyClassName: "Stuff.Thing", propertyName: "Width", valueClassNames: ["Stuff.Door"] });
     const result = merge([a, b]);
     expect(Object.keys(result)).to.have.length(2);
+  });
+
+  it("keeps the same property reached through different filtered paths separate", () => {
+    const pathA: PropertyField["pathFromTarget"] = [
+      {
+        sourceClassName: "Stuff.Thing",
+        relationshipName: "Stuff.RelA",
+        targetClassName: "Stuff.Other",
+        instanceFilter: { expression: "this.Kind = 1" },
+      },
+    ];
+    const pathB: PropertyField["pathFromTarget"] = [
+      {
+        sourceClassName: "Stuff.Thing",
+        relationshipName: "Stuff.RelA",
+        targetClassName: "Stuff.Other",
+        instanceFilter: { expression: "this.Kind = 2" },
+      },
+    ];
+    const a = createField({
+      propertyClassName: "Stuff.Other",
+      propertyName: "Name",
+      pathFromTarget: pathA,
+      valueClassNames: ["Stuff.Other"],
+    });
+    const b = createField({
+      propertyClassName: "Stuff.Other",
+      propertyName: "Name",
+      pathFromTarget: pathB,
+      valueClassNames: ["Stuff.Other"],
+    });
+
+    const result = merge([a, b]);
+    expect(Object.keys(result)).to.have.length(2);
+    expect(Object.keys(result)[0]).to.not.equal(Object.keys(result)[1]);
+    expect(Object.keys(result)).to.deep.equal([
+      PropertyField.computeId({ propertyClassName: "Stuff.Other", propertyName: "Name", pathFromTarget: pathA }),
+      PropertyField.computeId({ propertyClassName: "Stuff.Other", propertyName: "Name", pathFromTarget: pathB }),
+    ]);
   });
 
   it("merges to `many` when candidates disagree about the path cardinality", () => {

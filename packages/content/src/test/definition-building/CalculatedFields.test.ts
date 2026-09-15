@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectCalculatedFields } from "../../content/descriptor-building/CalculatedFields.js";
+import { collectCalculatedFields } from "../../content/definition-building/CalculatedFields.js";
 import { createSchemaAccess } from "../MetadataStubs.js";
 
 import type { ContentSource } from "../../content/ContentTarget.js";
@@ -17,6 +17,7 @@ function createSource(): ContentSource {
     target: { primaryClass: "TestSchema.A" },
     resolvedPrimaryClasses: ["TestSchema.A"],
     resolvedDeclarations: [],
+    externalInputPaths: [],
   };
 }
 
@@ -70,7 +71,6 @@ describe("collectCalculatedFields", () => {
       "p_v1:flow": {
         kind: "calculated",
         id: "p_v1:flow",
-        selectorId: "p_v1:flow",
         label: "Flow",
         expression: "this.FlowRate * 2",
         type: { kind: "primitive", type: "Double" },
@@ -141,11 +141,13 @@ describe("collectCalculatedFields", () => {
             target: { primaryClass: "TestSchema.A" },
             resolvedPrimaryClasses: ["TestSchema.A"],
             resolvedDeclarations: [],
+            externalInputPaths: [],
           },
           {
             target: { primaryClass: "TestSchema.B" },
             resolvedPrimaryClasses: ["TestSchema.B"],
             resolvedDeclarations: [],
+            externalInputPaths: [],
           },
         ],
         imodelFieldsProviders: [provider],

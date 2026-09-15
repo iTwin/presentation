@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectExternalFields } from "../../content/descriptor-building/ExternalFields.js";
+import { collectExternalFields } from "../../content/definition-building/ExternalFields.js";
+import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
-import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 
 describe("collectExternalFields", () => {
   it("returns nothing for no providers", () => {
@@ -15,7 +15,7 @@ describe("collectExternalFields", () => {
   });
 
   it("maps external field declarations, prefixing ids with the provider id", () => {
-    const provider: ExternalFieldsProvider = {
+    const provider = defineExternalFieldsProvider({
       id: "ext_v1",
       fields: [
         { id: "flow", label: "Flow", type: { kind: "primitive", type: "Double" } },
@@ -24,7 +24,7 @@ describe("collectExternalFields", () => {
       async getValues() {
         return [];
       },
-    };
+    });
     const { fields, inputs } = collectExternalFields([provider]);
     expect(fields).to.deep.equal({
       "ext_v1:flow": {
@@ -50,7 +50,7 @@ describe("collectExternalFields", () => {
     const path: RelationshipPath = [
       { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
     ];
-    const provider: ExternalFieldsProvider<"direct" | "related"> = {
+    const provider = defineExternalFieldsProvider({
       id: "ext_v1",
       fields: [],
       inputs: {
@@ -60,11 +60,29 @@ describe("collectExternalFields", () => {
       async getValues() {
         return [];
       },
-    };
+    });
     const { inputs } = collectExternalFields([provider]);
     expect(inputs).to.deep.equal([
       { propertyClassName: "TestSchema.A", propertyName: "Code" },
       { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path },
+    ]);
+  });
+
+  it("carries an input's cardinalityHint through", () => {
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const provider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [],
+      inputs: { related: { propertyClassName: "TestSchema.B", propertyName: "Name", path, cardinalityHint: "many" } },
+      async getValues() {
+        return [];
+      },
+    });
+    const { inputs } = collectExternalFields([provider]);
+    expect(inputs).to.deep.equal([
+      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path, cardinalityHint: "many" },
     ]);
   });
 });

@@ -6,6 +6,7 @@
 import { collect, ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { createContentProvider, resolveContentSources } from "../content/Content.js";
+import * as BuildContentDefinition from "../content/definition-building/BuildContentDefinition.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSqlQueryExecutor } from "@itwin/presentation-shared";
@@ -18,7 +19,12 @@ const imodelAccess = { ...createSchemaAccess([createEntityClass({ fullName: "Sch
   ECSqlQueryExecutor;
 
 function createSource(primaryClass: ContentSource["target"]["primaryClass"]): ContentSource {
-  return { target: { primaryClass }, resolvedPrimaryClasses: [primaryClass], resolvedDeclarations: [] };
+  return {
+    target: { primaryClass },
+    resolvedPrimaryClasses: [primaryClass],
+    resolvedDeclarations: [],
+    externalInputPaths: [],
+  };
 }
 
 function createSizeIModelAccess(props: { schemaClasses?: EC.Class[]; counts: Array<number | undefined> }) {
@@ -70,6 +76,35 @@ describe("createContentProvider", () => {
       const first = await provider.getContentDescriptor();
       const second = await provider.getContentDescriptor();
       expect(first).to.equal(second);
+    });
+
+    it("builds the content definition once and shares it across concurrent item loads", async () => {
+      const schemaAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "Schema.A",
+          properties: [createPrimitiveProperty({ name: "Code", declaringClass: "Schema.A" })],
+        }),
+      ]);
+      const createQueryReader = vi.fn((query: { ecsql: string }) =>
+        (async function* () {
+          if (query.ecsql.includes("LIMIT")) {
+            yield {
+              ["pres_primary_class"]: "Schema.A",
+              ["pres_primary_id"]: "0x1",
+              ["this"]: JSON.stringify({ ["Code"]: "A1" }),
+            };
+          }
+        })(),
+      );
+      const buildDefinitionSpy = vi.spyOn(BuildContentDefinition, "buildContentDefinition");
+      const provider = createContentProvider({
+        imodelAccess: { ...schemaAccess, createQueryReader },
+        sources: [createSource("Schema.A")],
+      });
+
+      await Promise.all([collect(provider.getItems()), collect(provider.getItems())]);
+
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
     });
 
     it("includes subclass fields for a provider-free polymorphic target", async () => {
@@ -130,7 +165,6 @@ describe("createContentProvider", () => {
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
         pathCardinality: "one",
-        selectorId: "Schema.A.Length",
       };
       const sizeIModelAccess = createSizeIModelAccess({ counts: [2] });
       const provider = createContentProvider({ imodelAccess: sizeIModelAccess, sources: [createSource("Schema.A")] });
@@ -231,7 +265,6 @@ describe("createContentProvider", () => {
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
         pathCardinality: "one",
-        selectorId: "Schema.A.Length",
       };
       const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });
       const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
@@ -275,6 +308,50 @@ describe("createContentProvider", () => {
 
       await expect(collect(provider.getInstanceKeys())).resolves.to.deep.equal([]);
       expect(keysIModelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getItems", () => {
+    it("lazily builds the content definition once and shares its descriptor with the loaded items", async () => {
+      const schemaAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "Schema.A",
+          properties: [createPrimitiveProperty({ name: "Code", declaringClass: "Schema.A" })],
+        }),
+      ]);
+      const createQueryReader = vi.fn((query: { ecsql: string }) =>
+        (async function* () {
+          if (query.ecsql.includes("LIMIT")) {
+            yield {
+              ["pres_primary_class"]: "Schema.A",
+              ["pres_primary_id"]: "0x1",
+              ["this"]: JSON.stringify({ ["Code"]: "A1" }),
+            };
+          }
+        })(),
+      );
+      const buildDefinitionSpy = vi.spyOn(BuildContentDefinition, "buildContentDefinition");
+      const provider = createContentProvider({
+        imodelAccess: { ...schemaAccess, createQueryReader },
+        sources: [createSource("Schema.A")],
+      });
+
+      expect(buildDefinitionSpy).not.toHaveBeenCalled();
+
+      const descriptor = await provider.getContentDescriptor();
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
+
+      const codeField = descriptor.fields["Schema.A.Code"] as PropertyField;
+      const items = [];
+      for await (const item of provider.getItems()) {
+        items.push(item);
+      }
+
+      expect(items).to.have.lengthOf(1);
+      expect(items[0].primaryKey).to.deep.equal({ className: "Schema.A", id: "0x1" });
+      expect(items[0].getValue(codeField)).to.equal("A1");
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
+      expect(items[0].descriptor).to.equal(descriptor);
     });
   });
 });

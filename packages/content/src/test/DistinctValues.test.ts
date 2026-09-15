@@ -35,7 +35,6 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     valueClassNames: props.valueClassNames ?? ["TestSchema.Primary"],
     primaryClassNames: props.primaryClassNames ?? ["TestSchema.Primary"],
     pathCardinality: "one",
-    selectorId: props.selectorId ?? `selector-${props.propertyName}`,
   };
 }
 
@@ -139,7 +138,6 @@ describe("getDistinctFieldValues", () => {
       label: "Calc",
       type: { kind: "primitive", type: "Point2d" },
       expression: "this.X + this.Y",
-      selectorId: "calc",
     };
 
     expect(await collect(getDistinctFieldValues({ imodelAccess, targets: [targetA], field }))).to.deep.equal([42]);
@@ -309,7 +307,6 @@ describe("buildDistinctValuesQuery", () => {
       type: { kind: "primitive", type: "String" },
       expression: "this.CodeValue || :scale",
       bindings: { scale: { type: "double", value: 2 } },
-      selectorId: "calc",
     };
 
     const query = await buildDistinctValuesQuery({ schemaProvider, target, field });

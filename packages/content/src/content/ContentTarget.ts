@@ -25,6 +25,9 @@ export type CardinalityHint = "one" | "many";
  * When the consumer selects instances of multiple different classes,
  * this becomes multiple content targets — one per distinct class.
  *
+ * @throws when resolved alongside another target whose scope can reach the same instance —
+ * see `resolveContentSources`.
+ *
  * @public
  */
 export interface ContentTarget {
@@ -122,6 +125,15 @@ export interface ContentSource {
    * deterministic and stable across runs for the same inputs, keeping serialized sources cacheable.
    */
   resolvedDeclarations: ResolvedDeclarationGroup[];
+
+  /**
+   * Concrete paths resolved purely to satisfy an external fields provider's related-property `input` —
+   * declared over a path with no field of its own. Unlike `resolvedDeclarations`, these carry no
+   * provider/declaration identity to re-derive: they exist solely so `BaseQuery` joins the path,
+   * giving the input's value selector a column to read. Never seed nested-anchor expansion and never
+   * produce descriptor fields.
+   */
+  externalInputPaths: ResolvedPath[];
 }
 
 /**
