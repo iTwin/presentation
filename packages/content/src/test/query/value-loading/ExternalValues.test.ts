@@ -32,6 +32,7 @@ function createProvider(props: {
   id?: string;
   localFieldIds: string[];
   withInputs?: boolean;
+  manyInput?: boolean;
   getValues: ExternalFieldsProvider["getValues"];
 }): ExternalFieldsProvider {
   return {
@@ -41,7 +42,12 @@ function createProvider(props: {
       ? {
           inputs: {
             code: { propertyClassName: "Schema.A", propertyName: "Code" },
-            name: { propertyClassName: "Schema.B", propertyName: "Name", path: [...namePath] },
+            name: {
+              propertyClassName: "Schema.B",
+              propertyName: "Name",
+              path: [...namePath],
+              ...(props.manyInput ? { cardinalityHint: "many" as const } : undefined),
+            },
           },
         }
       : undefined),
@@ -150,6 +156,24 @@ describe("createExternalValuePopulator", () => {
 
     expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "A1", name: ["B1", "B2"] } }] });
     expect(result).to.deep.equal([{ "ext_v1:status": "B1,B2" }]);
+  });
+
+  it("passes an empty array for a many-valued input whose selector produced no value", async () => {
+    const getValues = vi.fn(async (args: { items: Array<{ inputValues: { code: string; name: string[] } }> }) =>
+      args.items.map((item) => ({ status: item.inputValues.name.join(",") })),
+    );
+    const provider = createProvider({ localFieldIds: ["status"], withInputs: true, manyInput: true, getValues });
+    const populate = createExternalValuePopulator({
+      descriptor: createDescriptor(["ext_v1:status"]),
+      providers: [provider],
+    });
+
+    const result = await firstValueFrom(
+      populate!([{ selectorValues: new Map<string, Value>([[codeSelectorId, "A1"]]) }]),
+    );
+
+    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "A1", name: [] } }] });
+    expect(result).to.deep.equal([{ "ext_v1:status": "" }]);
   });
 
   it("throws when a provider returns a different number of records than the batch", async () => {

@@ -23,7 +23,7 @@ export type ExternalValuePopulator = (
 interface ProviderPlan {
   provider: ExternalFieldsProvider;
   /** Input key -> the selector its value is read from. */
-  inputs: Array<{ key: string; selectorId: string }>;
+  inputs: Array<{ key: string; selectorId: string; cardinalityHint?: "one" | "many" }>;
   /** Provider-local field id -> descriptor (global) field id, restricted to fields still in the descriptor. */
   outputs: Array<{ localId: string; fieldId: string }>;
 }
@@ -84,7 +84,7 @@ function createProviderPlan(props: {
   if (outputs.length === 0) {
     return undefined;
   }
-  const inputs: Array<{ key: string; selectorId: string }> = [];
+  const inputs: ProviderPlan["inputs"] = [];
   if (provider.inputs) {
     const entries: ReadonlyArray<[string, InputPropertyDeclaration]> = Object.entries(provider.inputs);
     for (const [key, declaration] of entries) {
@@ -95,6 +95,7 @@ function createProviderPlan(props: {
           propertyName: declaration.propertyName,
           pathFromTarget: declaration.path,
         }),
+        cardinalityHint: declaration.cardinalityHint,
       });
     }
   }
@@ -108,7 +109,10 @@ function populateFromProvider(props: {
   const { plan, rows } = props;
   const items = rows.map((row) => ({
     inputValues: Object.fromEntries(
-      plan.inputs.map(({ key, selectorId }) => [key, row.selectorValues.get(selectorId)]),
+      plan.inputs.map(({ key, selectorId, cardinalityHint }) => {
+        const value = row.selectorValues.get(selectorId);
+        return [key, value ?? (cardinalityHint === "many" ? [] : undefined)];
+      }),
     ),
   }));
   return from(plan.provider.getValues({ items })).pipe(

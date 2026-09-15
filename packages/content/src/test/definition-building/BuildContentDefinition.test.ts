@@ -344,6 +344,96 @@ describe("buildContentDescriptor", () => {
     expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
   });
 
+  it("infers a many-valued unhinted external input from merged path hints", async () => {
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const imodelAccess = createSchemaAccess([
+      createRelationshipClass({ fullName: "TestSchema.AtoB", cardinality: "many" }),
+      createEntityClass({ fullName: "TestSchema.A" }),
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Name", declaringClass: "TestSchema.B" })],
+      }),
+    ]);
+    const externalProvider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", path } },
+      async getValues() {
+        return [];
+      },
+    });
+
+    const definition = await buildContentDefinition({
+      imodelAccess,
+      sources: [createSource("TestSchema.A")],
+      config: { externalFieldsProviders: [externalProvider] },
+    });
+
+    expect(definition.externalProviders).to.deep.equal([
+      {
+        provider: externalProvider,
+        inputs: [
+          {
+            key: "name",
+            selectorId: "TestSchema.B.Name(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)",
+            cardinalityHint: "many",
+          },
+        ],
+        outputs: [{ localId: "status", fieldId: "ext_v1:status" }],
+      },
+    ]);
+  });
+
+  it("uses a related field's `one` hint for an unhinted external input on the same path", async () => {
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const provider: IModelFieldsProvider = {
+      id: "p1_v1",
+      async getContribution() {
+        return { relatedProperties: [{ path, cardinalityHint: "one" }] };
+      },
+    };
+    const source: ContentSource = {
+      target: { primaryClass: "TestSchema.A" },
+      resolvedPrimaryClasses: ["TestSchema.A"],
+      resolvedDeclarations: [
+        { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.A"] }] },
+      ],
+      externalInputPaths: [],
+    };
+    const imodelAccess = createSchemaAccess([
+      createRelationshipClass({ fullName: "TestSchema.AtoB", cardinality: "many" }),
+      createEntityClass({ fullName: "TestSchema.A" }),
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Name", declaringClass: "TestSchema.B" })],
+      }),
+    ]);
+    const externalProvider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", path } },
+      async getValues() {
+        return [];
+      },
+    });
+
+    const definition = await buildContentDefinition({
+      imodelAccess,
+      sources: [source],
+      config: { imodelFieldsProviders: [provider], externalFieldsProviders: [externalProvider] },
+    });
+
+    expect(
+      (definition.descriptor.fields["TestSchema.B.Name(TestSchema.A-[TestSchema.AtoB]->TestSchema.B)"] as PropertyField)
+        .pathCardinality,
+    ).to.equal("one");
+    expect(definition.externalProviders[0].inputs[0]).to.include({ key: "name", cardinalityHint: "one" });
+  });
+
   it("prepares input-only decoders with one schema lookup for properties from the same class", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({

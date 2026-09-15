@@ -16,7 +16,8 @@ import {
 } from "../extensions/DescriptorTransformer.js";
 import { collectInParallel, getOrCreate } from "../InternalUtils.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
-import { createPathCardinalityClassifier } from "../PathCardinality.js";
+import { serializeRelationshipPath } from "../model/Utils.js";
+import { collectPathCardinalities, createPathCardinalityClassifier } from "../PathCardinality.js";
 import { createPropertyValueDecoder } from "../query/value-loading/RowDecoder.js";
 import { collectCalculatedFields } from "./CalculatedFields.js";
 import { collectCategories, pruneUnreferencedCategories } from "./Categories.js";
@@ -55,7 +56,7 @@ export interface ContentDefinition {
   }>;
   externalProviders: Array<{
     provider: ExternalFieldsProvider;
-    inputs: Array<{ key: string; selectorId: string }>;
+    inputs: Array<{ key: string; selectorId: string; cardinalityHint?: "one" | "many" }>;
     outputs: Array<{ localId: string; fieldId: string }>;
   }>;
 }
@@ -148,19 +149,28 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     externalInputs,
   });
   const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
+  const mergedPathCardinalities = collectPathCardinalities(descriptor, externalInputs);
 
-  const externalProviders = (config?.externalFieldsProviders ?? [])
-    .map((provider) => {
+  const externalProviders = await Promise.all(
+    (config?.externalFieldsProviders ?? []).map(async (provider) => {
       const outputs = provider.fields
         .map((declaration) => ({ localId: declaration.id, fieldId: `${provider.id}:${declaration.id}` }))
         .filter((output) => output.fieldId in descriptor.fields);
       if (outputs.length === 0) {
         return undefined;
       }
-      const inputs: Array<{ key: string; selectorId: string }> = [];
+      const inputs: ContentDefinition["externalProviders"][number]["inputs"] = [];
       if (provider.inputs) {
         const entries: ReadonlyArray<[string, InputPropertyDeclaration]> = Object.entries(provider.inputs);
         for (const [key, declaration] of entries) {
+          const effectiveCardinalityHint =
+            declaration.path && declaration.path.length > 0
+              ? await classifier.classify({
+                  path: declaration.path,
+                  declaredPath: declaration.path,
+                  hint: mergedPathCardinalities.get(serializeRelationshipPath({ path: declaration.path })),
+                })
+              : "one";
           inputs.push({
             key,
             selectorId: computePropertySelectorId({
@@ -168,14 +178,24 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
               propertyName: declaration.propertyName,
               pathFromTarget: declaration.path,
             }),
+            cardinalityHint: effectiveCardinalityHint,
           });
         }
       }
       return { provider, inputs, outputs };
-    })
-    .filter((provider): provider is ContentDefinition["externalProviders"][number] => provider !== undefined);
+    }),
+  );
 
-  return { descriptor, selectors, propertyReaders, fieldSelectorIds, externalInputs, externalProviders };
+  return {
+    descriptor,
+    selectors,
+    propertyReaders,
+    fieldSelectorIds,
+    externalInputs,
+    externalProviders: externalProviders.filter(
+      (provider): provider is ContentDefinition["externalProviders"][number] => provider !== undefined,
+    ),
+  };
 }
 
 export async function preparePropertyReaders(props: {
