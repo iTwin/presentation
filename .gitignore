@@ -7,10 +7,6 @@ built-packages
 
 /packages/*/api/temp
 
-/apps/load-tests/tests/datasets
-/apps/load-tests/tests/scenarios/datasets.csv
-/apps/load-tests/tests/artillery-output.json
-/apps/load-tests/tests/benchmark.json
 
 /apps/performance-tests/*benchmark.json
 

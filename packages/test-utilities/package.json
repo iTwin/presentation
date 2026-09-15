@@ -26,10 +26,10 @@
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/node": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
 }

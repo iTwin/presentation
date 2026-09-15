@@ -29,13 +29,13 @@
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:*",
     "@types/node": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
     "as-table": "^1.0.55",
     "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "presentation-test-utilities": "workspace:^",
     "rimraf": "catalog:build-tools",
     "rxjs": "catalog:rxjs",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

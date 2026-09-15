@@ -108,6 +108,7 @@
     "@types/react-dom": "catalog:react",
     "@vitejs/plugin-react": "catalog:build-tools",
     "@vitest/browser-playwright": "catalog:test-tools",
+    "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "axe-core": "catalog:test-tools",
     "babel-plugin-react-compiler": "catalog:build-tools",
@@ -121,7 +122,6 @@
     "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
     "tsdown": "catalog:build-tools",
-    "@typescript/native": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools",
     "vitest-browser-react": "catalog:test-tools"
