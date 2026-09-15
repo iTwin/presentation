@@ -5,6 +5,7 @@
 
 import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
+import { computePropertySelectorId } from "../../../content/definition-building/ValueSelector.js";
 import { PAGE_SIZE } from "../../../content/query/QueryLimits.js";
 import { getItems } from "../../../content/query/value-loading/GetItems.js";
 import { createPropertyValueDecoder } from "../../../content/query/value-loading/RowDecoder.js";
@@ -18,11 +19,105 @@ import {
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlQueryDef, ECSqlQueryRow, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../../content/ContentTarget.js";
-import type { ContentDefinition } from "../../../content/descriptor-building/BuildDescriptor.js";
-import type { ExternalFieldsProvider } from "../../../content/extensions/ExternalFieldsProvider.js";
+import type { ContentDefinition } from "../../../content/definition-building/BuildContentDefinition.js";
+import type { PropertyValueSelector } from "../../../content/definition-building/ValueSelector.js";
+import type {
+  ExternalFieldsProvider,
+  InputPropertyDeclaration,
+} from "../../../content/extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { PropertyField } from "../../../content/model/Field.js";
 import type { ContentQuerySort } from "../../../content/query/SelectBuilder.js";
+
+function createTestDefinition(
+  contentDescriptor: ContentDescriptor,
+  externalFieldsProviders: ExternalFieldsProvider[] = [],
+): ContentDefinition {
+  const selectors: ContentDefinition["selectors"] = {};
+  const fieldSelectorIds: ContentDefinition["fieldSelectorIds"] = {};
+  const propertyReaders: ContentDefinition["propertyReaders"] = {};
+  for (const field of Object.values(contentDescriptor.fields)) {
+    if (field.kind !== "property") {
+      continue;
+    }
+    const selector: PropertyValueSelector = {
+      kind: "property",
+      id: field.id,
+      propertyClassName: field.propertyClassName,
+      propertyName: field.propertyName,
+      pathFromTarget: field.pathFromTarget,
+    };
+    selectors[selector.id] = selector;
+    fieldSelectorIds[field.id] = selector.id;
+    const decode = createPropertyValueDecoder(field.type);
+    const applicableClasses = new Set(field.valueClassNames.map((name) => name.toLowerCase()));
+    propertyReaders[selector.id] = (className, value) =>
+      applicableClasses.has(className.toLowerCase()) ? decode(value) : undefined;
+  }
+  const externalInputs = externalFieldsProviders.flatMap((provider) =>
+    Object.values(provider.inputs ?? {}).map((rawInput) => {
+      const input = rawInput as InputPropertyDeclaration;
+      return {
+        propertyClassName: input.propertyClassName,
+        propertyName: input.propertyName,
+        pathFromTarget: input.path,
+        cardinalityHint: input.cardinalityHint,
+      };
+    }),
+  );
+  for (const input of externalInputs) {
+    const selectorId = computePropertySelectorId({
+      propertyClassName: input.propertyClassName,
+      propertyName: input.propertyName,
+      pathFromTarget: input.pathFromTarget,
+    });
+    if (Object.hasOwn(selectors, selectorId)) {
+      continue;
+    }
+    const field = Object.values(contentDescriptor.fields).find(
+      (candidate) =>
+        candidate.kind === "property" &&
+        candidate.propertyClassName === input.propertyClassName &&
+        candidate.propertyName === input.propertyName,
+    );
+    if (!field) {
+      continue;
+    }
+    const propertyField = field as PropertyField;
+    selectors[selectorId] = {
+      kind: "property",
+      id: selectorId,
+      propertyClassName: input.propertyClassName,
+      propertyName: input.propertyName,
+      pathFromTarget: input.pathFromTarget ?? [],
+    };
+    const decode = createPropertyValueDecoder(propertyField.type);
+    const applicableClasses = new Set(propertyField.valueClassNames.map((name) => name.toLowerCase()));
+    propertyReaders[selectorId] = (className, value) =>
+      applicableClasses.has(className.toLowerCase()) ? decode(value) : undefined;
+  }
+  const externalProviders = externalFieldsProviders.map((provider) => ({
+    provider,
+    inputs: Object.entries(provider.inputs ?? {}).map(([key, rawInput]) => {
+      const input = rawInput as InputPropertyDeclaration;
+      const selectorId = computePropertySelectorId({
+        propertyClassName: input.propertyClassName,
+        propertyName: input.propertyName,
+        pathFromTarget: input.path,
+      });
+      return { key, selectorId };
+    }),
+    outputs: provider.fields.map((field) => ({ localId: field.id, fieldId: `${provider.id}:${field.id}` })),
+  }));
+  return {
+    descriptor: contentDescriptor,
+    selectors,
+    propertyReaders,
+    fieldSelectorIds,
+    externalInputs,
+    externalProviders,
+  };
+}
 
 const codeField: PropertyField = {
   kind: "property",
@@ -33,7 +128,7 @@ const codeField: PropertyField = {
   propertyName: "Code",
   pathFromTarget: [],
   pathCardinality: "one",
-  valueClassNames: ["Schema.A"],
+  valueClassNames: ["Schema.A", "Schema.B"],
   primaryClassNames: ["Schema.A"],
 };
 
@@ -198,11 +293,12 @@ function createIModelAccess(handler: (query: ECSqlQueryDef) => ECSqlQueryRow[]) 
     return iterator;
   });
   const codeProperty = createPrimitiveProperty({ name: "Code", declaringClass: "Schema.A" });
-  const classA = createEntityClass({ fullName: "Schema.A", properties: [codeProperty] });
   const classB = createEntityClass({
     fullName: "Schema.B",
     properties: [codeProperty, createPrimitiveProperty({ name: "Label", declaringClass: "Schema.B" })],
   });
+  const classA = createEntityClass({ fullName: "Schema.A", properties: [codeProperty], derivedClasses: [classB] });
+  classB.baseClass = classA;
   const imodelAccess = { ...createSchemaAccess([classA, classB]), createQueryReader };
   return {
     imodelAccess,
@@ -220,7 +316,11 @@ describe("getItems", () => {
       valueRow("Schema.A", "0x2", "A2"),
     ]);
     const items = await collect(
-      getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] }),
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createTestDefinition(descriptor),
+        sources: [createSource("Schema.A")],
+      }),
     );
 
     expect(items.map((item) => item.primaryKey.id)).to.deep.equal(["0x1", "0x2"]);
@@ -237,7 +337,11 @@ describe("getItems", () => {
       query.ecsql.includes("WHERE") ? [valueRow("Schema.A", "0xffff", "last")] : firstPage,
     );
     const items = await collect(
-      getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] }),
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createTestDefinition(descriptor),
+        sources: [createSource("Schema.A")],
+      }),
     );
 
     expect(items).to.have.lengthOf(PAGE_SIZE + 1);
@@ -254,7 +358,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
       }),
     );
@@ -279,7 +383,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -296,7 +400,7 @@ describe("getItems", () => {
     await collect(
       getItems({
         imodelAccess: helper.imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A")],
       }),
     );
@@ -310,7 +414,13 @@ describe("getItems", () => {
       { ["pres_primary_class"]: "Schema.A", ["pres_primary_id"]: "0x1", ["this"]: "{broken" },
     ]);
     await expect(
-      collect(getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] })),
+      collect(
+        getItems({
+          imodelAccess,
+          getContentDefinition: async () => createTestDefinition(descriptor),
+          sources: [createSource("Schema.A")],
+        }),
+      ),
     ).rejects.toThrow(/column "this"/);
   });
 
@@ -323,14 +433,24 @@ describe("getItems", () => {
       valueRow("Schema.A", "0x1", "A1-duplicate"),
     ]);
     await expect(
-      collect(getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] })),
+      collect(
+        getItems({
+          imodelAccess,
+          getContentDefinition: async () => createTestDefinition(descriptor),
+          sources: [createSource("Schema.A")],
+        }),
+      ),
     ).rejects.toThrow(/"Schema.A:0x1"/);
   });
 
   it("yields nothing when the source page is empty", async () => {
     const { imodelAccess, queries } = createIModelAccess(() => []);
     const items = await collect(
-      getItems({ imodelAccess, getDescriptor: async () => descriptor, sources: [createSource("Schema.A")] }),
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createTestDefinition(descriptor),
+        sources: [createSource("Schema.A")],
+      }),
     );
     expect(items).to.have.lengthOf(0);
     expect(queries).to.have.lengthOf(1);
@@ -342,7 +462,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -358,7 +478,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -381,7 +501,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -409,7 +529,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => descriptor,
+        getContentDefinition: async () => createTestDefinition(descriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -430,11 +550,12 @@ describe("getItems", () => {
       label: "Label",
       propertyClassName: "Schema.B",
       propertyName: "Label",
+      valueClassNames: ["Schema.B"],
     };
     const twoFieldDescriptor = {
       sources: [],
       categories: {},
-      fields: { "Schema.A.Code": codeField, "Schema.B.Label": labelField },
+      fields: { "Schema.A.Code": { ...codeField, valueClassNames: ["Schema.A"] }, "Schema.B.Label": labelField },
     } as unknown as ContentDescriptor;
     const sorting: ContentQuerySort[] = [{ field: codeField, direction: "asc" }];
     const { imodelAccess } = createIModelAccess((query) => {
@@ -464,7 +585,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => twoFieldDescriptor,
+        getContentDefinition: async () => createTestDefinition(twoFieldDescriptor),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -503,7 +624,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => relDescriptor,
+        getContentDefinition: async () => createTestDefinition(relDescriptor),
         sources: [createRelationalSource("TestSchema.Primary", true)],
       }),
     );
@@ -542,7 +663,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => relDescriptor,
+        getContentDefinition: async () => createTestDefinition(relDescriptor),
         sources: [createRelationalSource("TestSchema.Primary", true)],
       }),
     );
@@ -612,9 +733,9 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => relExternalDescriptor,
+        getContentDefinition: async () =>
+          createTestDefinition(relExternalDescriptor, [createCombinedFieldsProvider(getValues)]),
         sources: [createRelationalSource("TestSchema.Primary", true)],
-        externalFieldsProviders: [createCombinedFieldsProvider(getValues)],
       }),
     );
 
@@ -652,7 +773,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => relDescriptor,
+        getContentDefinition: async () => createTestDefinition(relDescriptor),
         sources: [
           createRelationalSource("TestSchema.Primary", true),
           createRelationalSource("TestSchema.Other", false),
@@ -712,7 +833,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => relDescriptor,
+        getContentDefinition: async () => createTestDefinition(relDescriptor),
         sources: [createRelationalSource("TestSchema.Primary", true)],
         sorting: [{ field: sortField, direction: "asc" }],
       }),
@@ -733,9 +854,9 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => externalDescriptor,
+        getContentDefinition: async () =>
+          createTestDefinition(externalDescriptor, [createExternalStatusProvider(getValues)]),
         sources: [createSource("Schema.A")],
-        externalFieldsProviders: [createExternalStatusProvider(getValues)],
       }),
     );
 
@@ -763,7 +884,10 @@ describe("getItems", () => {
           pathFromTarget: [],
         },
       },
-      propertyDecoders: { "Schema.A.Code": createPropertyValueDecoder(codeField.type) },
+      propertyReaders: {
+        "Schema.A.Code": (className, value) =>
+          className.toLowerCase() === "schema.a" ? createPropertyValueDecoder(codeField.type)(value) : undefined,
+      },
       fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code" },
       externalInputs: [],
       externalProviders: [
@@ -796,9 +920,9 @@ describe("getItems", () => {
     await collect(
       getItems({
         imodelAccess,
-        getDescriptor: async () => externalDescriptor,
+        getContentDefinition: async () =>
+          createTestDefinition(externalDescriptor, [createExternalStatusProvider(getValues)]),
         sources: [createSource("Schema.A")],
-        externalFieldsProviders: [createExternalStatusProvider(getValues)],
       }),
     );
 
@@ -813,9 +937,8 @@ describe("getItems", () => {
       collect(
         getItems({
           imodelAccess,
-          getDescriptor: async () => externalDescriptor,
+          getContentDefinition: async () => createTestDefinition(externalDescriptor, [provider]),
           sources: [createSource("Schema.A")],
-          externalFieldsProviders: [provider],
         }),
       ),
     ).rejects.toThrow(/external service down/);

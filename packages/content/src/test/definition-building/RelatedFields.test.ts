@@ -5,8 +5,8 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
-import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
-import { collectRelatedPropertyFields } from "../../content/descriptor-building/RelatedFields.js";
+import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
+import { collectRelatedPropertyFields } from "../../content/definition-building/RelatedFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createPathCardinalityClassifier } from "../../content/PathCardinality.js";
 import {

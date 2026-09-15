@@ -7,8 +7,8 @@ import { assert } from "@itwin/core-bentley";
 
 import type { EC, ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../ContentTarget.js";
-import type { ContentDefinition } from "../../descriptor-building/BuildDescriptor.js";
-import type { ValueSelector } from "../../descriptor-building/ValueSelector.js";
+import type { ContentDefinition } from "../../definition-building/BuildContentDefinition.js";
+import type { ValueSelector } from "../../definition-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentValues, RelatedInstanceEntry } from "../../model/ContentItem.js";
 import type { SelectProjection } from "../SelectBuilder.js";
@@ -50,19 +50,20 @@ export type RowDecoder = (row: ECSqlQueryRow) => {
   relatedInstances: Map<string, RelatedInstanceEntry>;
 };
 
+export type PropertyValueReader = (className: string, value: Value | null) => Value;
+
 export function createRowDecoder(props: {
   columnNames: SelectProjection["columnNames"];
   selectors: Record<ValueSelector["id"], ValueSelector>;
-  propertyDecoders: ContentDefinition["propertyDecoders"];
+  propertyReaders: ContentDefinition["propertyReaders"];
 }): RowDecoder {
-  const { columnNames, selectors, propertyDecoders } = props;
+  const { columnNames, selectors, propertyReaders } = props;
   const propertyReads = Object.entries(columnNames.propertyBlobs).map(([selectorId, column]) => {
     assert(Object.hasOwn(selectors, selectorId), `Missing selector "${selectorId}".`);
     const selector = selectors[selectorId];
     assert(selector.kind === "property", `Selector "${selectorId}" is not a property selector.`);
-    assert(Object.hasOwn(propertyDecoders, selectorId), `Missing property decoder for selector "${selectorId}".`);
-    const decode = propertyDecoders[selectorId];
-    return { selectorId, column, propertyName: selector.propertyName, decode };
+    assert(Object.hasOwn(propertyReaders, selectorId), `Missing property reader for selector "${selectorId}".`);
+    return { selectorId, column, propertyName: selector.propertyName, read: propertyReaders[selectorId] };
   });
 
   return (row) => decodeRow({ row, columnNames, propertyReads });
@@ -75,7 +76,7 @@ export function createRowDecoder(props: {
 function decodeRow(props: {
   row: ECSqlQueryRow;
   columnNames: SelectProjection["columnNames"];
-  propertyReads: Array<{ selectorId: string; column: string; propertyName: string; decode: PropertyValueDecoder }>;
+  propertyReads: Array<{ selectorId: string; column: string; propertyName: string; read: PropertyValueReader }>;
 }): { selectorValues: Map<string, Value>; relatedInstances: Map<string, RelatedInstanceEntry> } {
   const { row, columnNames, propertyReads } = props;
 
@@ -106,12 +107,18 @@ function decodeRow(props: {
   };
 
   const selectorValues = new Map<string, Value>();
-  for (const { selectorId, column, propertyName, decode } of propertyReads) {
+  for (const { selectorId, column, propertyName, read } of propertyReads) {
     const blob = parseBlob(column);
     if (!blob) {
       continue;
     }
-    const value = decode(blob[propertyName]);
+    const classColumn =
+      column in columnNames.relatedBlobs
+        ? columnNames.relatedBlobs[column].className
+        : columnNames.primaryKey.className;
+    const className: unknown = row[classColumn];
+    assert(typeof className === "string", `Expected string class name in column "${classColumn}".`);
+    const value = read(className, blob[propertyName]);
     if (value !== undefined) {
       selectorValues.set(selectorId, value);
     }

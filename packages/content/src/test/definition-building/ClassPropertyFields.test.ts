@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectClassPropertyFields } from "../../content/descriptor-building/ClassPropertyFields.js";
+import { collectClassPropertyFields } from "../../content/definition-building/ClassPropertyFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty } from "../MetadataStubs.js";
 

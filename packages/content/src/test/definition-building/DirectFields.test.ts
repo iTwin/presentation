@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectDirectPropertyFields } from "../../content/descriptor-building/DirectFields.js";
+import { collectDirectPropertyFields } from "../../content/definition-building/DirectFields.js";
 import { createEntityClass, createMixinClass, createPrimitiveProperty, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC } from "@itwin/presentation-shared";

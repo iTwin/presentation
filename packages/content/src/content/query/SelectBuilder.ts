@@ -8,7 +8,7 @@ import { ECSQL_PREFIX, mergeBindings, substituteExpressionAlias } from "../Inter
 import { serializeRelationshipPath } from "../model/Utils.js";
 
 import type { EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { PropertyValueSelector, ValueSelector } from "../descriptor-building/ValueSelector.js";
+import type { PropertyValueSelector, ValueSelector } from "../definition-building/ValueSelector.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
 import type { BaseQueryGroup } from "./BaseQuery.js";
 

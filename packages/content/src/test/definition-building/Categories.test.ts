@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectCategories, pruneUnreferencedCategories } from "../../content/descriptor-building/Categories.js";
-import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
+import { collectCategories, pruneUnreferencedCategories } from "../../content/definition-building/Categories.js";
+import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
-import type { CategorizedField, FieldCategorization } from "../../content/descriptor-building/ClassPropertyFields.js";
+import type { CategorizedField, FieldCategorization } from "../../content/definition-building/ClassPropertyFields.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 import type { PropertyField } from "../../content/model/Field.js";

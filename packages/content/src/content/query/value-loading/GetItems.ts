@@ -14,10 +14,6 @@ import {
   type InstanceKey,
   type PrimitiveValue,
 } from "@itwin/presentation-shared";
-import { preparePropertyDecoders } from "../../descriptor-building/BuildDescriptor.js";
-import { collectExternalFields } from "../../descriptor-building/ExternalFields.js";
-import { collectValueRequirements } from "../../descriptor-building/Selectors.js";
-import { computePropertySelectorId } from "../../descriptor-building/ValueSelector.js";
 import { createContentItem } from "../../model/ContentItem.js";
 import { serializeRelationshipPath } from "../../model/Utils.js";
 import { collectPathCardinalities } from "../../PathCardinality.js";
@@ -40,10 +36,10 @@ import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ContentValueFilter } from "../../Content.js";
 import type { ContentSource } from "../../ContentTarget.js";
-import type { ContentDefinition } from "../../descriptor-building/BuildDescriptor.js";
-import type { ExternalInput } from "../../descriptor-building/ExternalFields.js";
-import type { PropertyValueSelector } from "../../descriptor-building/ValueSelector.js";
-import type { ExternalFieldsProvider, InputPropertyDeclaration } from "../../extensions/ExternalFieldsProvider.js";
+import type { ContentDefinition } from "../../definition-building/BuildContentDefinition.js";
+import type { ExternalInput } from "../../definition-building/ExternalFields.js";
+import type { PropertyValueSelector } from "../../definition-building/ValueSelector.js";
+import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProvider.js";
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
@@ -61,8 +57,7 @@ import type { GroupValues } from "./RowDecoder.js";
  */
 export function getItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
-  getContentDefinition?: () => Promise<ContentDefinition>;
-  getDescriptor?: () => Promise<ContentDescriptor>;
+  getContentDefinition: () => Promise<ContentDefinition>;
   sources: ContentSource[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
@@ -78,73 +73,18 @@ export function getItems(props: {
 
 function loadItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
-  getContentDefinition?: () => Promise<ContentDefinition>;
-  getDescriptor?: () => Promise<ContentDescriptor>;
+  getContentDefinition: () => Promise<ContentDefinition>;
   sources: ContentSource[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
   externalFieldsProviders?: ExternalFieldsProvider[];
 }): Observable<ContentItem> {
-  const {
-    imodelAccess,
-    getContentDefinition,
-    getDescriptor,
-    sources,
-    queryFilterers,
-    filters,
-    externalFieldsProviders,
-  } = props;
+  const { imodelAccess, getContentDefinition, sources, queryFilterers, filters, externalFieldsProviders } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
-  const getDefinition =
-    getContentDefinition ??
-    (async () => {
-      const descriptor = await (
-        getDescriptor ??
-        (() => {
-          throw new Error("No descriptor or content-definition source was supplied.");
-        })
-      )();
-      const { inputs } = collectExternalFields(externalFieldsProviders ?? []);
-      const { selectors, fieldSelectorIds } = collectValueRequirements({
-        fields: Object.values(descriptor.fields),
-        externalInputs: inputs,
-      });
-      const externalProviders = (externalFieldsProviders ?? [])
-        .map((provider) => {
-          const outputs = provider.fields
-            .map((declaration) => ({ localId: declaration.id, fieldId: `${provider.id}:${declaration.id}` }))
-            .filter((output) => output.fieldId in descriptor.fields);
-          if (outputs.length === 0) {
-            return undefined;
-          }
-          const providerInputs: [string, InputPropertyDeclaration][] = Object.entries(provider.inputs ?? {});
-          return {
-            provider,
-            inputs: providerInputs.map(([key, declaration]) => ({
-              key,
-              selectorId: computePropertySelectorId({
-                propertyClassName: declaration.propertyClassName,
-                propertyName: declaration.propertyName,
-                pathFromTarget: declaration.path,
-              }),
-            })),
-            outputs,
-          };
-        })
-        .filter((provider): provider is NonNullable<typeof provider> => provider !== undefined);
-      return {
-        descriptor,
-        selectors,
-        propertyDecoders: await preparePropertyDecoders({ imodelAccess, selectors, fields: descriptor.fields }),
-        fieldSelectorIds,
-        externalInputs: inputs,
-        externalProviders,
-      } satisfies ContentDefinition;
-    });
-  return from(getDefinition()).pipe(
-    mergeMap(({ descriptor, selectors, propertyDecoders, fieldSelectorIds, externalInputs, externalProviders }) => {
+  return from(getContentDefinition()).pipe(
+    mergeMap(({ descriptor, selectors, propertyReaders, fieldSelectorIds, externalInputs, externalProviders }) => {
       const populateExternalValues = createExternalValuePopulator({
         descriptor,
         prepared: externalProviders,
@@ -156,7 +96,7 @@ function loadItems(props: {
             imodelAccess,
             descriptor,
             selectors,
-            propertyDecoders,
+            propertyReaders,
             source,
             sorting,
             queryFilterers,
@@ -197,7 +137,7 @@ async function createSourcePlan(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
   selectors: ContentDefinition["selectors"];
-  propertyDecoders: ContentDefinition["propertyDecoders"];
+  propertyReaders: ContentDefinition["propertyReaders"];
   source: ContentSource;
   sorting: ContentQuerySort[];
   queryFilterers?: QueryFilterer[];
@@ -208,7 +148,7 @@ async function createSourcePlan(props: {
     imodelAccess,
     descriptor,
     selectors,
-    propertyDecoders,
+    propertyReaders,
     source,
     sorting,
     queryFilterers,
@@ -259,7 +199,7 @@ async function createSourcePlan(props: {
     ),
   ]);
   const createDecoder = (projection: SelectProjection) =>
-    createRowDecoder({ columnNames: projection.columnNames, selectors, propertyDecoders });
+    createRowDecoder({ columnNames: projection.columnNames, selectors, propertyReaders });
   return {
     anchor: {
       baseQuery: anchor,

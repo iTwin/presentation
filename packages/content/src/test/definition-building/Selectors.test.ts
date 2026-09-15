@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectValueRequirements } from "../../content/descriptor-building/Selectors.js";
-import { computePropertySelectorId } from "../../content/descriptor-building/ValueSelector.js";
+import { collectValueRequirements } from "../../content/definition-building/Selectors.js";
+import { computePropertySelectorId } from "../../content/definition-building/ValueSelector.js";
 import { createTransformableDescriptor } from "../../content/extensions/DescriptorTransformer.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { toSortedUniqueClassNames } from "../../content/model/Utils.js";

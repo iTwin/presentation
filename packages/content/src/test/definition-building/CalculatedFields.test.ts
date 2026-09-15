@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectCalculatedFields } from "../../content/descriptor-building/CalculatedFields.js";
+import { collectCalculatedFields } from "../../content/definition-building/CalculatedFields.js";
 import { createSchemaAccess } from "../MetadataStubs.js";
 
 import type { ContentSource } from "../../content/ContentTarget.js";

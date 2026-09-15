@@ -6,7 +6,7 @@
 import { collect, ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { createContentProvider, resolveContentSources } from "../content/Content.js";
-import * as BuildDescriptor from "../content/descriptor-building/BuildDescriptor.js";
+import * as BuildContentDefinition from "../content/definition-building/BuildContentDefinition.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSqlQueryExecutor } from "@itwin/presentation-shared";
@@ -96,7 +96,7 @@ describe("createContentProvider", () => {
           }
         })(),
       );
-      const buildDefinitionSpy = vi.spyOn(BuildDescriptor, "buildContentDefinition");
+      const buildDefinitionSpy = vi.spyOn(BuildContentDefinition, "buildContentDefinition");
       const provider = createContentProvider({
         imodelAccess: { ...schemaAccess, createQueryReader },
         sources: [createSource("Schema.A")],
@@ -330,7 +330,7 @@ describe("createContentProvider", () => {
           }
         })(),
       );
-      const buildDefinitionSpy = vi.spyOn(BuildDescriptor, "buildContentDefinition");
+      const buildDefinitionSpy = vi.spyOn(BuildContentDefinition, "buildContentDefinition");
       const provider = createContentProvider({
         imodelAccess: { ...schemaAccess, createQueryReader },
         sources: [createSource("Schema.A")],

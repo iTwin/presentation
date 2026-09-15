@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectExternalFields } from "../../content/descriptor-building/ExternalFields.js";
+import { collectExternalFields } from "../../content/definition-building/ExternalFields.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";

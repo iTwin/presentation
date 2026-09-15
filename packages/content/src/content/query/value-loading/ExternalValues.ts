@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forkJoin, from, map } from "rxjs";
-import { computePropertySelectorId } from "../../descriptor-building/ValueSelector.js";
+import { computePropertySelectorId } from "../../definition-building/ValueSelector.js";
 
 import type { Observable } from "rxjs";
 import type { Value } from "@itwin/presentation-shared";

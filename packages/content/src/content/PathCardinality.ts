@@ -9,7 +9,7 @@ import { serializeRelationshipPath } from "./model/Utils.js";
 
 import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "./ContentTarget.js";
-import type { ExternalInput } from "./descriptor-building/ExternalFields.js";
+import type { ExternalInput } from "./definition-building/ExternalFields.js";
 import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 
 /**

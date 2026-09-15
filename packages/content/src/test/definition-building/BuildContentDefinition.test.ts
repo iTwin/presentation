@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { buildContentDefinition, buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
+import {
+  buildContentDefinition,
+  buildContentDescriptor,
+  preparePropertyReaders,
+} from "../../content/definition-building/BuildContentDefinition.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
@@ -28,6 +32,48 @@ function createSource(
 }
 
 describe("buildContentDescriptor", () => {
+  it("keeps sibling properties separate while allowing inherited properties", async () => {
+    const baseProperty = createPrimitiveProperty({ name: "Inherited", declaringClass: "TestSchema.Base" });
+    const siblingProperty = createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.D1" });
+    const base = createEntityClass({ fullName: "TestSchema.Base", properties: [baseProperty] });
+    const d1 = createEntityClass({
+      fullName: "TestSchema.D1",
+      properties: [baseProperty, siblingProperty],
+      baseClass: base,
+    });
+    const d2 = createEntityClass({
+      fullName: "TestSchema.D2",
+      properties: [baseProperty, createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.D2" })],
+      baseClass: base,
+    });
+    base.getDerivedClassNames = () => [d1.fullName, d2.fullName];
+    const imodelAccess = createSchemaAccess([base, d1, d2]);
+    const readers = await preparePropertyReaders({
+      imodelAccess,
+      selectors: {
+        "TestSchema.D1.Prop": {
+          kind: "property",
+          id: "TestSchema.D1.Prop",
+          propertyClassName: "TestSchema.D1",
+          propertyName: "Prop",
+          pathFromTarget: [],
+        },
+        "TestSchema.Base.Inherited": {
+          kind: "property",
+          id: "TestSchema.Base.Inherited",
+          propertyClassName: "TestSchema.Base",
+          propertyName: "Inherited",
+          pathFromTarget: [],
+        },
+      },
+      fields: {},
+    });
+
+    expect(readers["TestSchema.D1.Prop"]("TestSchema.D2", "d2")).to.equal(undefined);
+    expect(readers["TestSchema.D1.Prop"]("TestSchema.D1", "d1")).to.equal("d1");
+    expect(readers["TestSchema.Base.Inherited"]("TestSchema.D1", "base")).to.equal("base");
+  });
+
   it("carries the sources and enumerates direct property fields", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
@@ -45,6 +91,7 @@ describe("buildContentDescriptor", () => {
 
   it("merges the same direct property across sources, unioning value classes", async () => {
     const imodelAccess = createSchemaAccess([
+      createEntityClass({ fullName: "BisCore.Element" }),
       createEntityClass({
         fullName: "TestSchema.Door",
         properties: [createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" })],
@@ -71,6 +118,7 @@ describe("buildContentDescriptor", () => {
 
   it("unions fields across multiple targets, merging a shared inherited property", async () => {
     const imodelAccess = createSchemaAccess([
+      createEntityClass({ fullName: "BisCore.Element" }),
       createEntityClass({
         fullName: "TestSchema.Pump",
         properties: [
@@ -333,8 +381,8 @@ describe("buildContentDescriptor", () => {
     });
 
     expect(Object.keys(definition.descriptor.fields)).to.deep.equal(["ext_v1:status"]);
-    expect(definition.propertyDecoders["TestSchema.A.First"]("first")).to.equal("first");
-    expect(definition.propertyDecoders["TestSchema.A.Second"]("second")).to.equal("second");
+    expect(definition.propertyReaders["TestSchema.A.First"]("TestSchema.A", "first")).to.equal("first");
+    expect(definition.propertyReaders["TestSchema.A.Second"]("TestSchema.A", "second")).to.equal("second");
     expect(getSchema).toHaveBeenCalledOnce();
   });
 

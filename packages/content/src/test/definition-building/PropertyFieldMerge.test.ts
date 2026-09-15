@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { mergePropertyFieldsByIdentity } from "../../content/descriptor-building/PropertyFieldMerge.js";
+import { mergePropertyFieldsByIdentity } from "../../content/definition-building/PropertyFieldMerge.js";
 import { PropertyField } from "../../content/model/Field.js";
 
 import type { EC } from "@itwin/presentation-shared";

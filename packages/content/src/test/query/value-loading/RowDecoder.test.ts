@@ -16,7 +16,7 @@ import {
 
 import type { ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../../content/ContentTarget.js";
-import type { ValueSelector } from "../../../content/descriptor-building/ValueSelector.js";
+import type { ValueSelector } from "../../../content/definition-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { RelatedInstanceEntry } from "../../../content/model/ContentItem.js";
 import type { SelectProjection } from "../../../content/query/SelectBuilder.js";
@@ -84,17 +84,25 @@ function createTestRowDecoder(props: {
   selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
   columnNames: SelectProjection["columnNames"];
   decoderTypes?: Record<string, ValueDescriptor>;
+  propertyApplicableClasses?: Record<string, Set<string>>;
 }) {
-  return createRowDecoder({
-    columnNames: props.columnNames,
-    selectors: props.selectors ?? selectors,
-    propertyDecoders: Object.fromEntries(
-      Object.entries(props.decoderTypes ?? defaultDecoderTypes).map(([selectorId, type]) => [
+  const defaultApplicableClasses = Object.fromEntries(
+    Object.values(props.selectors ?? selectors)
+      .filter((selector): selector is Extract<ValueSelector, { kind: "property" }> => selector.kind === "property")
+      .map((selector) => [selector.id, new Set([selector.propertyClassName.toLowerCase()])]),
+  );
+  const applicableClasses = props.propertyApplicableClasses ?? defaultApplicableClasses;
+  const propertyReaders = Object.fromEntries(
+    Object.entries(props.decoderTypes ?? defaultDecoderTypes).map(([selectorId, type]) => {
+      const decode = createPropertyValueDecoder(type);
+      return [
         selectorId,
-        createPropertyValueDecoder(type),
-      ]),
-    ),
-  });
+        (className: string, value: Value | null) =>
+          applicableClasses[selectorId].has(className.toLowerCase()) ? decode(value) : undefined,
+      ];
+    }),
+  );
+  return createRowDecoder({ columnNames: props.columnNames, selectors: props.selectors ?? selectors, propertyReaders });
 }
 
 function decodeRow(props: {
@@ -103,6 +111,7 @@ function decodeRow(props: {
   selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
   columnNames: SelectProjection["columnNames"];
   decoderTypes?: Record<string, ValueDescriptor>;
+  propertyApplicableClasses?: Record<string, Set<string>>;
 }) {
   return createTestRowDecoder(props)(props.row);
 }
@@ -135,7 +144,13 @@ describe("RowDecoder", () => {
   describe("decodeRow — selector values", () => {
     it("rejects projected selectors without prepared property decoders", () => {
       expect(() => decodeRow({ row: {}, descriptor, columnNames, decoderTypes: {} })).toThrow(
-        'Missing property decoder for selector "Schema.A.Code".',
+        'Missing property reader for selector "Schema.A.Code".',
+      );
+    });
+
+    it("rejects projected selectors without property readers", () => {
+      expect(() => createRowDecoder({ columnNames, selectors, propertyReaders: {} })).toThrow(
+        'Missing property reader for selector "Schema.A.Code".',
       );
     });
 

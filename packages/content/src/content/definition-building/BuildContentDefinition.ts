@@ -33,7 +33,7 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { ExternalFieldsProvider, InputPropertyDeclaration } from "../extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field, PropertyField } from "../model/Field.js";
-import type { PropertyValueDecoder } from "../query/value-loading/RowDecoder.js";
+import type { PropertyValueReader } from "../query/value-loading/RowDecoder.js";
 import type { ValueSelector } from "./ValueSelector.js";
 
 /**
@@ -45,7 +45,7 @@ import type { ValueSelector } from "./ValueSelector.js";
 export interface ContentDefinition {
   descriptor: ContentDescriptor;
   selectors: Record<ValueSelector["id"], ValueSelector>;
-  propertyDecoders: Record<ValueSelector["id"], PropertyValueDecoder>;
+  propertyReaders: Record<ValueSelector["id"], PropertyValueReader>;
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
   externalInputs: Array<{
     propertyClassName: EC.FullClassNameDotNotation;
@@ -61,9 +61,9 @@ export interface ContentDefinition {
 }
 
 /**
- * Props for {@link buildContentDescriptor}.
+ * Props for {@link buildContentDefinition}.
  */
-interface BuildContentDescriptorProps {
+interface BuildContentDefinitionProps {
   /** Schema access used to enumerate fields from EC metadata (Stage 2 is schema-only — no queries). */
   imodelAccess: ECSchemaProvider;
   /** Pre-resolved content sources (output of Stage 1). */
@@ -75,7 +75,7 @@ interface BuildContentDescriptorProps {
 /**
  * Builds the descriptor and its private value-loading requirements without loading values.
  */
-export async function buildContentDefinition(props: BuildContentDescriptorProps): Promise<ContentDefinition> {
+export async function buildContentDefinition(props: BuildContentDefinitionProps): Promise<ContentDefinition> {
   const { imodelAccess, sources, config } = props;
   const imodelFieldsProviders = config?.imodelFieldsProviders ?? [];
   const externalFieldsProviders = config?.externalFieldsProviders ?? [];
@@ -147,7 +147,7 @@ export async function buildContentDefinition(props: BuildContentDescriptorProps)
     fields: Object.values(descriptor.fields),
     externalInputs,
   });
-  const propertyDecoders = await preparePropertyDecoders({ imodelAccess, selectors, fields: descriptor.fields });
+  const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
 
   const externalProviders = (config?.externalFieldsProviders ?? [])
     .map((provider) => {
@@ -175,23 +175,24 @@ export async function buildContentDefinition(props: BuildContentDescriptorProps)
     })
     .filter((provider): provider is ContentDefinition["externalProviders"][number] => provider !== undefined);
 
-  return { descriptor, selectors, propertyDecoders, fieldSelectorIds, externalInputs, externalProviders };
+  return { descriptor, selectors, propertyReaders, fieldSelectorIds, externalInputs, externalProviders };
 }
 
-export async function preparePropertyDecoders(props: {
+export async function preparePropertyReaders(props: {
   imodelAccess: ECSchemaProvider;
   selectors: ContentDefinition["selectors"];
   fields: ContentDescriptor["fields"];
-}): Promise<ContentDefinition["propertyDecoders"]> {
+}): Promise<ContentDefinition["propertyReaders"]> {
   const { imodelAccess, selectors, fields } = props;
   const fieldTypes = new Map<string, ValueDescriptor>();
   for (const field of Object.values(fields)) {
     if (field.kind === "property") {
-      fieldTypes.set(computePropertySelectorId(field), field.type);
+      const selectorId = computePropertySelectorId(field);
+      fieldTypes.set(selectorId, field.type);
     }
   }
   const classes = new Map<EC.FullClassNameDotNotation, Promise<EC.Class>>();
-  const propertyDecoders: ContentDefinition["propertyDecoders"] = {};
+  const propertyReaders: ContentDefinition["propertyReaders"] = {};
   for (const selector of Object.values(selectors)) {
     if (selector.kind !== "property") {
       continue;
@@ -214,9 +215,19 @@ export async function preparePropertyDecoders(props: {
         );
       }
     }
-    propertyDecoders[selector.id] = createPropertyValueDecoder(type);
+    const declaringClass = await getOrCreate({
+      map: classes,
+      key: selector.propertyClassName,
+      createFunc: async () => getClass(imodelAccess, selector.propertyClassName),
+    });
+    const applicableClassNames = new Set(
+      [declaringClass.fullName, ...declaringClass.getDerivedClassNames()].map((name) => name.toLowerCase()),
+    );
+    const decode = createPropertyValueDecoder(type);
+    propertyReaders[selector.id] = (className, value) =>
+      applicableClassNames.has(className.toLowerCase()) ? decode(value) : undefined;
   }
-  return propertyDecoders;
+  return propertyReaders;
 }
 
 /**
@@ -227,6 +238,6 @@ export async function preparePropertyDecoders(props: {
  * metadata to enumerate direct and related property fields, appends calculated and external fields,
  * resolves categories, runs descriptor transformers, and assembles the value selectors.
  */
-export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
+export async function buildContentDescriptor(props: BuildContentDefinitionProps): Promise<ContentDescriptor> {
   return (await buildContentDefinition(props)).descriptor;
 }

@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { buildContentDefinition } from "./descriptor-building/BuildDescriptor.js";
+import { buildContentDefinition } from "./definition-building/BuildContentDefinition.js";
 import { getInstanceKeys } from "./query/GetInstanceKeys.js";
 import { getSize } from "./query/GetSize.js";
 import { getItems } from "./query/value-loading/GetItems.js";
 
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";
-import type { ContentDefinition } from "./descriptor-building/BuildDescriptor.js";
+import type { ContentDefinition } from "./definition-building/BuildContentDefinition.js";
 
 /**
  * Builds the stateful content provider returned by `createContentProvider`.

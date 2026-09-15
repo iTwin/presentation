@@ -10,7 +10,7 @@ import { serializeRelationshipPath } from "../../content/model/Utils.js";
 import { buildSelectProjection } from "../../content/query/SelectBuilder.js";
 import { createPrimitiveProperty } from "../MetadataStubs.js";
 
-import type { ValueSelector } from "../../content/descriptor-building/ValueSelector.js";
+import type { ValueSelector } from "../../content/definition-building/ValueSelector.js";
 import type { CalculatedField, PropertyField } from "../../content/model/Field.js";
 import type { BaseQueryGroup } from "../../content/query/BaseQuery.js";
 
