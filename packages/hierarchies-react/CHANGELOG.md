@@ -1,5 +1,20 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.66
+
+### Major Changes
+
+- [#1540](https://github.com/iTwin/presentation/pull/1540): Updated StrataKit dependencies to newer versions, including `@stratakit/mui@1.0.0` and `@stratakit/structures@0.6.0`. `@stratakit/foundations` is now a peer dependency and should be installed by the application, along with `@mui/material@^9.4.0`.
+
+### Patch Changes
+
+- [#1514](https://github.com/iTwin/presentation/pull/1514): Fix label editor validation message size
+- [#1538](https://github.com/iTwin/presentation/pull/1538): Fixed keyboard-initiated node rename instantly closing the label editor. Additionally, improved tree node rendering performance by rendering a single shared context menu and label editor at the tree level instead of mounting them in every node.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.13
+  - @itwin/presentation-hierarchies@2.0.0-alpha.18
+  - @itwin/unified-selection@2.0.0-alpha.1
+
 ## 2.0.0-alpha.65
 
 ### Patch Changes
