@@ -209,7 +209,7 @@ export interface NavigationValue {
 }
 
 /**
- * Any value that can be assigned to an ECInstance — a primitive, struct, array, or undefined (null/empty).
+ * Any value that can be assigned to an ECInstance — a primitive, struct, array, navigation value, or undefined (null/empty).
  * @public
  */
 export type Value = PrimitiveValue | StructValue | ArrayValue | NavigationValue | undefined;
