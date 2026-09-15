@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
+    "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-shared": "workspace:*",
     "rxjs": "catalog:rxjs"
   },
