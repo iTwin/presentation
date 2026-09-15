@@ -361,6 +361,35 @@ describe("Content", () => {
           }),
         ).rejects.toThrow(/overlap/);
       });
+
+      it("restricts items to a target's instanceIds", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Prop" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          const a1 = builder.insertInstance(schema.items.A.fullName, { prop: "keep" });
+          builder.insertInstance(schema.items.A.fullName, { prop: "drop" });
+          const a3 = builder.insertInstance(schema.items.A.fullName, { prop: "keep-too" });
+          return { schema, a1, a3 };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName, instanceIds: [setup.a1.id, setup.a3.id] }],
+        });
+
+        const items = await collect(provider.getItems());
+        expectKeys(
+          items.map((item) => item.primaryKey),
+          [setup.a1, setup.a3],
+        );
+      });
     });
 
     describe("calculated fields", () => {
@@ -735,6 +764,266 @@ describe("Content", () => {
         expect(aItem.getValue(aScoreField)).toBe(1);
         expect(bItem.getValue(bScoreField)).toBe(2);
       });
+
+      it("orders items globally across multiple sorted sources past a single page", async () => {
+        // Interleave two sources' scores (A even, B odd) so the two-phase key stream's page boundary
+        // falls in the middle of the interleaved sequence, not at a source transition.
+        const perSource = 520; // 2 * 520 = 1040 > PAGE_SIZE (1000)
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+            `,
+          );
+          for (let i = 0; i < perSource; ++i) {
+            builder.insertInstance(schema.items.A.fullName, { score: 2 * i });
+            builder.insertInstance(schema.items.B.fullName, { score: 2 * i + 1 });
+          }
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }, { primaryClass: setup.schema.items.B.fullName }],
+        });
+        const scoreFields = getPropertyFieldsByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(
+          provider.getItems({ sorting: scoreFields.map((field) => ({ field, direction: "asc" as const })) }),
+        );
+        expect(items).toHaveLength(2 * perSource);
+        expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(2 * perSource);
+        const scores = items.map((item) => {
+          const scopeFieldForThisItem = scoreFields.find(
+            (field) => field.propertyClassName === item.primaryKey.className,
+          );
+          return scopeFieldForThisItem ? item.getValue(scopeFieldForThisItem) : undefined;
+        });
+        expect(scores).toEqual(Array.from({ length: 2 * perSource }, (_, i) => i));
+      });
+
+      it("orders items ascending by a string field, keeping null values first", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Name" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          builder.insertInstance(schema.items.A.fullName, { name: "banana" });
+          builder.insertInstance(schema.items.A.fullName, { name: undefined });
+          builder.insertInstance(schema.items.A.fullName, { name: "apple" });
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        });
+        const nameField = getPropertyFieldByName(await provider.getContentDescriptor(), "Name");
+
+        const items = await collect(provider.getItems({ sorting: [{ field: nameField, direction: "asc" }] }));
+        expect(items.map((item) => item.getValue(nameField))).toEqual([undefined, "apple", "banana"]);
+      });
+
+      it("pages through NULL and non-NULL sort values without gaps or duplicates, ascending", async () => {
+        // Nulls sort first ascending; 1000 null rows exactly fill page 1 (PAGE_SIZE), so its cursor
+        // lands on a null sort value and page 2 must cross from the null block into the non-null one.
+        const nullCount = 1000;
+        const valuedScores = [1, 2, 3];
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+            `,
+          );
+          for (let i = 0; i < nullCount; ++i) {
+            builder.insertInstance(schema.items.A.fullName, { score: undefined });
+          }
+          // Inserted out of order so the assertion below only passes if ascending sort actually reorders them.
+          for (const score of [3, 1, 2]) {
+            builder.insertInstance(schema.items.A.fullName, { score });
+          }
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(provider.getItems({ sorting: [{ field: scoreField, direction: "asc" }] }));
+        expect(items).toHaveLength(nullCount + valuedScores.length);
+        expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(nullCount + valuedScores.length);
+        const values = items.map((item) => item.getValue(scoreField));
+        expect(values.slice(0, nullCount)).toEqual(new Array(nullCount).fill(undefined));
+        expect(values.slice(nullCount)).toEqual(valuedScores);
+      });
+
+      it("pages through NULL and non-NULL sort values without gaps or duplicates, descending", async () => {
+        // Nulls sort last descending; a page-1-worth of null rows means page 1 ends inside the null
+        // block (cursor's sort value is null) and page 2 must continue returning nulls by id order.
+        const nullCount = 1002;
+        const valuedScores = [30, 20, 10]; // expected descending output order
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+            `,
+          );
+          // Inserted out of order so the assertion below only passes if descending sort actually reorders them.
+          for (const score of [10, 30, 20]) {
+            builder.insertInstance(schema.items.A.fullName, { score });
+          }
+          for (let i = 0; i < nullCount; ++i) {
+            builder.insertInstance(schema.items.A.fullName, { score: undefined });
+          }
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(provider.getItems({ sorting: [{ field: scoreField, direction: "desc" }] }));
+        expect(items).toHaveLength(nullCount + valuedScores.length);
+        expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(nullCount + valuedScores.length);
+        const values = items.map((item) => item.getValue(scoreField));
+        expect(values.slice(0, valuedScores.length)).toEqual(valuedScores);
+        expect(values.slice(valuedScores.length)).toEqual(new Array(nullCount).fill(undefined));
+      });
+
+      it("orders items by a 1:1 related property across more items than a single page holds", async () => {
+        const count = 1005; // exceeds the internal PAGE_SIZE of 1000
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Seq" typeName="int" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          for (let i = 0; i < count; ++i) {
+            const a = builder.insertInstance(schema.items.A.fullName, { seq: i });
+            // Descending insertion order for B's score so ascending sort order differs from insertion order.
+            const b = builder.insertInstance(schema.items.B.fullName, { score: count - i });
+            builder.insertRelationship(schema.items.AtoB.fullName, a.id, b.id);
+          }
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path, cardinalityHint: "one" }] };
+          },
+        });
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { imodelFieldsProviders: [fieldsProvider] },
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(provider.getItems({ sorting: [{ field: scoreField, direction: "asc" }] }));
+        expect(items).toHaveLength(count);
+        expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(count);
+        expect(items.map((item) => item.getValue(scoreField))).toEqual(Array.from({ length: count }, (_, i) => i + 1));
+      });
+
+      it("throws when sorting by a 1:many related property", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoC" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to c" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="c to a" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a = builder.insertInstance(schema.items.A.fullName, { propA: "a" });
+          const c = builder.insertInstance(schema.items.C.fullName, { score: 1 });
+          builder.insertRelationship(schema.items.AtoC.fullName, a.id, c.id);
+          return { schema };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.C.fullName,
+            relationshipName: setup.schema.items.AtoC.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path }] };
+          },
+        });
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { imodelFieldsProviders: [fieldsProvider] },
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        await expect(
+          collect(provider.getItems({ sorting: [{ field: scoreField, direction: "asc" }] })),
+        ).rejects.toThrow(/1:many/);
+      });
     });
 
     describe("filtering", () => {
@@ -800,6 +1089,167 @@ describe("Content", () => {
           }),
         );
         expect(items.map((item) => item.getValue(scoreField))).toEqual([3, 2, 1]);
+      });
+
+      it("applies a value filter to a 1:1 related property", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a1 = builder.insertInstance(schema.items.A.fullName, { propA: "keep" });
+          const b1 = builder.insertInstance(schema.items.B.fullName, { score: 5 });
+          builder.insertRelationship(schema.items.AtoB.fullName, a1.id, b1.id);
+          const a2 = builder.insertInstance(schema.items.A.fullName, { propA: "drop" });
+          const b2 = builder.insertInstance(schema.items.B.fullName, { score: 1 });
+          builder.insertRelationship(schema.items.AtoB.fullName, a2.id, b2.id);
+          return { schema, a1 };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path, cardinalityHint: "one" }] };
+          },
+        });
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { imodelFieldsProviders: [fieldsProvider] },
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(
+          provider.getItems({ filters: [{ field: scoreField, operator: "greater-than", value: 3 }] }),
+        );
+        expectKeys(
+          items.map((item) => item.primaryKey),
+          [setup.a1],
+        );
+      });
+
+      it("applies a value filter to a 1:many related property using existential (at-least-one) semantics", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C">
+                <ECProperty propertyName="Score" typeName="int" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoC" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to c" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="c to a" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          // `matches` reaches one qualifying (score > 3) and one non-qualifying related instance —
+          // existential semantics should still include it.
+          const matches = builder.insertInstance(schema.items.A.fullName, { propA: "matches" });
+          const highC = builder.insertInstance(schema.items.C.fullName, { score: 10 });
+          const lowC = builder.insertInstance(schema.items.C.fullName, { score: 1 });
+          builder.insertRelationship(schema.items.AtoC.fullName, matches.id, highC.id);
+          builder.insertRelationship(schema.items.AtoC.fullName, matches.id, lowC.id);
+          // `noMatch` reaches only non-qualifying related instances.
+          const noMatch = builder.insertInstance(schema.items.A.fullName, { propA: "no-match" });
+          const lowC2 = builder.insertInstance(schema.items.C.fullName, { score: 2 });
+          builder.insertRelationship(schema.items.AtoC.fullName, noMatch.id, lowC2.id);
+          return { schema, matches };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.C.fullName,
+            relationshipName: setup.schema.items.AtoC.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path }] };
+          },
+        });
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { imodelFieldsProviders: [fieldsProvider] },
+        });
+        const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
+
+        const items = await collect(
+          provider.getItems({ filters: [{ field: scoreField, operator: "greater-than", value: 3 }] }),
+        );
+        expectKeys(
+          items.map((item) => item.primaryKey),
+          [setup.matches],
+        );
+      });
+    });
+
+    describe("query filterers", () => {
+      it("restricts items using an injected WHERE clause", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Prop" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          const a1 = builder.insertInstance(schema.items.A.fullName, { prop: "keep" });
+          builder.insertInstance(schema.items.A.fullName, { prop: "drop" });
+          return { schema, a1 };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const queryFilterer = {
+          getFilterClauses({ targetAlias }: { targetAlias: string }) {
+            return { where: [`[${targetAlias}].[Prop] = 'keep'`] };
+          },
+        };
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { queryFilterers: [queryFilterer] },
+        });
+
+        const items = await collect(provider.getItems());
+        expectKeys(
+          items.map((item) => item.primaryKey),
+          [setup.a1],
+        );
       });
     });
 
