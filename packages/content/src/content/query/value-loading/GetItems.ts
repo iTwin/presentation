@@ -53,8 +53,6 @@ import type { GroupValues } from "./RowDecoder.js";
  * values into `ContentItem` accessors. Once a page's SQL-backed values are stitched, every configured
  * external fields provider is called once with that page's pre-extracted input values and its declared
  * fields are merged in before the items are emitted.
- *
- * @internal
  */
 export function getItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
@@ -180,9 +178,7 @@ async function createSourcePlan(props: {
  * one owner, so `buildSelectProjection` projects a selector from a single group. The group whose own
  * `paths` lists the key as a leaf path wins; a key that is nobody's leaf path (a prefix shared with a
  * longer, differently-grouped path, or a filter/sort-only path) goes to the first group that can resolve
- * it — `anchor`, then `additional` in order — so the anchor wins ties. Direct properties and calculated
- * selectors share the key `""` (a direct property's empty `pathFromTarget` serializes to `""`, and
- * neither kind can overflow into another group), so it is seeded onto the anchor alone.
+ * it — `anchor`, then `additional` in order — so the anchor wins ties.
  */
 function assignPathOwnership(
   anchor: BaseQueryGroup,
@@ -190,6 +186,9 @@ function assignPathOwnership(
 ): { anchor: Set<string>; additional: Set<string>[] } {
   const groups = [anchor, ...additional];
   const owned = groups.map(() => new Set<string>());
+  // Direct properties and calculated selectors share the key `""` (a direct property's empty
+  // `pathFromTarget` serializes to `""`, and neither kind can overflow into another group), so it is
+  // seeded onto the anchor alone.
   owned[0].add("");
   const claimed = new Set<string>([""]);
   for (const [index, group] of groups.entries()) {
@@ -388,13 +387,7 @@ function fetchGroupRows(props: {
 
 /**
  * Stitches every plan's group rows into one `instance key -> values` map, keyed by class+id
- * ({@link toInstanceKeyString}). A plan's anchor rows say which
- * of the page's primaries belong to it, and each of its additional groups is decoded against exactly those
- * keys — a `"many"` group reports `[]` for a primary of this plan that reached no related instance, and a
- * row an additional group returned for another plan's primary (possible when sources' targets overlap, or
- * when two classes share an id) is ignored. Each selector and join-path key is owned by exactly one group
- * (`assignPathOwnership`), so merging is a disjoint union and `mergeGroupValues` throws only on a planning
- * bug.
+ * ({@link toInstanceKeyString}).
  */
 function stitchPlans(props: {
   descriptor: ContentDescriptor;
@@ -407,6 +400,8 @@ function stitchPlans(props: {
     for (const [key, values] of groupValues) {
       const existing = result.get(key);
       if (existing) {
+        // Each selector and join-path key is owned by exactly one group (`assignPathOwnership`), so
+        // merging is a disjoint union and this throws only on a planning bug.
         mergeGroupValues(existing, values);
       } else {
         result.set(key, values);
@@ -423,6 +418,10 @@ function stitchPlans(props: {
     });
 
   for (const plan of plans) {
+    // A plan's anchor rows say which of the page's primaries belong to it; each of its additional
+    // groups is then decoded against exactly those keys, so a `"many"` group reports `[]` for a primary
+    // of this plan that reached no related instance, and a row an additional group returned for another
+    // plan's primary (possible when sources' targets overlap, or two classes share an id) is ignored.
     const anchorRows = rowsByGroup.get(plan.anchor) ?? [];
     const anchorKeys = anchorRows.map((row) =>
       decodePrimaryKey({ row, columnNames: plan.anchor.projection.columnNames }),

@@ -14,8 +14,6 @@ import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 /**
  * Populates one page's worth of rows with external field values, keyed by field ID and aligned by
  * row index with the given rows.
- *
- * @internal
  */
 export type ExternalValuePopulator = (
   rows: ReadonlyArray<{ selectorValues: Map<string, Value> }>,
@@ -40,8 +38,6 @@ interface ProviderPlan {
  * @throws if the descriptor declares an external field that no configured provider populates — a
  * misconfigured registration (missing or mismatched provider) rather than something a page can recover
  * from.
- *
- * @internal
  */
 export function createExternalValuePopulator(props: {
   descriptor: ContentDescriptor;

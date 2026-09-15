@@ -15,8 +15,6 @@ import type { SelectProjection } from "../SelectBuilder.js";
  * One primary instance's stitched SQL-backed values: `selectorId -> value` and
  * `join-path key -> related instances`. A `"one"`-cardinality group contributes scalar values and 0/1-entry
  * arrays; a `"many"`-cardinality group contributes index-aligned arrays (see {@link decodeGroupRows}).
- *
- * @internal
  */
 export interface GroupValues {
   selectorValues: Map<string, Value>;
@@ -27,8 +25,6 @@ export interface GroupValues {
  * Reads the primary instance key from a result row using the projection's class and instance column
  * aliases. The class column is projected via `ec_classname(..., 's.c')`, so it already holds the
  * dot-notation full class name expected by {@link InstanceKey}.
- *
- * @internal
  */
 export function decodePrimaryKey(props: {
   row: ECSqlQueryRow;
@@ -42,8 +38,6 @@ export function decodePrimaryKey(props: {
  * Serializes an instance key into a string that's unique across classes, unlike `ECInstanceId` alone —
  * e.g. a `bis.Model` and the `bis.Element` it models share an `ECInstanceId`, so keying by id alone would
  * merge their values.
- *
- * @internal
  */
 export function toInstanceKeyString(key: InstanceKey): string {
   return `${key.className}:${key.id}`;
@@ -52,15 +46,6 @@ export function toInstanceKeyString(key: InstanceKey): string {
 /**
  * Decodes one result row into its selector values and the related-instance identities carried by its
  * related `$` blobs.
- *
- * Property selectors sharing a table alias read from the same `$` blob column; each blob is parsed once and
- * serves both the selectors that read from it and the identity (`ECInstanceId` + the paired
- * `ec_classname(...)` column) of the instance it represents. Calculated selectors are read directly from
- * their scalar column. A `null` blob (an outer-join miss, or a class/group that does not supply the value)
- * leaves its selectors out of the map and contributes no identity. `buildSelectProjection` always projects a
- * path's target blob alongside its relationship blob, so a `relationshipKey` never appears without its `key`.
- *
- * @internal
  */
 export function decodeRow(props: {
   row: ECSqlQueryRow;
@@ -69,6 +54,10 @@ export function decodeRow(props: {
 }): { selectorValues: Map<string, Value>; relatedInstances: Map<string, RelatedInstanceEntry> } {
   const { row, descriptor, columnNames } = props;
 
+  // Property selectors sharing a table alias read from the same `$` blob column, so each blob is parsed
+  // once here and reused both for those selectors' values and for the related-instance identity below. A
+  // `null` blob (outer-join miss, or a class/group that doesn't supply the value) leaves its selectors
+  // out of the map and contributes no identity.
   const parsedBlobs = new Map<string, Record<string, Value> | undefined>();
   const parseBlob = (column: string): Record<string, Value> | undefined => {
     if (parsedBlobs.has(column)) {
@@ -105,6 +94,7 @@ export function decodeRow(props: {
       selectorValues.set(selectorId, value);
     }
   }
+  // Calculated selectors read directly from their scalar column, no blob involved.
   for (const [selectorId, column] of Object.entries(columnNames.calculatedValues)) {
     const value = row[column];
     if (value !== undefined && value !== null) {
@@ -130,6 +120,8 @@ export function decodeRow(props: {
       relationshipKeys.set(pathKey, key);
     }
   }
+  // `buildSelectProjection` always projects a path's target blob alongside its relationship blob, so
+  // every `relationshipKey` here finds a matching entry already in `relatedInstances`.
   for (const [pathKey, relationshipKey] of relationshipKeys) {
     const entry = relatedInstances.get(pathKey);
     if (entry) {
@@ -141,30 +133,23 @@ export function decodeRow(props: {
 }
 
 /**
- * Decodes one query group's rows into `instance key -> values` (keyed by {@link toInstanceKeyString},
- * giving every value the shape the group's cardinality dictates:
- *
- * - `"one"` (the anchor, a 1:1 partition): one row per primary — scalar selector values and a single-entry
- *   related-instance array per path key.
- * - `"many"` (an isolated 1:many path): zero or more rows per primary — every projected selector becomes an
- *   index-aligned array with one element per row (`undefined` where the row lacks the value) and every
- *   projected path key an equally long array of related instances. Each key in `keys` starts from empty
- *   arrays, so a primary that reached no related instance ends with `[]` rather than nothing.
- *
- * When `keys` is given, it is the complete set of primaries the group describes: rows for any other instance
- * key are ignored. A page's ids span every source, and an additional group's query is restricted only by an
- * `ECInstanceId` IN-list and its own source's target — not by class, nor by the anchor's query filterers and
- * value filters — so an overlapping source's group can return rows for a primary that belongs to another
- * source, or, when two classes share an `ECInstanceId`, to a different plan entirely.
- *
- * @internal
+ * Decodes one query group's rows into `instance key -> values` (keyed by {@link toInstanceKeyString}),
+ * giving every value the shape the group's cardinality dictates: `"one"` (the anchor, a 1:1 partition)
+ * gets scalar values and single-entry related-instance arrays; `"many"` (an isolated 1:many path) gets
+ * index-aligned arrays, one element per row.
  */
 export function decodeGroupRows(props: {
   rows: ECSqlQueryRow[];
   descriptor: ContentDescriptor;
   cardinality: CardinalityHint;
   columnNames: SelectProjection["columnNames"];
-  /** The primaries this group describes — see above. Omit to accept every row. */
+  /**
+   * The complete set of primaries this group describes; rows for any other instance key are ignored.
+   * An additional group's value query is restricted only by an `ECInstanceId` IN-list and its own
+   * source's target — not by class, nor by the anchor's query filterers/value filters — so it can return
+   * rows for a primary belonging to another source (overlapping targets) or another plan entirely (two
+   * classes sharing an `ECInstanceId`). Omit to accept every row.
+   */
   keys?: readonly InstanceKey[];
 }): Map<string, GroupValues> {
   const { rows, descriptor, cardinality, columnNames, keys } = props;
@@ -174,6 +159,7 @@ export function decodeGroupRows(props: {
   const ownRows = allowedKeys ? rows.filter((row) => allowedKeys.has(keyOf(row))) : rows;
 
   if (cardinality === "one") {
+    // One row per primary — a second row means a `"one"` cardinality hint was wrong for this path.
     for (const row of ownRows) {
       const key = keyOf(row);
       if (byKey.has(key)) {
@@ -194,6 +180,8 @@ export function decodeGroupRows(props: {
 
   const selectorIds = [...Object.keys(columnNames.propertyBlobs), ...Object.keys(columnNames.calculatedValues)];
   const pathKeys = [...new Set(Object.values(columnNames.relatedBlobs).map((blob) => blob.pathKey))];
+  // Every key in `keys` starts from empty arrays, so a primary that reached no related instance ends
+  // with `[]` rather than an absent map entry.
   const emptyValues = (): GroupValues => ({
     selectorValues: new Map(selectorIds.map((selectorId) => [selectorId, [] as Value[]])),
     relatedInstances: new Map(pathKeys.map((pathKey) => [pathKey, [] as RelatedInstanceEntry[]])),
@@ -226,8 +214,6 @@ export function decodeGroupRows(props: {
 /**
  * Merges `source` into `target` in place. Every selector and every join-path key is owned by exactly one
  * query group, so one already present in `target` is a stitching-ownership bug and throws.
- *
- * @internal
  */
 export function mergeGroupValues(target: GroupValues, source: GroupValues): void {
   for (const [selectorId, value] of source.selectorValues) {
@@ -247,8 +233,6 @@ export function mergeGroupValues(target: GroupValues, source: GroupValues): void
 /**
  * Projects decoded selector values onto descriptor fields through each field's `selectorId`, producing
  * the `ContentValues` for one instance. External fields carry no selector and are left `undefined`.
- *
- * @internal
  */
 export function toContentValues(props: {
   descriptor: ContentDescriptor;

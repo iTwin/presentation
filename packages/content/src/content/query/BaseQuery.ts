@@ -38,8 +38,6 @@ const PAGE_ID_SET_JOIN_TABLES = 1;
 /**
  * The `FROM` / `JOIN` / `WHERE` fragments (and their bindings) of a base content query, plus the
  * alias information downstream `SELECT` builders need to emit their own columns.
- *
- * @internal
  */
 export interface BaseQueryParts {
   /** `FROM <primary-selector> [this]`. */
@@ -65,8 +63,6 @@ export interface BaseQueryParts {
 
 /**
  * A single base-query group — a subset of a source's related paths joined onto the shared primaries.
- *
- * @internal
  */
 export interface BaseQueryGroup {
   /** Subset of the source's resolved paths this group joins (used by Stage 4 stitching). */
@@ -99,8 +95,6 @@ interface BuildBaseQueryProps {
 /**
  * The output of `buildBaseQuery`: an always-present `anchor` group plus, when related joins split, the
  * `additional` groups to stitch onto it.
- *
- * @internal
  */
 export interface BaseQuery {
   /**
@@ -123,8 +117,6 @@ export interface BaseQuery {
 /**
  * Related-columns mode (`getItems`): collects, merges, aliases, and JOINs the paths its property
  * selectors read (see `collectGroupPaths`) — not every path the source resolved.
- *
- * @internal
  */
 export async function buildBaseQuery(
   props: BuildBaseQueryProps & {
@@ -147,8 +139,6 @@ export async function buildBaseQuery(
  * Primaries-only mode (`getSize` / `getInstanceKeys`, the default): does NOT collect/merge/alias/JOIN
  * related paths (only joins required to *evaluate filters* are emitted), never splits → only the
  * `anchor`.
- *
- * @internal
  */
 export async function buildBaseQuery(
   props: BuildBaseQueryProps & { includeRelatedJoins?: false },
@@ -442,20 +432,13 @@ function serializeJoinPath(path: RelationshipPath): string {
 
 /**
  * Builds the candidate set of paths for `splitRelatedPaths` to classify and pack into groups: every
- * distinct path a property selector reads (`propertySelectorPaths` — includes external-input selectors,
- * which have a selector but no field, so `externalInputPaths` needs no separate handling), each
- * validated against the source's resolved paths (`resolvedDeclarations` + `externalInputPaths`) and kept
- * only if its join key equals a resolved path's or is a strict prefix of one. A selector path that
- * matches neither can never resolve to a joined alias and is skipped. `targetClassNames` is the
- * sorted-unique union of every resolved path it validated against.
- *
- * A resolved path with no selector on it, or on any prefix of it (a per-step spec targeting only an
- * intermediate step, a transformer that removed a path's fields, or a leaf class with no properties), is
- * never joined at all — there is nothing for its column to project. A selected prefix is classified and
- * packed independently, same as any other path, so it is never dropped when the longer path it prefixes
- * is inner-joined and has zero related instances.
+ * distinct path a property selector reads, validated against the source's resolved paths and kept only
+ * if it can resolve to a joined alias.
  */
 function collectGroupPaths(source: ContentSource, propertySelectorPaths: RelationshipPath[]): ResolvedPath[] {
+  // `resolvedDeclarations` + `externalInputPaths` together cover every path a selector could read from —
+  // `propertySelectorPaths` already includes external-input selectors (which have a selector but no
+  // field), so `externalInputPaths` needs no separate handling here.
   const resolvedPaths = [...source.resolvedDeclarations.flatMap((group) => group.paths), ...source.externalInputPaths];
   const byKey = new Map<string, ResolvedPath>();
   for (const selectorPath of propertySelectorPaths) {
@@ -466,6 +449,12 @@ function collectGroupPaths(source: ContentSource, propertySelectorPaths: Relatio
     if (byKey.has(key)) {
       continue;
     }
+    // A resolved path with no selector on it, or on any prefix of it (a per-step spec targeting only an
+    // intermediate step, a transformer that removed a path's fields, or a leaf class with no
+    // properties), is never joined at all — there is nothing for its column to project. So a selector
+    // path is only kept here if its join key equals some resolved path's, or is a strict prefix of one;
+    // a selected prefix is then classified and packed independently, same as any other path, so it is
+    // never dropped when the longer path it prefixes is inner-joined and has zero related instances.
     const owners = resolvedPaths.filter(
       (resolved) =>
         resolved.path.length >= selectorPath.length &&
@@ -478,6 +467,7 @@ function collectGroupPaths(source: ContentSource, propertySelectorPaths: Relatio
     }
     byKey.set(key, {
       path: selectorPath,
+      // The sorted-unique union of every resolved path this selector path validated against.
       targetClassNames: toSortedUniqueClassNames(owners.flatMap((owner) => owner.targetClassNames)),
     });
   }
@@ -618,8 +608,6 @@ async function buildExistentialFilterClause(props: {
 
 /**
  * Resolves a field's raw column selector (without navigation `.Id`) and its value type.
- *
- * @internal
  */
 export function resolveSelector(props: {
   field: PropertyField | CalculatedField;
@@ -993,8 +981,6 @@ async function buildQueryParts(props: {
  *
  * Used by the distinct-values query builder to reuse the existing target-filter and value-filter
  * building blocks without the source-oriented anchor/additional grouping performed by `buildBaseQuery`.
- *
- * @internal
  */
 export async function buildTargetScopedQuery(props: {
   schemaProvider: ECSchemaProvider;

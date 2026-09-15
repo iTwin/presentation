@@ -20,8 +20,6 @@ import type { ContentDescriptor } from "./model/ContentDescriptor.js";
  * `many` where the data is effectively 1:1). Without a hint, the path is `"many"` when any step's
  * traversed constraint has an unbounded upper multiplicity limit or an upper limit greater than one, honoring
  * `relationshipReverse` to pick the constraint the traversal lands on.
- *
- * @internal
  */
 export async function classifyPathCardinality(props: {
   schemaProvider: ECSchemaProvider;
@@ -51,8 +49,6 @@ export async function classifyPathCardinality(props: {
 /**
  * Classifies the paths a declaration's fields are reached over, so field enumeration can stamp each
  * field with the cardinality of its own path.
- *
- * @internal
  */
 export interface PathCardinalityClassifier {
   /**
@@ -77,8 +73,6 @@ export interface PathCardinalityClassifier {
  *
  * Each verdict reflects one declaration's view of a path. Declarations that disagree about a shared
  * path produce fields that `mergePropertyFieldsByIdentity` reconciles into one.
- *
- * @internal
  */
 export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider): PathCardinalityClassifier {
   const cache = new Map<string, Promise<CardinalityHint>>();
@@ -100,8 +94,6 @@ export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider):
  * describing a many-valued path as single-valued would silently drop every related instance but one.
  * Shared by `mergePropertyFieldsByIdentity` (candidate fields declaring the same path) and
  * `collectPathCardinalities` (descriptor fields declaring the same path).
- *
- * @internal
  */
 export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): CardinalityHint {
   for (const cardinality of cardinalities) {
@@ -118,8 +110,6 @@ export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): Ca
  * declarations, keyed by `serializeRelationshipPath(pathFromTarget)` — so a query built from the same
  * descriptor classifies every path exactly as the descriptor (and its providers) already do (feed the
  * result to `buildBaseQuery` as `cardinalityHints`).
- *
- * @internal
  */
 export function collectPathCardinalities(
   descriptor: ContentDescriptor,

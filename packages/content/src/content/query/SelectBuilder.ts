@@ -13,7 +13,6 @@ import type { CalculatedField, PropertyField } from "../model/Field.js";
 import type { PropertyValueSelector } from "../model/ValueSelector.js";
 import type { BaseQueryGroup } from "./BaseQuery.js";
 
-/** @internal */
 export interface ContentQuerySort {
   field: PropertyField | CalculatedField;
   direction: "asc" | "desc";
@@ -22,8 +21,6 @@ export interface ContentQuerySort {
 /**
  * The columns selected for one `BaseQueryGroup`, together with the information required to locate
  * descriptor selectors in the returned row.
- *
- * @internal
  */
 export interface SelectProjection {
   /** ECSQL clause fragments contributed by this group's projection. */
@@ -50,15 +47,12 @@ export interface SelectProjection {
     /** Calculated selector id -> alias of its scalar column. */
     calculatedValues: Record<string, string>;
     /**
-     * Projected related `$`-blob column -> its identity columns. One entry per related blob column that
-     * was actually projected (never `this`'s own blob). `pathKey` is the owned join-path key
-     * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`) the blob belongs to; `role`
-     * says whether the blob is the path's target instance or its last step's relationship instance. A
-     * `"target"` entry exists for every owned related path key that has at least one projected selector
-     * (target- or relationship-class), even one with only relationship-class selectors, so a
-     * `"relationship"` entry never exists without a paired `"target"` one; a `"relationship"` entry itself
-     * exists only where a relationship-class property selector was projected (nav-property steps never get
-     * one). `className` is the blob's `ec_classname(...)` column.
+     * Projected related `$`-blob column -> its identity columns, one entry per related blob column
+     * actually projected (never `this`'s own blob). `pathKey` is the owned join-path key
+     * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`) the blob belongs to;
+     * `role` says whether it's the path's target instance or its last step's relationship instance;
+     * `className` is the blob's `ec_classname(...)` column. See the projection loop below for how
+     * `"target"`/`"relationship"` entries pair up.
      *
      * Example: a path `A-[Rel]->B` with a projected `B` property and a projected `Rel` property yields two
      * entries, one per blob column: `{ b_alias: { className: "b_alias_cls", pathKey: "A-[Rel]->B", role:
@@ -73,8 +67,6 @@ export interface SelectProjection {
 /**
  * Builds the SELECT projection for one base-query group. Property selectors sharing one table alias
  * read from a single `$` blob; each calculated selector has its own scalar result column.
- *
- * @internal
  */
 export async function buildSelectProjection(props: {
   schemaProvider: ECSchemaProvider;
@@ -83,12 +75,9 @@ export async function buildSelectProjection(props: {
   sorting?: ContentQuerySort[];
   /**
    * Join-path keys (`serializeRelationshipPath(path, { includeInstanceFilters: true })`) this group owns
-   * for `SELECT` projection. A selector whose path is not in this set is skipped even if `group`'s alias
-   * map can resolve it — e.g. a related path that overflowed into another group, a prefix of a path
-   * owned by another (1:many) group, or a direct/calculated selector in a non-anchor group. Direct
-   * properties and calculated selectors share the key `""` (a direct property's `pathFromTarget` is
-   * always empty, which serializes to `""`), so they are owned by whichever group's set contains it —
-   * normally the anchor only.
+   * for `SELECT` projection — a selector whose path is not in this set is skipped even if `group`'s alias
+   * map can resolve it (e.g. a path that overflowed into another group). Direct properties and calculated
+   * selectors share the key `""`, owned by whichever group's set contains it — normally the anchor only.
    */
   ownedPathKeys: Set<string>;
 }): Promise<SelectProjection> {
@@ -140,6 +129,9 @@ export async function buildSelectProjection(props: {
       projectBlob(alias);
     } else {
       const role = relationshipClassNames.has(selector.propertyClassName) ? "relationship" : "target";
+      // A `"target"` entry is projected for every owned related path key that has at least one projected
+      // selector, even one with only relationship-class selectors below — so a `"relationship"` entry
+      // never exists without a paired `"target"` one.
       projectRelatedBlob({ alias, pathKey: key, role });
       if (role === "relationship") {
         const targetAlias = group.parts.relatedClassAliases.get(key)!.target;

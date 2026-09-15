@@ -126,7 +126,6 @@ export interface ContentItem {
     }>;
     getValue(field: ReadonlyField): DeepReadonly<Value>;
     readonly primaryKey: DeepReadonly<InstanceKey>;
-    readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
     readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
@@ -410,12 +409,6 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 
 // @public
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
-
-// @public
-interface RelatedInstanceEntry {
-    key: InstanceKey;
-    relationshipKey?: InstanceKey;
-}
 
 // @public
 interface RelatedPropertiesDeclaration {

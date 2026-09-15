@@ -12,8 +12,6 @@ import type { PrimitiveValue, PrimitiveValueType } from "@itwin/presentation-sha
  * One column of the keyset order, in ORDER BY priority. `expression` is the SQL the predicate compares
  * against (a derived-table column reference such as `[q].[pres_sort_0]`); `type` selects the binding
  * type for the cursor value; `value` is the cursor value for this column (or `undefined` for a NULL).
- *
- * @internal
  */
 export interface KeysetOrderColumn {
   expression: string;
@@ -27,8 +25,6 @@ export interface KeysetOrderColumn {
  * `ORDER BY`. Expands lexicographic comparison over the ordered columns into the standard OR-of-AND
  * ladder and matches SQLite/ECSQL null ordering (NULLs sort first ascending, last descending), so paging
  * neither skips nor duplicates rows across a page boundary — including ties on leading sort keys.
- *
- * @internal
  */
 export function buildKeysetPredicate(props: { columns: KeysetOrderColumn[] }): {
   clause: string;

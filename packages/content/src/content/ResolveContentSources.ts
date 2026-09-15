@@ -691,16 +691,14 @@ function resolveTarget({
 // --- Overlap detection ---
 
 /**
- * Yields every pair of sources that could share an instance, each pair once, in `(i, j)` order.
- *
- * `resolvedPrimaryClasses` holds the *concrete* class of every instance a target reaches (it is
- * enumerated with `GROUP BY ECClassId`, so a target on `bis.Element` lists `bis.PhysicalObject`, never
- * `bis.Element` itself). An instance has exactly one concrete class, so two targets can only share an
- * instance when they resolved the same class name — no hierarchy lookup is needed. Indexing sources by
- * class name therefore finds candidates in time linear in the number of sources rather than scanning
- * every pair.
+ * Yields every pair of sources that could share an instance, each pair once, in `(i, j)` order. An
+ * instance has exactly one concrete class, so two sources can only share one when they resolved the
+ * same class name — no hierarchy lookup needed, just an index from class name to source indices.
  */
 function* iterateCandidatePairs(sources: readonly ContentSource[]): Generator<[i: number, j: number]> {
+  // `resolvedPrimaryClasses` holds the *concrete* class of every instance a target reaches (enumerated
+  // with `GROUP BY ECClassId`, so a target on `bis.Element` lists `bis.PhysicalObject`, never
+  // `bis.Element` itself), which is what makes the name-only index below sufficient.
   const sourcesByClass = new Map<EC.FullClassNameDotNotation, number[]>();
   for (const [index, source] of sources.entries()) {
     for (const className of source.resolvedPrimaryClasses) {
@@ -751,11 +749,6 @@ function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
 
 /**
  * Emits an instance id shared by `a` and `b`'s scopes, or nothing when their scopes are disjoint.
- * Cheap tiers avoid a query where the answer follows from the targets' shapes alone: both scoped
- * by `instanceIds` intersect in JS; either target scoped by neither `instanceIds` nor
- * `instanceFilter` covers every instance of the (already known to intersect) shared class, so any
- * id the other target's `instanceIds` names is shared too. Anything else — e.g. `instanceFilter` on
- * one or both sides, or neither side naming concrete ids — needs a query to know for sure.
  *
  * Returned as an `Observable` rather than a `Promise` so `assertNoOverlappingSources` can race every
  * candidate pair and, on unsubscribing after the first hit, cancel every other pair's still-running
@@ -770,7 +763,9 @@ function findOverlappingInstanceId({
   a: ContentTarget;
   b: ContentTarget;
 }): Observable<Id64String> {
+  // Cheap tiers avoid a query where the answer follows from the targets' shapes alone.
   if (a.instanceIds && b.instanceIds) {
+    // Both scoped by `instanceIds` — intersect in JS.
     const bIds = new Set(b.instanceIds);
     const sharedId = a.instanceIds.find((id) => bIds.has(id));
     return sharedId !== undefined ? of(sharedId) : EMPTY;
@@ -778,12 +773,16 @@ function findOverlappingInstanceId({
   const aCoversAll = !a.instanceIds && !a.instanceFilter;
   const bCoversAll = !b.instanceIds && !b.instanceFilter;
   if (aCoversAll && b.instanceIds) {
+    // `a` is scoped by neither `instanceIds` nor `instanceFilter`, so it covers every instance of the
+    // (already known to intersect) shared class — any id `b` names is therefore shared too.
     return of(b.instanceIds[0]);
   }
   if (bCoversAll && a.instanceIds) {
     return of(a.instanceIds[0]);
   }
 
+  // Anything else — `instanceFilter` on one or both sides, or neither side naming concrete ids — needs
+  // a query to know for sure.
   const reader = imodelAccess.createQueryReader(buildOverlapQuery(a, b), { rowFormat: "Indexes" });
   return from(reader).pipe(
     map((row) => row[0] as Id64String),

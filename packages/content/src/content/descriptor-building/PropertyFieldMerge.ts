@@ -54,8 +54,6 @@ interface PropertyFieldCandidate extends CategorizedField {
  * categorization pass can turn it into a `categoryId`. This is the inverse of `forkField`: it merges
  * many candidates into one field on the way in, while `forkField` splits one field into a carved
  * subset on demand.
- *
- * @internal
  */
 export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate[]): CategorizedField[] {
   const groups = new Map<Field["id"], PropertyFieldCandidate[]>();

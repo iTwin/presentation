@@ -53,12 +53,10 @@ export interface ExternalFieldsProvider<
    * Value population callback. Called during Stage 4 with a batch of items
    * after SQL-backed fields are populated.
    *
-   * Each item contains pre-extracted `inputValues` keyed by the names declared in `inputs`. An input
-   * declared with `cardinalityHint: "many"` narrows to `Value[]` — one element per related instance,
-   * `[]` when the item reaches none. An unhinted input stays `Value`: it still may be an array at
-   * runtime, since the effective cardinality can fall back to schema multiplicity (frequently
-   * over-declared as many), so unhinted inputs must be handled as either shape. Must return an array
-   * parallel to `items`, where each element contains values for exactly the declared field IDs.
+   * Each item contains pre-extracted `inputValues` keyed by the names declared in `inputs` — see
+   * `InputPropertyDeclaration.cardinalityHint` for how an input's declared cardinality narrows
+   * its value type. Must return an array parallel to `items`, where each element contains values for
+   * exactly the declared field IDs.
    */
   getValues(props: {
     items: Array<{ inputValues: ExternalInputValues<TInputs> }>;

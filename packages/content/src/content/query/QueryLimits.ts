@@ -12,8 +12,6 @@ import type { ResolvedPath } from "../ContentTarget.js";
  * Maximum number of tables SQLite allows to participate in a single JOIN. When the merged
  * relationship-path joins of a query would exceed this, the base-query builder splits them across
  * multiple sub-queries.
- *
- * @internal
  */
 export const SQLITE_MAX_JOIN_TABLES = 64;
 
@@ -21,8 +19,6 @@ export const SQLITE_MAX_JOIN_TABLES = 64;
  * Maximum number of `UNION ALL` terms SQLite allows in a compound SELECT (`SQLITE_MAX_COMPOUND_SELECT`).
  * Larger unions are nested into groups of derived tables — the terms are counted per compound statement,
  * and a subquery starts a new one.
- *
- * @internal
  */
 export const SQLITE_MAX_COMPOUND_SELECT_TERMS = 500;
 
@@ -30,8 +26,6 @@ export const SQLITE_MAX_COMPOUND_SELECT_TERMS = 500;
  * Number of items the content loader fetches per page. The loader pages itself with a keyset cursor
  * and a `LIMIT` of this size so the frontend query executor never has to page (and OFFSET) our queries
  * internally: each query it runs already fits in one page, bounding time-to-first-value.
- *
- * @internal
  */
 export const PAGE_SIZE = 1000;
 
@@ -48,10 +42,8 @@ type ResolvedPathWithJoinInfo = ResolvedPath & { joinInfo: RelationshipPathJoinI
  * budget. This is not `info.joins.length`: an outer link-table entry (`relationship-select`) wraps a
  * subquery that itself joins the relationship + target, so it counts as two tables. A single step's
  * info therefore spans 1 to 3 tables (nav property → 1, inner link-table → 2, outer link-table → 3).
- *
- * @internal
  */
-export function countJoinTables(info: RelationshipPathJoinInfo): number {
+function countJoinTables(info: RelationshipPathJoinInfo): number {
   return info.steps
     .flatMap((step) => step.joins)
     .reduce((count, join) => count + 1 + (join.joinTarget.kind === "relationship-select" ? 1 : 0), 0);
@@ -61,8 +53,6 @@ export function countJoinTables(info: RelationshipPathJoinInfo): number {
  * Concatenates several resolved path join infos into one, dropping duplicate join entries that share a
  * prefix (identified by `targetClassIdSelector`, which is stable across paths whenever aliases were
  * assigned per unique prefix — see `assignPrefixAliases`) so a shared step is emitted exactly once.
- *
- * @internal
  */
 export function mergeJoinInfos(infos: readonly RelationshipPathJoinInfo[]): RelationshipPathJoinInfo {
   const seenTargets = new Set<string>();
@@ -88,7 +78,9 @@ export function mergeJoinInfos(infos: readonly RelationshipPathJoinInfo[]): Rela
  * A running SQLite JOIN-table budget accumulator, seeded with `reservedTables` (tables already consumed
  * outside whatever infos get added — the primary `FROM`, target filter, and query-filterer joins).
  *
- * @internal
+ * Packing logic (`packPathsWithinBudget`, `partitionPathsByJoinBudget`) only ever calls `tryAdd`;
+ * `costOf`/`remaining` are exposed so the budget's arithmetic — prefix-sharing dedup, reserved-tables
+ * accounting — can be unit-tested directly instead of inferred from packing outcomes.
  */
 export interface JoinBudget {
   /** Tables `info` would newly contribute if it were added. */
@@ -103,8 +95,6 @@ export interface JoinBudget {
  * Creates a {@link JoinBudget}. Every `tryAdd` merges the new info into a running merged join info (see
  * {@link mergeJoinInfos}), so a path sharing a prefix with one already added costs only its own unshared
  * suffix — not its full, independently-counted cost. `budget` defaults to {@link SQLITE_MAX_JOIN_TABLES}.
- *
- * @internal
  */
 export function createJoinBudget(props: { reservedTables: number; budget?: number }): JoinBudget {
   const limit = props.budget ?? SQLITE_MAX_JOIN_TABLES;
@@ -138,8 +128,6 @@ export function createJoinBudget(props: { reservedTables: number; budget?: numbe
  *
  * Paths are packed in the given order. A single path whose own cost exceeds the available budget still
  * gets its own group (a path cannot be split).
- *
- * @internal
  */
 export function partitionPathsByJoinBudget(props: {
   paths: readonly ResolvedPathWithJoinInfo[];
@@ -171,8 +159,6 @@ export function partitionPathsByJoinBudget(props: {
  * Packs the longest path prefix that fits `budget` and routes the rest to `overflow`, mutating `budget`
  * in place as paths are added — so a caller can keep packing more paths (e.g. selected columns after
  * sort/filter paths) against the same running budget without recomputing reserved tables.
- *
- * @internal
  */
 export function packPathsWithinBudget(props: { paths: readonly ResolvedPathWithJoinInfo[]; budget: JoinBudget }): {
   fitting: ResolvedPathWithJoinInfo[];

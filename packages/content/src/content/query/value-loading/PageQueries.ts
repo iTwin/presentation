@@ -21,8 +21,6 @@ import type { KeysetOrderColumn } from "./Keyset.js";
 
 /**
  * A base-query group paired with the projection that selects its columns.
- *
- * @internal
  */
 export interface PlannedGroup {
   baseQuery: BaseQueryGroup;
@@ -33,8 +31,6 @@ export interface PlannedGroup {
  * The queries and projections for one content source: its anchor group (with the projection that reads
  * its values and the key-only projection used by the multi-source ordering stream) and the additional
  * stitched groups.
- *
- * @internal
  */
 export interface SourcePlan {
   anchor: PlannedGroup & { keyProjection: SelectProjection };
@@ -43,7 +39,6 @@ export interface SourcePlan {
 
 /**
  * Position of the last emitted row, used to seed the next page's keyset predicate.
- * @internal
  */
 export interface Cursor {
   sortValues: Array<PrimitiveValue | undefined>;
@@ -52,7 +47,6 @@ export interface Cursor {
 
 /**
  * Builds a single source's keyset-paged anchor query.
- * @internal
  */
 export function buildAnchorPageQuery(props: {
   plan: SourcePlan;
@@ -86,7 +80,6 @@ export function buildAnchorPageQuery(props: {
 /**
  * Builds the globally-ordered `UNION ALL` key stream that interleaves multiple sources by sort order.
  * Only primary keys and sort values are selected here; field values are fetched separately per page.
- * @internal
  */
 export function buildKeyStreamQuery(props: {
   plans: SourcePlan[];
@@ -125,7 +118,6 @@ export function buildKeyStreamQuery(props: {
 
 /**
  * Builds a group's value query restricted to a page of primary keys via an `IdSet` join.
- * @internal
  */
 export function buildValueQuery(props: {
   baseQuery: BaseQueryGroup;

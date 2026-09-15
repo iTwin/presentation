@@ -17,8 +17,6 @@ import type { ContentDescriptor } from "./model/ContentDescriptor.js";
  *
  * The descriptor is built lazily on the first `getContentDescriptor` call and cached; the
  * remaining methods are query-stage concerns handled by later pipeline stages.
- *
- * @internal
  */
 export function createContentProviderImpl(props: Props<typeof createContentProvider>): ContentProvider {
   const { imodelAccess, sources, config } = props;
