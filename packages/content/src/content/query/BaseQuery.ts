@@ -968,7 +968,7 @@ export async function buildTargetScopedQuery(props: {
     getPrefixKeys,
     resolvePathInfo: createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys }),
     // Join all paths (the selected field's own path plus filter-referenced ones) with outer joins, and
-    // evaluate every filter with join-and-compare — no grouping or existential subqueries.
+    // evaluate every filter with join-and-compare — no grouping, budgets, or existential subqueries.
     paths,
     joinType: "outer",
     includePrimaryFilters: true,
