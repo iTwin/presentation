@@ -75,12 +75,6 @@ interface GetDistinctFieldValuesProps {
 
 /**
  * Builds a single-target `SELECT DISTINCT <field selector>` query for `getDistinctFieldValues`.
- *
- * For a non-navigation field, this *is* the whole query. For a navigation field, it is instead built as
- * the inner half of {@link buildNavigationValuesQuery}: reducing to the distinct id set first — before
- * joining the (few) resulting ids to the navigation target class for their class name and label — keeps
- * the source scan as cheap as the non-navigation case, paying the join + label cost once per distinct
- * value rather than once per source row.
  */
 export async function buildDistinctValuesQuery(props: {
   schemaProvider: ECSchemaProvider;
@@ -114,8 +108,6 @@ export async function buildDistinctValuesQuery(props: {
   const bindings: Record<string, ECSqlBinding> = { ...parts.bindings };
   mergeBindings(bindings, resolved.bindings);
 
-  // Non-navigation: this selector *is* the query. Navigation: it's just the id reduction — the
-  // `.[Id]` member is aliased so the wrapping query below can reference it as a plain column.
   const innerSelector = navigationTargetClassName ? `${resolved.selector}.[Id] AS [id]` : resolved.selector;
   const innerEcsql = `SELECT DISTINCT ${innerSelector} ${parts.from} ${parts.joins}${parts.where ? ` ${parts.where}` : ""}`;
 
@@ -137,11 +129,6 @@ export async function buildDistinctValuesQuery(props: {
  * resolves, and outer, so an id with no matching instance (e.g. a dangling reference) still contributes
  * its row rather than being silently dropped; `rowValueToNavigationValue` then surfaces such a row the
  * same way as a `NULL` navigation value — as `undefined` — since `ec_classname` comes back `NULL` too.
- *
- * Deliberately a single query, not a second round trip: `getDistinctFieldValues` streams one query's
- * results as they arrive, and a separate lookup query would force buffering the entire id set in memory
- * first. Measurements also showed this single nested-subquery shape edges out an equivalent two-query
- * `IdSet`-bound lookup, on top of preserving the streaming behavior.
  */
 async function buildNavigationValuesQuery(props: {
   innerEcsql: string;
