@@ -755,13 +755,12 @@ function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
     SELECT [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]
     FROM ${ECSql.createClassSelector(a.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
     ${outerJoins.sql}
-    WHERE [${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
+    WHERE ${outerWhere.sql ? `(${outerWhere.sql}) AND ` : ""}[${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
       SELECT [${OVERLAP_OTHER_ALIAS}].[ECInstanceId]
       FROM ${ECSql.createClassSelector(b.primaryClass)} [${OVERLAP_OTHER_ALIAS}]
       ${innerJoins.sql}
       ${innerWhere.sql ? `WHERE ${innerWhere.sql}` : ""}
     )
-      ${outerWhere.sql ? ` AND ${outerWhere.sql}` : ""}
     LIMIT 1
   `;
   const bindings = { ...outerJoins.bindings, ...innerJoins.bindings };

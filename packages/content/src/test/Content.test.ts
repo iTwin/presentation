@@ -2304,6 +2304,26 @@ describe("resolveContentSources", () => {
       });
     });
 
+    it("groups an outer OR filter before intersecting scopes", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceFilter: { expression: "this.Prop = 'one' OR this.Prop = 'two'" },
+        },
+        { primaryClass: targetA.primaryClass, instanceFilter: { expression: "this.Prop = 'other'" } },
+      ];
+
+      await resolveContentSources({ imodelAccess, targets });
+
+      const query = vi
+        .mocked(imodelAccess.createQueryReader)
+        .mock.calls.find(([q]) => q.ecsql.includes("pres_other"))![0];
+      expect(query.ecsql.replace(/\s+/g, " ")).toContain(
+        "WHERE ([this].Prop = 'one' OR [this].Prop = 'two') AND [this].[ECInstanceId] IN",
+      );
+    });
+
     it("does not check targets whose resolvedPrimaryClasses are disjoint", async () => {
       const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x1" }] });
       const targets: ContentTarget[] = [targetA, { primaryClass: "TestSchema.ClassC" }];
