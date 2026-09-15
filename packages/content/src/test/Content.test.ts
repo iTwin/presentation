@@ -2227,8 +2227,8 @@ describe("resolveContentSources", () => {
       expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     });
 
-    it("throws for intersecting instanceIds sets without issuing a query", async () => {
-      const imodelAccess = createOverlapMockIModelAccess();
+    it("queries intersecting instanceIds so class and filter scopes are verified", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x2" }] });
       const targets: ContentTarget[] = [
         { primaryClass: targetA.primaryClass, instanceIds: ["0x1", "0x2"] },
         { primaryClass: targetA.primaryClass, instanceIds: ["0x2", "0x3"] },
@@ -2237,6 +2237,53 @@ describe("resolveContentSources", () => {
       await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
         "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x2 is in both. Merge the targets or make their scopes disjoint.",
       );
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+
+    it("does not throw when intersecting instanceIds are excluded by a target filter", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [] });
+      const targets: ContentTarget[] = [
+        {
+          primaryClass: targetA.primaryClass,
+          instanceIds: ["0x2"],
+          instanceFilter: { expression: "this.Prop = 'left'" },
+        },
+        {
+          primaryClass: targetA.primaryClass,
+          instanceIds: ["0x2"],
+          instanceFilter: { expression: "this.Prop = 'right'" },
+        },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
+    });
+
+    it("does not query when either instanceIds set is empty", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x2" }] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass, instanceIds: [] },
+        { primaryClass: targetA.primaryClass, instanceIds: ["0x2"] },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("does not query an unscoped target against an empty instanceIds set", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x2" }] });
+      const targets: ContentTarget[] = [
+        { primaryClass: targetA.primaryClass },
+        { primaryClass: targetA.primaryClass, instanceIds: [] },
+      ];
+
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
       expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     });
 
@@ -2368,10 +2415,8 @@ describe("resolveContentSources", () => {
       expect(countOverlapQueries(imodelAccess)).toBe(1);
     });
 
-    it("throws naming the unscoped-but-covering target's other side's first id, without a query", async () => {
-      // Target A names no `instanceIds`/`instanceFilter`, so it covers every instance of the (already
-      // known to intersect) shared class — any id target B names is therefore shared too.
-      const imodelAccess = createOverlapMockIModelAccess();
+    it("queries an unscoped target against named IDs to verify existence and class", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [{ 0: "0x7" }] });
       const targets: ContentTarget[] = [
         { primaryClass: targetA.primaryClass },
         { primaryClass: targetA.primaryClass, instanceIds: ["0x7", "0x8"] },
@@ -2380,20 +2425,20 @@ describe("resolveContentSources", () => {
       await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
         "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x7 is in both. Merge the targets or make their scopes disjoint.",
       );
-      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
     });
 
-    it("throws naming the scoped target's first id when the other target covers everything, without a query", async () => {
-      const imodelAccess = createOverlapMockIModelAccess();
+    it("does not throw when named IDs do not exist in the complete target scope", async () => {
+      const imodelAccess = createOverlapMockIModelAccess({ overlapQueryResults: [] });
       const targets: ContentTarget[] = [
         { primaryClass: targetA.primaryClass, instanceIds: ["0x9"] },
         { primaryClass: targetA.primaryClass },
       ];
 
-      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
-        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x9 is in both. Merge the targets or make their scopes disjoint.",
-      );
-      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+      const result = await resolveContentSources({ imodelAccess, targets });
+
+      expect(result).to.have.length(2);
+      expect(countOverlapQueries(imodelAccess)).toBe(1);
     });
   });
 });

@@ -784,26 +784,22 @@ function findOverlappingInstanceId({
   a: ContentTarget;
   b: ContentTarget;
 }): Observable<Id64String> {
-  // Cheap tiers avoid a query where the answer follows from the targets' shapes alone.
+  // Empty or disjoint ID sets prove that the scopes cannot overlap. A non-empty intersection does
+  // not prove overlap: the IDs may not exist, belong to another concrete class, or be excluded by a
+  // target filter, so every possible positive overlap must still be checked by ECSQL.
+  if (a.instanceIds?.length === 0 || b.instanceIds?.length === 0) {
+    return EMPTY;
+  }
   if (a.instanceIds && b.instanceIds) {
-    // Both scoped by `instanceIds` — intersect in JS.
     const bIds = new Set(b.instanceIds);
     const sharedId = a.instanceIds.find((id) => bIds.has(id));
-    return sharedId !== undefined ? of(sharedId) : EMPTY;
-  }
-  const aCoversAll = !a.instanceIds && !a.instanceFilter;
-  const bCoversAll = !b.instanceIds && !b.instanceFilter;
-  if (aCoversAll && b.instanceIds) {
-    // `a` is scoped by neither `instanceIds` nor `instanceFilter`, so it covers every instance of the
-    // (already known to intersect) shared class — any id `b` names is therefore shared too.
-    return of(b.instanceIds[0]);
-  }
-  if (bCoversAll && a.instanceIds) {
-    return of(a.instanceIds[0]);
+    if (sharedId === undefined) {
+      return EMPTY;
+    }
   }
 
-  // Anything else — `instanceFilter` on one or both sides, or neither side naming concrete ids — needs
-  // a query to know for sure.
+  // A query is required for every possible positive overlap so it can verify complete class and filter
+  // scopes, including instance existence and membership in the selected class.
   const reader = imodelAccess.createQueryReader(buildOverlapQuery(a, b), { rowFormat: "Indexes" });
   return from(reader).pipe(
     map((row) => row[0] as Id64String),
