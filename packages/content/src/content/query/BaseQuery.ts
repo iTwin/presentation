@@ -30,8 +30,8 @@ import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
  * Tables reserved for the `IdSet` join `buildValueQuery` (PageQueries.ts) appends when paging a group's
  * values by primary key — outside the joins `BaseQueryParts` itself renders, so nothing here otherwise
  * accounts for it. Every additional group's value query needs it, and so does the anchor's whenever
- * `pageMultiSourceSorted` pages it the same way; reserved unconditionally on both so a group packed to
- * exactly the JOIN-table limit still leaves room for it. Keep in sync with `buildValueQuery`.
+ * `pageMultiSourceSorted` pages it the same way. Primaries-only readers build directly from the anchor
+ * and do not append this join. Keep in sync with `buildValueQuery`.
  */
 const PAGE_ID_SET_JOIN_TABLES = 1;
 
@@ -259,7 +259,7 @@ export async function buildBaseQuery(
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
   const fixedReserves =
     1 +
-    PAGE_ID_SET_JOIN_TABLES +
+    (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) +
     (targetFilter.joins?.length ?? 0) +
     filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
   // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
