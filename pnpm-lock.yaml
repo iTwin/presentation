@@ -145,6 +145,10 @@ catalogs:
     '@itwin/itwinui-react':
       specifier: ^3.21.5
       version: 3.21.5
+  miscellaneous:
+    fast-xml-parser:
+      specifier: ^5.11.1
+      version: 5.11.1
   react:
     '@types/react':
       specifier: ^19.3.0
@@ -422,7 +426,7 @@ importers:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       fast-xml-parser:
-        specifier: ^5.11.1
+        specifier: catalog:miscellaneous
         version: 5.11.1
       happy-dom:
         specifier: catalog:test-tools
@@ -776,7 +780,7 @@ importers:
         specifier: catalog:build-tools
         version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       fast-xml-parser:
-        specifier: ^5.11.1
+        specifier: catalog:miscellaneous
         version: 5.11.1
       immer:
         specifier: ^10.2.0
@@ -1447,6 +1451,85 @@ importers:
         specifier: catalog:build-tools
         version: '@typescript/typescript6@6.0.2'
 
+  packages/tree-definitions:
+    dependencies:
+      '@itwin/core-bentley':
+        specifier: catalog:itwinjs-core
+        version: 5.13.1
+      '@itwin/core-common':
+        specifier: catalog:itwinjs-core
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1)
+      '@itwin/presentation-hierarchies':
+        specifier: workspace:*
+        version: link:../hierarchies
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../shared
+      rxjs:
+        specifier: catalog:rxjs
+        version: 7.8.2
+    devDependencies:
+      '@bentley/classification-systems-schema':
+        specifier: 1.0.4
+        version: 1.0.4
+      '@itwin/build-tools':
+        specifier: catalog:build-tools
+        version: 5.13.1(@types/node@24.13.4)(supports-color@8.1.1)
+      '@itwin/core-backend':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@itwin/core-frontend':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/appui-abstract@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/core-orbitgt@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@itwin/ecschema-rpcinterface-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))))
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-backend@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@itwin/ecschema-rpcinterface-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))))
+      '@itwin/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 6.1.0(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
+      '@itwin/presentation-backend':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-backend@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@itwin/presentation-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))))
+      '@itwin/presentation-common':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))
+      '@itwin/presentation-core-interop':
+        specifier: workspace:*
+        version: link:../core-interop
+      '@itwin/presentation-frontend':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(8971f641df6ef7283255c431090bd7ca)
+      '@types/node':
+        specifier: catalog:build-tools
+        version: 24.13.4
+      '@typescript/native':
+        specifier: catalog:build-tools
+        version: typescript@7.0.2
+      eslint:
+        specifier: catalog:build-tools
+        version: 9.39.5(supports-color@8.1.1)
+      fast-xml-parser:
+        specifier: catalog:miscellaneous
+        version: 5.11.1
+      happy-dom:
+        specifier: catalog:test-tools
+        version: 20.14.5
+      presentation-test-utilities:
+        specifier: workspace:*
+        version: link:../test-utilities
+      rimraf:
+        specifier: catalog:build-tools
+        version: 6.1.3
+      typescript:
+        specifier: catalog:build-tools
+        version: '@typescript/typescript6@6.0.2'
+      vitest:
+        specifier: catalog:test-tools
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
+
   packages/unified-selection:
     dependencies:
       '@itwin/core-bentley':
@@ -1709,6 +1792,9 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
+
+  '@bentley/classification-systems-schema@1.0.4':
+    resolution: {integrity: sha512-JLomG5uiTbDo6vfDI4cPxNT/ouiPjhNtvm5Dce2rfR1Ck3V4mqEsSY6iCkDBi0PPAQzxrVU7mbLBegJLZ8XG6g==}
 
   '@bentley/functional-schema@1.0.4':
     resolution: {integrity: sha512-hQyFrJ6EgWQhvKl1vp7tU9xDEHAJ4bg/pEJ+MLGSjbSX0bL3jHr/rocCSMiZ6Lt7Iye8jTG+6FAajm7w6DUfcQ==}
@@ -2246,9 +2332,6 @@ packages:
     peerDependenciesMeta:
       '@opentelemetry/api':
         optional: true
-
-  '@itwin/core-bentley@5.12.5':
-    resolution: {integrity: sha512-MZ/rbMqycDthKLPeDw1VDck2Zr2Js63uTiFDWy3ZcF3qPulzPw71T3Azh5AOBWX6s8adjBsleqzPI09Flavk+w==}
 
   '@itwin/core-bentley@5.13.1':
     resolution: {integrity: sha512-2ysOpHfM5UF/xPCyTFkwCidLe4RXF7pLvql9k5SFnz/nlB8ctSiGb8vXHAdZxN3dud2RFTXzSC3ypIQs1s0yBQ==}
@@ -7523,6 +7606,8 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
+  '@bentley/classification-systems-schema@1.0.4': {}
+
   '@bentley/functional-schema@1.0.4': {}
 
   '@bentley/icons-generic-webfont@1.0.34': {}
@@ -8216,8 +8301,6 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/core-bentley@5.12.5': {}
-
   '@itwin/core-bentley@5.13.1': {}
 
   '@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1)':
@@ -8435,11 +8518,11 @@ snapshots:
 
   '@itwin/presentation-shared@1.2.19':
     dependencies:
-      '@itwin/core-bentley': 5.12.5
+      '@itwin/core-bentley': 5.13.1
 
   '@itwin/unified-selection@1.8.4':
     dependencies:
-      '@itwin/core-bentley': 5.12.5
+      '@itwin/core-bentley': 5.13.1
       '@itwin/presentation-shared': 1.2.19
       rxjs: 7.8.2
       rxjs-for-await: 1.0.0(rxjs@7.8.2)
@@ -9434,7 +9517,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
 
   '@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1))(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
@@ -10130,7 +10213,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
 
   bytes@3.1.2: {}
 
@@ -12381,7 +12464,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
       long: 5.3.2
 
   protocols@2.0.2: {}
