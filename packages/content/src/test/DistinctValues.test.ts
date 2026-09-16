@@ -16,6 +16,7 @@ import type {
   ECSqlQueryExecutor,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
+  ConcatenatedValue,
   RelationshipPath,
   Value,
   ValueDescriptor,
@@ -270,6 +271,7 @@ describe("getDistinctFieldValues", () => {
     });
 
     it("yields the target instances' keys and labels", async () => {
+      const concatenatedLabel: ConcatenatedValue = [{ type: "String", value: "Target" }, " 2"];
       const imodelAccess = createMockIModelAccess({
         rowsByMarker: new Map([
           [
@@ -277,7 +279,7 @@ describe("getDistinctFieldValues", () => {
             [
               { 0: "0x1", 1: "TestSchema.Target", 2: "Target 1" },
               // A JSON label selector's result is parsed back into a `ConcatenatedValue`.
-              { 0: "0x2", 1: "TestSchema.SubTarget", 2: `[{"type":"String","value":"Target"}," 2"]` },
+              { 0: "0x2", 1: "TestSchema.SubTarget", 2: JSON.stringify(concatenatedLabel) },
             ],
           ],
         ]),
@@ -289,7 +291,7 @@ describe("getDistinctFieldValues", () => {
 
       expect(results).to.deep.equal([
         { key: { className: "TestSchema.Target", id: "0x1" }, label: "Target 1" },
-        { key: { className: "TestSchema.SubTarget", id: "0x2" }, label: [{ type: "String", value: "Target" }, " 2"] },
+        { key: { className: "TestSchema.SubTarget", id: "0x2" }, label: concatenatedLabel },
       ]);
     });
 
@@ -396,7 +398,7 @@ describe("buildDistinctValuesQuery", () => {
   it("builds a SELECT DISTINCT for a direct property with no filters (omitted)", async () => {
     const field = makePropertyField({ propertyName: "Name" });
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field });
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
 
     expect(trimWhitespace(query.ecsql)).to.equal(`SELECT DISTINCT [this].[Name] FROM [TestSchema].[Primary] [this]`);
     expect(query.bindings).to.be.undefined;
@@ -411,7 +413,7 @@ describe("buildDistinctValuesQuery", () => {
       valueClassNames: ["TestSchema.Target"],
     });
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters: [] });
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters: [], labelsFactory });
 
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
@@ -438,7 +440,7 @@ describe("buildDistinctValuesQuery", () => {
       selectorId: "calc",
     };
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field });
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
 
     expect(trimWhitespace(query.ecsql)).to.equal(
       `SELECT DISTINCT ([this].CodeValue || :scale) FROM [TestSchema].[Primary] [this]`,
@@ -476,21 +478,17 @@ describe("buildDistinctValuesQuery", () => {
     const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters, labelsFactory });
 
     expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
-    expect(trimWhitespace(query.ecsql)).to.contain(`WHERE [this].[Category] = :${ECSQL_PREFIX}vf0`);
-  });
-
-  it("defaults to a class-metadata-based label clause when called directly without a `labelsFactory`", async () => {
-    // `getDistinctFieldValues` always supplies its own default (`createIModelInstanceLabelSelectClauseFactory`);
-    // `buildDistinctValuesQuery`'s own fallback (`createDefaultInstanceLabelSelectClauseFactory`) only
-    // applies to direct use of the query builder itself, with no query executor available.
-    const field = makePropertyField({
-      propertyName: "Parent",
-      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
-    });
-
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field });
-
-    expect(query.ecsql).to.include("[meta].[ECClassDef]");
+    expect(trimWhitespace(query.ecsql)).to.equal(
+      trimWhitespace(`
+        SELECT [navIds].[id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
+        FROM (
+          SELECT DISTINCT [this].[Parent].[Id] AS [id]
+          FROM [TestSchema].[Primary] [this]
+          WHERE [this].[Category] = :${ECSQL_PREFIX}vf0
+        ) [navIds]
+        LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]
+      `),
+    );
   });
 
   it("wraps the inner query's own related path joins when the navigation property itself is related", async () => {
@@ -505,13 +503,21 @@ describe("buildDistinctValuesQuery", () => {
 
     const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
 
-    // The related path's own join stays inside the inner (now-wrapped) query; the outer query joins the
-    // navigation target class to the inner query's `id` column, not to the related alias directly.
-    expect(trimWhitespace(query.ecsql)).to.contain(
-      trimWhitespace(`SELECT DISTINCT [${ECSQL_PREFIX}t0].[Parent].[Id] AS [id]`),
-    );
-    expect(trimWhitespace(query.ecsql)).to.contain(
-      trimWhitespace(`LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]`),
+    expect(trimWhitespace(query.ecsql)).to.equal(
+      trimWhitespace(`
+        SELECT [navIds].[id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
+        FROM (
+          SELECT DISTINCT [${ECSQL_PREFIX}t0].[Parent].[Id] AS [id]
+          FROM [TestSchema].[Primary] [this]
+          LEFT OUTER JOIN (
+            SELECT [${ECSQL_PREFIX}r0].*
+            FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Other] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+          ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
+          LEFT OUTER JOIN [TestSchema].[Other] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+        ) [navIds]
+        LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]
+      `),
     );
   });
 
@@ -536,7 +542,7 @@ describe("buildDistinctValuesQuery", () => {
   it("selects a whole point column", async () => {
     const field = makePropertyField({ propertyName: "Location", type: { kind: "primitive", type: "Point3d" } });
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field });
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory });
 
     expect(trimWhitespace(query.ecsql)).to.equal(
       `SELECT DISTINCT [this].[Location] FROM [TestSchema].[Primary] [this]`,
@@ -549,7 +555,7 @@ describe("buildDistinctValuesQuery", () => {
   ])("rejects $expectedKind fields with a distinct-values-specific error", async ({ type, expectedKind }) => {
     const field = makePropertyField({ propertyName: "Composite", type });
 
-    await expect(buildDistinctValuesQuery({ schemaProvider, target, field })).rejects.toThrow(
+    await expect(buildDistinctValuesQuery({ schemaProvider, target, field, labelsFactory })).rejects.toThrow(
       `Getting distinct values for ${expectedKind} fields is not supported.`,
     );
   });
@@ -565,7 +571,13 @@ describe("buildDistinctValuesQuery", () => {
     });
     const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field: directField, filters });
+    const query = await buildDistinctValuesQuery({
+      schemaProvider,
+      target,
+      field: directField,
+      filters,
+      labelsFactory,
+    });
 
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
@@ -594,7 +606,13 @@ describe("buildDistinctValuesQuery", () => {
     });
     const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field: directField, filters });
+    const query = await buildDistinctValuesQuery({
+      schemaProvider,
+      target,
+      field: directField,
+      filters,
+      labelsFactory,
+    });
 
     // Unlike `buildBaseQuery` — which spills 1:many filter paths into correlated subqueries to avoid
     // duplicating primary rows — a 1:many path is joined and compared directly here, because
@@ -625,7 +643,7 @@ describe("buildDistinctValuesQuery", () => {
     });
     const filters: ContentValueFilter[] = [{ field, operator: "is-not-null" }];
 
-    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters });
+    const query = await buildDistinctValuesQuery({ schemaProvider, target, field, filters, labelsFactory });
 
     // The path is joined exactly once even though both the selector and the filter reference it.
     expect(trimWhitespace(query.ecsql)).to.equal(
@@ -650,6 +668,7 @@ describe("buildDistinctValuesQuery", () => {
       schemaProvider,
       target: { primaryClass, instanceIds: ["0x1"], instanceFilter: { expression: "this.Area > 5" } },
       field,
+      labelsFactory,
     });
 
     expect(trimWhitespace(query.ecsql)).to.equal(

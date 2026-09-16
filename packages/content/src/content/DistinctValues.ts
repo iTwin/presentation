@@ -5,7 +5,6 @@
 
 import { distinct, finalize, from, map, mergeMap } from "rxjs";
 import {
-  createDefaultInstanceLabelSelectClauseFactory,
   createIModelInstanceLabelSelectClauseFactory,
   eachValueFrom,
   ECSql,
@@ -81,7 +80,7 @@ export async function buildDistinctValuesQuery(props: {
   target: ContentTarget;
   field: PropertyField | CalculatedField;
   filters?: ContentValueFilter[];
-  labelsFactory?: IInstanceLabelSelectClauseFactory;
+  labelsFactory: IInstanceLabelSelectClauseFactory;
 }): Promise<ECSqlQueryDef> {
   const { schemaProvider, target, field } = props;
   const filters = props.filters ?? [];
@@ -118,7 +117,7 @@ export async function buildDistinctValuesQuery(props: {
   const ecsql = await buildNavigationValuesQuery({
     innerEcsql,
     targetClassName: navigationTargetClassName,
-    labelsFactory: props.labelsFactory ?? createDefaultInstanceLabelSelectClauseFactory(),
+    labelsFactory: props.labelsFactory,
   });
   return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : undefined) };
 }
