@@ -67,4 +67,22 @@ describe("collectExternalFields", () => {
       { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path },
     ]);
   });
+
+  it("carries an input's cardinalityHint through", () => {
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
+    ];
+    const provider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [],
+      inputs: { related: { propertyClassName: "TestSchema.B", propertyName: "Name", path, cardinalityHint: "many" } },
+      async getValues() {
+        return [];
+      },
+    });
+    const { inputs } = collectExternalFields([provider]);
+    expect(inputs).to.deep.equal([
+      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path, cardinalityHint: "many" },
+    ]);
+  });
 });

@@ -29,6 +29,7 @@ export function createSource(props: {
     resolvedDeclarations: props.resolvedPaths.length
       ? [{ providerId: "test_v1", declarationIndex: 0, paths: props.resolvedPaths }]
       : [],
+    externalInputPaths: [],
   };
 }
 

@@ -8,7 +8,6 @@ import { ECSQL_PREFIX, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "..
 import type { ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../ContentTarget.js";
 
-/** @internal */
 export const TARGET_FILTER_JOIN_ALIAS = `${ECSQL_PREFIX}TargetInstanceIds`;
 
 /**
@@ -18,8 +17,6 @@ export const TARGET_FILTER_JOIN_ALIAS = `${ECSQL_PREFIX}TargetInstanceIds`;
  * generated queries. Pass a different alias when the target is scoped to a different alias in the
  * same query (e.g. the inner scope of a two-target overlap check); the join's own alias and binding
  * name are suffixed with it so two calls in one query never collide.
- *
- * @internal
  */
 export function buildTargetFilter(
   target: ContentTarget,
