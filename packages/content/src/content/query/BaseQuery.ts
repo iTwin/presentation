@@ -172,6 +172,7 @@ export async function buildBaseQuery(
   // joins exactly them, while related-columns force-joins them onto the anchor so a filtered path's
   // predicate is still evaluable even when its selected columns are owned by an additional group.
   const filterPaths = collectFilterPaths(filters);
+  const filterCardinalityHints = collectFilterPathCardinalities(filters);
   const sortPaths = collectSortPaths(
     (props.sortFields ?? []).filter((field): field is PropertyField => field.kind === "property"),
   );
@@ -187,7 +188,7 @@ export async function buildBaseQuery(
       cardinality = await classifyPathCardinality({
         schemaProvider,
         path,
-        cardinalityHint: includeRelatedJoins ? props.cardinalityHints?.get(key) : undefined,
+        cardinalityHint: includeRelatedJoins ? props.cardinalityHints?.get(key) : filterCardinalityHints.get(key),
       });
       cardinalityCache.set(key, cardinality);
     }
@@ -479,6 +480,21 @@ function collectFilterPaths(filters: ContentValueFilter[]): RelationshipPath[] {
   return collectSortPaths(
     filters.map(({ field }) => field).filter((field): field is PropertyField => field.kind === "property"),
   );
+}
+
+/** Collects effective cardinality hints for paths referenced by property filters. */
+function collectFilterPathCardinalities(filters: ContentValueFilter[]): Map<string, CardinalityHint> {
+  const hints = new Map<string, CardinalityHint>();
+  for (const { field } of filters) {
+    if (field.kind !== "property" || field.pathFromTarget.length === 0) {
+      continue;
+    }
+    const key = serializeRelationshipPath({ path: field.pathFromTarget });
+    if (!hints.has(key) || field.pathCardinality === "many") {
+      hints.set(key, field.pathCardinality);
+    }
+  }
+  return hints;
 }
 
 /** Collects the distinct related paths that must be joined by the anchor to evaluate sort keys. */

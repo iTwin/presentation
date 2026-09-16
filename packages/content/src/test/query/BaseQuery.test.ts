@@ -964,6 +964,30 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
     });
 
+    it("uses a filter field's many-valued path hint", async () => {
+      const path = makeOneToOnePath();
+      const field = { ...makeOneToOneNameField(path), pathCardinality: "many" as const };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: false,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      expect(result.anchor.parts.joins).to.equal("");
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          WHERE EXISTS (
+            SELECT 1
+            FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+            WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0)
+          )
+        `),
+      );
+    });
+
     it("de-duplicates filter-referenced paths and ignores direct fields", async () => {
       const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const relatedField = makePropertyField({
