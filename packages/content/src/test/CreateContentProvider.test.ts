@@ -66,9 +66,10 @@ describe("createContentProvider", () => {
       expect(descriptor.sources).to.equal(sources);
     });
 
-    it("builds the descriptor lazily and caches it across calls", async () => {
+    it("builds the content definition lazily and reuses it across descriptor calls", async () => {
       const buildDefinitionSpy = vi.spyOn(BuildContentDefinition, "buildContentDefinition");
       const provider = createContentProvider({ imodelAccess, sources: [createSource("Schema.A")] });
+      expect(buildDefinitionSpy).not.toHaveBeenCalled();
       const first = await provider.getContentDescriptor();
       const second = await provider.getContentDescriptor();
       expect(first).to.equal(second);

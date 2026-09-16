@@ -4,10 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import {
-  buildContentDefinition,
-  buildContentDescriptor,
-} from "../../content/definition-building/BuildContentDefinition.js";
+import { buildContentDefinition } from "../../content/definition-building/BuildContentDefinition.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
@@ -30,7 +27,7 @@ function createSource(
   return { target: { primaryClass }, resolvedPrimaryClasses, resolvedDeclarations: [] };
 }
 
-describe("buildContentDescriptor", () => {
+describe("buildContentDefinition", () => {
   it("carries the sources and enumerates direct property fields", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
@@ -40,7 +37,7 @@ describe("buildContentDescriptor", () => {
     ]);
     const sources = [createSource("TestSchema.A")];
 
-    const descriptor = await buildContentDescriptor({ imodelAccess, sources });
+    const { descriptor } = await buildContentDefinition({ imodelAccess, sources });
 
     expect(descriptor.sources).to.equal(sources);
     expect(Object.keys(descriptor.fields)).to.deep.equal(["TestSchema.A.Prop"]);
@@ -60,7 +57,7 @@ describe("buildContentDescriptor", () => {
     ]);
     const sources = [createSource("TestSchema.Door"), createSource("TestSchema.Window")];
 
-    const descriptor = await buildContentDescriptor({ imodelAccess, sources });
+    const { descriptor } = await buildContentDefinition({ imodelAccess, sources });
 
     expect(Object.keys(descriptor.fields)).to.deep.equal(["BisCore.Element.UserLabel"]);
     const field = descriptor.fields["BisCore.Element.UserLabel"] as PropertyField;
@@ -69,7 +66,7 @@ describe("buildContentDescriptor", () => {
 
   it("returns no fields when the primary class has no properties", async () => {
     const imodelAccess = createSchemaAccess([createEntityClass({ fullName: "TestSchema.Empty" })]);
-    const descriptor = await buildContentDescriptor({ imodelAccess, sources: [createSource("TestSchema.Empty")] });
+    const { descriptor } = await buildContentDefinition({ imodelAccess, sources: [createSource("TestSchema.Empty")] });
     expect(descriptor.fields).to.deep.equal({});
   });
 
@@ -92,7 +89,7 @@ describe("buildContentDescriptor", () => {
       }),
     ]);
 
-    const descriptor = await buildContentDescriptor({
+    const { descriptor } = await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.Pump"), createSource("TestSchema.Valve")],
     });
@@ -145,7 +142,7 @@ describe("buildContentDescriptor", () => {
       ],
     };
 
-    const descriptor = await buildContentDescriptor({
+    const { descriptor } = await buildContentDefinition({
       imodelAccess,
       sources: [source],
       config: { imodelFieldsProviders: [provider] },
@@ -204,7 +201,7 @@ describe("buildContentDescriptor", () => {
 
     it("classifies from schema multiplicity when the declaration gives no hint", async () => {
       const provider = createRelatedPropertiesProvider();
-      const descriptor = await buildContentDescriptor({
+      const { descriptor } = await buildContentDefinition({
         imodelAccess: createRelatedPropertiesSchemaAccess("many"),
         sources: [createContentSource(provider)],
         config: { imodelFieldsProviders: [provider] },
@@ -218,7 +215,7 @@ describe("buildContentDescriptor", () => {
 
     it("carries a declaration's hint through to the enumerated field", async () => {
       const provider = createRelatedPropertiesProvider("one");
-      const descriptor = await buildContentDescriptor({
+      const { descriptor } = await buildContentDefinition({
         imodelAccess: createRelatedPropertiesSchemaAccess("many"),
         sources: [createContentSource(provider)],
         config: { imodelFieldsProviders: [provider] },
@@ -234,7 +231,7 @@ describe("buildContentDescriptor", () => {
           properties: [createPrimitiveProperty({ name: "Direct", declaringClass: "TestSchema.A" })],
         }),
       ]);
-      const descriptor = await buildContentDescriptor({ imodelAccess, sources: [createSource("TestSchema.A")] });
+      const { descriptor } = await buildContentDefinition({ imodelAccess, sources: [createSource("TestSchema.A")] });
       expect((descriptor.fields["TestSchema.A.Direct"] as PropertyField).pathCardinality).to.equal("one");
     });
   });
@@ -314,7 +311,7 @@ describe("buildContentDescriptor", () => {
       },
     };
 
-    const descriptor = await buildContentDescriptor({
+    const { descriptor } = await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
       config: { descriptorTransformers: [transformer] },
@@ -351,7 +348,7 @@ describe("buildContentDescriptor", () => {
       },
     };
 
-    await buildContentDescriptor({
+    await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
       config: { descriptorTransformers: [high, unset, low] },

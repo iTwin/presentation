@@ -129,15 +129,3 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
 
   return { descriptor, selectors, fieldSelectorIds, externalInputs };
 }
-
-/**
- * Builds a {@link (ContentDescriptor:interface)} from pre-resolved content sources (Stage 2 of the
- * content pipeline).
- *
- * Re-calls providers (cheap — no data queries) to recover declaration metadata, reads EC schema
- * metadata to enumerate direct and related property fields, appends calculated and external fields,
- * resolves categories, runs descriptor transformers, and assembles the value selectors.
- */
-export async function buildContentDescriptor(props: BuildContentDefinitionProps): Promise<ContentDescriptor> {
-  return (await buildContentDefinition(props)).descriptor;
-}
