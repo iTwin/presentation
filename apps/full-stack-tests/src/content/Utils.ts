@@ -94,13 +94,20 @@ export function getPropertyFieldByName(descriptor: Descriptor, propertyName: str
  * fields that share a property name but reach it via different paths.
  */
 export function getPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath = []): PropertyField[] {
+  const withoutInstanceFilters = (relationshipPath: RelationshipPath): RelationshipPath =>
+    relationshipPath.map(({ instanceFilter: _instanceFilter, ...step }) => step);
+  const expectedPath = withoutInstanceFilters(path);
   return getPropertyFields(descriptor).filter(
     (f) =>
-      f.id ===
       PropertyField.computeId({
         propertyClassName: f.propertyClassName,
         propertyName: f.propertyName,
-        pathFromTarget: path,
+        pathFromTarget: withoutInstanceFilters(f.pathFromTarget),
+      }) ===
+      PropertyField.computeId({
+        propertyClassName: f.propertyClassName,
+        propertyName: f.propertyName,
+        pathFromTarget: expectedPath,
       }),
   );
 }

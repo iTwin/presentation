@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PropertyField } from "./Field.js";
+import { serializeRelationshipPath } from "./Utils.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CalculatedField } from "./Field.js";
+import type { CalculatedField, PropertyField } from "./Field.js";
 
 /**
  * A deduplicated instruction for selecting one raw value (column) from the iModel.
@@ -36,9 +36,9 @@ export interface PropertyValueSelector extends Pick<
 > {
   kind: "property";
   /**
-   * Stable column identity — equals a property field's *base* id (its
-   * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so every fork/override
-   * variant of the same underlying property collapses to one selector id.
+   * Stable column identity. For a direct property, this matches the base property-field id; for a
+   * related property, it also includes the relationship path and any step instance filters/bindings so
+   * distinct filtered paths do not collapse into one selector.
    */
   id: string;
 }
@@ -59,8 +59,10 @@ export interface CalculatedValueSelector extends Pick<CalculatedField, "expressi
 }
 
 /**
- * Computes the stable id of a {@link PropertyValueSelector} — the *base* id of the property field(s)
- * that read this column. A thin wrapper over `PropertyField.computeId` with no `forkKey`.
+ * Computes the stable id of a {@link PropertyValueSelector}. Unlike field IDs, selector IDs must also
+ * distinguish property reads that follow the same relationship path but different step instance
+ * filters or binding values, because those columns are not interchangeable for external-provider
+ * inputs and other deduplicated value lookups.
  *
  * @internal
  */
@@ -69,5 +71,9 @@ export function computePropertySelectorId(props: {
   propertyName: string;
   pathFromTarget?: RelationshipPath;
 }): ValueSelector["id"] {
-  return PropertyField.computeId(props);
+  let identity = `${props.propertyClassName}.${props.propertyName}`;
+  if (props.pathFromTarget && props.pathFromTarget.length > 0) {
+    identity += `(${serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true })})`;
+  }
+  return identity;
 }
