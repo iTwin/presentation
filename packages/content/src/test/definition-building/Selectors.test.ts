@@ -130,6 +130,19 @@ describe("ValueSelector", () => {
       });
     });
 
+    it("reuses the field-backed selector for an external input matching a field (no duplicate)", () => {
+      const prop = propertyField({
+        propertyClassName: "Stuff.Thing",
+        propertyName: "Height",
+        valueClassNames: ["Stuff.Door"],
+      });
+      const { selectors } = collectValueRequirements({
+        fields: [prop],
+        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
+      });
+      expect(Object.keys(selectors)).to.deep.equal([prop.id]);
+    });
+
     it("keeps selector ids distinct for the same property reached through different filtered paths", () => {
       const pathA = [
         {
@@ -162,19 +175,6 @@ describe("ValueSelector", () => {
       expect(idA).to.not.equal(idB);
       expect(idA).to.contain("Kind = 1");
       expect(idB).to.contain("Kind = 2");
-    });
-
-    it("reuses the field-backed selector for an external input matching a field (no duplicate)", () => {
-      const prop = propertyField({
-        propertyClassName: "Stuff.Thing",
-        propertyName: "Height",
-        valueClassNames: ["Stuff.Door"],
-      });
-      const { selectors } = collectValueRequirements({
-        fields: [prop],
-        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
-      });
-      expect(Object.keys(selectors)).to.deep.equal([prop.id]);
     });
 
     it("drops a removed output field's selector on recompute, but keeps it when it is also an external input (pinning replacement)", () => {
