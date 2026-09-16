@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 // cspell:words ecdbmap
-/* eslint-disable @typescript-eslint/naming-convention */
 
 import { XMLParser } from "fast-xml-parser";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -34,35 +33,35 @@ export async function buildIModel<TResult extends object | undefined>(
 
 class TestIModelConnection extends IModelConnection {
   constructor(
-    private readonly db: IModelDb,
-    private readonly directory: string,
+    private readonly _db: IModelDb,
+    private readonly _directory: string,
   ) {
     // eslint-disable-next-line @itwin/no-internal
-    super(db.getConnectionProps());
+    super(_db.getConnectionProps());
     IModelConnection.onOpen.raiseEvent(this);
   }
 
   public override get isClosed(): boolean {
     // eslint-disable-next-line @itwin/no-internal
-    return !this.db.isOpen;
+    return !this._db.isOpen;
   }
 
   // Access the in-process backend directly so tests don't need the internal IModelReadRpcInterface.
   public override createQueryReader(...args: Parameters<IModelConnection["createQueryReader"]>) {
-    return this.db.createQueryReader(...args);
+    return this._db.createQueryReader(...args);
   }
 
   public override async getSchemaView(
     ...args: Parameters<IModelConnection["getSchemaView"]>
   ): ReturnType<IModelConnection["getSchemaView"]> {
-    return this.db.getSchemaView(...args);
+    return this._db.getSchemaView(...args);
   }
 
   public override async close(): Promise<void> {
-    this.db.close();
+    this._db.close();
     this.onClose.raiseEvent(this);
     IModelConnection.onClose.raiseEvent(this);
-    rmSync(this.directory, { recursive: true, force: true });
+    rmSync(this._directory, { recursive: true, force: true });
   }
 }
 
