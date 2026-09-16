@@ -47,6 +47,17 @@ class TestIModelConnection extends IModelConnection {
     return !this.db.isOpen;
   }
 
+  // Access the in-process backend directly so tests don't need the internal IModelReadRpcInterface.
+  public override createQueryReader(...args: Parameters<IModelConnection["createQueryReader"]>) {
+    return this.db.createQueryReader(...args);
+  }
+
+  public override async getSchemaView(
+    ...args: Parameters<IModelConnection["getSchemaView"]>
+  ): ReturnType<IModelConnection["getSchemaView"]> {
+    return this.db.getSchemaView(...args);
+  }
+
   public override async close(): Promise<void> {
     this.db.close();
     this.onClose.raiseEvent(this);

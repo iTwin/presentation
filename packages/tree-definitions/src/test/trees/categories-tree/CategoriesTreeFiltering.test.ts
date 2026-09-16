@@ -8,10 +8,6 @@ import { firstValueFrom, toArray } from "rxjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { IModelReadRpcInterface } from "@itwin/core-common";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
@@ -22,7 +18,7 @@ import {
 } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 import { CategoriesTreeIdsCache } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsCache.js";
 import { buildIModel } from "../../IModelUtils.js";
-import { initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
 
@@ -36,15 +32,11 @@ import type { CategoriesTreeHierarchyConfiguration } from "../../../tree-definit
 describe("Categories tree", () => {
   describe("Hierarchy search", () => {
     beforeAll(async () => {
-      await initializeCore({
-        rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
-      });
-      // eslint-disable-next-line @itwin/no-internal
-      ECSchemaRpcImpl.register();
+      await initializeITwinJs();
     });
 
     afterAll(async () => {
-      await terminateCore();
+      await terminateITwinJs();
     });
 
     describe("label search limits", () => {

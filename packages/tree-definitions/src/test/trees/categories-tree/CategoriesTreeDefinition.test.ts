@@ -6,10 +6,7 @@
 import { insertSubCategory } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { IModel, IModelReadRpcInterface } from "@itwin/core-common";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { PresentationRpcInterface } from "@itwin/presentation-common";
+import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
@@ -20,7 +17,7 @@ import {
 } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 import { CategoriesTreeIdsCache } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsCache.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
-import { initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
@@ -33,15 +30,11 @@ import type { CategoriesTreeHierarchyConfiguration } from "../../../tree-definit
 describe("Categories tree", () => {
   describe("Hierarchy definition", () => {
     beforeAll(async () => {
-      await initializeCore({
-        rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
-      });
-      // eslint-disable-next-line @itwin/no-internal
-      ECSchemaRpcImpl.register();
+      await initializeITwinJs();
     });
 
     afterAll(async () => {
-      await terminateCore();
+      await terminateITwinJs();
     });
 
     ["2d" as const, "3d" as const].forEach((viewType) => {

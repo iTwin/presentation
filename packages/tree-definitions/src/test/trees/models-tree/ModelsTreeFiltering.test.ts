@@ -16,16 +16,13 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { IModel, IModelReadRpcInterface } from "@itwin/core-common";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { PresentationRpcInterface } from "@itwin/presentation-common";
+import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
 import { ModelsTreeDefinition } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 import { buildIModel } from "../../IModelUtils.js";
-import { initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createAccessAndCache, createClassGroupingHierarchyNode } from "./Utils.js";
 
@@ -89,15 +86,11 @@ namespace TreeSearchTestCaseDefinition {
 describe("Models tree", () => {
   describe("Hierarchy search", () => {
     beforeAll(async () => {
-      await initializeCore({
-        rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
-      });
-      // eslint-disable-next-line @itwin/no-internal
-      ECSchemaRpcImpl.register();
+      await initializeITwinJs();
     });
 
     afterAll(async () => {
-      await terminateCore();
+      await terminateITwinJs();
     });
 
     describe("label search limits", () => {
