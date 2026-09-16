@@ -221,6 +221,9 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
                 }),
               });
               classificationEntry.parentClassificationOrTableId = tableOrParentId;
+              // Child classification might have been returned first and set the relatedCategories to an empty array,
+              // change it with the actual related categories from the current row.
+              classificationEntry.relatedCategories = relatedCategories;
               return acc;
             },
             {
