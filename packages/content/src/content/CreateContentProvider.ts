@@ -6,6 +6,7 @@
 import { buildContentDefinition } from "./definition-building/BuildContentDefinition.js";
 import { getInstanceKeys } from "./query/GetInstanceKeys.js";
 import { getSize } from "./query/GetSize.js";
+import { getItems } from "./query/value-loading/GetItems.js";
 
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";
@@ -16,8 +17,6 @@ import type { ContentDefinition } from "./definition-building/BuildContentDefini
  *
  * The descriptor is built lazily on the first `getContentDescriptor` call and cached; the
  * remaining methods are query-stage concerns handled by later pipeline stages.
- *
- * @internal
  */
 export function createContentProviderImpl(props: Props<typeof createContentProvider>): ContentProvider {
   const { imodelAccess, sources, config } = props;
@@ -26,6 +25,7 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
     definition ??= buildContentDefinition({ imodelAccess, sources, config });
     return definition;
   }
+
   return {
     async getContentDescriptor() {
       const contentDefinition = await getContentDefinition();
@@ -42,9 +42,15 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
         filters: options?.filters,
       });
     },
-    /* v8 ignore next 3 */
-    getItems() {
-      throw new Error("Not implemented");
+    getItems(options) {
+      return getItems({
+        imodelAccess,
+        getContentDefinition,
+        sources,
+        queryFilterers: config?.queryFilterers,
+        filters: options?.filters,
+        sorting: options?.sorting,
+      });
     },
   };
 }
