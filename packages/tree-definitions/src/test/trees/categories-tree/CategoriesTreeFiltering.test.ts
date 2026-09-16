@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubCategory } from "presentation-test-utilities";
+import { firstValueFrom, toArray } from "rxjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
@@ -125,6 +126,24 @@ describe("Categories tree", () => {
       describe(`${viewType} view`, () => {
         const { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement } =
           getInsertFunctionByViewType(viewType);
+
+        it("does not emit search paths for a hidden default subcategory", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) =>
+            withEditTxn(imodel, (txn) => {
+              const elementsModel = insertElementsModel({ txn, codeValue: "model" });
+              const category = insertCategory({ txn, codeValue: "category" });
+              insertElement({ txn, modelId: elementsModel.id, categoryId: category.id });
+              return { category };
+            }),
+          );
+          const { imodelConnection, ...keys } = buildIModelResult;
+          const { idsCache } = createCategoriesTreeSearchProps({ imodelConnection, searchText: "category", viewType });
+          const subCategoryIds = await firstValueFrom(idsCache.getSubCategories({ categoryId: keys.category.id }));
+
+          expect(subCategoryIds).toHaveLength(1);
+          const paths = await firstValueFrom(idsCache.getSubCategoriesSearchPaths({ subCategoryIds }).pipe(toArray()));
+          expect(paths).toEqual([]);
+        });
 
         it("finds definition container by label", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>

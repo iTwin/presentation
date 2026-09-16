@@ -3,21 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  defaultIfEmpty,
-  defer,
-  EMPTY,
-  forkJoin,
-  from,
-  map,
-  merge,
-  mergeMap,
-  of,
-  reduce,
-  shareReplay,
-  tap,
-  toArray,
-} from "rxjs";
+import { defer, EMPTY, forkJoin, from, map, merge, mergeMap, of, reduce, shareReplay, tap, toArray } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
 import {
@@ -494,7 +480,6 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
           ),
         );
       }),
-      defaultIfEmpty([]),
     );
   }
 
