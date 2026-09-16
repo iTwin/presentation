@@ -19,7 +19,7 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
-import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeCore, terminateCore } from "../../Initialize.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createModelsTreeProvider } from "./Utils.js";
 
@@ -28,14 +28,6 @@ import type { InstanceKey } from "@itwin/presentation-shared";
 describe("ModelsTreeDefinition", () => {
   beforeAll(async () => {
     await initializeCore({
-      backendProps: {
-        caching: {
-          hierarchies: {
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
-            mode: HierarchyCacheMode.Memory,
-          },
-        },
-      },
       rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
     });
     // eslint-disable-next-line @itwin/no-internal

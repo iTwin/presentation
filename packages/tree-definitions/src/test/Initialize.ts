@@ -15,9 +15,6 @@ import { Presentation as PresentationFrontend } from "@itwin/presentation-fronte
 import type { RpcInterfaceDefinition } from "@itwin/core-common";
 import type { PresentationManagerProps } from "@itwin/presentation-backend";
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export { HierarchyCacheMode } from "@itwin/presentation-backend";
-
 export async function initializeCore(props?: {
   rpcs?: RpcInterfaceDefinition[];
   backendProps?: PresentationManagerProps;

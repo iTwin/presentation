@@ -20,7 +20,7 @@ import {
 } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 import { CategoriesTreeIdsCache } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsCache.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
-import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeCore, terminateCore } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
@@ -34,14 +34,6 @@ describe("Categories tree", () => {
   describe("Hierarchy definition", () => {
     beforeAll(async () => {
       await initializeCore({
-        backendProps: {
-          caching: {
-            hierarchies: {
-              // eslint-disable-next-line @typescript-eslint/no-deprecated
-              mode: HierarchyCacheMode.Memory,
-            },
-          },
-        },
         rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
       });
       // eslint-disable-next-line @itwin/no-internal

@@ -25,7 +25,7 @@ import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitio
 import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
 import { ModelsTreeDefinition } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 import { buildIModel } from "../../IModelUtils.js";
-import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeCore, terminateCore } from "../../Initialize.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createAccessAndCache, createClassGroupingHierarchyNode } from "./Utils.js";
 
@@ -90,14 +90,6 @@ describe("Models tree", () => {
   describe("Hierarchy search", () => {
     beforeAll(async () => {
       await initializeCore({
-        backendProps: {
-          caching: {
-            hierarchies: {
-              // eslint-disable-next-line @typescript-eslint/no-deprecated
-              mode: HierarchyCacheMode.Memory,
-            },
-          },
-        },
         rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
       });
       // eslint-disable-next-line @itwin/no-internal

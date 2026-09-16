@@ -36,7 +36,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { buildIModel } from "../../IModelUtils.js";
-import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeCore, terminateCore } from "../../Initialize.js";
 import { collect } from "../Common.js";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation.js";
 import {
@@ -56,14 +56,6 @@ describe("Models tree", () => {
   describe("Hierarchy level filtering", () => {
     beforeAll(async () => {
       await initializeCore({
-        backendProps: {
-          caching: {
-            hierarchies: {
-              // eslint-disable-next-line @typescript-eslint/no-deprecated
-              mode: HierarchyCacheMode.Memory,
-            },
-          },
-        },
         rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
       });
       // eslint-disable-next-line @itwin/no-internal
