@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.14
+
+### Minor Changes
+
+- [#1551](https://github.com/iTwin/presentation/pull/1551): Introduced `NavigationValue` for representing instances targeted by navigation properties.
+
 ## 2.0.0-alpha.13
 
 ### Major Changes
