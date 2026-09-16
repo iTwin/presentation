@@ -1058,7 +1058,7 @@ describe("Categories tree", () => {
         describe("elements.excludedClasses", () => {
           const elementClassName: EC.FullClassNameDotNotation =
             viewType === "3d" ? "Generic.PhysicalObject" : "BisCore.DrawingGraphic";
-          const modeledElementClassName: EC.FullClassNameDotNotation = `${TestSchema.Name}.${viewType === "3d" ? TestSchema.ModeledElement3dClassName : TestSchema.ModeledElement2dClassName}`;
+          const modeledElementClassName: EC.FullClassNameDotNotation = `${TestSchema.name}.${viewType === "3d" ? TestSchema.modeledElement3dClassName : TestSchema.modeledElement2dClassName}`;
           const unrelatedElementClassName: EC.FullClassNameDotNotation =
             viewType === "3d" ? "BisCore.GeometricElement2d" : "BisCore.GeometricElement3d";
           const subModeledElementBaseClassName: EC.FullClassNameDotNotation = "BisCore.ISubModeledElement";

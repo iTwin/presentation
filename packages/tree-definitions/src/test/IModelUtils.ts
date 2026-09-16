@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import { randomUUID } from "node:crypto";
 import { expect } from "vitest";
 import { buildIModel as buildNamedIModel, importSchema } from "./TestUtilities.js";
@@ -24,10 +22,10 @@ function getUniqueIModelName(): string {
 }
 
 export namespace TestSchema {
-  export const Name = "TestSchema";
-  export const ModeledElement2dClassName = "SubModelableDrawingGraphic";
-  export const SubModel2dClassName = "DrawingGraphicModel";
-  export const ModeledElement3dClassName = "SubModelablePhysicalObject";
+  export const name = "TestSchema";
+  export const modeledElement2dClassName = "SubModelableDrawingGraphic";
+  export const subModel2dClassName = "DrawingGraphicModel";
+  export const modeledElement3dClassName = "SubModelablePhysicalObject";
 }
 
 export async function buildIModel(
@@ -45,15 +43,15 @@ export async function buildIModel<TResult extends object | undefined>(
       imodel,
       schemaContentXml: `
         <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-        <ECEntityClass typeName="${TestSchema.ModeledElement3dClassName}" displayLabel="Test Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
+        <ECEntityClass typeName="${TestSchema.modeledElement3dClassName}" displayLabel="Test Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
           <BaseClass>bis:PhysicalElement</BaseClass>
           <BaseClass>bis:ISubModeledElement</BaseClass>
         </ECEntityClass>
-        <ECEntityClass typeName="${TestSchema.ModeledElement2dClassName}" displayLabel="Test Drawing Graphic" modifier="Sealed" description="A sub-modelable 2d graphic that is a sibling of bis:DrawingGraphic (not derived from it).">
+        <ECEntityClass typeName="${TestSchema.modeledElement2dClassName}" displayLabel="Test Drawing Graphic" modifier="Sealed" description="A sub-modelable 2d graphic that is a sibling of bis:DrawingGraphic (not derived from it).">
           <BaseClass>bis:GraphicalElement2d</BaseClass>
           <BaseClass>bis:ISubModeledElement</BaseClass>
         </ECEntityClass>
-        <ECEntityClass typeName="${TestSchema.SubModel2dClassName}" displayLabel="Drawing Graphic Model" modifier="Sealed" description="A 2d geometric model that can sub-model a DrawingGraphic element.">
+        <ECEntityClass typeName="${TestSchema.subModel2dClassName}" displayLabel="Drawing Graphic Model" modifier="Sealed" description="A 2d geometric model that can sub-model a DrawingGraphic element.">
           <BaseClass>bis:GraphicalModel2d</BaseClass>
         </ECEntityClass>
         <ECRelationshipClass typeName="DrawingGraphicModelBreaksDownSubModelableDrawingGraphic" strength="embedding" strengthDirection="backward" modifier="None">
@@ -66,7 +64,7 @@ export async function buildIModel<TResult extends object | undefined>(
           </Target>
         </ECRelationshipClass>
       `,
-      schemaName: TestSchema.Name,
+      schemaName: TestSchema.name,
       schemaAlias: "test",
     })) as TestSchemaDefinition;
     const setupResult = setup ? await setup(imodel, testSchema) : undefined;
@@ -82,8 +80,8 @@ export async function buildIModel<TResult extends object | undefined>(
 
 interface TestSchemaDefinition extends ImportSchemaResult {
   items: {
-    [TestSchema.ModeledElement3dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
-    [TestSchema.ModeledElement2dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
-    [TestSchema.SubModel2dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
+    [TestSchema.modeledElement3dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
+    [TestSchema.modeledElement2dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
+    [TestSchema.subModel2dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
   };
 }

@@ -581,7 +581,7 @@ describe("ModelsTreeDefinition", () => {
               const keptElement = insertPhysicalElement({
                 txn,
                 userLabel: `kept element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -634,7 +634,7 @@ describe("ModelsTreeDefinition", () => {
               insertPhysicalElement({
                 txn,
                 userLabel: `excluded element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -742,7 +742,7 @@ describe("ModelsTreeDefinition", () => {
                 userLabel: `element 1`,
                 modelId: model.id,
                 categoryId: category.id,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
               });
               const excludedCategory = insertSpatialCategory({ txn, codeValue: "excluded category" });
               insertPhysicalElement({
@@ -868,7 +868,7 @@ describe("ModelsTreeDefinition", () => {
               insertPhysicalElement({
                 txn,
                 userLabel: `excluded child element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: excludedChildCategory.id,
                 parentId: parentElement.id,
@@ -880,7 +880,7 @@ describe("ModelsTreeDefinition", () => {
           using provider = createModelsTreeProvider({
             imodelConnection,
             hierarchyConfig: {
-              elements: { excludedClasses: [`${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`] },
+              elements: { excludedClasses: [`${TestSchema.name}.${TestSchema.modeledElement3dClassName}`] },
             },
           });
           await validateHierarchy({
@@ -932,7 +932,7 @@ describe("ModelsTreeDefinition", () => {
               insertPhysicalElement({
                 txn,
                 userLabel: `excluded child element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: excludedChildCategory.id,
                 parentId: parentElement.id,
@@ -951,7 +951,7 @@ describe("ModelsTreeDefinition", () => {
           using provider = createModelsTreeProvider({
             imodelConnection,
             hierarchyConfig: {
-              elements: { excludedClasses: [`${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`] },
+              elements: { excludedClasses: [`${TestSchema.name}.${TestSchema.modeledElement3dClassName}`] },
             },
           });
           await validateHierarchy({
@@ -1013,7 +1013,7 @@ describe("ModelsTreeDefinition", () => {
               const modeledElement = insertPhysicalElement({
                 txn,
                 userLabel: `parent element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -1075,7 +1075,7 @@ describe("ModelsTreeDefinition", () => {
               const modeledElement = insertPhysicalElement({
                 txn,
                 userLabel: `parent element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -1089,7 +1089,7 @@ describe("ModelsTreeDefinition", () => {
               const childModeledElement = insertPhysicalElement({
                 txn,
                 userLabel: `child modeled element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: subModel.id,
                 categoryId: childCategory.id,
               });

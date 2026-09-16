@@ -1214,7 +1214,7 @@ describe("ModelsTreeDefinition", () => {
             txn,
             modelId: physicalModel.id,
             categoryId: categoryA.id,
-            classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+            classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
           });
           const subModel = insertPhysicalSubModel({ txn, modeledElementId: modeledElement.id });
           const modelingElement = insertPhysicalElement({ txn, modelId: subModel.id, categoryId: categoryA.id });
@@ -1273,7 +1273,7 @@ describe("ModelsTreeDefinition", () => {
             userLabel: "modeled element",
             modelId: physicalModel.id,
             categoryId: categoryA.id,
-            classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+            classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
           });
           const subModel = insertPhysicalSubModel({ txn, modeledElementId: modeledElement.id });
           const modelingElement = insertPhysicalElement({
