@@ -357,7 +357,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const allQueries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
       const queries = allQueries.filter((ecsql) => !isPrimaryEnumerationQuery(ecsql));
       expect(queries.length).to.be.greaterThan(0);
@@ -447,7 +446,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
       const anchoringQuery = queries.find((ecsql) => ecsql.includes("[FirstStepRelClassId]"));
       expect(anchoringQuery).to.not.equal(undefined);
@@ -554,7 +552,6 @@ describe("resolveContentSources", () => {
       });
 
       // 3 strategies are applicable for a 3-step path: original, subquery-anchor, cross-join
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(3);
 
       // Verify the final resolved paths are correct regardless of which strategy won the race
@@ -730,7 +727,6 @@ describe("resolveContentSources", () => {
 
     expect(resolveFn).toHaveBeenCalledOnce();
     expect(resolveFn).toHaveBeenCalledWith({ imodelAccess, target: targetA });
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     expect(result[0].resolvedDeclarations).to.deep.equal([
       { providerId: "test_v1", declarationIndex: 0, paths: customPaths },
@@ -880,9 +876,7 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include(
@@ -914,9 +908,7 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include("[this].Area > :minArea");
@@ -944,7 +936,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include('[this].Name = "test"');
@@ -972,7 +963,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
       expect(query.ecsql).to.include('[this].Name = "test"');
@@ -1022,7 +1012,6 @@ describe("resolveContentSources", () => {
       await resolveContentSources({ imodelAccess, targets: [target], config: { imodelFieldsProviders: [provider] } });
 
       // All 3 strategies should include the filter bindings in their queries
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0]);
       expect(queries).to.have.length(3);
       for (const query of queries) {
@@ -1079,7 +1068,6 @@ describe("resolveContentSources", () => {
 
       await resolveContentSources({ imodelAccess, targets, config: { imodelFieldsProviders: [provider] } });
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(provider.getContribution).toHaveBeenCalledTimes(2);
     });
   });
@@ -1188,7 +1176,6 @@ describe("resolveContentSources", () => {
 
       expect(result[0].resolvedPrimaryClasses).to.deep.equal(["TestSchema.ClassA"]);
       // Only the path-resolution query runs — no primary-enumeration scan for a leaf class.
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       const queries = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((c) => c[0].ecsql);
       expect(queries.some((ecsql) => isPrimaryEnumerationQuery(ecsql))).to.equal(false);
     });
@@ -1271,7 +1258,6 @@ describe("resolveContentSources", () => {
       });
 
       const scanQuery = vi
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         .mocked(imodelAccess.createQueryReader)
         .mock.calls.map((c) => c[0])
         .find((q) => isPrimaryEnumerationQuery(q.ecsql));

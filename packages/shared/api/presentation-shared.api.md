@@ -559,6 +559,12 @@ export type LogFunction = (category: string, message: string) => void;
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @public
+export interface NavigationValue {
+    key: InstanceKey;
+    label: ConcatenatedValue | string;
+}
+
+// @public
 export interface NavigationValueDescriptor {
     // (undocumented)
     kind: "navigation";
@@ -822,7 +828,7 @@ namespace TypedValueSelectClauseProps {
 }
 
 // @public
-export type Value = PrimitiveValue | StructValue | ArrayValue | undefined;
+export type Value = PrimitiveValue | StructValue | ArrayValue | NavigationValue | undefined;
 
 // @public
 export type ValueDescriptor = PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor | NavigationValueDescriptor;
