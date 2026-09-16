@@ -16,19 +16,33 @@ import { collectDirectPropertyFields } from "./DirectFields.js";
 import { collectExternalFields } from "./ExternalFields.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { collectRelatedPropertyFields } from "./RelatedFields.js";
-import { collectSelectors } from "./Selectors.js";
+import { collectValueRequirements } from "./Selectors.js";
 
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field, PropertyField } from "../model/Field.js";
+import type { ExternalInput } from "./ExternalFields.js";
+import type { ValueSelector } from "./ValueSelector.js";
 
 /**
- * Props for {@link buildContentDescriptor}.
- * @internal
+ * The descriptor and private requirements for loading its values, built after transforms run.
+ *
+ * Contains no loaded values. Value requirements and field-to-value mappings remain
+ * in provider-owned private state.
  */
-interface BuildContentDescriptorProps {
+export interface ContentDefinition {
+  descriptor: ContentDescriptor;
+  selectors: Record<ValueSelector["id"], ValueSelector>;
+  fieldSelectorIds: Partial<Record<Field["id"], string>>;
+  externalInputs: ExternalInput[];
+}
+
+/**
+ * Props for {@link buildContentDefinition}.
+ */
+interface BuildContentDefinitionProps {
   /** Schema access used to enumerate fields from EC metadata (Stage 2 is schema-only — no queries). */
   imodelAccess: ECSchemaProvider;
   /** Pre-resolved content sources (output of Stage 1). */
@@ -38,16 +52,9 @@ interface BuildContentDescriptorProps {
 }
 
 /**
- * Builds a {@link (ContentDescriptor:interface)} from pre-resolved content sources (Stage 2 of the
- * content pipeline).
- *
- * Re-calls providers (cheap — no data queries) to recover declaration metadata, reads EC schema
- * metadata to enumerate direct and related property fields, appends calculated and external fields,
- * resolves categories, runs descriptor transformers, and assembles the value selectors.
- *
- * @internal
+ * Builds the descriptor and its private value-loading requirements without loading values.
  */
-export async function buildContentDescriptor(props: BuildContentDescriptorProps): Promise<ContentDescriptor> {
+export async function buildContentDefinition(props: BuildContentDefinitionProps): Promise<ContentDefinition> {
   const { imodelAccess, sources, config } = props;
   const imodelFieldsProviders = config?.imodelFieldsProviders ?? [];
   const externalFieldsProviders = config?.externalFieldsProviders ?? [];
@@ -109,12 +116,28 @@ export async function buildContentDescriptor(props: BuildContentDescriptorProps)
     await transformer.transform({ descriptor: createTransformableDescriptor(transformed), imodelAccess });
   }
 
-  // Selectors and category pruning reflect the post-transform field set: a removed field drops its
-  // selector (unless an external input still requires the column), and its category may fall away.
-  return {
+  const descriptor: ContentDescriptor = {
     sources: transformed.sources,
     fields: transformed.fields,
     categories: pruneUnreferencedCategories({ fields: transformed.fields, categories: transformed.categories }),
-    selectors: collectSelectors({ fields: Object.values(transformed.fields), externalInputs }),
   };
+
+  const { selectors, fieldSelectorIds } = collectValueRequirements({
+    fields: Object.values(descriptor.fields),
+    externalInputs,
+  });
+
+  return { descriptor, selectors, fieldSelectorIds, externalInputs };
+}
+
+/**
+ * Builds a {@link (ContentDescriptor:interface)} from pre-resolved content sources (Stage 2 of the
+ * content pipeline).
+ *
+ * Re-calls providers (cheap — no data queries) to recover declaration metadata, reads EC schema
+ * metadata to enumerate direct and related property fields, appends calculated and external fields,
+ * resolves categories, runs descriptor transformers, and assembles the value selectors.
+ */
+export async function buildContentDescriptor(props: BuildContentDefinitionProps): Promise<ContentDescriptor> {
+  return (await buildContentDefinition(props)).descriptor;
 }

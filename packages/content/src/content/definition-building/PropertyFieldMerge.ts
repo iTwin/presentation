@@ -9,6 +9,7 @@ import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvid
 import { getOrCreate } from "../InternalUtils.js";
 import { PropertyField } from "../model/Field.js";
 import { toSortedUniqueClassNames } from "../model/Utils.js";
+import { resolveCardinality } from "../PathCardinality.js";
 
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field } from "../model/Field.js";
@@ -46,14 +47,13 @@ interface PropertyFieldCandidate extends CategorizedField {
  *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClassNames`
  *     are still unioned.
  * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority:
- *   describing a many-valued path as single-valued would drop every related instance but one.
+ *   describing a many-valued path as single-valued would drop every related instance but one (see
+ *   {@link resolveCardinality}).
  *
  * The winning candidate's {@link FieldCategorization} is carried on each merged field so the
  * categorization pass can turn it into a `categoryId`. This is the inverse of `forkField`: it merges
  * many candidates into one field on the way in, while `forkField` splits one field into a carved
  * subset on demand.
- *
- * @internal
  */
 export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate[]): CategorizedField[] {
   const groups = new Map<Field["id"], PropertyFieldCandidate[]>();
@@ -71,9 +71,9 @@ export function mergePropertyFieldsByIdentity(candidates: PropertyFieldCandidate
     const winner = group.reduce((best, candidate) => (priorityOf(candidate) > priorityOf(best) ? candidate : best));
     const valueClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.valueClassNames));
     const primaryClassNames = toSortedUniqueClassNames(group.flatMap((candidate) => candidate.field.primaryClassNames));
-    const pathCardinality = group.some((candidate) => candidate.field.pathCardinality === "many") ? "many" : "one";
+    const pathCardinality = resolveCardinality(group.map((candidate) => candidate.field.pathCardinality));
     result.push({
-      field: { ...winner.field, id: baseId, selectorId: baseId, pathCardinality, valueClassNames, primaryClassNames },
+      field: { ...winner.field, id: baseId, pathCardinality, valueClassNames, primaryClassNames },
       categorization: winner.categorization,
     });
   }

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectCalculatedFields } from "../../content/descriptor-building/CalculatedFields.js";
+import { collectCalculatedFields } from "../../content/definition-building/CalculatedFields.js";
 import { createSchemaAccess } from "../MetadataStubs.js";
 
 import type { ContentSource } from "../../content/ContentTarget.js";
@@ -70,7 +70,6 @@ describe("collectCalculatedFields", () => {
       "p_v1:flow": {
         kind: "calculated",
         id: "p_v1:flow",
-        selectorId: "p_v1:flow",
         label: "Flow",
         expression: "this.FlowRate * 2",
         type: { kind: "primitive", type: "Double" },
