@@ -12,7 +12,7 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
-import { CLASS_NAME_DefinitionModel } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { getClassesByView, mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   CategoriesTreeDefinition,
@@ -93,7 +93,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -127,7 +127,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
               const definitionContainerChild = insertDefinitionContainer({
@@ -137,7 +137,7 @@ describe("Categories tree", () => {
               });
               insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainerChild.id,
               });
             }),
@@ -156,7 +156,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -179,7 +179,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -213,7 +213,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -256,7 +256,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc", isPrivate: true });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -279,7 +279,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
               const definitionContainerChild = insertDefinitionContainer({
@@ -290,7 +290,7 @@ describe("Categories tree", () => {
               });
               const definitionModelChild = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainerChild.id,
               });
 
@@ -313,7 +313,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -353,7 +353,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
               const category1 = insertCategory({ txn, codeValue: "cat1", modelId: definitionModel.id });
@@ -392,7 +392,7 @@ describe("Categories tree", () => {
               const rootDefinitionContainer = insertDefinitionContainer({ txn, codeValue: "root dc" });
               const rootDefinitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: rootDefinitionContainer.id,
               });
               const definitionContainer1 = insertDefinitionContainer({
@@ -407,12 +407,12 @@ describe("Categories tree", () => {
               });
               const definitionModel1 = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer1.id,
               });
               const definitionModel2 = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer2.id,
               });
               const category1 = insertCategory({ txn, codeValue: "cat1", modelId: definitionModel1.id });
@@ -459,7 +459,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -506,7 +506,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -561,7 +561,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -617,7 +617,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
               const definitionContainerChild = insertDefinitionContainer({
@@ -627,7 +627,7 @@ describe("Categories tree", () => {
               });
               const definitionModelChild = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainerChild.id,
               });
 
@@ -673,7 +673,7 @@ describe("Categories tree", () => {
               const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
               const definitionModel = insertSubModel({
                 txn,
-                classFullName: CLASS_NAME_DefinitionModel,
+                classFullName: CLASS_NAMES.definitionModel,
                 modeledElementId: definitionContainer.id,
               });
 
@@ -1185,7 +1185,7 @@ describe("Categories tree", () => {
                   const definitionContainer = insertDefinitionContainer({ txn, codeValue: "dc" });
                   const definitionModel = insertSubModel({
                     txn,
-                    classFullName: CLASS_NAME_DefinitionModel,
+                    classFullName: CLASS_NAMES.definitionModel,
                     modeledElementId: definitionContainer.id,
                   });
                   const elementsModel = insertElementsModel({ txn, codeValue: "m" });

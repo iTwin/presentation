@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
-import { CLASS_NAME_GeometricElement3d } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { ClassificationsTreeDefinition } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
 import { ClassificationsTreeIdsCache } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsCache.js";
 import { createIModelAccess } from "../Common.js";
@@ -165,7 +165,7 @@ export function createAccessAndCache({
   const imodelAccess = createIModelAccess(imodelConnection);
   const baseIdsCache = new BaseIdsCache({
     queryExecutor: imodelAccess,
-    elementClassName: CLASS_NAME_GeometricElement3d,
+    elementClassName: CLASS_NAMES.geometricElement3d,
     type: "3d",
     excludedElementClassNames: hierarchyConfig.elements?.excludedClasses,
   });

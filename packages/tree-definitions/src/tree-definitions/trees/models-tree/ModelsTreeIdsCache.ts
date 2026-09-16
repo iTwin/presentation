@@ -7,11 +7,7 @@ import { defer, filter, forkJoin, map, mergeMap, of, reduce, shareReplay } from 
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
-import {
-  CLASS_NAME_GeometricModel3d,
-  CLASS_NAME_InformationPartitionElement,
-  CLASS_NAME_Subject,
-} from "../../shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
@@ -72,7 +68,7 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
           s.Parent.Id parentId,
           (
             SELECT m.ECInstanceId
-            FROM ${CLASS_NAME_GeometricModel3d} m
+            FROM ${CLASS_NAMES.geometricModel3d} m
             ${createWhereClause({
               conditions: [
                 "m.ECInstanceId = HexToId(json_extract(s.JsonProperties, '$.Subject.Model.TargetPartition'))",
@@ -116,8 +112,8 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
     return defer(() => {
       const modelsQuery = `
         SELECT p.ECInstanceId id, p.Parent.Id parentId
-        FROM ${CLASS_NAME_InformationPartitionElement} p
-        INNER JOIN ${CLASS_NAME_GeometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
+        FROM ${CLASS_NAMES.informationPartitionElement} p
+        INNER JOIN ${CLASS_NAMES.geometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
         ${createWhereClause({ conditions: ["NOT m.IsPrivate", this.#hierarchyConfig.models.withoutElements === "exclude" && `EXISTS (SELECT 1 FROM ${this.#hierarchyConfig.elements.baseClass} WHERE Model.Id = m.ECInstanceId)`] })}
       `;
       return this.#queryExecutor.createQueryReader(
@@ -326,7 +322,7 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
           }
           const parentInfo = subjectInfos.get(currParentId);
           if (!parentInfo?.hideInHierarchy) {
-            result.push({ className: CLASS_NAME_Subject, id: currParentId });
+            result.push({ className: CLASS_NAMES.subject, id: currParentId });
           }
           currParentId = parentInfo?.parentSubjectId;
         }
@@ -384,7 +380,7 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
     }).pipe(
       mergeMap((categoryModelId) =>
         this.createUpToModelInstanceKeyPaths(categoryModelId).pipe(
-          map((modelPath) => [...modelPath, { className: CLASS_NAME_GeometricModel3d, id: categoryModelId }]),
+          map((modelPath) => [...modelPath, { className: CLASS_NAMES.geometricModel3d, id: categoryModelId }]),
         ),
       ),
     );

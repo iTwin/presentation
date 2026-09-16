@@ -19,7 +19,7 @@ import { IModel, IModelReadRpcInterface } from "@itwin/core-common";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import { CLASS_NAME_Subject } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
 import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -51,7 +51,7 @@ describe("ModelsTreeDefinition", () => {
   it("creates Subject - Model - Category - Element hierarchy", async () => {
     await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
       withEditTxn(imodel, (txn) => {
-        const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+        const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
         const childSubject = insertSubject({ txn, codeValue: "child subject", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ txn, codeValue: `model`, partitionParentId: childSubject.id });
         const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -178,7 +178,7 @@ describe("ModelsTreeDefinition", () => {
     it(`hides subjects with \`Subject.Model.Type = "Hierarchy"\` json property`, async function () {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const childSubject = insertSubject({
             txn,
             codeValue: "child subject",
@@ -234,7 +234,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides childless subjects", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const childSubject = insertSubject({ txn, codeValue: "child subject", parentId: rootSubject.id });
           return { rootSubject, childSubject };
         }),
@@ -247,7 +247,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides subjects with childless models", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ txn, codeValue: "child subject 1", parentId: rootSubject.id });
           const model = insertPhysicalModelWithPartition({
             txn,
@@ -271,7 +271,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides subjects with private models", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ txn, codeValue: "child subject 1", parentId: rootSubject.id });
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id, isPrivate: true });
@@ -294,7 +294,7 @@ describe("ModelsTreeDefinition", () => {
     it("shows subjects with child models related with subject through `Subject.Model.TargetPartition` json property", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ txn, codeValue: "child subject 1", parentId: rootSubject.id });
           const model = insertPhysicalModelWithPartition({
             txn,
@@ -386,7 +386,7 @@ describe("ModelsTreeDefinition", () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const category = insertSpatialCategory({ txn, codeValue: "category" });
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const hiddenSubject1 = insertSubject({
             txn,
             codeValue: "hidden subject 1",
@@ -490,7 +490,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides models with `PhysicalPartition.Model.Content` json property", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({
             txn,
             codeValue: "model",
@@ -536,7 +536,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides models with `GraphicalPartition3d.Model.Content` json property", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({
             txn,
             codeValue: "model",
@@ -582,7 +582,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides private models and their content", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id, isPrivate: true });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -603,7 +603,7 @@ describe("ModelsTreeDefinition", () => {
     it("hides empty models", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           return { rootSubject, model };
@@ -617,7 +617,7 @@ describe("ModelsTreeDefinition", () => {
     it("children of child element is set to true when child element has subModel that contains children", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -701,7 +701,7 @@ describe("ModelsTreeDefinition", () => {
     it("children of child element is set to false when it's subModel is private", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -769,7 +769,7 @@ describe("ModelsTreeDefinition", () => {
     it("children of child element is set to false when it's subModel has no children", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -836,7 +836,7 @@ describe("ModelsTreeDefinition", () => {
     it("children of element is set to true when element has subModel that contains children", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -902,7 +902,7 @@ describe("ModelsTreeDefinition", () => {
     it("children of element is set to false when it's subModel is private", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -952,7 +952,7 @@ describe("ModelsTreeDefinition", () => {
     it("children of element is set to false when it's subModel has no children", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -1005,7 +1005,7 @@ describe("ModelsTreeDefinition", () => {
         withEditTxn(imodel, (txn) => {
           const category1 = insertSpatialCategory({ txn, codeValue: "category1", userLabel: "merged category" });
           const category2 = insertSpatialCategory({ txn, codeValue: "category2", userLabel: "merged category" });
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const hiddenSubject1 = insertSubject({
             txn,
             codeValue: "hidden subject 1",
@@ -1080,7 +1080,7 @@ describe("ModelsTreeDefinition", () => {
     it("does not show intermediate category when child element has same category as parent", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({
             txn,
             codeValue: `model`,
@@ -1148,7 +1148,7 @@ describe("ModelsTreeDefinition", () => {
     it("shows intermediate category when child element has different category than parent", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({
             txn,
             codeValue: `model`,
@@ -1349,7 +1349,7 @@ describe("ModelsTreeDefinition", () => {
     it("shows intermediate category for deeply nested elements with different categories", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({
             txn,
             codeValue: `model`,

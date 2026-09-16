@@ -34,7 +34,7 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { CLASS_NAME_Subject } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { buildIModel } from "../../IModelUtils.js";
 import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
 import { collect } from "../Common.js";
@@ -116,7 +116,7 @@ describe("Models tree", () => {
         nodes: await collect(
           provider.getNodes({
             parentNode: undefined,
-            instanceFilter: createInstanceFilter(CLASS_NAME_Subject, {
+            instanceFilter: createInstanceFilter(CLASS_NAMES.subject, {
               sourceAlias: "this",
               propertyName: "Description",
               propertyTypeName: "string",
@@ -131,7 +131,7 @@ describe("Models tree", () => {
         nodes: await collect(
           provider.getNodes({
             parentNode: undefined,
-            instanceFilter: createInstanceFilter(CLASS_NAME_Subject, {
+            instanceFilter: createInstanceFilter(CLASS_NAMES.subject, {
               sourceAlias: "this",
               propertyName: "Description",
               propertyTypeName: "string",
