@@ -125,6 +125,28 @@ describe("QueryLimits", () => {
       expect(budget.remaining()).to.equal(2);
     });
 
+    it("does not validate conflicting bindings for an info that exceeds the budget", () => {
+      const budget = createJoinBudget({ reservedTables: 0, budget: 1 });
+      const a = path({ cost: 1, steps: [step("A", "AtoB", "B")] });
+      const b = path({ cost: 1, steps: [step("A", "AtoC", "C")] });
+      a.joinInfo.bindings = { p: { type: "int", value: 1 } };
+      b.joinInfo.bindings = { p: { type: "int", value: 2 } };
+
+      expect(budget.tryAdd(a.joinInfo)).to.equal(true);
+      expect(budget.tryAdd(b.joinInfo)).to.equal(false);
+    });
+
+    it("rejects conflicting bindings when an info fits the budget", () => {
+      const budget = createJoinBudget({ reservedTables: 0, budget: 2 });
+      const a = path({ cost: 1, steps: [step("A", "AtoB", "B")] });
+      const b = path({ cost: 1, steps: [step("A", "AtoC", "C")] });
+      a.joinInfo.bindings = { p: { type: "int", value: 1 } };
+      b.joinInfo.bindings = { p: { type: "int", value: 2 } };
+
+      expect(budget.tryAdd(a.joinInfo)).to.equal(true);
+      expect(() => budget.tryAdd(b.joinInfo)).to.throw('Duplicate ECSQL binding name "p"');
+    });
+
     it("remaining() accounts for reservedTables from the start", () => {
       const budget = createJoinBudget({ reservedTables: 5, budget: 10 });
       expect(budget.remaining()).to.equal(5);

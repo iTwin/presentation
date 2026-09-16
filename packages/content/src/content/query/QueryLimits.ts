@@ -49,24 +49,29 @@ function countJoinTables(info: RelationshipPathJoinInfo): number {
     .reduce((count, join) => count + 1 + (join.joinTarget.kind === "relationship-select" ? 1 : 0), 0);
 }
 
+function mergeJoinInfoSteps(infos: readonly RelationshipPathJoinInfo[]): RelationshipPathJoinInfo["steps"] {
+  const seenTargets = new Set<string>();
+  const steps: RelationshipPathJoinInfo["steps"] = [];
+  for (const info of infos) {
+    for (const step of info.steps) {
+      if (!seenTargets.has(step.targetClassIdSelector)) {
+        seenTargets.add(step.targetClassIdSelector);
+        steps.push(step);
+      }
+    }
+  }
+  return steps;
+}
+
 /**
  * Concatenates several resolved path join infos into one, dropping duplicate join entries that share a
  * prefix (identified by `targetClassIdSelector`, which is stable across paths whenever aliases were
  * assigned per unique prefix — see `assignPrefixAliases`) so a shared step is emitted exactly once.
  */
 export function mergeJoinInfos(infos: readonly RelationshipPathJoinInfo[]): RelationshipPathJoinInfo {
-  const seenTargets = new Set<string>();
-  const steps: RelationshipPathJoinInfo["steps"] = [];
+  const steps = mergeJoinInfoSteps(infos);
   const bindings: Record<string, ECSqlBinding> = {};
   for (const info of infos) {
-    for (const step of info.steps) {
-      // A step's `targetClassIdSelector` encodes its target alias, which is stable across paths (thanks
-      // to `assignPrefixAliases`), so it identifies a shared-prefix step and lets it be emitted once.
-      if (!seenTargets.has(step.targetClassIdSelector)) {
-        seenTargets.add(step.targetClassIdSelector);
-        steps.push(step);
-      }
-    }
     // Shared-prefix steps contribute identical bindings; keep an identical duplicate but reject a name
     // reused with a different value.
     mergeBindings(bindings, info.bindings);
@@ -100,7 +105,7 @@ export function createJoinBudget(props: { reservedTables: number; budget?: numbe
   const limit = props.budget ?? SQLITE_MAX_JOIN_TABLES;
   let merged: RelationshipPathJoinInfo = { steps: [] };
   const costOf = (info: RelationshipPathJoinInfo): number =>
-    countJoinTables(mergeJoinInfos([merged, info])) - countJoinTables(merged);
+    countJoinTables({ steps: mergeJoinInfoSteps([merged, info]) }) - countJoinTables(merged);
   const remaining = (): number => limit - props.reservedTables - countJoinTables(merged);
   return {
     costOf,
