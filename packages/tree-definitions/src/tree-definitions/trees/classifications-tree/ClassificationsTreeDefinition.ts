@@ -51,7 +51,6 @@ import type {
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
@@ -63,8 +62,7 @@ import type { ClassificationsTreeIdsCache } from "./ClassificationsTreeIdsCache.
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 interface ClassificationsTreeDefinitionProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor & { imodelKey: string };
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   getIdsCache: (imodelKey: string) => ClassificationsTreeIdsCache;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
 }
@@ -95,8 +93,7 @@ export interface ClassificationsTreeHierarchyConfiguration {
 }
 
 interface ClassificationsTreeInstanceKeyPathsBaseProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   limit?: number | "unbounded";
   idsCache: ClassificationsTreeIdsCache;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
@@ -863,8 +860,7 @@ function createSearchPathsForDifferentTypes(
 
 function createGeometricElementInstanceKeyPaths(props: {
   idsCache: ClassificationsTreeIdsCache;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   targetItems: Id64Array;
   componentId: GuidString;
   componentName: string;

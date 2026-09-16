@@ -63,7 +63,6 @@ import type {
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryRow,
@@ -79,16 +78,14 @@ import type { CategoryNodeProps, ElementNodeProps } from "./CategoriesTreeNodeIn
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 interface CategoriesTreeDefinitionProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   viewType: "2d" | "3d";
   idsCache: CategoriesTreeIdsCache;
   hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
 }
 
 interface CategoriesTreeInstanceKeyPathsBaseProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   limit?: number | "unbounded";
   viewType: "2d" | "3d";
   idsCache: CategoriesTreeIdsCache;
@@ -179,8 +176,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   #idsCache: CategoriesTreeIdsCache;
   #hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
   #excludedClasses?: EC.FullClassNameDotNotation[];
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  #iModelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  #iModelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   #categoryClass: EC.FullClassNameDotNotation;
   #categoryElementClass: EC.FullClassNameDotNotation;
   #categoryModelClass: EC.FullClassNameDotNotation;

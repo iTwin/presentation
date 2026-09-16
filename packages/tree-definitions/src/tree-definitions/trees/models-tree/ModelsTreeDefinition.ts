@@ -65,7 +65,6 @@ import type {
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -163,8 +162,7 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
 };
 
 interface ModelsTreeDefinitionProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsCache: ModelsTreeIdsCache;
   hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
   componentId?: GuidString;
@@ -177,8 +175,7 @@ export interface ElementsGroupInfo {
 }
 
 interface ModelsTreeInstanceKeyPathsBaseProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsCache: ModelsTreeIdsCache;
   hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
   limit?: number | "unbounded";
