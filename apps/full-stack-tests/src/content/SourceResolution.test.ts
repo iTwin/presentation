@@ -500,5 +500,60 @@ describe("Content", () => {
       });
       expect(nestedGroup.paths[0].targetClassNames).toEqual([setup.schema.items.A.fullName]);
     });
+
+    it("loads fine when two targets on the same class have disjoint instanceFilters", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="Prop" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.A.fullName, { prop: "keep" });
+        builder.insertInstance(s.items.A.fullName, { prop: "drop" });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [
+          { primaryClass: setup.schema.items.A.fullName, instanceFilter: { expression: `this.Prop = 'keep'` } },
+          { primaryClass: setup.schema.items.A.fullName, instanceFilter: { expression: `this.Prop = 'drop'` } },
+        ],
+      });
+
+      expect(sources).toHaveLength(2);
+    });
+
+    it("throws when two targets on the same class have overlapping instanceFilters", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="Prop" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.A.fullName, { prop: "shared" });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+
+      await expect(
+        resolveContentSources({
+          imodelAccess,
+          targets: [
+            { primaryClass: setup.schema.items.A.fullName, instanceFilter: { expression: `this.Prop = 'shared'` } },
+            { primaryClass: setup.schema.items.A.fullName },
+          ],
+        }),
+      ).rejects.toThrow(/^Content targets #0 \(.*\.A\) and #1 \(.*\.A\) overlap: instance 0x[0-9a-f]+ is in both\./);
+    });
   });
 });

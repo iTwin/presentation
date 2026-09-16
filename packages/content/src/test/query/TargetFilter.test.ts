@@ -44,6 +44,24 @@ describe("buildTargetFilter", () => {
     expect(buildTargetFilter(target)).to.deep.equal({ where: "[this].Area > :minArea AND [this].Name = :name" });
   });
 
+  it("suffixes the join/binding alias when a custom primary alias is given", () => {
+    const target: ContentTarget = {
+      primaryClass,
+      instanceIds: ["0x1"],
+      instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 100 } } },
+    };
+    expect(buildTargetFilter(target, "other")).to.deep.equal({
+      joins: [
+        `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}_other) [${TARGET_FILTER_JOIN_ALIAS}_other] ON [${TARGET_FILTER_JOIN_ALIAS}_other].[id] = [other].[ECInstanceId]`,
+      ],
+      where: "[other].Area > :minArea",
+      bindings: {
+        [`${TARGET_FILTER_JOIN_ALIAS}_other`]: { type: "idset", value: ["0x1"] },
+        minArea: { type: "double", value: 100 },
+      },
+    });
+  });
+
   it("combines instance ids and instance filter", () => {
     const target: ContentTarget = {
       primaryClass,
