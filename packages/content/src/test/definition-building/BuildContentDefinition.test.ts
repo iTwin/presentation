@@ -385,6 +385,45 @@ describe("buildContentDefinition", () => {
     expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
   });
 
+  it("keeps external input values available for classes removed from output field scopes", async () => {
+    const property = createPrimitiveProperty({ name: "Code", declaringClass: "TestSchema.Base" });
+    const base = createEntityClass({ fullName: "TestSchema.Base", properties: [property] });
+    const a = createEntityClass({ fullName: "TestSchema.A", baseClass: base, properties: [property] });
+    const b = createEntityClass({ fullName: "TestSchema.B", baseClass: base, properties: [property] });
+    base.getDerivedClassNames = () => [a.fullName, b.fullName];
+    const externalProvider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: { code: { propertyClassName: base.fullName, propertyName: "Code" } },
+      async getValues() {
+        return [];
+      },
+    });
+    const definition = await buildContentDefinition({
+      imodelAccess: createSchemaAccess([base, a, b]),
+      sources: [createSource(base.fullName, [a.fullName, b.fullName])],
+      config: {
+        externalFieldsProviders: [externalProvider],
+        descriptorTransformers: [
+          {
+            async transform({ descriptor }) {
+              descriptor.forkField("TestSchema.Base.Code", [a.fullName]);
+              descriptor.removeField("TestSchema.Base.Code");
+            },
+          },
+        ],
+      },
+    });
+
+    const fields = Object.values(definition.descriptor.fields).filter((field) => field.kind === "property");
+    expect(fields).to.have.lengthOf(1);
+    expect(fields[0].valueClassNames).to.deep.equal([a.fullName]);
+    expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.Base.Code"]);
+    const read = definition.propertyReaders["TestSchema.Base.Code"];
+    expect(read(a.fullName, "a")).to.equal("a");
+    expect(read(b.fullName, "b")).to.equal("b");
+  });
+
   it("applies descriptor transformer metadata changes", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({

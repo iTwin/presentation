@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
+import { createTransformableDescriptor } from "../../../content/extensions/DescriptorTransformer.js";
+import { PropertyField } from "../../../content/model/Field.js";
 import { serializeRelationshipPath } from "../../../content/model/Utils.js";
 import {
   createPropertyValueDecoder,
@@ -14,7 +16,7 @@ import {
   toContentValues,
 } from "../../../content/query/value-loading/RowDecoder.js";
 
-import type { ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
+import type { ECSqlQueryRow, InstanceKey, RelationshipPath, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../../content/ContentTarget.js";
 import type { ValueSelector } from "../../../content/definition-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
@@ -29,6 +31,7 @@ const columnNames: SelectProjection["columnNames"] = {
   calculatedValues: { "calc:score": "pres_calc_0" },
   relatedBlobs: {},
 };
+
 const defaultDecoderTypes: Record<string, ValueDescriptor> = {
   "Schema.A.Code": stringType,
   "Schema.A.Label": stringType,
@@ -72,8 +75,20 @@ const descriptor = {
   sources: [],
   categories: {},
   fields: {
-    "Schema.A.Code": { kind: "property", id: "Schema.A.Code" },
-    "Schema.A.Label": { kind: "property", id: "Schema.A.Label" },
+    "Schema.A.Code": {
+      kind: "property",
+      id: "Schema.A.Code",
+      pathFromTarget: [],
+      pathCardinality: "one",
+      valueClassNames: ["Schema.A"],
+    },
+    "Schema.A.Label": {
+      kind: "property",
+      id: "Schema.A.Label",
+      pathFromTarget: [],
+      pathCardinality: "one",
+      valueClassNames: ["Schema.A"],
+    },
     "calc:score": { kind: "calculated", id: "calc:score" },
     "ext:note": { kind: "external", id: "ext:note", providerId: "ext" },
   },
@@ -484,39 +499,149 @@ describe("RowDecoder", () => {
   });
 
   describe("toContentValues", () => {
-    it("uses prepared fieldSelectorIds for field lookup, including shared reads across field forks", () => {
-      const forkedDescriptor = {
-        sources: [],
-        categories: {},
-        fields: {
-          "Schema.A.Code": { kind: "property", id: "Schema.A.Code" },
-          "Schema.A.Code#Door": { kind: "property", id: "Schema.A.Code#Door" },
-          "calc:score": { kind: "calculated", id: "calc:score" },
-        },
-      } as unknown as ContentDescriptor;
+    function createPropertyField(overrides: Partial<PropertyField> = {}): PropertyField {
+      const props = {
+        propertyClassName: "Schema.Base",
+        propertyName: "Code",
+        pathFromTarget: [],
+        ...overrides,
+      } satisfies Partial<PropertyField>;
+      return {
+        kind: "property",
+        id: PropertyField.computeId(props),
+        label: "Code",
+        categoryId: "test",
+        readOnly: false,
+        type: stringType,
+        pathCardinality: "one",
+        valueClassNames: ["Schema.B", "Schema.C"],
+        primaryClassNames: ["Schema.B", "Schema.C"],
+        ...props,
+      };
+    }
+
+    it("uses prepared fieldSelectorIds for shared reads while respecting direct field fork scopes", () => {
+      const field = createPropertyField();
+      const forkedDescriptor: ContentDescriptor = { sources: [], categories: {}, fields: { [field.id]: field } };
+      const fork = createTransformableDescriptor(forkedDescriptor).forkField(field.id, ["Schema.B"]);
 
       const contentValues = toContentValues({
         descriptor: forkedDescriptor,
-        primaryKey: { className: "Schema.A", id: "0x1" },
-        values: {
-          selectorValues: new Map<string, Value>([
-            ["Schema.A.Code", "A1"],
-            ["calc:score", 42],
-          ]),
-          relatedInstances: new Map(),
-        },
-        fieldSelectorIds: {
-          "Schema.A.Code": "Schema.A.Code",
-          "Schema.A.Code#Door": "Schema.A.Code",
-          "calc:score": "calc:score",
-        },
+        primaryKey: { className: "Schema.B", id: "0x1" },
+        values: { selectorValues: new Map([[field.id, "B1"]]), relatedInstances: new Map() },
+        fieldSelectorIds: { [field.id]: field.id, [fork.id]: field.id },
       });
 
-      expect(contentValues.values).to.deep.equal({
-        "Schema.A.Code": "A1",
-        "Schema.A.Code#Door": "A1",
-        "calc:score": 42,
+      expect(contentValues.values).to.deep.equal({ [fork.id]: "B1" });
+    });
+
+    it.each([
+      { pathCardinality: "one", propertyClassKind: "target" },
+      { pathCardinality: "many", propertyClassKind: "target" },
+      { pathCardinality: "one", propertyClassKind: "relationship" },
+      { pathCardinality: "many", propertyClassKind: "relationship" },
+    ] as const)(
+      "scopes $pathCardinality related $propertyClassKind values without changing shared selectors",
+      ({ pathCardinality, propertyClassKind }) => {
+        const path: RelationshipPath = [
+          {
+            sourceClassName: "Schema.A",
+            relationshipName: "Schema.Rel",
+            targetClassName: "Schema.Base",
+            instanceFilter: { expression: "this.Kind = 1" },
+          },
+        ];
+        const pathKey = serializeRelationshipPath({ path, includeInstanceFilters: true });
+        const field = createPropertyField({
+          pathFromTarget: path,
+          pathCardinality,
+          propertyClassKind,
+          propertyClassName: propertyClassKind === "relationship" ? "Schema.Rel" : "Schema.Base",
+          primaryClassNames: ["Schema.A"],
+        });
+        const relatedDescriptor: ContentDescriptor = { sources: [], categories: {}, fields: { [field.id]: field } };
+        const fork = createTransformableDescriptor(relatedDescriptor).forkField(field.id, ["Schema.B"]);
+        const entries: RelatedInstanceEntry[] = [
+          { key: { className: "Schema.B", id: "0x2" }, relationshipKey: { className: "Schema.C", id: "0x4" } },
+          { key: { className: "Schema.C", id: "0x3" }, relationshipKey: { className: "Schema.B", id: "0x5" } },
+        ];
+        const selectorValue = pathCardinality === "many" ? ["first", "second"] : "first";
+        const selectorValues = new Map([[field.id, selectorValue]]);
+        const contentValues = toContentValues({
+          descriptor: relatedDescriptor,
+          fieldSelectorIds: { [field.id]: field.id, [fork.id]: field.id },
+          primaryKey: { className: "Schema.A", id: "0x1" },
+          values: {
+            selectorValues,
+            relatedInstances: new Map([[pathKey, pathCardinality === "many" ? entries : entries.slice(0, 1)]]),
+          },
+        });
+
+        const firstFieldId = propertyClassKind === "target" ? fork.id : field.id;
+        const secondFieldId = propertyClassKind === "target" ? field.id : fork.id;
+        expect(contentValues.values).to.deep.equal(
+          pathCardinality === "many"
+            ? { [firstFieldId]: ["first", undefined], [secondFieldId]: [undefined, "second"] }
+            : { [firstFieldId]: "first" },
+        );
+        expect(selectorValues.get(field.id)).to.equal(selectorValue);
+        expect(selectorValues.get(field.id)).to.deep.equal(pathCardinality === "many" ? ["first", "second"] : "first");
+      },
+    );
+
+    it.each([undefined, [], [undefined]])("preserves missing or empty to-many values: %j", (value) => {
+      const field = createPropertyField({
+        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        pathCardinality: "many",
+        primaryClassNames: ["Schema.A"],
       });
+      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+      const contentValues = toContentValues({
+        descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
+        fieldSelectorIds: { [field.id]: field.id },
+        primaryKey: { className: value === undefined ? "Schema.Unrelated" : "Schema.A", id: "0x1" },
+        values: {
+          selectorValues: value === undefined ? new Map() : new Map([[field.id, value]]),
+          relatedInstances: new Map([[pathKey, value?.length ? [{ key: { className: "Schema.B", id: "0x2" } }] : []]]),
+        },
+      });
+      expect(contentValues.values).to.deep.equal(value === undefined ? {} : { [field.id]: value });
+    });
+
+    it("preserves an empty to-many value when the path has no related-instance entry", () => {
+      const field = createPropertyField({
+        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        pathCardinality: "many",
+        primaryClassNames: ["Schema.A"],
+      });
+      const contentValues = toContentValues({
+        descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
+        fieldSelectorIds: { [field.id]: field.id },
+        primaryKey: { className: "Schema.A", id: "0x1" },
+        values: { selectorValues: new Map([[field.id, []]]), relatedInstances: new Map() },
+      });
+      expect(contentValues.values).to.deep.equal({ [field.id]: [] });
+      expect(contentValues.relatedInstances).to.deep.equal({});
+    });
+
+    it("keeps an EC array property intact on a one-cardinality related path", () => {
+      const field = createPropertyField({
+        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        type: { kind: "array", elementType: stringType },
+        primaryClassNames: ["Schema.A"],
+      });
+      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+      const value = ["first", "second"];
+      const contentValues = toContentValues({
+        descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
+        fieldSelectorIds: { [field.id]: field.id },
+        primaryKey: { className: "Schema.A", id: "0x1" },
+        values: {
+          selectorValues: new Map([[field.id, value]]),
+          relatedInstances: new Map([[pathKey, [{ key: { className: "Schema.B", id: "0x2" } }]]]),
+        },
+      });
+      expect(contentValues.values[field.id]).to.equal(value);
     });
 
     it("maps selector values onto fields and leaves external fields undefined", () => {
