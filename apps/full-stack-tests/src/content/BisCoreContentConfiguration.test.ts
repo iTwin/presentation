@@ -251,6 +251,7 @@ describe("Content", () => {
           sourceClassName: elementClassName,
           targetClassName: multiAspectClassName,
           relationshipName: "BisCore.ElementOwnsMultiAspects",
+          instanceFilter: { expression: "this.ECClassId IS NOT (BisCore.ExternalSourceAspect)" },
         },
       ];
       validateVisibleFieldsAtPath({
@@ -455,6 +456,7 @@ describe("Content", () => {
           sourceClassName: elementClassName,
           targetClassName: "BisCore.ExternalSourceAspect",
           relationshipName: "BisCore.ElementOwnsMultiAspects",
+          instanceFilter: { expression: "this.Kind <> 'Relationship'" },
         },
       ];
 

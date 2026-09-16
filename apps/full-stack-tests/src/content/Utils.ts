@@ -88,26 +88,22 @@ export function getPropertyFieldByName(descriptor: Descriptor, propertyName: str
 
 /**
  * Returns the property fields whose resolved `pathFromTarget` matches the given path (an empty path,
- * the default, means the direct/target-class fields). A field is considered to be on `path` when
- * recomputing its ID with that path (via `PropertyField.computeId`) reproduces the field's own ID —
- * i.e. the field's canonical path serialization equals `path`'s. Use this to distinguish related
- * fields that share a property name but reach it via different paths.
+ * the default, means the direct/target-class fields). Paths are compared by their canonical
+ * serialization through `PropertyField.computeId`, including instance filters. Recomputing both
+ * identities without a fork key allows forked fields to match their source path.
  */
 export function getPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath = []): PropertyField[] {
-  const withoutInstanceFilters = (relationshipPath: RelationshipPath): RelationshipPath =>
-    relationshipPath.map(({ instanceFilter: _instanceFilter, ...step }) => step);
-  const expectedPath = withoutInstanceFilters(path);
   return getPropertyFields(descriptor).filter(
     (f) =>
       PropertyField.computeId({
         propertyClassName: f.propertyClassName,
         propertyName: f.propertyName,
-        pathFromTarget: withoutInstanceFilters(f.pathFromTarget),
+        pathFromTarget: f.pathFromTarget,
       }) ===
       PropertyField.computeId({
         propertyClassName: f.propertyClassName,
         propertyName: f.propertyName,
-        pathFromTarget: expectedPath,
+        pathFromTarget: path,
       }),
   );
 }
@@ -150,16 +146,6 @@ export function getFieldCategory(descriptor: Descriptor, field: Field) {
 /** Looks up a field by its stable ID (e.g. one produced by `PropertyField.computeId`). */
 export function getFieldById(descriptor: Descriptor, id: string): Descriptor["fields"][string] | undefined {
   return descriptor.fields[id];
-}
-
-/**
- * Returns the related property fields whose resolved `pathFromTarget` matches the given path. A field
- * is considered to be on `path` when recomputing its ID with that path (via `PropertyField.computeId`)
- * reproduces the field's own ID — i.e. the field's canonical path serialization equals `path`'s. Use
- * this to distinguish related fields that share a property name but reach it via different paths.
- */
-export function getRelatedPropertyFieldsByPath(descriptor: Descriptor, path: RelationshipPath): PropertyField[] {
-  return getPropertyFieldsByPath(descriptor, path);
 }
 
 /**
