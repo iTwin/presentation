@@ -366,9 +366,9 @@ export async function buildBaseQuery(
 /**
  * Splits a source's resolved related paths into the anchor's paths plus additional groups. A 1:many path
  * (a `cardinalityHint`, else schema multiplicity) is isolated into its own inner-joined group so the
- * anchor stays one row per primary; because such a path never shares a query with others, inner-joining
- * it needs no extra join-info resolution. The remaining 1:1 paths are strictly packed into the anchor,
- * then overflow is partitioned into additional groups. All stay outer-joined and reuse resolved info.
+ * anchor stays one row per primary. The remaining 1:1 paths are strictly packed into the anchor, then
+ * overflow is partitioned into additional groups. Every additional group is checked against a fresh
+ * budget, and all 1:1 groups stay outer-joined and reuse resolved info.
  */
 async function splitRelatedPaths(props: {
   resolvePathInfo: (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo>;
@@ -388,6 +388,9 @@ async function splitRelatedPaths(props: {
   for (const resolved of props.paths) {
     const cardinality = await props.classifyCardinality(resolved.path);
     if (cardinality === "many") {
+      const joinInfo = await props.resolvePathInfo(resolved.path, "inner");
+      // This path already forms its own group; call the partitioner only to validate it against a fresh budget.
+      partitionPathsByJoinBudget({ paths: [{ ...resolved, joinInfo }], reservedTables: props.overflowReservedTables });
       oneToManyGroups.push({ paths: [resolved], joinType: "inner", cardinality: "many" });
     } else {
       oneToOne.push(resolved);

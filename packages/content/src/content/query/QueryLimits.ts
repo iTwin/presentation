@@ -126,8 +126,8 @@ export function createJoinBudget(props: { reservedTables: number; budget?: numbe
  * `reservedTables` accounts for tables already consumed outside the packed paths (the primary `FROM`,
  * target filter, and query-filterer joins). `budget` defaults to {@link SQLITE_MAX_JOIN_TABLES}.
  *
- * Paths are packed in the given order. A single path whose own cost exceeds the available budget still
- * gets its own group (a path cannot be split).
+ * Paths are packed in the given order. Throws when a single path exceeds the available budget because
+ * it cannot be split into valid queries.
  */
 export function partitionPathsByJoinBudget(props: {
   paths: readonly ResolvedPathWithJoinInfo[];
@@ -139,16 +139,13 @@ export function partitionPathsByJoinBudget(props: {
   while (index < props.paths.length) {
     const budget = createJoinBudget({ reservedTables: props.reservedTables, budget: props.budget });
     const group = [props.paths[index]];
-    // A path cannot be split, so the first path of a group is always force-attempted; if it alone
-    // overflows the budget, `tryAdd` fails, the group closes with just that one path, and a fresh
-    // budget starts the next group instead of carrying its (rejected, so never-merged) cost forward.
-    const firstFits = budget.tryAdd(props.paths[index].joinInfo);
+    if (!budget.tryAdd(props.paths[index].joinInfo)) {
+      throw new Error("A relationship path exceeds the SQLite JOIN-table limit.");
+    }
     ++index;
-    if (firstFits) {
-      while (index < props.paths.length && budget.tryAdd(props.paths[index].joinInfo)) {
-        group.push(props.paths[index]);
-        ++index;
-      }
+    while (index < props.paths.length && budget.tryAdd(props.paths[index].joinInfo)) {
+      group.push(props.paths[index]);
+      ++index;
     }
     groups.push(group);
   }
