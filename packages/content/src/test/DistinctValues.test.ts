@@ -10,13 +10,13 @@ import { buildDistinctValuesQuery, getDistinctFieldValues } from "../content/Dis
 import { ECSQL_PREFIX } from "../content/InternalUtils.js";
 
 import type {
+  ConcatenatedValue,
   EC,
   ECSchemaProvider,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
-  ConcatenatedValue,
   RelationshipPath,
   Value,
   ValueDescriptor,
