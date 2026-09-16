@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+import { serializeRelationshipPath } from "../../model/Utils.js";
 
 import type { EC, ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../ContentTarget.js";
@@ -11,6 +12,7 @@ import type { ContentDefinition } from "../../definition-building/BuildContentDe
 import type { ValueSelector } from "../../definition-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentValues, RelatedInstanceEntry } from "../../model/ContentItem.js";
+import type { PropertyField } from "../../model/Field.js";
 import type { SelectProjection } from "../SelectBuilder.js";
 
 /**
@@ -322,6 +324,7 @@ export function mergeGroupValues(target: GroupValues, source: GroupValues): void
 /**
  * Projects decoded selector values onto descriptor fields through private field bindings, producing
  * the `ContentValues` for one instance. External fields have no binding and are left `undefined`.
+ * Property fields apply their value-class scope without changing the shared selector values.
  */
 export function toContentValues(props: {
   descriptor: ContentDescriptor;
@@ -336,11 +339,44 @@ export function toContentValues(props: {
     if (selectorId === undefined) {
       continue;
     }
-    const value = groupValues.selectorValues.get(selectorId);
+    const selectorValue = groupValues.selectorValues.get(selectorId);
+    if (selectorValue === undefined) {
+      continue;
+    }
+    const value =
+      field.kind === "property"
+        ? applyPropertyFieldScope({ field, primaryKey, value: selectorValue, groupValues })
+        : selectorValue;
     if (value !== undefined) {
       values[field.id] = value;
     }
   }
 
   return { primaryKey, values, relatedInstances: Object.fromEntries(groupValues.relatedInstances) };
+}
+
+function applyPropertyFieldScope(props: {
+  field: PropertyField;
+  primaryKey: InstanceKey;
+  value: Value;
+  groupValues: GroupValues;
+}): Value {
+  const { field, primaryKey, value, groupValues } = props;
+  const applicableClassNames = new Set(field.valueClassNames.map((name) => name.toLowerCase()));
+  if (field.pathFromTarget.length === 0) {
+    return applicableClassNames.has(primaryKey.className.toLowerCase()) ? value : undefined;
+  }
+
+  const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+  const entries = groupValues.relatedInstances.get(pathKey) ?? [];
+  const appliesToEntry = (entry: RelatedInstanceEntry | undefined): boolean => {
+    const key = field.propertyClassKind === "relationship" ? entry?.relationshipKey : entry?.key;
+    return key !== undefined && applicableClassNames.has(key.className.toLowerCase());
+  };
+  if (field.pathCardinality === "many") {
+    assert(Array.isArray(value), `Expected an array value for field "${field.id}".`);
+    // Mask rather than filter so values stay aligned with the path's related-instance entries.
+    return value.map((element, index) => (appliesToEntry(entries[index]) ? element : undefined));
+  }
+  return appliesToEntry(entries[0]) ? value : undefined;
 }
