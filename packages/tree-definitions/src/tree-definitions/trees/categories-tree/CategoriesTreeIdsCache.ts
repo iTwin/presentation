@@ -479,7 +479,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
     if (Id64.sizeOf(subCategoryIds) === 0) {
       return EMPTY;
     }
-    return this.getSubCategoryCategories({ subCategoryIds, checkForSubCategoriesSize: true }).pipe(
+    return this.getSubCategoryCategories({ subCategoryIds }).pipe(
       mergeMap((categorySubCategories) => categorySubCategories.entries()),
       mergeMap(([categoryId, categorySubCategories]) => {
         return this.getSearchPathsUpToRootCategory({ categoryId }).pipe(

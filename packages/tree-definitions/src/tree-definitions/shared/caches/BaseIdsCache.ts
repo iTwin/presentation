@@ -393,17 +393,15 @@ export class BaseIdsCache {
 
   public getSubCategoryCategories({
     subCategoryIds,
-    checkForSubCategoriesSize,
   }: {
     subCategoryIds: Id64Arg;
-    checkForSubCategoriesSize: boolean;
   }): Observable<Map<CategoryId, SubCategoryId[]>> {
     return this.#subCategoriesCache.getSubCategoriesInfo().pipe(
       mergeMap(({ subCategoryCategories, categorySubCategories }) =>
         fromWithRelease({ source: subCategoryIds, releaseOnCount: 500 }).pipe(
           reduce((acc, subCategoryId) => {
             const categoryId = subCategoryCategories.get(subCategoryId);
-            if (!checkForSubCategoriesSize || categoryId === undefined) {
+            if (categoryId === undefined) {
               return acc;
             }
             const subCategories = categorySubCategories.get(categoryId);
