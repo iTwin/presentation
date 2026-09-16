@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.19
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.14
+
 ## 2.0.0-alpha.18
 
 ### Major Changes

@@ -1,5 +1,12 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0-alpha.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.14
+
 ## 2.0.0-alpha.4
 
 ### Major Changes
