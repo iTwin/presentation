@@ -1390,7 +1390,7 @@ describe("buildBaseQuery", () => {
       }
     });
 
-    it("spills overflowing 1:1 filters in primaries-only mode", async () => {
+    it("uses the full JOIN budget in primaries-only mode", async () => {
       const paths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
       const result = await buildBaseQuery({
         schemaProvider,
@@ -1399,9 +1399,23 @@ describe("buildBaseQuery", () => {
         filters: paths.map((path, index) => makeIndexedOneToOneFilter(path, index)),
       });
 
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(40);
-      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel20]");
-      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel20]");
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
+      expect(result.anchor.parts.joins).to.include("[TestSchema].[Rel20]");
+      expect(result.anchor.parts.where).to.not.include("EXISTS");
+    });
+
+    it("spills overflowing 1:1 filters in primaries-only mode", async () => {
+      const paths = Array.from({ length: 22 }, (_, index) => makeIndexedOneToOnePath(index));
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: false,
+        filters: paths.map((path, index) => makeIndexedOneToOneFilter(path, index)),
+      });
+
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel21]");
     });
 
     it("evaluates an overflowing 1:1 is-null filter with the aggregate existential form", async () => {
