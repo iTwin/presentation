@@ -3,12 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { getClass } from "@itwin/presentation-shared";
 import {
   createTransformableDescriptor,
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,
 } from "../extensions/DescriptorTransformer.js";
-import { collectInParallel } from "../InternalUtils.js";
+import { collectInParallel, getOrCreate } from "../InternalUtils.js";
+import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 import { createPathCardinalityClassifier } from "../PathCardinality.js";
+import { createPropertyValueDecoder } from "../query/value-loading/RowDecoder.js";
 import { collectCalculatedFields } from "./CalculatedFields.js";
 import { collectCategories, pruneUnreferencedCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
@@ -17,12 +20,14 @@ import { collectExternalFields } from "./ExternalFields.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { collectRelatedPropertyFields } from "./RelatedFields.js";
 import { collectValueRequirements } from "./Selectors.js";
+import { computePropertySelectorId } from "./ValueSelector.js";
 
-import type { ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, ValueDescriptor } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field, PropertyField } from "../model/Field.js";
+import type { PropertyValueReader } from "../query/value-loading/RowDecoder.js";
 import type { ExternalInput } from "./ExternalFields.js";
 import type { ValueSelector } from "./ValueSelector.js";
 
@@ -35,6 +40,7 @@ import type { ValueSelector } from "./ValueSelector.js";
 export interface ContentDefinition {
   descriptor: ContentDescriptor;
   selectors: Record<ValueSelector["id"], ValueSelector>;
+  propertyReaders: Record<ValueSelector["id"], PropertyValueReader>;
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
   externalInputs: ExternalInput[];
 }
@@ -126,6 +132,59 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     fields: Object.values(descriptor.fields),
     externalInputs,
   });
+  const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
 
-  return { descriptor, selectors, fieldSelectorIds, externalInputs };
+  return { descriptor, selectors, propertyReaders, fieldSelectorIds, externalInputs };
+}
+
+export async function preparePropertyReaders(props: {
+  imodelAccess: ECSchemaProvider;
+  selectors: ContentDefinition["selectors"];
+  fields: ContentDescriptor["fields"];
+}): Promise<ContentDefinition["propertyReaders"]> {
+  const { imodelAccess, selectors, fields } = props;
+  const fieldTypes = new Map<string, ValueDescriptor>();
+  for (const field of Object.values(fields)) {
+    if (field.kind === "property") {
+      const selectorId = computePropertySelectorId(field);
+      fieldTypes.set(selectorId, field.type);
+    }
+  }
+  const classes = new Map<EC.FullClassNameDotNotation, Promise<EC.Class>>();
+  const propertyReaders: ContentDefinition["propertyReaders"] = {};
+  for (const selector of Object.values(selectors)) {
+    if (selector.kind !== "property") {
+      continue;
+    }
+    let type = fieldTypes.get(selector.id);
+    if (!type) {
+      const ecClass = await getOrCreate({
+        map: classes,
+        key: selector.propertyClassName,
+        createFunc: async () => getClass(imodelAccess, selector.propertyClassName),
+      });
+      const property = ecClass.getProperty(selector.propertyName);
+      if (!property) {
+        throw new Error(`Property "${selector.propertyClassName}.${selector.propertyName}" was not found.`);
+      }
+      type = createValueDescriptorFromProperty(property);
+      if (!type) {
+        throw new Error(
+          `Property "${selector.propertyClassName}.${selector.propertyName}" has an unsupported value type.`,
+        );
+      }
+    }
+    const declaringClass = await getOrCreate({
+      map: classes,
+      key: selector.propertyClassName,
+      createFunc: async () => getClass(imodelAccess, selector.propertyClassName),
+    });
+    const applicableClassNames = new Set(
+      [declaringClass.fullName, ...declaringClass.getDerivedClassNames()].map((name) => name.toLowerCase()),
+    );
+    const decode = createPropertyValueDecoder(type);
+    propertyReaders[selector.id] = (className, value) =>
+      applicableClassNames.has(className.toLowerCase()) ? decode(value) : undefined;
+  }
+  return propertyReaders;
 }
