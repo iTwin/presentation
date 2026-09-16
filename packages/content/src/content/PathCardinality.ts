@@ -9,6 +9,7 @@ import { serializeRelationshipPath } from "./model/Utils.js";
 
 import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "./ContentTarget.js";
+import type { ExternalInput } from "./definition-building/ExternalFields.js";
 import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 
 /**
@@ -104,18 +105,30 @@ export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): Ca
 }
 
 /**
- * Derives per-path cardinality hints from a descriptor's property fields, keyed by
- * `serializeRelationshipPath(pathFromTarget)`, so a query built from the same descriptor classifies
- * every path exactly as the descriptor already does (feed the result to `buildBaseQuery` as
- * `cardinalityHints`).
+ * Derives per-path cardinality hints from a descriptor's property fields and, since an
+ * external-input-only path has no field to consult, from external fields providers' input
+ * declarations, keyed by `serializeRelationshipPath(pathFromTarget)` — so a query built from the same
+ * descriptor classifies every path exactly as the descriptor (and its providers) already do (feed the
+ * result to `buildBaseQuery` as `cardinalityHints`).
  */
-export function collectPathCardinalities(descriptor: ContentDescriptor): Map<string, CardinalityHint> {
+export function collectPathCardinalities(
+  descriptor: ContentDescriptor,
+  externalInputs: Iterable<ExternalInput> = [],
+): Map<string, CardinalityHint> {
   const declarations: Array<{ path: RelationshipPath; cardinality: CardinalityHint }> = [];
   for (const field of Object.values(descriptor.fields)) {
     if (field.kind === "property" && field.pathFromTarget.length > 0) {
       declarations.push({ path: field.pathFromTarget, cardinality: field.pathCardinality });
     }
   }
+  // An unhinted input contributes nothing here and falls back to schema multiplicity in `buildBaseQuery`,
+  // same as an unhinted field path would.
+  for (const input of externalInputs) {
+    if (input.cardinalityHint && input.pathFromTarget && input.pathFromTarget.length > 0) {
+      declarations.push({ path: input.pathFromTarget, cardinality: input.cardinalityHint });
+    }
+  }
+
   const cardinalitiesByKey = new Map<string, CardinalityHint[]>();
   for (const { path, cardinality } of declarations) {
     const key = serializeRelationshipPath({ path, includeInstanceFilters: true });

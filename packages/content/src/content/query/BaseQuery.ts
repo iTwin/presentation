@@ -440,7 +440,10 @@ function serializeJoinPath(path: RelationshipPath): string {
  * if it can resolve to a joined alias.
  */
 function collectGroupPaths(source: ContentSource, propertySelectorPaths: RelationshipPath[]): ResolvedPath[] {
-  const resolvedPaths = source.resolvedDeclarations.flatMap((group) => group.paths);
+  // `resolvedDeclarations` + `externalInputPaths` together cover every path a selector could read from —
+  // `propertySelectorPaths` already includes external-input selectors (which have a selector but no
+  // field), so `externalInputPaths` needs no separate handling here.
+  const resolvedPaths = [...source.resolvedDeclarations.flatMap((group) => group.paths), ...source.externalInputPaths];
   const byKey = new Map<string, ResolvedPath>();
   for (const selectorPath of propertySelectorPaths) {
     if (selectorPath.length === 0) {
