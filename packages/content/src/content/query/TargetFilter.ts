@@ -11,21 +11,29 @@ import type { ContentTarget } from "../ContentTarget.js";
 /** @internal */
 export const TARGET_FILTER_JOIN_ALIAS = `${ECSQL_PREFIX}TargetInstanceIds`;
 
-/** @internal */
-export function buildTargetFilter(target: ContentTarget): {
-  joins?: string[];
-  where?: string;
-  bindings?: Record<string, ECSqlBinding>;
-} {
+/**
+ * Builds the target's `instanceIds` / `instanceFilter` join, where clause and bindings.
+ *
+ * `primaryAlias` defaults to {@link PRIMARY_CLASS_ALIAS} — the alias used everywhere else in
+ * generated queries. Pass a different alias when the target is scoped to a different alias in the
+ * same query (e.g. the inner scope of a two-target overlap check); the join's own alias and binding
+ * name are suffixed with it so two calls in one query never collide.
+ *
+ * @internal
+ */
+export function buildTargetFilter(
+  target: ContentTarget,
+  primaryAlias: string = PRIMARY_CLASS_ALIAS,
+): { joins?: string[]; where?: string; bindings?: Record<string, ECSqlBinding> } {
   const bindings: Record<string, ECSqlBinding> = {};
   let where: string | undefined;
   const joins: string[] = [];
+  const joinAlias =
+    primaryAlias === PRIMARY_CLASS_ALIAS ? TARGET_FILTER_JOIN_ALIAS : `${TARGET_FILTER_JOIN_ALIAS}_${primaryAlias}`;
 
   if (target.instanceIds) {
-    joins.push(
-      `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]`,
-    );
-    bindings[TARGET_FILTER_JOIN_ALIAS] = { type: "idset", value: target.instanceIds };
+    joins.push(`JOIN IdSet(:${joinAlias}) [${joinAlias}] ON [${joinAlias}].[id] = [${primaryAlias}].[ECInstanceId]`);
+    bindings[joinAlias] = { type: "idset", value: target.instanceIds };
   }
 
   if (target.instanceFilter) {
@@ -33,7 +41,7 @@ export function buildTargetFilter(target: ContentTarget): {
     const expression = substituteExpressionAlias({
       expression: target.instanceFilter.expression,
       fromAlias: alias,
-      toAlias: PRIMARY_CLASS_ALIAS,
+      toAlias: primaryAlias,
     });
     where = expression;
     if (target.instanceFilter.bindings) {
