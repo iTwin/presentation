@@ -50,6 +50,15 @@ describe("serializeRelationshipPath", () => {
       };
     }
 
+    it("includes instance filters by default", () => {
+      const pathA: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0" } })];
+      const pathB: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 1" } })];
+      expect(serializeRelationshipPath({ path: pathA })).to.not.equal(serializeRelationshipPath({ path: pathB }));
+      expect(serializeRelationshipPath({ path: pathA })).to.not.equal(
+        serializeRelationshipPath({ path: pathA, includeInstanceFilters: false }),
+      );
+    });
+
     it("matches the plain serialization for a filter-free path", () => {
       const path: RelationshipPath = [step()];
       expect(serializeRelationshipPath({ path, includeInstanceFilters: true })).to.equal(

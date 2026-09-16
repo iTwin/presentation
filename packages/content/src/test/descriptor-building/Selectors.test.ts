@@ -140,6 +140,40 @@ describe("ValueSelector", () => {
       expect(Object.keys(selectors)).to.deep.equal([prop.selectorId]);
     });
 
+    it("keeps selector ids distinct for the same property reached through different filtered paths", () => {
+      const pathA = [
+        {
+          sourceClassName: "Stuff.Thing",
+          relationshipName: "Stuff.RelA",
+          targetClassName: "Stuff.Other",
+          instanceFilter: { expression: "this.Kind = 1", bindings: { kind: { type: "int", value: 1 } } },
+        },
+      ] as const;
+      const pathB = [
+        {
+          sourceClassName: "Stuff.Thing",
+          relationshipName: "Stuff.RelA",
+          targetClassName: "Stuff.Other",
+          instanceFilter: { expression: "this.Kind = 2", bindings: { kind: { type: "int", value: 2 } } },
+        },
+      ] as const;
+
+      const idA = computePropertySelectorId({
+        propertyClassName: "Stuff.Other",
+        propertyName: "Name",
+        pathFromTarget: [...pathA],
+      });
+      const idB = computePropertySelectorId({
+        propertyClassName: "Stuff.Other",
+        propertyName: "Name",
+        pathFromTarget: [...pathB],
+      });
+
+      expect(idA).to.not.equal(idB);
+      expect(idA).to.contain("Kind = 1");
+      expect(idB).to.contain("Kind = 2");
+    });
+
     it("drops a removed output field's selector on recompute, but keeps it when it is also an external input (pinning replacement)", () => {
       const removable = propertyField({
         propertyClassName: "Stuff.Thing",
