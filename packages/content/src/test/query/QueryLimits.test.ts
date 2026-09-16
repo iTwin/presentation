@@ -197,14 +197,12 @@ describe("QueryLimits", () => {
       ]);
     });
 
-    it("gives an oversized single path its own group", () => {
+    it("rejects an oversized single path", () => {
       const big = path({ cost: 4, steps: [step("A", "AtoB", "B"), step("B", "BtoC", "C")] });
       const small = path({ cost: 2, steps: [step("A", "AtoD", "D")] });
-      // Budget 2 cannot hold the 4-table path, but a path is never split.
-      expect(partitionPathsByJoinBudget({ paths: [big, small], reservedTables: 0, budget: 2 })).to.deep.equal([
-        [big],
-        [small],
-      ]);
+      expect(() => partitionPathsByJoinBudget({ paths: [big, small], reservedTables: 0, budget: 2 })).to.throw(
+        "A relationship path exceeds the SQLite JOIN-table limit.",
+      );
     });
 
     it("packs a prefix and its extension into one group even though the per-path sum would not fit", () => {

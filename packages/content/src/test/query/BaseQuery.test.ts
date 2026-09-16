@@ -105,6 +105,16 @@ function makeOneToManyNameField(path: RelationshipPath = makeOneToManyPath()): P
   });
 }
 
+function makeMultiStepPath(length: number, relationshipPrefix: string): RelationshipPath {
+  let sourceClassName = primaryClass;
+  return Array.from({ length }, (_, index) => {
+    const targetClassName = `TestSchema.Target${index}` as EC.FullClassNameDotNotation;
+    const step = makeStep(sourceClassName, `TestSchema.${relationshipPrefix}${index}`, targetClassName);
+    sourceClassName = targetClassName;
+    return step;
+  });
+}
+
 describe("buildBaseQuery", () => {
   describe("FROM + related JOINs", () => {
     it("builds a direct-only query with no related joins", async () => {
@@ -1047,6 +1057,32 @@ describe("buildBaseQuery", () => {
       // Both groups join more than one path → outer-joined, and share the same FROM.
       expect(result.additional![0].parts.from).to.equal(result.anchor.parts.from);
       expect(result.additional![0].parts.joins).to.include("LEFT OUTER JOIN");
+    });
+
+    it("rejects a 1:1 path that cannot fit in an additional group", async () => {
+      const path = makeMultiStepPath(21, "Rel");
+
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource([path]),
+          includeRelatedJoins: true,
+          propertySelectorPaths: [path],
+        }),
+      ).rejects.toThrow("A relationship path exceeds the SQLite JOIN-table limit.");
+    });
+
+    it("rejects a 1:many path that cannot fit in its isolated group", async () => {
+      const path = makeMultiStepPath(32, "RelMany");
+
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource([path]),
+          includeRelatedJoins: true,
+          propertySelectorPaths: [path],
+        }),
+      ).rejects.toThrow("A relationship path exceeds the SQLite JOIN-table limit.");
     });
 
     it("shares the target filter and query-filterer joins on the anchor", async () => {
