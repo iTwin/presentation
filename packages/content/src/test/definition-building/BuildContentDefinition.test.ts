@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { buildContentDefinition } from "../../content/definition-building/BuildContentDefinition.js";
+import {
+  buildContentDefinition,
+  preparePropertyReaders,
+} from "../../content/definition-building/BuildContentDefinition.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
@@ -28,6 +31,92 @@ function createSource(
 }
 
 describe("buildContentDefinition", () => {
+  it("keeps sibling properties separate while allowing inherited properties", async () => {
+    const baseProperty = createPrimitiveProperty({ name: "Inherited", declaringClass: "TestSchema.Base" });
+    const siblingProperty = createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.D1" });
+    const base = createEntityClass({ fullName: "TestSchema.Base", properties: [baseProperty] });
+    const d1 = createEntityClass({
+      fullName: "TestSchema.D1",
+      properties: [baseProperty, siblingProperty],
+      baseClass: base,
+    });
+    const d2 = createEntityClass({
+      fullName: "TestSchema.D2",
+      properties: [baseProperty, createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.D2" })],
+      baseClass: base,
+    });
+    base.getDerivedClassNames = () => [d1.fullName, d2.fullName];
+    const imodelAccess = createSchemaAccess([base, d1, d2]);
+    const readers = await preparePropertyReaders({
+      imodelAccess,
+      selectors: {
+        "TestSchema.D1.Prop": {
+          kind: "property",
+          id: "TestSchema.D1.Prop",
+          propertyClassName: "TestSchema.D1",
+          propertyName: "Prop",
+          pathFromTarget: [],
+        },
+        "TestSchema.Base.Inherited": {
+          kind: "property",
+          id: "TestSchema.Base.Inherited",
+          propertyClassName: "TestSchema.Base",
+          propertyName: "Inherited",
+          pathFromTarget: [],
+        },
+      },
+      fields: {},
+    });
+
+    expect(readers["TestSchema.D1.Prop"]("TestSchema.D2", "d2")).to.equal(undefined);
+    expect(readers["TestSchema.D1.Prop"]("TestSchema.D1", "d1")).to.equal("d1");
+    expect(readers["TestSchema.Base.Inherited"]("TestSchema.D1", "base")).to.equal("base");
+  });
+
+  it("rejects a prepared property selector whose property does not exist", async () => {
+    await expect(
+      preparePropertyReaders({
+        imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.A" })]),
+        selectors: {
+          missing: {
+            kind: "property",
+            id: "missing",
+            propertyClassName: "TestSchema.A",
+            propertyName: "Missing",
+            pathFromTarget: [],
+          },
+        },
+        fields: {},
+      }),
+    ).rejects.toThrow('Property "TestSchema.A.Missing" was not found.');
+  });
+
+  it.each(["Binary", "IGeometry"] as const)(
+    "rejects a prepared property selector with unsupported %s type",
+    async (primitiveType) => {
+      await expect(
+        preparePropertyReaders({
+          imodelAccess: createSchemaAccess([
+            createEntityClass({
+              fullName: "TestSchema.A",
+              properties: [createPrimitiveProperty({ name: "Unsupported", primitiveType })],
+            }),
+          ]),
+          selectors: {
+            unsupported: {
+              kind: "property",
+              id: "unsupported",
+              propertyClassName: "TestSchema.A",
+              propertyName: "Unsupported",
+              pathFromTarget: [],
+            },
+          },
+          fields: {},
+        }),
+      ).rejects.toThrow('Property "TestSchema.A.Unsupported" has an unsupported value type.');
+    },
+  );
+
   it("carries the sources and enumerates direct property fields", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
