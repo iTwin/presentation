@@ -34,55 +34,60 @@ describe("Classifications tree", () => {
       await terminateITwinJs();
     });
 
-    it("loads classifications' hierarchy without elements", async () => {
-      await using buildIModelResult = await buildIModel(async (imodel) =>
-        withEditTxn(imodel, async (txn) => {
-          await importClassificationSchema(imodel);
+    it.each([rootClassificationSystemCode, "Owner's Classification"])(
+      "loads classifications' hierarchy without elements for system code %s",
+      async (systemCode) => {
+        await using buildIModelResult = await buildIModel(async (imodel) =>
+          withEditTxn(imodel, async (txn) => {
+            await importClassificationSchema(imodel);
 
-          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
-          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
-          const parentClassification = insertClassification({
-            txn,
-            modelId: table.id,
-            codeValue: "TestParentClassification",
-          });
-          const childClassification = insertClassification({
-            txn,
-            modelId: table.id,
-            parentId: parentClassification.id,
-            codeValue: "TestChildClassification",
-          });
+            const system = insertClassificationSystem({ txn, codeValue: systemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+            const parentClassification = insertClassification({
+              txn,
+              modelId: table.id,
+              codeValue: "TestParentClassification",
+            });
+            const childClassification = insertClassification({
+              txn,
+              modelId: table.id,
+              parentId: parentClassification.id,
+              codeValue: "TestChildClassification",
+            });
 
-          return { table, parentClassification, childClassification };
-        }),
-      );
-
-      const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
-
-      await validateHierarchy({
-        provider,
-        expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.table],
-            supportsFiltering: true,
-            children: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.parentClassification],
-                supportsFiltering: true,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childClassification],
-                    supportsFiltering: true,
-                    children: false,
-                  }),
-                ],
-              }),
-            ],
+            return { table, parentClassification, childClassification };
           }),
-        ],
-      });
-    });
+        );
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = createClassificationsTreeProvider(imodelConnection, {
+          rootClassificationSystemCode: systemCode,
+        });
+
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.parentClassification],
+                  supportsFiltering: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.childClassification],
+                      supportsFiltering: true,
+                      children: false,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      },
+    );
 
     it("loads classification elements", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>

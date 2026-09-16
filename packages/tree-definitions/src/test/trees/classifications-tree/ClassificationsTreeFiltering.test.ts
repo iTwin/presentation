@@ -130,6 +130,56 @@ describe("Classifications tree", () => {
       });
     });
 
+    it("finds a table by label when the classification system code contains an apostrophe", async () => {
+      const hierarchyConfig = { rootClassificationSystemCode: "Owner's Classification" };
+      for (const includeClassifications of [false, true]) {
+        await using buildIModelResult = await buildIModel(async (imodel) =>
+          withEditTxn(imodel, async (txn) => {
+            await importClassificationSchema(imodel);
+
+            const system = insertClassificationSystem({ txn, codeValue: hierarchyConfig.rootClassificationSystemCode });
+            const table = insertClassificationTable({
+              txn,
+              parentId: system.id,
+              codeValue: "ClassificationTable",
+              userLabel: "Matching table",
+            });
+            if (includeClassifications) {
+              const classification = insertClassification({ txn, modelId: table.id, codeValue: "Classification" });
+              const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+              const spatialCategory = insertSpatialCategory({ txn, codeValue: "Category" });
+              const element = insertPhysicalElement({
+                txn,
+                modelId: physicalModel.id,
+                categoryId: spatialCategory.id,
+                codeValue: "Element",
+              });
+              insertElementHasClassificationsRelationship({
+                txn,
+                elementId: element.id,
+                classificationId: classification.id,
+              });
+            }
+
+            return { table };
+          }),
+        );
+        const { imodelConnection, ...keys } = buildIModelResult;
+        const searchProps = createClassificationsTreeSearchProps({
+          imodelConnection,
+          hierarchyConfig,
+          search: { searchText: "Matching" },
+        });
+
+        expect(await ClassificationsTreeDefinition.createSearchTree(searchProps)).toEqual([
+          {
+            identifier: { id: keys.table.id, className: CLASS_NAME_ClassificationTable },
+            options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+          },
+        ]);
+      }
+    });
+
     ["Test", "_", "%"].forEach((label) => {
       it(`finds classification table by label when it contains '${label}'`, async function () {
         await using buildIModelResult = await buildIModel(async (imodel) =>

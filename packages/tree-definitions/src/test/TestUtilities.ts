@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+// cspell:words ecdbmap
 /* eslint-disable @typescript-eslint/naming-convention */
 
 import { XMLParser } from "fast-xml-parser";

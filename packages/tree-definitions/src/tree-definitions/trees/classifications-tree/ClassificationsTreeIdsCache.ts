@@ -98,12 +98,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
             JOIN ${CLASS_NAME_ClassificationTable} ct ON ct.ECInstanceId = cl.Model.Id
             JOIN ${CLASS_NAME_ClassificationSystem} cs ON cs.ECInstanceId = ct.Parent.Id
             ${createWhereClause({
-              conditions: [
-                `cs.CodeValue = '${this.#props.hierarchyConfig.rootClassificationSystemCode}'`,
-                "NOT ct.IsPrivate",
-                "NOT cl.IsPrivate",
-                "cl.Parent.Id IS NULL",
-              ],
+              conditions: ["cs.CodeValue = ?", "NOT ct.IsPrivate", "NOT cl.IsPrivate", "cl.Parent.Id IS NULL"],
             })}
 
             UNION ALL
@@ -160,7 +155,11 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
         LIMIT ${this.#rowLimit}
       `;
       return this.#props.queryExecutor.createQueryReader(
-        { ctes, ecsql },
+        {
+          ctes,
+          ecsql,
+          bindings: [{ type: "string", value: this.#props.hierarchyConfig.rootClassificationSystemCode }],
+        },
         {
           rowFormat: "ECSqlPropertyNames",
           limit: "unbounded",

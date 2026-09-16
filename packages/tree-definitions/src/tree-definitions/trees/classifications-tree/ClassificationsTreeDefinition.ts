@@ -223,8 +223,9 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
               ${instanceFilterClauses.from} this
             JOIN ${CLASS_NAME_ClassificationSystem} system ON system.ECInstanceId = this.Parent.Id
             ${instanceFilterClauses.joins}
-            ${createWhereClause({ conditions: [`system.CodeValue = '${this.#props.hierarchyConfig.rootClassificationSystemCode}'`, "NOT this.IsPrivate", instanceFilterClauses.where] })}
+            ${createWhereClause({ conditions: ["system.CodeValue = ?", "NOT this.IsPrivate", instanceFilterClauses.where] })}
           `,
+          bindings: [{ type: "string", value: this.#props.hierarchyConfig.rootClassificationSystemCode }],
         },
       },
     ];
@@ -655,7 +656,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
             ${classificationTableLabelSelectClause}
           FROM ${CLASS_NAME_ClassificationTable} this
           JOIN ${CLASS_NAME_ClassificationSystem} system ON system.ECInstanceId = this.Parent.Id
-          ${createWhereClause({ conditions: [`system.CodeValue = '${props.hierarchyConfig.rootClassificationSystemCode}'`, "NOT this.IsPrivate"] })}
+          ${createWhereClause({ conditions: ["system.CodeValue = ?", "NOT this.IsPrivate"] })}
         )
       `,
       ...(classificationIds.length > 0
@@ -731,6 +732,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
       ${props.limit === "unbounded" ? "" : `LIMIT ${(props.limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT) + 1}`}
     `;
     const bindings = [
+      { type: "string" as const, value: props.hierarchyConfig.rootClassificationSystemCode },
       ...(classificationIds.length > 0
         ? [
             { type: "idset" as const, value: classificationIds },
