@@ -2080,6 +2080,40 @@ describe("resolveContentSources", () => {
       );
     });
 
+    it("cancels in-flight overlap queries after finding the first overlap", async () => {
+      const imodelAccess = createOverlapMockIModelAccess();
+      const immediateReader = (async function* () {
+        yield { 0: "0x1" };
+      })();
+      const gatedReader = (async function* () {
+        await new Promise(() => {});
+      })();
+      const gatedNext = vi.spyOn(gatedReader, "next");
+      const gatedReturn = vi.spyOn(gatedReader, "return");
+      let overlapQueryIndex = 0;
+      vi.mocked(imodelAccess.createQueryReader).mockImplementation((query) => {
+        if (!query.ecsql.includes("pres_other")) {
+          return (async function* () {})();
+        }
+        const queryIndex = overlapQueryIndex++;
+        if (queryIndex === 0) {
+          return immediateReader;
+        }
+        return queryIndex === 1 ? gatedReader : (async function* () {})();
+      });
+      const targets: ContentTarget[] = [
+        targetA,
+        { primaryClass: targetA.primaryClass },
+        { primaryClass: targetA.primaryClass },
+      ];
+
+      await expect(resolveContentSources({ imodelAccess, targets })).rejects.toThrow(
+        "Content targets #0 (TestSchema.ClassA) and #1 (TestSchema.ClassA) overlap: instance 0x1 is in both. Merge the targets or make their scopes disjoint.",
+      );
+      expect(gatedNext).toHaveBeenCalled();
+      expect(gatedReturn).toHaveBeenCalled();
+    });
+
     it("does not throw for disjoint instanceIds sets, issuing no query", async () => {
       const imodelAccess = createOverlapMockIModelAccess();
       const targets: ContentTarget[] = [
