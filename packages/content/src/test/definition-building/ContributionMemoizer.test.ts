@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createContributionMemoizer } from "../../content/descriptor-building/ContributionMemoizer.js";
+import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
 
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../content/ContentTarget.js";

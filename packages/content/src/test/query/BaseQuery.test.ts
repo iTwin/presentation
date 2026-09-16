@@ -73,7 +73,6 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     valueClassNames: props.valueClassNames ?? [primaryClass],
     primaryClassNames: props.primaryClassNames ?? [primaryClass],
     pathCardinality: "one",
-    selectorId: props.selectorId ?? `selector-${props.propertyName}`,
   };
 }
 
@@ -745,7 +744,6 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "this.CodeValue || this.UserLabel",
-        selectorId: "calc",
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
 
@@ -764,7 +762,6 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "String" },
         expression: "e.CodeValue",
         targetAlias: "e",
-        selectorId: "calc",
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
 
@@ -780,7 +777,6 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "Boolean" },
         expression: "this.FlagA OR this.FlagB",
-        selectorId: "calc",
       };
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: true }];
 
@@ -797,7 +793,6 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "Double" },
         expression: "this.Length * :scale",
         bindings: { scale: { type: "double", value: 2 } },
-        selectorId: "calc",
       };
       const filters: ContentValueFilter[] = [{ field, operator: "greater-than", value: 10 }];
 

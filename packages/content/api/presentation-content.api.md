@@ -48,7 +48,6 @@ export interface CalculatedField extends BaseField {
     expression: string;
     // (undocumented)
     kind: "calculated";
-    selectorId: string;
     targetAlias?: string;
 }
 
@@ -61,13 +60,6 @@ interface CalculatedFieldDeclaration {
     label: string;
     targetAlias?: string;
     type: ValueDescriptor;
-}
-
-// @public
-export interface CalculatedValueSelector extends Pick<CalculatedField, "expression" | "targetAlias" | "bindings"> {
-    id: string;
-    // (undocumented)
-    kind: "calculated";
 }
 
 // @public
@@ -111,7 +103,6 @@ export interface ContentConfiguration {
 export interface ContentDescriptor {
     categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     fields: Record<Field["id"], Field>;
-    selectors: Record<ValueSelector["id"], ValueSelector>;
     sources: ContentSource[];
 }
 
@@ -336,7 +327,6 @@ export interface PropertyField extends BaseField {
     propertyClassKind?: "target" | "relationship";
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
-    selectorId: string;
     valueClassNames: EC.FullClassNameDotNotation[];
 }
 
@@ -368,13 +358,6 @@ type PropertySelection = "all" | "none" | {
 } | {
     exclude: string[];
 };
-
-// @public
-export interface PropertyValueSelector extends Pick<PropertyField, "propertyClassName" | "propertyName" | "pathFromTarget"> {
-    id: string;
-    // (undocumented)
-    kind: "property";
-}
 
 // @public
 interface QueryFilterClauses {
@@ -481,9 +464,6 @@ type TransformableField<TField extends Field = Field> = TField extends Field ? D
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";
-
-// @public
-export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
 
 // (No @packageDocumentation comment for this package)
 

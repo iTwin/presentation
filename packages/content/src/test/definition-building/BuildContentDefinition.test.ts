@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { buildContentDescriptor } from "../../content/descriptor-building/BuildDescriptor.js";
+import {
+  buildContentDefinition,
+  buildContentDescriptor,
+} from "../../content/definition-building/BuildContentDefinition.js";
+import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
 import {
@@ -17,7 +21,6 @@ import {
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
 import type { DescriptorTransformer } from "../../content/extensions/DescriptorTransformer.js";
-import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
 
 function createSource(
@@ -45,6 +48,7 @@ describe("buildContentDescriptor", () => {
 
   it("merges the same direct property across sources, unioning value classes", async () => {
     const imodelAccess = createSchemaAccess([
+      createEntityClass({ fullName: "BisCore.Element" }),
       createEntityClass({
         fullName: "TestSchema.Door",
         properties: [createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" })],
@@ -71,6 +75,7 @@ describe("buildContentDescriptor", () => {
 
   it("unions fields across multiple targets, merging a shared inherited property", async () => {
     const imodelAccess = createSchemaAccess([
+      createEntityClass({ fullName: "BisCore.Element" }),
       createEntityClass({
         fullName: "TestSchema.Pump",
         properties: [
@@ -252,17 +257,17 @@ describe("buildContentDescriptor", () => {
       },
     };
 
-    const descriptor = await buildContentDescriptor({
+    const definition = await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
       config: { imodelFieldsProviders: [fieldsProvider] },
     });
+    const { descriptor } = definition;
 
     expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
     expect(descriptor.fields["calc_v1:sum"].kind).to.equal("calculated");
-    // Both the property field and the calculated field back a selector.
-    expect(Object.keys(descriptor.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
-    expect(descriptor.selectors["calc_v1:sum"].kind).to.equal("calculated");
+    expect(Object.keys(definition.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
+    expect(definition.selectors["calc_v1:sum"].kind).to.equal("calculated");
   });
 
   it("appends external fields without selectors and keeps external input columns", async () => {
@@ -272,25 +277,26 @@ describe("buildContentDescriptor", () => {
         properties: [createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.A" })],
       }),
     ]);
-    const externalProvider: ExternalFieldsProvider<"code"> = {
+    const externalProvider = defineExternalFieldsProvider({
       id: "ext_v1",
       fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
       inputs: { code: { propertyClassName: "TestSchema.A", propertyName: "Prop" } },
       async getValues() {
         return [];
       },
-    };
+    });
 
-    const descriptor = await buildContentDescriptor({
+    const definition = await buildContentDefinition({
       imodelAccess,
       sources: [createSource("TestSchema.A")],
       config: { externalFieldsProviders: [externalProvider] },
     });
+    const { descriptor } = definition;
 
     expect(Object.keys(descriptor.fields).sort()).to.deep.equal(["TestSchema.A.Prop", "ext_v1:status"]);
     expect(descriptor.fields["ext_v1:status"].kind).to.equal("external");
-    // External fields have no selector; the input reuses the property field's column selector.
-    expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
+    // External fields have no selector; the input reuses the property field's private requirement.
+    expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
   });
 
   it("applies descriptor transformer metadata changes", async () => {
@@ -393,15 +399,16 @@ describe("buildContentDescriptor", () => {
       },
     };
 
-    const descriptor = await buildContentDescriptor({
+    const definition = await buildContentDefinition({
       imodelAccess,
       sources: [source],
       config: { imodelFieldsProviders: [provider], descriptorTransformers: [transformer] },
     });
+    const { descriptor } = definition;
 
-    // The related field (and thus its selector and auto category) is gone; the direct field remains.
+    // The related field (and thus its private requirement and auto category) is gone; the direct field remains.
     expect(Object.keys(descriptor.fields)).to.deep.equal(["TestSchema.A.Keep"]);
-    expect(Object.keys(descriptor.selectors)).to.deep.equal(["TestSchema.A.Keep"]);
+    expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Keep"]);
     expect(descriptor.categories).to.deep.equal({});
   });
 });
