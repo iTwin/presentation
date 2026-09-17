@@ -5,7 +5,7 @@
 
 import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { fromWithRelease } from "../Rxjs.js";
+import { fromWithRelease, toVoidPromise } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
 import { ElementModelCategoriesCache } from "./ElementModelCategoriesCache.js";
 import { ModeledElementsCache } from "./ModeledElementsCache.js";
@@ -78,7 +78,24 @@ export class BaseIdsCache {
     );
   }
 
-  // ModeledElementsCache methods
+  public async preloadModeledElements(): Promise<void> {
+    if (this.#modeledElementsCache !== undefined) {
+      return;
+    }
+    try {
+      await toVoidPromise(this.getModeledElementsInfo());
+    } catch {}
+  }
+
+  public async preloadElementModelCategories(): Promise<void> {
+    if (this.#elementModelCategoriesCache.cachedDataDefined()) {
+      return;
+    }
+    try {
+      await toVoidPromise(this.#elementModelCategoriesCache.getCachedData());
+    } catch {}
+  }
+
   public getAllSubModels(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
     if (!props?.excludeIfOnlyExcludedClasses) {
       return this.getModeledElementsInfo().pipe(map(({ allSubModels }) => allSubModels));

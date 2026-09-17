@@ -7,7 +7,7 @@ import { defer, EMPTY, forkJoin, from, map, mergeMap, of, reduce, shareReplay, t
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease } from "../../shared/Rxjs.js";
+import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/Utils.js";
 
@@ -334,6 +334,15 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
       definitionContainersInfo,
       hasElements,
     });
+  }
+
+  public async preloadDefinitionContainers(): Promise<void> {
+    if (this.#definitionContainersInfo !== undefined) {
+      return;
+    }
+    try {
+      await toVoidPromise(this.getDefinitionContainersInfo());
+    } catch {}
   }
 
   public getDirectChildDefinitionContainersAndCategories({

@@ -7,7 +7,7 @@ import { defer, EMPTY, expand, from, map, mergeMap, of, reduce, shareReplay, tap
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease } from "../../shared/Rxjs.js";
+import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
@@ -219,6 +219,15 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
       shareReplay(),
     );
     return this.#cachedData;
+  }
+
+  public async preloadClassifications(): Promise<void> {
+    if (this.#cachedData !== undefined) {
+      return;
+    }
+    try {
+      await toVoidPromise(this.getCachedData());
+    } catch {}
   }
 
   public get isDataLoaded(): boolean {
