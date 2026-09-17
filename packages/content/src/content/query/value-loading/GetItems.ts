@@ -76,13 +76,14 @@ function loadItems(props: {
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
   return from(getContentDefinition()).pipe(
-    mergeMap(({ descriptor, selectors, propertyReaders, fieldSelectorIds }) => {
+    mergeMap(({ descriptor, selectors, calculatedFieldIdsBySource, propertyReaders, fieldSelectorIds }) => {
       return from(sources).pipe(
         mergeMap(async (source) =>
           createSourcePlan({
             imodelAccess,
             descriptor,
             selectors,
+            applicableCalculatedFieldIds: calculatedFieldIdsBySource.get(source) ?? new Set(),
             propertyReaders,
             source,
             sorting,
@@ -115,13 +116,24 @@ async function createSourcePlan(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
   selectors: ContentDefinition["selectors"];
+  applicableCalculatedFieldIds: ReadonlySet<string>;
   propertyReaders: ContentDefinition["propertyReaders"];
   source: ContentSource;
   sorting: ContentQuerySort[];
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
 }): Promise<SourcePlan> {
-  const { imodelAccess, descriptor, selectors, propertyReaders, source, sorting, queryFilterers, filters } = props;
+  const {
+    imodelAccess,
+    descriptor,
+    selectors,
+    applicableCalculatedFieldIds,
+    propertyReaders,
+    source,
+    sorting,
+    queryFilterers,
+    filters,
+  } = props;
   const propertySelectorPaths = Object.values(selectors)
     .filter((selector): selector is PropertyValueSelector => selector.kind === "property")
     .map((selector) => selector.pathFromTarget)
@@ -143,6 +155,7 @@ async function createSourcePlan(props: {
     buildSelectProjection({
       schemaProvider: imodelAccess,
       selectors,
+      applicableCalculatedFieldIds,
       group: anchor,
       sorting,
       ownedPathKeys: ownedPathKeys.anchor,
@@ -150,6 +163,7 @@ async function createSourcePlan(props: {
     buildSelectProjection({
       schemaProvider: imodelAccess,
       selectors: {},
+      applicableCalculatedFieldIds,
       group: anchor,
       sorting,
       ownedPathKeys: ownedPathKeys.anchor,
@@ -159,6 +173,7 @@ async function createSourcePlan(props: {
         buildSelectProjection({
           schemaProvider: imodelAccess,
           selectors,
+          applicableCalculatedFieldIds,
           group,
           ownedPathKeys: ownedPathKeys.additional[index],
         }),

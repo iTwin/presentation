@@ -440,6 +440,96 @@ describe("Content", () => {
     });
 
     describe("calculated fields", () => {
+      it.each([undefined, "asc", "desc"] as const)(
+        "loads and pages source-specific calculated fields with %s sorting",
+        async (direction) => {
+          const nullCount = 1000;
+          using setup = await buildTestECDb(async (builder, testName) => {
+            const schema = await importSchema(
+              testName,
+              builder,
+              `
+                <ECEntityClass typeName="A">
+                  <ECProperty propertyName="Score" typeName="int" />
+                </ECEntityClass>
+                <ECEntityClass typeName="B">
+                  <ECProperty propertyName="Name" typeName="string" />
+                </ECEntityClass>
+              `,
+            );
+            const a1 = builder.insertInstance(schema.items.A.fullName, { score: 3 });
+            const a2 = builder.insertInstance(schema.items.A.fullName, { score: 1 });
+            for (let i = 0; i < nullCount; ++i) {
+              builder.insertInstance(schema.items.B.fullName, { name: `B${i}` });
+            }
+            return { schema, a1, a2 };
+          });
+          const imodelAccess = createContentIModelAccess(setup.ecdb);
+          const provider = await createProvider({
+            imodelAccess,
+            targets: [{ primaryClass: setup.schema.items.B.fullName }, { primaryClass: setup.schema.items.A.fullName }],
+            config: {
+              imodelFieldsProviders: [
+                defineIModelFieldsProvider({
+                  id: "specific_v1",
+                  async getContribution({ target }) {
+                    if (target.primaryClass !== setup.schema.items.A.fullName) {
+                      return undefined;
+                    }
+                    return {
+                      calculatedFields: [
+                        {
+                          id: "score",
+                          label: "Scaled",
+                          expression: "e.Score * 2",
+                          targetAlias: "e",
+                          type: { kind: "primitive", type: "Integer" },
+                        },
+                      ],
+                    };
+                  },
+                }),
+                defineIModelFieldsProvider({
+                  id: "shared_v1",
+                  async getContribution() {
+                    return {
+                      calculatedFields: [
+                        {
+                          id: "constant",
+                          label: "Shared",
+                          expression: "7",
+                          type: { kind: "primitive", type: "Integer" },
+                        },
+                      ],
+                    };
+                  },
+                }),
+              ],
+            },
+          });
+          const descriptor = await provider.getContentDescriptor();
+          const specificField = getCalculatedFieldByLabel(descriptor, "Scaled");
+          const sharedField = getCalculatedFieldByLabel(descriptor, "Shared");
+          const items = await collect(
+            provider.getItems({ sorting: direction ? [{ field: specificField, direction }] : undefined }),
+          );
+          expect(items).toHaveLength(nullCount + 2);
+          expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(nullCount + 2);
+          for (const item of items) {
+            expect(item.getValue(sharedField)).toBe(7);
+            const expected =
+              item.primaryKey.id === setup.a1.id ? 6 : item.primaryKey.id === setup.a2.id ? 2 : undefined;
+            expect(item.getValue(specificField)).toBe(expected);
+          }
+          const values = items.map((item) => item.getValue(specificField));
+          if (direction === "asc") {
+            expect(values).toEqual([...new Array(nullCount).fill(undefined), 2, 6]);
+          } else if (direction === "desc") {
+            expect(values).toEqual([6, 2, ...new Array(nullCount).fill(undefined)]);
+          }
+        },
+      );
+
       it("computes calculated field values from a provider expression", async () => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const schema = await importSchema(

@@ -51,7 +51,14 @@ function createTestDefinition(contentDescriptor: ContentDescriptor): ContentDefi
     propertyReaders[selector.id] = (className, value) =>
       applicableClasses.has(className.toLowerCase()) ? decode(value) : undefined;
   }
-  return { descriptor: contentDescriptor, selectors, propertyReaders, fieldSelectorIds, externalInputs: [] };
+  return {
+    descriptor: contentDescriptor,
+    selectors,
+    calculatedFieldIdsBySource: new Map(),
+    propertyReaders,
+    fieldSelectorIds,
+    externalInputs: [],
+  };
 }
 
 const codeField: PropertyField = {
