@@ -66,7 +66,6 @@
     "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:^",
-    "@stratakit/icons": "catalog:stratakit",
     "@stratakit/structures": "catalog:stratakit",
     "@tanstack/react-virtual": "^3.13.24",
     "classnames": "catalog:react",
@@ -78,6 +77,7 @@
   "peerDependencies": {
     "@mui/material": "^9.4.0",
     "@stratakit/foundations": "^1.0.0",
+    "@stratakit/icons": "^0.4.3",
     "@stratakit/mui": "^1.0.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
@@ -87,6 +87,9 @@
       "optional": true
     },
     "@stratakit/foundations": {
+      "optional": true
+    },
+    "@stratakit/icons": {
       "optional": true
     },
     "@stratakit/mui": {
@@ -99,6 +102,7 @@
     "@mui/material": "catalog:stratakit",
     "@rolldown/plugin-babel": "catalog:build-tools",
     "@stratakit/foundations": "catalog:stratakit",
+    "@stratakit/icons": "catalog:stratakit",
     "@stratakit/mui": "catalog:stratakit",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
