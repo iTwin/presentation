@@ -9,6 +9,7 @@ import {
   createContentProvider,
   defineDescriptorTransformer,
   defineExternalFieldsProvider,
+  defineIModelFieldsProvider,
   resolveContentSources,
 } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
@@ -20,6 +21,7 @@ import {
   getExternalFields,
   getFieldById,
   getFieldCategory,
+  getPropertyFieldByName,
 } from "./Utils.js";
 
 import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
@@ -221,12 +223,14 @@ describe("Content", () => {
       expect(item.getValue(combinedField)).toBe("a1+b1");
     });
 
-    it("populates an external field from a many-valued related input", async () => {
-      using setup = await buildTestECDb(async (builder, testName) => {
-        const s = await importSchema(
-          testName,
-          builder,
-          `
+    it.each([false, true])(
+      "populates a many-valued related input with conflicting property fields: %s",
+      async (includePropertyFields) => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
             <ECEntityClass typeName="A">
               <ECProperty propertyName="PropA" typeName="string" />
             </ECEntityClass>
@@ -242,56 +246,85 @@ describe("Content", () => {
               </Target>
             </ECRelationshipClass>
           `,
-        );
-        const related = builder.insertInstance(s.items.A.fullName, { propA: "related" });
-        const unrelated = builder.insertInstance(s.items.A.fullName, { propA: "unrelated" });
-        const c1 = builder.insertInstance(s.items.C.fullName, { propC: "first" });
-        const c2 = builder.insertInstance(s.items.C.fullName, { propC: "second" });
-        builder.insertRelationship(s.items.AtoC.fullName, related.id, c1.id);
-        builder.insertRelationship(s.items.AtoC.fullName, related.id, c2.id);
-        return { schema: s, related, unrelated };
-      });
-      const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
-        {
-          sourceClassName: setup.schema.items.A.fullName,
-          targetClassName: setup.schema.items.C.fullName,
-          relationshipName: setup.schema.items.AtoC.fullName,
-        },
-      ];
-      const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { names: string[] } }> }) =>
-        batch.map((entry) => ({ joined: [...entry.inputValues.names].sort().join(",") })),
-      );
-      const extProvider = defineExternalFieldsProvider({
-        id: "ext_v1",
-        fields: [{ id: "joined", label: "Joined", type: { kind: "primitive", type: "String" } }],
-        inputs: {
-          names: {
-            propertyClassName: setup.schema.items.C.fullName,
-            propertyName: "PropC",
-            path,
-            cardinalityHint: "many",
+          );
+          const related = builder.insertInstance(s.items.A.fullName, { propA: "related" });
+          const unrelated = builder.insertInstance(s.items.A.fullName, { propA: "unrelated" });
+          const c1 = builder.insertInstance(s.items.C.fullName, { propC: "first" });
+          const c2 = builder.insertInstance(s.items.C.fullName, { propC: "second" });
+          builder.insertRelationship(s.items.AtoC.fullName, related.id, c1.id);
+          builder.insertRelationship(s.items.AtoC.fullName, related.id, c2.id);
+          return { schema: s, related, unrelated, c1, c2 };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.C.fullName,
+            relationshipName: setup.schema.items.AtoC.fullName,
           },
-        },
-        getValues,
-      });
-      const provider = await createProvider({
-        imodelAccess,
-        targets: [{ primaryClass: setup.schema.items.A.fullName }],
-        config: { externalFieldsProviders: [extProvider] },
-      });
-      const descriptor = await provider.getContentDescriptor();
-      const [joinedField] = getExternalFields(descriptor);
+        ];
+        const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { names: string[] } }> }) =>
+          batch.map((entry) => ({ joined: [...entry.inputValues.names].sort().join(",") })),
+        );
+        const extProvider = defineExternalFieldsProvider({
+          id: "ext_v1",
+          fields: [{ id: "joined", label: "Joined", type: { kind: "primitive", type: "String" } }],
+          inputs: {
+            names: {
+              propertyClassName: setup.schema.items.C.fullName,
+              propertyName: "PropC",
+              path,
+              cardinalityHint: "many",
+            },
+          },
+          getValues,
+        });
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: {
+            externalFieldsProviders: [extProvider],
+            imodelFieldsProviders: includePropertyFields
+              ? [
+                  defineIModelFieldsProvider({
+                    id: "related_v1",
+                    async getContribution() {
+                      return { relatedProperties: [{ path, cardinalityHint: "one" }] };
+                    },
+                  }),
+                ]
+              : [],
+          },
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const [joinedField] = getExternalFields(descriptor);
 
-      const items = await collect(provider.getItems());
-      const [{ items: batchItems }] = getValues.mock.calls[0];
-      const relatedIndex = items.findIndex((item) => item.primaryKey.id === setup.related.id);
-      const unrelatedIndex = items.findIndex((item) => item.primaryKey.id === setup.unrelated.id);
-      expect(batchItems[relatedIndex].inputValues.names).toHaveLength(2);
-      expect(batchItems[unrelatedIndex].inputValues.names).toEqual([]);
-      expect(items[relatedIndex].getValue(joinedField)).toBe("first,second");
-      expect(items[unrelatedIndex].getValue(joinedField)).toBe("");
-    });
+        const items = await collect(provider.getItems());
+        const [{ items: batchItems }] = getValues.mock.calls[0];
+        const relatedIndex = items.findIndex((item) => item.primaryKey.id === setup.related.id);
+        const unrelatedIndex = items.findIndex((item) => item.primaryKey.id === setup.unrelated.id);
+        expect(batchItems[relatedIndex].inputValues.names).toHaveLength(2);
+        expect(batchItems[unrelatedIndex].inputValues.names).toEqual([]);
+        expect(items[relatedIndex].getValue(joinedField)).toBe("first,second");
+        expect(items[unrelatedIndex].getValue(joinedField)).toBe("");
+        if (includePropertyFields) {
+          const relatedField = getPropertyFieldByName(descriptor, "PropC");
+          expect(relatedField.pathCardinality).toBe("many");
+          expect(items[relatedIndex].getValue(relatedField)).toEqual(expect.arrayContaining(["first", "second"]));
+          expect(items[unrelatedIndex].getValue(relatedField)).toEqual([]);
+          const relatedInstances = items[relatedIndex].getRelatedInstances(relatedField);
+          expect(relatedInstances).toHaveLength(2);
+          expect(relatedInstances.map((entry) => [entry.key, entry.getValue(relatedField)])).toEqual(
+            expect.arrayContaining([
+              [setup.c1, "first"],
+              [setup.c2, "second"],
+            ]),
+          );
+          expect(items[unrelatedIndex].getRelatedInstances(relatedField)).toEqual([]);
+          expect(getPropertyFieldByName(descriptor, "PropA").pathCardinality).toBe("one");
+        }
+      },
+    );
 
     it("leaves an unhinted scalar related input undefined for a primary with no related instance", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {

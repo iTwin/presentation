@@ -146,12 +146,24 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     categories: pruneUnreferencedCategories({ fields: transformed.fields, categories: transformed.categories }),
   };
 
+  const pathCardinalitiesBeforePromotion = collectPathCardinalities(descriptor, externalInputs);
+  // Every field on a shared path must agree with the query's decoded value shape.
+  for (const field of Object.values(descriptor.fields)) {
+    if (
+      field.kind === "property" &&
+      field.pathFromTarget.length > 0 &&
+      pathCardinalitiesBeforePromotion.get(serializeRelationshipPath({ path: field.pathFromTarget })) === "many"
+    ) {
+      field.pathCardinality = "many";
+    }
+  }
+
   const { selectors, fieldSelectorIds } = collectValueRequirements({
     fields: Object.values(descriptor.fields),
     externalInputs,
   });
   const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
-  const mergedPathCardinalities = collectPathCardinalities(descriptor, externalInputs);
+  const effectivePathCardinalities = collectPathCardinalities(descriptor, externalInputs);
 
   const externalProviders = await Promise.all(
     (config?.externalFieldsProviders ?? []).map(async (provider) => {
@@ -170,7 +182,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
               ? await classifier.classify({
                   path: declaration.path,
                   declaredPath: declaration.path,
-                  hint: mergedPathCardinalities.get(serializeRelationshipPath({ path: declaration.path })),
+                  hint: effectivePathCardinalities.get(serializeRelationshipPath({ path: declaration.path })),
                 })
               : "one";
           inputs.push({
