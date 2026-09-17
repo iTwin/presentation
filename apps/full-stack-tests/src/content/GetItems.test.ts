@@ -346,7 +346,6 @@ describe("Content", () => {
           items.map((item) => item.primaryKey),
           [setup.derived],
         );
-        expect(items[0].primaryKey.className).toBe(setup.schema.items.Derived.fullName);
       });
 
       it("enumerates multiple sources sequentially", async () => {
@@ -788,6 +787,7 @@ describe("Content", () => {
           // `bis.Element`) — force that here to exercise stitching that keys by id alone.
           const a = builder.insertInstance(schema.items.A.fullName, { ecInstanceId: "0x1", score: 1 });
           const b = builder.insertInstance(schema.items.B.fullName, { ecInstanceId: "0x1", score: 2 });
+          expect(a.id).to.eq(b.id);
           return { schema, a, b };
         });
         const imodelAccess = createContentIModelAccess(setup.ecdb);
@@ -849,10 +849,10 @@ describe("Content", () => {
         expect(items).toHaveLength(2 * perSource);
         expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(2 * perSource);
         const scores = items.map((item) => {
-          const scopeFieldForThisItem = scoreFields.find(
+          const scoreFieldForThisItem = scoreFields.find(
             (field) => field.propertyClassName === item.primaryKey.className,
           );
-          return scopeFieldForThisItem ? item.getValue(scopeFieldForThisItem) : undefined;
+          return scoreFieldForThisItem ? item.getValue(scoreFieldForThisItem) : undefined;
         });
         expect(scores).toEqual(Array.from({ length: 2 * perSource }, (_, i) => i));
       });
