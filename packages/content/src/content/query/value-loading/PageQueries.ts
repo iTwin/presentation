@@ -85,6 +85,7 @@ export function buildAnchorPageQuery(props: {
 /**
  * Builds the globally-ordered `UNION ALL` key stream that interleaves multiple sources by sort order.
  * Only primary keys and sort values are selected here; field values are fetched separately per page.
+ * @throws If no source plans are supplied.
  */
 export function buildKeyStreamQuery(props: {
   plans: SourcePlan[];
@@ -92,6 +93,9 @@ export function buildKeyStreamQuery(props: {
   cursor?: Cursor;
 }): ECSqlQueryDef {
   const { plans, sorting, cursor } = props;
+  if (plans.length === 0) {
+    throw new Error("Cannot build a key stream query without source plans.");
+  }
   const bindings: Record<string, ECSqlBinding> = {};
   const branches = plans.map((plan, sourceIndex) => {
     const branchBindings: Record<string, ECSqlBinding> = {};

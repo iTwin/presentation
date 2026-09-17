@@ -184,6 +184,15 @@ describe("buildAnchorPageQuery", () => {
 });
 
 describe("buildKeyStreamQuery", () => {
+  it.each<Cursor | undefined>([undefined, { sortValues: ["A"], primaryKey: { className: "Schema.A", id: "0x1" } }])(
+    "rejects an empty plan list with cursor=%j",
+    (cursor) => {
+      expect(() => buildKeyStreamQuery({ plans: [], sorting, cursor })).to.throw(
+        "Cannot build a key stream query without source plans.",
+      );
+    },
+  );
+
   it("unions the sources' key streams under a single ordering and page limit", () => {
     const query = buildKeyStreamQuery({ plans: [createPlan(), createPlan()], sorting });
     expect(trimWhitespace(query.ecsql)).to.equal(
