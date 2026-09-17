@@ -87,9 +87,9 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
               cl.ECInstanceId,
               ct.ECInstanceId,
               NULL
-            FROM ${CLASS_NAMES.classification} cl
-            JOIN ${CLASS_NAMES.classificationTable} ct ON ct.ECInstanceId = cl.Model.Id
-            JOIN ${CLASS_NAMES.classificationSystem} cs ON cs.ECInstanceId = ct.Parent.Id
+            FROM ${CLASS_NAMES.Classification} cl
+            JOIN ${CLASS_NAMES.ClassificationTable} ct ON ct.ECInstanceId = cl.Model.Id
+            JOIN ${CLASS_NAMES.ClassificationSystem} cs ON cs.ECInstanceId = ct.Parent.Id
             ${createWhereClause({
               conditions: ["cs.CodeValue = ?", "NOT ct.IsPrivate", "NOT cl.IsPrivate", "cl.Parent.Id IS NULL"],
             })}
@@ -102,7 +102,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
               cl.Parent.Id
             FROM
               ${CLASSIFICATIONS_CTE} cte
-              JOIN ${CLASS_NAMES.classification} cl ON cl.Parent.Id = cte.ClassificationId
+              JOIN ${CLASS_NAMES.Classification} cl ON cl.Parent.Id = cte.ClassificationId
             WHERE
               NOT cl.IsPrivate
           )
@@ -119,7 +119,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
             : { classificationAccessor: "TargetECInstanceId", categoryAccessor: "SourceECInstanceId" };
         categoriesOfClassificationSelector = `
           SELECT group_concat(IdToHex(cat.ECInstanceId))
-          FROM ${CLASS_NAMES.spatialCategory} cat
+          FROM ${CLASS_NAMES.SpatialCategory} cat
           JOIN ${relationship} rel ON rel.${categoryAccessor} = cat.ECInstanceId
           ${createWhereClause({ conditions: ["NOT cat.IsPrivate", `rel.${classificationAccessor} = cl.ClassificationId`] })}
           GROUP BY rel.${classificationAccessor}
@@ -127,9 +127,9 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
       } else {
         categoriesOfClassificationSelector = `
           SELECT group_concat(IdToHex(cat.ECInstanceId))
-          FROM ${CLASS_NAMES.geometricElement3d} e
-          JOIN ${CLASS_NAMES.spatialCategory} cat ON cat.ECInstanceId = e.Category.Id
-          JOIN ${CLASS_NAMES.elementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
+          FROM ${CLASS_NAMES.GeometricElement3d} e
+          JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = e.Category.Id
+          JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
           ${createWhereClause({
             conditions: ["e.Parent.Id IS NULL", "NOT cat.IsPrivate", "ehc.TargetECInstanceId = cl.ClassificationId"],
           })}
@@ -296,15 +296,15 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
         fromWithRelease({ source: classificationIds, releaseOnCount: 200 }).pipe(
           map((classificationId) => {
             const path: HierarchyNodeIdentifiersPath = [
-              { id: classificationId, className: CLASS_NAMES.classification },
+              { id: classificationId, className: CLASS_NAMES.Classification },
             ];
             let parentId = classificationOrTableInfos.get(classificationId)?.parentClassificationOrTableId;
             while (parentId !== undefined) {
               const parentIdOfParent = classificationOrTableInfos.get(parentId)?.parentClassificationOrTableId;
               if (parentIdOfParent) {
-                path.push({ className: CLASS_NAMES.classification, id: parentId });
+                path.push({ className: CLASS_NAMES.Classification, id: parentId });
               } else {
-                path.push({ className: CLASS_NAMES.classificationTable, id: parentId });
+                path.push({ className: CLASS_NAMES.ClassificationTable, id: parentId });
               }
               parentId = parentIdOfParent;
             }
@@ -330,7 +330,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
           this.Model.Id modelId,
           this.Category.Id categoryId,
           this.ECInstanceId id
-        FROM ${CLASS_NAMES.geometricElement3d} this
+        FROM ${CLASS_NAMES.GeometricElement3d} this
         JOIN IdSet(?) elementIdSet ON ECInstanceId = elementIdSet.id
       `;
       return this.#props.queryExecutor.createQueryReader(

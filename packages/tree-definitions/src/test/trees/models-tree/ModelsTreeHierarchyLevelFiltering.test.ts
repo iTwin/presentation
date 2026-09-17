@@ -96,7 +96,7 @@ describe("Models tree", () => {
         nodes: await collect(
           provider.getNodes({
             parentNode: undefined,
-            instanceFilter: createInstanceFilter(CLASS_NAMES.subject, {
+            instanceFilter: createInstanceFilter(CLASS_NAMES.Subject, {
               sourceAlias: "this",
               propertyName: "Description",
               propertyTypeName: "string",
@@ -111,7 +111,7 @@ describe("Models tree", () => {
         nodes: await collect(
           provider.getNodes({
             parentNode: undefined,
-            instanceFilter: createInstanceFilter(CLASS_NAMES.subject, {
+            instanceFilter: createInstanceFilter(CLASS_NAMES.Subject, {
               sourceAlias: "this",
               propertyName: "Description",
               propertyTypeName: "string",

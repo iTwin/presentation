@@ -35,7 +35,7 @@ describe("ModelsTreeDefinition", () => {
     it("includes models without elements when `models.withoutElements` is set to 'include'", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           return { rootSubject, model };
@@ -61,7 +61,7 @@ describe("ModelsTreeDefinition", () => {
     it("does not group elements when `elements.classGrouping` is set to `disable`", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const childSubject = insertSubject({ txn, codeValue: "child subject", parentId: rootSubject.id });
           const model = insertPhysicalModelWithPartition({
             txn,
@@ -163,7 +163,7 @@ describe("ModelsTreeDefinition", () => {
     it("displays element count for grouping nodes when `elements.classGrouping` is set to `enable-with-counts`", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const childSubject = insertSubject({ txn, codeValue: "child subject", parentId: rootSubject.id });
           const model = insertPhysicalModelWithPartition({
             txn,
@@ -302,7 +302,7 @@ describe("ModelsTreeDefinition", () => {
     it("uses custom element class specification", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({
             txn,
             codeValue: `model`,
@@ -428,7 +428,7 @@ describe("ModelsTreeDefinition", () => {
     it("returns empty hierarchy when the iModel doesn't have any elements of `elements.baseClass` class", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAMES.subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           return { rootSubject, model };
@@ -437,7 +437,7 @@ describe("ModelsTreeDefinition", () => {
       const { imodelConnection } = buildIModelResult;
       using provider = createModelsTreeProvider({
         imodelConnection,
-        hierarchyConfig: { elements: { baseClass: CLASS_NAMES.geometricElement2d } },
+        hierarchyConfig: { elements: { baseClass: CLASS_NAMES.GeometricElement2d } },
       });
       await validateHierarchy({ provider, expect: [] });
     });
@@ -707,7 +707,7 @@ describe("ModelsTreeDefinition", () => {
             provider,
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: CLASS_NAMES.subject, id: IModel.rootSubjectId }],
+                instanceKeys: [{ className: CLASS_NAMES.Subject, id: IModel.rootSubjectId }],
                 supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
@@ -794,7 +794,7 @@ describe("ModelsTreeDefinition", () => {
             provider,
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: CLASS_NAMES.subject, id: IModel.rootSubjectId }],
+                instanceKeys: [{ className: CLASS_NAMES.Subject, id: IModel.rootSubjectId }],
                 supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({

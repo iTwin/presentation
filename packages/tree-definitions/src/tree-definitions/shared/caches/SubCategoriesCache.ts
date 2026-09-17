@@ -45,7 +45,7 @@ export class SubCategoriesCache {
           sc.ECInstanceId id,
           sc.Parent.Id categoryId
         FROM
-          ${CLASS_NAMES.subCategory} sc
+          ${CLASS_NAMES.SubCategory} sc
         ${createWhereClause({ conditions: ["NOT sc.IsPrivate", lastSubCategoryId !== undefined && `sc.ECInstanceId > ${lastSubCategoryId}`] })}
         ORDER BY sc.ECInstanceId
         LIMIT ${this.#rowLimit}

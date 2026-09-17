@@ -165,7 +165,7 @@ export function createAccessAndCache({
   const imodelAccess = createIModelAccess(imodelConnection);
   const baseIdsCache = new BaseIdsCache({
     queryExecutor: imodelAccess,
-    elementClassName: CLASS_NAMES.geometricElement3d,
+    elementClassName: CLASS_NAMES.GeometricElement3d,
     type: "3d",
     excludedElementClassNames: hierarchyConfig.elements?.excludedClasses,
   });
