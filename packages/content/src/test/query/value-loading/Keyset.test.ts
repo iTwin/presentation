@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import { buildKeysetPredicate } from "../../../content/query/value-loading/Keyset.js";
 
 import type { KeysetOrderColumn } from "../../../content/query/value-loading/Keyset.js";
@@ -17,11 +18,11 @@ describe("buildKeysetPredicate", () => {
     ];
     const { clause, bindings } = buildKeysetPredicate({ columns });
     expect(clause).to.equal(
-      [
-        "[q].[pres_sort_0] > :pres_keyset_0",
-        "([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] > :pres_keyset_1)",
-        "([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] = :pres_keyset_1 AND [q].[pres_primary_id] > :pres_keyset_2)",
-      ].join(" OR "),
+      trimWhitespace(`
+        [q].[pres_sort_0] > :pres_keyset_0
+        OR ([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] > :pres_keyset_1)
+        OR ([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] = :pres_keyset_1 AND [q].[pres_primary_id] > :pres_keyset_2)
+      `),
     );
     expect(bindings).to.deep.equal({
       ["pres_keyset_0"]: { type: "string", value: "A" },
@@ -45,9 +46,10 @@ describe("buildKeysetPredicate", () => {
       ],
     });
     expect(clause).to.equal(
-      ["[q].[pres_sort_0] IS NOT NULL", "([q].[pres_sort_0] IS NULL AND [q].[pres_primary_id] > :pres_keyset_1)"].join(
-        " OR ",
-      ),
+      trimWhitespace(`
+        [q].[pres_sort_0] IS NOT NULL
+        OR ([q].[pres_sort_0] IS NULL AND [q].[pres_primary_id] > :pres_keyset_1)
+      `),
     );
     // The NULL cursor column contributes no binding.
     expect(bindings).to.deep.equal({ ["pres_keyset_1"]: { type: "id", value: "0x1" } });
@@ -61,7 +63,10 @@ describe("buildKeysetPredicate", () => {
       ],
     });
     expect(clause).to.equal(
-      ["FALSE", "([q].[pres_sort_0] IS NULL AND [q].[pres_primary_id] > :pres_keyset_1)"].join(" OR "),
+      trimWhitespace(`
+        FALSE
+        OR ([q].[pres_sort_0] IS NULL AND [q].[pres_primary_id] > :pres_keyset_1)
+      `),
     );
   });
 });
