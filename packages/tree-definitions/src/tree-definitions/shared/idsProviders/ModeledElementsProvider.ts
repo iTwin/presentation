@@ -11,28 +11,32 @@ import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ElementId, ModelId } from "../Types.js";
 
-interface ModeledElementsCacheProps {
+interface ModeledElementsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: string;
   nonEmptyModelIds: Array<ModelId>;
 }
 
+interface ModeledElementsProviderData {
+  allSubModels: Set<ElementId>;
+}
+
 /** @internal */
-export class ModeledElementsCache {
+export class ModeledElementsProvider {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: string;
   #nonEmptyModelIds: Array<ModelId>;
   // ElementId here is also a ModelId, since those elements are sub models.
-  #modeledElementsInfo: Observable<{ allSubModels: Set<ElementId> }> | undefined;
+  #cachedData: Observable<ModeledElementsProviderData> | undefined;
 
-  constructor(props: ModeledElementsCacheProps) {
+  constructor(props: ModeledElementsProviderProps) {
     this.#queryExecutor = props.queryExecutor;
     this.#componentId = props.componentId;
     this.#elementClassName = props.elementClassName;
-    this.#componentName = "ModeledElementsCache";
+    this.#componentName = "ModeledElementsProvider";
     this.#nonEmptyModelIds = props.nonEmptyModelIds;
   }
 
@@ -60,8 +64,8 @@ export class ModeledElementsCache {
     );
   }
 
-  public getModeledElementsInfo() {
-    this.#modeledElementsInfo ??= this.queryModeledElements().pipe(
+  public getData(): Observable<ModeledElementsProviderData> {
+    this.#cachedData ??= this.queryModeledElements().pipe(
       reduce(
         (acc, modeledElementId) => {
           acc.allSubModels.add(modeledElementId);
@@ -71,6 +75,6 @@ export class ModeledElementsCache {
       ),
       shareReplay(),
     );
-    return this.#modeledElementsInfo;
+    return this.#cachedData;
   }
 }

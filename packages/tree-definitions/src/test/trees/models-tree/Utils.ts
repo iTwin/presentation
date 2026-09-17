@@ -5,14 +5,14 @@
 
 import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   defaultHierarchyConfiguration,
   ModelsTreeDefinition,
 } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
-import { ModelsTreeIdsCache } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsCache.js";
+import { ModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 import { createIModelAccess } from "../Common.js";
 
 import type { Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -32,7 +32,7 @@ interface CreateModelsTreeProviderProps {
   imodelConnection: IModelConnection;
   searchPaths?: HierarchySearchTree[];
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-  idsCache?: ModelsTreeIdsCache;
+  idsProvider?: ModelsTreeIdsProvider;
   imodelAccess?: ReturnType<typeof createIModelAccess>;
 }
 
@@ -41,24 +41,25 @@ export function createModelsTreeProvider({
   searchPaths,
   hierarchyConfig,
   imodelAccess,
-  idsCache,
+  idsProvider,
 }: CreateModelsTreeProviderProps): HierarchyProvider & { dispose: () => void; [Symbol.dispose]: () => void } {
   const configOverrides: ModelsTreeHierarchyConfiguration = { subjects: { root: "exclude" }, ...hierarchyConfig };
   const config = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const createdImodelAccess = imodelAccess ?? createIModelAccess(imodelConnection);
-  const baseIdsCache = new BaseIdsCache({
+  const baseIdsProvider = new BaseIdsProvider({
     queryExecutor: createdImodelAccess,
     elementClassName: config.elements.baseClass,
     type: "3d",
     excludedElementClassNames: config.elements.excludedClasses,
   });
-  const createdIdsCache =
-    idsCache ?? new ModelsTreeIdsCache({ queryExecutor: createdImodelAccess, hierarchyConfig: config, baseIdsCache });
+  const createdIdsProvider =
+    idsProvider ??
+    new ModelsTreeIdsProvider({ queryExecutor: createdImodelAccess, hierarchyConfig: config, baseIdsProvider });
   const provider = createIModelHierarchyProvider({
     imodelAccess: createdImodelAccess,
     hierarchyDefinition: new ModelsTreeDefinition({
       imodelAccess: createdImodelAccess,
-      idsCache: createdIdsCache,
+      idsProvider: createdIdsProvider,
       hierarchyConfig: config,
     }),
     ...(searchPaths ? { search: { paths: searchPaths } } : undefined),
@@ -222,7 +223,7 @@ export function createClassGroupingHierarchyNode({
   };
 }
 
-export function createAccessAndCache({
+export function createAccessAndIdsProvider({
   imodelConnection,
   hierarchyConfig,
 }: {
@@ -234,16 +235,16 @@ export function createAccessAndCache({
     defaults: defaultHierarchyConfiguration,
     overrides: hierarchyConfig,
   });
-  const baseIdsCache = new BaseIdsCache({
+  const baseIdsProvider = new BaseIdsProvider({
     queryExecutor: imodelAccess,
     elementClassName: requiredHierarchyConfig.elements.baseClass,
     type: "3d",
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsCache = new ModelsTreeIdsCache({
+  const idsProvider = new ModelsTreeIdsProvider({
     queryExecutor: imodelAccess,
     hierarchyConfig: requiredHierarchyConfig,
-    baseIdsCache,
+    baseIdsProvider,
   });
-  return { imodelAccess, idsCache, hierarchyConfig: requiredHierarchyConfig };
+  return { imodelAccess, idsProvider, hierarchyConfig: requiredHierarchyConfig };
 }

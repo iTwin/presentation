@@ -17,7 +17,7 @@ import { ClassificationsTreeDefinition } from "../../../tree-definitions/trees/c
 import { buildIModel } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import {
-  createAccessAndCache,
+  createAccessAndIdsProvider,
   importClassificationSchema,
   insertClassification,
   insertClassificationSystem,
@@ -1093,13 +1093,13 @@ function createClassificationsTreeSearchProps(props: {
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   search: ({ searchText: string } | { targetItems: InstanceKey[] }) & { limit?: number | "unbounded" };
 }) {
-  const { imodelAccess, idsCache } = createAccessAndCache({
+  const { imodelAccess, idsProvider } = createAccessAndIdsProvider({
     imodelConnection: props.imodelConnection,
     hierarchyConfig: props.hierarchyConfig,
   });
   return {
     imodelAccess,
-    idsCache,
+    idsProvider,
     hierarchyConfig: props.hierarchyConfig,
     limit: props.search.limit,
     revealTargets: true,
