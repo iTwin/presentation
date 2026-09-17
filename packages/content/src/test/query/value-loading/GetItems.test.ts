@@ -258,6 +258,20 @@ function createIModelAccess(handler: (query: ECSqlQueryDef) => ECSqlQueryRow[]) 
 }
 
 describe("getItems", () => {
+  it.each([false, true])("returns no items without querying for no sources, sorted=%s", async (sorted) => {
+    const { imodelAccess, createQueryReader } = createIModelAccess(() => []);
+    const items = await collect(
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createTestDefinition(descriptor),
+        sources: [],
+        sorting: sorted ? [{ field: codeField, direction: "asc" }] : [],
+      }),
+    );
+    expect(items).to.deep.equal([]);
+    expect(createQueryReader).not.toHaveBeenCalled();
+  });
+
   it("loads a single source page and decodes property values", async () => {
     const { imodelAccess, queries } = createIModelAccess(() => [
       valueRow("Schema.A", "0x1", "A1"),

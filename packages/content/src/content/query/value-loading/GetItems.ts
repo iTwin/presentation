@@ -92,8 +92,8 @@ function loadItems(props: {
         ),
         toArray(),
         mergeMap((plans) => {
-          if (plans.length === 1 || !hasSort) {
-            // Single source (sorted or not) and multi-source unsorted both page each source's anchor directly and
+          if (plans.length <= 1 || !hasSort) {
+            // Zero or one source (sorted or not) and multi-source unsorted both page each source's anchor directly and
             // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
             return from(plans).pipe(
               mergeMap(
