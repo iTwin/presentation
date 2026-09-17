@@ -58,6 +58,56 @@ function createSelectors(selectors: ValueSelector[]): Record<ValueSelector["id"]
 }
 
 describe("buildSelectProjection", () => {
+  it.each([false, true])(
+    "omits non-applicable calculated values and preserves NULL sort columns (key-only: %s)",
+    async (keyOnly) => {
+      const missingField: CalculatedField = {
+        kind: "calculated",
+        id: "calc:missing",
+        label: "Missing",
+        expression: "this.Missing * :factor",
+        bindings: { factor: { type: "int", value: 2 } },
+        type: { kind: "primitive", type: "Integer" },
+      };
+      const sharedField: CalculatedField = {
+        kind: "calculated",
+        id: "calc:shared",
+        label: "Shared",
+        expression: ":shared",
+        bindings: { shared: { type: "int", value: 7 } },
+        type: { kind: "primitive", type: "Integer" },
+      };
+      const projection = await buildSelectProjection({
+        schemaProvider,
+        selectors: keyOnly ? {} : createSelectors([missingField, sharedField]),
+        applicableCalculatedFieldIds: new Set([sharedField.id]),
+        sorting: [
+          { field: missingField, direction: "asc" },
+          { field: sharedField, direction: "desc" },
+        ],
+        group: createBaseQueryGroup(false),
+        ownedPathKeys: ownsDirect,
+      });
+      expect(trimWhitespace(projection.clauses.select)).to.equal(
+        trimWhitespace(`
+          SELECT
+            ec_classname([this].[ECClassId], 's.c') AS [${primaryClassColumn}],
+            [this].[ECInstanceId] AS [${primaryIdColumn}],
+            ${keyOnly ? "" : "(:shared) AS [pres_calc_0],"}
+            NULL AS [pres_sort_0],
+            (:shared) AS [pres_sort_1]
+        `),
+      );
+      expect(projection.bindings).to.deep.equal({ shared: { type: "int", value: 7 } });
+      expect(projection.columnNames.calculatedValues).to.deep.equal(keyOnly ? {} : { "calc:shared": "pres_calc_0" });
+      expect(projection.sort).to.deep.equal([
+        { fieldId: missingField.id, column: "pres_sort_0", direction: "asc" },
+        { fieldId: sharedField.id, column: "pres_sort_1", direction: "desc" },
+      ]);
+      expect(projection.clauses.orderBy).to.contain("[pres_sort_0] ASC, [pres_sort_1] DESC");
+    },
+  );
+
   it("selects each property alias once and calculated fields as scalar columns", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
