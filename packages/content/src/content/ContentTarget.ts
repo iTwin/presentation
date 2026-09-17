@@ -128,10 +128,7 @@ export interface ContentSource {
 
   /**
    * Concrete paths resolved purely to satisfy an external fields provider's related-property `input` —
-   * declared over a path with no field of its own. Unlike `resolvedDeclarations`, these carry no
-   * provider/declaration identity to re-derive: they exist solely so `BaseQuery` joins the path,
-   * giving the input's value selector a column to read. Never seed nested-anchor expansion and never
-   * produce descriptor fields.
+   * declared over a path with no field of its own.
    */
   externalInputPaths: ResolvedPath[];
 }
