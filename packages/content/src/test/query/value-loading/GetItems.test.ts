@@ -693,7 +693,7 @@ describe("getItems", () => {
           },
         ],
         externalInputPaths: [],
-      } as ContentSource;
+      };
     }
 
     const { imodelAccess, queries } = createRelationalIModelAccess((query) => {
