@@ -131,14 +131,14 @@ export function parseIdsSelectorResult(selectorResult: any): Id64Array {
 export function getClassesByView(viewType: "2d" | "3d") {
   return viewType === "2d"
     ? ({
-        categoryClass: CLASS_NAMES.drawingCategory,
-        elementClass: CLASS_NAMES.geometricElement2d,
-        modelClass: CLASS_NAMES.geometricModel2d,
+        categoryClass: CLASS_NAMES.DrawingCategory,
+        elementClass: CLASS_NAMES.GeometricElement2d,
+        modelClass: CLASS_NAMES.GeometricModel2d,
       } as const)
     : ({
-        categoryClass: CLASS_NAMES.spatialCategory,
-        elementClass: CLASS_NAMES.geometricElement3d,
-        modelClass: CLASS_NAMES.geometricModel3d,
+        categoryClass: CLASS_NAMES.SpatialCategory,
+        elementClass: CLASS_NAMES.GeometricElement3d,
+        modelClass: CLASS_NAMES.GeometricModel3d,
       } as const);
 }
 

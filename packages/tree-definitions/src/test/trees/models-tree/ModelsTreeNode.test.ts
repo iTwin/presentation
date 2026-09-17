@@ -24,7 +24,7 @@ describe("ModelsTreeNode", () => {
   const categoryNode = createNode("category");
   const elementNode = createNode("element");
   const classGroupingNode: HierarchyNode = {
-    key: { type: "class-grouping", className: CLASS_NAMES.geometricElement3d },
+    key: { type: "class-grouping", className: CLASS_NAMES.GeometricElement3d },
     parentKeys: [],
     label: "",
     children: false,
