@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, expand, from, map, merge, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
+import { defer, EMPTY, expand, from, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
@@ -12,10 +12,10 @@ import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
-import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
+import type { GuidString, Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsCacheImplProps } from "../../shared/caches/BaseIdsCache.js";
-import type { CategoryId, ClassificationId, ClassificationTableId, ElementId } from "../../shared/Types.js";
+import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type { ClassificationsTreeHierarchyConfiguration } from "./ClassificationsTreeDefinition.js";
 import type { ClassificationsTreeVisibilityHandlerConfiguration } from "./UseClassificationsTree.js";
 
@@ -40,7 +40,6 @@ export type VisibilityHandlerConfigForClassificationsCache = Pick<
 interface ClassificationOrTableInfo {
   parentClassificationOrTableId: ClassificationId | ClassificationTableId | undefined;
   childClassificationIds: ClassificationId[];
-  relatedCategories: CategoryId[];
 }
 
 interface ClassificationsTreeIdsCacheProps extends BaseIdsCacheImplProps {
@@ -54,11 +53,9 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
   #cachedData:
     | Observable<{
         classificationOrTableInfos: Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>;
-        classificationsWithChildren: Set<ClassificationId>;
         classificationsWithNonExcludedChildren: Set<ClassificationId>;
       }>
     | undefined;
-  #filteredElementsData: Observable<Map<ElementId, { modelId: Id64String; categoryId: Id64String }>> | undefined;
   #props: ClassificationsTreeIdsCacheProps;
   #componentId: GuidString;
   #componentName: string;
@@ -184,11 +181,9 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
           reduce(
             (acc, { id, tableId, parentId, relatedCategories }) => {
               if (parentId !== undefined) {
-                acc.classificationsWithChildren.add(parentId);
                 acc.classificationsWithNonExcludedChildren.add(parentId);
               }
               if (relatedCategories.length > 0) {
-                acc.classificationsWithChildren.add(id);
                 if (relatedCategories.some((categoryId) => categoriesContainingNonExcludedElements.has(categoryId))) {
                   acc.classificationsWithNonExcludedChildren.add(id);
                 }
@@ -197,26 +192,15 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
               const parentInfo = getOrCreate({
                 map: acc.classificationOrTableInfos,
                 key: tableOrParentId,
-                createFunc: () => ({
-                  childClassificationIds: [],
-                  relatedCategories: [],
-                  parentClassificationOrTableId: undefined,
-                }),
+                createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: undefined }),
               });
               parentInfo.childClassificationIds.push(id);
               const classificationEntry = getOrCreate({
                 map: acc.classificationOrTableInfos,
                 key: id,
-                createFunc: () => ({
-                  childClassificationIds: [],
-                  relatedCategories,
-                  parentClassificationOrTableId: tableOrParentId,
-                }),
+                createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: tableOrParentId }),
               });
               classificationEntry.parentClassificationOrTableId = tableOrParentId;
-              // Child classification might have been returned first and set the relatedCategories to an empty array,
-              // change it with the actual related categories from the current row.
-              classificationEntry.relatedCategories = relatedCategories;
               return acc;
             },
             {
@@ -224,7 +208,6 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
                 ClassificationId | ClassificationTableId,
                 ClassificationOrTableInfo
               >(),
-              classificationsWithChildren: new Set<ClassificationId>(),
               classificationsWithNonExcludedChildren: new Set<ClassificationId>(),
             },
           ),
@@ -245,28 +228,6 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
   public hasChildren(classificationId: ClassificationId): Observable<boolean> {
     return this.getCachedData().pipe(
       map(({ classificationsWithNonExcludedChildren }) => classificationsWithNonExcludedChildren.has(classificationId)),
-    );
-  }
-
-  public getAllContainedCategories(classificationOrTableIds: Id64Arg): Observable<CategoryId> {
-    if (Id64.sizeOf(classificationOrTableIds) === 0) {
-      return EMPTY;
-    }
-    return this.getCachedData().pipe(
-      mergeMap(({ classificationOrTableInfos }) =>
-        from(Id64.iterable(classificationOrTableIds)).pipe(
-          mergeMap((classificationOrTableId) => {
-            const classificationInfo = classificationOrTableInfos.get(classificationOrTableId);
-            if (classificationInfo === undefined) {
-              return EMPTY;
-            }
-            return merge(
-              from(classificationInfo.relatedCategories),
-              this.getAllContainedCategories(classificationInfo.childClassificationIds),
-            );
-          }),
-        ),
-      ),
     );
   }
 
@@ -317,58 +278,5 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
 
   public getAllClassifications(): Observable<ClassificationId[]> {
     return this.getCachedData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()]));
-  }
-
-  private queryFilteredElementsData({
-    elementIds,
-  }: {
-    elementIds: Id64Array;
-  }): Observable<{ modelId: Id64String; id: ElementId; categoryId: Id64String }> {
-    return defer(() => {
-      const query = `
-        SELECT
-          this.Model.Id modelId,
-          this.Category.Id categoryId,
-          this.ECInstanceId id
-        FROM ${CLASS_NAMES.geometricElement3d} this
-        JOIN IdSet(?) elementIdSet ON ECInstanceId = elementIdSet.id
-      `;
-      return this.#props.queryExecutor.createQueryReader(
-        { ecsql: query, bindings: [{ type: "idset", value: elementIds }] },
-        {
-          rowFormat: "ECSqlPropertyNames",
-          limit: "unbounded",
-          restartToken: `${this.#componentName}/${this.#componentId}/filtered-elements/${Guid.createValue()}`,
-        },
-      );
-    }).pipe(
-      catchBeSQLiteInterrupts,
-      map((row) => {
-        return { modelId: row.modelId, id: row.id, categoryId: row.categoryId };
-      }),
-    );
-  }
-
-  public getFilteredElementsData({
-    elementIds,
-  }: {
-    elementIds: Id64Array;
-  }): Observable<Map<ElementId, { categoryId: Id64String; modelId: Id64String }>> {
-    const result = new Map<ElementId, { categoryId: Id64String; modelId: Id64String }>();
-    if (Id64.sizeOf(elementIds) === 0) {
-      return of(result);
-    }
-    this.#filteredElementsData ??= this.queryFilteredElementsData({ elementIds }).pipe(
-      reduce((acc, { modelId, id, categoryId }) => {
-        acc.set(id, { modelId, categoryId });
-        return acc;
-      }, result),
-      shareReplay(),
-    );
-    return this.#filteredElementsData;
-  }
-
-  public clearFilteredElementsData() {
-    this.#filteredElementsData = undefined;
   }
 }

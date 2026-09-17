@@ -21,23 +21,18 @@ interface ElementModelCategoriesCacheProps {
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
 }
 interface ModelsCategoriesInfoEntry {
-  categoriesOfTopMostElements: Set<CategoryId>;
-  allCategories: Set<CategoryId>;
   categoriesOfTopMostNonExcludedElements: Set<CategoryId>;
-  nonExcludedCategories: Set<CategoryId>;
-  isPlanProjectionModel: boolean;
+  hasNonExcludedElements: boolean;
 }
 interface CachedData {
+  planProjectionModels: Set<ModelId>;
   modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
-  modelsContainingTopMostNonExcludedElements: Set<ModelId>;
   categoriesContainingNonExcludedElements: Set<CategoryId>;
   categoryModelsInfo: Map<
     CategoryId,
     Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
   >;
-  categoriesWithParentElements: Set<CategoryId>;
   allCategories: Set<CategoryId>;
-  allTopMostElementCategories: Set<CategoryId>;
 }
 
 /** @internal */
@@ -63,7 +58,6 @@ export class ElementModelCategoriesCache {
     modelId: Id64String;
     categoryId: Id64String;
     isTopMostElementCategory: boolean;
-    hasParentElements: boolean;
     hasElementsFromNonExcludedClasses: boolean;
     isPlanProjectionModel: boolean;
   }> {
@@ -77,7 +71,6 @@ export class ElementModelCategoriesCache {
             this.Model.Id modelId,
             this.Category.Id categoryId,
             MAX(IIF(this.Parent.Id IS NULL, 1, 0)) isTopMostElementCategory,
-            MAX(IIF((SELECT 1 FROM ${this.#elementClassName} ce WHERE ce.Parent.Id = this.ECInstanceId LIMIT 1), 1, 0)) hasParentElements,
             IIF(m.$->IsPlanProjection?, 1, 0) isPlanProjectionModel
             ${excludedClause ? `, MAX(IIF((${excludedClause}), 1, 0)) hasElementsFromNonExcludedClasses` : ""}
           FROM ${this.#elementClassName} this
@@ -100,7 +93,6 @@ export class ElementModelCategoriesCache {
           modelId: row.modelId,
           categoryId: row.categoryId,
           isTopMostElementCategory: !!row.isTopMostElementCategory,
-          hasParentElements: !!row.hasParentElements,
           hasElementsFromNonExcludedClasses: excludedClause ? !!row.hasElementsFromNonExcludedClasses : true,
           isPlanProjectionModel: !!row.isPlanProjectionModel,
         };
@@ -137,37 +129,26 @@ export class ElementModelCategoriesCache {
             map: acc.modelsCategoriesInfo,
             key: queriedCategory.modelId,
             createFunc: (): ModelsCategoriesInfoEntry => ({
-              categoriesOfTopMostElements: new Set<string>(),
-              allCategories: new Set<string>(),
               categoriesOfTopMostNonExcludedElements: new Set<string>(),
-              nonExcludedCategories: new Set<string>(),
-              isPlanProjectionModel: queriedCategory.isPlanProjectionModel,
+              hasNonExcludedElements: false,
             }),
           });
-          modelEntry.allCategories.add(queriedCategory.categoryId);
-          if (queriedCategory.isTopMostElementCategory) {
-            modelEntry.categoriesOfTopMostElements.add(queriedCategory.categoryId);
-            acc.allTopMostElementCategories.add(queriedCategory.categoryId);
+          if (queriedCategory.isPlanProjectionModel) {
+            acc.planProjectionModels.add(queriedCategory.modelId);
           }
           if (queriedCategory.hasElementsFromNonExcludedClasses) {
-            modelEntry.nonExcludedCategories.add(queriedCategory.categoryId);
+            modelEntry.hasNonExcludedElements = true;
             acc.categoriesContainingNonExcludedElements.add(queriedCategory.categoryId);
             if (queriedCategory.isTopMostElementCategory) {
-              acc.modelsContainingTopMostNonExcludedElements.add(queriedCategory.modelId);
               modelEntry.categoriesOfTopMostNonExcludedElements.add(queriedCategory.categoryId);
             }
-          }
-          if (queriedCategory.hasParentElements) {
-            acc.categoriesWithParentElements.add(queriedCategory.categoryId);
           }
           return acc;
         },
         {
+          planProjectionModels: new Set<ModelId>(),
           modelsCategoriesInfo: new Map<ModelId, ModelsCategoriesInfoEntry>(),
-          categoriesWithParentElements: new Set<CategoryId>(),
-          allTopMostElementCategories: new Set<CategoryId>(),
           allCategories: new Set<CategoryId>(),
-          modelsContainingTopMostNonExcludedElements: new Set<ModelId>(),
           categoriesContainingNonExcludedElements: new Set<CategoryId>(),
           categoryModelsInfo: new Map<
             CategoryId,

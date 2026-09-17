@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, filter, forkJoin, from, identity, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
+import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { fromWithRelease } from "../Rxjs.js";
-import { ChildrenTree, getOrCreate } from "../Utils.js";
+import { getOrCreate } from "../Utils.js";
 import { ElementModelCategoriesCache } from "./ElementModelCategoriesCache.js";
 import { ModeledElementsCache } from "./ModeledElementsCache.js";
 import { SubCategoriesCache } from "./SubCategoriesCache.js";
@@ -16,7 +16,6 @@ import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentl
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, Props } from "@itwin/presentation-shared";
 import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
-import type { ParentElementsPath } from "../Utils.js";
 
 /** @internal */
 export interface BaseIdsCacheProps {
@@ -41,7 +40,6 @@ export class BaseIdsCache {
       >
     | undefined;
   #subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
-  #canHaveHiddenChildren: boolean;
 
   constructor(props: BaseIdsCacheProps) {
     this.#queryExecutor = props.queryExecutor;
@@ -57,7 +55,6 @@ export class BaseIdsCache {
       elementClassName: props.elementClassName,
       excludedElementClassNames: props.excludedElementClassNames,
     });
-    this.#canHaveHiddenChildren = !!props.excludedElementClassNames?.length;
   }
 
   private getModeledElementsInfo(): ReturnType<ModeledElementsCache["getModeledElementsInfo"]> {
@@ -82,53 +79,6 @@ export class BaseIdsCache {
   }
 
   // ModeledElementsCache methods
-  public getCategoryModeledElements({
-    modelIds,
-    categoryIds,
-    parentElementsPath,
-  }: {
-    modelIds: Id64Set;
-    categoryIds: Id64Set;
-    parentElementsPath: ParentElementsPath;
-  }): Observable<Id64String> {
-    return this.getModeledElementsInfo().pipe(
-      mergeMap(({ subModelsTree }) => {
-        const accumulator = new Array<ElementId>();
-        const childrenTreeAsArray = new Array<Set<ElementId | CategoryId | ModelId>>();
-        childrenTreeAsArray.push(modelIds);
-        for (const { categoryIds: parentCategoryId, elementIds } of parentElementsPath) {
-          childrenTreeAsArray.push(new Set([parentCategoryId]));
-          childrenTreeAsArray.push(new Set(elementIds));
-        }
-        childrenTreeAsArray.push(categoryIds);
-        ChildrenTree.visit({
-          tree: subModelsTree,
-          accept: ({ treeEntry, key, depth }) => {
-            if (depth < childrenTreeAsArray.length) {
-              // when entry in children tree does not exist in the childrenTreeAsArray
-              // it means that this branch of the tree is not in the path specified by parentElementsPath
-              // children can be ignored
-              if (!childrenTreeAsArray[depth].has(key)) {
-                return { ignoreChildren: true };
-              }
-              if (depth === childrenTreeAsArray.length - 1) {
-                accumulator.push(...treeEntry.directSubModels);
-              }
-              return { ignoreChildren: false };
-            }
-            accumulator.push(...treeEntry.directSubModels);
-            return { ignoreChildren: false };
-          },
-        });
-        return accumulator;
-      }),
-    );
-  }
-
-  public hasSubModels({ modelId }: { modelId: Id64String }): Observable<boolean> {
-    return this.getModeledElementsInfo().pipe(map(({ subModelsTree }) => subModelsTree.has(modelId)));
-  }
-
   public getAllSubModels(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
     if (!props?.excludeIfOnlyExcludedClasses) {
       return this.getModeledElementsInfo().pipe(map(({ allSubModels }) => allSubModels));
@@ -143,7 +93,7 @@ export class BaseIdsCache {
             const result = new Set<ElementId>();
             for (const subModelId of allSubModels) {
               const modelInfo = modelsCategoriesInfo.get(subModelId);
-              if (modelInfo && modelInfo.nonExcludedCategories.size > 0) {
+              if (modelInfo?.hasNonExcludedElements) {
                 result.add(subModelId);
               }
             }
@@ -154,85 +104,6 @@ export class BaseIdsCache {
       shareReplay(),
     );
     return this.#subModelsWithNonExcludedElements;
-  }
-
-  public getSubModels(
-    props:
-      | { elementId: Id64String }
-      | { modelIds: Id64Set; categoryIds?: undefined }
-      | { categoryIds: Id64Set; modelIds?: undefined }
-      | { modelIds: Id64Set; categoryIds: Id64Set; parentElementsPath: ParentElementsPath },
-  ): Observable<Id64String> {
-    if ("elementId" in props) {
-      return this.getModeledElementsInfo().pipe(
-        mergeMap(({ allSubModels, childSubModels }) => {
-          if (allSubModels.has(props.elementId)) {
-            // If element is a sub-model, it can not be a parent.
-            return of(props.elementId);
-          }
-          // Convert sub-models set into array.
-          // When element does not contain sub-model, return empty array.
-          return childSubModels.get(props.elementId) ?? EMPTY;
-        }),
-      );
-    }
-    if (props.modelIds) {
-      if (props.categoryIds) {
-        return this.getCategoryModeledElements({
-          modelIds: props.modelIds,
-          categoryIds: props.categoryIds,
-          parentElementsPath: props.parentElementsPath,
-        });
-      }
-      return from(props.modelIds).pipe(
-        mergeMap((modelId) =>
-          this.hasSubModels({ modelId }).pipe(
-            mergeMap((hasModeledElements) => {
-              if (!hasModeledElements) {
-                return of([]);
-              }
-              return this.getCategories({ modelId });
-            }),
-          ),
-        ),
-        reduce((acc, categoryIds) => {
-          for (const categoryId of categoryIds) {
-            acc.add(categoryId);
-          }
-          return acc;
-        }, new Set<CategoryId>()),
-        mergeMap((categoryIds) => {
-          if (categoryIds.size === 0) {
-            return EMPTY;
-          }
-          return this.getCategoryModeledElements({ modelIds: props.modelIds, categoryIds, parentElementsPath: [] });
-        }),
-      );
-    }
-
-    return fromWithRelease({ source: props.categoryIds, releaseOnCount: 100 }).pipe(
-      mergeMap((categoryId) =>
-        this.getModels({ categoryId, excludeSubModels: true, includeOnlyTopMostElementCategory: true }).pipe(
-          mergeMap((modelId) => forkJoin({ hasModeledElements: this.hasSubModels({ modelId }), modelId: of(modelId) })),
-          reduce((acc, { hasModeledElements, modelId }) => {
-            if (hasModeledElements) {
-              acc.add(modelId);
-            }
-            return acc;
-          }, new Set<ModelId>()),
-          mergeMap((modelIds) => {
-            if (modelIds.size === 0) {
-              return EMPTY;
-            }
-            return this.getCategoryModeledElements({
-              modelIds,
-              categoryIds: new Set([categoryId]),
-              parentElementsPath: [],
-            });
-          }),
-        ),
-      ),
-    );
   }
 
   // ElementModelCategoriesCache methods
@@ -252,50 +123,18 @@ export class BaseIdsCache {
   }
 
   public getPlanProjectionModels(): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache.getCachedData().pipe(
-      map(({ modelsCategoriesInfo }) => {
-        const result = new Set<ModelId>();
-        for (const [modelId, modelInfo] of modelsCategoriesInfo) {
-          if (modelInfo.isPlanProjectionModel) {
-            result.add(modelId);
-          }
-        }
-        return result;
-      }),
-    );
+    return this.#elementModelCategoriesCache
+      .getCachedData()
+      .pipe(map(({ planProjectionModels }) => planProjectionModels));
   }
 
-  public getCategories({
-    modelId,
-    includeOnlyIfCategoryOfTopMostElement,
-    excludeIfOnlyExcludedClasses,
-  }: {
-    modelId: Id64String;
-    includeOnlyIfCategoryOfTopMostElement?: boolean;
-    excludeIfOnlyExcludedClasses?: boolean;
-  }): Observable<Id64Set> {
+  public getCategories({ modelId }: { modelId: Id64String }): Observable<Id64Set> {
     return this.#elementModelCategoriesCache.getCachedData().pipe(
       map(({ modelsCategoriesInfo }) => {
         const modelInfo = modelsCategoriesInfo.get(modelId);
-        if (excludeIfOnlyExcludedClasses) {
-          return (
-            (includeOnlyIfCategoryOfTopMostElement
-              ? modelInfo?.categoriesOfTopMostNonExcludedElements
-              : modelInfo?.nonExcludedCategories) ?? new Set()
-          );
-        }
-        return (
-          (includeOnlyIfCategoryOfTopMostElement ? modelInfo?.categoriesOfTopMostElements : modelInfo?.allCategories) ??
-          new Set()
-        );
+        return modelInfo?.categoriesOfTopMostNonExcludedElements ?? new Set();
       }),
     );
-  }
-
-  public getModelsContainingNonExcludedElements(): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache
-      .getCachedData()
-      .pipe(map(({ modelsContainingTopMostNonExcludedElements }) => modelsContainingTopMostNonExcludedElements));
   }
 
   public getCategoriesContainingNonExcludedElements(): Observable<Id64Set> {
@@ -304,14 +143,8 @@ export class BaseIdsCache {
       .pipe(map(({ categoriesContainingNonExcludedElements }) => categoriesContainingNonExcludedElements));
   }
 
-  public getAllCategoriesOfElements(props?: { onlyTopMostElementCategories?: boolean }): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache
-      .getCachedData()
-      .pipe(
-        map(({ allCategories, allTopMostElementCategories }) =>
-          props?.onlyTopMostElementCategories ? allTopMostElementCategories : allCategories,
-        ),
-      );
+  public getAllCategoriesOfElements(): Observable<Id64Set> {
+    return this.#elementModelCategoriesCache.getCachedData().pipe(map(({ allCategories }) => allCategories));
   }
 
   private getCategoryModelsInfoWithoutSubModels(): Observable<
@@ -372,18 +205,7 @@ export class BaseIdsCache {
     );
   }
 
-  public categoryHasParentElements({ categoryId }: { categoryId: Id64String }): Observable<boolean> {
-    return this.#elementModelCategoriesCache
-      .getCachedData()
-      .pipe(map(({ categoriesWithParentElements }) => categoriesWithParentElements.has(categoryId)));
-  }
-
   // SubCategoriesCache methods
-  public getSubCategories(props: { categoryId: Id64String }): Observable<Array<SubCategoryId>> {
-    return this.#subCategoriesCache
-      .getSubCategoriesInfo()
-      .pipe(map(({ categorySubCategories }) => categorySubCategories.get(props.categoryId) ?? []));
-  }
 
   public getCategorySubCategoriesMap(): Observable<Map<CategoryId, SubCategoryId[]>> {
     return this.#subCategoriesCache
@@ -416,10 +238,6 @@ export class BaseIdsCache {
       ),
     );
   }
-
-  public canHaveHiddenChildren(): boolean {
-    return this.#canHaveHiddenChildren;
-  }
 }
 
 /** @internal */
@@ -444,38 +262,20 @@ export class BaseIdsCacheImpl {
     return this.#baseIdsCache.modeledElementsLoaded();
   }
 
-  public getSubCategories(
-    props: Props<BaseIdsCache["getSubCategories"]>,
-  ): ReturnType<BaseIdsCache["getSubCategories"]> {
-    return this.#baseIdsCache.getSubCategories(props);
-  }
-
   public getSubCategoryCategories(
     props: Props<BaseIdsCache["getSubCategoryCategories"]>,
   ): ReturnType<BaseIdsCache["getSubCategoryCategories"]> {
     return this.#baseIdsCache.getSubCategoryCategories(props);
   }
 
-  public getSubModels(props: Props<BaseIdsCache["getSubModels"]>): ReturnType<BaseIdsCache["getSubModels"]> {
-    return this.#baseIdsCache.getSubModels(props);
-  }
-
   public getAllSubModels(props?: Props<BaseIdsCache["getAllSubModels"]>): ReturnType<BaseIdsCache["getAllSubModels"]> {
     return this.#baseIdsCache.getAllSubModels(props);
-  }
-
-  public getModelsContainingNonExcludedElements(): ReturnType<BaseIdsCache["getModelsContainingNonExcludedElements"]> {
-    return this.#baseIdsCache.getModelsContainingNonExcludedElements();
   }
 
   public getCategoriesContainingNonExcludedElements(): ReturnType<
     BaseIdsCache["getCategoriesContainingNonExcludedElements"]
   > {
     return this.#baseIdsCache.getCategoriesContainingNonExcludedElements();
-  }
-
-  public hasSubModels(props: Props<BaseIdsCache["hasSubModels"]>): ReturnType<BaseIdsCache["hasSubModels"]> {
-    return this.#baseIdsCache.hasSubModels(props);
   }
 
   public getCategories(props: Props<BaseIdsCache["getCategories"]>): ReturnType<BaseIdsCache["getCategories"]> {
@@ -486,20 +286,8 @@ export class BaseIdsCacheImpl {
     return this.#baseIdsCache.getModels(props);
   }
 
-  public categoryHasParentElements(
-    props: Props<BaseIdsCache["categoryHasParentElements"]>,
-  ): ReturnType<BaseIdsCache["categoryHasParentElements"]> {
-    return this.#baseIdsCache.categoryHasParentElements(props);
-  }
-
-  public getAllCategoriesOfElements(
-    props?: Props<BaseIdsCache["getAllCategoriesOfElements"]>,
-  ): ReturnType<BaseIdsCache["getAllCategoriesOfElements"]> {
-    return this.#baseIdsCache.getAllCategoriesOfElements(props);
-  }
-
-  public canHaveHiddenChildren(): ReturnType<BaseIdsCache["canHaveHiddenChildren"]> {
-    return this.#baseIdsCache.canHaveHiddenChildren();
+  public getAllCategoriesOfElements(): ReturnType<BaseIdsCache["getAllCategoriesOfElements"]> {
+    return this.#baseIdsCache.getAllCategoriesOfElements();
   }
 
   public getCategorySubCategoriesMap(): ReturnType<BaseIdsCache["getCategorySubCategoriesMap"]> {

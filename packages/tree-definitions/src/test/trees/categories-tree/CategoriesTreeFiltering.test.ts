@@ -20,7 +20,12 @@ import { CategoriesTreeIdsCache } from "../../../tree-definitions/trees/categori
 import { buildIModel } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
-import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
+import {
+  getDefaultSubCategoryId,
+  getInsertFunctionByViewType,
+  insertDefinitionContainer,
+  insertSubModel,
+} from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
@@ -122,10 +127,11 @@ describe("Categories tree", () => {
           );
           const { imodelConnection, ...keys } = buildIModelResult;
           const { idsCache } = createCategoriesTreeSearchProps({ imodelConnection, searchText: "category", viewType });
-          const subCategoryIds = await firstValueFrom(idsCache.getSubCategories({ categoryId: keys.category.id }));
+          const defaultSubCategoryId = getDefaultSubCategoryId(keys.category.id);
 
-          expect(subCategoryIds).toHaveLength(1);
-          const paths = await firstValueFrom(idsCache.getSubCategoriesSearchPaths({ subCategoryIds }).pipe(toArray()));
+          const paths = await firstValueFrom(
+            idsCache.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId }).pipe(toArray()),
+          );
           expect(paths).toEqual([]);
         });
 
