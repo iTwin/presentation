@@ -6,13 +6,13 @@
 import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
+import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   defaultHierarchyConfiguration,
   ModelsTreeDefinition,
 } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
-import { ModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
+import { createModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 import { createIModelAccess } from "../Common.js";
 
 import type { Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -27,6 +27,7 @@ import type {
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
 import type { ParentElementsPath } from "../../../tree-definitions/shared/Utils.js";
 import type { ModelsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+import type { ModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 interface CreateModelsTreeProviderProps {
   imodelConnection: IModelConnection;
@@ -46,15 +47,14 @@ export function createModelsTreeProvider({
   const configOverrides: ModelsTreeHierarchyConfiguration = { subjects: { root: "exclude" }, ...hierarchyConfig };
   const config = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const createdImodelAccess = imodelAccess ?? createIModelAccess(imodelConnection);
-  const baseIdsProvider = new BaseIdsProvider({
+  const baseIdsProvider = createBaseIdsProvider({
     queryExecutor: createdImodelAccess,
     elementClassName: config.elements.baseClass,
-    type: "3d",
     excludedElementClassNames: config.elements.excludedClasses,
   });
   const createdIdsProvider =
     idsProvider ??
-    new ModelsTreeIdsProvider({ queryExecutor: createdImodelAccess, hierarchyConfig: config, baseIdsProvider });
+    createModelsTreeIdsProvider({ queryExecutor: createdImodelAccess, hierarchyConfig: config, baseIdsProvider });
   const provider = createIModelHierarchyProvider({
     imodelAccess: createdImodelAccess,
     hierarchyDefinition: new ModelsTreeDefinition({
@@ -235,13 +235,12 @@ export function createAccessAndIdsProvider({
     defaults: defaultHierarchyConfiguration,
     overrides: hierarchyConfig,
   });
-  const baseIdsProvider = new BaseIdsProvider({
+  const baseIdsProvider = createBaseIdsProvider({
     queryExecutor: imodelAccess,
     elementClassName: requiredHierarchyConfig.elements.baseClass,
-    type: "3d",
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsProvider = new ModelsTreeIdsProvider({
+  const idsProvider = createModelsTreeIdsProvider({
     queryExecutor: imodelAccess,
     hierarchyConfig: requiredHierarchyConfig,
     baseIdsProvider,

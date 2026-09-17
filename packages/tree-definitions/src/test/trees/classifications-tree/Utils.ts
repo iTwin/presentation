@@ -8,9 +8,9 @@ import { createRequire } from "node:module";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
+import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { ClassificationsTreeDefinition } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
-import { ClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
+import { createClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 import { createIModelAccess } from "../Common.js";
 
 import type { EditTxn, IModelDb } from "@itwin/core-backend";
@@ -163,13 +163,12 @@ export function createAccessAndIdsProvider({
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
 }) {
   const imodelAccess = createIModelAccess(imodelConnection);
-  const baseIdsProvider = new BaseIdsProvider({
+  const baseIdsProvider = createBaseIdsProvider({
     queryExecutor: imodelAccess,
     elementClassName: CLASS_NAMES.GeometricElement3d,
-    type: "3d",
     excludedElementClassNames: hierarchyConfig.elements?.excludedClasses,
   });
-  const idsProvider = new ClassificationsTreeIdsProvider({
+  const idsProvider = createClassificationsTreeIdsProvider({
     queryExecutor: imodelAccess,
     hierarchyConfig,
     baseIdsProvider,

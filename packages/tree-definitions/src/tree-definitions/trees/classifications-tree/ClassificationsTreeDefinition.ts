@@ -7,6 +7,7 @@ import {
   bufferCount,
   defer,
   EMPTY,
+  filter,
   firstValueFrom,
   forkJoin,
   from,
@@ -571,7 +572,7 @@ async function getChildClassifications({
   idsProvider: ClassificationsTreeIdsProvider;
 }): Promise<{ childClassifications: Id64Array; childClassificationsWithChildren: Id64Array }> {
   return firstValueFrom(
-    idsProvider.getDirectChildClassifications(classificationOrTableIds).pipe(
+    from(idsProvider.getDirectChildClassifications(classificationOrTableIds)).pipe(
       mergeMap((classifications) =>
         from(classifications).pipe(
           mergeMap((classificationId) =>
@@ -638,7 +639,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
             }),
         ),
       );
-    const classificationIds = await firstValueFrom(props.idsProvider.getAllClassifications());
+    const classificationIds = await props.idsProvider.getAllClassifications();
     const ctes = [
       `
         ${CLASSIFICATION_TABLES_WITH_LABELS_CTE}(ClassName, ECInstanceId, DisplayLabel) AS (
@@ -836,9 +837,10 @@ function createSearchPathsForDifferentTypes(
           from(ids.classificationTableIds).pipe(
             map((id) => ({ path: [{ id, className: CLASS_NAMES.ClassificationTable }], target: id })),
           ),
-          idsProvider
-            .getClassificationsPathObs(ids.classificationIds)
-            .pipe(map((path) => ({ path, target: path[path.length - 1].id }))),
+          from(idsProvider.getClassificationsPath(ids.classificationIds)).pipe(
+            filter((path) => path.length > 0),
+            map((path) => ({ path, target: path[path.length - 1].id })),
+          ),
           from(ids.elementIds).pipe(
             bufferCount(getOptimalBatchSize({ totalSize: elementsLength, maximumBatchSize: 5000 })),
             releaseMainThreadOnItemsCount(1),
@@ -926,9 +928,9 @@ function createGeometricElementInstanceKeyPaths(props: {
     mergeMap(({ path, parentClassificationId }) => {
       const target = path[path.length - 1].id;
       if (parentClassificationId) {
-        return idsProvider
-          .getClassificationsPathObs(parentClassificationId)
-          .pipe(map((parentClassificationPath) => ({ path: parentClassificationPath.concat(path), target })));
+        return from(idsProvider.getClassificationsPath(parentClassificationId)).pipe(
+          map((parentClassificationPath) => ({ path: parentClassificationPath.concat(path), target })),
+        );
       }
       return of({ path, target });
     }),

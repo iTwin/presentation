@@ -93,6 +93,93 @@ describe("Models tree", () => {
       await terminateITwinJs();
     });
 
+    it.each(["model", "category", "element"] as const)("finds all subject paths to a shared %s", async (target) => {
+      await using setupResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, (txn) => {
+          const subject = insertSubject({ txn, codeValue: "subject" });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model", partitionParentId: subject.id });
+          const linkedSubject = insertSubject({
+            txn,
+            codeValue: "linked subject",
+            jsonProperties: { Subject: { Model: { TargetPartition: model.id } } },
+          });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const element = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+          return { subject, linkedSubject, model, category, element };
+        }),
+      );
+      const { imodelAccess, idsProvider, hierarchyConfig } = createAccessAndIdsProvider({
+        imodelConnection: setupResult.imodelConnection,
+        hierarchyConfig: { subjects: { root: "exclude" } },
+      });
+      const paths = await ModelsTreeDefinition.createSearchTree({
+        imodelAccess,
+        idsProvider,
+        hierarchyConfig,
+        targetItems: [target === "model" ? adjustedModelKey(setupResult.model) : setupResult[target]],
+        revealTargets: true,
+        abortSignal: new AbortController().signal,
+      });
+      const targetOptions = { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } };
+      const modelPath: HierarchySearchTree = {
+        identifier: adjustedModelKey(setupResult.model),
+        options: target === "model" ? targetOptions : { autoExpand: true },
+        ...(target !== "model" && {
+          children: [
+            {
+              identifier: setupResult.category,
+              options: target === "category" ? targetOptions : { autoExpand: true },
+              ...(target === "element" && {
+                children: [
+                  {
+                    identifier: { ...setupResult.element, className: CLASS_NAMES.GeometricElement3d },
+                    options: targetOptions,
+                  },
+                ],
+              }),
+            },
+          ],
+        }),
+      };
+      expect(paths).toHaveLength(2);
+      expect(paths).toEqual(
+        expect.arrayContaining(
+          [setupResult.subject, setupResult.linkedSubject].map((subject) => ({
+            identifier: subject,
+            options: { autoExpand: true },
+            children: [modelPath],
+          })),
+        ),
+      );
+    });
+
+    it("honors modeled-element exclusion options", async () => {
+      await using setupResult = await buildIModel(async (imodel, testSchema) =>
+        withEditTxn(imodel, (txn) => {
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const modeledElement = insertPhysicalElement({
+            txn,
+            classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+            modelId: model.id,
+            categoryId: category.id,
+          });
+          const subModel = insertPhysicalSubModel({ txn, modeledElementId: modeledElement.id });
+          insertPhysicalElement({ txn, modelId: subModel.id, categoryId: category.id });
+          return { modeledElement };
+        }),
+      );
+      const { idsProvider } = createAccessAndIdsProvider({
+        imodelConnection: setupResult.imodelConnection,
+        hierarchyConfig: { elements: { excludedClasses: ["Generic.PhysicalObject"] } },
+      });
+      expect(await idsProvider.getAllModeledElements()).toEqual(new Set([setupResult.modeledElement.id]));
+      expect(await idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })).toEqual(new Set());
+      expect(await idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: false })).toEqual(
+        new Set([setupResult.modeledElement.id]),
+      );
+    });
+
     describe("label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { model: InstanceKey; category: InstanceKey; elements: InstanceKey[] };
