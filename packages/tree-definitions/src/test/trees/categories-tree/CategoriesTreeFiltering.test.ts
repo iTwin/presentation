@@ -1325,7 +1325,7 @@ function createCategoriesTreeSearchProps(props: {
   return {
     idsProvider,
     viewType: props.viewType,
-    hierarchyConfig,
+    hierarchyConfig: props.hierarchyConfig,
     label: props.searchText,
     limit: props.searchLimit,
     revealTargets: true,

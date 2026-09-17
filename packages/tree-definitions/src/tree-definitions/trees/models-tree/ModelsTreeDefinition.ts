@@ -42,6 +42,7 @@ import {
   createWhereClause,
   getOptimalBatchSize,
   groupingNodeDataFromChildren,
+  mergeWithDefaults,
   ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
@@ -78,13 +79,16 @@ import type { DeepRequired } from "../../shared/Utils.js";
 import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 import type { CategoryNodeProps, ElementNodeProps } from "./ModelsTreeNodeInternal.js";
 
-/** @beta */
+/**
+ * An element class grouping node that can be used as a search target.
+ * @beta
+ */
 export type ClassGroupingHierarchyNode = GroupingHierarchyNode & { key: ClassGroupingNodeKey };
 
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
- * Defines hierarchy configuration supported by `ModelsTree`.
+ * Configures subject, model, category, and element nodes produced by `ModelsTreeDefinition`.
  * @beta
  */
 export interface ModelsTreeHierarchyConfiguration {
@@ -161,49 +165,72 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
   hierarchyLevelFiltering: "enable",
 };
 
+/**
+ * Data access and configuration for a models hierarchy.
+ * @beta
+ */
 interface ModelsTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /** ID provider configured with the same element and hierarchy options as this definition. */
   idsProvider: ModelsTreeIdsProvider;
-  hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
-  componentId?: GuidString;
+  /** Hierarchy options. Omitted properties use the documented defaults. */
+  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID. */
+  uniqueId?: GuidString;
 }
 
-/** @beta */
+/**
+ * Identifies an element class grouping node and its containing category or element for hierarchy searches.
+ * @beta
+ */
 export interface ElementsGroupInfo {
   parent: { ids: Id64String[]; type: "element" } | { ids: Id64String[]; modelIds: Id64String[]; type: "category" };
   groupingNode: ClassGroupingHierarchyNode;
 }
 
+/**
+ * Shared data access, configuration, and cancellation options for models hierarchy searches.
+ * @beta
+ */
 interface ModelsTreeInstanceKeyPathsBaseProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: ModelsTreeIdsProvider;
-  hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
+  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+  /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
+  /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
-  componentId?: string;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
+  uniqueId?: GuidString;
 }
 
+/**
+ * Search targets specified as instance keys or element class grouping nodes.
+ * @beta
+ */
 type ModelsTreeInstanceKeyPathsFromTargetItemsProps = {
   targetItems: Array<InstanceKey | ElementsGroupInfo>;
 } & ModelsTreeInstanceKeyPathsBaseProps;
 
+/**
+ * Search targets selected by a substring of their instance label.
+ * @beta
+ */
 type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = { label: string } & ModelsTreeInstanceKeyPathsBaseProps;
 
-/** @internal */
-export type ModelsTreeInstanceKeyPathsProps =
+/**
+ * Options for locating hierarchy paths by label, instance keys, or element class grouping nodes.
+ * @beta
+ */
+type ModelsTreeInstanceKeyPathsProps =
   | ModelsTreeInstanceKeyPathsFromTargetItemsProps
   | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace ModelsTreeInstanceKeyPathsProps {
-  export function isLabelProps(
-    props: ModelsTreeInstanceKeyPathsProps,
-  ): props is ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
-    return !!(props as ModelsTreeInstanceKeyPathsFromInstanceLabelProps).label;
-  }
-}
-
-/** @internal */
+/**
+ * Defines a configurable hierarchy of subjects, models, categories, and geometric elements.
+ * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @beta
+ */
 export class ModelsTreeDefinition implements HierarchyDefinition {
   #impl: HierarchyDefinition;
   #idsProvider: ModelsTreeIdsProvider;
@@ -211,10 +238,13 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #isSupported?: Promise<boolean>;
   static #componentName = "ModelsTreeDefinition";
-  #componentId: GuidString;
+  #uniqueId: GuidString;
 
   public constructor(props: ModelsTreeDefinitionProps) {
-    this.#hierarchyConfig = props.hierarchyConfig;
+    this.#hierarchyConfig = mergeWithDefaults({
+      defaults: defaultHierarchyConfiguration,
+      overrides: props.hierarchyConfig,
+    });
     this.#impl = createPredicateBasedHierarchyDefinition({
       imodelAccess: props.imodelAccess,
       hierarchy: {
@@ -252,7 +282,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         ],
       },
     });
-    this.#componentId = props.componentId ?? Guid.createValue();
+    this.#uniqueId = props.uniqueId ?? Guid.createValue();
     this.#idsProvider = props.idsProvider;
     this.#queryExecutor = props.imodelAccess;
   }
@@ -890,35 +920,55 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     ];
   }
 
+  /**
+   * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
+   * @throws An error if the configured search limit is exceeded.
+   */
   public static createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
     return eachValueFrom<{ path: HierarchyNodeIdentifiersPath; target: Id64String | ElementsGroupInfo }>(
       defer(() => {
-        const componentInfo = {
-          componentId: props.componentId ?? Guid.createValue(),
-          componentName: this.#componentName,
-        };
-        if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
+        const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
+        const hierarchyConfig = mergeWithDefaults({
+          defaults: defaultHierarchyConfiguration,
+          overrides: props.hierarchyConfig,
+        });
+        if ("label" in props) {
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
-          return createInstanceKeyPathsFromInstanceLabelObs({ ...props, ...componentInfo, labelsFactory });
+          return createInstanceKeyPathsFromInstanceLabelObs({
+            ...props,
+            ...componentInfo,
+            labelsFactory,
+            hierarchyConfig,
+          });
         }
-        return createInstanceKeyPathsFromTargetItemsObs({ ...props, ...componentInfo });
+        return createInstanceKeyPathsFromTargetItemsObs({ ...props, ...componentInfo, hierarchyConfig });
       }).pipe(props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity),
     );
   }
 
+  /**
+   * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+   * @throws An error if the configured search limit is exceeded.
+   */
   public static async createSearchTree(props: ModelsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
     const builder = HierarchySearchTree.createBuilder();
     await firstValueFrom(
       defer(() => {
-        const componentInfo = {
-          componentId: props.componentId ?? Guid.createValue(),
-          componentName: this.#componentName,
-        };
-        if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
+        const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
+        const hierarchyConfig = mergeWithDefaults({
+          defaults: defaultHierarchyConfiguration,
+          overrides: props.hierarchyConfig,
+        });
+        if ("label" in props) {
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
-          return createInstanceKeyPathsFromInstanceLabelObs({ ...props, ...componentInfo, labelsFactory });
+          return createInstanceKeyPathsFromInstanceLabelObs({
+            ...props,
+            ...componentInfo,
+            labelsFactory,
+            hierarchyConfig,
+          });
         }
-        return createInstanceKeyPathsFromTargetItemsObs({ ...props, ...componentInfo });
+        return createInstanceKeyPathsFromTargetItemsObs({ ...props, ...componentInfo, hierarchyConfig });
       }).pipe(
         props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
         releaseMainThreadOnItemsCount(1000),
@@ -965,7 +1015,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     };
 
     for await (const _row of this.#queryExecutor.createQueryReader(query, {
-      restartToken: `${ModelsTreeDefinition.#componentName}/${this.#componentId}/is-class-supported`,
+      restartToken: `${ModelsTreeDefinition.#componentName}/${this.#uniqueId}/is-class-supported`,
     })) {
       return true;
     }
@@ -988,7 +1038,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   idsProvider: ModelsTreeIdsProvider;
   elementClassName: EC.FullClassNameDotNotation;
   targetItems: Array<Id64String | ElementsGroupInfo>;
-  componentId: GuidString;
+  uniqueId: GuidString;
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
@@ -996,7 +1046,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   const {
     targetItems,
     chunkIndex,
-    componentId,
+    uniqueId,
     componentName,
     elementClassName,
     idsProvider,
@@ -1105,7 +1155,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
         {
           rowFormat: "Indexes",
           limit: "unbounded",
-          restartToken: `${componentName}/${componentId}/geometric-element-paths/${chunkIndex}`,
+          restartToken: `${componentName}/${uniqueId}/geometric-element-paths/${chunkIndex}`,
         },
       );
     }),
@@ -1138,7 +1188,7 @@ export function createCategoriesSearchPaths(props: {
   queryExecutor: LimitingECSqlQueryExecutor;
   idsProvider: ModelsTreeIdsProvider;
   targetCategoryIds: Id64Array;
-  componentId: GuidString;
+  uniqueId: GuidString;
   componentName: string;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
@@ -1146,7 +1196,7 @@ export function createCategoriesSearchPaths(props: {
   const separator = ";";
   const {
     targetCategoryIds,
-    componentId,
+    uniqueId,
     componentName,
     idsProvider,
     queryExecutor,
@@ -1258,11 +1308,7 @@ export function createCategoriesSearchPaths(props: {
               ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
             ],
           },
-          {
-            rowFormat: "Indexes",
-            limit: "unbounded",
-            restartToken: `${componentName}/${componentId}/categories-paths`,
-          },
+          { rowFormat: "Indexes", limit: "unbounded", restartToken: `${componentName}/${uniqueId}/categories-paths` },
         );
       }),
       catchBeSQLiteInterrupts,
@@ -1310,9 +1356,10 @@ function parseQueriedPath({
 }
 
 function createInstanceKeyPathsFromTargetItemsObs(
-  props: Omit<ModelsTreeInstanceKeyPathsFromTargetItemsProps, "abortSignal" | "componentId"> & {
-    componentId: GuidString;
+  props: Omit<ModelsTreeInstanceKeyPathsFromTargetItemsProps, "abortSignal" | "uniqueId" | "hierarchyConfig"> & {
+    uniqueId: GuidString;
     componentName: string;
+    hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
   },
 ) {
   const { targetItems, imodelAccess, limit } = props;
@@ -1344,7 +1391,11 @@ function createInstanceKeyPathsFromTargetItemsObs(
 }
 
 function createSearchPathsForDifferentTypes(
-  props: Omit<ModelsTreeInstanceKeyPathsBaseProps, "componentId"> & { componentId: GuidString; componentName: string },
+  props: Omit<ModelsTreeInstanceKeyPathsBaseProps, "uniqueId" | "hierarchyConfig"> & {
+    uniqueId: GuidString;
+    componentName: string;
+    hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
+  },
 ): OperatorFunction<
   { key: Id64String; type: number } | { key: ElementsGroupInfo; type: typeof ELEMENT_TYPE_AS_NUMBER },
   ObservedValueOf<ReturnType<typeof createGeometricElementInstanceKeyPaths>>
@@ -1376,7 +1427,7 @@ function createSearchPathsForDifferentTypes(
         },
       ),
       switchMap((ids) => {
-        const { idsProvider, imodelAccess, componentId, componentName, limit } = props;
+        const { idsProvider, imodelAccess, uniqueId, componentName, limit } = props;
         const elementsLength = ids.elementIds.length;
         const totalSize = ids.subjectIds.length + ids.modelIds.length + ids.categoryIds.length + elementsLength;
         if (limit !== "unbounded" && totalSize > (limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT)) {
@@ -1401,7 +1452,7 @@ function createSearchPathsForDifferentTypes(
             idsProvider,
             queryExecutor: imodelAccess,
             elementClassName: props.hierarchyConfig.elements.baseClass,
-            componentId,
+            uniqueId,
             componentName,
             excludedElementClassNames: props.hierarchyConfig.elements.excludedClasses,
           }),
@@ -1415,7 +1466,7 @@ function createSearchPathsForDifferentTypes(
                   idsProvider,
                   elementClassName: props.hierarchyConfig.elements.baseClass,
                   targetItems: block,
-                  componentId,
+                  uniqueId,
                   componentName,
                   chunkIndex,
                   excludedElementClassNames: props.hierarchyConfig.elements.excludedClasses,
@@ -1429,10 +1480,11 @@ function createSearchPathsForDifferentTypes(
 }
 
 function createInstanceKeyPathsFromInstanceLabelObs(
-  props: Omit<ModelsTreeInstanceKeyPathsFromInstanceLabelProps, "abortSignal" | "componentId"> & {
+  props: Omit<ModelsTreeInstanceKeyPathsFromInstanceLabelProps, "abortSignal" | "uniqueId" | "hierarchyConfig"> & {
     labelsFactory: IInstanceLabelSelectClauseFactory;
-    componentId: GuidString;
+    uniqueId: GuidString;
     componentName: string;
+    hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
   },
 ) {
   const { labelsFactory, label, imodelAccess, limit, hierarchyConfig } = props;
@@ -1484,7 +1536,7 @@ function createInstanceKeyPathsFromInstanceLabelObs(
     mergeMap((queryProps) => {
       return imodelAccess.createQueryReader(queryProps, {
         rowFormat: "Indexes",
-        restartToken: `${props.componentName}/${props.componentId}/filter-by-label`,
+        restartToken: `${props.componentName}/${props.uniqueId}/filter-by-label`,
         limit: "unbounded",
       });
     }),

@@ -42,6 +42,10 @@ interface ClassificationOrTableInfo {
   childClassificationIds: ClassificationId[];
 }
 
+/**
+ * Query access, root classification system, and category relationships for a classifications-tree ID provider.
+ * @beta
+ */
 interface ClassificationsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
@@ -64,16 +68,16 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
   /** Indicates whether classification data has finished loading. */
   readonly isDataLoaded: boolean;
   /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
-  hasChildren(classificationId: ClassificationId): Promise<boolean>;
+  hasChildren(classificationId: Id64String): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
-  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
+  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<Id64String[]>;
   /**
    * Yields a path from the classification table to each supplied classification, including both endpoints.
    * Empty input yields no paths. Unknown IDs yield a path containing only the supplied classification.
    */
   getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
-  getAllClassifications(): Promise<ClassificationId[]>;
+  getAllClassifications(): Promise<Id64String[]>;
 }
 
 /**

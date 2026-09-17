@@ -50,7 +50,7 @@ interface CategoriesInfo {
  */
 export interface CachedCategoryInfo {
   /** The category's element ID. */
-  id: CategoryId;
+  id: Id64String;
   /** Number of non-private subcategories, including the default subcategory. */
   subCategoryChildCount: number;
   /** Whether the category contains elements of the configured class, including excluded classes. */
@@ -59,7 +59,10 @@ export interface CachedCategoryInfo {
   hasElementsFromNonExcludedClasses: boolean;
 }
 
-/** @beta */
+/**
+ * Query access and view type for a categories-tree ID provider.
+ * @beta
+ */
 interface CategoriesTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   baseIdsProvider: BaseIdsProvider;
@@ -84,7 +87,7 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
   getDirectChildDefinitionContainersAndCategories(props: {
     parentDefinitionContainerIds: Id64Arg;
     includeEmpty?: boolean;
-  }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
+  }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Id64Array }>;
   /** Yields root-to-subcategory paths, omitting subcategories whose parent category has only one subcategory. */
   getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
   /** Yields root-to-definition-container paths, including each container itself. Unknown IDs yield empty paths. */
@@ -96,11 +99,11 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
   /** Returns all category and definition container IDs, excluding empty entries unless requested. */
   getAllDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
-  }): Promise<{ categories: Array<CategoryId>; definitionContainers: Array<DefinitionContainerId> }>;
+  }): Promise<{ categories: Id64Array; definitionContainers: Id64Array }>;
   /** Returns root categories and definition container IDs, excluding empty entries unless requested. */
   getRootDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
-  }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
+  }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Id64Array }>;
   /** Indicates whether definition container and category data has finished loading. */
   readonly isDataLoaded: boolean;
   /** Indicates whether the iModel schema supports definition containers. */

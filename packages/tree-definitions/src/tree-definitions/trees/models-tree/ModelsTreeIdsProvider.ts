@@ -9,18 +9,25 @@ import { IModel } from "@itwin/core-common";
 import { eachValueFrom, type InstanceKey } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
+import { createWhereClause, getOrCreate, mergeWithDefaults } from "../../shared/Utils.js";
+import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
-import type { RequiredModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js";
+import type { ModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
+/**
+ * Data access and configuration for a models-tree ID provider.
+ * @beta
+ */
 interface ModelsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
-  hierarchyConfig: Pick<RequiredModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
+  /** Hierarchy options. Omitted properties use the defaults of `ModelsTreeHierarchyConfiguration`. */
+  hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
+  /** Base provider using the same element class and exclusions as `hierarchyConfig`. */
   baseIdsProvider: BaseIdsProvider;
 }
 
@@ -62,9 +69,10 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
  */
 export function createModelsTreeIdsProvider({
   queryExecutor,
-  hierarchyConfig,
+  hierarchyConfig: configOverrides,
   baseIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
+  const hierarchyConfig = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const cachedData: {
     subjectInfos: Observable<Map<SubjectId, SubjectInfo>> | undefined;
     parentSubjectIds: Observable<Id64Array> | undefined;

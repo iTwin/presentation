@@ -13,7 +13,7 @@ import { ModeledElementsProvider } from "./ModeledElementsProvider.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
 
 import type { Observable } from "rxjs";
-import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentley";
+import type { GuidString, Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
 
@@ -34,7 +34,7 @@ export interface BaseIdsProvider {
   /** Indicates whether modeled element data has finished loading. */
   modeledElementsLoaded(): boolean;
   /** Returns IDs of non-private models containing elements of the configured class, including excluded classes. */
-  getAllModels(): Promise<Array<ModelId>>;
+  getAllModels(): Promise<Id64Array>;
   /** Returns IDs of non-private plan projection models containing elements of the configured class. */
   getPlanProjectionModels(): Promise<Id64Set>;
   /** Returns categories containing top-level elements and non-excluded elements in the specified model. */
@@ -52,14 +52,17 @@ export interface BaseIdsProvider {
     includeOnlyTopMostElementCategory?: boolean;
     /** Requires the category to contain both top-level elements and non-excluded elements in the model. */
     excludeIfOnlyExcludedClasses?: boolean;
-  }): AsyncIterableIterator<ModelId>;
+  }): AsyncIterableIterator<Id64String>;
   /** Returns a mapping from category IDs to their subcategory IDs. */
-  getCategorySubCategoriesMap(): Promise<Map<CategoryId, SubCategoryId[]>>;
+  getCategorySubCategoriesMap(): Promise<Map<Id64String, Id64Array>>;
   /** Groups the supplied subcategory IDs by parent category, omitting categories with only one subcategory. */
-  getSubCategoryCategories(props: { subCategoryIds: Id64Arg }): Promise<Map<CategoryId, SubCategoryId[]>>;
+  getSubCategoryCategories(props: { subCategoryIds: Id64Arg }): Promise<Map<Id64String, Id64Array>>;
 }
 
-/** @beta */
+/**
+ * Query access and element class filters shared by tree ID providers.
+ * @beta
+ */
 interface BaseIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   elementClassName: EC.FullClassNameDotNotation;

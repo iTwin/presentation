@@ -41,6 +41,7 @@ import {
   getOptimalBatchSize,
   getOrCreate,
   groupingNodeDataFromChildren,
+  mergeWithDefaults,
   ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
@@ -78,30 +79,44 @@ import type { CategoryNodeProps, ElementNodeProps } from "./CategoriesTreeNodeIn
 
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
+/**
+ * Data access, view type, and configuration for a categories hierarchy.
+ * @beta
+ */
 interface CategoriesTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   viewType: "2d" | "3d";
   idsProvider: CategoriesTreeIdsProvider;
-  hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
+  hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
 }
 
+/**
+ * Shared data access, configuration, and cancellation options for categories hierarchy searches.
+ * @beta
+ */
 interface CategoriesTreeInstanceKeyPathsBaseProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
   viewType: "2d" | "3d";
   idsProvider: CategoriesTreeIdsProvider;
-  hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
-  componentId?: GuidString;
+  hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
+  uniqueId?: GuidString;
+  /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
 
-/** @internal */
-export interface CategoriesTreeInstanceKeyPathsFromInstanceLabelProps extends CategoriesTreeInstanceKeyPathsBaseProps {
+/**
+ * Options for locating categories hierarchy paths by a substring of the instance label.
+ * @beta
+ */
+interface CategoriesTreeInstanceKeyPathsFromInstanceLabelProps extends CategoriesTreeInstanceKeyPathsBaseProps {
   label: string;
 }
 
 /**
- * Defines hierarchy configuration supported by `CategoriesTree`.
+ * Configures category, subcategory, and element nodes produced by `CategoriesTreeDefinition`.
  * @beta
  */
 export interface CategoriesTreeHierarchyConfiguration {
@@ -171,7 +186,11 @@ export const defaultHierarchyConfiguration: RequiredCategoriesTreeHierarchyConfi
   subCategories: { nodes: "include" },
 };
 
-/** @internal */
+/**
+ * Defines a hierarchy of definition containers, categories, subcategories, and optional elements for a 2D or 3D view.
+ * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @beta
+ */
 export class CategoriesTreeDefinition implements HierarchyDefinition {
   #impl: Promise<HierarchyDefinition> | undefined;
   #idsProvider: CategoriesTreeIdsProvider;
@@ -186,7 +205,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   public constructor(props: CategoriesTreeDefinitionProps) {
     this.#iModelAccess = props.imodelAccess;
     this.#idsProvider = props.idsProvider;
-    this.#hierarchyConfig = props.hierarchyConfig;
+    this.#hierarchyConfig = mergeWithDefaults({
+      defaults: defaultHierarchyConfiguration,
+      overrides: props.hierarchyConfig,
+    });
     const { categoryClass, elementClass, modelClass } = getClassesByView(props.viewType);
     this.#categoryClass = categoryClass;
     this.#categoryElementClass = elementClass;
@@ -1253,31 +1275,49 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     ];
   }
 
+  /**
+   * Yields hierarchy paths to instances whose labels contain the supplied text.
+   * @throws An error if the configured search limit is exceeded.
+   */
   public static createInstanceKeyPaths(
     props: CategoriesTreeInstanceKeyPathsFromInstanceLabelProps,
   ): AsyncIterableIterator<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
     const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
+    const hierarchyConfig = mergeWithDefaults({
+      defaults: defaultHierarchyConfiguration,
+      overrides: props.hierarchyConfig,
+    });
     return eachValueFrom(
       createInstanceKeyPathsFromInstanceLabel({
         ...props,
         labelsFactory,
-        componentId: props.componentId ?? Guid.createValue(),
+        uniqueId: props.uniqueId ?? Guid.createValue(),
         componentName: this.#componentName,
+        hierarchyConfig,
       }).pipe(props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity),
     );
   }
 
+  /**
+   * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+   * @throws An error if the configured search limit is exceeded.
+   */
   public static async createSearchTree(
     props: CategoriesTreeInstanceKeyPathsFromInstanceLabelProps & { revealTargets?: boolean },
   ) {
     const builder = HierarchySearchTree.createBuilder();
     const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
+    const hierarchyConfig = mergeWithDefaults({
+      defaults: defaultHierarchyConfiguration,
+      overrides: props.hierarchyConfig,
+    });
     await firstValueFrom(
       createInstanceKeyPathsFromInstanceLabel({
         ...props,
         labelsFactory,
-        componentId: props.componentId ?? Guid.createValue(),
+        uniqueId: props.uniqueId ?? Guid.createValue(),
         componentName: this.#componentName,
+        hierarchyConfig,
       }).pipe(
         props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
         releaseMainThreadOnItemsCount(1000),
@@ -1303,22 +1343,17 @@ const ELEMENT_CLASS_NAME_QUERY_ALIAS = "e";
 const MODEL_CLASS_NAME_QUERY_ALIAS = "m";
 
 function createInstanceKeyPathsFromInstanceLabel(
-  props: MarkRequired<Omit<CategoriesTreeInstanceKeyPathsFromInstanceLabelProps, "abortSignal">, "componentId"> & {
+  props: MarkRequired<
+    Omit<CategoriesTreeInstanceKeyPathsFromInstanceLabelProps, "abortSignal" | "hierarchyConfig">,
+    "uniqueId"
+  > & {
     labelsFactory: IInstanceLabelSelectClauseFactory;
+    hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
     componentName: string;
   },
 ) {
-  const {
-    idsProvider,
-    label,
-    viewType,
-    labelsFactory,
-    limit,
-    imodelAccess,
-    componentId,
-    componentName,
-    hierarchyConfig,
-  } = props;
+  const { idsProvider, label, viewType, labelsFactory, limit, imodelAccess, uniqueId, componentName, hierarchyConfig } =
+    props;
   const { categoryClass, elementClass } = getClassesByView(viewType);
 
   const adjustedLabel = label.replace(/[%_\\]/g, "\\$&");
@@ -1492,7 +1527,7 @@ function createInstanceKeyPathsFromInstanceLabel(
         return EMPTY;
       }
       return imodelAccess.createQueryReader(queryProps, {
-        restartToken: `${componentName}/${componentId}/filter-by-label`,
+        restartToken: `${componentName}/${uniqueId}/filter-by-label`,
         limit: "unbounded",
       });
     }),
@@ -1520,9 +1555,10 @@ function createInstanceKeyPathsFromInstanceLabel(
 }
 
 function createSearchPathsForDifferentTypes(
-  props: Omit<CategoriesTreeInstanceKeyPathsBaseProps, "componentId"> & {
-    componentId: GuidString;
+  props: Omit<CategoriesTreeInstanceKeyPathsBaseProps, "uniqueId" | "hierarchyConfig"> & {
+    uniqueId: GuidString;
     componentName: string;
+    hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
   },
 ): OperatorFunction<
   { key: Id64String; type: number },
@@ -1560,7 +1596,7 @@ function createSearchPathsForDifferentTypes(
         },
       ),
       switchMap((ids) => {
-        const { idsProvider, imodelAccess, componentId, componentName, limit } = props;
+        const { idsProvider, imodelAccess, uniqueId, componentName, limit } = props;
         const elementsLength = ids.elementIds.length;
         const totalSize =
           ids.definitionContainerIds.length + ids.categoryIds.length + ids.subCategoryIds.length + elementsLength;
@@ -1575,7 +1611,7 @@ function createSearchPathsForDifferentTypes(
           createCategoriesSearchPaths({
             queryExecutor: imodelAccess,
             targetCategoryIds: ids.categoryIds,
-            componentId,
+            uniqueId,
             componentName,
             idsProvider,
             viewType: props.viewType,
@@ -1602,7 +1638,7 @@ function createSearchPathsForDifferentTypes(
                       viewType: props.viewType,
                       targetItems: block,
                       chunkIndex,
-                      componentId,
+                      uniqueId,
                       componentName,
                       excludedElementClassNames:
                         props.hierarchyConfig.elements.nodes === "include"
@@ -1624,7 +1660,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   idsProvider: CategoriesTreeIdsProvider;
   viewType: "2d" | "3d";
   targetItems: Id64Array;
-  componentId: GuidString;
+  uniqueId: GuidString;
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
@@ -1633,7 +1669,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   const {
     targetItems,
     chunkIndex,
-    componentId,
+    uniqueId,
     componentName,
     idsProvider,
     queryExecutor,
@@ -1714,7 +1750,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
         {
           rowFormat: "Indexes",
           limit: "unbounded",
-          restartToken: `${componentName}/${componentId}/element-paths/${chunkIndex}`,
+          restartToken: `${componentName}/${uniqueId}/element-paths/${chunkIndex}`,
         },
       );
     }),
@@ -1738,7 +1774,7 @@ export function createCategoriesSearchPaths(props: {
   idsProvider: CategoriesTreeIdsProvider;
   viewType: "2d" | "3d";
   targetCategoryIds: Id64Array;
-  componentId: GuidString;
+  uniqueId: GuidString;
   componentName: string;
   elements: "include" | "exclude";
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
@@ -1746,7 +1782,7 @@ export function createCategoriesSearchPaths(props: {
   const separator = ";";
   const {
     targetCategoryIds,
-    componentId,
+    uniqueId,
     componentName,
     idsProvider,
     queryExecutor,
@@ -1852,11 +1888,7 @@ export function createCategoriesSearchPaths(props: {
               ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
             ],
           },
-          {
-            rowFormat: "Indexes",
-            limit: "unbounded",
-            restartToken: `${componentName}/${componentId}/categories-paths`,
-          },
+          { rowFormat: "Indexes", limit: "unbounded", restartToken: `${componentName}/${uniqueId}/categories-paths` },
         );
       }),
       catchBeSQLiteInterrupts,

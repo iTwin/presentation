@@ -212,6 +212,16 @@ describe("Models tree", () => {
         await imodelConnection.close();
       });
 
+      it.each(["createSearchTree", "createInstanceKeyPaths"])("handles an empty search label in %s", async (method) => {
+        const { imodelAccess, idsProvider } = createAccessAndIdsProvider({ imodelConnection });
+        const props = { imodelAccess, idsProvider, label: "", limit: 2 };
+        const result =
+          method === "createSearchTree"
+            ? ModelsTreeDefinition.createSearchTree(props)
+            : ModelsTreeDefinition.createInstanceKeyPaths(props).next();
+        await expect(result).rejects.toThrow(new SearchLimitExceededError(2));
+      });
+
       it.each([
         { limit: undefined, exceedsLimit: true },
         { limit: 2, exceedsLimit: true },

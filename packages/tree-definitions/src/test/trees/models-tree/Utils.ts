@@ -54,13 +54,17 @@ export function createModelsTreeProvider({
   });
   const createdIdsProvider =
     idsProvider ??
-    createModelsTreeIdsProvider({ queryExecutor: createdImodelAccess, hierarchyConfig: config, baseIdsProvider });
+    createModelsTreeIdsProvider({
+      queryExecutor: createdImodelAccess,
+      hierarchyConfig: configOverrides,
+      baseIdsProvider,
+    });
   const provider = createIModelHierarchyProvider({
     imodelAccess: createdImodelAccess,
     hierarchyDefinition: new ModelsTreeDefinition({
       imodelAccess: createdImodelAccess,
       idsProvider: createdIdsProvider,
-      hierarchyConfig: config,
+      hierarchyConfig: configOverrides,
     }),
     ...(searchPaths ? { search: { paths: searchPaths } } : undefined),
   });
@@ -240,10 +244,6 @@ export function createAccessAndIdsProvider({
     elementClassName: requiredHierarchyConfig.elements.baseClass,
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsProvider = createModelsTreeIdsProvider({
-    queryExecutor: imodelAccess,
-    hierarchyConfig: requiredHierarchyConfig,
-    baseIdsProvider,
-  });
+  const idsProvider = createModelsTreeIdsProvider({ queryExecutor: imodelAccess, hierarchyConfig, baseIdsProvider });
   return { imodelAccess, idsProvider, hierarchyConfig: requiredHierarchyConfig };
 }
