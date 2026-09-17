@@ -75,7 +75,7 @@ export class ElementModelCategoriesProvider {
             IIF(m.$->IsPlanProjection?, 1, 0) isPlanProjectionModel
             ${excludedClause ? `, MAX(IIF((${excludedClause}), 1, 0)) hasElementsFromNonExcludedClasses` : ""}
           FROM ${this.#elementClassName} this
-          JOIN ${CLASS_NAMES.model} m ON m.ECInstanceId = this.Model.Id
+          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
           WHERE m.IsPrivate = false
           GROUP BY modelId, categoryId
         `;

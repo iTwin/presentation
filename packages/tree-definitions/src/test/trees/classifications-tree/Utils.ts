@@ -165,7 +165,7 @@ export function createAccessAndIdsProvider({
   const imodelAccess = createIModelAccess(imodelConnection);
   const baseIdsProvider = new BaseIdsProvider({
     queryExecutor: imodelAccess,
-    elementClassName: CLASS_NAMES.geometricElement3d,
+    elementClassName: CLASS_NAMES.GeometricElement3d,
     type: "3d",
     excludedElementClassNames: hierarchyConfig.elements?.excludedClasses,
   });

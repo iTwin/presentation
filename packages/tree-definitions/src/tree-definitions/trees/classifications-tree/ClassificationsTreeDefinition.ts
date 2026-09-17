@@ -131,17 +131,17 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
           this.#createClassificationTablesQuery(requestProps),
         childNodes: [
           {
-            parentInstancesNodePredicate: CLASS_NAMES.classificationTable,
+            parentInstancesNodePredicate: CLASS_NAMES.ClassificationTable,
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
               this.#createClassificationTableChildrenQuery(requestProps),
           },
           {
-            parentInstancesNodePredicate: CLASS_NAMES.classification,
+            parentInstancesNodePredicate: CLASS_NAMES.Classification,
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
               this.#createClassificationChildrenQuery(requestProps),
           },
           {
-            parentInstancesNodePredicate: CLASS_NAMES.geometricElement,
+            parentInstancesNodePredicate: CLASS_NAMES.GeometricElement,
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
               this.#createGeometricElementChildrenQuery(requestProps),
           },
@@ -183,23 +183,23 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
   }: DefineRootHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAMES.classificationTable, alias: "this" },
+      contentClass: { fullName: CLASS_NAMES.ClassificationTable, alias: "this" },
     });
     return [
       {
-        fullClassName: CLASS_NAMES.classificationTable,
+        fullClassName: CLASS_NAMES.ClassificationTable,
         query: {
           ecsql: `
             SELECT
               ${await createSelectClause({
                 ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.classificationTable } },
+                nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.ClassificationTable } },
                 hasChildren: {
                   selector: `
                     IFNULL((
                       SELECT 1
-                      FROM ${CLASS_NAMES.classification} classification
+                      FROM ${CLASS_NAMES.Classification} classification
                       WHERE classification.Model.Id = this.ECInstanceId
                       LIMIT 1
                     ), 0)
@@ -210,7 +210,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
               })}
             FROM
               ${instanceFilterClauses.from} this
-            JOIN ${CLASS_NAMES.classificationSystem} system ON system.ECInstanceId = this.Parent.Id
+            JOIN ${CLASS_NAMES.ClassificationSystem} system ON system.ECInstanceId = this.Parent.Id
             ${instanceFilterClauses.joins}
             ${createWhereClause({ conditions: ["system.CodeValue = ?", "NOT this.IsPrivate", instanceFilterClauses.where] })}
           `,
@@ -265,7 +265,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     const [elementsInstanceFilterClauses, childClassificationsDefinition] = await Promise.all([
       createFilterClauses({
         filter: instanceFilter,
-        contentClass: { fullName: CLASS_NAMES.geometricElement3d, alias: "this" },
+        contentClass: { fullName: CLASS_NAMES.GeometricElement3d, alias: "this" },
       }),
       idsProvider.isDataLoaded
         ? this.#createCachedChildClassificationsQuery({
@@ -286,12 +286,12 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     return [
       // load classification elements
       {
-        fullClassName: CLASS_NAMES.geometricElement3d,
+        fullClassName: CLASS_NAMES.GeometricElement3d,
         query: {
           ecsql: `
             SELECT ${await this.#createElementSelectClause({ createSelectClause })}
             FROM ${elementsInstanceFilterClauses.from} this
-            JOIN ${CLASS_NAMES.elementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
+            JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
             JOIN IdSet(?) parentClassificationIdSet ON ehc.TargetECInstanceId = parentClassificationIdSet.id
             ${elementsInstanceFilterClauses.joins}
             ${createWhereClause({
@@ -330,7 +330,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     const [instanceFilterClauses, { childClassifications, childClassificationsWithChildren }] = await Promise.all([
       createFilterClauses({
         filter: instanceFilter,
-        contentClass: { fullName: CLASS_NAMES.classification, alias: "this" },
+        contentClass: { fullName: CLASS_NAMES.Classification, alias: "this" },
       }),
       getChildClassifications({ classificationOrTableIds: parentIds, idsProvider }),
     ]);
@@ -338,7 +338,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       return undefined;
     }
     return {
-      fullClassName: CLASS_NAMES.classification,
+      fullClassName: CLASS_NAMES.Classification,
       query: {
         ecsql: `
           SELECT
@@ -379,18 +379,18 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
   }): Promise<HierarchyNodesDefinition> {
     const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAMES.classification, alias: "this" },
+      contentClass: { fullName: CLASS_NAMES.Classification, alias: "this" },
     });
     const hasChildClassifications = `
       SELECT 1
-      FROM ${CLASS_NAMES.classification} cc
+      FROM ${CLASS_NAMES.Classification} cc
       ${createWhereClause({ conditions: ["cc.Parent.Id = this.ECInstanceId", "NOT cc.IsPrivate"] })}
       LIMIT 1
     `;
     const hasElements = `
       SELECT 1
-      FROM ${CLASS_NAMES.geometricElement3d} e
-      JOIN ${CLASS_NAMES.elementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
+      FROM ${CLASS_NAMES.GeometricElement3d} e
+      JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
       ${createWhereClause({
         conditions: [
           "ehc.TargetECInstanceId = this.ECInstanceId",
@@ -404,7 +404,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       LIMIT 1
     `;
     return {
-      fullClassName: CLASS_NAMES.classification,
+      fullClassName: CLASS_NAMES.Classification,
       query: {
         ecsql: `
           SELECT
@@ -438,7 +438,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     return createSelectClause({
       ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
       ecInstanceId: { selector: "this.ECInstanceId" },
-      nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.classification } },
+      nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.Classification } },
       hasChildren,
       extendedData: { type: "classification" },
       supportsFiltering: true,
@@ -453,11 +453,11 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAMES.geometricElement3d, alias: "this" },
+      contentClass: { fullName: CLASS_NAMES.GeometricElement3d, alias: "this" },
     });
     return [
       {
-        fullClassName: CLASS_NAMES.geometricElement3d,
+        fullClassName: CLASS_NAMES.GeometricElement3d,
         query: {
           ecsql: `
           SELECT ${await this.#createElementSelectClause({ createSelectClause })}
@@ -488,12 +488,12 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     return createSelectClause({
       ecClassId: { selector: "this.ECClassId" },
       ecInstanceId: { selector: "this.ECInstanceId" },
-      nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.geometricElement3d } },
+      nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.GeometricElement3d } },
       hasChildren: {
         selector: `
           IFNULL((
             SELECT 1
-            FROM ${CLASS_NAMES.element} ce
+            FROM ${CLASS_NAMES.Element} ce
             ${createWhereClause({
               conditions: [
                 "ce.Parent.Id = this.ECInstanceId",
@@ -629,7 +629,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
   return defer(async () => {
     const [classificationTableLabelSelectClause, classificationLabelSelectClause, elementLabelSelectClause] =
       await Promise.all(
-        [CLASS_NAMES.classificationTable, CLASS_NAMES.classification, CLASS_NAMES.geometricElement3d].map(
+        [CLASS_NAMES.ClassificationTable, CLASS_NAMES.Classification, CLASS_NAMES.GeometricElement3d].map(
           async (className) =>
             props.labelsFactory.createSelectClause({
               classAlias: "this",
@@ -646,8 +646,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
             '${CLASSIFICATION_TABLE_CLASS_NAME_QUERY_ALIAS}',
             this.ECInstanceId,
             ${classificationTableLabelSelectClause}
-          FROM ${CLASS_NAMES.classificationTable} this
-          JOIN ${CLASS_NAMES.classificationSystem} system ON system.ECInstanceId = this.Parent.Id
+          FROM ${CLASS_NAMES.ClassificationTable} this
+          JOIN ${CLASS_NAMES.ClassificationSystem} system ON system.ECInstanceId = this.Parent.Id
           ${createWhereClause({ conditions: ["system.CodeValue = ?", "NOT this.IsPrivate"] })}
         )
       `,
@@ -658,7 +658,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
                 '${CLASSIFICATION_CLASS_NAME_QUERY_ALIAS}',
                 this.ECInstanceId,
                 ${classificationLabelSelectClause}
-              FROM ${CLASS_NAMES.classification} this
+              FROM ${CLASS_NAMES.Classification} this
               JOIN IdSet(?) classificationIdSet ON this.ECInstanceId = classificationIdSet.id
             )`,
             `${ELEMENTS_WITH_LABELS_CTE}(ClassName, ECInstanceId, DisplayLabel) AS (
@@ -666,8 +666,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
                 '${ELEMENT_CLASS_NAME_QUERY_ALIAS}',
                 this.ECInstanceId,
                 ${elementLabelSelectClause}
-              FROM ${CLASS_NAMES.geometricElement3d} this
-              JOIN ${CLASS_NAMES.elementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
+              FROM ${CLASS_NAMES.GeometricElement3d} this
+              JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
               JOIN IdSet(?) classificationIdSet ON ehc.TargetECInstanceId = classificationIdSet.id
               ${createWhereClause({ conditions: ["this.Parent.Id IS NULL", createExcludedClassesClause({ alias: "this", excludedClassNames: props.hierarchyConfig.elements?.excludedClasses })] })}
 
@@ -678,7 +678,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
                 this.ECInstanceId,
                 ${elementLabelSelectClause}
               FROM
-                ${CLASS_NAMES.geometricElement3d} this
+                ${CLASS_NAMES.GeometricElement3d} this
                 JOIN ${ELEMENTS_WITH_LABELS_CTE} pe ON pe.ECInstanceId = this.Parent.Id
               ${createWhereClause({ conditions: [createExcludedClassesClause({ alias: "this", excludedClassNames: props.hierarchyConfig.elements?.excludedClasses })] })}
             )`,
@@ -778,11 +778,11 @@ function createInstanceKeyPathsFromTargetItemsObs(
   }
   return fromWithRelease({ source: targetItems, releaseOnCount: 2000 }).pipe(
     mergeMap(async (key): Promise<{ key: Id64String; type: number }> => {
-      if (await imodelAccess.classDerivesFrom(key.className, CLASS_NAMES.classificationTable)) {
+      if (await imodelAccess.classDerivesFrom(key.className, CLASS_NAMES.ClassificationTable)) {
         return { key: key.id, type: CLASSIFICATION_TABLE_TYPE_AS_NUMBER };
       }
 
-      if (await imodelAccess.classDerivesFrom(key.className, CLASS_NAMES.classification)) {
+      if (await imodelAccess.classDerivesFrom(key.className, CLASS_NAMES.Classification)) {
         return { key: key.id, type: CLASSIFICATION_TYPE_AS_NUMBER };
       }
 
@@ -834,7 +834,7 @@ function createSearchPathsForDifferentTypes(
 
         return merge(
           from(ids.classificationTableIds).pipe(
-            map((id) => ({ path: [{ id, className: CLASS_NAMES.classificationTable }], target: id })),
+            map((id) => ({ path: [{ id, className: CLASS_NAMES.ClassificationTable }], target: id })),
           ),
           idsProvider
             .getClassificationsPathObs(ids.classificationIds)
@@ -885,7 +885,7 @@ function createGeometricElementInstanceKeyPaths(props: {
           e.ECInstanceId,
           e.Parent.Id,
           '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([e].[ECInstanceId]) AS TEXT)
-        FROM  ${CLASS_NAMES.element} e
+        FROM  ${CLASS_NAMES.Element} e
         JOIN IdSet(?) targetItemIdSet ON e.ECInstanceId = targetItemIdSet.id
         ${createWhereClause({ conditions: [createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames })] })}
 
@@ -896,7 +896,7 @@ function createGeometricElementInstanceKeyPaths(props: {
           pe.Parent.Id,
           '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([pe].[ECInstanceId]) AS TEXT) || '${separator}' || ce.Path
         FROM ElementsHierarchy ce
-        JOIN ${CLASS_NAMES.element} pe ON pe.ECInstanceId = ce.ParentId
+        JOIN ${CLASS_NAMES.Element} pe ON pe.ECInstanceId = ce.ParentId
         ${createWhereClause({ conditions: [createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames })] })}
       )`,
     ];
@@ -905,8 +905,8 @@ function createGeometricElementInstanceKeyPaths(props: {
         e.Path path,
         c.ECInstanceId classificationId
       FROM
-        ${CLASS_NAMES.classification} c
-        JOIN ${CLASS_NAMES.elementHasClassifications} ehc ON ehc.TargetECInstanceId = c.ECInstanceId
+        ${CLASS_NAMES.Classification} c
+        JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.TargetECInstanceId = c.ECInstanceId
         JOIN ElementsHierarchy e ON ehc.SourceECInstanceId = e.ECInstanceId
       WHERE e.ParentId IS NULL
     `;
@@ -944,7 +944,7 @@ function parseQueryRow(
   for (let i = 0; i < rowElements.length; i += 2) {
     switch (rowElements[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:
-        path.push({ className: CLASS_NAMES.geometricElement3d, id: rowElements[i + 1] });
+        path.push({ className: CLASS_NAMES.GeometricElement3d, id: rowElements[i + 1] });
         break;
     }
   }

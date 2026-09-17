@@ -92,7 +92,7 @@ export class CategoriesTreeIdsProvider extends BaseIdsProviderImpl {
               ${
                 isDefinitionContainerSupported
                   ? `
-                  IIF(this.Model.Id IN (SELECT dc.ECInstanceId FROM ${CLASS_NAMES.definitionContainer} dc),
+                  IIF(this.Model.Id IN (SELECT dc.ECInstanceId FROM ${CLASS_NAMES.DefinitionContainer} dc),
                     true,
                     false
                   )`
@@ -100,7 +100,7 @@ export class CategoriesTreeIdsProvider extends BaseIdsProviderImpl {
               } parentDefinitionContainerExists
             FROM
               ${this.#categoryClass} this
-              JOIN ${CLASS_NAMES.model} m ON m.ECInstanceId = this.Model.Id
+              JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
             ${createWhereClause({ conditions: ["NOT this.IsPrivate", "NOT m.IsPrivate OR m.ECClassId IS (BisCore.DictionaryModel)"] })}
             GROUP BY this.ECInstanceId
           `;
@@ -165,7 +165,7 @@ export class CategoriesTreeIdsProvider extends BaseIdsProviderImpl {
             SELECT
               dc.ECInstanceId,
               dc.Model.Id
-            FROM ${CLASS_NAMES.definitionContainer} dc
+            FROM ${CLASS_NAMES.DefinitionContainer} dc
             JOIN ${this.#categoryClass} c ON c.Model.Id = dc.ECInstanceId
             JOIN IdSet(?) categoryIdSet ON c.ECInstanceId = categoryIdSet.id
             WHERE NOT dc.IsPrivate
@@ -177,7 +177,7 @@ export class CategoriesTreeIdsProvider extends BaseIdsProviderImpl {
               pdc.Model.Id
             FROM
               ${DEFINITION_CONTAINERS_CTE} cdc
-              JOIN ${CLASS_NAMES.definitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
+              JOIN ${CLASS_NAMES.DefinitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
             WHERE NOT pdc.IsPrivate
           )
         `,
@@ -396,7 +396,7 @@ export class CategoriesTreeIdsProvider extends BaseIdsProviderImpl {
               map((subCategoryId) => [
                 ...pathsUpToCategory,
                 { id: categoryId, className: this.#categoryClass },
-                { id: subCategoryId, className: CLASS_NAMES.subCategory },
+                { id: subCategoryId, className: CLASS_NAMES.SubCategory },
               ]),
             ),
           ),
@@ -422,7 +422,7 @@ export class CategoriesTreeIdsProvider extends BaseIdsProviderImpl {
                 this.#definitionContainerInstanceKeyPaths.set(definitionContainerId, entry);
                 return entry;
               }
-              const instanceKey = { id: definitionContainerId, className: CLASS_NAMES.definitionContainer };
+              const instanceKey = { id: definitionContainerId, className: CLASS_NAMES.DefinitionContainer };
               if (!definitionContainerInfo.parentDefinitionContainerExists) {
                 entry = of([instanceKey]).pipe(shareReplay());
                 this.#definitionContainerInstanceKeyPaths.set(definitionContainerId, entry);

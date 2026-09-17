@@ -109,14 +109,14 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: true },
                 children: keys.elements.map((element) => ({
-                  identifier: { id: element.id, className: CLASS_NAMES.geometricElement3d },
+                  identifier: { id: element.id, className: CLASS_NAMES.GeometricElement3d },
                   options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                 })),
               },
@@ -169,7 +169,7 @@ describe("Classifications tree", () => {
 
         expect(await ClassificationsTreeDefinition.createSearchTree(searchProps)).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
           },
         ]);
@@ -220,7 +220,7 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
           },
         ]);
@@ -269,11 +269,11 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
               },
             ],
@@ -319,15 +319,15 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { id: keys.element.id, className: CLASS_NAMES.geometricElement3d },
+                    identifier: { id: keys.element.id, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                 ],
@@ -382,19 +382,19 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { id: keys.parentElement.id, className: CLASS_NAMES.geometricElement3d },
+                    identifier: { id: keys.parentElement.id, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: true },
                     children: [
                       {
-                        identifier: { id: keys.childElement.id, className: CLASS_NAMES.geometricElement3d },
+                        identifier: { id: keys.childElement.id, className: CLASS_NAMES.GeometricElement3d },
                         options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                       },
                     ],
@@ -538,11 +538,11 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
               },
             ],
@@ -706,7 +706,7 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table2.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table2.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
           },
         ]);
@@ -766,11 +766,11 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table2.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table2.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification2.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification2.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
               },
             ],
@@ -832,15 +832,15 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table2.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table2.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification2.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification2.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { id: keys.element2.id, className: CLASS_NAMES.geometricElement3d },
+                    identifier: { id: keys.element2.id, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                 ],
@@ -913,19 +913,19 @@ describe("Classifications tree", () => {
           }),
         ).toEqual([
           {
-            identifier: { id: keys.table2.id, className: CLASS_NAMES.classificationTable },
+            identifier: { id: keys.table2.id, className: CLASS_NAMES.ClassificationTable },
             options: { autoExpand: true },
             children: [
               {
-                identifier: { id: keys.classification2.id, className: CLASS_NAMES.classification },
+                identifier: { id: keys.classification2.id, className: CLASS_NAMES.Classification },
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { id: keys.element2.id, className: CLASS_NAMES.geometricElement3d },
+                    identifier: { id: keys.element2.id, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: true },
                     children: [
                       {
-                        identifier: { id: keys.childElement.id, className: CLASS_NAMES.geometricElement3d },
+                        identifier: { id: keys.childElement.id, className: CLASS_NAMES.GeometricElement3d },
                         options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                       },
                     ],
@@ -981,7 +981,7 @@ describe("Classifications tree", () => {
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { ...keys.element, className: CLASS_NAMES.geometricElement3d },
+                    identifier: { ...keys.element, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                 ],
