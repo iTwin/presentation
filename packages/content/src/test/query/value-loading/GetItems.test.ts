@@ -109,32 +109,6 @@ const relDescriptor = {
   fields: { code: relCodeField, name: relNameField },
 } as unknown as ContentDescriptor;
 
-const filteredManyPathA: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
-const filteredManyPathB: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 2" } }];
-const filteredNameFieldA: PropertyField = {
-  ...relNameField,
-  id: PropertyField.computeId({
-    propertyClassName: "TestSchema.Many",
-    propertyName: "Name",
-    pathFromTarget: filteredManyPathA,
-  }),
-  pathFromTarget: filteredManyPathA,
-};
-const filteredNameFieldB: PropertyField = {
-  ...relNameField,
-  id: PropertyField.computeId({
-    propertyClassName: "TestSchema.Many",
-    propertyName: "Name",
-    pathFromTarget: filteredManyPathB,
-  }),
-  pathFromTarget: filteredManyPathB,
-};
-const filteredPathsDescriptor = {
-  sources: [],
-  categories: {},
-  fields: { code: relCodeField, filteredNameA: filteredNameFieldA, filteredNameB: filteredNameFieldB },
-} as unknown as ContentDescriptor;
-
 function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, related: boolean): ContentSource {
   return {
     target: { primaryClass },
@@ -148,23 +122,6 @@ function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, relat
           },
         ]
       : [],
-  } as unknown as ContentSource;
-}
-
-function createFilteredPathsSource(primaryClass: EC.FullClassNameDotNotation): ContentSource {
-  return {
-    target: { primaryClass },
-    resolvedPrimaryClasses: [primaryClass],
-    resolvedDeclarations: [
-      {
-        providerId: "provider_v1",
-        declarationIndex: 0,
-        paths: [
-          { path: filteredManyPathA, targetClassNames: ["TestSchema.Many"] },
-          { path: filteredManyPathB, targetClassNames: ["TestSchema.Many"] },
-        ],
-      },
-    ],
   } as unknown as ContentSource;
 }
 
@@ -596,6 +553,48 @@ describe("getItems", () => {
   });
 
   it("loads the same related property separately through differently filtered paths", async () => {
+    const filteredManyPathA: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
+    const filteredManyPathB: RelationshipPath = [{ ...manyPath[0], instanceFilter: { expression: "this.Kind = 2" } }];
+    const filteredNameFieldA: PropertyField = {
+      ...relNameField,
+      id: PropertyField.computeId({
+        propertyClassName: "TestSchema.Many",
+        propertyName: "Name",
+        pathFromTarget: filteredManyPathA,
+      }),
+      pathFromTarget: filteredManyPathA,
+    };
+    const filteredNameFieldB: PropertyField = {
+      ...relNameField,
+      id: PropertyField.computeId({
+        propertyClassName: "TestSchema.Many",
+        propertyName: "Name",
+        pathFromTarget: filteredManyPathB,
+      }),
+      pathFromTarget: filteredManyPathB,
+    };
+    const filteredPathsDescriptor = {
+      sources: [],
+      categories: {},
+      fields: { code: relCodeField, filteredNameA: filteredNameFieldA, filteredNameB: filteredNameFieldB },
+    } as unknown as ContentDescriptor;
+    function createFilteredPathsSource(primaryClass: EC.FullClassNameDotNotation): ContentSource {
+      return {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedDeclarations: [
+          {
+            providerId: "provider_v1",
+            declarationIndex: 0,
+            paths: [
+              { path: filteredManyPathA, targetClassNames: ["TestSchema.Many"] },
+              { path: filteredManyPathB, targetClassNames: ["TestSchema.Many"] },
+            ],
+          },
+        ],
+      } as unknown as ContentSource;
+    }
+
     const { imodelAccess, queries } = createRelationalIModelAccess((query) => {
       if (query.ecsql.includes("Kind = 1")) {
         return [
