@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { mergeBindings } from "../../InternalUtils.js";
+import { ECSQL_PREFIX, mergeBindings } from "../../InternalUtils.js";
 import { namespaceBindings } from "../NamespaceBindings.js";
 import { PAGE_SIZE, SQLITE_MAX_COMPOUND_SELECT_TERMS } from "../QueryLimits.js";
 import { buildKeysetPredicate } from "./Keyset.js";
@@ -20,6 +20,8 @@ import type { BaseQueryGroup } from "../BaseQuery.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { KeysetOrderColumn } from "./Keyset.js";
 import type { RowDecoder } from "./RowDecoder.js";
+
+export const QUERY_ALIAS = `${ECSQL_PREFIX}q`;
 
 /**
  * A base-query group paired with the projection that selects its columns.
@@ -70,8 +72,8 @@ export function buildAnchorPageQuery(props: {
   const where = cursor ? applyKeyset({ projection, sorting, cursor, bindings }) : "";
   return {
     ecsql: `
-      SELECT [q].*
-      FROM (${inner}) [q]
+      SELECT [${QUERY_ALIAS}].*
+      FROM (${inner}) [${QUERY_ALIAS}]
       ${where}
       ${orderByClause(projection)}
       LIMIT ${PAGE_SIZE}
@@ -109,8 +111,8 @@ export function buildKeyStreamQuery(props: {
   const where = cursor ? applyKeyset({ projection: plans[0].anchor.keyProjection, sorting, cursor, bindings }) : "";
   return {
     ecsql: `
-      SELECT [q].*
-      FROM (${union}) [q]
+      SELECT [${QUERY_ALIAS}].*
+      FROM (${union}) [${QUERY_ALIAS}]
       ${where}
       ${orderByClause(plans[0].anchor.keyProjection)}
       LIMIT ${PAGE_SIZE}
@@ -185,19 +187,19 @@ function keysetColumns(props: {
 }): KeysetOrderColumn[] {
   const { projection, sorting, cursor } = props;
   const columns: KeysetOrderColumn[] = projection.sort.map((entry, index) => ({
-    expression: `[q].[${entry.column}]`,
+    expression: `[${QUERY_ALIAS}].[${entry.column}]`,
     direction: entry.direction,
     type: sortPrimitiveType(sorting[index]),
     value: cursor.sortValues[index],
   }));
   columns.push({
-    expression: `[q].[${projection.columnNames.primaryKey.className}]`,
+    expression: `[${QUERY_ALIAS}].[${projection.columnNames.primaryKey.className}]`,
     direction: "asc",
     type: "String",
     value: cursor.primaryKey.className,
   });
   columns.push({
-    expression: `[q].[${projection.columnNames.primaryKey.id}]`,
+    expression: `[${QUERY_ALIAS}].[${projection.columnNames.primaryKey.id}]`,
     direction: "asc",
     type: "Id",
     value: cursor.primaryKey.id,
@@ -206,10 +208,10 @@ function keysetColumns(props: {
 }
 
 function orderByClause(projection: SelectProjection): string {
-  const parts = projection.sort.map((entry) => `[q].[${entry.column}] ${entry.direction.toUpperCase()}`);
+  const parts = projection.sort.map((entry) => `[${QUERY_ALIAS}].[${entry.column}] ${entry.direction.toUpperCase()}`);
   parts.push(
-    `[q].[${projection.columnNames.primaryKey.className}] ASC`,
-    `[q].[${projection.columnNames.primaryKey.id}] ASC`,
+    `[${QUERY_ALIAS}].[${projection.columnNames.primaryKey.className}] ASC`,
+    `[${QUERY_ALIAS}].[${projection.columnNames.primaryKey.id}] ASC`,
   );
   return `ORDER BY ${parts.join(", ")}`;
 }

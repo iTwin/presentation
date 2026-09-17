@@ -9,14 +9,15 @@ import { ECSQL_PREFIX } from "../../InternalUtils.js";
 import type { PrimitiveValue, PrimitiveValueType } from "@itwin/presentation-shared";
 
 /**
- * One column of the keyset order, in ORDER BY priority. `expression` is the SQL the predicate compares
- * against (a derived-table column reference such as `[q].[pres_sort_0]`); `type` selects the binding
- * type for the cursor value; `value` is the cursor value for this column (or `undefined` for a NULL).
+ * One column of the keyset order, in ORDER BY priority.
  */
 export interface KeysetOrderColumn {
+  /** The SQL the predicate compares against (a derived-table column reference such as `[q].[pres_sort_0]`) */
   expression: string;
   direction: "asc" | "desc";
+  /** Selects the binding type for the cursor value */
   type: PrimitiveValueType;
+  /** The cursor value for this column (or `undefined` for a NULL) */
   value: PrimitiveValue | undefined;
 }
 

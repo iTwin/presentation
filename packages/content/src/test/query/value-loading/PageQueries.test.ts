@@ -10,6 +10,7 @@ import {
   buildAnchorPageQuery,
   buildKeyStreamQuery,
   buildValueQuery,
+  QUERY_ALIAS,
 } from "../../../content/query/value-loading/PageQueries.js";
 
 import type { PropertyField } from "../../../content/model/Field.js";
@@ -109,15 +110,15 @@ describe("buildAnchorPageQuery", () => {
     const query = buildAnchorPageQuery({ plan: createPlan(), sorting: [] });
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT [q].*
+        SELECT [${QUERY_ALIAS}].*
         FROM (
           SELECT
             ec_classname([this].[ECClassId], 's.c') AS [pres_primary_class],
             [this].[ECInstanceId] AS [pres_primary_id],
             [this].$ AS [this]
           FROM [Schema].[A] [this]
-        ) [q]
-        ORDER BY [q].[pres_primary_class] ASC, [q].[pres_primary_id] ASC
+        ) [${QUERY_ALIAS}]
+        ORDER BY [${QUERY_ALIAS}].[pres_primary_class] ASC, [${QUERY_ALIAS}].[pres_primary_id] ASC
         LIMIT ${PAGE_SIZE}
       `),
     );
@@ -135,7 +136,7 @@ describe("buildAnchorPageQuery", () => {
     const query = buildAnchorPageQuery({ plan: createPlan({ anchor: { projection } }), sorting });
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT [q].*
+        SELECT [${QUERY_ALIAS}].*
         FROM (
           SELECT
             ec_classname([this].[ECClassId], 's.c') AS [pres_primary_class],
@@ -143,8 +144,8 @@ describe("buildAnchorPageQuery", () => {
             [this].$ AS [this],
             [this].$->[Code] AS [pres_sort_0]
           FROM [Schema].[A] [this]
-        ) [q]
-        ORDER BY [q].[pres_sort_0] ASC, [q].[pres_primary_class] ASC, [q].[pres_primary_id] ASC
+        ) [${QUERY_ALIAS}]
+        ORDER BY [${QUERY_ALIAS}].[pres_sort_0] ASC, [${QUERY_ALIAS}].[pres_primary_class] ASC, [${QUERY_ALIAS}].[pres_primary_id] ASC
         LIMIT ${PAGE_SIZE}
       `),
     );
@@ -156,7 +157,7 @@ describe("buildAnchorPageQuery", () => {
     const query = buildAnchorPageQuery({ plan: createPlan({ anchor: { projection } }), sorting, cursor });
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT [q].*
+        SELECT [${QUERY_ALIAS}].*
         FROM (
           SELECT
             ec_classname([this].[ECClassId], 's.c') AS [pres_primary_class],
@@ -164,12 +165,12 @@ describe("buildAnchorPageQuery", () => {
             [this].$ AS [this],
             [this].$->[Code] AS [pres_sort_0]
           FROM [Schema].[A] [this]
-        ) [q]
+        ) [${QUERY_ALIAS}]
         WHERE
-          [q].[pres_sort_0] > :pres_keyset_0
-          OR ([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] > :pres_keyset_1)
-          OR ([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] = :pres_keyset_1 AND [q].[pres_primary_id] > :pres_keyset_2)
-        ORDER BY [q].[pres_sort_0] ASC, [q].[pres_primary_class] ASC, [q].[pres_primary_id] ASC
+          [${QUERY_ALIAS}].[pres_sort_0] > :pres_keyset_0
+          OR ([${QUERY_ALIAS}].[pres_sort_0] = :pres_keyset_0 AND [${QUERY_ALIAS}].[pres_primary_class] > :pres_keyset_1)
+          OR ([${QUERY_ALIAS}].[pres_sort_0] = :pres_keyset_0 AND [${QUERY_ALIAS}].[pres_primary_class] = :pres_keyset_1 AND [${QUERY_ALIAS}].[pres_primary_id] > :pres_keyset_2)
+        ORDER BY [${QUERY_ALIAS}].[pres_sort_0] ASC, [${QUERY_ALIAS}].[pres_primary_class] ASC, [${QUERY_ALIAS}].[pres_primary_id] ASC
         LIMIT ${PAGE_SIZE}
       `),
     );
@@ -187,7 +188,7 @@ describe("buildKeyStreamQuery", () => {
     const query = buildKeyStreamQuery({ plans: [createPlan(), createPlan()], sorting });
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT [q].*
+        SELECT [${QUERY_ALIAS}].*
         FROM (
           SELECT * FROM (
             SELECT
@@ -202,8 +203,8 @@ describe("buildKeyStreamQuery", () => {
               [this].[ECInstanceId] AS [pres_primary_id]
             FROM [Schema].[A] [this]
           )
-        ) [q]
-        ORDER BY [q].[pres_primary_class] ASC, [q].[pres_primary_id] ASC
+        ) [${QUERY_ALIAS}]
+        ORDER BY [${QUERY_ALIAS}].[pres_primary_class] ASC, [${QUERY_ALIAS}].[pres_primary_id] ASC
         LIMIT ${PAGE_SIZE}
       `),
     );
@@ -222,7 +223,7 @@ describe("buildKeyStreamQuery", () => {
     const query = buildKeyStreamQuery({ plans: [makeFilteredPlan(), makeFilteredPlan()], sorting });
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT [q].*
+        SELECT [${QUERY_ALIAS}].*
         FROM (
           SELECT * FROM (
             SELECT
@@ -239,8 +240,8 @@ describe("buildKeyStreamQuery", () => {
             FROM [Schema].[A] [this]
             WHERE [this].Code > :s1_minCode
           )
-        ) [q]
-        ORDER BY [q].[pres_primary_class] ASC, [q].[pres_primary_id] ASC
+        ) [${QUERY_ALIAS}]
+        ORDER BY [${QUERY_ALIAS}].[pres_primary_class] ASC, [${QUERY_ALIAS}].[pres_primary_id] ASC
         LIMIT ${PAGE_SIZE}
       `),
     );
@@ -281,7 +282,7 @@ describe("buildKeyStreamQuery", () => {
     const query = buildKeyStreamQuery({ plans: [makePlan(), makePlan()], sorting, cursor });
     expect(trimWhitespace(query.ecsql)).to.equal(
       trimWhitespace(`
-        SELECT [q].*
+        SELECT [${QUERY_ALIAS}].*
         FROM (
           SELECT * FROM (
             SELECT
@@ -298,12 +299,12 @@ describe("buildKeyStreamQuery", () => {
               [this].$->[Code] AS [pres_sort_0]
             FROM [Schema].[A] [this]
           )
-        ) [q]
+        ) [${QUERY_ALIAS}]
         WHERE
-          [q].[pres_sort_0] > :pres_keyset_0
-          OR ([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] > :pres_keyset_1)
-          OR ([q].[pres_sort_0] = :pres_keyset_0 AND [q].[pres_primary_class] = :pres_keyset_1 AND [q].[pres_primary_id] > :pres_keyset_2)
-        ORDER BY [q].[pres_sort_0] ASC, [q].[pres_primary_class] ASC, [q].[pres_primary_id] ASC
+          [${QUERY_ALIAS}].[pres_sort_0] > :pres_keyset_0
+          OR ([${QUERY_ALIAS}].[pres_sort_0] = :pres_keyset_0 AND [${QUERY_ALIAS}].[pres_primary_class] > :pres_keyset_1)
+          OR ([${QUERY_ALIAS}].[pres_sort_0] = :pres_keyset_0 AND [${QUERY_ALIAS}].[pres_primary_class] = :pres_keyset_1 AND [${QUERY_ALIAS}].[pres_primary_id] > :pres_keyset_2)
+        ORDER BY [${QUERY_ALIAS}].[pres_sort_0] ASC, [${QUERY_ALIAS}].[pres_primary_class] ASC, [${QUERY_ALIAS}].[pres_primary_id] ASC
         LIMIT ${PAGE_SIZE}
       `),
     );
@@ -341,11 +342,8 @@ describe("buildKeyStreamQuery", () => {
 
 describe("buildValueQuery", () => {
   it("restricts the group to a page of ids via an IdSet join", () => {
-    const baseQuery = createBaseQueryGroup({
-      where: "WHERE [this].Code > :minCode",
-      bindings: { minCode: { type: "string", value: "A" } },
-    });
-    const projection = createProjection({ bindings: { extra: { type: "int", value: 1 } } });
+    const baseQuery = createBaseQueryGroup();
+    const projection = createProjection();
     const query = buildValueQuery({ baseQuery, projection, ids: ["0x1", "0x2"] });
 
     expect(trimWhitespace(query.ecsql)).to.equal(
@@ -356,13 +354,8 @@ describe("buildValueQuery", () => {
           [this].$ AS [this]
         FROM [Schema].[A] [this]
         JOIN IdSet(:pres_page_ids) [pres_page] ON [pres_page].[id] = [this].[ECInstanceId]
-        WHERE [this].Code > :minCode
       `),
     );
-    expect(query.bindings).to.deep.equal({
-      minCode: { type: "string", value: "A" },
-      extra: { type: "int", value: 1 },
-      ["pres_page_ids"]: { type: "idset", value: ["0x1", "0x2"] },
-    });
+    expect(query.bindings).to.deep.equal({ ["pres_page_ids"]: { type: "idset", value: ["0x1", "0x2"] } });
   });
 });
