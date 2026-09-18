@@ -37,6 +37,7 @@ function createSource(): ContentSource {
     target: { primaryClass: "TestSchema.A" },
     resolvedPrimaryClasses: ["TestSchema.A"],
     resolvedDeclarations: [],
+    externalInputPaths: [],
   };
 }
 
@@ -669,6 +670,7 @@ describe("collectCategories", () => {
             nested: { anchorClassName: props.anchorClassName, prefixStepCount: 1 },
           },
         ],
+        externalInputPaths: [],
       };
     }
 
@@ -757,6 +759,7 @@ describe("collectCategories", () => {
             nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
           },
         ],
+        externalInputPaths: [],
       };
       const memoizer = createContributionMemoizer({ imodelAccess: createSchemaAccess([]) });
       const categories = await collectCategories({

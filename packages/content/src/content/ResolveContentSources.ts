@@ -24,6 +24,7 @@ import type {
   RelationshipPath,
 } from "@itwin/presentation-shared";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
+import type { ExternalFieldsProvider, InputPropertyDeclaration } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
 // --- Types ---
@@ -279,6 +280,46 @@ async function resolveDeclarationPaths({
       toArray(),
     ),
   );
+}
+
+/**
+ * Resolves the paths declared by external fields providers' related-property `inputs` — the pipeline's
+ * own path-only counterpart to a provider's `relatedProperties` declarations, resolved the same way
+ * (`resolveDeclarationPaths`) but carrying no provider identity: nothing re-derives these afterward, so
+ * they need none of `RelatedPropertiesDeclaration`'s field-shaping members (`properties`,
+ * `cardinalityHint`) and never seed nested-anchor expansion.
+ */
+async function resolveExternalInputPaths({
+  imodelAccess,
+  target,
+  externalFieldsProviders,
+}: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  target: ContentTarget;
+  externalFieldsProviders: ExternalFieldsProvider[];
+}): Promise<ResolvedPath[]> {
+  const paths = collectExternalInputPaths(externalFieldsProviders);
+  const resolved = await Promise.all(
+    paths.map(async (path) => resolveDeclarationPaths({ imodelAccess, target, declaration: { path } })),
+  );
+  return resolved.flat();
+}
+
+/** De-duplicates every related path declared as an input across all external fields providers. */
+function collectExternalInputPaths(externalFieldsProviders: ExternalFieldsProvider[]): RelationshipPath[] {
+  const byKey = new Map<string, RelationshipPath>();
+  for (const provider of externalFieldsProviders) {
+    const declarations: ReadonlyArray<InputPropertyDeclaration> = Object.values(provider.inputs ?? {});
+    for (const declaration of declarations) {
+      if (declaration.path && declaration.path.length > 0) {
+        const key = serializeRelationshipPath({ path: declaration.path, includeInstanceFilters: true });
+        if (!byKey.has(key)) {
+          byKey.set(key, declaration.path);
+        }
+      }
+    }
+  }
+  return [...byKey.values()];
 }
 
 // --- Target resolution ---
@@ -623,10 +664,12 @@ async function resolveNestedGroups({
 function resolveTarget({
   imodelAccess,
   providers,
+  externalFieldsProviders,
   target,
 }: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   providers: IModelFieldsProvider[];
+  externalFieldsProviders: ExternalFieldsProvider[];
   target: ContentTarget;
 }): Observable<ContentSource> {
   const resolvedPrimaryClasses = from(resolvePrimaryClasses({ imodelAccess, target }));
@@ -642,22 +685,21 @@ function resolveTarget({
       ];
     }),
   );
-  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations });
+  const externalInputPaths = from(resolveExternalInputPaths({ imodelAccess, target, externalFieldsProviders }));
+  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, externalInputPaths });
 }
 
 // --- Overlap detection ---
 
 /**
- * Yields every pair of sources that could share an instance, each pair once, in `(i, j)` order.
- *
- * `resolvedPrimaryClasses` holds the *concrete* class of every instance a target reaches (it is
- * enumerated with `GROUP BY ECClassId`, so a target on `bis.Element` lists `bis.PhysicalObject`, never
- * `bis.Element` itself). An instance has exactly one concrete class, so two targets can only share an
- * instance when they resolved the same class name — no hierarchy lookup is needed. Indexing sources by
- * class name therefore finds candidates in time linear in the number of sources rather than scanning
- * every pair.
+ * Yields every pair of sources that could share an instance, each pair once, in `(i, j)` order. An
+ * instance has exactly one concrete class, so two sources can only share one when they resolved the
+ * same class name — no hierarchy lookup needed, just an index from class name to source indices.
  */
 function* iterateCandidatePairs(sources: readonly ContentSource[]): Generator<[i: number, j: number]> {
+  // `resolvedPrimaryClasses` holds the *concrete* class of every instance a target reaches (enumerated
+  // with `GROUP BY ECClassId`, so a target on `bis.Element` lists `bis.PhysicalObject`, never
+  // `bis.Element` itself), which is what makes the name-only index below sufficient.
   const sourcesByClass = new Map<EC.FullClassNameDotNotation, number[]>();
   for (const [index, source] of sources.entries()) {
     for (const className of source.resolvedPrimaryClasses) {
@@ -728,11 +770,6 @@ function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
 
 /**
  * Emits an instance id shared by `a` and `b`'s scopes, or nothing when their scopes are disjoint.
- * Cheap tiers avoid a query where the answer follows from the targets' shapes alone: both scoped
- * by `instanceIds` intersect in JS; either target scoped by neither `instanceIds` nor
- * `instanceFilter` covers every instance of the (already known to intersect) shared class, so any
- * id the other target's `instanceIds` names is shared too. Anything else — e.g. `instanceFilter` on
- * one or both sides, or neither side naming concrete ids — needs a query to know for sure.
  *
  * Returned as an `Observable` rather than a `Promise` so `assertNoOverlappingSources` can race every
  * candidate pair and, on unsubscribing after the first hit, cancel every other pair's still-running
@@ -760,8 +797,8 @@ function findOverlappingInstanceId({
       return EMPTY;
     }
   }
+
   // A query is required for every possible positive overlap so it can verify complete class and filter
-  // scopes, including instance existence and membership in the selected class.
   // scopes, including instance existence and membership in the selected class.
   const reader = imodelAccess.createQueryReader(buildOverlapQuery(a, b), { rowFormat: "Indexes" });
   return from(reader).pipe(
@@ -811,6 +848,7 @@ export async function resolveContentSourcesImpl(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   targets: ContentTarget[];
   imodelFieldsProviders: IModelFieldsProvider[];
+  externalFieldsProviders: ExternalFieldsProvider[];
 }): Promise<ContentSource[]> {
   if (props.targets.length === 0) {
     return [];
@@ -819,9 +857,12 @@ export async function resolveContentSourcesImpl(props: {
   return lastValueFrom(
     from(props.targets).pipe(
       mergeMap((target, idx) =>
-        resolveTarget({ imodelAccess: props.imodelAccess, providers: props.imodelFieldsProviders, target }).pipe(
-          map((source) => ({ source, idx })),
-        ),
+        resolveTarget({
+          imodelAccess: props.imodelAccess,
+          providers: props.imodelFieldsProviders,
+          externalFieldsProviders: props.externalFieldsProviders,
+          target,
+        }).pipe(map((source) => ({ source, idx }))),
       ),
       toArray(),
       map((items) => {

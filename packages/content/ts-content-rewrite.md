@@ -217,7 +217,7 @@ Provider specs are applied first (the system uses them during field generation t
 **Input:** Provider-owned content definition plus request options.
 **Output:** ECSQL query (or queries).
 
-This stage translates private value requirements into one or more ECSQL queries. It emits one column per deduplicated requirement, not one per field. Multiple fields can share a requirement (for example, forks), and external-input columns may have no field. Hidden fields are still queried; removing an output field drops its requirement unless the same column is also required by another field or external input. Calculated requirements carry their ECSQL expression. Query filterers can inject additional WHERE clauses or JOINs at this point.
+This stage translates private value requirements into one or more ECSQL queries. It emits one column per deduplicated requirement, not one per field. Multiple fields can share a requirement (for example, forks), and external-input columns may have no field. Hidden fields are still queried; removing an output field drops its requirement unless the same column is required by another field or external input. Calculated requirements carry their ECSQL expression. Query filterers can inject additional WHERE clauses or JOINs at this point.
 
 A property requirement carries semantic coordinates (`propertyClassName`, `propertyName`, `pathFromTarget`) but no column alias. The builder assigns deterministic aliases while constructing each request's FROM/JOIN shape, then combines those aliases with the cached requirements to create request-specific projections and row decoders.
 
