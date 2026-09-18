@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { serializeRelationshipPath } from "./Utils.js";
+import { serializeRelationshipPath } from "../model/Utils.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CalculatedField, PropertyField } from "./Field.js";
+import type { CalculatedField, PropertyField } from "../model/Field.js";
 
 /**
  * A deduplicated instruction for selecting one raw value (column) from the iModel.
@@ -15,8 +15,6 @@ import type { CalculatedField, PropertyField } from "./Field.js";
  * *what to display*. Multiple fields (e.g. an override and its base, or several `forkField` carves)
  * can share a single selector, and an external fields provider input can require a selector with no
  * output field at all.
- *
- * @public
  */
 export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
 
@@ -27,8 +25,6 @@ export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
  * (`propertyClassName`, `propertyName`, `pathFromTarget`) via `Pick`, so the field stays the single
  * source of truth. Unlike a field, a selector is deduplicated and may exist with no backing field
  * (an external fields provider input column).
- *
- * @public
  */
 export interface PropertyValueSelector extends Pick<
   PropertyField,
@@ -49,8 +45,6 @@ export interface PropertyValueSelector extends Pick<
  * Reuses the expression-defining fields of the {@link (CalculatedField:interface)}(s) that read it
  * (`expression`, `targetAlias`, `bindings`) via `Pick`, so the field stays the single source of
  * truth. Unlike a field, a selector is deduplicated.
- *
- * @public
  */
 export interface CalculatedValueSelector extends Pick<CalculatedField, "expression" | "targetAlias" | "bindings"> {
   kind: "calculated";
@@ -63,8 +57,6 @@ export interface CalculatedValueSelector extends Pick<CalculatedField, "expressi
  * distinguish property reads that follow the same relationship path but different step instance
  * filters or binding values, because those columns are not interchangeable for external-provider
  * inputs and other deduplicated value lookups.
- *
- * @internal
  */
 export function computePropertySelectorId(props: {
   propertyClassName: EC.FullClassNameDotNotation;

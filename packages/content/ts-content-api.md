@@ -45,6 +45,8 @@ Naively encoding the full path (e.g., `SourceClass.Prop/Rel1/Class2/Rel2/Class3/
 
 **Decision:** Use full non-encoded field IDs with format `{PropertyClassName}.{PropertyName}({serialized path from content target to property class})`. For direct (non-related) properties, the path portion is omitted. Memory impact is negligible at expected scale (~1K fields, average 2-step paths ≈ ~260 KB total).
 
+Field IDs remain consumer-facing value keys only. Query requirements and field-to-query bindings are derived and retained privately by the content provider; they are not properties of `ContentDescriptor`, `PropertyField`, or `CalculatedField`.
+
 ## Multi-source property fields
 
 When multiple content target classes share a property with the same name and type (e.g., `UserLabel` defined on both `BisCore.PhysicalElement` and `BisCore.SpatialElement`), should they merge into a single field in the descriptor?

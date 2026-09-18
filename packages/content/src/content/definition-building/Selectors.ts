@@ -3,12 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { computePropertySelectorId } from "../model/ValueSelector.js";
+import { computePropertySelectorId } from "./ValueSelector.js";
 
 import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
 import type { Field } from "../model/Field.js";
-import type { CalculatedValueSelector, PropertyValueSelector, ValueSelector } from "../model/ValueSelector.js";
 import type { ExternalInput } from "./ExternalFields.js";
+import type { CalculatedValueSelector, PropertyValueSelector, ValueSelector } from "./ValueSelector.js";
+
+export interface ValueRequirements {
+  selectors: Record<ValueSelector["id"], ValueSelector>;
+  fieldSelectorIds: Partial<Record<Field["id"], ValueSelector["id"]>>;
+}
 
 /**
  * Collects the deduplicated set of {@link ValueSelector}s to SELECT, keyed by selector id.
@@ -21,23 +26,26 @@ import type { ExternalInput } from "./ExternalFields.js";
  * an input column. When a field-backed selector and an input selector share an id, the field-backed
  * one is kept (they are otherwise identical).
  *
- * @internal
  */
-export function collectSelectors(props: {
+export function collectValueRequirements(props: {
   fields: Iterable<Field>;
   externalInputs: Iterable<ExternalInput>;
-}): Record<ValueSelector["id"], ValueSelector> {
+}): ValueRequirements {
   const { fields, externalInputs } = props;
-  const result: Record<ValueSelector["id"], ValueSelector> = {};
+  const selectors: Record<ValueSelector["id"], ValueSelector> = {};
+  const fieldSelectorIds: ValueRequirements["fieldSelectorIds"] = {};
   for (const field of fields) {
     switch (field.kind) {
       case "property": {
-        result[field.selectorId] = createPropertySelector({ ...field, id: field.selectorId });
+        const selector = createPropertySelector({ ...field, id: computePropertySelectorId(field) });
+        selectors[selector.id] = selector;
+        fieldSelectorIds[field.id] = selector.id;
         break;
       }
       case "calculated": {
-        const selector = createCalculatedSelector({ ...field, id: field.selectorId });
-        result[selector.id] = selector;
+        const selector = createCalculatedSelector({ ...field, id: field.id });
+        selectors[selector.id] = selector;
+        fieldSelectorIds[field.id] = selector.id;
         break;
       }
       // external fields have no selector — populated out-of-band, not via SQL.
@@ -45,9 +53,9 @@ export function collectSelectors(props: {
   }
   for (const input of externalInputs) {
     const selector = createPropertySelector({ ...input, id: computePropertySelectorId(input) });
-    result[selector.id] ??= selector;
+    selectors[selector.id] ??= selector;
   }
-  return result;
+  return { selectors, fieldSelectorIds };
 }
 
 /** Creates a {@link PropertyValueSelector} with its id derived from the property's identity. */

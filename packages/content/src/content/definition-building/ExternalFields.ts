@@ -21,8 +21,6 @@ export interface ExternalInput {
  * Each declared field's global id is `${providerId}:${localId}`. External fields have no value
  * selector (they are populated out-of-band, not via SQL); the returned `inputs` are the property
  * columns that must nonetheless be selected so their values can feed the providers' `getValues`.
- *
- * @internal
  */
 export function collectExternalFields(externalFieldsProviders: ExternalFieldsProvider[]): {
   fields: Record<Field["id"], ExternalField>;

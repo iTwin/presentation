@@ -7,7 +7,6 @@ import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "./Category.js";
 import type { Field } from "./Field.js";
 import type { DeepReadonly } from "./Utils.js";
-import type { ValueSelector } from "./ValueSelector.js";
 
 /**
  * The schema of the content result. Computed before loading any values.
@@ -36,13 +35,6 @@ export interface ContentDescriptor {
    * All category definitions referenced by fields in this descriptor, keyed by category ID.
    */
   categories: Record<CategoryDefinition["id"], CategoryDefinition>;
-
-  /**
-   * Columns to SELECT from the iModel, keyed by selector ID. The deduplicated union of the columns
-   * backing this descriptor's SQL-backed fields and the columns required by external fields
-   * providers' inputs. Multiple fields may reference the same selector via their `selectorId`.
-   */
-  selectors: Record<ValueSelector["id"], ValueSelector>;
 }
 
 /**
