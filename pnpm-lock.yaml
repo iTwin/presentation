@@ -1167,9 +1167,6 @@ importers:
       '@itwin/unified-selection':
         specifier: workspace:^
         version: link:../unified-selection
-      '@stratakit/icons':
-        specifier: catalog:stratakit
-        version: 0.4.3
       '@stratakit/structures':
         specifier: catalog:stratakit
         version: 0.6.0(@stratakit/foundations@1.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@types/react@19.3.0)(immer@10.2.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(use-sync-external-store@1.6.0(react@19.3.0))
@@ -1207,6 +1204,9 @@ importers:
       '@stratakit/foundations':
         specifier: catalog:stratakit
         version: 1.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@stratakit/icons':
+        specifier: catalog:stratakit
+        version: 0.4.3
       '@stratakit/mui':
         specifier: catalog:stratakit
         version: 1.0.0(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@stratakit/foundations@1.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(supports-color@8.1.1)
