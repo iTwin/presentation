@@ -5,12 +5,13 @@
 
 import { describe, expect, it } from "vitest";
 import { createContentItem } from "../../content/model/ContentItem.js";
+import { PropertyField } from "../../content/model/Field.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 
 import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
 import type { ContentValues } from "../../content/model/ContentItem.js";
-import type { Field, PropertyField } from "../../content/model/Field.js";
+import type { Field } from "../../content/model/Field.js";
 
 function createTestDescriptor(fields: Field[]): ContentDescriptor {
   const fieldMap: Record<string, Field> = {};
@@ -306,6 +307,81 @@ describe("createContentItem", () => {
       expect(byPath).to.have.lengthOf(1);
       expect(byField[0].key).to.deep.equal(byPath[0].key);
       expect(byField[0].getValue(nameField)).to.equal(byPath[0].getValue(nameField));
+    });
+
+    it("loads the same property through different filtered paths using distinct computed field IDs", () => {
+      const filteredPathA: RelationshipPath = [{ ...testPath[0], instanceFilter: { expression: "this.Kind = 1" } }];
+      const filteredPathB: RelationshipPath = [{ ...testPath[0], instanceFilter: { expression: "this.Kind = 2" } }];
+      const filteredPathAKey = serializeRelationshipPath({ path: filteredPathA, includeInstanceFilters: true });
+      const filteredPathBKey = serializeRelationshipPath({ path: filteredPathB, includeInstanceFilters: true });
+      const nameFieldA = createTestPropertyField(
+        PropertyField.computeId({
+          propertyClassName: "BisCore.ElementAspect",
+          propertyName: "Name",
+          pathFromTarget: filteredPathA,
+        }),
+        {
+          propertyName: "Name",
+          propertyClassName: "BisCore.ElementAspect",
+          pathFromTarget: filteredPathA,
+          pathCardinality: "many",
+        },
+      );
+      const nameFieldB = createTestPropertyField(
+        PropertyField.computeId({
+          propertyClassName: "BisCore.ElementAspect",
+          propertyName: "Name",
+          pathFromTarget: filteredPathB,
+        }),
+        {
+          propertyName: "Name",
+          propertyClassName: "BisCore.ElementAspect",
+          pathFromTarget: filteredPathB,
+          pathCardinality: "many",
+        },
+      );
+      const descriptor = createTestDescriptor([nameFieldA, nameFieldB]);
+      const aspectA: InstanceKey = { className: "BisCore.ElementAspect", id: "0x10" };
+      const aspectB: InstanceKey = { className: "BisCore.ElementAspect", id: "0x11" };
+      const contentValues: ContentValues = {
+        primaryKey: { className: "BisCore.Element", id: "0x1" },
+        values: { [nameFieldA.id]: ["First"], [nameFieldB.id]: ["Second"] },
+        relatedInstances: { [filteredPathAKey]: [{ key: aspectA }], [filteredPathBKey]: [{ key: aspectB }] },
+      };
+
+      const item = createContentItem({ descriptor, contentValues });
+      const entriesA = item.getRelatedInstances({ pathFromTarget: filteredPathA });
+      const entriesB = item.getRelatedInstances({ pathFromTarget: filteredPathB });
+
+      expect(nameFieldA.id).to.not.equal(nameFieldB.id);
+      expect(entriesA).to.have.lengthOf(1);
+      expect(entriesA[0].key).to.deep.equal(aspectA);
+      expect(entriesA[0].getValue(nameFieldA)).to.equal("First");
+      expect(entriesB).to.have.lengthOf(1);
+      expect(entriesB[0].key).to.deep.equal(aspectB);
+      expect(entriesB[0].getValue(nameFieldB)).to.equal("Second");
+    });
+
+    it("returns an entry for a path declared only as an external fields provider input, with no field aligned to it", () => {
+      const descriptor = createTestDescriptor([]);
+      const aspectKey: InstanceKey = { className: "BisCore.ElementAspect", id: "0x10" };
+      const contentValues: ContentValues = {
+        primaryKey: { className: "BisCore.Element", id: "0x1" },
+        values: {},
+        relatedInstances: { [testPathKey]: [{ key: aspectKey }] },
+      };
+      const unrelatedField = createTestPropertyField("BisCore.ElementAspect.Name", {
+        propertyName: "Name",
+        propertyClassName: "BisCore.ElementAspect",
+        pathFromTarget: testPath,
+      });
+
+      const item = createContentItem({ descriptor, contentValues });
+      const entries = item.getRelatedInstances({ pathFromTarget: testPath });
+
+      expect(entries).to.have.lengthOf(1);
+      expect(entries[0].key).to.deep.equal(aspectKey);
+      expect(entries[0].getValue(unrelatedField)).to.be.undefined;
     });
   });
 });

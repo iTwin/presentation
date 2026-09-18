@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { buildContentDefinition } from "../../content/definition-building/BuildContentDefinition.js";
+import {
+  buildContentDefinition,
+  preparePropertyReaders,
+} from "../../content/definition-building/BuildContentDefinition.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
 import { PropertyField } from "../../content/model/Field.js";
@@ -28,6 +31,92 @@ function createSource(
 }
 
 describe("buildContentDefinition", () => {
+  it("keeps sibling properties separate while allowing inherited properties", async () => {
+    const baseProperty = createPrimitiveProperty({ name: "Inherited", declaringClass: "TestSchema.Base" });
+    const siblingProperty = createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.D1" });
+    const base = createEntityClass({ fullName: "TestSchema.Base", properties: [baseProperty] });
+    const d1 = createEntityClass({
+      fullName: "TestSchema.D1",
+      properties: [baseProperty, siblingProperty],
+      baseClass: base,
+    });
+    const d2 = createEntityClass({
+      fullName: "TestSchema.D2",
+      properties: [baseProperty, createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.D2" })],
+      baseClass: base,
+    });
+    base.getDerivedClassNames = () => [d1.fullName, d2.fullName];
+    const imodelAccess = createSchemaAccess([base, d1, d2]);
+    const readers = await preparePropertyReaders({
+      imodelAccess,
+      selectors: {
+        "TestSchema.D1.Prop": {
+          kind: "property",
+          id: "TestSchema.D1.Prop",
+          propertyClassName: "TestSchema.D1",
+          propertyName: "Prop",
+          pathFromTarget: [],
+        },
+        "TestSchema.Base.Inherited": {
+          kind: "property",
+          id: "TestSchema.Base.Inherited",
+          propertyClassName: "TestSchema.Base",
+          propertyName: "Inherited",
+          pathFromTarget: [],
+        },
+      },
+      fields: {},
+    });
+
+    expect(readers["TestSchema.D1.Prop"]("TestSchema.D2", "d2")).to.equal(undefined);
+    expect(readers["TestSchema.D1.Prop"]("TestSchema.D1", "d1")).to.equal("d1");
+    expect(readers["TestSchema.Base.Inherited"]("TestSchema.D1", "base")).to.equal("base");
+  });
+
+  it("rejects a prepared property selector whose property does not exist", async () => {
+    await expect(
+      preparePropertyReaders({
+        imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.A" })]),
+        selectors: {
+          missing: {
+            kind: "property",
+            id: "missing",
+            propertyClassName: "TestSchema.A",
+            propertyName: "Missing",
+            pathFromTarget: [],
+          },
+        },
+        fields: {},
+      }),
+    ).rejects.toThrow('Property "TestSchema.A.Missing" was not found.');
+  });
+
+  it.each(["Binary", "IGeometry"] as const)(
+    "rejects a prepared property selector with unsupported %s type",
+    async (primitiveType) => {
+      await expect(
+        preparePropertyReaders({
+          imodelAccess: createSchemaAccess([
+            createEntityClass({
+              fullName: "TestSchema.A",
+              properties: [createPrimitiveProperty({ name: "Unsupported", primitiveType })],
+            }),
+          ]),
+          selectors: {
+            unsupported: {
+              kind: "property",
+              id: "unsupported",
+              propertyClassName: "TestSchema.A",
+              propertyName: "Unsupported",
+              pathFromTarget: [],
+            },
+          },
+          fields: {},
+        }),
+      ).rejects.toThrow('Property "TestSchema.A.Unsupported" has an unsupported value type.');
+    },
+  );
+
   it("carries the sources and enumerates direct property fields", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({
@@ -294,6 +383,45 @@ describe("buildContentDefinition", () => {
     expect(descriptor.fields["ext_v1:status"].kind).to.equal("external");
     // External fields have no selector; the input reuses the property field's private requirement.
     expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Prop"]);
+  });
+
+  it("keeps external input values available for classes removed from output field scopes", async () => {
+    const property = createPrimitiveProperty({ name: "Code", declaringClass: "TestSchema.Base" });
+    const base = createEntityClass({ fullName: "TestSchema.Base", properties: [property] });
+    const a = createEntityClass({ fullName: "TestSchema.A", baseClass: base, properties: [property] });
+    const b = createEntityClass({ fullName: "TestSchema.B", baseClass: base, properties: [property] });
+    base.getDerivedClassNames = () => [a.fullName, b.fullName];
+    const externalProvider = defineExternalFieldsProvider({
+      id: "ext_v1",
+      fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+      inputs: { code: { propertyClassName: base.fullName, propertyName: "Code" } },
+      async getValues() {
+        return [];
+      },
+    });
+    const definition = await buildContentDefinition({
+      imodelAccess: createSchemaAccess([base, a, b]),
+      sources: [createSource(base.fullName, [a.fullName, b.fullName])],
+      config: {
+        externalFieldsProviders: [externalProvider],
+        descriptorTransformers: [
+          {
+            async transform({ descriptor }) {
+              descriptor.forkField("TestSchema.Base.Code", [a.fullName]);
+              descriptor.removeField("TestSchema.Base.Code");
+            },
+          },
+        ],
+      },
+    });
+
+    const fields = Object.values(definition.descriptor.fields).filter((field) => field.kind === "property");
+    expect(fields).to.have.lengthOf(1);
+    expect(fields[0].valueClassNames).to.deep.equal([a.fullName]);
+    expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.Base.Code"]);
+    const read = definition.propertyReaders["TestSchema.Base.Code"];
+    expect(read(a.fullName, "a")).to.equal("a");
+    expect(read(b.fullName, "b")).to.equal("b");
   });
 
   it("applies descriptor transformer metadata changes", async () => {

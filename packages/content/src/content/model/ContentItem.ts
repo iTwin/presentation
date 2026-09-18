@@ -12,7 +12,6 @@ import type { DeepReadonly } from "./Utils.js";
 
 /**
  * One related instance reached over a relationship path.
- * @public
  */
 export interface RelatedInstanceEntry {
   /** Key of the related (path target) instance. */
@@ -27,8 +26,6 @@ export interface RelatedInstanceEntry {
  *
  * All fields (property, SQL calculated, and external) are populated by the pipeline.
  * Fields that don't apply to this instance's class have `undefined` values.
- *
- * @internal
  */
 export interface ContentValues {
   /** The primary instance this row represents. */
@@ -36,14 +33,24 @@ export interface ContentValues {
   /** Map of field ID → raw value. */
   values: Record<Field["id"], Value>;
   /**
-   * Related instances reached by this item, keyed by serialized relationship path
-   * ({@link serializeRelationshipPath} — same serialization used in field IDs).
+   * Related instances reached by this item, keyed by the exact relationship path the values were
+   * loaded over, including step instance filters and their binding values
+   * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`).
    *
-   * Alignment contract: for a field whose `pathFromTarget` serializes to key `P` and whose value
-   * is array-shaped due to path cardinality, `values[field.id]` has exactly `relatedInstances[P].length`
-   * elements — element `i` comes from `relatedInstances[P][i]`, with `undefined` holes where that
-   * instance's property is `null`. For single-instance (`"one"`) paths the entry array has length
-   * 0 or 1 and the field value is inlined.
+   * Alignment contract: for a field whose `pathFromTarget` serializes to the same path key and whose
+   * value is array-shaped due to path cardinality, `values[field.id]` has exactly as many elements as
+   * that key's entry array here — element `i` comes from entry `i`, with `undefined` holes where that
+   * instance's property is `null`. For single-instance (`"one"`) paths the entry array has length 0 or
+   * 1 and the field value is inlined.
+   *
+   * Order within an entry array is unspecified but consistent across this item's fields and
+   * `relatedInstances` — index `i` always refers to the same related instance for every array-shaped
+   * field on the same path and for the path's own entries.
+   *
+   * Entries exist for every related path the item was loaded over — those read by a field and those
+   * declared only as an external fields provider input — so a path key may be present with no field
+   * aligned to it. Not exposed directly on the public `ContentItem` — see
+   * {@link (ContentItem:interface).getRelatedInstances}, which reads this map scoped to one path.
    */
   relatedInstances: Record<string, RelatedInstanceEntry[]>;
 }
@@ -65,12 +72,6 @@ export interface ContentItem {
   readonly values: DeepReadonly<Record<Field["id"], Value>>;
 
   /**
-   * Related instances reached by this item, keyed by serialized relationship path.
-   * See {@link (ContentItem:interface).getRelatedInstances} for an ergonomic accessor.
-   */
-  readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
-
-  /**
    * Retrieve a value by field reference.
    * Returns `undefined` if the field doesn't apply to this item's class.
    */
@@ -81,7 +82,9 @@ export interface ContentItem {
    * field's {@link (PropertyField:interface).pathFromTarget}), each paired with a scoped
    * `getValue` that reads that instance's value for a field on the same path.
    *
-   * Returns an empty array when no related instance was reached over the path.
+   * Returns an empty array when no related instance was reached over the path. Order within the
+   * returned array is unspecified but consistent across this item's fields and across paths — index
+   * `i` always refers to the same related instance for every array-shaped field on `path`.
    */
   getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }): ReadonlyArray<{
     /** Key of the related instance. */
@@ -98,8 +101,6 @@ export interface ContentItem {
 
 /**
  * Create a `ContentItem` accessor from a descriptor and raw content values.
- *
- * @internal
  */
 export function createContentItem({
   descriptor,
@@ -112,18 +113,17 @@ export function createContentItem({
     descriptor,
     primaryKey: contentValues.primaryKey,
     values: contentValues.values,
-    relatedInstances: contentValues.relatedInstances,
     getValue(field: DeepReadonly<ReadonlyField>): DeepReadonly<Value> {
       return contentValues.values[field.id];
     },
     getRelatedInstances(props: { pathFromTarget: DeepReadonly<RelationshipPath> }) {
-      const pathKey = serializeRelationshipPath({ path: props.pathFromTarget });
+      const pathKey = serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true });
       const entries = contentValues.relatedInstances[pathKey] ?? [];
       return entries.map((entry, index) => ({
         key: entry.key,
         relationshipKey: entry.relationshipKey,
         getValue(field: DeepReadonly<PropertyField>): DeepReadonly<Value> {
-          if (serializeRelationshipPath({ path: field.pathFromTarget }) !== pathKey) {
+          if (serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true }) !== pathKey) {
             return undefined;
           }
           const rawValue = contentValues.values[field.id];
