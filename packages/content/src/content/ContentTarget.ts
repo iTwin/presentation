@@ -25,6 +25,9 @@ export type CardinalityHint = "one" | "many";
  * When the consumer selects instances of multiple different classes,
  * this becomes multiple content targets — one per distinct class.
  *
+ * @throws when resolved alongside another target whose scope can reach the same instance —
+ * see `resolveContentSources`.
+ *
  * @public
  */
 export interface ContentTarget {
