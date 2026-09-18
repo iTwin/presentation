@@ -14,7 +14,7 @@ import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies
 import type { EC } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
 
-interface ElementModelCategoriesCacheProps {
+interface ElementModelCategoriesProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: string;
@@ -24,7 +24,8 @@ interface ModelsCategoriesInfoEntry {
   categoriesOfTopMostNonExcludedElements: Set<CategoryId>;
   hasNonExcludedElements: boolean;
 }
-interface CachedData {
+
+interface ElementModelCategoriesProviderData {
   planProjectionModels: Set<ModelId>;
   modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
   categoriesContainingNonExcludedElements: Set<CategoryId>;
@@ -36,22 +37,22 @@ interface CachedData {
 }
 
 /** @internal */
-export class ElementModelCategoriesCache {
+export class ElementModelCategoriesProvider {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: string;
   #excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
-  #cachedData: Observable<CachedData> | undefined;
-  #dataResolved = false;
-  #subscriberBatches: Array<{ obs: Observable<CachedData>; subscriberCount: number }> = [];
+  #cachedData: Observable<ElementModelCategoriesProviderData> | undefined;
+  #dataLoaded = false;
+  #subscriberBatches: Array<{ obs: Observable<ElementModelCategoriesProviderData>; subscriberCount: number }> = [];
 
-  constructor(props: ElementModelCategoriesCacheProps) {
+  constructor(props: ElementModelCategoriesProviderProps) {
     this.#queryExecutor = props.queryExecutor;
     this.#elementClassName = props.elementClassName;
     this.#excludedElementClassNames = props.excludedElementClassNames;
     this.#componentId = props.componentId;
-    this.#componentName = "ElementModelCategoriesCache";
+    this.#componentName = "ElementModelCategoriesProvider";
   }
 
   private queryElementModelCategories(): Observable<{
@@ -100,15 +101,15 @@ export class ElementModelCategoriesCache {
     );
   }
 
-  public cachedDataLoaded() {
-    return !!this.#dataResolved;
+  public get isDataLoaded(): boolean {
+    return !!this.#dataLoaded;
   }
 
-  public cachedDataDefined() {
+  public get isDataDefined(): boolean {
     return this.#cachedData !== undefined;
   }
 
-  public getCachedData() {
+  public getData(): Observable<ElementModelCategoriesProviderData> {
     this.#cachedData ??= this.queryElementModelCategories().pipe(
       reduce(
         (acc, queriedCategory) => {
@@ -157,14 +158,14 @@ export class ElementModelCategoriesCache {
         },
       ),
       tap(() => {
-        this.#dataResolved = true;
+        this.#dataLoaded = true;
         this.#subscriberBatches = [];
       }),
       shareReplay(),
     );
 
-    // Once the data is resolved, every subscriber gets a synchronous replay, so batching is no longer needed.
-    if (this.#dataResolved) {
+    // Once the data is loaded, every subscriber gets a synchronous replay, so batching is no longer needed.
+    if (this.#dataLoaded) {
       return this.#cachedData;
     }
 

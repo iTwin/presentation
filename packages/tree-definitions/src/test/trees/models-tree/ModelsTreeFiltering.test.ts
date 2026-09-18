@@ -24,7 +24,7 @@ import { ModelsTreeDefinition } from "../../../tree-definitions/trees/models-tre
 import { buildIModel } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createAccessAndCache, createClassGroupingHierarchyNode } from "./Utils.js";
+import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./Utils.js";
 
 import type { EditTxn } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
@@ -131,13 +131,13 @@ describe("Models tree", () => {
         { limit: 103, exceedsLimit: false },
         { limit: "unbounded" as const, exceedsLimit: false },
       ])("honors label search limit $limit with 103 matches", async ({ limit, exceedsLimit }) => {
-        const { imodelAccess, idsCache, hierarchyConfig } = createAccessAndCache({
+        const { imodelAccess, idsProvider, hierarchyConfig } = createAccessAndIdsProvider({
           imodelConnection,
           hierarchyConfig: { subjects: { root: "exclude" } },
         });
         const searchPaths = ModelsTreeDefinition.createSearchTree({
           imodelAccess,
-          idsCache,
+          idsProvider,
           hierarchyConfig,
           label: "matching element",
           limit,
@@ -2733,12 +2733,12 @@ describe("Models tree", () => {
         it("finds instance key paths by target instance key", async () => {
           const {
             imodelAccess,
-            idsCache,
+            idsProvider,
             hierarchyConfig: requiredHierarchyConfig,
-          } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+          } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
           const searchPaths = await ModelsTreeDefinition.createSearchTree({
             imodelAccess,
-            idsCache,
+            idsProvider,
             hierarchyConfig: requiredHierarchyConfig,
             targetItems,
             revealTargets: true,
@@ -2754,12 +2754,12 @@ describe("Models tree", () => {
 
           const {
             imodelAccess,
-            idsCache,
+            idsProvider,
             hierarchyConfig: requiredHierarchyConfig,
-          } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+          } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
           const searchPaths = await ModelsTreeDefinition.createSearchTree({
             imodelAccess,
-            idsCache,
+            idsProvider,
             hierarchyConfig: requiredHierarchyConfig,
             label: targetInstanceLabel,
             revealTargets: true,
@@ -2771,14 +2771,14 @@ describe("Models tree", () => {
         it("searches hierarchy by instance key paths", async () => {
           const {
             imodelAccess,
-            idsCache,
+            idsProvider,
             hierarchyConfig: requiredHierarchyConfig,
-          } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+          } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: new ModelsTreeDefinition({
               imodelAccess,
-              idsCache,
+              idsProvider,
               hierarchyConfig: requiredHierarchyConfig,
             }),
             search: { paths: instanceKeyPaths },
@@ -2833,12 +2833,12 @@ describe("Models tree", () => {
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
       const {
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
-      } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+      } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
       const searchPaths = await ModelsTreeDefinition.createSearchTree({
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
         label: formattedECInstanceId,
         revealTargets: true,
@@ -2865,14 +2865,14 @@ describe("Models tree", () => {
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
       const {
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
-      } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+      } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
 
       const abortController1 = new AbortController();
       const pathsPromiseAborted = ModelsTreeDefinition.createSearchTree({
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
         label: "Test",
         revealTargets: true,
@@ -2884,7 +2884,7 @@ describe("Models tree", () => {
       const abortController2 = new AbortController();
       const pathsPromise = ModelsTreeDefinition.createSearchTree({
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
         label: "Test",
         revealTargets: true,
@@ -2922,9 +2922,9 @@ describe("Models tree", () => {
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
       const {
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
-      } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+      } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
       const targetItems: Array<InstanceKey | ElementsGroupInfo> = [
         { className: "BisCore.SpatialCategory", id: ids.category.id },
       ];
@@ -2932,7 +2932,7 @@ describe("Models tree", () => {
       const abortController1 = new AbortController();
       const pathsPromiseAborted = ModelsTreeDefinition.createSearchTree({
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
         targetItems,
         revealTargets: true,
@@ -2944,7 +2944,7 @@ describe("Models tree", () => {
       const abortController2 = new AbortController();
       const pathsPromise = ModelsTreeDefinition.createSearchTree({
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
         targetItems,
         revealTargets: true,
@@ -2999,14 +2999,14 @@ describe("Models tree", () => {
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
       const {
         imodelAccess,
-        idsCache,
+        idsProvider,
         hierarchyConfig: requiredHierarchyConfig,
-      } = createAccessAndCache({ imodelConnection, hierarchyConfig });
+      } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
 
       expect(
         await ModelsTreeDefinition.createSearchTree({
           imodelAccess,
-          idsCache,
+          idsProvider,
           hierarchyConfig: requiredHierarchyConfig,
           label: "_",
           revealTargets: true,
@@ -3034,7 +3034,7 @@ describe("Models tree", () => {
       expect(
         await ModelsTreeDefinition.createSearchTree({
           imodelAccess,
-          idsCache,
+          idsProvider,
           hierarchyConfig: requiredHierarchyConfig,
           label: "%",
           revealTargets: true,
@@ -3062,7 +3062,7 @@ describe("Models tree", () => {
       expect(
         await ModelsTreeDefinition.createSearchTree({
           imodelAccess,
-          idsCache,
+          idsProvider,
           hierarchyConfig: requiredHierarchyConfig,
           label: "\\",
           revealTargets: true,

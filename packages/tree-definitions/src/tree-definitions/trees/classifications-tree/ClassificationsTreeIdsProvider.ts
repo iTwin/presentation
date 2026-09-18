@@ -5,8 +5,8 @@
 
 import { defer, EMPTY, expand, from, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { BaseIdsProviderImpl } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
@@ -14,10 +14,10 @@ import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsCacheImplProps } from "../../shared/caches/BaseIdsCache.js";
+import type { EC } from "@itwin/presentation-shared";
+import type { BaseIdsProviderImplProps } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type { ClassificationsTreeHierarchyConfiguration } from "./ClassificationsTreeDefinition.js";
-import type { ClassificationsTreeVisibilityHandlerConfiguration } from "./UseClassificationsTree.js";
 
 /**
  * Hierarchy config props needed for ids cache.
@@ -29,44 +29,54 @@ export type HierarchyConfigForClassificationsCache = Pick<
 >;
 
 /**
- * Visibility handler config props needed for ids cache.
- * @internal
+ * Relationship used to determine related categories for classifications.
+ *
+ * By default, categories are determined using `ClassificationSystems.ElementHasClassifications` and `BisCore.GeometricElement3dIsInCategory` relationships.
+ *
+ * @beta
  */
-export type VisibilityHandlerConfigForClassificationsCache = Pick<
-  ClassificationsTreeVisibilityHandlerConfiguration,
-  "classificationToCategoriesRelationshipSpecification"
->;
+export interface ClassificationToCategoriesRelationshipSpecification {
+  /**
+   * Full class name of the relationship which links classifications to categories. Format: `{SchemaName}.{RelationshipClassName}`.
+   */
+  fullClassName: EC.FullClassNameDotNotation;
+  /**
+   * Describes the relationship direction by specifying its source.
+   * E.g. whether it's a `classification` -> `categories` or `category` -> `classifications` relationship.
+   */
+  source: "classification" | "category";
+}
 
 interface ClassificationOrTableInfo {
   parentClassificationOrTableId: ClassificationId | ClassificationTableId | undefined;
   childClassificationIds: ClassificationId[];
 }
 
-interface ClassificationsTreeIdsCacheProps extends BaseIdsCacheImplProps {
+interface ClassificationsTreeIdsProviderProps extends BaseIdsProviderImplProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   hierarchyConfig: HierarchyConfigForClassificationsCache;
-  visibilityHandlerConfig?: VisibilityHandlerConfigForClassificationsCache;
+  classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
+}
+
+interface ClassificationsTreeIdsProviderData {
+  classificationOrTableInfos: Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>;
+  classificationsWithNonExcludedChildren: Set<ClassificationId>;
 }
 
 /** @internal */
-export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
-  #cachedData:
-    | Observable<{
-        classificationOrTableInfos: Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>;
-        classificationsWithNonExcludedChildren: Set<ClassificationId>;
-      }>
-    | undefined;
-  #props: ClassificationsTreeIdsCacheProps;
+export class ClassificationsTreeIdsProvider extends BaseIdsProviderImpl {
+  #cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
+  #props: ClassificationsTreeIdsProviderProps;
   #componentId: GuidString;
   #componentName: string;
   #rowLimit = 7500;
   #cachedDataLoaded = false;
 
-  constructor(props: ClassificationsTreeIdsCacheProps) {
+  constructor(props: ClassificationsTreeIdsProviderProps) {
     super(props);
     this.#props = props;
     this.#componentId = Guid.createValue();
-    this.#componentName = "ClassificationsTreeIdsCache";
+    this.#componentName = "ClassificationsTreeIdsProvider";
   }
 
   private queryClassifications(): Observable<
@@ -106,12 +116,10 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
         `,
       ];
       let categoriesOfClassificationSelector: string;
-      if (this.#props.visibilityHandlerConfig?.classificationToCategoriesRelationshipSpecification) {
-        const relationship =
-          this.#props.visibilityHandlerConfig.classificationToCategoriesRelationshipSpecification.fullClassName;
+      if (this.#props.classificationToCategoriesRelationshipSpecification) {
+        const relationship = this.#props.classificationToCategoriesRelationshipSpecification.fullClassName;
         const { categoryAccessor, classificationAccessor } =
-          this.#props.visibilityHandlerConfig.classificationToCategoriesRelationshipSpecification.source ===
-          "classification"
+          this.#props.classificationToCategoriesRelationshipSpecification.source === "classification"
             ? { classificationAccessor: "SourceECInstanceId", categoryAccessor: "TargetECInstanceId" }
             : { classificationAccessor: "TargetECInstanceId", categoryAccessor: "SourceECInstanceId" };
         categoriesOfClassificationSelector = `
@@ -174,7 +182,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
     );
   }
 
-  private getCachedData() {
+  private getData() {
     this.#cachedData ??= this.getCategoriesContainingNonExcludedElements().pipe(
       mergeMap((categoriesContainingNonExcludedElements) =>
         this.queryClassifications().pipe(
@@ -226,7 +234,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
       return;
     }
     try {
-      await toVoidPromise(this.getCachedData());
+      await toVoidPromise(this.getData());
     } catch {}
   }
 
@@ -235,7 +243,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
   }
 
   public hasChildren(classificationId: ClassificationId): Observable<boolean> {
-    return this.getCachedData().pipe(
+    return this.getData().pipe(
       map(({ classificationsWithNonExcludedChildren }) => classificationsWithNonExcludedChildren.has(classificationId)),
     );
   }
@@ -245,7 +253,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
     if (Id64.sizeOf(classificationOrTableIds) === 0) {
       return of(result);
     }
-    return this.getCachedData().pipe(
+    return this.getData().pipe(
       mergeMap(({ classificationOrTableInfos }) =>
         from(Id64.iterable(classificationOrTableIds)).pipe(
           reduce((acc, classificationOrTableId) => {
@@ -261,7 +269,7 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
   }
 
   public getClassificationsPathObs(classificationIds: Id64Arg): Observable<HierarchyNodeIdentifiersPath> {
-    return this.getCachedData().pipe(
+    return this.getData().pipe(
       mergeMap(({ classificationOrTableInfos }) =>
         fromWithRelease({ source: classificationIds, releaseOnCount: 200 }).pipe(
           map((classificationId) => {
@@ -286,6 +294,6 @@ export class ClassificationsTreeIdsCache extends BaseIdsCacheImpl {
   }
 
   public getAllClassifications(): Observable<ClassificationId[]> {
-    return this.getCachedData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()]));
+    return this.getData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()]));
   }
 }

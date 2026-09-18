@@ -7,9 +7,9 @@ import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay, 
 import { Guid } from "@itwin/core-bentley";
 import { fromWithRelease, toVoidPromise } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
-import { ElementModelCategoriesCache } from "./ElementModelCategoriesCache.js";
-import { ModeledElementsCache } from "./ModeledElementsCache.js";
-import { SubCategoriesCache } from "./SubCategoriesCache.js";
+import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
+import { ModeledElementsProvider } from "./ModeledElementsProvider.js";
+import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentley";
@@ -18,7 +18,7 @@ import type { EC, Props } from "@itwin/presentation-shared";
 import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
 
 /** @internal */
-export interface BaseIdsCacheProps {
+export interface BaseIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   elementClassName: EC.FullClassNameDotNotation;
   type: "2d" | "3d";
@@ -26,14 +26,14 @@ export interface BaseIdsCacheProps {
 }
 
 /** @internal */
-export class BaseIdsCache {
+export class BaseIdsProvider {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #componentId: GuidString;
-  readonly #subCategoriesCache: SubCategoriesCache;
+  readonly #subCategoriesProvider: SubCategoriesProvider;
   #elementClassName: EC.FullClassNameDotNotation;
-  #modeledElementsCache: Observable<ModeledElementsCache> | undefined;
+  #modeledElementsProvider: Observable<ModeledElementsProvider> | undefined;
   #modeledElementsLoaded = false;
-  readonly #elementModelCategoriesCache: ElementModelCategoriesCache;
+  readonly #elementModelCategoriesProvider: ElementModelCategoriesProvider;
   #categoryModelsInfoWithoutSubModels:
     | Observable<
         Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
@@ -41,15 +41,15 @@ export class BaseIdsCache {
     | undefined;
   #subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
 
-  constructor(props: BaseIdsCacheProps) {
+  constructor(props: BaseIdsProviderProps) {
     this.#queryExecutor = props.queryExecutor;
     this.#elementClassName = props.elementClassName;
     this.#componentId = Guid.createValue();
-    this.#subCategoriesCache = new SubCategoriesCache({
+    this.#subCategoriesProvider = new SubCategoriesProvider({
       queryExecutor: this.#queryExecutor,
       componentId: this.#componentId,
     });
-    this.#elementModelCategoriesCache = new ElementModelCategoriesCache({
+    this.#elementModelCategoriesProvider = new ElementModelCategoriesProvider({
       queryExecutor: this.#queryExecutor,
       componentId: this.#componentId,
       elementClassName: props.elementClassName,
@@ -57,11 +57,11 @@ export class BaseIdsCache {
     });
   }
 
-  private getModeledElementsInfo(): ReturnType<ModeledElementsCache["getModeledElementsInfo"]> {
-    this.#modeledElementsCache ??= this.getAllModels().pipe(
+  private getModeledElementsData(): ReturnType<ModeledElementsProvider["getData"]> {
+    this.#modeledElementsProvider ??= this.getAllModels().pipe(
       map(
         (allModels) =>
-          new ModeledElementsCache({
+          new ModeledElementsProvider({
             queryExecutor: this.#queryExecutor,
             componentId: this.#componentId,
             elementClassName: this.#elementClassName,
@@ -70,8 +70,8 @@ export class BaseIdsCache {
       ),
       shareReplay(),
     );
-    return this.#modeledElementsCache.pipe(
-      mergeMap((modeledElementsCache) => modeledElementsCache.getModeledElementsInfo()),
+    return this.#modeledElementsProvider.pipe(
+      mergeMap((modeledElementsProvider) => modeledElementsProvider.getData()),
       tap(() => {
         this.#modeledElementsLoaded = true;
       }),
@@ -79,33 +79,33 @@ export class BaseIdsCache {
   }
 
   public async preloadModeledElements(): Promise<void> {
-    if (this.#modeledElementsCache !== undefined) {
+    if (this.#modeledElementsProvider !== undefined) {
       return;
     }
     try {
-      await toVoidPromise(this.getModeledElementsInfo());
+      await toVoidPromise(this.getModeledElementsData());
     } catch {}
   }
 
   public async preloadElementModelCategories(): Promise<void> {
-    if (this.#elementModelCategoriesCache.cachedDataDefined()) {
+    if (this.#elementModelCategoriesProvider.isDataDefined) {
       return;
     }
     try {
-      await toVoidPromise(this.#elementModelCategoriesCache.getCachedData());
+      await toVoidPromise(this.#elementModelCategoriesProvider.getData());
     } catch {}
   }
 
   public getAllSubModels(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
     if (!props?.excludeIfOnlyExcludedClasses) {
-      return this.getModeledElementsInfo().pipe(map(({ allSubModels }) => allSubModels));
+      return this.getModeledElementsData().pipe(map(({ allSubModels }) => allSubModels));
     }
-    this.#subModelsWithNonExcludedElements ??= this.getModeledElementsInfo().pipe(
+    this.#subModelsWithNonExcludedElements ??= this.getModeledElementsData().pipe(
       mergeMap(({ allSubModels }) => {
         if (allSubModels.size === 0) {
           return of(allSubModels);
         }
-        return this.#elementModelCategoriesCache.getCachedData().pipe(
+        return this.#elementModelCategoriesProvider.getData().pipe(
           map(({ modelsCategoriesInfo }) => {
             const result = new Set<ElementId>();
             for (const subModelId of allSubModels) {
@@ -123,10 +123,10 @@ export class BaseIdsCache {
     return this.#subModelsWithNonExcludedElements;
   }
 
-  // ElementModelCategoriesCache methods
+  // ElementModelCategoriesProvider methods
 
   public elementModelCategoriesLoaded(): boolean {
-    return this.#elementModelCategoriesCache.cachedDataLoaded();
+    return this.#elementModelCategoriesProvider.isDataLoaded;
   }
 
   public modeledElementsLoaded(): boolean {
@@ -134,19 +134,17 @@ export class BaseIdsCache {
   }
 
   public getAllModels(): Observable<Array<ModelId>> {
-    return this.#elementModelCategoriesCache
-      .getCachedData()
+    return this.#elementModelCategoriesProvider
+      .getData()
       .pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
   }
 
   public getPlanProjectionModels(): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache
-      .getCachedData()
-      .pipe(map(({ planProjectionModels }) => planProjectionModels));
+    return this.#elementModelCategoriesProvider.getData().pipe(map(({ planProjectionModels }) => planProjectionModels));
   }
 
   public getCategories({ modelId }: { modelId: Id64String }): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache.getCachedData().pipe(
+    return this.#elementModelCategoriesProvider.getData().pipe(
       map(({ modelsCategoriesInfo }) => {
         const modelInfo = modelsCategoriesInfo.get(modelId);
         return modelInfo?.categoriesOfTopMostNonExcludedElements ?? new Set();
@@ -155,13 +153,13 @@ export class BaseIdsCache {
   }
 
   public getCategoriesContainingNonExcludedElements(): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache
-      .getCachedData()
+    return this.#elementModelCategoriesProvider
+      .getData()
       .pipe(map(({ categoriesContainingNonExcludedElements }) => categoriesContainingNonExcludedElements));
   }
 
   public getAllCategoriesOfElements(): Observable<Id64Set> {
-    return this.#elementModelCategoriesCache.getCachedData().pipe(map(({ allCategories }) => allCategories));
+    return this.#elementModelCategoriesProvider.getData().pipe(map(({ allCategories }) => allCategories));
   }
 
   private getCategoryModelsInfoWithoutSubModels(): Observable<
@@ -170,8 +168,8 @@ export class BaseIdsCache {
     this.#categoryModelsInfoWithoutSubModels ??= this.getAllSubModels().pipe(
       mergeMap((allSubModels) =>
         allSubModels.size === 0
-          ? this.#elementModelCategoriesCache.getCachedData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo))
-          : this.#elementModelCategoriesCache.getCachedData().pipe(
+          ? this.#elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo))
+          : this.#elementModelCategoriesProvider.getData().pipe(
               mergeMap(({ categoryModelsInfo }) => categoryModelsInfo.entries()),
               reduce((acc, [key, modelInfos]) => {
                 const newModelInfos = modelInfos.filter(({ id }) => !allSubModels.has(id));
@@ -199,7 +197,7 @@ export class BaseIdsCache {
     excludeIfOnlyExcludedClasses?: boolean;
   }): Observable<ModelId> {
     let getCategoryModelsInfo = () =>
-      this.#elementModelCategoriesCache.getCachedData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
+      this.#elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
 
     if (excludeSubModels) {
       getCategoryModelsInfo = () => this.getCategoryModelsInfoWithoutSubModels();
@@ -222,12 +220,10 @@ export class BaseIdsCache {
     );
   }
 
-  // SubCategoriesCache methods
+  // SubCategoriesProvider methods
 
   public getCategorySubCategoriesMap(): Observable<Map<CategoryId, SubCategoryId[]>> {
-    return this.#subCategoriesCache
-      .getSubCategoriesInfo()
-      .pipe(map(({ categorySubCategories }) => categorySubCategories));
+    return this.#subCategoriesProvider.getData().pipe(map(({ categorySubCategories }) => categorySubCategories));
   }
 
   public getSubCategoryCategories({
@@ -235,7 +231,7 @@ export class BaseIdsCache {
   }: {
     subCategoryIds: Id64Arg;
   }): Observable<Map<CategoryId, SubCategoryId[]>> {
-    return this.#subCategoriesCache.getSubCategoriesInfo().pipe(
+    return this.#subCategoriesProvider.getData().pipe(
       mergeMap(({ subCategoryCategories, categorySubCategories }) =>
         fromWithRelease({ source: subCategoryIds, releaseOnCount: 500 }).pipe(
           reduce((acc, subCategoryId) => {
@@ -258,56 +254,58 @@ export class BaseIdsCache {
 }
 
 /** @internal */
-export interface BaseIdsCacheImplProps {
-  baseIdsCache: BaseIdsCache;
+export interface BaseIdsProviderImplProps {
+  baseIdsProvider: BaseIdsProvider;
 }
 
 /** @internal */
-export class BaseIdsCacheImpl {
-  #baseIdsCache: BaseIdsCache;
-  constructor(props: BaseIdsCacheImplProps) {
-    this.#baseIdsCache = props.baseIdsCache;
+export class BaseIdsProviderImpl {
+  #baseIdsProvider: BaseIdsProvider;
+  constructor(props: BaseIdsProviderImplProps) {
+    this.#baseIdsProvider = props.baseIdsProvider;
   }
 
-  // Implement IBaseIdsCache by re-exporting BaseIdsCache methods
+  // Implement IBaseIdsProvider by re-exporting BaseIdsProvider methods
 
-  public elementModelCategoriesLoaded(): ReturnType<BaseIdsCache["elementModelCategoriesLoaded"]> {
-    return this.#baseIdsCache.elementModelCategoriesLoaded();
+  public elementModelCategoriesLoaded(): ReturnType<BaseIdsProvider["elementModelCategoriesLoaded"]> {
+    return this.#baseIdsProvider.elementModelCategoriesLoaded();
   }
 
-  public modeledElementsLoaded(): ReturnType<BaseIdsCache["modeledElementsLoaded"]> {
-    return this.#baseIdsCache.modeledElementsLoaded();
+  public modeledElementsLoaded(): ReturnType<BaseIdsProvider["modeledElementsLoaded"]> {
+    return this.#baseIdsProvider.modeledElementsLoaded();
   }
 
   public getSubCategoryCategories(
-    props: Props<BaseIdsCache["getSubCategoryCategories"]>,
-  ): ReturnType<BaseIdsCache["getSubCategoryCategories"]> {
-    return this.#baseIdsCache.getSubCategoryCategories(props);
+    props: Props<BaseIdsProvider["getSubCategoryCategories"]>,
+  ): ReturnType<BaseIdsProvider["getSubCategoryCategories"]> {
+    return this.#baseIdsProvider.getSubCategoryCategories(props);
   }
 
-  public getAllSubModels(props?: Props<BaseIdsCache["getAllSubModels"]>): ReturnType<BaseIdsCache["getAllSubModels"]> {
-    return this.#baseIdsCache.getAllSubModels(props);
+  public getAllSubModels(
+    props?: Props<BaseIdsProvider["getAllSubModels"]>,
+  ): ReturnType<BaseIdsProvider["getAllSubModels"]> {
+    return this.#baseIdsProvider.getAllSubModels(props);
   }
 
   public getCategoriesContainingNonExcludedElements(): ReturnType<
-    BaseIdsCache["getCategoriesContainingNonExcludedElements"]
+    BaseIdsProvider["getCategoriesContainingNonExcludedElements"]
   > {
-    return this.#baseIdsCache.getCategoriesContainingNonExcludedElements();
+    return this.#baseIdsProvider.getCategoriesContainingNonExcludedElements();
   }
 
-  public getCategories(props: Props<BaseIdsCache["getCategories"]>): ReturnType<BaseIdsCache["getCategories"]> {
-    return this.#baseIdsCache.getCategories(props);
+  public getCategories(props: Props<BaseIdsProvider["getCategories"]>): ReturnType<BaseIdsProvider["getCategories"]> {
+    return this.#baseIdsProvider.getCategories(props);
   }
 
-  public getModels(props: Props<BaseIdsCache["getModels"]>): ReturnType<BaseIdsCache["getModels"]> {
-    return this.#baseIdsCache.getModels(props);
+  public getModels(props: Props<BaseIdsProvider["getModels"]>): ReturnType<BaseIdsProvider["getModels"]> {
+    return this.#baseIdsProvider.getModels(props);
   }
 
-  public getAllCategoriesOfElements(): ReturnType<BaseIdsCache["getAllCategoriesOfElements"]> {
-    return this.#baseIdsCache.getAllCategoriesOfElements();
+  public getAllCategoriesOfElements(): ReturnType<BaseIdsProvider["getAllCategoriesOfElements"]> {
+    return this.#baseIdsProvider.getAllCategoriesOfElements();
   }
 
-  public getCategorySubCategoriesMap(): ReturnType<BaseIdsCache["getCategorySubCategoriesMap"]> {
-    return this.#baseIdsCache.getCategorySubCategoriesMap();
+  public getCategorySubCategoriesMap(): ReturnType<BaseIdsProvider["getCategorySubCategoriesMap"]> {
+    return this.#baseIdsProvider.getCategorySubCategoriesMap();
   }
 }

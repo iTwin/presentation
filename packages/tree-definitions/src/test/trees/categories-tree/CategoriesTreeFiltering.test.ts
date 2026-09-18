@@ -8,15 +8,15 @@ import { firstValueFrom, toArray } from "rxjs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
 import { getClassesByView, mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   CategoriesTreeDefinition,
   defaultHierarchyConfiguration,
 } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
-import { CategoriesTreeIdsCache } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsCache.js";
+import { CategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { buildIModel } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
@@ -126,11 +126,15 @@ describe("Categories tree", () => {
             }),
           );
           const { imodelConnection, ...keys } = buildIModelResult;
-          const { idsCache } = createCategoriesTreeSearchProps({ imodelConnection, searchText: "category", viewType });
+          const { idsProvider } = createCategoriesTreeSearchProps({
+            imodelConnection,
+            searchText: "category",
+            viewType,
+          });
           const defaultSubCategoryId = getDefaultSubCategoryId(keys.category.id);
 
           const paths = await firstValueFrom(
-            idsCache.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId }).pipe(toArray()),
+            idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId }).pipe(toArray()),
           );
           expect(paths).toEqual([]);
         });
@@ -1308,11 +1312,11 @@ function createCategoriesTreeSearchProps(props: {
   const imodelAccess = createIModelAccess(props.imodelConnection);
   const excludedElementClassNames =
     hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined;
-  const idsCache = new CategoriesTreeIdsCache({
+  const idsProvider = new CategoriesTreeIdsProvider({
     queryExecutor: imodelAccess,
     type: props.viewType,
     excludedElementClassNames,
-    baseIdsCache: new BaseIdsCache({
+    baseIdsProvider: new BaseIdsProvider({
       queryExecutor: imodelAccess,
       type: props.viewType,
       elementClassName: getClassesByView(props.viewType).elementClass,
@@ -1320,7 +1324,7 @@ function createCategoriesTreeSearchProps(props: {
     }),
   });
   return {
-    idsCache,
+    idsProvider,
     viewType: props.viewType,
     hierarchyConfig,
     label: props.searchText,

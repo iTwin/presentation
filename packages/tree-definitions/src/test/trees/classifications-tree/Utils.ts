@@ -7,10 +7,10 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { ClassificationsTreeDefinition } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
-import { ClassificationsTreeIdsCache } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsCache.js";
+import { ClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 import { createIModelAccess } from "../Common.js";
 
 import type { EditTxn, IModelDb } from "@itwin/core-backend";
@@ -37,12 +37,12 @@ export function createClassificationsTreeProvider(
   imodel: IModelConnection,
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
 ): HierarchyProvider & Disposable {
-  const { imodelAccess, idsCache } = createAccessAndCache({ imodelConnection: imodel, hierarchyConfig });
+  const { imodelAccess, idsProvider } = createAccessAndIdsProvider({ imodelConnection: imodel, hierarchyConfig });
   const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: new ClassificationsTreeDefinition({
       imodelAccess,
-      getIdsCache: () => idsCache,
+      getIdsProvider: () => idsProvider,
       hierarchyConfig,
     }),
   });
@@ -155,7 +155,7 @@ export async function importClassificationSchema(imodel: IModelDb) {
   await imodel.importSchemaStrings([schemaXml]);
 }
 
-export function createAccessAndCache({
+export function createAccessAndIdsProvider({
   imodelConnection,
   hierarchyConfig,
 }: {
@@ -163,12 +163,16 @@ export function createAccessAndCache({
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
 }) {
   const imodelAccess = createIModelAccess(imodelConnection);
-  const baseIdsCache = new BaseIdsCache({
+  const baseIdsProvider = new BaseIdsProvider({
     queryExecutor: imodelAccess,
     elementClassName: CLASS_NAMES.GeometricElement3d,
     type: "3d",
     excludedElementClassNames: hierarchyConfig.elements?.excludedClasses,
   });
-  const idsCache = new ClassificationsTreeIdsCache({ queryExecutor: imodelAccess, hierarchyConfig, baseIdsCache });
-  return { imodelAccess, idsCache };
+  const idsProvider = new ClassificationsTreeIdsProvider({
+    queryExecutor: imodelAccess,
+    hierarchyConfig,
+    baseIdsProvider,
+  });
+  return { imodelAccess, idsProvider };
 }

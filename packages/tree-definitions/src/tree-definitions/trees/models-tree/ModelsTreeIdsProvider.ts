@@ -6,8 +6,8 @@
 import { defer, filter, forkJoin, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { BaseIdsProviderImpl } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
@@ -15,7 +15,7 @@ import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { InstanceKey } from "@itwin/presentation-shared";
-import type { BaseIdsCacheImplProps } from "../../shared/caches/BaseIdsCache.js";
+import type { BaseIdsProviderImplProps } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
 import type { RequiredModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
@@ -24,7 +24,7 @@ import type { RequiredModelsTreeHierarchyConfiguration } from "./ModelsTreeDefin
  */
 type HierarchyConfigForModelsCache = Pick<RequiredModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
 
-interface ModelsTreeIdsCacheProps extends BaseIdsCacheImplProps {
+interface ModelsTreeIdsProviderProps extends BaseIdsProviderImplProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   hierarchyConfig: HierarchyConfigForModelsCache;
 }
@@ -37,7 +37,7 @@ interface SubjectInfo {
 }
 
 /** @internal */
-export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
+export class ModelsTreeIdsProvider extends BaseIdsProviderImpl {
   #subjectInfos: Observable<Map<SubjectId, SubjectInfo>> | undefined;
   #upToModelInstanceKeyPaths: Map<ModelId, Observable<HierarchyNodeIdentifiersPath>> = new Map();
   #parentSubjectIds: Observable<Id64Array> | undefined; // the list should contain a subject id if its node should be shown as having children
@@ -46,13 +46,13 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
   #componentId: GuidString;
   #componentName: string;
 
-  constructor(props: ModelsTreeIdsCacheProps) {
+  constructor(props: ModelsTreeIdsProviderProps) {
     super(props);
     this.#queryExecutor = props.queryExecutor;
     this.#hierarchyConfig = props.hierarchyConfig;
 
     this.#componentId = Guid.createValue();
-    this.#componentName = "ModelsTreeIdsCache";
+    this.#componentName = "ModelsTreeIdsProvider";
   }
 
   private querySubjects(): Observable<{

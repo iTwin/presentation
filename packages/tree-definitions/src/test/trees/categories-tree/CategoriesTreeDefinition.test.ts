@@ -8,14 +8,14 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { getClassesByView, mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   CategoriesTreeDefinition,
   defaultHierarchyConfiguration,
 } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
-import { CategoriesTreeIdsCache } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsCache.js";
+import { CategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
@@ -1486,19 +1486,19 @@ describe("Categories tree", () => {
           ].forEach(({ queryIdentifier, description }) => {
             it(`doesn't throw on ecsql query interrupt in ${description}`, async () => {
               const imodelAccess = createIModelAccess(imodelConnection);
-              const baseIdsCache = new BaseIdsCache({
+              const baseIdsProvider = new BaseIdsProvider({
                 queryExecutor: imodelAccess,
                 elementClassName: getClassesByView(viewType).elementClass,
                 type: viewType,
               });
-              const idsCache = new CategoriesTreeIdsCache({
+              const idsProvider = new CategoriesTreeIdsProvider({
                 queryExecutor: imodelAccess,
                 type: viewType,
-                baseIdsCache,
+                baseIdsProvider,
               });
               const iter = CategoriesTreeDefinition.createInstanceKeyPaths({
                 imodelAccess,
-                idsCache,
+                idsProvider,
                 viewType,
                 hierarchyConfig: {
                   subCategories: { nodes: "include" },
@@ -1537,16 +1537,16 @@ function createCategoryTreeProvider(
   const imodelAccess = createIModelAccess(imodelConnection);
   const excludedElementClassNames =
     hierarchyConfig?.elements?.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined;
-  const baseIdsCache = new BaseIdsCache({
+  const baseIdsProvider = new BaseIdsProvider({
     queryExecutor: imodelAccess,
     elementClassName: getClassesByView(viewType).elementClass,
     type: viewType,
     excludedElementClassNames,
   });
-  const idsCache = new CategoriesTreeIdsCache({
+  const idsProvider = new CategoriesTreeIdsProvider({
     queryExecutor: imodelAccess,
     type: viewType,
-    baseIdsCache,
+    baseIdsProvider,
     excludedElementClassNames,
   });
   const hierarchyProvider = createIModelHierarchyProvider({
@@ -1554,7 +1554,7 @@ function createCategoryTreeProvider(
     hierarchyDefinition: new CategoriesTreeDefinition({
       imodelAccess,
       viewType,
-      idsCache,
+      idsProvider,
       hierarchyConfig: mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: hierarchyConfig }),
     }),
   });
