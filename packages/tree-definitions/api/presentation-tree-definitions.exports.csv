@@ -1,12 +1,4 @@
 sep=;
 Release Tag;API Item Type;API Item Name
-beta;class;CategoriesTreeDefinition
-beta;namespace;CategoriesTreeNode
-beta;class;ClassificationsTreeDefinition
-beta;namespace;ClassificationsTreeNode
-beta;function;createBaseIdsProvider
-beta;function;createCategoriesTreeIdsProvider
-beta;function;createClassificationsTreeIdsProvider
-beta;function;createModelsTreeIdsProvider
-beta;class;ModelsTreeDefinition
+beta;function;createModelsTree
 beta;namespace;ModelsTreeNode

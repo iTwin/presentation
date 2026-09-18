@@ -34,6 +34,7 @@ import {
   parseFullClassName,
 } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -46,6 +47,7 @@ import {
   ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
+import { createModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
 import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
@@ -88,7 +90,7 @@ export type ClassGroupingHierarchyNode = GroupingHierarchyNode & { key: ClassGro
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
- * Configures subject, model, category, and element nodes produced by `ModelsTreeDefinition`.
+ * Configures subject, model, category, and element nodes produced by `createModelsTree`.
  * @beta
  */
 export interface ModelsTreeHierarchyConfiguration {
@@ -169,14 +171,17 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
  * Data access and configuration for a models hierarchy.
  * @beta
  */
-interface ModelsTreeDefinitionProps {
+interface ModelsTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  /** ID provider configured with the same element and hierarchy options as this definition. */
-  idsProvider: ModelsTreeIdsProvider;
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
   uniqueId?: GuidString;
+}
+
+/** @internal */
+interface ModelsTreeDefinitionProps extends ModelsTreeProps {
+  idsProvider: ModelsTreeIdsProvider;
 }
 
 /**
@@ -189,20 +194,18 @@ export interface ElementsGroupInfo {
 }
 
 /**
- * Shared data access, configuration, and cancellation options for models hierarchy searches.
+ * Limits and cancellation options for models hierarchy searches.
  * @beta
  */
-interface ModelsTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  idsProvider: ModelsTreeIdsProvider;
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
-  /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
-  uniqueId?: GuidString;
 }
+
+/** @internal */
+type ModelsTreeInstanceKeyPathsBaseProps = ModelsTreeDefinitionProps & ModelsTreeSearchOptions;
 
 /**
  * Search targets specified as instance keys or element class grouping nodes.
@@ -227,9 +230,60 @@ type ModelsTreeInstanceKeyPathsProps =
   | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 
 /**
+ * Search-specific options for a models tree with shared data access and configuration.
+ * @beta
+ */
+type ModelsTreeSearchProps = ModelsTreeSearchOptions &
+  ({ targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string });
+
+/**
+ * Creates a models hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Creates and shares cached ID providers using the resolved hierarchy configuration.
+ * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @beta
+ */
+export function createModelsTree(props: ModelsTreeProps) {
+  const hierarchyConfig = mergeWithDefaults({
+    defaults: defaultHierarchyConfiguration,
+    overrides: props.hierarchyConfig,
+  });
+  const idsProvider = createModelsTreeIdsProvider({
+    queryExecutor: props.imodelAccess,
+    hierarchyConfig,
+    baseIdsProvider: createBaseIdsProvider({
+      queryExecutor: props.imodelAccess,
+      elementClassName: hierarchyConfig.elements.baseClass,
+      excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
+    }),
+  });
+  const sharedProps = {
+    imodelAccess: props.imodelAccess,
+    idsProvider,
+    hierarchyConfig,
+    uniqueId: props.uniqueId ?? Guid.createValue(),
+  };
+  const definition: HierarchyDefinition = new ModelsTreeDefinition(sharedProps);
+  return {
+    definition,
+    /**
+     * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) =>
+      ModelsTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+    /**
+     * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createSearchTree: async (searchProps: ModelsTreeSearchProps & { revealTargets?: boolean }) =>
+      ModelsTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+  };
+}
+
+/**
  * Defines a configurable hierarchy of subjects, models, categories, and geometric elements.
  * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
- * @beta
+ * @internal
  */
 export class ModelsTreeDefinition implements HierarchyDefinition {
   #impl: HierarchyDefinition;

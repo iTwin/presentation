@@ -9,8 +9,8 @@ import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitio
 import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
+  createModelsTree,
   defaultHierarchyConfiguration,
-  ModelsTreeDefinition,
 } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 import { createModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 import { createIModelAccess } from "../Common.js";
@@ -27,13 +27,11 @@ import type {
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
 import type { ParentElementsPath } from "../../../tree-definitions/shared/Utils.js";
 import type { ModelsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
-import type { ModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 interface CreateModelsTreeProviderProps {
   imodelConnection: IModelConnection;
   searchPaths?: HierarchySearchTree[];
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-  idsProvider?: ModelsTreeIdsProvider;
   imodelAccess?: ReturnType<typeof createIModelAccess>;
 }
 
@@ -42,30 +40,13 @@ export function createModelsTreeProvider({
   searchPaths,
   hierarchyConfig,
   imodelAccess,
-  idsProvider,
 }: CreateModelsTreeProviderProps): HierarchyProvider & { dispose: () => void; [Symbol.dispose]: () => void } {
   const configOverrides: ModelsTreeHierarchyConfiguration = { subjects: { root: "exclude" }, ...hierarchyConfig };
-  const config = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const createdImodelAccess = imodelAccess ?? createIModelAccess(imodelConnection);
-  const baseIdsProvider = createBaseIdsProvider({
-    queryExecutor: createdImodelAccess,
-    elementClassName: config.elements.baseClass,
-    excludedElementClassNames: config.elements.excludedClasses,
-  });
-  const createdIdsProvider =
-    idsProvider ??
-    createModelsTreeIdsProvider({
-      queryExecutor: createdImodelAccess,
-      hierarchyConfig: configOverrides,
-      baseIdsProvider,
-    });
   const provider = createIModelHierarchyProvider({
     imodelAccess: createdImodelAccess,
-    hierarchyDefinition: new ModelsTreeDefinition({
-      imodelAccess: createdImodelAccess,
-      idsProvider: createdIdsProvider,
-      hierarchyConfig: configOverrides,
-    }),
+    hierarchyDefinition: createModelsTree({ imodelAccess: createdImodelAccess, hierarchyConfig: configOverrides })
+      .definition,
     ...(searchPaths ? { search: { paths: searchPaths } } : undefined),
   });
   const dispose = () => {

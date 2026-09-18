@@ -13,16 +13,20 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
-import { ModelsTreeDefinition } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+import {
+  createModelsTree,
+  ModelsTreeDefinition,
+} from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 import { buildIModel } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./Utils.js";
 
@@ -108,14 +112,11 @@ describe("Models tree", () => {
           return { subject, linkedSubject, model, category, element };
         }),
       );
-      const { imodelAccess, idsProvider, hierarchyConfig } = createAccessAndIdsProvider({
-        imodelConnection: setupResult.imodelConnection,
+      const { createSearchTree } = createModelsTree({
+        imodelAccess: createIModelAccess(setupResult.imodelConnection),
         hierarchyConfig: { subjects: { root: "exclude" } },
       });
-      const paths = await ModelsTreeDefinition.createSearchTree({
-        imodelAccess,
-        idsProvider,
-        hierarchyConfig,
+      const paths = await createSearchTree({
         targetItems: [target === "model" ? adjustedModelKey(setupResult.model) : setupResult[target]],
         revealTargets: true,
         abortSignal: new AbortController().signal,
@@ -212,13 +213,65 @@ describe("Models tree", () => {
         await imodelConnection.close();
       });
 
+      it.each([
+        { uniqueId: undefined, hierarchyConfig: undefined },
+        { uniqueId: "models-tree-test", hierarchyConfig: { subjects: { root: "exclude" as const } } },
+      ])("shares factory inputs with unique ID $uniqueId", async ({ uniqueId, hierarchyConfig }) => {
+        const imodelAccess = createIModelAccess(imodelConnection);
+        const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
+        const { definition, createInstanceKeyPaths, createSearchTree } = createModelsTree({
+          imodelAccess,
+          hierarchyConfig,
+          uniqueId,
+        });
+        using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
+        const rootSubject = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
+        const roots = await collect(provider.getNodes({ parentNode: undefined }));
+        expect(roots).toHaveLength(1);
+        expect(roots[0].key).toMatchObject({
+          type: "instances",
+          instanceKeys: [hierarchyConfig ? keys.model : rootSubject],
+        });
+        const definitionToken = queryReader.mock.calls.find(([, options]) =>
+          options?.restartToken?.endsWith("/is-class-supported"),
+        )?.[1]?.restartToken;
+        expect(definitionToken).toBeDefined();
+        const resolvedUniqueId = definitionToken!.split("/")[1];
+        expect(resolvedUniqueId).toEqual(uniqueId ?? expect.any(String));
+
+        const expectedPath = [
+          ...(hierarchyConfig ? [] : [rootSubject]),
+          adjustedModelKey(keys.model),
+          keys.category,
+          { ...keys.elements[0], className: CLASS_NAMES.GeometricElement3d },
+        ];
+        queryReader.mockClear();
+        expect(await collect(createInstanceKeyPaths({ label: "matching element 0" }))).toEqual([
+          { path: expectedPath, target: keys.elements[0].id },
+        ]);
+        expect(queryReader).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ restartToken: `ModelsTreeDefinition/${resolvedUniqueId}/filter-by-label` }),
+        );
+
+        queryReader.mockClear();
+        const expectedSearchTree: HierarchySearchTree[] = expectedPath.reduceRight<HierarchySearchTree[]>(
+          (children, identifier) => [{ identifier, ...(children.length ? { children } : {}) }],
+          [],
+        );
+        expect(await createSearchTree({ label: "matching element 0" })).toEqual(expectedSearchTree);
+        expect(queryReader).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ restartToken: `ModelsTreeDefinition/${resolvedUniqueId}/filter-by-label` }),
+        );
+      });
+
       it.each(["createSearchTree", "createInstanceKeyPaths"])("handles an empty search label in %s", async (method) => {
-        const { imodelAccess, idsProvider } = createAccessAndIdsProvider({ imodelConnection });
-        const props = { imodelAccess, idsProvider, label: "", limit: 2 };
-        const result =
-          method === "createSearchTree"
-            ? ModelsTreeDefinition.createSearchTree(props)
-            : ModelsTreeDefinition.createInstanceKeyPaths(props).next();
+        const { createSearchTree, createInstanceKeyPaths } = createModelsTree({
+          imodelAccess: createIModelAccess(imodelConnection),
+        });
+        const props = { label: "", limit: 2 };
+        const result = method === "createSearchTree" ? createSearchTree(props) : createInstanceKeyPaths(props).next();
         await expect(result).rejects.toThrow(new SearchLimitExceededError(2));
       });
 
@@ -228,14 +281,11 @@ describe("Models tree", () => {
         { limit: 103, exceedsLimit: false },
         { limit: "unbounded" as const, exceedsLimit: false },
       ])("honors label search limit $limit with 103 matches", async ({ limit, exceedsLimit }) => {
-        const { imodelAccess, idsProvider, hierarchyConfig } = createAccessAndIdsProvider({
-          imodelConnection,
+        const { createSearchTree } = createModelsTree({
+          imodelAccess: createIModelAccess(imodelConnection),
           hierarchyConfig: { subjects: { root: "exclude" } },
         });
-        const searchPaths = ModelsTreeDefinition.createSearchTree({
-          imodelAccess,
-          idsProvider,
-          hierarchyConfig,
+        const searchPaths = createSearchTree({
           label: "matching element",
           limit,
           revealTargets: true,
@@ -2828,15 +2878,11 @@ describe("Models tree", () => {
         });
 
         it("finds instance key paths by target instance key", async () => {
-          const {
-            imodelAccess,
-            idsProvider,
-            hierarchyConfig: requiredHierarchyConfig,
-          } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
-          const searchPaths = await ModelsTreeDefinition.createSearchTree({
-            imodelAccess,
-            idsProvider,
-            hierarchyConfig: requiredHierarchyConfig,
+          const { createSearchTree } = createModelsTree({
+            imodelAccess: createIModelAccess(imodelConnection),
+            hierarchyConfig,
+          });
+          const searchPaths = await createSearchTree({
             targetItems,
             revealTargets: true,
             abortSignal: new AbortController().signal,
@@ -2849,15 +2895,11 @@ describe("Models tree", () => {
             return;
           }
 
-          const {
-            imodelAccess,
-            idsProvider,
-            hierarchyConfig: requiredHierarchyConfig,
-          } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
-          const searchPaths = await ModelsTreeDefinition.createSearchTree({
-            imodelAccess,
-            idsProvider,
-            hierarchyConfig: requiredHierarchyConfig,
+          const { createSearchTree } = createModelsTree({
+            imodelAccess: createIModelAccess(imodelConnection),
+            hierarchyConfig,
+          });
+          const searchPaths = await createSearchTree({
             label: targetInstanceLabel,
             revealTargets: true,
             abortSignal: new AbortController().signal,
@@ -2866,18 +2908,10 @@ describe("Models tree", () => {
         });
 
         it("searches hierarchy by instance key paths", async () => {
-          const {
-            imodelAccess,
-            idsProvider,
-            hierarchyConfig: requiredHierarchyConfig,
-          } = createAccessAndIdsProvider({ imodelConnection, hierarchyConfig });
+          const imodelAccess = createIModelAccess(imodelConnection);
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: new ModelsTreeDefinition({
-              imodelAccess,
-              idsProvider,
-              hierarchyConfig: requiredHierarchyConfig,
-            }),
+            hierarchyDefinition: createModelsTree({ imodelAccess, hierarchyConfig }).definition,
             search: { paths: instanceKeyPaths },
           });
           await validateHierarchy({ provider: hierarchyProvider, expect: expectedHierarchy });

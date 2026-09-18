@@ -20,7 +20,7 @@ import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js"
 /**
  * Provides model, category, and subcategory IDs for tree hierarchy definitions.
  * Element data is limited to the configured element class and non-private models.
- * @beta
+ * @internal
  */
 export interface BaseIdsProvider {
   /** Starts loading modeled element data if it has not been requested yet. Loading errors are ignored. */
@@ -61,7 +61,7 @@ export interface BaseIdsProvider {
 
 /**
  * Query access and element class filters shared by tree ID providers.
- * @beta
+ * @internal
  */
 interface BaseIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
@@ -71,7 +71,7 @@ interface BaseIdsProviderProps {
 
 /**
  * Creates a cached ID provider for elements of the specified class and optional excluded classes.
- * @beta
+ * @internal
  */
 export function createBaseIdsProvider({
   elementClassName,

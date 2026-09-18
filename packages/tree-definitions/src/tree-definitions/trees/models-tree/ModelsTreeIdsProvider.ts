@@ -21,7 +21,7 @@ import type { ModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js
 
 /**
  * Data access and configuration for a models-tree ID provider.
- * @beta
+ * @internal
  */
 interface ModelsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
@@ -40,7 +40,7 @@ interface SubjectInfo {
 
 /**
  * Provides subject and model IDs and search paths for model tree hierarchies.
- * @beta
+ * @internal
  */
 export interface ModelsTreeIdsProvider extends BaseIdsProvider {
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
@@ -48,7 +48,7 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
   /** Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants. */
   getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
   /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
-  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Observable<Id64Array>;
+  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
   /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
   createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<HierarchyNodeIdentifiersPath>;
   /**
@@ -65,7 +65,7 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
 
 /**
  * Creates an ID provider for model tree hierarchies using the supplied hierarchy configuration.
- * @beta
+ * @internal
  */
 export function createModelsTreeIdsProvider({
   queryExecutor,
@@ -320,30 +320,32 @@ export function createModelsTreeIdsProvider({
         ),
       );
     },
-    getChildSubjectModelIds(parentSubjectIds: Id64Arg): Observable<Id64Array> {
-      return getSubjectInfos().pipe(
-        map((subjectInfos) => {
-          const hiddenSubjectIds = new Array<SubjectId>();
-          for (const subjectId of Id64.iterable(parentSubjectIds)) {
-            forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
-              if (childSubjectInfo.hideInHierarchy) {
-                hiddenSubjectIds.push(childSubjectId);
-                return "continue";
-              }
-              return "break";
-            });
-          }
-          const modelIds = new Array<ModelId>();
+    async getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array> {
+      return firstValueFrom(
+        getSubjectInfos().pipe(
+          map((subjectInfos) => {
+            const hiddenSubjectIds = new Array<SubjectId>();
+            for (const subjectId of Id64.iterable(parentSubjectIds)) {
+              forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
+                if (childSubjectInfo.hideInHierarchy) {
+                  hiddenSubjectIds.push(childSubjectId);
+                  return "continue";
+                }
+                return "break";
+              });
+            }
+            const modelIds = new Array<ModelId>();
 
-          for (const subjectId of Id64.iterable(parentSubjectIds)) {
-            addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
-          }
+            for (const subjectId of Id64.iterable(parentSubjectIds)) {
+              addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
+            }
 
-          for (const subjectId of hiddenSubjectIds) {
-            addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
-          }
-          return modelIds;
-        }),
+            for (const subjectId of hiddenSubjectIds) {
+              addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
+            }
+            return modelIds;
+          }),
+        ),
       );
     },
     createSubjectInstanceKeysPath: async (props) => firstValueFrom(createSubjectInstanceKeysPath(props)),
