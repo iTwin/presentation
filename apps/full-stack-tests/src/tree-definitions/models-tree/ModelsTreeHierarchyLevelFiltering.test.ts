@@ -26,11 +26,11 @@ import {
 import { DefaultContentDisplayTypes, KeySet, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { buildIModel } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect } from "../Common.js";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation.js";
+import { buildIModel } from "../IModelUtils.js";
 import {
   createCategoryHierarchyNode,
   createElementHierarchyNode,
@@ -47,11 +47,11 @@ import type { DefineHierarchyLevelProps, HierarchyProvider } from "@itwin/presen
 describe("Models tree", () => {
   describe("Hierarchy level filtering", () => {
     beforeAll(async () => {
-      await initializeITwinJs();
+      await initialize();
     });
 
     afterAll(async () => {
-      await terminateITwinJs();
+      await terminate();
     });
 
     it("can filter root level", async () => {

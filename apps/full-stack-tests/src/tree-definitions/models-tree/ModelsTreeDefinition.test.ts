@@ -16,21 +16,21 @@ import {
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { buildIModel, TestSchema } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { buildIModel, TestSchema } from "../IModelUtils.js";
 import { createModelsTreeProvider } from "./Utils.js";
 
 import type { InstanceKey } from "@itwin/presentation-shared";
 
 describe("ModelsTreeDefinition", () => {
   beforeAll(async () => {
-    await initializeITwinJs();
+    await initialize();
   });
 
   afterAll(async () => {
-    await terminateITwinJs();
+    await terminate();
   });
 
   it("creates Subject - Model - Category - Element hierarchy", async () => {

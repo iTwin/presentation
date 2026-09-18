@@ -5,12 +5,12 @@
 
 import { randomUUID } from "node:crypto";
 import { expect } from "vitest";
-import { buildIModel as buildNamedIModel, importSchema } from "./TestUtilities.js";
+import { buildTestIModel } from "../IModelUtils.js";
+import { importSchema } from "../SchemaUtils.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { EC } from "@itwin/presentation-shared";
-import type { ImportSchemaResult } from "./TestUtilities.js";
 
 function getUniqueIModelName(): string {
   const testName =
@@ -38,10 +38,11 @@ export async function buildIModel<TResult extends object | undefined>(
   setup?: (imodel: IModelDb, testSchema: TestSchemaDefinition) => Promise<TResult>,
 ) {
   const testName = getUniqueIModelName();
-  const res = await buildNamedIModel(testName, async (imodel) => {
-    const testSchema = (await importSchema({
+  const res = await buildTestIModel(testName, async (imodel) => {
+    const testSchema = (await importSchema(
+      { schemaName: TestSchema.name, schemaAlias: "test" },
       imodel,
-      schemaContentXml: `
+      `
         <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
         <ECEntityClass typeName="${TestSchema.modeledElement3dClassName}" displayLabel="Test Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
           <BaseClass>bis:PhysicalElement</BaseClass>
@@ -64,9 +65,7 @@ export async function buildIModel<TResult extends object | undefined>(
           </Target>
         </ECRelationshipClass>
       `,
-      schemaName: TestSchema.name,
-      schemaAlias: "test",
-    })) as TestSchemaDefinition;
+    )) as TestSchemaDefinition;
     const setupResult = setup ? await setup(imodel, testSchema) : undefined;
     return { ...setupResult, testSchema };
   });
@@ -78,7 +77,7 @@ export async function buildIModel<TResult extends object | undefined>(
   };
 }
 
-interface TestSchemaDefinition extends ImportSchemaResult {
+interface TestSchemaDefinition extends Awaited<ReturnType<typeof importSchema>> {
   items: {
     [TestSchema.modeledElement3dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
     [TestSchema.modeledElement2dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };

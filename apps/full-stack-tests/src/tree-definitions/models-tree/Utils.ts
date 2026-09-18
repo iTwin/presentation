@@ -5,14 +5,14 @@
 
 import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
-import { mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
+  CLASS_NAMES,
+  createBaseIdsProvider,
   createModelsTree,
-  defaultHierarchyConfiguration,
-} from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
-import { createModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
+  createModelsTreeIdsProvider,
+  defaultModelsTreeHierarchyConfiguration as defaultHierarchyConfiguration,
+  mergeWithDefaults,
+} from "@itwin/presentation-tree-definitions/internal";
 import { createIModelAccess } from "../Common.js";
 
 import type { Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -25,8 +25,10 @@ import type {
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { ParentElementsPath } from "../../../tree-definitions/shared/Utils.js";
-import type { ModelsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+import type {
+  ModelsTreeHierarchyConfiguration,
+  ParentElementsPath,
+} from "@itwin/presentation-tree-definitions/internal";
 
 interface CreateModelsTreeProviderProps {
   imodelConnection: IModelConnection;

@@ -5,5 +5,5 @@
     "rootDir": "./src",
     "outDir": "lib"
   },
-  "include": ["src/presentation-tree-definitions.ts"]
+  "include": ["src/presentation-tree-definitions.ts", "src/presentation-tree-definitions-internal.ts"]
 }

@@ -14,13 +14,13 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
-import { TestSchema } from "../../IModelUtils.js";
+import { TestSchema } from "../IModelUtils.js";
 
 import type { EditTxn } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ElementProps, ModelProps } from "@itwin/core-common";
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { ElementId } from "../../../tree-definitions/shared/Types.js";
+import type { ElementId } from "@itwin/presentation-tree-definitions/internal";
 
 export function insertDefinitionContainer(
   props: {

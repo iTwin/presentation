@@ -10,9 +10,9 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { buildIModel } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { buildIModel } from "../IModelUtils.js";
 import {
   createClassificationsTreeProvider,
   importClassificationSchema,
@@ -27,11 +27,11 @@ const rootClassificationSystemCode = "TestClassificationSystem";
 describe("Classifications tree", () => {
   describe("Hierarchy definition", () => {
     beforeAll(async () => {
-      await initializeITwinJs();
+      await initialize();
     });
 
     afterAll(async () => {
-      await terminateITwinJs();
+      await terminate();
     });
 
     it.each([rootClassificationSystemCode, "Owner's Classification"])(

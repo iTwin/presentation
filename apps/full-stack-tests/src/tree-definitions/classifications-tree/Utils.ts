@@ -7,10 +7,12 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
-import { ClassificationsTreeDefinition } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
-import { createClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
+import {
+  CLASS_NAMES,
+  ClassificationsTreeDefinition,
+  createBaseIdsProvider,
+  createClassificationsTreeIdsProvider,
+} from "@itwin/presentation-tree-definitions/internal";
 import { createIModelAccess } from "../Common.js";
 
 import type { EditTxn, IModelDb } from "@itwin/core-backend";
@@ -19,7 +21,7 @@ import type { DefinitionElementProps } from "@itwin/core-common";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyProvider } from "@itwin/presentation-hierarchies";
 import type { EC } from "@itwin/presentation-shared";
-import type { ClassificationsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
+import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 function insertDefinitionSubModel(props: {
   txn: EditTxn;
