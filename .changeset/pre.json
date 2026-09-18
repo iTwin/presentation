@@ -22,7 +22,8 @@
     "@itwin/unified-selection": "1.3.0",
     "@itwin/unified-selection-react": "1.0.0",
     "@itwin/presentation-content": "0.1.0",
-    "@itwin/presentation-content-react": "0.1.0"
+    "@itwin/presentation-content-react": "0.1.0",
+    "@itwin/presentation-tree-definitions": "0.0.0"
   },
   "changesets": [
     "add-ecsql-class-selector",
@@ -84,6 +85,7 @@
     "honest-suits-check",
     "honest-wasps-scream",
     "hot-cheetahs-hope",
+    "hot-plants-drop",
     "hungry-otters-wave",
     "icy-islands-bake",
     "imodel-instance-label-override-factory",
@@ -175,6 +177,7 @@
     "violet-lies-design",
     "wacky-birds-watch",
     "warm-books-sing",
+    "warm-eggs-flash",
     "wise-plants-try",
     "wise-stamps-wait",
     "yellow-kings-cut",
