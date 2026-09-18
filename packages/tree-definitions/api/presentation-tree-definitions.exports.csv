@@ -1,0 +1,5 @@
+sep=;
+Release Tag;API Item Type;API Item Name
+beta;namespace;CategoriesTreeNode
+beta;namespace;ClassificationsTreeNode
+beta;namespace;ModelsTreeNode

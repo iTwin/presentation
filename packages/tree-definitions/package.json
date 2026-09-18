@@ -1,0 +1,60 @@
+{
+  "name": "@itwin/presentation-tree-definitions",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reusable tree hierarchy definitions for iTwin Presentation",
+  "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/tree-definitions"
+  },
+  "type": "module",
+  "main": "lib/presentation-tree-definitions.js",
+  "types": "lib/presentation-tree-definitions.d.ts",
+  "exports": {
+    ".": "./lib/presentation-tree-definitions.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "npm run -s typecheck && tsc -p tsconfig.build.json",
+    "clean": "rimraf lib",
+    "extract-api": "betools extract-api --entry=lib/presentation-tree-definitions --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "lint": "eslint \"./src/**/*.ts\"",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-common": "catalog:itwinjs-core",
+    "@itwin/presentation-hierarchies": "workspace:*",
+    "@itwin/presentation-shared": "workspace:*",
+    "rxjs": "catalog:rxjs"
+  },
+  "devDependencies": {
+    "@bentley/classification-systems-schema": "1.0.4",
+    "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/core-backend": "catalog:itwinjs-core-dev",
+    "@itwin/core-frontend": "catalog:itwinjs-core-dev",
+    "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core-dev",
+    "@itwin/ecschema-rpcinterface-impl": "catalog:itwinjs-core-dev",
+    "@itwin/eslint-plugin": "catalog:build-tools",
+    "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
+    "@itwin/presentation-common": "catalog:itwinjs-core-dev",
+    "@itwin/presentation-core-interop": "workspace:*",
+    "@itwin/presentation-frontend": "catalog:itwinjs-core-dev",
+    "@types/node": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
+    "fast-xml-parser": "catalog:miscellaneous",
+    "happy-dom": "catalog:test-tools",
+    "presentation-test-utilities": "workspace:*",
+    "rimraf": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
+    "typescript": "catalog:build-tools",
+    "vitest": "catalog:test-tools"
+  }
+}
