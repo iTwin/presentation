@@ -354,6 +354,7 @@ describe("buildContentDefinition", () => {
     expect(descriptor.fields["calc_v1:sum"].kind).to.equal("calculated");
     expect(Object.keys(definition.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
     expect(definition.selectors["calc_v1:sum"].kind).to.equal("calculated");
+    expect(definition.calculatedFieldIdsBySource.get(descriptor.sources[0])).to.deep.equal(new Set(["calc_v1:sum"]));
   });
 
   it("appends external fields without selectors and keeps external input columns", async () => {

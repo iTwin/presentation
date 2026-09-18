@@ -20,13 +20,14 @@ import type { GetContributionFn } from "./ContributionMemoizer.js";
  * collapse to the same id are therefore deduplicated, but only after asserting they are structurally
  * identical — a divergence (different expression, type, category, etc. under one id) is a provider
  * bug and throws, mirroring the intra-provider check in `mergePropertyFieldsByIdentity`.
+ * Source applicability is retained separately from the merged fields for query planning.
  *
  */
 export async function collectCalculatedFields(props: {
   sources: ContentSource[];
   imodelFieldsProviders: IModelFieldsProvider[];
   getContribution: GetContributionFn;
-}): Promise<Record<Field["id"], CalculatedField>> {
+}): Promise<{ fields: Record<Field["id"], CalculatedField>; fieldIdsBySource: Map<ContentSource, Set<Field["id"]>> }> {
   const { sources, imodelFieldsProviders, getContribution } = props;
   const declared = await collectInParallel({
     inputs: sources,
@@ -36,6 +37,7 @@ export async function collectCalculatedFields(props: {
         expand: async (provider) => {
           const contribution = await getContribution({ provider, target: source.target });
           return (contribution?.calculatedFields ?? []).map((declaration) => ({
+            source,
             providerId: provider.id,
             declaration,
           }));
@@ -44,7 +46,8 @@ export async function collectCalculatedFields(props: {
   });
 
   const result: Record<Field["id"], CalculatedField> = {};
-  for (const { providerId, declaration } of declared) {
+  const fieldIdsBySource = new Map(sources.map((source) => [source, new Set<Field["id"]>()]));
+  for (const { source, providerId, declaration } of declared) {
     const id = `${providerId}:${declaration.id}`;
     const field: CalculatedField = {
       kind: "calculated",
@@ -69,8 +72,9 @@ export async function collectCalculatedFields(props: {
       );
     }
     result[id] = field;
+    fieldIdsBySource.get(source)!.add(id);
   }
-  return result;
+  return { fields: result, fieldIdsBySource };
 }
 
 /**

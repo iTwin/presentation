@@ -8,7 +8,11 @@ import { ECSQL_PREFIX, mergeBindings, substituteExpressionAlias } from "../Inter
 import { serializeRelationshipPath } from "../model/Utils.js";
 
 import type { EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { PropertyValueSelector, ValueSelector } from "../definition-building/ValueSelector.js";
+import type {
+  CalculatedValueSelector,
+  PropertyValueSelector,
+  ValueSelector,
+} from "../definition-building/ValueSelector.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
 import type { BaseQueryGroup } from "./BaseQuery.js";
 
@@ -73,6 +77,11 @@ export async function buildSelectProjection(props: {
   group: BaseQueryGroup;
   sorting?: ContentQuerySort[];
   /**
+   * Calculated fields contributed to this source. When supplied, other calculated values are omitted
+   * and their sort columns select NULL to preserve the shared UNION/keyset column layout.
+   */
+  applicableCalculatedFieldIds?: ReadonlySet<string>;
+  /**
    * Join-path keys (`serializeRelationshipPath(path, { includeInstanceFilters: true })`) this group owns
    * for `SELECT` projection — a selector whose path is not in this set is skipped even if `group`'s alias
    * map can resolve it (e.g. a path that overflowed into another group). Direct properties and calculated
@@ -80,7 +89,7 @@ export async function buildSelectProjection(props: {
    */
   ownedPathKeys: Set<string>;
 }): Promise<SelectProjection> {
-  const { schemaProvider, selectors, group, sorting = [], ownedPathKeys } = props;
+  const { schemaProvider, selectors, group, sorting = [], applicableCalculatedFieldIds, ownedPathKeys } = props;
   const primaryKey = { className: `${ECSQL_PREFIX}primary_class`, id: `${ECSQL_PREFIX}primary_id` };
   const select = [
     `ec_classname([${group.parts.primaryClassAlias}].[ECClassId], 's.c') AS [${primaryKey.className}]`,
@@ -143,7 +152,11 @@ export async function buildSelectProjection(props: {
   const bindings: Record<string, ECSqlBinding> = {};
   const calculatedValues: Record<string, string> = {};
   const calculatedSelectors = ownedPathKeys.has("")
-    ? Object.values(selectors).filter((selector) => selector.kind === "calculated")
+    ? Object.values(selectors).filter(
+        (selector): selector is CalculatedValueSelector =>
+          selector.kind === "calculated" &&
+          (!applicableCalculatedFieldIds || applicableCalculatedFieldIds.has(selector.id)),
+      )
     : [];
   for (const [index, selector] of calculatedSelectors.entries()) {
     // Alias by a controlled name rather than the raw selector id so ids with special characters (e.g. `:`)
@@ -166,11 +179,12 @@ export async function buildSelectProjection(props: {
   });
   for (const [index, entry] of sorting.entries()) {
     const column = `${ECSQL_PREFIX}sort_${index}`;
-    const selector = resolveSortSelector({
-      field: entry.field,
-      group,
-      relationshipClassNames: sortingRelationshipClasses,
-    });
+    const selector =
+      entry.field.kind === "calculated" &&
+      applicableCalculatedFieldIds &&
+      !applicableCalculatedFieldIds.has(entry.field.id)
+        ? { selector: "NULL" }
+        : resolveSortSelector({ field: entry.field, group, relationshipClassNames: sortingRelationshipClasses });
     // Emit the sort key as a private column so the loader can read its value into the keyset cursor.
     select.push(`${selector.selector} AS [${column}]`);
     mergeBindings(bindings, selector.bindings);
