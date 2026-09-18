@@ -4,37 +4,42 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubCategory } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
-import { getClassesByView, mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   CategoriesTreeDefinition,
-  defaultHierarchyConfiguration,
-} from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
-import { createCategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
-import { buildIModel, TestSchema } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+  CLASS_NAMES,
+  createBaseIdsProvider,
+  createCategoriesTreeIdsProvider,
+  defaultCategoriesTreeHierarchyConfiguration as defaultHierarchyConfiguration,
+  getClassesByView,
+  mergeWithDefaults,
+} from "@itwin/presentation-tree-definitions/internal";
+import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { buildIModel, TestSchema } from "../IModelUtils.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyProvider } from "@itwin/presentation-hierarchies";
 import type { EC } from "@itwin/presentation-shared";
-import type { CategoriesTreeHierarchyConfiguration } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
+import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 describe("Categories tree", () => {
   describe("Hierarchy definition", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     beforeAll(async () => {
-      await initializeITwinJs();
+      await initialize();
     });
 
     afterAll(async () => {
-      await terminateITwinJs();
+      await terminate();
     });
 
     ["2d" as const, "3d" as const].forEach((viewType) => {

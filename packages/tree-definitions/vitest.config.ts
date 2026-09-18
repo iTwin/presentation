@@ -6,13 +6,5 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  test: {
-    name: "Tree definitions",
-    include: ["src/**/*.test.ts"],
-    environment: "happy-dom",
-    restoreMocks: true,
-    testTimeout: 60000,
-    hookTimeout: 60000,
-    maxWorkers: 1,
-  },
+  test: { name: "Tree definitions", include: ["src/**/*.test.ts"], environment: "node", restoreMocks: true },
 });

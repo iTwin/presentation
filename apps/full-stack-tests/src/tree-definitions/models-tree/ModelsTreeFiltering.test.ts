@@ -13,18 +13,16 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
-import { createModelsTree } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
-import { buildIModel } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+import { CLASS_NAMES, createModelsTree, SearchLimitExceededError } from "@itwin/presentation-tree-definitions/internal";
+import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { buildIModel } from "../IModelUtils.js";
 import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./Utils.js";
 
 import type { EditTxn } from "@itwin/core-backend";
@@ -35,7 +33,7 @@ import type { InstanceKey } from "@itwin/presentation-shared";
 import type {
   ElementsGroupInfo,
   ModelsTreeHierarchyConfiguration,
-} from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+} from "@itwin/presentation-tree-definitions/internal";
 import type { ExpectedHierarchyDef } from "../HierarchyValidation.js";
 
 interface TreeSearchTestCaseDefinition<TIModelSetupResult extends object> {
@@ -86,12 +84,16 @@ namespace TreeSearchTestCaseDefinition {
 
 describe("Models tree", () => {
   describe("Hierarchy search", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     beforeAll(async () => {
-      await initializeITwinJs();
+      await initialize();
     });
 
     afterAll(async () => {
-      await terminateITwinJs();
+      await terminate();
     });
 
     it.each(["model", "category", "element"] as const)("finds all subject paths to a shared %s", async (target) => {

@@ -7,18 +7,19 @@ import { insertSubCategory } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
-import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
-import { getClassesByView, mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   CategoriesTreeDefinition,
-  defaultHierarchyConfiguration,
-} from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
-import { createCategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
-import { buildIModel } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+  CLASS_NAMES,
+  createBaseIdsProvider,
+  createCategoriesTreeIdsProvider,
+  defaultCategoriesTreeHierarchyConfiguration as defaultHierarchyConfiguration,
+  getClassesByView,
+  mergeWithDefaults,
+  SearchLimitExceededError,
+} from "@itwin/presentation-tree-definitions/internal";
+import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
+import { buildIModel } from "../IModelUtils.js";
 import {
   getDefaultSubCategoryId,
   getInsertFunctionByViewType,
@@ -29,7 +30,7 @@ import {
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { CategoriesTreeHierarchyConfiguration } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
+import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 // cspell:words egory
 // cspell complains about Cat_egory and Cat%egory
@@ -37,11 +38,11 @@ import type { CategoriesTreeHierarchyConfiguration } from "../../../tree-definit
 describe("Categories tree", () => {
   describe("Hierarchy search", () => {
     beforeAll(async () => {
-      await initializeITwinJs();
+      await initialize();
     });
 
     afterAll(async () => {
-      await terminateITwinJs();
+      await terminate();
     });
 
     describe("label search limits", () => {

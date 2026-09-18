@@ -11,11 +11,13 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { SearchLimitExceededError } from "../../../tree-definitions/shared/TreeErrors.js";
-import { ClassificationsTreeDefinition } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
-import { buildIModel } from "../../IModelUtils.js";
-import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
+import {
+  CLASS_NAMES,
+  ClassificationsTreeDefinition,
+  SearchLimitExceededError,
+} from "@itwin/presentation-tree-definitions/internal";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { buildIModel } from "../IModelUtils.js";
 import {
   createAccessAndIdsProvider,
   importClassificationSchema,
@@ -27,7 +29,7 @@ import {
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { InstanceKey } from "@itwin/presentation-shared";
-import type { ClassificationsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
+import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 const rootClassificationSystemCode = "TestClassificationSystem";
 const defaultHierarchyConfiguration = { rootClassificationSystemCode };
@@ -35,11 +37,11 @@ const defaultHierarchyConfiguration = { rootClassificationSystemCode };
 describe("Classifications tree", () => {
   describe("Hierarchy search", () => {
     beforeAll(async () => {
-      await initializeITwinJs();
+      await initialize();
     });
 
     afterAll(async () => {
-      await terminateITwinJs();
+      await terminate();
     });
 
     describe("label search limits", () => {
