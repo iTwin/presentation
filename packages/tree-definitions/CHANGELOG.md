@@ -1,6 +1,6 @@
 # @itwin/presentation-tree-definitions
 
-## 0.1.0-alpha.0
+## 0.1.0
 
 ### Minor Changes
 
