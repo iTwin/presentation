@@ -23,7 +23,7 @@ import type { ClassificationsTreeHierarchyConfiguration } from "./Classification
  *
  * By default, categories are determined using `ClassificationSystems.ElementHasClassifications` and `BisCore.GeometricElement3dIsInCategory` relationships.
  *
- * @beta
+ * @internal
  */
 export interface ClassificationToCategoriesRelationshipSpecification {
   /**
@@ -42,6 +42,10 @@ interface ClassificationOrTableInfo {
   childClassificationIds: ClassificationId[];
 }
 
+/**
+ * Query access, root classification system, and category relationships for a classifications-tree ID provider.
+ * @internal
+ */
 interface ClassificationsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
@@ -56,7 +60,7 @@ interface ClassificationsTreeIdsProviderData {
 
 /**
  * Provides classification IDs and search paths within the configured classification system.
- * @beta
+ * @internal
  */
 export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
   /** Starts loading classification data if it has not been requested yet. Loading errors are ignored. */
@@ -78,7 +82,7 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
 
 /**
  * Creates a cached classification tree ID provider using the supplied base provider and category relationships.
- * @beta
+ * @internal
  */
 export function createClassificationsTreeIdsProvider({
   baseIdsProvider,

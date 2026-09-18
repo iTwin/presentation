@@ -62,13 +62,20 @@ import type { ClassificationsTreeIdsProvider } from "./ClassificationsTreeIdsPro
 
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
+/**
+ * Data access and classification system configuration for a classifications hierarchy.
+ * @internal
+ */
 interface ClassificationsTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   getIdsProvider: (imodelKey: string) => ClassificationsTreeIdsProvider;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
 }
 
-/** @beta */
+/**
+ * Selects the root classification system and excluded element classes for `ClassificationsTreeDefinition`.
+ * @internal
+ */
 export interface ClassificationsTreeHierarchyConfiguration {
   /**
    * The classifications' hierarchy starts at the root `ClassificationSystem` element. This attribute identifies that
@@ -93,31 +100,51 @@ export interface ClassificationsTreeHierarchyConfiguration {
   };
 }
 
+/**
+ * Shared data access, configuration, and cancellation options for classifications hierarchy searches.
+ * @internal
+ */
 interface ClassificationsTreeInstanceKeyPathsBaseProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
   idsProvider: ClassificationsTreeIdsProvider;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
-  componentId?: GuidString;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
+  uniqueId?: GuidString;
+  /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
 
-/** @internal */
-export interface ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps extends ClassificationsTreeInstanceKeyPathsBaseProps {
+/**
+ * Search targets selected by a substring of their instance label.
+ * @internal
+ */
+interface ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps extends ClassificationsTreeInstanceKeyPathsBaseProps {
   label: string;
 }
 
-/** @internal */
-export interface ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps extends ClassificationsTreeInstanceKeyPathsBaseProps {
+/**
+ * Search targets specified as classification table, classification, or geometric element instance keys.
+ * @internal
+ */
+interface ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps extends ClassificationsTreeInstanceKeyPathsBaseProps {
   targetItems: Array<InstanceKey>;
 }
 
-/** @internal */
-export type ClassificationsTreeInstanceKeyPathsProps =
+/**
+ * Options for locating classifications hierarchy paths by label or instance keys.
+ * @internal
+ */
+type ClassificationsTreeInstanceKeyPathsProps =
   | ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps
   | ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps;
 
-/** @internal */
+/**
+ * Defines a hierarchy of classification tables, classifications, and related geometric elements.
+ * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @internal
+ */
 export class ClassificationsTreeDefinition implements HierarchyDefinition {
   #impl: HierarchyDefinition;
   #props: ClassificationsTreeDefinitionProps;
@@ -517,13 +544,14 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     });
   }
 
+  /**
+   * Yields hierarchy paths to instances matching the supplied label or instance keys.
+   * @throws An error if the configured search limit is exceeded.
+   */
   public static createInstanceKeyPaths(props: ClassificationsTreeInstanceKeyPathsProps) {
     return eachValueFrom<{ path: HierarchyNodeIdentifiersPath; target: Id64String }>(
       defer(() => {
-        const componentInfo = {
-          componentId: props.componentId ?? Guid.createValue(),
-          componentName: this.#componentName,
-        };
+        const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
         if ("label" in props) {
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
           return createInstanceKeyPathsFromInstanceLabelObs({ ...props, ...componentInfo, labelsFactory });
@@ -533,14 +561,15 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     );
   }
 
+  /**
+   * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+   * @throws An error if the configured search limit is exceeded.
+   */
   public static async createSearchTree(props: ClassificationsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
     const builder = HierarchySearchTree.createBuilder();
     await firstValueFrom(
       defer(() => {
-        const componentInfo = {
-          componentId: props.componentId ?? Guid.createValue(),
-          componentName: this.#componentName,
-        };
+        const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
         if ("label" in props) {
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
           return createInstanceKeyPathsFromInstanceLabelObs({ ...props, ...componentInfo, labelsFactory });
@@ -617,10 +646,10 @@ const ELEMENT_CLASS_NAME_QUERY_ALIAS = "e";
 function createInstanceKeyPathsFromInstanceLabelObs({
   label,
   ...props
-}: Omit<ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps, "componentId" | "componentName" | "abortSignal"> & {
+}: Omit<ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps, "uniqueId" | "componentName" | "abortSignal"> & {
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentName: string;
-  componentId: string;
+  uniqueId: string;
 }) {
   const adjustedLabel = label.replace(/[%_\\]/g, "\\$&");
 
@@ -744,7 +773,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
   }).pipe(
     mergeMap((queryProps) =>
       props.imodelAccess.createQueryReader(queryProps, {
-        restartToken: `${props.componentName}/${props.componentId}/filter-by-label`,
+        restartToken: `${props.componentName}/${props.uniqueId}/filter-by-label`,
         limit: "unbounded",
       }),
     ),
@@ -768,8 +797,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
   );
 }
 function createInstanceKeyPathsFromTargetItemsObs(
-  props: Omit<ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps, "abortSignal" | "componentId"> & {
-    componentId: GuidString;
+  props: Omit<ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps, "abortSignal" | "uniqueId"> & {
+    uniqueId: GuidString;
     componentName: string;
   },
 ) {
@@ -794,8 +823,8 @@ function createInstanceKeyPathsFromTargetItemsObs(
 }
 
 function createSearchPathsForDifferentTypes(
-  props: Omit<ClassificationsTreeInstanceKeyPathsBaseProps, "componentId"> & {
-    componentId: GuidString;
+  props: Omit<ClassificationsTreeInstanceKeyPathsBaseProps, "uniqueId"> & {
+    uniqueId: GuidString;
     componentName: string;
   },
 ): OperatorFunction<
@@ -826,7 +855,7 @@ function createSearchPathsForDifferentTypes(
         },
       ),
       switchMap((ids) => {
-        const { idsProvider, imodelAccess, componentId, componentName, limit } = props;
+        const { idsProvider, imodelAccess, uniqueId, componentName, limit } = props;
         const elementsLength = ids.elementIds.length;
         const totalSize = ids.classificationTableIds.length + ids.classificationIds.length + elementsLength;
         if (limit !== "unbounded" && totalSize > (limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT)) {
@@ -851,7 +880,7 @@ function createSearchPathsForDifferentTypes(
                   imodelAccess,
                   targetItems: block,
                   chunkIndex,
-                  componentId,
+                  uniqueId,
                   componentName,
                   excludedElementClassNames: props.hierarchyConfig.elements?.excludedClasses,
                 }),
@@ -867,12 +896,12 @@ function createGeometricElementInstanceKeyPaths(props: {
   idsProvider: ClassificationsTreeIdsProvider;
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   targetItems: Id64Array;
-  componentId: GuidString;
+  uniqueId: GuidString;
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
 }): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
-  const { targetItems, imodelAccess, idsProvider, componentId, componentName, chunkIndex, excludedElementClassNames } =
+  const { targetItems, imodelAccess, idsProvider, uniqueId, componentName, chunkIndex, excludedElementClassNames } =
     props;
   if (targetItems.length === 0) {
     return EMPTY;
@@ -918,7 +947,7 @@ function createGeometricElementInstanceKeyPaths(props: {
       {
         rowFormat: "ECSqlPropertyNames",
         limit: "unbounded",
-        restartToken: `${componentName}/${componentId}/elements-filter-paths/${chunkIndex}`,
+        restartToken: `${componentName}/${uniqueId}/elements-filter-paths/${chunkIndex}`,
       },
     );
   }).pipe(

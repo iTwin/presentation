@@ -4,5 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { ModelsTreeNode } from "./tree-definitions/trees/models-tree/ModelsTreeNode.js";
-export { CategoriesTreeNode } from "./tree-definitions/trees/categories-tree/CategoriesTreeNode.js";
-export { ClassificationsTreeNode } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeNode.js";
+export { createModelsTree } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";

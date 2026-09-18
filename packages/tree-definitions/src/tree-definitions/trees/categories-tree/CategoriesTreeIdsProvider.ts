@@ -46,11 +46,11 @@ interface CategoriesInfo {
 
 /**
  * Category metadata used to determine which child nodes are available in the hierarchy.
- * @beta
+ * @internal
  */
 export interface CachedCategoryInfo {
   /** The category's element ID. */
-  id: CategoryId;
+  id: Id64String;
   /** Number of non-private subcategories, including the default subcategory. */
   subCategoryChildCount: number;
   /** Whether the category contains elements of the configured class, including excluded classes. */
@@ -59,7 +59,10 @@ export interface CachedCategoryInfo {
   hasElementsFromNonExcludedClasses: boolean;
 }
 
-/** @beta */
+/**
+ * Query access and view type for a categories-tree ID provider.
+ * @internal
+ */
 interface CategoriesTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   baseIdsProvider: BaseIdsProvider;
@@ -75,7 +78,7 @@ interface CategoriesData {
 
 /**
  * Provides category and definition container IDs and search paths for category tree hierarchies.
- * @beta
+ * @internal
  */
 export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
   /** Starts loading definition container and category data if not already requested. Loading errors are ignored. */
@@ -109,7 +112,7 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
 
 /**
  * Creates a cached category tree ID provider for the specified view type using the supplied base provider.
- * @beta
+ * @internal
  */
 export function createCategoriesTreeIdsProvider({
   queryExecutor,

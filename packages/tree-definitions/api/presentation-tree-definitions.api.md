@@ -5,75 +5,66 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
+import type { EC } from '@itwin/presentation-shared';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { GuidString } from '@itwin/core-bentley';
+import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
-import type { Id64Array } from '@itwin/core-bentley';
+import type { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
+import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import type { Id64String } from '@itwin/core-bentley';
+import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
+import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 
 // @beta
-export namespace CategoriesTreeNode {
-    const isDefinitionContainerNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
-        key: InstancesNodeKey;
+type ClassGroupingHierarchyNode = GroupingHierarchyNode & {
+    key: ClassGroupingNodeKey;
+};
+
+// @beta
+export function createModelsTree(props: ModelsTreeProps): {
+    definition: HierarchyDefinition;
+    createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
+        path: HierarchyNodeIdentifiersPath;
+        target: Id64String | ElementsGroupInfo;
+    }>;
+    createSearchTree: (searchProps: ModelsTreeSearchProps & {
+        revealTargets?: boolean;
+    }) => Promise<HierarchySearchTree[]>;
+};
+
+// @beta
+interface ElementsGroupInfo {
+    // (undocumented)
+    groupingNode: ClassGroupingHierarchyNode;
+    // (undocumented)
+    parent: {
+        ids: Id64String[];
+        type: "element";
+    } | {
+        ids: Id64String[];
+        modelIds: Id64String[];
+        type: "category";
     };
-    const isCategoryNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
-        key: InstancesNodeKey;
-    } & {
-        extendedData: {
-            description?: string;
-            hasSubCategories?: boolean;
-            modelIds: Id64Array;
-        };
-    };
-    const isModelNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
-        key: InstancesNodeKey;
-    };
-    const isElementNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
-        key: InstancesNodeKey;
-    } & {
-        extendedData: {
-            modelId: Id64String;
-            categoryId: Id64String;
-        };
-    };
-    const isElementClassGroupingNode: (node: Pick<HierarchyNode, "key">) => node is Omit<GroupingHierarchyNode, "extendedData"> & {
-        key: ClassGroupingNodeKey;
-    } & {
-        extendedData: {
-            categoryId: Id64String;
-            modelElementsMap: Map<Id64String, {
-                elementIds: Set<Id64String>;
-            }>;
-        };
-    };
-    const isSubCategoryNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
-        key: InstancesNodeKey;
-    } & {
-        extendedData: {
-            categoryId: Id64String;
-        };
-    };
-    const getType: (node: HierarchyNode) => "definition-container" | "category" | "element" | "sub-category" | "model" | "elements-class-group" | undefined;
 }
 
 // @beta
-export namespace ClassificationsTreeNode {
-    const isClassificationTableNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
-        key: InstancesNodeKey;
+interface ModelsTreeHierarchyConfiguration {
+    elements?: {
+        baseClass?: EC.FullClassNameDotNotation;
+        excludedClasses?: EC.FullClassNameDotNotation[];
+        classGrouping?: "enable" | "enable-with-counts" | "disable";
     };
-    const isClassificationNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
-        key: InstancesNodeKey;
+    hierarchyLevelFiltering?: "enable" | "disable";
+    models?: {
+        withoutElements?: "include" | "exclude";
     };
-    const isGeometricElementNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
-        key: InstancesNodeKey;
-    } & {
-        extendedData: {
-            modelId: Id64String;
-            categoryId: Id64String;
-        };
+    subjects?: {
+        root?: "include" | "exclude";
     };
-    const getType: (node: HierarchyNode) => "classification-table" | "classification" | "element" | undefined;
 }
 
 // @beta
@@ -109,6 +100,27 @@ export namespace ModelsTreeNode {
     };
     const getType: (node: HierarchyNode) => "subject" | "model" | "category" | "element" | "elements-class-group" | undefined;
 }
+
+// @beta
+interface ModelsTreeProps {
+    hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    uniqueId?: GuidString;
+}
+
+// @beta
+interface ModelsTreeSearchOptions {
+    abortSignal?: AbortSignal;
+    limit?: number | "unbounded";
+}
+
+// @beta
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
+    targetItems: Array<InstanceKey | ElementsGroupInfo>;
+} | {
+    label: string;
+});
 
 // (No @packageDocumentation comment for this package)
 
