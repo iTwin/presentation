@@ -9,6 +9,16 @@ import { Id64 } from "@itwin/core-bentley";
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
 
+/**
+ * Same as `firstValueFrom` except it won't throw if the observable emits no values.
+ * @internal
+ */
+export async function toVoidPromise(obs: Observable<any>): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    obs.subscribe({ complete: () => resolve(), error: reject });
+  });
+}
+
 /** @internal */
 export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   return (obs: Observable<T>): Observable<T> => {

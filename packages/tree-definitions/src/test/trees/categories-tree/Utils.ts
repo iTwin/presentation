@@ -86,3 +86,9 @@ export function getInsertFunctionByViewType(viewType: "2d" | "3d") {
     });
   return { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement };
 }
+
+export function getDefaultSubCategoryId(categoryId: Id64String) {
+  const categoryIdNumber = Number.parseInt(categoryId, 16);
+  const subCategoryId = `0x${(categoryIdNumber + 1).toString(16)}`;
+  return subCategoryId;
+}

@@ -438,13 +438,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const [categoryIds, categoryInstanceFilterClauses, modeledCategoryElementsDefinition] = await Promise.all([
       firstValueFrom(
         from(modelIds).pipe(
-          mergeMap((modelId) =>
-            this.#idsCache.getCategories({
-              modelId,
-              includeOnlyIfCategoryOfTopMostElement: true,
-              excludeIfOnlyExcludedClasses: true,
-            }),
-          ),
+          mergeMap((modelId) => this.#idsCache.getCategories({ modelId })),
           reduce((acc, modelCategories) => {
             for (const categoryId of modelCategories) {
               acc.add(categoryId);

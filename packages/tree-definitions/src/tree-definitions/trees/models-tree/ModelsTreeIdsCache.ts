@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, forkJoin, map, mergeMap, of, reduce, shareReplay } from "rxjs";
+import { defer, filter, forkJoin, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
@@ -222,39 +222,6 @@ export class ModelsTreeIdsCache extends BaseIdsCacheImpl {
           });
         }
         return childSubjectIds;
-      }),
-    );
-  }
-
-  /** Returns ECInstanceIDs of all Models under specific parent Subjects, including their child Subjects, etc. */
-  public getSubjectModelIds(subjectIds: Id64Arg): Observable<Id64Array> {
-    return this.getSubjectInfos().pipe(
-      mergeMap((subjectInfos) => {
-        const result = new Array<ModelId>();
-        const childSubjects = new Array<SubjectId>();
-        for (const subjectId of Id64.iterable(subjectIds)) {
-          const subjectInfo = subjectInfos.get(subjectId);
-          if (!subjectInfo) {
-            continue;
-          }
-          for (const modelId of subjectInfo.childModelIds) {
-            result.push(modelId);
-          }
-          for (const childSubjectId of subjectInfo.childSubjectIds) {
-            childSubjects.push(childSubjectId);
-          }
-        }
-        if (childSubjects.length === 0) {
-          return of(result);
-        }
-        return this.getSubjectModelIds(childSubjects).pipe(
-          map((modelsOfChildSubjects) => {
-            for (const modelId of modelsOfChildSubjects) {
-              result.push(modelId);
-            }
-            return result;
-          }),
-        );
       }),
     );
   }
