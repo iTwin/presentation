@@ -68,16 +68,16 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
   /** Indicates whether classification data has finished loading. */
   readonly isDataLoaded: boolean;
   /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
-  hasChildren(classificationId: Id64String): Promise<boolean>;
+  hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
-  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<Id64String[]>;
+  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
   /**
    * Yields a path from the classification table to each supplied classification, including both endpoints.
    * Empty input yields no paths. Unknown IDs yield a path containing only the supplied classification.
    */
   getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
-  getAllClassifications(): Promise<Id64String[]>;
+  getAllClassifications(): Promise<ClassificationId[]>;
 }
 
 /**
