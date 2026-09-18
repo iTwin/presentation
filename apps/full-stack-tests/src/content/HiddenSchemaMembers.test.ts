@@ -15,7 +15,7 @@ import {
   buildDescriptor,
   createContentIModelAccess,
   getPropertyFieldByName,
-  getRelatedPropertyFieldsByPath,
+  getPropertyFieldsByPath,
 } from "./Utils.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
@@ -234,24 +234,24 @@ describe("Content", () => {
       });
 
       // `BHidden.P1` is hidden because its property source class (`BHidden`) has `HiddenClass`.
-      const p1 = getRelatedPropertyFieldsByPath(descriptor, pathToBHidden).find((f) => f.propertyName === "P1");
+      const p1 = getPropertyFieldsByPath(descriptor, pathToBHidden).find((f) => f.propertyName === "P1");
       expect(p1).toBeDefined();
       expect(p1!.hidden).toBe(true);
 
       // `C.P2` is hidden because the property itself has `HiddenProperty`.
-      const p2 = getRelatedPropertyFieldsByPath(descriptor, pathToC).find((f) => f.propertyName === "P2");
+      const p2 = getPropertyFieldsByPath(descriptor, pathToC).find((f) => f.propertyName === "P2");
       expect(p2).toBeDefined();
       expect(p2!.hidden).toBe(true);
 
       // `Description` is inherited from the (non-hidden) `RelatedBase` on both related paths, so it
       // stays visible for both `BHidden` and `C`, even though `BHidden` itself is hidden.
-      const descriptionViaB = getRelatedPropertyFieldsByPath(descriptor, pathToBHidden).find(
+      const descriptionViaB = getPropertyFieldsByPath(descriptor, pathToBHidden).find(
         (f) => f.propertyName === "Description",
       );
       expect(descriptionViaB).toBeDefined();
       expect(descriptionViaB!.hidden).toBeUndefined();
 
-      const descriptionViaC = getRelatedPropertyFieldsByPath(descriptor, pathToC).find(
+      const descriptionViaC = getPropertyFieldsByPath(descriptor, pathToC).find(
         (f) => f.propertyName === "Description",
       );
       expect(descriptionViaC).toBeDefined();
@@ -317,7 +317,7 @@ describe("Content", () => {
         },
       });
 
-      const relatedFields = getRelatedPropertyFieldsByPath(descriptor, path);
+      const relatedFields = getPropertyFieldsByPath(descriptor, path);
 
       const p1 = relatedFields.find((f) => f.propertyName === "P1");
       expect(p1).toBeDefined();

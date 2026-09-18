@@ -230,11 +230,10 @@ describe("bisCoreAspectsFieldsProvider", () => {
 
   it("excludes BisCore.ExternalSourceAspect from the generic owned-multi-aspect declaration at BisCore 1.0.2", async () => {
     // The `Identifier` property of `BisCore.ExternalSourceAspect` is contributed with its own label/category
-    // override by the external-source-specific declaration of `bisCoreFieldsProvider`. Both declarations
-    // resolve to the same `Element` -> `ExternalSourceAspect` path (instance filters don't participate in
-    // field identity), so without excluding `ExternalSourceAspect` from the generic "all owned
-    // multi-aspects" declaration, the two providers would produce one field with divergent metadata and
-    // the label/category would be decided by provider priority rather than by intent.
+    // override by the external-source-specific declaration of `bisCoreFieldsProvider`. Without excluding
+    // `ExternalSourceAspect` from the generic "all owned multi-aspects" declaration, the differing path
+    // filters would give the generic and specialized fields separate identities and surface the property
+    // twice with different presentation metadata.
     const contribution = await getAspectsContribution(
       createImodelAccess({ bisCoreVersion: { read: 1, write: 0, minor: 2 } }),
       "BisCore.Element",

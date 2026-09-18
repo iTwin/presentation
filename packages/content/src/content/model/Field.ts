@@ -141,7 +141,7 @@ export namespace PropertyField {
   }): Field["id"] {
     let identity = `${props.propertyClassName}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
-      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget })})`;
+      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true })})`;
     }
     if (props.forkKey) {
       identity += `#${props.forkKey}`;

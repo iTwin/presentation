@@ -85,10 +85,23 @@ export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider):
       const applicableHint = hint === "many" && path.length < declaredPath.length ? undefined : hint;
       return getOrCreate({
         map: cache,
-        key: `${serializeRelationshipPath({ path })}|${applicableHint ?? ""}`,
+        key: `${serializeRelationshipPath({ path, includeInstanceFilters: false })}|${applicableHint ?? ""}`,
         createFunc: async () =>
           classifyPathCardinality({ schemaProvider: imodelAccess, path, cardinalityHint: applicableHint }),
       });
     },
   };
+}
+
+/**
+ * Combines cardinality declarations for the same path. A many-valued declaration wins because
+ * treating that path as single-valued would discard related instances.
+ */
+export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): CardinalityHint {
+  for (const cardinality of cardinalities) {
+    if (cardinality === "many") {
+      return "many";
+    }
+  }
+  return "one";
 }
