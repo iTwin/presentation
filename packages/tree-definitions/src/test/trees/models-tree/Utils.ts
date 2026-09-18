@@ -6,13 +6,7 @@
 import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { BaseIdsCache } from "../../../tree-definitions/shared/caches/BaseIdsCache.js";
-import {
-  CLASS_NAME_Element,
-  CLASS_NAME_GeometricElement3d,
-  CLASS_NAME_Model,
-  CLASS_NAME_SpatialCategory,
-  CLASS_NAME_Subject,
-} from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   defaultHierarchyConfiguration,
@@ -91,7 +85,7 @@ export function createSubjectHierarchyNode(props?: {
 }): NonGroupingHierarchyNode {
   const instanceKeys = new Array<InstanceKey>();
   for (const id of props?.ids ? Id64.iterable(props.ids) : []) {
-    instanceKeys.push({ className: CLASS_NAME_Subject, id });
+    instanceKeys.push({ className: CLASS_NAMES.Subject, id });
   }
   return {
     key: { type: "instances", instanceKeys },
@@ -113,7 +107,7 @@ export function createModelHierarchyNode(props?: {
   return {
     key: {
       type: "instances",
-      instanceKeys: [{ className: props?.className ?? CLASS_NAME_Model, id: props?.modelId ?? "" }],
+      instanceKeys: [{ className: props?.className ?? CLASS_NAMES.Model, id: props?.modelId ?? "" }],
     },
     children: !!props?.hasChildren,
     label: "",
@@ -144,8 +138,8 @@ export function createCategoryHierarchyNode({
       type: "instances",
       instanceKeys:
         typeof categoryId === "string"
-          ? [{ className: CLASS_NAME_SpatialCategory, id: categoryId }]
-          : [...(categoryId ?? [])].map((id) => ({ className: CLASS_NAME_SpatialCategory, id })),
+          ? [{ className: CLASS_NAMES.SpatialCategory, id: categoryId }]
+          : [...(categoryId ?? [])].map((id) => ({ className: CLASS_NAMES.SpatialCategory, id })),
     },
     children: !!hasChildren,
     label: "",
@@ -171,7 +165,7 @@ export function createElementHierarchyNode(props: {
   return {
     key: {
       type: "instances",
-      instanceKeys: [{ className: props.className ?? CLASS_NAME_GeometricElement3d, id: props.elementId ?? "" }],
+      instanceKeys: [{ className: props.className ?? CLASS_NAMES.GeometricElement3d, id: props.elementId ?? "" }],
     },
     children: !!props.hasChildren,
     label: "",
@@ -206,7 +200,7 @@ export function createClassGroupingHierarchyNode({
   parentElementsPath?: ParentElementsPath;
   childrenWhichAreParents?: Set<Id64String>;
 }): GroupingHierarchyNode & { key: ClassGroupingNodeKey } {
-  const className = props.className ?? CLASS_NAME_Element;
+  const className = props.className ?? CLASS_NAMES.Element;
   return {
     key: { type: "class-grouping", className },
     children: !!elements.length,

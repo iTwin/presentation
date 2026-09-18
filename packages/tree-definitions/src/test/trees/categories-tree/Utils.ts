@@ -72,7 +72,7 @@ export function getInsertFunctionByViewType(viewType: "2d" | "3d") {
     viewType === "3d"
       ? insertPhysicalSubModel
       : (props: { txn: EditTxn; modeledElementId: string }) =>
-          insertDrawingSubModel({ ...props, classFullName: `${TestSchema.Name}.${TestSchema.SubModel2dClassName}` });
+          insertDrawingSubModel({ ...props, classFullName: `${TestSchema.name}.${TestSchema.subModel2dClassName}` });
   const insertModeledElement = (props: {
     txn: EditTxn;
     modelId: Id64String;
@@ -82,7 +82,7 @@ export function getInsertFunctionByViewType(viewType: "2d" | "3d") {
   }): InstanceKey =>
     insertElement({
       ...props,
-      classFullName: `${TestSchema.Name}.${viewType === "3d" ? TestSchema.ModeledElement3dClassName : TestSchema.ModeledElement2dClassName}`,
+      classFullName: `${TestSchema.name}.${viewType === "3d" ? TestSchema.modeledElement3dClassName : TestSchema.modeledElement2dClassName}`,
     });
   return { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement };
 }

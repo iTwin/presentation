@@ -29,12 +29,7 @@ import {
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
-import {
-  CLASS_NAME_DefinitionContainer,
-  CLASS_NAME_ISubModeledElement,
-  CLASS_NAME_Model,
-  CLASS_NAME_SubCategory,
-} from "../../shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -68,7 +63,6 @@ import type {
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
-  ECClassHierarchyInspector,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryRow,
@@ -84,16 +78,14 @@ import type { CategoryNodeProps, ElementNodeProps } from "./CategoriesTreeNodeIn
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 interface CategoriesTreeDefinitionProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   viewType: "2d" | "3d";
   idsCache: CategoriesTreeIdsCache;
   hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
 }
 
 interface CategoriesTreeInstanceKeyPathsBaseProps {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   limit?: number | "unbounded";
   viewType: "2d" | "3d";
   idsCache: CategoriesTreeIdsCache;
@@ -184,8 +176,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   #idsCache: CategoriesTreeIdsCache;
   #hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
   #excludedClasses?: EC.FullClassNameDotNotation[];
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  #iModelAccess: ECSchemaProvider & ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
+  #iModelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   #categoryClass: EC.FullClassNameDotNotation;
   #categoryElementClass: EC.FullClassNameDotNotation;
   #categoryModelClass: EC.FullClassNameDotNotation;
@@ -331,7 +322,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                       this.createElementChildrenQuery(requestProps),
                   },
                   {
-                    parentInstancesNodePredicate: CLASS_NAME_ISubModeledElement,
+                    parentInstancesNodePredicate: CLASS_NAMES.ISubModeledElement,
                     definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
                       this.createISubModeledElementChildrenQuery(requestProps),
                   },
@@ -356,7 +347,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
             ...(isDefinitionContainerSupported
               ? [
                   {
-                    parentInstancesNodePredicate: CLASS_NAME_DefinitionContainer,
+                    parentInstancesNodePredicate: CLASS_NAMES.DefinitionContainer,
                     definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
                       this.createDefinitionContainersAndCategoriesQuery(requestProps),
                   },
@@ -668,11 +659,11 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   }): Promise<HierarchyNodesDefinition> {
     const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAME_DefinitionContainer, alias: "this" },
+      contentClass: { fullName: CLASS_NAMES.DefinitionContainer, alias: "this" },
     });
 
     return {
-      fullClassName: CLASS_NAME_DefinitionContainer,
+      fullClassName: CLASS_NAMES.DefinitionContainer,
       query: {
         ecsql: `
           SELECT
@@ -700,7 +691,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   }): Promise<HierarchyNodesDefinition> {
     const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAME_DefinitionContainer, alias: "this" },
+      contentClass: { fullName: CLASS_NAMES.DefinitionContainer, alias: "this" },
     });
     const hasCategory =
       this.#hierarchyConfig.categories.withoutElements === "include"
@@ -716,12 +707,12 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
             SELECT 1
             FROM ${this.#categoryClass} cat
             JOIN ${this.#categoryElementClass} ce ON cat.ECInstanceId = ce.Category.Id
-            JOIN ${CLASS_NAME_Model} gm ON ce.Model.Id = gm.ECInstanceId
+            JOIN ${CLASS_NAMES.Model} gm ON ce.Model.Id = gm.ECInstanceId
             WHERE cat.Model.Id = dc.ECInstanceId AND NOT cat.IsPrivate AND NOT gm.IsPrivate
           )
         `;
     return {
-      fullClassName: CLASS_NAME_DefinitionContainer,
+      fullClassName: CLASS_NAMES.DefinitionContainer,
       query: {
         ctes: [
           `
@@ -729,7 +720,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               SELECT
                 dc.ECInstanceId AS id,
                 dc.Model.Id AS modelId
-              FROM ${CLASS_NAME_DefinitionContainer} dc
+              FROM ${CLASS_NAMES.DefinitionContainer} dc
               WHERE NOT dc.IsPrivate AND ${hasCategory}
 
               UNION ALL
@@ -737,7 +728,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               SELECT
                 pdc.ECInstanceId AS id,
                 pdc.Model.Id AS modelId
-              FROM ${CLASS_NAME_DefinitionContainer} pdc
+              FROM ${CLASS_NAMES.DefinitionContainer} pdc
               JOIN AllContainers dc ON pdc.ECInstanceId = dc.modelId
               WHERE NOT pdc.IsPrivate
             )
@@ -748,7 +739,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
             WHERE ${
               parentDefinitionContainerIds
                 ? `modelId IN (${parentDefinitionContainerIds.join(",")})`
-                : `NOT IFNULL((SELECT 1 FROM ${CLASS_NAME_DefinitionContainer} parentDc WHERE parentDc.ECInstanceId = dc.modelId), false)`
+                : `NOT IFNULL((SELECT 1 FROM ${CLASS_NAMES.DefinitionContainer} parentDc WHERE parentDc.ECInstanceId = dc.modelId), false)`
             }
           )`,
         ],
@@ -771,7 +762,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     return createSelectClause({
       ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
       ecInstanceId: { selector: "this.ECInstanceId" },
-      nodeLabel: { of: { classAlias: "this", className: CLASS_NAME_DefinitionContainer } },
+      nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.DefinitionContainer } },
       extendedData: { type: "definition-container" },
       hasChildren: true,
       supportsFiltering: true,
@@ -902,7 +893,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       FROM
         (
           SELECT COUNT(*) scCount
-          FROM ${CLASS_NAME_SubCategory} sub
+          FROM ${CLASS_NAMES.SubCategory} sub
           ${createWhereClause({ conditions: ["sub.Parent.Id = this.ECInstanceId", "NOT sub.IsPrivate"] })}
         )
       WHERE scCount > 1
@@ -910,14 +901,14 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const hasElements = `
       SELECT 1
       FROM ${this.#categoryElementClass} ce
-      JOIN ${CLASS_NAME_Model} m ON ce.Model.Id = m.ECInstanceId
+      JOIN ${CLASS_NAMES.Model} m ON ce.Model.Id = m.ECInstanceId
       ${createWhereClause({ conditions: ["ce.Category.Id = this.ECInstanceId", "NOT m.IsPrivate"] })}
       LIMIT 1
     `;
     const hasChildElements = `
       SELECT 1
       FROM ${this.#categoryElementClass} ce
-      JOIN ${CLASS_NAME_Model} m ON ce.Model.Id = m.ECInstanceId
+      JOIN ${CLASS_NAMES.Model} m ON ce.Model.Id = m.ECInstanceId
       ${createWhereClause({
         conditions: [
           "ce.Category.Id = this.ECInstanceId",
@@ -962,7 +953,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               isDefinitionContainerSupported &&
                 (parentDefinitionContainerIds
                   ? `this.Model.Id IN (${parentDefinitionContainerIds.join(",")})`
-                  : `this.Model.Id NOT IN (SELECT dc.ECInstanceId FROM ${CLASS_NAME_DefinitionContainer} dc)`),
+                  : `this.Model.Id NOT IN (SELECT dc.ECInstanceId FROM ${CLASS_NAMES.DefinitionContainer} dc)`),
               this.#hierarchyConfig.categories.withoutElements === "exclude" && `IFNULL((${hasElements}), 0)`,
             ],
           })}
@@ -992,19 +983,19 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const instanceFilterClauses = await createFilterClauses({
       filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAME_SubCategory, alias: "this" },
+      contentClass: { fullName: CLASS_NAMES.SubCategory, alias: "this" },
     });
 
     return [
       {
-        fullClassName: CLASS_NAME_SubCategory,
+        fullClassName: CLASS_NAMES.SubCategory,
         query: {
           ecsql: `
             SELECT
               ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: { of: { classAlias: "this", className: CLASS_NAME_SubCategory } },
+                nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.SubCategory } },
                 extendedData: { categoryId: { selector: "printf('0x%x', this.Parent.Id)" }, type: "sub-category" },
                 supportsFiltering: false,
               })}
@@ -1060,7 +1051,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 : `IFNULL(
                     (
                       SELECT 1
-                      FROM ${CLASS_NAME_Model} m
+                      FROM ${CLASS_NAMES.Model} m
                       JOIN ${this.#categoryElementClass} ce ON ce.Model.Id = m.ECInstanceId
                       ${createWhereClause({
                         conditions: [
@@ -1159,7 +1150,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               ${selectClause}
             FROM ${instanceFilterClauses.from} this
             JOIN IdSet(?) categoryIdSet ON this.Category.Id = categoryIdSet.id
-            ${modelIds ? "JOIN IdSet(?) modelIdSet ON this.Model.Id = modelIdSet.id" : `JOIN ${CLASS_NAME_Model} m ON this.Model.Id = m.ECInstanceId`}
+            ${modelIds ? "JOIN IdSet(?) modelIdSet ON this.Model.Id = modelIdSet.id" : `JOIN ${CLASS_NAMES.Model} m ON this.Model.Id = m.ECInstanceId`}
             ${parentIds ? "JOIN IdSet(?) parentIdSet ON this.Parent.Id = parentIdSet.id" : ""}
             ${instanceFilterClauses.joins}
             ${createWhereClause({
@@ -1346,9 +1337,9 @@ function createInstanceKeyPathsFromInstanceLabel(
         ] = await Promise.all(
           [
             categoryClass,
-            CLASS_NAME_SubCategory,
+            CLASS_NAMES.SubCategory,
             elementClass,
-            ...(definitionContainers.length > 0 ? [CLASS_NAME_DefinitionContainer] : []),
+            ...(definitionContainers.length > 0 ? [CLASS_NAMES.DefinitionContainer] : []),
           ].map(async (className) =>
             labelsFactory.createSelectClause({
               classAlias: "this",
@@ -1365,7 +1356,7 @@ function createInstanceKeyPathsFromInstanceLabel(
               COUNT(sc.ECInstanceId),
               ${categoryLabelSelectClause}
             FROM ${categoryClass} this
-            JOIN ${CLASS_NAME_SubCategory} sc ON sc.Parent.Id = this.ECInstanceId
+            JOIN ${CLASS_NAMES.SubCategory} sc ON sc.Parent.Id = this.ECInstanceId
             GROUP BY this.ECInstanceId
           )`,
           ...(hierarchyConfig.elements.nodes === "include"
@@ -1378,7 +1369,7 @@ function createInstanceKeyPathsFromInstanceLabel(
                     ${elementLabelSelectClause}
                   FROM ${elementClass} this
                   JOIN IdSet(?) elementCategoryIdSet ON this.Category.Id = elementCategoryIdSet.id
-                  JOIN ${CLASS_NAME_Model} m ON this.Model.Id = m.ECInstanceId
+                  JOIN ${CLASS_NAMES.Model} m ON this.Model.Id = m.ECInstanceId
                   ${createWhereClause({
                     conditions: [
                       "NOT m.IsPrivate",
@@ -1399,7 +1390,7 @@ function createInstanceKeyPathsFromInstanceLabel(
                     this.ECInstanceId,
                     this.Parent.Id,
                     ${subCategoryLabelSelectClause}
-                  FROM ${CLASS_NAME_SubCategory} this
+                  FROM ${CLASS_NAMES.SubCategory} this
                   JOIN IdSet(?) subCategoryParentIdSet ON this.Parent.Id = subCategoryParentIdSet.id
                   WHERE NOT this.IsPrivate
                 )`,
@@ -1412,7 +1403,7 @@ function createInstanceKeyPathsFromInstanceLabel(
                     '${DEFINITION_CONTAINER_CLASS_NAME_QUERY_ALIAS}',
                     this.ECInstanceId,
                     ${definitionContainerLabelSelectClause}
-                  FROM ${CLASS_NAME_DefinitionContainer} this
+                  FROM ${CLASS_NAMES.DefinitionContainer} this
                   JOIN IdSet(?) definitionContainerIdSet ON this.ECInstanceId = definitionContainerIdSet.id
                   WHERE NOT this.IsPrivate
                 )`,

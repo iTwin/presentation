@@ -5,14 +5,7 @@
 
 import { assert, Id64 } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "@itwin/presentation-hierarchies";
-import {
-  CLASS_NAME_DrawingCategory,
-  CLASS_NAME_GeometricElement2d,
-  CLASS_NAME_GeometricElement3d,
-  CLASS_NAME_GeometricModel2d,
-  CLASS_NAME_GeometricModel3d,
-  CLASS_NAME_SpatialCategory,
-} from "./ClassNameDefinitions.js";
+import { CLASS_NAMES } from "./ClassNameDefinitions.js";
 
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { EC } from "@itwin/presentation-shared";
@@ -138,14 +131,14 @@ export function parseIdsSelectorResult(selectorResult: any): Id64Array {
 export function getClassesByView(viewType: "2d" | "3d") {
   return viewType === "2d"
     ? ({
-        categoryClass: CLASS_NAME_DrawingCategory,
-        elementClass: CLASS_NAME_GeometricElement2d,
-        modelClass: CLASS_NAME_GeometricModel2d,
+        categoryClass: CLASS_NAMES.DrawingCategory,
+        elementClass: CLASS_NAMES.GeometricElement2d,
+        modelClass: CLASS_NAMES.GeometricModel2d,
       } as const)
     : ({
-        categoryClass: CLASS_NAME_SpatialCategory,
-        elementClass: CLASS_NAME_GeometricElement3d,
-        modelClass: CLASS_NAME_GeometricModel3d,
+        categoryClass: CLASS_NAMES.SpatialCategory,
+        elementClass: CLASS_NAMES.GeometricElement3d,
+        modelClass: CLASS_NAMES.GeometricModel3d,
       } as const);
 }
 

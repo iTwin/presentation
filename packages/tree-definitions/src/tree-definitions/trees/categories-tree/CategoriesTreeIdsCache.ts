@@ -6,11 +6,7 @@
 import { defer, EMPTY, forkJoin, from, map, merge, mergeMap, of, reduce, shareReplay, tap, toArray } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { BaseIdsCacheImpl } from "../../shared/caches/BaseIdsCache.js";
-import {
-  CLASS_NAME_DefinitionContainer,
-  CLASS_NAME_Model,
-  CLASS_NAME_SubCategory,
-} from "../../shared/ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/Utils.js";
@@ -140,7 +136,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
               ${
                 isDefinitionContainerSupported
                   ? `
-                  IIF(this.Model.Id IN (SELECT dc.ECInstanceId FROM ${CLASS_NAME_DefinitionContainer} dc),
+                  IIF(this.Model.Id IN (SELECT dc.ECInstanceId FROM ${CLASS_NAMES.DefinitionContainer} dc),
                     true,
                     false
                   )`
@@ -148,7 +144,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
               } parentDefinitionContainerExists
             FROM
               ${this.#categoryClass} this
-              JOIN ${CLASS_NAME_Model} m ON m.ECInstanceId = this.Model.Id
+              JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
             ${createWhereClause({ conditions: ["NOT this.IsPrivate", "NOT m.IsPrivate OR m.ECClassId IS (BisCore.DictionaryModel)"] })}
             GROUP BY this.ECInstanceId
           `;
@@ -213,7 +209,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
             SELECT
               dc.ECInstanceId,
               dc.Model.Id
-            FROM ${CLASS_NAME_DefinitionContainer} dc
+            FROM ${CLASS_NAMES.DefinitionContainer} dc
             JOIN ${this.#categoryClass} c ON c.Model.Id = dc.ECInstanceId
             JOIN IdSet(?) categoryIdSet ON c.ECInstanceId = categoryIdSet.id
             WHERE NOT dc.IsPrivate
@@ -225,7 +221,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
               pdc.Model.Id
             FROM
               ${DEFINITION_CONTAINERS_CTE} cdc
-              JOIN ${CLASS_NAME_DefinitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
+              JOIN ${CLASS_NAMES.DefinitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
             WHERE NOT pdc.IsPrivate
           )
         `,
@@ -474,7 +470,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
               map((subCategoryId) => [
                 ...pathsUpToCategory,
                 { id: categoryId, className: this.#categoryClass },
-                { id: subCategoryId, className: CLASS_NAME_SubCategory },
+                { id: subCategoryId, className: CLASS_NAMES.SubCategory },
               ]),
             ),
           ),
@@ -500,7 +496,7 @@ export class CategoriesTreeIdsCache extends BaseIdsCacheImpl {
                 this.#definitionContainerInstanceKeyPaths.set(definitionContainerId, entry);
                 return entry;
               }
-              const instanceKey = { id: definitionContainerId, className: CLASS_NAME_DefinitionContainer };
+              const instanceKey = { id: definitionContainerId, className: CLASS_NAMES.DefinitionContainer };
               if (!definitionContainerInfo.parentDefinitionContainerExists) {
                 entry = of([instanceKey]).pipe(shareReplay());
                 this.#definitionContainerInstanceKeyPaths.set(definitionContainerId, entry);

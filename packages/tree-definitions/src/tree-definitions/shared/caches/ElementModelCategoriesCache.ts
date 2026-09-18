@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, delay, map, reduce, shareReplay, tap } from "rxjs";
-import { CLASS_NAME_Model } from "../ClassNameDefinitions.js";
+import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
 import { createExcludedClassesClause, getOrCreate } from "../Utils.js";
 
@@ -81,7 +81,7 @@ export class ElementModelCategoriesCache {
             IIF(m.$->IsPlanProjection?, 1, 0) isPlanProjectionModel
             ${excludedClause ? `, MAX(IIF((${excludedClause}), 1, 0)) hasElementsFromNonExcludedClasses` : ""}
           FROM ${this.#elementClassName} this
-          JOIN ${CLASS_NAME_Model} m ON m.ECInstanceId = this.Model.Id
+          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
           WHERE m.IsPrivate = false
           GROUP BY modelId, categoryId
         `;

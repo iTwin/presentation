@@ -13,16 +13,10 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { IModel, IModelReadRpcInterface } from "@itwin/core-common";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { PresentationRpcInterface } from "@itwin/presentation-common";
-import {
-  CLASS_NAME_GeometricElement2d,
-  CLASS_NAME_Subject,
-} from "../../../tree-definitions/shared/ClassNameDefinitions.js";
+import { IModel } from "@itwin/core-common";
+import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
-import { HierarchyCacheMode, initializeCore, terminateCore } from "../../Initialize.js";
+import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createModelsTreeProvider } from "./Utils.js";
 
@@ -30,30 +24,18 @@ import type { InstanceKey } from "@itwin/presentation-shared";
 
 describe("ModelsTreeDefinition", () => {
   beforeAll(async () => {
-    await initializeCore({
-      backendProps: {
-        caching: {
-          hierarchies: {
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
-            mode: HierarchyCacheMode.Memory,
-          },
-        },
-      },
-      rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
-    });
-    // eslint-disable-next-line @itwin/no-internal
-    ECSchemaRpcImpl.register();
+    await initializeITwinJs();
   });
 
   afterAll(async () => {
-    await terminateCore();
+    await terminateITwinJs();
   });
 
   describe("Hierarchy customization", () => {
     it("includes models without elements when `models.withoutElements` is set to 'include'", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           return { rootSubject, model };
@@ -79,7 +61,7 @@ describe("ModelsTreeDefinition", () => {
     it("does not group elements when `elements.classGrouping` is set to `disable`", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const childSubject = insertSubject({ txn, codeValue: "child subject", parentId: rootSubject.id });
           const model = insertPhysicalModelWithPartition({
             txn,
@@ -181,7 +163,7 @@ describe("ModelsTreeDefinition", () => {
     it("displays element count for grouping nodes when `elements.classGrouping` is set to `enable-with-counts`", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const childSubject = insertSubject({ txn, codeValue: "child subject", parentId: rootSubject.id });
           const model = insertPhysicalModelWithPartition({
             txn,
@@ -320,7 +302,7 @@ describe("ModelsTreeDefinition", () => {
     it("uses custom element class specification", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({
             txn,
             codeValue: `model`,
@@ -446,7 +428,7 @@ describe("ModelsTreeDefinition", () => {
     it("returns empty hierarchy when the iModel doesn't have any elements of `elements.baseClass` class", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
-          const rootSubject: InstanceKey = { className: CLASS_NAME_Subject, id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
           const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
           const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
           return { rootSubject, model };
@@ -455,7 +437,7 @@ describe("ModelsTreeDefinition", () => {
       const { imodelConnection } = buildIModelResult;
       using provider = createModelsTreeProvider({
         imodelConnection,
-        hierarchyConfig: { elements: { baseClass: CLASS_NAME_GeometricElement2d } },
+        hierarchyConfig: { elements: { baseClass: CLASS_NAMES.GeometricElement2d } },
       });
       await validateHierarchy({ provider, expect: [] });
     });
@@ -599,7 +581,7 @@ describe("ModelsTreeDefinition", () => {
               const keptElement = insertPhysicalElement({
                 txn,
                 userLabel: `kept element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -652,7 +634,7 @@ describe("ModelsTreeDefinition", () => {
               insertPhysicalElement({
                 txn,
                 userLabel: `excluded element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -725,7 +707,7 @@ describe("ModelsTreeDefinition", () => {
             provider,
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: CLASS_NAME_Subject, id: IModel.rootSubjectId }],
+                instanceKeys: [{ className: CLASS_NAMES.Subject, id: IModel.rootSubjectId }],
                 supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
@@ -760,7 +742,7 @@ describe("ModelsTreeDefinition", () => {
                 userLabel: `element 1`,
                 modelId: model.id,
                 categoryId: category.id,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
               });
               const excludedCategory = insertSpatialCategory({ txn, codeValue: "excluded category" });
               insertPhysicalElement({
@@ -812,7 +794,7 @@ describe("ModelsTreeDefinition", () => {
             provider,
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: CLASS_NAME_Subject, id: IModel.rootSubjectId }],
+                instanceKeys: [{ className: CLASS_NAMES.Subject, id: IModel.rootSubjectId }],
                 supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
@@ -886,7 +868,7 @@ describe("ModelsTreeDefinition", () => {
               insertPhysicalElement({
                 txn,
                 userLabel: `excluded child element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: excludedChildCategory.id,
                 parentId: parentElement.id,
@@ -898,7 +880,7 @@ describe("ModelsTreeDefinition", () => {
           using provider = createModelsTreeProvider({
             imodelConnection,
             hierarchyConfig: {
-              elements: { excludedClasses: [`${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`] },
+              elements: { excludedClasses: [`${TestSchema.name}.${TestSchema.modeledElement3dClassName}`] },
             },
           });
           await validateHierarchy({
@@ -950,7 +932,7 @@ describe("ModelsTreeDefinition", () => {
               insertPhysicalElement({
                 txn,
                 userLabel: `excluded child element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: excludedChildCategory.id,
                 parentId: parentElement.id,
@@ -969,7 +951,7 @@ describe("ModelsTreeDefinition", () => {
           using provider = createModelsTreeProvider({
             imodelConnection,
             hierarchyConfig: {
-              elements: { excludedClasses: [`${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`] },
+              elements: { excludedClasses: [`${TestSchema.name}.${TestSchema.modeledElement3dClassName}`] },
             },
           });
           await validateHierarchy({
@@ -1031,7 +1013,7 @@ describe("ModelsTreeDefinition", () => {
               const modeledElement = insertPhysicalElement({
                 txn,
                 userLabel: `parent element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -1093,7 +1075,7 @@ describe("ModelsTreeDefinition", () => {
               const modeledElement = insertPhysicalElement({
                 txn,
                 userLabel: `parent element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: model.id,
                 categoryId: category.id,
               });
@@ -1107,7 +1089,7 @@ describe("ModelsTreeDefinition", () => {
               const childModeledElement = insertPhysicalElement({
                 txn,
                 userLabel: `child modeled element`,
-                classFullName: `${TestSchema.Name}.${TestSchema.ModeledElement3dClassName}`,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
                 modelId: subModel.id,
                 categoryId: childCategory.id,
               });

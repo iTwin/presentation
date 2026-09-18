@@ -4,64 +4,28 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelHost } from "@itwin/core-backend";
-import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration } from "@itwin/core-common";
+import { RpcManager } from "@itwin/core-common";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { Presentation as PresentationBackend } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
 
-import type { RpcInterfaceDefinition } from "@itwin/core-common";
-import type { PresentationManagerProps } from "@itwin/presentation-backend";
-
-// eslint-disable-next-line @typescript-eslint/no-deprecated
-export { HierarchyCacheMode } from "@itwin/presentation-backend";
-
-export async function initializeCore(props?: {
-  rpcs?: RpcInterfaceDefinition[];
-  backendProps?: PresentationManagerProps;
-}) {
+export async function initializeITwinJs() {
+  // Initialize the native backend runtime required to create test databases and execute ECSQL queries.
   await IModelHost.startup({ cacheDir: `./lib/test/output/${process.pid}/`, profileName: "tree-definitions-tests" });
-  initializeRpcInterfaces(props?.rpcs ?? [IModelReadRpcInterface, ECSchemaRpcInterface, PresentationRpcInterface]);
-  PresentationBackend.initialize(props?.backendProps);
+  // The filter builder uses Presentation content descriptors to determine filterable properties.
+  // Enable in-process RPC so hierarchy-level filtering tests can request those descriptors.
+  RpcManager.initializeInterface(PresentationRpcInterface);
+  // Register the backend implementation of Presentation requests.
+  PresentationBackend.initialize();
+  // Start frontend services without rendering, before initializing Presentation.
   await NoRenderApp.startup();
+  // Provide Presentation.presentation for content-descriptor requests.
   await PresentationFrontend.initialize();
 }
 
-export async function terminateCore() {
+export async function terminateITwinJs() {
   PresentationFrontend.terminate();
   await IModelApp.shutdown();
-  PresentationBackend.terminate();
   await IModelHost.shutdown();
-}
-
-export async function initializeITwinJs() {
-  await initializeCore();
-  // eslint-disable-next-line @itwin/no-internal
-  ECSchemaRpcImpl.register();
-}
-
-export async function terminateITwinJs() {
-  await terminateCore();
-}
-
-function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
-  const config = class extends RpcDefaultConfiguration {
-    public override interfaces: any = () => interfaces;
-  };
-
-  for (const definition of interfaces) {
-    // eslint-disable-next-line @itwin/no-internal
-    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config);
-  }
-
-  const instance = RpcConfiguration.obtain(config);
-
-  try {
-    RpcConfiguration.initializeInterfaces(instance);
-  } catch {
-    // this may fail with "Error: RPC interface "xxx" is already initialized." because
-    // multiple different tests want to set up rpc interfaces
-  }
 }
