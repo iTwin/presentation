@@ -8,6 +8,7 @@ import {
   defaultIfEmpty,
   distinct,
   EMPTY,
+  filter,
   firstValueFrom,
   from,
   fromEvent,
@@ -307,9 +308,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
 
   private async getHierarchyDefinition(): Promise<HierarchyDefinition> {
     this.#impl ??= (async () => {
-      const isDefinitionContainerSupported = await firstValueFrom(
-        this.#idsProvider.getIsDefinitionContainerSupported(),
-      );
+      const isDefinitionContainerSupported = await this.#idsProvider.getIsDefinitionContainerSupported();
       return createPredicateBasedHierarchyDefinition({
         imodelAccess: this.#iModelAccess,
         hierarchy: {
@@ -440,7 +439,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const [categoryIds, categoryInstanceFilterClauses, modeledCategoryElementsDefinition] = await Promise.all([
       firstValueFrom(
         from(modelIds).pipe(
-          mergeMap((modelId) => this.#idsProvider.getCategories({ modelId })),
+          mergeMap(async (modelId) => this.#idsProvider.getCategories({ modelId })),
           reduce((acc, modelCategories) => {
             for (const categoryId of modelCategories) {
               acc.add(categoryId);
@@ -552,7 +551,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
       this.#idsProvider.modeledElementsLoaded()
-        ? firstValueFrom(this.#idsProvider.getAllSubModels({ excludeIfOnlyExcludedClasses: true }))
+        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
@@ -589,18 +588,16 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const parentNodeInstanceIds = "parentNodeInstanceIds" in props ? props.parentNodeInstanceIds : undefined;
     const [values, isDefinitionContainerSupported] = await Promise.all([
       this.#idsProvider.isDataLoaded
-        ? firstValueFrom(
-            parentNodeInstanceIds === undefined
-              ? this.#idsProvider.getRootDefinitionContainersAndCategories({
-                  includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
-                })
-              : this.#idsProvider.getDirectChildDefinitionContainersAndCategories({
-                  parentDefinitionContainerIds: parentNodeInstanceIds,
-                  includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
-                }),
-          )
+        ? parentNodeInstanceIds === undefined
+          ? this.#idsProvider.getRootDefinitionContainersAndCategories({
+              includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
+            })
+          : this.#idsProvider.getDirectChildDefinitionContainersAndCategories({
+              parentDefinitionContainerIds: parentNodeInstanceIds,
+              includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
+            })
         : undefined,
-      firstValueFrom(this.#idsProvider.getIsDefinitionContainerSupported()),
+      this.#idsProvider.getIsDefinitionContainerSupported(),
     ]);
     const { categories, definitionContainers } = values ?? {};
     const hierarchyDefinitionPromises = new Array<Promise<HierarchyNodesDefinition>>();
@@ -786,13 +783,17 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               mergeMap((categoryInfo) => (categoryInfo.hasElementsFromNonExcludedClasses ? of(categoryInfo) : EMPTY)),
               mergeMap(({ id: categoryId }) =>
                 // when category has element models, then it has element children
-                this.#idsProvider
-                  .getModels({ categoryId, excludeSubModels: true, includeOnlyTopMostElementCategory: true })
-                  .pipe(
-                    take(1),
-                    defaultIfEmpty(undefined),
-                    mergeMap((modelId) => (modelId ? of(categoryId) : EMPTY)),
-                  ),
+                from(
+                  this.#idsProvider.getModels({
+                    categoryId,
+                    excludeSubModels: true,
+                    includeOnlyTopMostElementCategory: true,
+                  }),
+                ).pipe(
+                  take(1),
+                  defaultIfEmpty(undefined),
+                  mergeMap((modelId) => (modelId ? of(categoryId) : EMPTY)),
+                ),
               ),
               toArray(),
             ),
@@ -1113,7 +1114,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
       this.#idsProvider.modeledElementsLoaded()
-        ? firstValueFrom(this.#idsProvider.getAllSubModels({ excludeIfOnlyExcludedClasses: true }))
+        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const modelIds: Id64Array | undefined =
@@ -1122,7 +1123,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         : this.#idsProvider.elementModelCategoriesLoaded()
           ? await firstValueFrom(
               from(categoryIds).pipe(
-                mergeMap((categoryId) => this.#idsProvider.getModels({ categoryId, excludeSubModels: true })),
+                mergeMap((categoryId) => from(this.#idsProvider.getModels({ categoryId, excludeSubModels: true }))),
                 distinct(),
                 toArray(),
               ),
@@ -1188,7 +1189,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       }),
       createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
       this.#idsProvider.modeledElementsLoaded()
-        ? firstValueFrom(this.#idsProvider.getAllSubModels({ excludeIfOnlyExcludedClasses: true }))
+        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
 
@@ -1327,34 +1328,36 @@ function createInstanceKeyPathsFromInstanceLabel(
   const SUBCATEGORIES_WITH_LABELS_CTE = "SubCategoriesWithLabels";
   const DEFINITION_CONTAINERS_WITH_LABELS_CTE = "DefinitionContainersWithLabels";
 
-  return idsProvider
-    .getAllDefinitionContainersAndCategories({ includeEmpty: hierarchyConfig.categories.withoutElements === "include" })
-    .pipe(
-      mergeMap(async ({ definitionContainers, categories }) => {
-        if (categories.length === 0) {
-          return undefined;
-        }
-        const [
-          categoryLabelSelectClause,
-          subCategoryLabelSelectClause,
-          elementLabelSelectClause,
-          definitionContainerLabelSelectClause,
-        ] = await Promise.all(
-          [
-            categoryClass,
-            CLASS_NAMES.SubCategory,
-            elementClass,
-            ...(definitionContainers.length > 0 ? [CLASS_NAMES.DefinitionContainer] : []),
-          ].map(async (className) =>
-            labelsFactory.createSelectClause({
-              classAlias: "this",
-              className,
-              selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
-            }),
-          ),
-        );
-        const ctes = [
-          `${CATEGORIES_WITH_LABELS_CTE}(ClassName, ECInstanceId, ChildCount, DisplayLabel) AS (
+  return from(
+    idsProvider.getAllDefinitionContainersAndCategories({
+      includeEmpty: hierarchyConfig.categories.withoutElements === "include",
+    }),
+  ).pipe(
+    mergeMap(async ({ definitionContainers, categories }) => {
+      if (categories.length === 0) {
+        return undefined;
+      }
+      const [
+        categoryLabelSelectClause,
+        subCategoryLabelSelectClause,
+        elementLabelSelectClause,
+        definitionContainerLabelSelectClause,
+      ] = await Promise.all(
+        [
+          categoryClass,
+          CLASS_NAMES.SubCategory,
+          elementClass,
+          ...(definitionContainers.length > 0 ? [CLASS_NAMES.DefinitionContainer] : []),
+        ].map(async (className) =>
+          labelsFactory.createSelectClause({
+            classAlias: "this",
+            className,
+            selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
+          }),
+        ),
+      );
+      const ctes = [
+        `${CATEGORIES_WITH_LABELS_CTE}(ClassName, ECInstanceId, ChildCount, DisplayLabel) AS (
             SELECT
               '${CATEGORY_CLASS_NAME_QUERY_ALIAS}',
               this.ECInstanceId,
@@ -1364,9 +1367,9 @@ function createInstanceKeyPathsFromInstanceLabel(
             JOIN ${CLASS_NAMES.SubCategory} sc ON sc.Parent.Id = this.ECInstanceId
             GROUP BY this.ECInstanceId
           )`,
-          ...(hierarchyConfig.elements.nodes === "include"
-            ? [
-                `${ELEMENTS_WITH_LABELS_CTE}(ClassName, ECInstanceId, ParentId, DisplayLabel) AS (
+        ...(hierarchyConfig.elements.nodes === "include"
+          ? [
+              `${ELEMENTS_WITH_LABELS_CTE}(ClassName, ECInstanceId, ParentId, DisplayLabel) AS (
                   SELECT
                     '${ELEMENT_CLASS_NAME_QUERY_ALIAS}',
                     this.ECInstanceId,
@@ -1385,11 +1388,11 @@ function createInstanceKeyPathsFromInstanceLabel(
                     ],
                   })}
                 )`,
-              ]
-            : []),
-          ...(hierarchyConfig.subCategories.nodes === "include"
-            ? [
-                `${SUBCATEGORIES_WITH_LABELS_CTE}(ClassName, ECInstanceId, ParentId, DisplayLabel) AS (
+            ]
+          : []),
+        ...(hierarchyConfig.subCategories.nodes === "include"
+          ? [
+              `${SUBCATEGORIES_WITH_LABELS_CTE}(ClassName, ECInstanceId, ParentId, DisplayLabel) AS (
                   SELECT
                     '${SUB_CATEGORY_CLASS_NAME_QUERY_ALIAS}',
                     this.ECInstanceId,
@@ -1399,11 +1402,11 @@ function createInstanceKeyPathsFromInstanceLabel(
                   JOIN IdSet(?) subCategoryParentIdSet ON this.Parent.Id = subCategoryParentIdSet.id
                   WHERE NOT this.IsPrivate
                 )`,
-              ]
-            : []),
-          ...(definitionContainers.length > 0
-            ? [
-                `${DEFINITION_CONTAINERS_WITH_LABELS_CTE}(ClassName, ECInstanceId, DisplayLabel) AS (
+            ]
+          : []),
+        ...(definitionContainers.length > 0
+          ? [
+              `${DEFINITION_CONTAINERS_WITH_LABELS_CTE}(ClassName, ECInstanceId, DisplayLabel) AS (
                   SELECT
                     '${DEFINITION_CONTAINER_CLASS_NAME_QUERY_ALIAS}',
                     this.ECInstanceId,
@@ -1412,10 +1415,10 @@ function createInstanceKeyPathsFromInstanceLabel(
                   JOIN IdSet(?) definitionContainerIdSet ON this.ECInstanceId = definitionContainerIdSet.id
                   WHERE NOT this.IsPrivate
                 )`,
-              ]
-            : []),
-        ];
-        const ecsql = `
+            ]
+          : []),
+      ];
+      const ecsql = `
           SELECT * FROM (
             SELECT
               c.ClassName AS ClassName,
@@ -1471,49 +1474,49 @@ function createInstanceKeyPathsFromInstanceLabel(
           )
           ${limit === "unbounded" ? "" : `LIMIT ${(limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT) + 1}`}
         `;
-        const bindings = [
-          ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
-          ...(hierarchyConfig.subCategories.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
-          ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: definitionContainers }] : []),
-          { type: "string" as const, value: adjustedLabel },
-          ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "string" as const, value: adjustedLabel }] : []),
-          ...(hierarchyConfig.subCategories.nodes === "include"
-            ? [{ type: "string" as const, value: adjustedLabel }]
-            : []),
-          ...(definitionContainers.length > 0 ? [{ type: "string" as const, value: adjustedLabel }] : []),
-        ];
-        return { ctes, ecsql, bindings };
-      }),
-      mergeMap((queryProps) => {
-        if (!queryProps) {
-          return EMPTY;
-        }
-        return imodelAccess.createQueryReader(queryProps, {
-          restartToken: `${componentName}/${componentId}/filter-by-label`,
-          limit: "unbounded",
-        });
-      }),
-      catchBeSQLiteInterrupts,
-      map((row): { key: Id64String; type: number } => {
-        let type: number;
-        switch (row.ClassName) {
-          case CATEGORY_CLASS_NAME_QUERY_ALIAS:
-            type = CATEGORY_TYPE_AS_NUMBER;
-            break;
-          case SUB_CATEGORY_CLASS_NAME_QUERY_ALIAS:
-            type = SUB_CATEGORY_TYPE_AS_NUMBER;
-            break;
-          case ELEMENT_CLASS_NAME_QUERY_ALIAS:
-            type = ELEMENT_TYPE_AS_NUMBER;
-            break;
-          default:
-            type = DEFINITION_CONTAINER_TYPE_AS_NUMBER;
-            break;
-        }
-        return { type, key: row.ECInstanceId };
-      }),
-      createSearchPathsForDifferentTypes(props),
-    );
+      const bindings = [
+        ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
+        ...(hierarchyConfig.subCategories.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
+        ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: definitionContainers }] : []),
+        { type: "string" as const, value: adjustedLabel },
+        ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "string" as const, value: adjustedLabel }] : []),
+        ...(hierarchyConfig.subCategories.nodes === "include"
+          ? [{ type: "string" as const, value: adjustedLabel }]
+          : []),
+        ...(definitionContainers.length > 0 ? [{ type: "string" as const, value: adjustedLabel }] : []),
+      ];
+      return { ctes, ecsql, bindings };
+    }),
+    mergeMap((queryProps) => {
+      if (!queryProps) {
+        return EMPTY;
+      }
+      return imodelAccess.createQueryReader(queryProps, {
+        restartToken: `${componentName}/${componentId}/filter-by-label`,
+        limit: "unbounded",
+      });
+    }),
+    catchBeSQLiteInterrupts,
+    map((row): { key: Id64String; type: number } => {
+      let type: number;
+      switch (row.ClassName) {
+        case CATEGORY_CLASS_NAME_QUERY_ALIAS:
+          type = CATEGORY_TYPE_AS_NUMBER;
+          break;
+        case SUB_CATEGORY_CLASS_NAME_QUERY_ALIAS:
+          type = SUB_CATEGORY_TYPE_AS_NUMBER;
+          break;
+        case ELEMENT_CLASS_NAME_QUERY_ALIAS:
+          type = ELEMENT_TYPE_AS_NUMBER;
+          break;
+        default:
+          type = DEFINITION_CONTAINER_TYPE_AS_NUMBER;
+          break;
+      }
+      return { type, key: row.ECInstanceId };
+    }),
+    createSearchPathsForDifferentTypes(props),
+  );
 }
 
 function createSearchPathsForDifferentTypes(
@@ -1566,9 +1569,9 @@ function createSearchPathsForDifferentTypes(
         }
 
         return merge(
-          idsProvider
-            .getDefinitionContainersSearchPaths({ definitionContainerIds: ids.definitionContainerIds })
-            .pipe(map((path) => ({ path, target: path[path.length - 1].id }))),
+          from(
+            idsProvider.getDefinitionContainersSearchPaths({ definitionContainerIds: ids.definitionContainerIds }),
+          ).pipe(map((path) => ({ path, target: path[path.length - 1].id }))),
           createCategoriesSearchPaths({
             queryExecutor: imodelAccess,
             targetCategoryIds: ids.categoryIds,
@@ -1582,8 +1585,9 @@ function createSearchPathsForDifferentTypes(
                 ? props.hierarchyConfig.elements.excludedClasses
                 : undefined,
           }),
-          idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: ids.subCategoryIds }).pipe(
+          from(idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: ids.subCategoryIds })).pipe(
             releaseMainThreadOnItemsCount(2000),
+            filter((path) => path.length > 0),
             map((path) => ({ path, target: path[path.length - 1].id })),
           ),
           props.hierarchyConfig.elements.nodes === "include"
@@ -1641,7 +1645,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     return EMPTY;
   }
 
-  return props.idsProvider.getAllSubModels().pipe(
+  return from(props.idsProvider.getAllModeledElements()).pipe(
     mergeMap((subModelIds) => {
       const ctes = [
         `CategoriesElementsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
@@ -1718,7 +1722,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     targetItems.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
     map((row) => parseQueryRow(row, separator, elementClass, categoryClass, modelClass)),
     mergeMap((elementHierarchyPath) =>
-      idsProvider.getSearchPathsUpToRootCategory({ categoryId: elementHierarchyPath[0].id }).pipe(
+      from(idsProvider.getSearchPathsUpToRootCategory({ categoryId: elementHierarchyPath[0].id })).pipe(
         map((pathUpToCategory) => {
           const path = [...pathUpToCategory, ...elementHierarchyPath];
           return { path, target: elementHierarchyPath[elementHierarchyPath.length - 1].id };
@@ -1755,9 +1759,9 @@ export function createCategoriesSearchPaths(props: {
   }
   const rootCategoriesSearchPaths = fromWithRelease({ source: targetCategoryIds, releaseOnCount: 300 }).pipe(
     mergeMap((categoryId) =>
-      idsProvider
-        .getSearchPathsUpToRootCategory({ categoryId })
-        .pipe(map((path) => ({ path: [...path, { id: categoryId, className: categoryClass }], target: categoryId }))),
+      from(idsProvider.getSearchPathsUpToRootCategory({ categoryId })).pipe(
+        map((path) => ({ path: [...path, { id: categoryId, className: categoryClass }], target: categoryId })),
+      ),
     ),
   );
   if (props.elements === "exclude") {
@@ -1766,7 +1770,7 @@ export function createCategoriesSearchPaths(props: {
 
   return merge(
     rootCategoriesSearchPaths,
-    props.idsProvider.getAllSubModels().pipe(
+    from(props.idsProvider.getAllModeledElements()).pipe(
       mergeMap((subModelIds) => {
         const ctes = [
           `CategoriesParentsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
@@ -1859,7 +1863,7 @@ export function createCategoriesSearchPaths(props: {
       targetCategoryIds.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
       map((row) => parseQueryRow(row, separator, elementClass, categoryClass, modelClass)),
       mergeMap((categoryHierarchyPath) =>
-        idsProvider.getSearchPathsUpToRootCategory({ categoryId: categoryHierarchyPath[0].id }).pipe(
+        from(idsProvider.getSearchPathsUpToRootCategory({ categoryId: categoryHierarchyPath[0].id })).pipe(
           map((pathUpToCategory) => {
             const path = [...pathUpToCategory, ...categoryHierarchyPath];
             return { path, target: categoryHierarchyPath[categoryHierarchyPath.length - 1].id };

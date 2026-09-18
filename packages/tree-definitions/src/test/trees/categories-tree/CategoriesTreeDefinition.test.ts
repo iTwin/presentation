@@ -9,13 +9,13 @@ import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES } from "../../../tree-definitions/shared/ClassNameDefinitions.js";
-import { BaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
+import { createBaseIdsProvider } from "../../../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { getClassesByView, mergeWithDefaults } from "../../../tree-definitions/shared/Utils.js";
 import {
   CategoriesTreeDefinition,
   defaultHierarchyConfiguration,
 } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
-import { CategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
+import { createCategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { buildIModel, TestSchema } from "../../IModelUtils.js";
 import { initializeITwinJs, terminateITwinJs } from "../../Initialize.js";
 import { createIModelAccess } from "../Common.js";
@@ -1486,12 +1486,11 @@ describe("Categories tree", () => {
           ].forEach(({ queryIdentifier, description }) => {
             it(`doesn't throw on ecsql query interrupt in ${description}`, async () => {
               const imodelAccess = createIModelAccess(imodelConnection);
-              const baseIdsProvider = new BaseIdsProvider({
+              const baseIdsProvider = createBaseIdsProvider({
                 queryExecutor: imodelAccess,
                 elementClassName: getClassesByView(viewType).elementClass,
-                type: viewType,
               });
-              const idsProvider = new CategoriesTreeIdsProvider({
+              const idsProvider = createCategoriesTreeIdsProvider({
                 queryExecutor: imodelAccess,
                 type: viewType,
                 baseIdsProvider,
@@ -1537,18 +1536,12 @@ function createCategoryTreeProvider(
   const imodelAccess = createIModelAccess(imodelConnection);
   const excludedElementClassNames =
     hierarchyConfig?.elements?.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined;
-  const baseIdsProvider = new BaseIdsProvider({
+  const baseIdsProvider = createBaseIdsProvider({
     queryExecutor: imodelAccess,
     elementClassName: getClassesByView(viewType).elementClass,
-    type: viewType,
     excludedElementClassNames,
   });
-  const idsProvider = new CategoriesTreeIdsProvider({
-    queryExecutor: imodelAccess,
-    type: viewType,
-    baseIdsProvider,
-    excludedElementClassNames,
-  });
+  const idsProvider = createCategoriesTreeIdsProvider({ queryExecutor: imodelAccess, type: viewType, baseIdsProvider });
   const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: new CategoriesTreeDefinition({
