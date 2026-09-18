@@ -81,7 +81,7 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
  * Data access, view type, and configuration for a categories hierarchy.
- * @beta
+ * @internal
  */
 interface CategoriesTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
@@ -92,7 +92,7 @@ interface CategoriesTreeDefinitionProps {
 
 /**
  * Shared data access, configuration, and cancellation options for categories hierarchy searches.
- * @beta
+ * @internal
  */
 interface CategoriesTreeInstanceKeyPathsBaseProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
@@ -109,7 +109,7 @@ interface CategoriesTreeInstanceKeyPathsBaseProps {
 
 /**
  * Options for locating categories hierarchy paths by a substring of the instance label.
- * @beta
+ * @internal
  */
 interface CategoriesTreeInstanceKeyPathsFromInstanceLabelProps extends CategoriesTreeInstanceKeyPathsBaseProps {
   label: string;
@@ -117,7 +117,7 @@ interface CategoriesTreeInstanceKeyPathsFromInstanceLabelProps extends Categorie
 
 /**
  * Configures category, subcategory, and element nodes produced by `CategoriesTreeDefinition`.
- * @beta
+ * @internal
  */
 export interface CategoriesTreeHierarchyConfiguration {
   /**
@@ -189,7 +189,7 @@ export const defaultHierarchyConfiguration: RequiredCategoriesTreeHierarchyConfi
 /**
  * Defines a hierarchy of definition containers, categories, subcategories, and optional elements for a 2D or 3D view.
  * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
- * @beta
+ * @internal
  */
 export class CategoriesTreeDefinition implements HierarchyDefinition {
   #impl: Promise<HierarchyDefinition> | undefined;

@@ -209,7 +209,7 @@ type ModelsTreeInstanceKeyPathsBaseProps = ModelsTreeDefinitionProps & ModelsTre
 
 /**
  * Search targets specified as instance keys or element class grouping nodes.
- * @beta
+ * @internal
  */
 type ModelsTreeInstanceKeyPathsFromTargetItemsProps = {
   targetItems: Array<InstanceKey | ElementsGroupInfo>;
@@ -217,13 +217,13 @@ type ModelsTreeInstanceKeyPathsFromTargetItemsProps = {
 
 /**
  * Search targets selected by a substring of their instance label.
- * @beta
+ * @internal
  */
 type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = { label: string } & ModelsTreeInstanceKeyPathsBaseProps;
 
 /**
  * Options for locating hierarchy paths by label, instance keys, or element class grouping nodes.
- * @beta
+ * @internal
  */
 type ModelsTreeInstanceKeyPathsProps =
   | ModelsTreeInstanceKeyPathsFromTargetItemsProps

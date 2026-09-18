@@ -64,7 +64,7 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
  * Data access and classification system configuration for a classifications hierarchy.
- * @beta
+ * @internal
  */
 interface ClassificationsTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
@@ -74,7 +74,7 @@ interface ClassificationsTreeDefinitionProps {
 
 /**
  * Selects the root classification system and excluded element classes for `ClassificationsTreeDefinition`.
- * @beta
+ * @internal
  */
 export interface ClassificationsTreeHierarchyConfiguration {
   /**
@@ -102,7 +102,7 @@ export interface ClassificationsTreeHierarchyConfiguration {
 
 /**
  * Shared data access, configuration, and cancellation options for classifications hierarchy searches.
- * @beta
+ * @internal
  */
 interface ClassificationsTreeInstanceKeyPathsBaseProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
@@ -118,7 +118,7 @@ interface ClassificationsTreeInstanceKeyPathsBaseProps {
 
 /**
  * Search targets selected by a substring of their instance label.
- * @beta
+ * @internal
  */
 interface ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps extends ClassificationsTreeInstanceKeyPathsBaseProps {
   label: string;
@@ -126,7 +126,7 @@ interface ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps extends Clas
 
 /**
  * Search targets specified as classification table, classification, or geometric element instance keys.
- * @beta
+ * @internal
  */
 interface ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps extends ClassificationsTreeInstanceKeyPathsBaseProps {
   targetItems: Array<InstanceKey>;
@@ -134,7 +134,7 @@ interface ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps extends Class
 
 /**
  * Options for locating classifications hierarchy paths by label or instance keys.
- * @beta
+ * @internal
  */
 type ClassificationsTreeInstanceKeyPathsProps =
   | ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps
@@ -143,7 +143,7 @@ type ClassificationsTreeInstanceKeyPathsProps =
 /**
  * Defines a hierarchy of classification tables, classifications, and related geometric elements.
  * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
- * @beta
+ * @internal
  */
 export class ClassificationsTreeDefinition implements HierarchyDefinition {
   #impl: HierarchyDefinition;
