@@ -9,6 +9,7 @@ import { serializeRelationshipPath } from "./model/Utils.js";
 
 import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "./ContentTarget.js";
+import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 
 /**
  * Determines the effective cardinality of a relationship path — whether each target instance reaches
@@ -18,8 +19,6 @@ import type { CardinalityHint } from "./ContentTarget.js";
  * `many` where the data is effectively 1:1). Without a hint, the path is `"many"` when any step's
  * traversed constraint has an unbounded upper multiplicity limit or an upper limit greater than one, honoring
  * `relationshipReverse` to pick the constraint the traversal lands on.
- *
- * @internal
  */
 export async function classifyPathCardinality(props: {
   schemaProvider: ECSchemaProvider;
@@ -49,8 +48,6 @@ export async function classifyPathCardinality(props: {
 /**
  * Classifies the paths a declaration's fields are reached over, so field enumeration can stamp each
  * field with the cardinality of its own path.
- *
- * @internal
  */
 export interface PathCardinalityClassifier {
   /**
@@ -75,8 +72,6 @@ export interface PathCardinalityClassifier {
  *
  * Each verdict reflects one declaration's view of a path. Declarations that disagree about a shared
  * path produce fields that `mergePropertyFieldsByIdentity` reconciles into one.
- *
- * @internal
  */
 export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider): PathCardinalityClassifier {
   const cache = new Map<string, Promise<CardinalityHint>>();
@@ -94,8 +89,10 @@ export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider):
 }
 
 /**
- * Combines cardinality declarations for the same path. A many-valued declaration wins because
- * treating that path as single-valued would discard related instances.
+ * Folds several cardinality verdicts for the same path into one: `"many"` wins if any of them says so —
+ * describing a many-valued path as single-valued would silently drop every related instance but one.
+ * Shared by `mergePropertyFieldsByIdentity` (candidate fields declaring the same path) and
+ * `collectPathCardinalities` (descriptor fields declaring the same path).
  */
 export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): CardinalityHint {
   for (const cardinality of cardinalities) {
@@ -104,4 +101,44 @@ export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): Ca
     }
   }
   return "one";
+}
+
+/**
+ * Derives per-path cardinality hints from a descriptor's property fields, keyed by
+ * `serializeRelationshipPath(pathFromTarget)`, so a query built from the same descriptor classifies
+ * every path exactly as the descriptor already does (feed the result to `buildBaseQuery` as
+ * `cardinalityHints`).
+ */
+export function collectPathCardinalities(descriptor: ContentDescriptor): Map<string, CardinalityHint> {
+  const declarations: Array<{ path: RelationshipPath; cardinality: CardinalityHint }> = [];
+  for (const field of Object.values(descriptor.fields)) {
+    if (field.kind === "property" && field.pathFromTarget.length > 0) {
+      declarations.push({ path: field.pathFromTarget, cardinality: field.pathCardinality });
+    }
+  }
+  const cardinalitiesByKey = new Map<string, CardinalityHint[]>();
+  for (const { path, cardinality } of declarations) {
+    const key = serializeRelationshipPath({ path, includeInstanceFilters: true });
+    getOrCreate({ map: cardinalitiesByKey, key, createFunc: () => [] }).push(cardinality);
+  }
+  const hints = new Map<string, CardinalityHint>();
+  for (const [key, cardinalities] of cardinalitiesByKey) {
+    // `"many"` wins if any declaration for this path says so (see `resolveCardinality`).
+    hints.set(key, resolveCardinality(cardinalities));
+  }
+  for (const { path, cardinality } of declarations) {
+    if (cardinality !== "one") {
+      continue;
+    }
+    // A whole traversal reaching at most one instance means every prefix does too, so seed every
+    // strict prefix that has no verdict of its own yet — same rule `PathCardinalityClassifier` applies.
+    // A `"many"` traversal implies nothing about a prefix, so it seeds nothing here.
+    for (let length = 1; length < path.length; ++length) {
+      const prefixKey = serializeRelationshipPath({ path: path.slice(0, length), includeInstanceFilters: true });
+      if (!hints.has(prefixKey)) {
+        hints.set(prefixKey, "one");
+      }
+    }
+  }
+  return hints;
 }
