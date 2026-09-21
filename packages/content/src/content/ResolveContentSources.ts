@@ -3,13 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, toArray } from "rxjs";
+import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, take, toArray } from "rxjs";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
+import { ECSQL_PREFIX, getOrCreate, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
+import { namespaceBindings } from "./query/NamespaceBindings.js";
+import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
 import { buildTargetFilter } from "./query/TargetFilter.js";
 
 import type { Observable } from "rxjs";
+import type { Id64String } from "@itwin/core-bentley";
 import type {
   EC,
   ECSchemaProvider,
@@ -642,6 +645,166 @@ function resolveTarget({
   return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations });
 }
 
+// --- Overlap detection ---
+
+/**
+ * Yields every pair of sources that could share an instance, each pair once, in `(i, j)` order.
+ *
+ * `resolvedPrimaryClasses` holds the *concrete* class of every instance a target reaches (it is
+ * enumerated with `GROUP BY ECClassId`, so a target on `bis.Element` lists `bis.PhysicalObject`, never
+ * `bis.Element` itself). An instance has exactly one concrete class, so two targets can only share an
+ * instance when they resolved the same class name — no hierarchy lookup is needed. Indexing sources by
+ * class name therefore finds candidates in time linear in the number of sources rather than scanning
+ * every pair.
+ */
+function* iterateCandidatePairs(sources: readonly ContentSource[]): Generator<[i: number, j: number]> {
+  const sourcesByClass = new Map<EC.FullClassNameDotNotation, number[]>();
+  for (const [index, source] of sources.entries()) {
+    for (const className of source.resolvedPrimaryClasses) {
+      getOrCreate({ map: sourcesByClass, key: className, createFunc: () => [] }).push(index);
+    }
+  }
+  // Two sources may share more than one class; check each such pair only once. Indices were pushed in
+  // ascending source order, so `indices[a] < indices[b]` already holds.
+  const seen = new Set<string>();
+  for (const indices of sourcesByClass.values()) {
+    for (let a = 0; a < indices.length; ++a) {
+      for (let b = a + 1; b < indices.length; ++b) {
+        const key = `${indices[a]},${indices[b]}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          yield [indices[a], indices[b]];
+        }
+      }
+    }
+  }
+}
+
+// One instance of `a`'s primary class that also satisfies `b`'s scope, if any. Anchored at `a` so
+// the outer scan can reuse `a`'s own instance-id join / filter; `b`'s scope is checked via a
+// subquery, built at a distinct alias so both targets' `instanceIds` joins/bindings can coexist.
+function buildOverlapQuery(a: ContentTarget, b: ContentTarget): ECSqlQueryDef {
+  /** The distinct alias used for the "other" target's scope in an overlap-check query's inner subquery. */
+  const OVERLAP_OTHER_ALIAS = `${ECSQL_PREFIX}other`;
+
+  const outerFilter = buildTargetFilter(a);
+  const innerFilter = buildTargetFilter(b, OVERLAP_OTHER_ALIAS);
+  const outerJoins = namespaceBindings({
+    sql: outerFilter.joins?.join("\n") ?? "",
+    bindings: outerFilter.bindings ?? {},
+    prefix: "outer_",
+  });
+  const outerWhere = namespaceBindings({
+    sql: outerFilter.where ?? "",
+    bindings: outerFilter.bindings ?? {},
+    prefix: "outer_",
+  });
+  const innerJoins = namespaceBindings({
+    sql: innerFilter.joins?.join("\n") ?? "",
+    bindings: innerFilter.bindings ?? {},
+    prefix: "inner_",
+  });
+  const innerWhere = namespaceBindings({
+    sql: innerFilter.where ?? "",
+    bindings: innerFilter.bindings ?? {},
+    prefix: "inner_",
+  });
+  const ecsql = `
+    SELECT [${PRIMARY_CLASS_ALIAS}].[ECInstanceId]
+    FROM ${ECSql.createClassSelector(a.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
+    ${outerJoins.sql}
+    WHERE ${outerWhere.sql ? `(${outerWhere.sql}) AND ` : ""}[${PRIMARY_CLASS_ALIAS}].[ECInstanceId] IN (
+      SELECT [${OVERLAP_OTHER_ALIAS}].[ECInstanceId]
+      FROM ${ECSql.createClassSelector(b.primaryClass)} [${OVERLAP_OTHER_ALIAS}]
+      ${innerJoins.sql}
+      ${innerWhere.sql ? `WHERE ${innerWhere.sql}` : ""}
+    )
+    LIMIT 1
+  `;
+  const bindings = { ...outerJoins.bindings, ...innerJoins.bindings };
+  Object.assign(bindings, outerWhere.bindings, innerWhere.bindings);
+  return { ecsql, ...(Object.keys(bindings).length > 0 ? { bindings } : {}) };
+}
+
+/**
+ * Emits an instance id shared by `a` and `b`'s scopes, or nothing when their scopes are disjoint.
+ * Cheap tiers avoid a query where the answer follows from the targets' shapes alone: both scoped
+ * by `instanceIds` intersect in JS; either target scoped by neither `instanceIds` nor
+ * `instanceFilter` covers every instance of the (already known to intersect) shared class, so any
+ * id the other target's `instanceIds` names is shared too. Anything else — e.g. `instanceFilter` on
+ * one or both sides, or neither side naming concrete ids — needs a query to know for sure.
+ *
+ * Returned as an `Observable` rather than a `Promise` so `assertNoOverlappingSources` can race every
+ * candidate pair and, on unsubscribing after the first hit, cancel every other pair's still-running
+ * query via `finalize`.
+ */
+function findOverlappingInstanceId({
+  imodelAccess,
+  a,
+  b,
+}: {
+  imodelAccess: ECSqlQueryExecutor;
+  a: ContentTarget;
+  b: ContentTarget;
+}): Observable<Id64String> {
+  // Empty or disjoint ID sets prove that the scopes cannot overlap. A non-empty intersection does
+  // not prove overlap: the IDs may not exist, belong to another concrete class, or be excluded by a
+  // target filter, so every possible positive overlap must still be checked by ECSQL.
+  if (a.instanceIds?.length === 0 || b.instanceIds?.length === 0) {
+    return EMPTY;
+  }
+  if (a.instanceIds && b.instanceIds) {
+    const bIds = new Set(b.instanceIds);
+    const sharedId = a.instanceIds.find((id) => bIds.has(id));
+    if (sharedId === undefined) {
+      return EMPTY;
+    }
+  }
+  // A query is required for every possible positive overlap so it can verify complete class and filter
+  // scopes, including instance existence and membership in the selected class.
+  // scopes, including instance existence and membership in the selected class.
+  const reader = imodelAccess.createQueryReader(buildOverlapQuery(a, b), { rowFormat: "Indexes" });
+  return from(reader).pipe(
+    map((row) => row[0] as Id64String),
+    finalize(() => void reader.return?.(undefined)),
+  );
+}
+
+/**
+ * Throws when two resolved sources' targets can reach the same instance. Silently letting it
+ * through would either emit the instance twice (unsorted paging) or throw later from
+ * `mergeGroupValues` on a duplicated direct selector (sorted paging) — and de-duplicating would
+ * drop one source's related properties for that instance. Only pairs that resolved a common concrete
+ * class are checked (see `iterateCandidatePairs`); their checks run concurrently up to
+ * `QUERY_CONCURRENCY`, and `take(1)` stops at the first confirmed overlap, cancelling the rest.
+ */
+async function assertNoOverlappingSources({
+  imodelAccess,
+  sources,
+}: {
+  imodelAccess: ECSqlQueryExecutor;
+  sources: ContentSource[];
+}): Promise<void> {
+  const overlap = await lastValueFrom(
+    from(iterateCandidatePairs(sources)).pipe(
+      mergeMap(
+        ([i, j]) =>
+          findOverlappingInstanceId({ imodelAccess, a: sources[i].target, b: sources[j].target }).pipe(
+            map((overlapId) => ({ i, j, overlapId })),
+          ),
+        QUERY_CONCURRENCY,
+      ),
+      take(1),
+    ),
+    { defaultValue: undefined },
+  );
+  if (overlap) {
+    throw new Error(
+      `Content targets #${overlap.i} (${sources[overlap.i].target.primaryClass}) and #${overlap.j} (${sources[overlap.j].target.primaryClass}) overlap: instance ${overlap.overlapId} is in both. Merge the targets or make their scopes disjoint.`,
+    );
+  }
+}
+
 // --- Public entry point ---
 
 export async function resolveContentSourcesImpl(props: {
@@ -664,6 +827,10 @@ export async function resolveContentSourcesImpl(props: {
       map((items) => {
         items.sort((a, b) => a.idx - b.idx);
         return items.map(({ source }) => source);
+      }),
+      mergeMap(async (sources) => {
+        await assertNoOverlappingSources({ imodelAccess: props.imodelAccess, sources });
+        return sources;
       }),
     ),
   );
