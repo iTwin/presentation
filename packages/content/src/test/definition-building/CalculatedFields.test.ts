@@ -37,7 +37,7 @@ const getContribution: Parameters<typeof collectCalculatedFields>[0]["getContrib
 describe("collectCalculatedFields", () => {
   it("returns no fields when providers declare none", async () => {
     const provider = createProvider("p_v1", { calculatedFields: [] });
-    const fields = await collectCalculatedFields({
+    const { fields } = await collectCalculatedFields({
       sources: [createSource()],
       imodelFieldsProviders: [provider],
       getContribution,
@@ -47,7 +47,7 @@ describe("collectCalculatedFields", () => {
 
   it("skips providers that are not applicable to the target", async () => {
     const provider = createProvider("p_v1", undefined);
-    const fields = await collectCalculatedFields({
+    const { fields } = await collectCalculatedFields({
       sources: [createSource()],
       imodelFieldsProviders: [provider],
       getContribution,
@@ -61,7 +61,7 @@ describe("collectCalculatedFields", () => {
         { id: "flow", label: "Flow", expression: "this.FlowRate * 2", type: { kind: "primitive", type: "Double" } },
       ],
     });
-    const fields = await collectCalculatedFields({
+    const { fields } = await collectCalculatedFields({
       sources: [createSource()],
       imodelFieldsProviders: [provider],
       getContribution,
@@ -91,7 +91,7 @@ describe("collectCalculatedFields", () => {
         },
       ],
     });
-    const fields = await collectCalculatedFields({
+    const { fields } = await collectCalculatedFields({
       sources: [createSource()],
       imodelFieldsProviders: [provider],
       getContribution,
@@ -106,12 +106,45 @@ describe("collectCalculatedFields", () => {
     const provider = createProvider("p_v1", {
       calculatedFields: [{ id: "calc", label: "Calc", expression: "1", type: { kind: "primitive", type: "Integer" } }],
     });
-    const fields = await collectCalculatedFields({
+    const { fields } = await collectCalculatedFields({
       sources: [createSource(), createSource()],
       imodelFieldsProviders: [provider],
       getContribution,
     });
     expect(Object.keys(fields)).to.deep.equal(["p_v1:calc"]);
+  });
+
+  it("retains applicability per source even when targets have the same primary class", async () => {
+    const sources = [createSource(), createSource(), createSource()];
+    sources[0].target.instanceIds = ["0x1"];
+    sources[1].target.instanceIds = ["0x2"];
+    sources[2].target.instanceIds = ["0x3"];
+    const provider: IModelFieldsProvider = {
+      id: "p_v1",
+      async getContribution({ target }) {
+        if (target.instanceIds?.[0] === "0x2") {
+          return undefined;
+        }
+        return {
+          calculatedFields: [
+            { id: "calc", label: "Calc", expression: "1", type: { kind: "primitive", type: "Integer" } },
+          ],
+        };
+      },
+    };
+    const { fields, fieldIdsBySource } = await collectCalculatedFields({
+      sources,
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
+    expect(Object.keys(fields)).to.deep.equal(["p_v1:calc"]);
+    expect(fieldIdsBySource).to.deep.equal(
+      new Map([
+        [sources[0], new Set(["p_v1:calc"])],
+        [sources[1], new Set()],
+        [sources[2], new Set(["p_v1:calc"])],
+      ]),
+    );
   });
 
   it("throws when a provider declares divergent calculated fields for one id across targets", async () => {

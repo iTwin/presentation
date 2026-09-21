@@ -43,6 +43,8 @@ export interface ContentDefinition {
   propertyReaders: Record<ValueSelector["id"], PropertyValueReader>;
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
   externalInputs: ExternalInput[];
+  /** Calculated fields contributed to each source, keyed by the original source object. */
+  calculatedFieldIdsBySource: Map<ContentSource, Set<Field["id"]>>;
 }
 
 /**
@@ -89,7 +91,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
   // turns those facts into category ids and assigns `categoryId` (mutating the merged field objects).
   const mergedPropertyFields = mergePropertyFieldsByIdentity(candidates);
 
-  const [categories, calculatedFields] = await Promise.all([
+  const [categories, { fields: calculatedFields, fieldIdsBySource: calculatedFieldIdsBySource }] = await Promise.all([
     collectCategories({
       imodelAccess,
       sources,
@@ -134,7 +136,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
   });
   const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
 
-  return { descriptor, selectors, propertyReaders, fieldSelectorIds, externalInputs };
+  return { descriptor, selectors, calculatedFieldIdsBySource, propertyReaders, fieldSelectorIds, externalInputs };
 }
 
 export async function preparePropertyReaders(props: {
