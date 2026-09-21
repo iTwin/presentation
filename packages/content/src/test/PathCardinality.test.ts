@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { classifyPathCardinality, createPathCardinalityClassifier } from "../content/PathCardinality.js";
+import {
+  classifyPathCardinality,
+  createPathCardinalityClassifier,
+  resolveCardinality,
+} from "../content/PathCardinality.js";
 import { createRelationshipClass, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
@@ -59,6 +63,39 @@ describe("createPathCardinalityClassifier", () => {
     const path = [aToB, bToC];
     expect(await classifier.classify({ path, declaredPath: path })).to.equal("many");
     expect(await classifier.classify({ path, declaredPath: path, hint: "one" })).to.equal("one");
+  });
+
+  it("reuses schema cardinality across equivalent filtered paths", async () => {
+    const getClass = vi.fn(async () => ({
+      fullName: "TestSchema.AToB",
+      isRelationshipClass: () => true,
+      source: { multiplicity: { upperLimit: 1 } },
+      target: { multiplicity: { upperLimit: 1 } },
+    }));
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kind", bindings: { kind: { type: "int", value: 1 } } } },
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kind", bindings: { kind: { type: "int", value: 2 } } } },
+    ];
+    const classifier = createPathCardinalityClassifier({
+      getSchema: vi.fn(async () => ({ getClass })),
+    } as unknown as ECSchemaProvider);
+
+    await classifier.classify({ path: filteredA, declaredPath: filteredA });
+    await classifier.classify({ path: filteredB, declaredPath: filteredB });
+
+    expect(getClass).toHaveBeenCalledOnce();
+  });
+});
+
+describe("resolveCardinality", () => {
+  it("returns `one` when every declaration is single-valued", () => {
+    expect(resolveCardinality(["one", "one"])).to.equal("one");
+  });
+
+  it("returns `many` when any declaration is many-valued", () => {
+    expect(resolveCardinality(["one", "many", "one"])).to.equal("many");
   });
 });
 

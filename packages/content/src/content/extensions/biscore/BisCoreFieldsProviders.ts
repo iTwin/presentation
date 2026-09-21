@@ -51,19 +51,17 @@ function createDocumentLinkCategory(strings: BisCoreLocalizedStrings): CategoryD
  *
  * The generic `ElementOwnsMultiAspects` → `ElementMultiAspect` declaration excludes
  * `BisCore.ExternalSourceAspect` instances (`BisCore` ≥ 1.0.2) — that aspect's `Identifier` property
- * is contributed with its own label/category override by `createExternalSourceContribution`, and both
- * declarations resolve to the same `Element` → `ExternalSourceAspect` path (instance filters don't
- * participate in field identity). Without the exclusion, the two would produce one field with
- * divergent metadata whenever an element owns an `ExternalSourceAspect`, leaving the label and
- * category to be picked by fields-provider priority rather than by intent.
+ * is contributed with its own label/category override by `createExternalSourceContribution`. Without
+ * the exclusion, the generic and external-source declarations would produce separate fields because
+ * their path filters differ, surfacing the property twice with different presentation metadata.
  *
  * The exclusion is intentionally polymorphic, with two deliberate consequences:
  * - `ExternalSourceAspect` instances with `Kind = 'Relationship'` surface no fields at all — they
  *   describe a synchronization relationship rather than the element itself, so their properties are
  *   not meaningful element content.
  * - Properties declared by `ExternalSourceAspect` subclasses don't surface either — a non-polymorphic
- *   exclusion would reintroduce the `Identifier` metadata collision for those subclasses, since the
- *   external-source declaration resolves its `ExternalSourceAspect` target polymorphically.
+ *   exclusion would produce duplicate `Identifier` fields for those subclasses, since the external-source
+ *   declaration resolves its `ExternalSourceAspect` target polymorphically.
  *
  * The exclusion applies on nested content too, even though the external-source declarations don't
  * reach there: a provider's contribution shape can't depend on whether it's being applied to the

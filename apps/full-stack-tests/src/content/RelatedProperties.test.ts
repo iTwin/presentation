@@ -13,8 +13,8 @@ import {
   createContentIModelAccess,
   getPropertyFieldByName,
   getPropertyFieldsByName,
+  getPropertyFieldsByPath,
   getRelatedPropertyFields,
-  getRelatedPropertyFieldsByPath,
 } from "./Utils.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
@@ -964,13 +964,13 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      const propBFields = getRelatedPropertyFieldsByPath(descriptor, shortPath);
+      const propBFields = getPropertyFieldsByPath(descriptor, shortPath);
       expect(propBFields).toHaveLength(1);
       expect(propBFields[0].propertyName).toBe("PropB");
       expect(propBFields[0].pathFromTarget).toEqual(shortPath);
       expect(propBFields[0].primaryClassNames).toEqual([setup.schema.items.A.fullName]);
 
-      const propCFields = getRelatedPropertyFieldsByPath(descriptor, longPath);
+      const propCFields = getPropertyFieldsByPath(descriptor, longPath);
       expect(propCFields).toHaveLength(1);
       expect(propCFields[0].propertyName).toBe("PropC");
       expect(propCFields[0].pathFromTarget).toEqual(longPath);
