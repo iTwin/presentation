@@ -179,12 +179,10 @@ export async function preparePropertyReaders(props: {
       key: selector.propertyClassName,
       createFunc: async () => getClass(imodelAccess, selector.propertyClassName),
     });
-    const applicableClassNames = new Set(
-      [declaringClass.fullName, ...declaringClass.getDerivedClassNames()].map((name) => name.toLowerCase()),
-    );
+    const applicableClassNames = new Set<string>([declaringClass.fullName, ...declaringClass.getDerivedClassNames()]);
     const decode = createPropertyValueDecoder(type);
     propertyReaders[selector.id] = (className, value) =>
-      applicableClassNames.has(className.toLowerCase()) ? decode(value) : undefined;
+      applicableClassNames.has(className) ? decode(value) : undefined;
   }
   return propertyReaders;
 }

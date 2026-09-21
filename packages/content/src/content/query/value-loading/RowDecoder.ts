@@ -362,16 +362,16 @@ function applyPropertyFieldScope(props: {
   groupValues: GroupValues;
 }): Value {
   const { field, primaryKey, value, groupValues } = props;
-  const applicableClassNames = new Set(field.valueClassNames.map((name) => name.toLowerCase()));
+  const applicableClassNames = new Set(field.valueClassNames);
   if (field.pathFromTarget.length === 0) {
-    return applicableClassNames.has(primaryKey.className.toLowerCase()) ? value : undefined;
+    return applicableClassNames.has(primaryKey.className) ? value : undefined;
   }
 
   const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
   const entries = groupValues.relatedInstances.get(pathKey) ?? [];
   const appliesToEntry = (entry: RelatedInstanceEntry | undefined): boolean => {
     const key = field.propertyClassKind === "relationship" ? entry?.relationshipKey : entry?.key;
-    return key !== undefined && applicableClassNames.has(key.className.toLowerCase());
+    return key !== undefined && applicableClassNames.has(key.className);
   };
   if (field.pathCardinality === "many") {
     assert(Array.isArray(value), `Expected an array value for field "${field.id}".`);
