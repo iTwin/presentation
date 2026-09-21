@@ -5,7 +5,7 @@
 
 import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
-import { setupModelsTree } from "@itwin/presentation-models-tree";
+import { createModelsTree } from "@itwin/presentation-tree-definitions";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
@@ -16,7 +16,7 @@ import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) =>
-    setupModelsTree({ imodelAccess }).definition;
+    createModelsTree({ imodelAccess }).definition;
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
@@ -59,7 +59,7 @@ describe("models tree", () => {
     cleanup: (props) => props.iModel.close(),
     test: async ({ imodelAccess, targetItems }) => {
       const abortSignal = new AbortController().signal;
-      const modelsTree = setupModelsTree({ imodelAccess });
+      const modelsTree = createModelsTree({ imodelAccess });
       const search = { paths: await modelsTree.createSearchTree({ limit: "unbounded", targetItems, abortSignal }) };
       const countTargets = (nodes: typeof search.paths): number =>
         nodes.reduce(
