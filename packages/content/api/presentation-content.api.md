@@ -272,7 +272,9 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
 // @public
 type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration>> = {
     [K in keyof TInputs]: TInputs[K] extends {
-        cardinalityHint: "many";
+        related: {
+            cardinalityHint: "many";
+        };
     } ? Value[] : Value;
 };
 
@@ -309,10 +311,12 @@ interface IModelFieldsProvider extends BaseFieldsProvider {
 
 // @public
 interface InputPropertyDeclaration {
-    cardinalityHint?: CardinalityHint;
-    path?: RelationshipPath;
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
+    related?: {
+        path: RelationshipPath;
+        cardinalityHint?: CardinalityHint;
+    };
 }
 
 // @public

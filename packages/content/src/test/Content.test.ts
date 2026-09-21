@@ -2052,7 +2052,7 @@ describe("resolveContentSources", () => {
       return {
         id: "ext_v1",
         fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
-        inputs: { related: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path } },
+        inputs: { related: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", related: { path } } },
         async getValues() {
           return [];
         },
@@ -2132,8 +2132,16 @@ describe("resolveContentSources", () => {
         ...createExternalProvider(path),
         id: "ext_one_v1",
         inputs: {
-          first: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path, cardinalityHint: "one" },
-          second: { propertyClassName: "TestSchema.ClassB", propertyName: "OtherProp", path, cardinalityHint: "many" },
+          first: {
+            propertyClassName: "TestSchema.ClassB",
+            propertyName: "Prop",
+            related: { path, cardinalityHint: "one" },
+          },
+          second: {
+            propertyClassName: "TestSchema.ClassB",
+            propertyName: "OtherProp",
+            related: { path, cardinalityHint: "many" },
+          },
         },
       };
       const providerTwo: ExternalFieldsProvider = {
@@ -2143,8 +2151,7 @@ describe("resolveContentSources", () => {
           third: {
             propertyClassName: "TestSchema.ClassB",
             propertyName: "Prop",
-            path: structuredClone(path),
-            cardinalityHint: "many",
+            related: { path: structuredClone(path), cardinalityHint: "many" },
           },
         },
       };
@@ -2183,8 +2190,8 @@ describe("resolveContentSources", () => {
       const provider: ExternalFieldsProvider = {
         ...createExternalProvider(slowPath),
         inputs: {
-          slow: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path: slowPath },
-          fast: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path: fastPath },
+          slow: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", related: { path: slowPath } },
+          fast: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", related: { path: fastPath } },
         },
       };
       const fastFinished = new ResolvablePromise<void>();
@@ -2292,8 +2299,8 @@ describe("resolveContentSources", () => {
         const provider: ExternalFieldsProvider = {
           ...createExternalProvider(path),
           inputs: {
-            first: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path },
-            second: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path: otherPath },
+            first: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", related: { path } },
+            second: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", related: { path: otherPath } },
           },
         };
         const imodelAccess = createMockIModelAccess({
@@ -2318,29 +2325,60 @@ describe("resolveContentSources", () => {
       },
     );
 
-    it.each([{ path: undefined }, { path: [] }])(
-      "ignores an external fields provider's direct input with path $path",
-      async ({ path }) => {
+    it("ignores an external fields provider's direct input", async () => {
+      const provider: ExternalFieldsProvider = {
+        id: "ext_v1",
+        fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
+        inputs: { direct: { propertyClassName: "TestSchema.ClassA", propertyName: "Prop" } },
+        async getValues() {
+          return [];
+        },
+      };
+      const imodelAccess = createMockIModelAccess();
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [provider] },
+      });
+
+      expect(result.resolvedExternalInputs).to.deep.equal([]);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it.each([undefined, "one", "many"] as const)(
+      "rejects an empty related input path with cardinality hint %s before querying",
+      async (cardinalityHint) => {
         const provider: ExternalFieldsProvider = {
-          id: "ext_v1",
-          fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
-          inputs: { direct: { propertyClassName: "TestSchema.ClassA", propertyName: "Prop", path } },
-          async getValues() {
-            return [];
+          ...createExternalProvider([]),
+          inputs: {
+            invalid: {
+              propertyClassName: "TestSchema.ClassB",
+              propertyName: "Prop",
+              related: { path: [], cardinalityHint },
+            },
           },
         };
         const imodelAccess = createMockIModelAccess();
 
-        const [result] = await resolveContentSources({
-          imodelAccess,
-          targets: [targetA],
-          config: { externalFieldsProviders: [provider] },
-        });
-
-        expect(result.resolvedExternalInputs).to.deep.equal([]);
+        await expect(
+          resolveContentSources({ imodelAccess, targets: [targetA], config: { externalFieldsProviders: [provider] } }),
+        ).rejects.toThrow(
+          'External fields provider "ext_v1" input "invalid" declares an empty related path. Omit "related" for a direct property input.',
+        );
         expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
       },
     );
+
+    it("rejects an empty related input path even when there are no targets", async () => {
+      await expect(
+        resolveContentSources({
+          imodelAccess: createMockIModelAccess(),
+          targets: [],
+          config: { externalFieldsProviders: [createExternalProvider([])] },
+        }),
+      ).rejects.toThrow(/provider "ext_v1" input "related" declares an empty related path/);
+    });
 
     it("ignores an external fields provider that declares no inputs at all", async () => {
       const provider: ExternalFieldsProvider = {

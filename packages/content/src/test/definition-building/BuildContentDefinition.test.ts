@@ -312,7 +312,9 @@ describe("buildContentDefinition", () => {
       return defineExternalFieldsProvider({
         id,
         fields: [{ id: "value", label: "Value", type: { kind: "primitive", type: "String" } }],
-        inputs: { related: { propertyClassName: "TestSchema.B", propertyName: "Related", path, cardinalityHint } },
+        inputs: {
+          related: { propertyClassName: "TestSchema.B", propertyName: "Related", related: { path, cardinalityHint } },
+        },
         async getValues() {
           return [];
         },
@@ -399,8 +401,16 @@ describe("buildContentDefinition", () => {
       const provider = defineExternalFieldsProvider({
         ...createExternalProvider("ext1_v1"),
         inputs: {
-          first: { propertyClassName: "TestSchema.B", propertyName: "Related", path, cardinalityHint: "one" },
-          second: { propertyClassName: "TestSchema.B", propertyName: "Related", path, cardinalityHint: "many" },
+          first: {
+            propertyClassName: "TestSchema.B",
+            propertyName: "Related",
+            related: { path, cardinalityHint: "one" },
+          },
+          second: {
+            propertyClassName: "TestSchema.B",
+            propertyName: "Related",
+            related: { path, cardinalityHint: "many" },
+          },
         },
         async getValues() {
           return [];
@@ -712,10 +722,12 @@ describe("buildContentDefinition", () => {
         missing: {
           propertyClassName: "TestSchema.B",
           propertyName: "Missing",
-          path: [
-            { sourceClassName: "TestSchema.A", relationshipName: "TestSchema.Rel", targetClassName: "TestSchema.B" },
-          ],
-          cardinalityHint: "one",
+          related: {
+            path: [
+              { sourceClassName: "TestSchema.A", relationshipName: "TestSchema.Rel", targetClassName: "TestSchema.B" },
+            ],
+            cardinalityHint: "one",
+          },
         },
       },
       async getValues() {
@@ -761,7 +773,7 @@ describe("buildContentDefinition", () => {
     const externalProvider = defineExternalFieldsProvider({
       id: "ext_v1",
       fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
-      inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", path } },
+      inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", related: { path } } },
       async getValues() {
         return [];
       },
@@ -777,7 +789,7 @@ describe("buildContentDefinition", () => {
       { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path, cardinality: "many" },
     ]);
     expect(externalProvider.inputs).to.deep.equal({
-      name: { propertyClassName: "TestSchema.B", propertyName: "Name", path },
+      name: { propertyClassName: "TestSchema.B", propertyName: "Name", related: { path } },
     });
     expect(definition.externalProviders).to.deep.equal([
       {
@@ -818,7 +830,9 @@ describe("buildContentDefinition", () => {
       const provider = defineExternalFieldsProvider({
         id: "ext_v1",
         fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
-        inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", path, cardinalityHint } },
+        inputs: {
+          name: { propertyClassName: "TestSchema.B", propertyName: "Name", related: { path, cardinalityHint } },
+        },
         async getValues() {
           return [];
         },
@@ -826,7 +840,7 @@ describe("buildContentDefinition", () => {
       const unhintedProvider = defineExternalFieldsProvider({
         ...provider,
         id: "unhinted_v1",
-        inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", path } },
+        inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", related: { path } } },
         async getValues() {
           return [];
         },
@@ -908,7 +922,9 @@ describe("buildContentDefinition", () => {
       const externalProvider = defineExternalFieldsProvider({
         id: "ext_v1",
         fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
-        inputs: { name: { propertyClassName: "TestSchema.B", propertyName: "Name", path, cardinalityHint } },
+        inputs: {
+          name: { propertyClassName: "TestSchema.B", propertyName: "Name", related: { path, cardinalityHint } },
+        },
         async getValues() {
           return [];
         },
@@ -956,7 +972,7 @@ describe("buildContentDefinition", () => {
       fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
       inputs: {
         first: { propertyClassName: "TestSchema.A", propertyName: "First" },
-        second: { propertyClassName: "TestSchema.A", propertyName: "Second", path: [] },
+        second: { propertyClassName: "TestSchema.A", propertyName: "Second" },
       },
       async getValues() {
         return [];
@@ -979,7 +995,7 @@ describe("buildContentDefinition", () => {
     expect(Object.keys(definition.descriptor.fields)).to.deep.equal(["ext_v1:status"]);
     expect(definition.externalInputs).to.deep.equal([
       { propertyClassName: "TestSchema.A", propertyName: "First", cardinality: "one" },
-      { propertyClassName: "TestSchema.A", propertyName: "Second", pathFromTarget: [], cardinality: "one" },
+      { propertyClassName: "TestSchema.A", propertyName: "Second", cardinality: "one" },
     ]);
     expect(definition.propertyReaders["TestSchema.A.First"]("TestSchema.A", "first")).to.equal("first");
     expect(definition.propertyReaders["TestSchema.A.Second"]("TestSchema.A", "second")).to.equal("second");

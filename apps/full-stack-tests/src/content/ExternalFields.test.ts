@@ -206,7 +206,7 @@ describe("Content", () => {
         fields: [{ id: "combined", label: "Combined", type: { kind: "primitive", type: "String" } }],
         inputs: {
           propA: { propertyClassName: setup.schema.items.A.fullName, propertyName: "PropA" },
-          propB: { propertyClassName: setup.schema.items.B.fullName, propertyName: "PropB", path },
+          propB: { propertyClassName: setup.schema.items.B.fullName, propertyName: "PropB", related: { path } },
         },
         async getValues({ items: batch }: { items: Array<{ inputValues: { propA: string; propB: string } }> }) {
           return batch.map((entry) => ({ combined: `${entry.inputValues.propA}+${entry.inputValues.propB}` }));
@@ -274,8 +274,7 @@ describe("Content", () => {
             names: {
               propertyClassName: setup.schema.items.C.fullName,
               propertyName: "PropC",
-              path,
-              cardinalityHint: "many",
+              related: { path, cardinalityHint: "many" },
             },
           },
           getValues,
@@ -455,34 +454,33 @@ describe("Content", () => {
             name: {
               propertyClassName: setup.schema.items.B.fullName,
               propertyName: "Name",
-              path: pathAB,
-              cardinalityHint,
+              related: { path: pathAB, cardinalityHint },
             },
             tags: {
               propertyClassName: setup.schema.items.B.fullName,
               propertyName: "Tags",
-              path: pathAB,
-              cardinalityHint,
+              related: { path: pathAB, cardinalityHint },
             },
             mark: {
               propertyClassName: setup.schema.items.Rel.fullName,
               propertyName: "Mark",
-              path: pathAB,
-              cardinalityHint,
+              related: { path: pathAB, cardinalityHint },
             },
             filteredName: {
               propertyClassName: setup.schema.items.B.fullName,
               propertyName: "Name",
-              path: [
-                {
-                  ...pathAB[0],
-                  instanceFilter: {
-                    expression: "this.Name = :name",
-                    bindings: { name: { type: "string", value: "first" } },
+              related: {
+                path: [
+                  {
+                    ...pathAB[0],
+                    instanceFilter: {
+                      expression: "this.Name = :name",
+                      bindings: { name: { type: "string", value: "first" } },
+                    },
                   },
-                },
-              ],
-              cardinalityHint: "one",
+                ],
+                cardinalityHint: "one",
+              },
             },
           },
           getValues,
@@ -930,7 +928,9 @@ describe("Content", () => {
         id: "ext_v1",
         fields: [{ id: "echoed", label: "Echoed", type: { kind: "primitive", type: "String" } }],
         // No `cardinalityHint` — the path is 1:1, so the value stays a scalar `Value`, not `Value[]`.
-        inputs: { propB: { propertyClassName: setup.schema.items.B.fullName, propertyName: "PropB", path } },
+        inputs: {
+          propB: { propertyClassName: setup.schema.items.B.fullName, propertyName: "PropB", related: { path } },
+        },
         getValues,
       });
       const provider = await createProvider({

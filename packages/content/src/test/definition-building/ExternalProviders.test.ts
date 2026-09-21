@@ -33,8 +33,7 @@ const secondPath: RelationshipPath = [
 const input: InputPropertyDeclaration = {
   propertyClassName: "Schema.B",
   propertyName: "Name",
-  path: declaredPath,
-  cardinalityHint: "one",
+  related: { path: declaredPath, cardinalityHint: "one" },
 };
 
 function createProvider(
@@ -118,7 +117,7 @@ describe("prepareExternalProviders", () => {
     const otherPath: RelationshipPath = [{ ...declaredPath[0], relationshipName: "Schema.OtherRel" }];
     const providers = [
       createProvider({ name: input, code: { propertyClassName: "Schema.A", propertyName: "Code" } }),
-      createProvider({ name: { ...input, path: otherPath } }, "other_v1"),
+      createProvider({ name: { ...input, related: { path: otherPath, cardinalityHint: "one" } } }, "other_v1"),
     ];
     const slowGate = new ResolvablePromise<void>();
     const completed: string[] = [];
@@ -219,8 +218,12 @@ describe("prepareExternalProviders", () => {
     const result = await prepare({
       providers: [
         createProvider({
-          first: { ...input, propertyClassName: "Schema.C", path: firstDeclared },
-          second: { ...input, propertyClassName: "Schema.C", path: secondDeclared },
+          first: { ...input, propertyClassName: "Schema.C", related: { path: firstDeclared, cardinalityHint: "one" } },
+          second: {
+            ...input,
+            propertyClassName: "Schema.C",
+            related: { path: secondDeclared, cardinalityHint: "one" },
+          },
         }),
       ],
       sources: [
@@ -244,8 +247,11 @@ describe("prepareExternalProviders", () => {
   it("keeps input keys and cardinalities independent when providers share selector coordinates", async () => {
     const result = await prepare({
       providers: [
-        createProvider({ scalar: input, array: { ...input, cardinalityHint: "many" } }),
-        createProvider({ scalar: { ...input, cardinalityHint: "many" } }, "other_v1"),
+        createProvider({
+          scalar: input,
+          array: { ...input, related: { path: declaredPath, cardinalityHint: "many" } },
+        }),
+        createProvider({ scalar: { ...input, related: { path: declaredPath, cardinalityHint: "many" } } }, "other_v1"),
       ],
       sources: [
         createSource([
@@ -282,7 +288,9 @@ describe("prepareExternalProviders", () => {
   it("infers query cardinality from each concrete path and input cardinality from the declared path", async () => {
     const result = await prepare({
       providers: [
-        createProvider({ name: { propertyClassName: "Schema.B", propertyName: "Name", path: declaredPath } }),
+        createProvider({
+          name: { propertyClassName: "Schema.B", propertyName: "Name", related: { path: declaredPath } },
+        }),
       ],
       sources: [createSource([createGroup([firstPath, secondPath])])],
     });
@@ -296,11 +304,7 @@ describe("prepareExternalProviders", () => {
   });
 
   it("retains direct inputs and empty resolved groups for schema validation", async () => {
-    const direct: InputPropertyDeclaration = {
-      propertyClassName: "Schema.A",
-      propertyName: "Code",
-      cardinalityHint: "many",
-    };
+    const direct: InputPropertyDeclaration = { propertyClassName: "Schema.A", propertyName: "Code" };
     const result = await prepare({
       providers: [createProvider({ direct, name: input })],
       sources: [createSource([createGroup([])])],
@@ -319,7 +323,9 @@ describe("prepareExternalProviders", () => {
   it("retains unhinted declaration coordinates when no source resolved the input", async () => {
     const result = await prepare({
       providers: [
-        createProvider({ name: { propertyClassName: "Schema.B", propertyName: "Name", path: declaredPath } }),
+        createProvider({
+          name: { propertyClassName: "Schema.B", propertyName: "Name", related: { path: declaredPath } },
+        }),
       ],
       sources: [],
     });
@@ -341,6 +347,23 @@ describe("prepareExternalProviders", () => {
       { propertyClassName: "Schema.B", propertyName: "Name", pathFromTarget: firstPath, cardinality: "one" },
     ]);
     expect(result.plans).to.deep.equal([]);
+  });
+
+  it.each([undefined, "one", "many"] as const)(
+    "rejects an empty related path with cardinality hint %s",
+    async (cardinalityHint) => {
+      const provider = createProvider({ name: { ...input, related: { path: [], cardinalityHint } } });
+      await expect(prepare({ providers: [provider], sources: [] })).rejects.toThrow(
+        'External fields provider "ext_v1" input "name" declares an empty related path. Omit "related" for a direct property input.',
+      );
+    },
+  );
+
+  it("rejects an empty related path even when cached paths exist and output fields were removed", async () => {
+    const provider = createProvider({ name: { ...input, related: { path: [], cardinalityHint: "many" } } });
+    await expect(
+      prepare({ providers: [provider], sources: [createSource([createGroup([firstPath])])], fields: {} }),
+    ).rejects.toThrow(/provider "ext_v1" input "name" declares an empty related path/);
   });
 
   it("does not classify the logical input when all provider outputs were removed", async () => {

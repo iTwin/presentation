@@ -19,7 +19,7 @@ import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
  * items to fill in the external field values.
  *
  * The generic parameter `TInputs` constrains the input values received by `getValues` — see
- * `InputPropertyDeclaration.cardinalityHint` for how an input's declared cardinality narrows
+ * `InputPropertyDeclaration.related` for how an input's declared cardinality narrows
  * its value type. The generic parameter `TOutputFieldIds` constrains the getValues function to return
  * values for exactly the declared field IDs — no more, no fewer.
  *
@@ -54,7 +54,7 @@ export interface ExternalFieldsProvider<
    * after SQL-backed fields are populated.
    *
    * Each item contains pre-extracted `inputValues` keyed by the names declared in `inputs` — see
-   * `InputPropertyDeclaration.cardinalityHint` for how an input's declared cardinality narrows
+   * `InputPropertyDeclaration.related` for how an input's declared cardinality narrows
    * its value type. Must return an array parallel to `items`, where each element contains values for
    * exactly the declared field IDs.
    */
@@ -65,12 +65,12 @@ export interface ExternalFieldsProvider<
 
 /**
  * Maps an input declarations record to the `inputValues` shape `getValues` receives: `Value[]` for an
- * input declared `cardinalityHint: "many"`, `Value` otherwise.
+ * input declared `related.cardinalityHint: "many"`, `Value` otherwise.
  *
  * @public
  */
 type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration>> = {
-  [K in keyof TInputs]: TInputs[K] extends { cardinalityHint: "many" } ? Value[] : Value;
+  [K in keyof TInputs]: TInputs[K] extends { related: { cardinalityHint: "many" } } ? Value[] : Value;
 };
 
 /**
@@ -88,24 +88,30 @@ export interface InputPropertyDeclaration {
   /** The EC property name. */
   propertyName: string;
   /**
-   * Relationship path from the content target to the property's class.
-   * Omit for properties directly on the target class.
-   * Polymorphic paths include values from all concrete path variants found during source resolution.
+   * Relationship traversal to the property's class. Omit for properties directly on the target class,
+   * whose values pass through unchanged, including native EC arrays.
    */
-  path?: RelationshipPath;
-  /**
-   * Hint about how many related instances `path` reaches per target instance — same semantics as
-   * `PropertyField.pathCardinality`. Declaring `"many"` narrows this input's `getValues` value to
-   * `Value[]`; without a hint the value stays typed as `Value`, even though the effective cardinality
-   * may still resolve to many at runtime (schema multiplicity is consulted as a fallback), so an
-   * unhinted input must be handled as either shape.
-   *
-   * An explicit hint overrides schema multiplicity only for this input. Other fields and inputs on
-   * the same path keep their own shapes, even when a shared query loads multiple related instances.
-   * A `"one"` hint applies across all concrete variants of the declared path, not to each variant
-   * independently. Loading fails if their combined result reaches more than one instance.
-   */
-  cardinalityHint?: CardinalityHint;
+  related?: {
+    /**
+     * Relationship path from the content target to the property's class. Must contain at least one step;
+     * source resolution and descriptor building reject empty paths.
+     * Polymorphic paths include values from all concrete path variants found during source resolution.
+     */
+    path: RelationshipPath;
+    /**
+     * Hint about how many related instances `path` reaches per target instance, with the same semantics as
+     * `PropertyField.pathCardinality`. Declaring `"many"` narrows this input's `getValues` value to
+     * `Value[]`; without a hint the value stays typed as `Value`, even though the effective cardinality
+     * may still resolve to many at runtime (schema multiplicity is consulted as a fallback), so an
+     * unhinted input must be handled as either shape.
+     *
+     * An explicit hint overrides schema multiplicity only for this input. Other fields and inputs on
+     * the same path keep their own shapes, even when a shared query loads multiple related instances.
+     * A `"one"` hint applies across all concrete variants of the declared path, not to each variant
+     * independently. Loading fails if their combined result reaches more than one instance.
+     */
+    cardinalityHint?: CardinalityHint;
+  };
 }
 
 /**
@@ -157,8 +163,10 @@ type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
  *     sensorIds: {
  *       propertyClassName: "MySchema:Sensor",
  *       propertyName: "Id",
- *       path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Sensor", relationshipName: "MySchema:PumpHasSensors" }],
- *       cardinalityHint: "many",
+ *       related: {
+ *         path: [{ sourceClassName: "MySchema:Pump", targetClassName: "MySchema:Sensor", relationshipName: "MySchema:PumpHasSensors" }],
+ *         cardinalityHint: "many",
+ *       },
  *     },
  *   },
  *   async getValues({ items }) {

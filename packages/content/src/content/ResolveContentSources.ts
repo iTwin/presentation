@@ -10,6 +10,7 @@ import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Uti
 import { namespaceBindings } from "./query/NamespaceBindings.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
 import { buildTargetFilter } from "./query/TargetFilter.js";
+import { validateExternalInputs } from "./ValidateExternalInputs.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -300,8 +301,8 @@ function resolveExternalInputs({
   return from(externalFieldsProviders).pipe(
     mergeMap((provider) => {
       const declarations: Array<[string, InputPropertyDeclaration]> = Object.entries(provider.inputs ?? {});
-      return declarations.flatMap(([inputKey, { path }]) =>
-        path?.length ? [{ providerId: provider.id, inputKey, path }] : [],
+      return declarations.flatMap(([inputKey, { related }]) =>
+        related ? [{ providerId: provider.id, inputKey, path: related.path }] : [],
       );
     }),
     mergeMap(async ({ providerId, inputKey, path }, index) => ({
@@ -849,6 +850,7 @@ export async function resolveContentSourcesImpl(props: {
   imodelFieldsProviders: IModelFieldsProvider[];
   externalFieldsProviders: ExternalFieldsProvider[];
 }): Promise<ContentSource[]> {
+  validateExternalInputs(props.externalFieldsProviders);
   if (props.targets.length === 0) {
     return [];
   }

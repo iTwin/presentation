@@ -5,6 +5,7 @@
 
 import { getOrCreate } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
+import { validateExternalInputs } from "../ValidateExternalInputs.js";
 import { computePropertySelectorId } from "./ValueSelector.js";
 
 import type { RelationshipPath } from "@itwin/presentation-shared";
@@ -42,6 +43,7 @@ export async function prepareExternalProviders(props: {
   fields: ContentDescriptor["fields"];
   classifier: PathCardinalityClassifier;
 }): Promise<{ inputs: ExternalInput[]; plans: ExternalProviderPlan[] }> {
+  validateExternalInputs(props.providers);
   const pathsByProvider = collectResolvedInputPaths(props);
   const prepared = await Promise.all(
     props.providers.map(async (provider) =>
@@ -106,7 +108,7 @@ async function prepareInput(props: {
 }): Promise<{ inputs: ExternalInput[]; plan?: ExternalProviderPlan["inputs"][number] }> {
   const { key, declaration, resolvedPaths, classifier, includePlan } = props;
   // Retain unresolved declarations for schema validation and missing-value handling.
-  const paths = resolvedPaths?.size ? [...resolvedPaths.values()] : [declaration.path];
+  const paths = resolvedPaths?.size ? [...resolvedPaths.values()] : [declaration.related?.path];
   const inputs = await Promise.all(
     paths.map(async (pathFromTarget): Promise<ExternalInput> => ({
       propertyClassName: declaration.propertyClassName,
@@ -117,7 +119,7 @@ async function prepareInput(props: {
         ? await classifier.classify({
             path: pathFromTarget,
             declaredPath: pathFromTarget,
-            hint: declaration.cardinalityHint,
+            hint: declaration.related?.cardinalityHint,
           })
         : "one",
     })),
@@ -128,11 +130,11 @@ async function prepareInput(props: {
   const plan: ExternalProviderPlan["inputs"][number] = {
     key,
     // Provider input contract across all resolved paths, based on the original declaration.
-    cardinality: declaration.path?.length
+    cardinality: declaration.related
       ? await classifier.classify({
-          path: declaration.path,
-          declaredPath: declaration.path,
-          hint: declaration.cardinalityHint,
+          path: declaration.related.path,
+          declaredPath: declaration.related.path,
+          hint: declaration.related.cardinalityHint,
         })
       : "one",
     selectors: inputs.map((input) => ({
@@ -159,7 +161,7 @@ function collectResolvedInputPaths(props: {
       }
       const declarations: Readonly<Partial<Record<string, InputPropertyDeclaration>>> = provider.inputs ?? {};
       const declaration = declarations[group.inputKey];
-      if (!declaration?.path?.length) {
+      if (!declaration?.related) {
         throw new Error(
           `External fields provider "${group.providerId}" no longer declares related input "${group.inputKey}" for target "${source.target.primaryClass}".`,
         );
