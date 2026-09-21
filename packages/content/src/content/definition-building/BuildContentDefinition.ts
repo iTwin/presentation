@@ -3,27 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  type EC,
-  type ECSchemaProvider,
-  getClass,
-  type RelationshipPath,
-  type ValueDescriptor,
-} from "@itwin/presentation-shared";
+import { type EC, type ECSchemaProvider, getClass, type ValueDescriptor } from "@itwin/presentation-shared";
 import {
   createTransformableDescriptor,
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,
 } from "../extensions/DescriptorTransformer.js";
 import { collectInParallel, getOrCreate } from "../InternalUtils.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
-import { serializeRelationshipPath } from "../model/Utils.js";
-import { collectPathCardinalities, createPathCardinalityClassifier } from "../PathCardinality.js";
+import { createPathCardinalityClassifier } from "../PathCardinality.js";
 import { createPropertyValueDecoder } from "../query/value-loading/RowDecoder.js";
 import { collectCalculatedFields } from "./CalculatedFields.js";
 import { collectCategories, pruneUnreferencedCategories } from "./Categories.js";
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { collectDirectPropertyFields } from "./DirectFields.js";
 import { collectExternalFields } from "./ExternalFields.js";
+import { prepareExternalProviders } from "./ExternalProviders.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { collectRelatedPropertyFields } from "./RelatedFields.js";
 import { collectValueRequirements } from "./Selectors.js";
@@ -31,10 +25,10 @@ import { computePropertySelectorId } from "./ValueSelector.js";
 
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
-import type { ExternalFieldsProvider, InputPropertyDeclaration } from "../extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field, PropertyField } from "../model/Field.js";
 import type { PropertyValueReader } from "../query/value-loading/RowDecoder.js";
+import type { ExternalInput, ExternalProviderPlan } from "./ExternalProviders.js";
 import type { ValueSelector } from "./ValueSelector.js";
 
 /**
@@ -48,17 +42,8 @@ export interface ContentDefinition {
   selectors: Record<ValueSelector["id"], ValueSelector>;
   propertyReaders: Record<ValueSelector["id"], PropertyValueReader>;
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
-  externalInputs: Array<{
-    propertyClassName: EC.FullClassNameDotNotation;
-    propertyName: string;
-    pathFromTarget?: RelationshipPath;
-    cardinalityHint?: "one" | "many";
-  }>;
-  externalProviders: Array<{
-    provider: ExternalFieldsProvider;
-    inputs: Array<{ key: string; selectorId: string; cardinalityHint?: "one" | "many" }>;
-    outputs: Array<{ localId: string; fieldId: string }>;
-  }>;
+  externalInputs: ExternalInput[];
+  externalProviders: ExternalProviderPlan[];
   /** Calculated fields contributed to each source, keyed by the original source object. */
   calculatedFieldIdsBySource: Map<ContentSource, Set<Field["id"]>>;
 }
@@ -84,8 +69,8 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
   const externalFieldsProviders = config?.externalFieldsProviders ?? [];
   const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
   const { getContribution, getAnchorContribution } = createContributionMemoizer({ imodelAccess });
+  const externalFields = collectExternalFields(externalFieldsProviders);
   const classifier = createPathCardinalityClassifier(imodelAccess);
-
   const candidates = await collectInParallel({
     inputs: sources,
     expand: async (source) => {
@@ -119,7 +104,6 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     }),
     collectCalculatedFields({ sources, imodelFieldsProviders, getContribution }),
   ]);
-  const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalFieldsProviders);
   const propertyFields: Record<Field["id"], PropertyField> = Object.fromEntries(
     mergedPropertyFields.map(({ field }) => [field.id, field]),
   );
@@ -146,59 +130,17 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     categories: pruneUnreferencedCategories({ fields: transformed.fields, categories: transformed.categories }),
   };
 
-  const pathCardinalitiesBeforePromotion = collectPathCardinalities(descriptor, externalInputs);
-  // Every field on a shared path must agree with the query's decoded value shape.
-  for (const field of Object.values(descriptor.fields)) {
-    if (
-      field.kind === "property" &&
-      field.pathFromTarget.length > 0 &&
-      pathCardinalitiesBeforePromotion.get(serializeRelationshipPath({ path: field.pathFromTarget })) === "many"
-    ) {
-      field.pathCardinality = "many";
-    }
-  }
-
+  const { inputs: externalInputs, plans: externalProviders } = await prepareExternalProviders({
+    providers: externalFieldsProviders,
+    sources,
+    fields: descriptor.fields,
+    classifier,
+  });
   const { selectors, fieldSelectorIds } = collectValueRequirements({
     fields: Object.values(descriptor.fields),
     externalInputs,
   });
   const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
-  const effectivePathCardinalities = collectPathCardinalities(descriptor, externalInputs);
-
-  const externalProviders = await Promise.all(
-    (config?.externalFieldsProviders ?? []).map(async (provider) => {
-      const outputs = provider.fields
-        .map((declaration) => ({ localId: declaration.id, fieldId: `${provider.id}:${declaration.id}` }))
-        .filter((output) => output.fieldId in descriptor.fields);
-      if (outputs.length === 0) {
-        return undefined;
-      }
-      const inputs: ContentDefinition["externalProviders"][number]["inputs"] = [];
-      if (provider.inputs) {
-        const entries: ReadonlyArray<[string, InputPropertyDeclaration]> = Object.entries(provider.inputs);
-        for (const [key, declaration] of entries) {
-          const effectiveCardinalityHint =
-            declaration.path && declaration.path.length > 0
-              ? await classifier.classify({
-                  path: declaration.path,
-                  declaredPath: declaration.path,
-                  hint: effectivePathCardinalities.get(serializeRelationshipPath({ path: declaration.path })),
-                })
-              : "one";
-          inputs.push({
-            key,
-            selectorId: computePropertySelectorId({
-              propertyClassName: declaration.propertyClassName,
-              propertyName: declaration.propertyName,
-              pathFromTarget: declaration.path,
-            }),
-            cardinalityHint: effectiveCardinalityHint,
-          });
-        }
-      }
-      return { provider, inputs, outputs };
-    }),
-  );
 
   return {
     descriptor,
@@ -206,9 +148,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     propertyReaders,
     fieldSelectorIds,
     externalInputs,
-    externalProviders: externalProviders.filter(
-      (provider): provider is ContentDefinition["externalProviders"][number] => provider !== undefined,
-    ),
+    externalProviders,
     calculatedFieldIdsBySource,
   };
 }

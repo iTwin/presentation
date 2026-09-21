@@ -37,9 +37,8 @@ import type { Id64String } from "@itwin/core-bentley";
 import type { ContentValueFilter } from "../../Content.js";
 import type { ContentSource } from "../../ContentTarget.js";
 import type { ContentDefinition } from "../../definition-building/BuildContentDefinition.js";
-import type { ExternalInput } from "../../definition-building/ExternalFields.js";
+import type { ExternalInput } from "../../definition-building/ExternalProviders.js";
 import type { PropertyValueSelector } from "../../definition-building/ValueSelector.js";
-import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProvider.js";
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
@@ -62,7 +61,6 @@ export function getItems(props: {
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
-  externalFieldsProviders?: ExternalFieldsProvider[];
 }): AsyncIterable<ContentItem> {
   return {
     [Symbol.asyncIterator]() {
@@ -78,9 +76,8 @@ function loadItems(props: {
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
-  externalFieldsProviders?: ExternalFieldsProvider[];
 }): Observable<ContentItem> {
-  const { imodelAccess, getContentDefinition, sources, queryFilterers, filters, externalFieldsProviders } = props;
+  const { imodelAccess, getContentDefinition, sources, queryFilterers, filters } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
   return from(getContentDefinition()).pipe(
@@ -94,11 +91,7 @@ function loadItems(props: {
         externalInputs,
         externalProviders,
       }) => {
-        const populateExternalValues = createExternalValuePopulator({
-          descriptor,
-          prepared: externalProviders,
-          providers: externalFieldsProviders,
-        });
+        const populateExternalValues = createExternalValuePopulator({ descriptor, plans: externalProviders });
         return from(sources).pipe(
           mergeMap(async (source) =>
             createSourcePlan({

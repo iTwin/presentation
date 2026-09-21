@@ -17,7 +17,7 @@ function createSource(): ContentSource {
     target: { primaryClass: "TestSchema.A" },
     resolvedPrimaryClasses: ["TestSchema.A"],
     resolvedDeclarations: [],
-    externalInputPaths: [],
+    resolvedExternalInputs: [],
   };
 }
 
@@ -174,13 +174,13 @@ describe("collectCalculatedFields", () => {
             target: { primaryClass: "TestSchema.A" },
             resolvedPrimaryClasses: ["TestSchema.A"],
             resolvedDeclarations: [],
-            externalInputPaths: [],
+            resolvedExternalInputs: [],
           },
           {
             target: { primaryClass: "TestSchema.B" },
             resolvedPrimaryClasses: ["TestSchema.B"],
             resolvedDeclarations: [],
-            externalInputPaths: [],
+            resolvedExternalInputs: [],
           },
         ],
         imodelFieldsProviders: [provider],

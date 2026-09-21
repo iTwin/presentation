@@ -84,7 +84,7 @@ function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"
     target: { primaryClass: "TestSchema.A" },
     resolvedPrimaryClasses: ["TestSchema.A"],
     resolvedDeclarations,
-    externalInputPaths: [],
+    resolvedExternalInputs: [],
   };
 }
 

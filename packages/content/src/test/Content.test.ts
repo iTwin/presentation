@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { resolveContentSources } from "../content/Content.js";
 import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetFilter.js";
@@ -143,13 +144,13 @@ describe("resolveContentSources", () => {
       expect(result[0]).to.deep.equal({
         target: targets[0],
         resolvedPrimaryClasses: ["TestSchema.ClassA"],
-        externalInputPaths: [],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [],
       });
       expect(result[1]).to.deep.equal({
         target: targets[1],
         resolvedPrimaryClasses: ["TestSchema.ClassB"],
-        externalInputPaths: [],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [],
       });
     });
@@ -165,7 +166,7 @@ describe("resolveContentSources", () => {
       expect(result).to.deep.equal({
         target: targetA,
         resolvedPrimaryClasses: ["TestSchema.ConcreteA"],
-        externalInputPaths: [],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [],
       });
     });
@@ -262,7 +263,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
-          externalInputPaths: [],
+          resolvedExternalInputs: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -311,7 +312,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
-          externalInputPaths: [],
+          resolvedExternalInputs: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -494,7 +495,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
-          externalInputPaths: [],
+          resolvedExternalInputs: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -566,7 +567,7 @@ describe("resolveContentSources", () => {
         {
           target: targetA,
           resolvedPrimaryClasses: ["TestSchema.ClassA"],
-          externalInputPaths: [],
+          resolvedExternalInputs: [],
           resolvedDeclarations: [
             {
               providerId: "test_v1",
@@ -2071,7 +2072,9 @@ describe("resolveContentSources", () => {
         1: "TestSchema.ConcreteRelAB",
         2: "TestSchema.ConcreteB",
       };
-      const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [queryRow, { ...queryRow, 2: "TestSchema.OtherConcreteB" }],
+      });
 
       const [result] = await resolveContentSources({
         imodelAccess,
@@ -2081,21 +2084,37 @@ describe("resolveContentSources", () => {
 
       // The path is joined (and its resolved classes captured) but contributes no field declaration.
       expect(result.resolvedDeclarations).to.deep.equal([]);
-      expect(result.externalInputPaths).to.deep.equal([
+      expect(result.resolvedExternalInputs).to.deep.equal([
         {
-          path: [
+          providerId: "ext_v1",
+          inputKey: "related",
+          paths: [
             {
-              sourceClassName: "TestSchema.ClassA",
-              targetClassName: "TestSchema.ConcreteB",
-              relationshipName: "TestSchema.ConcreteRelAB",
+              path: [
+                {
+                  sourceClassName: "TestSchema.ClassA",
+                  targetClassName: "TestSchema.ConcreteB",
+                  relationshipName: "TestSchema.ConcreteRelAB",
+                },
+              ],
+              targetClassNames: ["TestSchema.ClassA"],
+            },
+            {
+              path: [
+                {
+                  sourceClassName: "TestSchema.ClassA",
+                  targetClassName: "TestSchema.OtherConcreteB",
+                  relationshipName: "TestSchema.ConcreteRelAB",
+                },
+              ],
+              targetClassNames: ["TestSchema.ClassA"],
             },
           ],
-          targetClassNames: ["TestSchema.ClassA"],
         },
       ]);
     });
 
-    it("resolves an identical input path declared by multiple external fields providers only once", async () => {
+    it("keeps separate input groups but resolves a shared path only once across providers and inputs", async () => {
       const path: RelationshipPath = [
         {
           sourceClassName: "TestSchema.ClassA",
@@ -2109,8 +2128,26 @@ describe("resolveContentSources", () => {
         2: "TestSchema.ConcreteB",
       };
       const imodelAccess = createMockIModelAccess({ resolvePathsQueryResults: [queryRow] });
-      const providerOne = { ...createExternalProvider(path), id: "ext_one_v1" as ExternalFieldsProvider["id"] };
-      const providerTwo = { ...createExternalProvider(path), id: "ext_two_v1" as ExternalFieldsProvider["id"] };
+      const providerOne: ExternalFieldsProvider = {
+        ...createExternalProvider(path),
+        id: "ext_one_v1",
+        inputs: {
+          first: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path, cardinalityHint: "one" },
+          second: { propertyClassName: "TestSchema.ClassB", propertyName: "OtherProp", path, cardinalityHint: "many" },
+        },
+      };
+      const providerTwo: ExternalFieldsProvider = {
+        ...createExternalProvider(path),
+        id: "ext_two_v1",
+        inputs: {
+          third: {
+            propertyClassName: "TestSchema.ClassB",
+            propertyName: "Prop",
+            path: structuredClone(path),
+            cardinalityHint: "many",
+          },
+        },
+      };
 
       const [result] = await resolveContentSources({
         imodelAccess,
@@ -2118,31 +2155,192 @@ describe("resolveContentSources", () => {
         config: { externalFieldsProviders: [providerOne, providerTwo] },
       });
 
-      expect(result.externalInputPaths).to.have.length(1);
+      const paths: ResolvedPath[] = [
+        {
+          path: [{ ...path[0], relationshipName: "TestSchema.ConcreteRelAB", targetClassName: "TestSchema.ConcreteB" }],
+          targetClassNames: ["TestSchema.ClassA"],
+        },
+      ];
+      expect(result.resolvedExternalInputs).to.deep.equal([
+        { providerId: "ext_one_v1", inputKey: "first", paths },
+        { providerId: "ext_one_v1", inputKey: "second", paths },
+        { providerId: "ext_two_v1", inputKey: "third", paths },
+      ]);
       // A single-step path only ever runs the "original" resolution strategy, so a single query
       // proves the two providers' identical paths were de-duplicated before resolution ran.
       expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
     });
 
-    it("ignores an external fields provider input with no path (direct property)", async () => {
+    it("preserves provider and input order when paths finish resolving out of order", async () => {
+      const slowPath: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          relationshipName: "TestSchema.SlowRel",
+          targetClassName: "TestSchema.ClassB",
+        },
+      ];
+      const fastPath: RelationshipPath = [{ ...slowPath[0], relationshipName: "TestSchema.FastRel" }];
       const provider: ExternalFieldsProvider = {
-        id: "ext_v1",
-        fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
-        inputs: { direct: { propertyClassName: "TestSchema.ClassA", propertyName: "Prop" } },
-        async getValues() {
-          return [];
+        ...createExternalProvider(slowPath),
+        inputs: {
+          slow: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path: slowPath },
+          fast: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path: fastPath },
         },
       };
+      const fastFinished = new ResolvablePromise<void>();
+      const completionOrder: string[] = [];
+      const imodelAccess = createMockIModelAccess();
+      let queryIndex = 0;
+      vi.mocked(imodelAccess.createQueryReader).mockImplementation(() =>
+        (async function* () {
+          const isSlow = queryIndex++ === 0;
+          if (isSlow) {
+            await fastFinished;
+          }
+          yield {
+            0: "TestSchema.ClassA",
+            1: isSlow ? "TestSchema.SlowRel" : "TestSchema.FastRel",
+            2: "TestSchema.ClassB",
+          };
+          completionOrder.push(isSlow ? "slow" : "fast");
+          if (!isSlow) {
+            fastFinished.resolveSync();
+          }
+        })(),
+      );
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { externalFieldsProviders: [provider, { ...createExternalProvider(fastPath), id: "other_v1" }] },
+      });
+
+      expect(completionOrder).to.deep.equal(["fast", "slow"]);
+      expect(result.resolvedExternalInputs.map(({ providerId, inputKey }) => [providerId, inputKey])).to.deep.equal([
+        ["ext_v1", "slow"],
+        ["ext_v1", "fast"],
+        ["other_v1", "related"],
+      ]);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
+    });
+
+    it("propagates an external input path resolution error", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          relationshipName: "TestSchema.RelAB",
+          targetClassName: "TestSchema.ClassB",
+        },
+      ];
+      const imodelAccess = createMockIModelAccess();
+      const queryError = new Error("external input query failed");
+      vi.mocked(imodelAccess.createQueryReader).mockImplementation(() =>
+        (async function* (): AsyncGenerator<ECSqlQueryRow> {
+          throw queryError;
+        })(),
+      );
+
+      await expect(
+        resolveContentSources({
+          imodelAccess,
+          targets: [targetA],
+          config: { externalFieldsProviders: [createExternalProvider(path)] },
+        }),
+      ).rejects.toThrow(queryError);
+    });
+
+    it("retains the input's provider and key when no concrete paths resolve", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
       const imodelAccess = createMockIModelAccess();
 
       const [result] = await resolveContentSources({
         imodelAccess,
         targets: [targetA],
-        config: { externalFieldsProviders: [provider] },
+        config: { externalFieldsProviders: [createExternalProvider(path)] },
       });
 
-      expect(result.externalInputPaths).to.deep.equal([]);
+      expect(result.resolvedExternalInputs).to.deep.equal([{ providerId: "ext_v1", inputKey: "related", paths: [] }]);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
     });
+
+    it.each(["expression", "bindings"] as const)(
+      "resolves paths with distinct filter %s separately",
+      async (difference) => {
+        const path: RelationshipPath = [
+          {
+            sourceClassName: "TestSchema.ClassA",
+            targetClassName: "TestSchema.ClassB",
+            relationshipName: "TestSchema.RelAB",
+            instanceFilter: { expression: "this.Area > :minArea", bindings: { minArea: { type: "double", value: 1 } } },
+          },
+        ];
+        const otherPath: RelationshipPath = [
+          {
+            ...path[0],
+            instanceFilter: {
+              expression: difference === "expression" ? "this.Area < :minArea" : "this.Area > :minArea",
+              bindings: { minArea: { type: "double", value: difference === "bindings" ? 2 : 1 } },
+            },
+          },
+        ];
+        const provider: ExternalFieldsProvider = {
+          ...createExternalProvider(path),
+          inputs: {
+            first: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path },
+            second: { propertyClassName: "TestSchema.ClassB", propertyName: "Prop", path: otherPath },
+          },
+        };
+        const imodelAccess = createMockIModelAccess({
+          resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+        });
+
+        const [result] = await resolveContentSources({
+          imodelAccess,
+          targets: [targetA],
+          config: { externalFieldsProviders: [provider] },
+        });
+
+        expect(result.resolvedExternalInputs).to.deep.equal([
+          { providerId: "ext_v1", inputKey: "first", paths: [{ path, targetClassNames: ["TestSchema.ClassA"] }] },
+          {
+            providerId: "ext_v1",
+            inputKey: "second",
+            paths: [{ path: otherPath, targetClassNames: ["TestSchema.ClassA"] }],
+          },
+        ]);
+        expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
+      },
+    );
+
+    it.each([{ path: undefined }, { path: [] }])(
+      "ignores an external fields provider's direct input with path $path",
+      async ({ path }) => {
+        const provider: ExternalFieldsProvider = {
+          id: "ext_v1",
+          fields: [{ id: "f", label: "F", type: { kind: "primitive", type: "String" } }],
+          inputs: { direct: { propertyClassName: "TestSchema.ClassA", propertyName: "Prop", path } },
+          async getValues() {
+            return [];
+          },
+        };
+        const imodelAccess = createMockIModelAccess();
+
+        const [result] = await resolveContentSources({
+          imodelAccess,
+          targets: [targetA],
+          config: { externalFieldsProviders: [provider] },
+        });
+
+        expect(result.resolvedExternalInputs).to.deep.equal([]);
+        expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+      },
+    );
 
     it("ignores an external fields provider that declares no inputs at all", async () => {
       const provider: ExternalFieldsProvider = {
@@ -2160,7 +2358,8 @@ describe("resolveContentSources", () => {
         config: { externalFieldsProviders: [provider] },
       });
 
-      expect(result.externalInputPaths).to.deep.equal([]);
+      expect(result.resolvedExternalInputs).to.deep.equal([]);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     });
   });
 

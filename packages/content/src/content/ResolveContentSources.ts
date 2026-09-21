@@ -283,13 +283,11 @@ async function resolveDeclarationPaths({
 }
 
 /**
- * Resolves the paths declared by external fields providers' related-property `inputs` — the pipeline's
- * own path-only counterpart to a provider's `relatedProperties` declarations, resolved the same way
- * (`resolveDeclarationPaths`) but carrying no provider identity: nothing re-derives these afterward, so
- * they need none of `RelatedPropertiesDeclaration`'s field-shaping members (`properties`,
- * `cardinalityHint`) and never seed nested-anchor expansion.
+ * Resolves external providers' related inputs, retaining each declaration's identity.
+ * Identical paths share resolution work within a target but keep separate groups.
+ * These groups carry no field-shaping members and never seed nested-anchor expansion.
  */
-async function resolveExternalInputPaths({
+function resolveExternalInputs({
   imodelAccess,
   target,
   externalFieldsProviders,
@@ -297,29 +295,30 @@ async function resolveExternalInputPaths({
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
   externalFieldsProviders: ExternalFieldsProvider[];
-}): Promise<ResolvedPath[]> {
-  const paths = collectExternalInputPaths(externalFieldsProviders);
-  const resolved = await Promise.all(
-    paths.map(async (path) => resolveDeclarationPaths({ imodelAccess, target, declaration: { path } })),
+}): Observable<ContentSource["resolvedExternalInputs"]> {
+  const resolutionCache = new Map<string, Promise<ResolvedPath[]>>();
+  return from(externalFieldsProviders).pipe(
+    mergeMap((provider) => {
+      const declarations: Array<[string, InputPropertyDeclaration]> = Object.entries(provider.inputs ?? {});
+      return declarations.flatMap(([inputKey, { path }]) =>
+        path?.length ? [{ providerId: provider.id, inputKey, path }] : [],
+      );
+    }),
+    mergeMap(async ({ providerId, inputKey, path }, index) => ({
+      index,
+      group: {
+        providerId,
+        inputKey,
+        paths: await getOrCreate({
+          map: resolutionCache,
+          key: serializeRelationshipPath({ path, includeInstanceFilters: true }),
+          createFunc: async () => resolveDeclarationPaths({ imodelAccess, target, declaration: { path } }),
+        }),
+      },
+    })),
+    toArray(),
+    map((groups) => groups.sort((a, b) => a.index - b.index).map(({ group }) => group)),
   );
-  return resolved.flat();
-}
-
-/** De-duplicates every related path declared as an input across all external fields providers. */
-function collectExternalInputPaths(externalFieldsProviders: ExternalFieldsProvider[]): RelationshipPath[] {
-  const byKey = new Map<string, RelationshipPath>();
-  for (const provider of externalFieldsProviders) {
-    const declarations: ReadonlyArray<InputPropertyDeclaration> = Object.values(provider.inputs ?? {});
-    for (const declaration of declarations) {
-      if (declaration.path && declaration.path.length > 0) {
-        const key = serializeRelationshipPath({ path: declaration.path, includeInstanceFilters: true });
-        if (!byKey.has(key)) {
-          byKey.set(key, declaration.path);
-        }
-      }
-    }
-  }
-  return [...byKey.values()];
 }
 
 // --- Target resolution ---
@@ -685,8 +684,8 @@ function resolveTarget({
       ];
     }),
   );
-  const externalInputPaths = from(resolveExternalInputPaths({ imodelAccess, target, externalFieldsProviders }));
-  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, externalInputPaths });
+  const resolvedExternalInputs = resolveExternalInputs({ imodelAccess, target, externalFieldsProviders });
+  return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, resolvedExternalInputs });
 }
 
 // --- Overlap detection ---

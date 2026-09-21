@@ -7,7 +7,7 @@ import { computePropertySelectorId } from "./ValueSelector.js";
 
 import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
 import type { Field } from "../model/Field.js";
-import type { ExternalInput } from "./ExternalFields.js";
+import type { ExternalInput } from "./ExternalProviders.js";
 import type { CalculatedValueSelector, PropertyValueSelector, ValueSelector } from "./ValueSelector.js";
 
 export interface ValueRequirements {

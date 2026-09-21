@@ -150,8 +150,8 @@ interface ContentSortSpec {
 
 // @public
 export interface ContentSource {
-    externalInputPaths: ResolvedPath[];
     resolvedDeclarations: ResolvedDeclarationGroup[];
+    resolvedExternalInputs: ResolvedExternalInputGroup[];
     resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
     target: ContentTarget;
 }
@@ -426,6 +426,13 @@ interface ResolvedDeclarationGroup {
     };
     paths: ResolvedPath[];
     providerId: BaseFieldsProvider["id"];
+}
+
+// @public
+interface ResolvedExternalInputGroup {
+    inputKey: string;
+    paths: ResolvedPath[];
+    providerId: ExternalFieldsProvider["id"];
 }
 
 // @public

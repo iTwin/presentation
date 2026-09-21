@@ -4,29 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forkJoin, from, map } from "rxjs";
-import { computePropertySelectorId } from "../../definition-building/ValueSelector.js";
+import { assert } from "@itwin/core-bentley";
+import { getRelatedSelectorValues } from "./RowDecoder.js";
 
 import type { Observable } from "rxjs";
 import type { Value } from "@itwin/presentation-shared";
-import type { ExternalFieldsProvider, InputPropertyDeclaration } from "../../extensions/ExternalFieldsProvider.js";
+import type { ExternalProviderPlan } from "../../definition-building/ExternalProviders.js";
+import type { ExternalFieldsProvider } from "../../extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
+import type { GroupValues } from "./RowDecoder.js";
 
 /**
  * Populates one page's worth of rows with external field values, keyed by field ID and aligned by
  * row index with the given rows.
  */
-export type ExternalValuePopulator = (
-  rows: ReadonlyArray<{ selectorValues: Map<string, Value> }>,
-) => Observable<Array<Record<string, Value>>>;
-
-/** A provider's declared fields and inputs, resolved against one descriptor. */
-interface ProviderPlan {
-  provider: ExternalFieldsProvider;
-  /** Input key -> the selector its value is read from. */
-  inputs: Array<{ key: string; selectorId: string; cardinalityHint?: "one" | "many" }>;
-  /** Provider-local field id -> descriptor (global) field id, restricted to fields still in the descriptor. */
-  outputs: Array<{ localId: string; fieldId: string }>;
-}
+export type ExternalValuePopulator = (rows: ReadonlyArray<GroupValues>) => Observable<Array<Record<string, Value>>>;
 
 /**
  * Builds a page-scoped populator that calls every configured external fields provider with a page's
@@ -41,15 +33,9 @@ interface ProviderPlan {
  */
 export function createExternalValuePopulator(props: {
   descriptor: ContentDescriptor;
-  providers?: ExternalFieldsProvider[];
-  prepared?: ProviderPlan[];
+  plans: ExternalProviderPlan[];
 }): ExternalValuePopulator | undefined {
-  const { descriptor, providers = [], prepared } = props;
-  const plans =
-    prepared ??
-    providers
-      .map((provider) => createProviderPlan({ descriptor, provider }))
-      .filter((plan): plan is ProviderPlan => plan !== undefined);
+  const { descriptor, plans } = props;
   assertEveryExternalFieldIsProvided({ descriptor, plans });
   if (plans.length === 0) {
     return undefined;
@@ -60,7 +46,10 @@ export function createExternalValuePopulator(props: {
     );
 }
 
-function assertEveryExternalFieldIsProvided(props: { descriptor: ContentDescriptor; plans: ProviderPlan[] }): void {
+function assertEveryExternalFieldIsProvided(props: {
+  descriptor: ContentDescriptor;
+  plans: ExternalProviderPlan[];
+}): void {
   const { descriptor, plans } = props;
   const populatedFieldIds = new Set(plans.flatMap((plan) => plan.outputs.map((output) => output.fieldId)));
   const unprovidedFieldIds = Object.values(descriptor.fields)
@@ -73,46 +62,14 @@ function assertEveryExternalFieldIsProvided(props: { descriptor: ContentDescript
   }
 }
 
-function createProviderPlan(props: {
-  descriptor: ContentDescriptor;
-  provider: ExternalFieldsProvider;
-}): ProviderPlan | undefined {
-  const { descriptor, provider } = props;
-  const outputs = provider.fields
-    .map((declaration) => ({ localId: declaration.id, fieldId: `${provider.id}:${declaration.id}` }))
-    .filter((output) => output.fieldId in descriptor.fields);
-  if (outputs.length === 0) {
-    return undefined;
-  }
-  const inputs: ProviderPlan["inputs"] = [];
-  if (provider.inputs) {
-    const entries: ReadonlyArray<[string, InputPropertyDeclaration]> = Object.entries(provider.inputs);
-    for (const [key, declaration] of entries) {
-      inputs.push({
-        key,
-        selectorId: computePropertySelectorId({
-          propertyClassName: declaration.propertyClassName,
-          propertyName: declaration.propertyName,
-          pathFromTarget: declaration.path,
-        }),
-        cardinalityHint: declaration.cardinalityHint,
-      });
-    }
-  }
-  return { provider, inputs, outputs };
-}
-
 function populateFromProvider(props: {
-  plan: ProviderPlan;
-  rows: ReadonlyArray<{ selectorValues: Map<string, Value> }>;
+  plan: ExternalProviderPlan;
+  rows: ReadonlyArray<GroupValues>;
 }): Observable<Array<Record<string, Value>>> {
   const { plan, rows } = props;
   const items = rows.map((row) => ({
     inputValues: Object.fromEntries(
-      plan.inputs.map(({ key, selectorId, cardinalityHint }) => {
-        const value = row.selectorValues.get(selectorId);
-        return [key, value ?? (cardinalityHint === "many" ? [] : undefined)];
-      }),
+      plan.inputs.map((input) => [input.key, readInputValue({ input, row, providerId: plan.provider.id })]),
     ),
   }));
   return from(plan.provider.getValues({ items })).pipe(
@@ -134,6 +91,39 @@ function populateFromProvider(props: {
       });
     }),
   );
+}
+
+function readInputValue(props: {
+  input: ExternalProviderPlan["inputs"][number];
+  row: GroupValues;
+  providerId: ExternalFieldsProvider["id"];
+}): Value {
+  const { input, row, providerId } = props;
+  if (input.selectors.length === 1 && input.selectors[0].pathKey === undefined) {
+    // A direct input reads the primary instance's one entry, preserving native EC arrays inside it.
+    return row.selectorValues.get(input.selectors[0].selectorId)?.[0];
+  }
+
+  // Combine all resolved paths, keeping one value per related instance, including missing property values.
+  const values: Value[] = [];
+  for (const { selectorId, pathKey } of input.selectors) {
+    assert(pathKey !== undefined, `Missing resolved path for external input "${input.key}".`);
+    for (const value of getRelatedSelectorValues({ values: row, selectorId, pathKey })) {
+      values.push(value);
+    }
+  }
+  if (input.cardinality === "many") {
+    // A many-valued input requires an array even when there are zero or one related instances.
+    return values;
+  }
+  // A one-valued input permits at most one instance across all paths, even if its property value is missing.
+  if (values.length > 1) {
+    throw new Error(
+      `External fields provider "${providerId}" input "${input.key}" has more than one related instance across its resolved paths despite "one" input cardinality.`,
+    );
+  }
+  // Return the single property's value as-is, or undefined when no related instance exists.
+  return values[0];
 }
 
 function mergeRows(props: {

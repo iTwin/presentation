@@ -23,7 +23,7 @@ function createSource(primaryClass: ContentSource["target"]["primaryClass"]): Co
     target: { primaryClass },
     resolvedPrimaryClasses: [primaryClass],
     resolvedDeclarations: [],
-    externalInputPaths: [],
+    resolvedExternalInputs: [],
   };
 }
 

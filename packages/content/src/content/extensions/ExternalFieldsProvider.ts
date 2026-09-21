@@ -90,6 +90,7 @@ export interface InputPropertyDeclaration {
   /**
    * Relationship path from the content target to the property's class.
    * Omit for properties directly on the target class.
+   * Polymorphic paths include values from all concrete path variants found during source resolution.
    */
   path?: RelationshipPath;
   /**
@@ -98,6 +99,11 @@ export interface InputPropertyDeclaration {
    * `Value[]`; without a hint the value stays typed as `Value`, even though the effective cardinality
    * may still resolve to many at runtime (schema multiplicity is consulted as a fallback), so an
    * unhinted input must be handled as either shape.
+   *
+   * An explicit hint overrides schema multiplicity only for this input. Other fields and inputs on
+   * the same path keep their own shapes, even when a shared query loads multiple related instances.
+   * A `"one"` hint applies across all concrete variants of the declared path, not to each variant
+   * independently. Loading fails if their combined result reaches more than one instance.
    */
   cardinalityHint?: CardinalityHint;
 }

@@ -456,19 +456,19 @@ describe("RowDecoder", () => {
   describe("mergeGroupValues", () => {
     const entry: RelatedInstanceEntry = { key: { className: "Schema.B", id: "0x2" } };
     const values = (
-      selectorEntries: Array<[string, Value]>,
+      selectorEntries: Array<[string, Value[]]>,
       related: Array<[string, RelatedInstanceEntry[]]> = [],
     ): GroupValues => ({ selectorValues: new Map(selectorEntries), relatedInstances: new Map(related) });
 
     it("adds new selector values and related-instance entries", () => {
-      const target = values([["a", 1]]);
-      mergeGroupValues(target, values([["b", 2]], [["A-[Rel]->B", [entry]]]));
-      expect(target.selectorValues.get("b")).to.equal(2);
+      const target = values([["a", [1]]]);
+      mergeGroupValues(target, values([["b", [2]]], [["A-[Rel]->B", [entry]]]));
+      expect(target.selectorValues.get("b")).to.deep.equal([2]);
       expect(target.relatedInstances.get("A-[Rel]->B")).to.deep.equal([entry]);
     });
 
     it("throws when two groups own the same selector", () => {
-      expect(() => mergeGroupValues(values([["a", 1]]), values([["a", 2]]))).toThrow(/more than one query group/);
+      expect(() => mergeGroupValues(values([["a", [1]]]), values([["a", [2]]]))).toThrow(/more than one query group/);
     });
 
     it("throws when two groups own the same path key", () => {
@@ -528,12 +528,26 @@ describe("RowDecoder", () => {
       const contentValues = toContentValues({
         descriptor: forkedDescriptor,
         primaryKey: { className: "Schema.B", id: "0x1" },
-        values: { selectorValues: new Map([[field.id, "B1"]]), relatedInstances: new Map() },
+        values: { selectorValues: new Map([[field.id, ["B1"]]]), relatedInstances: new Map() },
         fieldSelectorIds: { [field.id]: field.id, [fork.id]: field.id },
       });
 
       expect(contentValues.values).to.deep.equal({ [fork.id]: "B1" });
     });
+
+    it.each([{ value: [] }, { value: ["first", "second"] }])(
+      "keeps a direct EC array property intact: $value",
+      ({ value }) => {
+        const field = createPropertyField({ type: { kind: "array", elementType: stringType } });
+        const contentValues = toContentValues({
+          descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
+          fieldSelectorIds: { [field.id]: field.id },
+          primaryKey: { className: "Schema.B", id: "0x1" },
+          values: { selectorValues: new Map([[field.id, [value]]]), relatedInstances: new Map() },
+        });
+        expect(contentValues.values[field.id]).to.equal(value);
+      },
+    );
 
     it.each([
       { pathCardinality: "one", propertyClassKind: "target" },
@@ -565,7 +579,7 @@ describe("RowDecoder", () => {
           { key: { className: "Schema.B", id: "0x2" }, relationshipKey: { className: "Schema.C", id: "0x4" } },
           { key: { className: "Schema.C", id: "0x3" }, relationshipKey: { className: "Schema.B", id: "0x5" } },
         ];
-        const selectorValue = pathCardinality === "many" ? ["first", "second"] : "first";
+        const selectorValue = pathCardinality === "many" ? ["first", "second"] : ["first"];
         const selectorValues = new Map([[field.id, selectorValue]]);
         const contentValues = toContentValues({
           descriptor: relatedDescriptor,
@@ -585,28 +599,34 @@ describe("RowDecoder", () => {
             : { [firstFieldId]: "first" },
         );
         expect(selectorValues.get(field.id)).to.equal(selectorValue);
-        expect(selectorValues.get(field.id)).to.deep.equal(pathCardinality === "many" ? ["first", "second"] : "first");
       },
     );
 
-    it.each([undefined, [], [undefined]])("preserves missing or empty to-many values: %j", (value) => {
-      const field = createPropertyField({
-        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
-        pathCardinality: "many",
-        primaryClassNames: ["Schema.A"],
-      });
-      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
-      const contentValues = toContentValues({
-        descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
-        fieldSelectorIds: { [field.id]: field.id },
-        primaryKey: { className: value === undefined ? "Schema.Unrelated" : "Schema.A", id: "0x1" },
-        values: {
-          selectorValues: value === undefined ? new Map() : new Map([[field.id, value]]),
-          relatedInstances: new Map([[pathKey, value?.length ? [{ key: { className: "Schema.B", id: "0x2" } }] : []]]),
-        },
-      });
-      expect(contentValues.values).to.deep.equal(value === undefined ? {} : { [field.id]: value });
-    });
+    it.each([{ value: undefined }, { value: [] }, { value: [undefined] }])(
+      "preserves missing or empty to-many values: $value",
+      ({ value }) => {
+        const field = createPropertyField({
+          pathFromTarget: [
+            { sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" },
+          ],
+          pathCardinality: "many",
+          primaryClassNames: ["Schema.A"],
+        });
+        const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
+        const contentValues = toContentValues({
+          descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
+          fieldSelectorIds: { [field.id]: field.id },
+          primaryKey: { className: value === undefined ? "Schema.Unrelated" : "Schema.A", id: "0x1" },
+          values: {
+            selectorValues: value === undefined ? new Map() : new Map([[field.id, value]]),
+            relatedInstances: new Map([
+              [pathKey, value?.length ? [{ key: { className: "Schema.B", id: "0x2" } }] : []],
+            ]),
+          },
+        });
+        expect(contentValues.values).to.deep.equal(value === undefined ? {} : { [field.id]: value });
+      },
+    );
 
     it("preserves an empty to-many value when the path has no related-instance entry", () => {
       const field = createPropertyField({
@@ -637,11 +657,73 @@ describe("RowDecoder", () => {
         fieldSelectorIds: { [field.id]: field.id },
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
-          selectorValues: new Map([[field.id, value]]),
+          selectorValues: new Map([[field.id, [value]]]),
           relatedInstances: new Map([[pathKey, [{ key: { className: "Schema.B", id: "0x2" } }]]]),
         },
       });
       expect(contentValues.values[field.id]).to.equal(value);
+    });
+
+    it.each([
+      { description: "no instances", values: [], type: stringType },
+      { description: "one null property", values: [undefined], type: stringType },
+      { description: "one scalar property", values: ["first"], type: stringType },
+      {
+        description: "one empty EC array property",
+        values: [[]],
+        type: { kind: "array", elementType: stringType } as const,
+      },
+      {
+        description: "one EC array property",
+        values: [["first", "second"]],
+        type: { kind: "array", elementType: stringType } as const,
+      },
+    ])("projects one and many field shapes from shared loading with $description", ({ values, type }) => {
+      const field = createPropertyField({
+        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        primaryClassNames: ["Schema.A"],
+        type,
+      });
+      const manyField = { ...field, id: `${field.id}#many`, pathCardinality: "many" as const };
+      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget });
+      const selectorValues = new Map([[field.id, values]]);
+      const contentValues = toContentValues({
+        descriptor: { sources: [], categories: {}, fields: { [field.id]: field, [manyField.id]: manyField } },
+        fieldSelectorIds: { [field.id]: field.id, [manyField.id]: field.id },
+        primaryKey: { className: "Schema.A", id: "0x1" },
+        values: {
+          selectorValues,
+          relatedInstances: new Map([[pathKey, values.map(() => ({ key: { className: "Schema.B", id: "0x2" } }))]]),
+        },
+      });
+      expect(contentValues.values[field.id]).to.deep.equal(values[0]);
+      expect(contentValues.values[manyField.id]).to.deep.equal(values);
+      expect(selectorValues.get(field.id)).to.equal(values);
+    });
+
+    it.each([
+      { description: "present values", value: ["first", "second"] },
+      { description: "null values", value: [undefined, undefined] },
+      { description: "an absent selector", value: undefined },
+    ])("rejects multiple instances for a one field with $description", ({ value }) => {
+      const field = createPropertyField({
+        pathFromTarget: [{ sourceClassName: "Schema.A", relationshipName: "Schema.Rel", targetClassName: "Schema.B" }],
+        primaryClassNames: ["Schema.A"],
+      });
+      const pathKey = serializeRelationshipPath({ path: field.pathFromTarget });
+      expect(() =>
+        toContentValues({
+          descriptor: { sources: [], categories: {}, fields: { [field.id]: field } },
+          fieldSelectorIds: { [field.id]: field.id },
+          primaryKey: { className: "Schema.A", id: "0x1" },
+          values: {
+            selectorValues: value === undefined ? new Map() : new Map([[field.id, value]]),
+            relatedInstances: new Map([
+              [pathKey, [{ key: { className: "Schema.B", id: "0x2" } }, { key: { className: "Schema.B", id: "0x3" } }]],
+            ]),
+          },
+        }),
+      ).toThrow(/Field .*more than one related instance.*Schema.A:0x1.*"one"/);
     });
 
     it("maps selector values onto fields and leaves external fields undefined", () => {
@@ -654,9 +736,9 @@ describe("RowDecoder", () => {
         },
         primaryKey: { className: "Schema.A", id: "0x1" },
         values: {
-          selectorValues: new Map<string, Value>([
-            ["Schema.A.Code", "A1"],
-            ["calc:score", 42],
+          selectorValues: new Map<string, Value[]>([
+            ["Schema.A.Code", ["A1"]],
+            ["calc:score", [42]],
           ]),
           relatedInstances: new Map(),
         },
@@ -698,7 +780,7 @@ describe("RowDecoder", () => {
       relatedBlobs: { t0: { className: "t0_cls", pathKey: "A-[Rel]->B", role: "target" } },
     };
     const relatedDescriptor = { sources: [], categories: {}, fields: {} } as ContentDescriptor;
-    const row = (primaryId: string, related: { id: string; name?: string; code?: string } | null) => ({
+    const row = (primaryId: string, related: { id: string; name?: Value; code?: Value } | null) => ({
       ["pres_primary_class"]: "Schema.A",
       ["pres_primary_id"]: primaryId,
       ["t0"]: related
@@ -707,19 +789,64 @@ describe("RowDecoder", () => {
       ["t0_cls"]: related ? "Schema.B" : null,
     });
 
-    it("decodes a `one` group to scalar values and single-entry related-instance arrays", () => {
+    it("wraps direct and calculated values, keeping an undefined entry for a missing property", () => {
+      const byKey = decodeGroupRows({
+        rows: [
+          {
+            ["pres_primary_class"]: "Schema.A",
+            ["pres_primary_id"]: "0x1",
+            ["this"]: JSON.stringify({ ["Code"]: "code" }),
+            ["pres_calc_0"]: 42,
+          },
+        ],
+        descriptor,
+        cardinality: "one",
+        columnNames,
+      });
+      expect(byKey.get("Schema.A:0x1")!.selectorValues).to.deep.equal(
+        new Map<string, Value[]>([
+          ["Schema.A.Code", ["code"]],
+          ["Schema.A.Label", [undefined]],
+          ["calc:score", [42]],
+        ]),
+      );
+    });
+
+    it.each(["one", "many"] as const)(
+      "keeps EC arrays nested and missing property values aligned in a %s group",
+      (cardinality) => {
+        const byKey = decodePreparedGroupRows({
+          rows: [row("0x1", { id: "0x10", name: ["first", "second"] })],
+          rowDecoder: createTestRowDecoder({
+            descriptor: relatedDescriptor,
+            columnNames: relatedColumnNames,
+            decoderTypes: { "Schema.B.Name": { kind: "array", elementType: stringType }, "Schema.B.Code": stringType },
+          }),
+          cardinality,
+          columnNames: relatedColumnNames,
+        });
+        const values = byKey.get("Schema.A:0x1")!;
+        expect(values.selectorValues.get("Schema.B.Name")).to.deep.equal([["first", "second"]]);
+        expect(values.selectorValues.get("Schema.B.Code")).to.deep.equal([undefined]);
+        expect(values.relatedInstances.get("A-[Rel]->B")).to.deep.equal([
+          { key: { className: "Schema.B", id: "0x10" } },
+        ]);
+      },
+    );
+
+    it("decodes a `one` group to instance-aligned arrays, leaving empty arrays for an outer-join miss", () => {
       const byKey = decodeGroupRows({
         rows: [row("0x1", { id: "0x10", name: "n", code: "c" }), row("0x2", null)],
         descriptor: relatedDescriptor,
         cardinality: "one",
         columnNames: relatedColumnNames,
       });
-      expect(byKey.get("Schema.A:0x1")!.selectorValues.get("Schema.B.Name")).to.equal("n");
+      expect(byKey.get("Schema.A:0x1")!.selectorValues.get("Schema.B.Name")).to.deep.equal(["n"]);
       expect(byKey.get("Schema.A:0x1")!.relatedInstances.get("A-[Rel]->B")).to.deep.equal([
         { key: { className: "Schema.B", id: "0x10" } },
       ]);
-      // An outer-join miss: the primary is present, its related values and identity are absent.
-      expect(byKey.get("Schema.A:0x2")!.selectorValues.size).to.equal(0);
+      expect(byKey.get("Schema.A:0x2")!.selectorValues.get("Schema.B.Name")).to.deep.equal([]);
+      expect(byKey.get("Schema.A:0x2")!.selectorValues.get("Schema.B.Code")).to.deep.equal([]);
       expect(byKey.get("Schema.A:0x2")!.relatedInstances.size).to.equal(0);
     });
 

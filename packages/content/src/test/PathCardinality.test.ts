@@ -327,25 +327,25 @@ describe("collectPathCardinalities", () => {
 
     expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
   });
-  it("folds in a hinted external input on a path with no field", () => {
+  it("folds in a prepared external input on a path with no field", () => {
     const hints = collectPathCardinalities(makeDescriptor([]), [
-      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: [aToB], cardinalityHint: "many" },
+      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: [aToB], cardinality: "many" },
     ]);
 
     expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
   });
 
-  it("ignores an unhinted external input", () => {
+  it("ignores a direct external input", () => {
     const hints = collectPathCardinalities(makeDescriptor([]), [
-      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: [aToB] },
+      { propertyClassName: "TestSchema.A", propertyName: "Name", cardinality: "one" },
     ]);
 
     expect(hints.size).to.equal(0);
   });
 
-  it("seeds prefixes from a `one`-hinted external input the same way a field would", () => {
+  it("seeds prefixes from a one-valued external input the same way a field would", () => {
     const hints = collectPathCardinalities(makeDescriptor([]), [
-      { propertyClassName: "TestSchema.C", propertyName: "Name", pathFromTarget: [aToB, bToC], cardinalityHint: "one" },
+      { propertyClassName: "TestSchema.C", propertyName: "Name", pathFromTarget: [aToB, bToC], cardinality: "one" },
     ]);
 
     expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("one");
@@ -355,7 +355,7 @@ describe("collectPathCardinalities", () => {
   it("resolves a field and an external input disagreeing on the same path to `many`", () => {
     const oneField = makeField({ id: "one", pathFromTarget: [aToB], pathCardinality: "one" });
     const hints = collectPathCardinalities(makeDescriptor([oneField]), [
-      { propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: [aToB], cardinalityHint: "many" },
+      { propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: [aToB], cardinality: "many" },
     ]);
 
     expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");

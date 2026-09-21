@@ -7,11 +7,9 @@ import { describe, expect, it } from "vitest";
 import { collectExternalFields } from "../../content/definition-building/ExternalFields.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 
-import type { RelationshipPath } from "@itwin/presentation-shared";
-
 describe("collectExternalFields", () => {
   it("returns nothing for no providers", () => {
-    expect(collectExternalFields([])).to.deep.equal({ fields: {}, inputs: [] });
+    expect(collectExternalFields([])).to.deep.equal({});
   });
 
   it("maps external field declarations, prefixing ids with the provider id", () => {
@@ -25,7 +23,7 @@ describe("collectExternalFields", () => {
         return [];
       },
     });
-    const { fields, inputs } = collectExternalFields([provider]);
+    const fields = collectExternalFields([provider]);
     expect(fields).to.deep.equal({
       "ext_v1:flow": {
         kind: "external",
@@ -43,46 +41,5 @@ describe("collectExternalFields", () => {
         categoryId: "cat",
       },
     });
-    expect(inputs).to.deep.equal([]);
-  });
-
-  it("collects input column coordinates, including relationship paths", () => {
-    const path: RelationshipPath = [
-      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
-    ];
-    const provider = defineExternalFieldsProvider({
-      id: "ext_v1",
-      fields: [],
-      inputs: {
-        direct: { propertyClassName: "TestSchema.A", propertyName: "Code" },
-        related: { propertyClassName: "TestSchema.B", propertyName: "Name", path },
-      },
-      async getValues() {
-        return [];
-      },
-    });
-    const { inputs } = collectExternalFields([provider]);
-    expect(inputs).to.deep.equal([
-      { propertyClassName: "TestSchema.A", propertyName: "Code" },
-      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path },
-    ]);
-  });
-
-  it("carries an input's cardinalityHint through", () => {
-    const path: RelationshipPath = [
-      { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
-    ];
-    const provider = defineExternalFieldsProvider({
-      id: "ext_v1",
-      fields: [],
-      inputs: { related: { propertyClassName: "TestSchema.B", propertyName: "Name", path, cardinalityHint: "many" } },
-      async getValues() {
-        return [];
-      },
-    });
-    const { inputs } = collectExternalFields([provider]);
-    expect(inputs).to.deep.equal([
-      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: path, cardinalityHint: "many" },
-    ]);
   });
 });

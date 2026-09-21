@@ -113,7 +113,13 @@ export interface RelatedPropertiesDeclaration {
    */
   properties?: StepPropertySpec[];
 
-  /** Hint about expected cardinality (affects loading strategy). */
+  /**
+   * Hint about expected cardinality, used to determine this declaration's field shapes.
+   * An explicit hint overrides schema multiplicity for this declaration, not for other fields or
+   * external inputs on the same path. Without a hint, the declaration uses schema multiplicity.
+   * Candidates for the same property field still merge with `"many"` winning.
+   * Loading fails when a field with `"one"` cardinality reaches more than one related instance.
+   */
   cardinalityHint?: CardinalityHint;
 
   /**

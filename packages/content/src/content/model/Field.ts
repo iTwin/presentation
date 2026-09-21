@@ -74,6 +74,8 @@ export interface PropertyField extends BaseField {
    *
    * Taken from the contributing declaration's `cardinalityHint` where given, else from schema
    * multiplicity of the traversed relationship constraints.
+   * Other fields and external inputs on the same query path do not change this field's value shape.
+   * Loading fails if a `"one"` field reaches more than one related instance.
    */
   pathCardinality: CardinalityHint;
   /**
