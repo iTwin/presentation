@@ -8,9 +8,8 @@ import { ECSQL_PREFIX, mergeBindings, substituteExpressionAlias } from "../Inter
 import { serializeRelationshipPath } from "../model/Utils.js";
 
 import type { EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentDescriptor } from "../model/ContentDescriptor.js";
+import type { PropertyValueSelector, ValueSelector } from "../definition-building/ValueSelector.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
-import type { PropertyValueSelector } from "../model/ValueSelector.js";
 import type { BaseQueryGroup } from "./BaseQuery.js";
 
 /** @internal */
@@ -62,11 +61,11 @@ export interface SelectProjection {
  */
 export async function buildSelectProjection(props: {
   schemaProvider: ECSchemaProvider;
-  descriptor: ContentDescriptor;
+  selectors: Record<ValueSelector["id"], ValueSelector>;
   group: BaseQueryGroup;
   sorting?: ContentQuerySort[];
 }): Promise<SelectProjection> {
-  const { schemaProvider, descriptor, group, sorting = [] } = props;
+  const { schemaProvider, selectors, group, sorting = [] } = props;
   const primaryKey = { className: `${ECSQL_PREFIX}primary_class`, id: `${ECSQL_PREFIX}primary_id` };
   const select = [
     `ec_classname([${group.parts.primaryClassAlias}].[ECClassId], 's.c') AS [${primaryKey.className}]`,
@@ -74,7 +73,7 @@ export async function buildSelectProjection(props: {
   ];
 
   const propertyBlobs: Record<string, string> = {};
-  const propertySelectors = Object.values(descriptor.selectors).filter(
+  const propertySelectors = Object.values(selectors).filter(
     (selector): selector is PropertyValueSelector => selector.kind === "property",
   );
   const relationshipClassNames = await collectRelationshipClassNames({ schemaProvider, selectors: propertySelectors });
@@ -93,7 +92,7 @@ export async function buildSelectProjection(props: {
 
   const bindings: Record<string, ECSqlBinding> = {};
   const calculatedValues: Record<string, string> = {};
-  const calculatedSelectors = Object.values(descriptor.selectors).filter((selector) => selector.kind === "calculated");
+  const calculatedSelectors = Object.values(selectors).filter((selector) => selector.kind === "calculated");
   for (const [index, selector] of calculatedSelectors.entries()) {
     // Alias by a controlled name rather than the raw selector id so ids with special characters (e.g. `:`)
     // stay addressable under the name-based row format.

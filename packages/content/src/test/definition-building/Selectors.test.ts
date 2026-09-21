@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectSelectors } from "../../content/descriptor-building/Selectors.js";
+import { collectValueRequirements } from "../../content/definition-building/Selectors.js";
+import { computePropertySelectorId } from "../../content/definition-building/ValueSelector.js";
 import { createTransformableDescriptor } from "../../content/extensions/DescriptorTransformer.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { toSortedUniqueClassNames } from "../../content/model/Utils.js";
-import { computePropertySelectorId } from "../../content/model/ValueSelector.js";
 
 import type { EC, ECSqlBinding } from "@itwin/presentation-shared";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
@@ -21,15 +21,14 @@ function propertyField(props: {
   label?: string;
   pathFromTarget?: PropertyFieldType["pathFromTarget"];
 }): PropertyFieldType {
-  const selectorId = PropertyField.computeId({
+  const id = PropertyField.computeId({
     propertyClassName: props.propertyClassName,
     propertyName: props.propertyName,
     pathFromTarget: props.pathFromTarget,
   });
   return {
     kind: "property",
-    id: selectorId,
-    selectorId,
+    id,
     label: props.label ?? "Label",
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName,
@@ -52,7 +51,6 @@ function calculatedField(props: {
   return {
     kind: "calculated",
     id: props.id,
-    selectorId: props.id,
     label: "Calc",
     type: { kind: "primitive", type: "String" },
     expression: props.expression,
@@ -62,11 +60,11 @@ function calculatedField(props: {
 }
 
 function createDescriptor(fields: Field[]): ContentDescriptor {
-  return { sources: [], categories: {}, selectors: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
+  return { sources: [], categories: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
 }
 
 describe("ValueSelector", () => {
-  describe("collectSelectors", () => {
+  describe("collectValueRequirements", () => {
     it("produces one selector per SQL-backed field", () => {
       const prop = propertyField({
         propertyClassName: "Stuff.Thing",
@@ -74,10 +72,11 @@ describe("ValueSelector", () => {
         valueClassNames: ["Stuff.Door"],
       });
       const calc = calculatedField({ id: "provider:calc", expression: "1" });
-      const selectors = collectSelectors({ fields: [prop, calc], externalInputs: [] });
-      expect(Object.keys(selectors)).to.have.members([prop.selectorId, calc.selectorId]);
-      expect(selectors[prop.selectorId].kind).to.equal("property");
-      expect(selectors[calc.selectorId].kind).to.equal("calculated");
+      const { selectors, fieldSelectorIds } = collectValueRequirements({ fields: [prop, calc], externalInputs: [] });
+      expect(Object.keys(selectors)).to.have.members([prop.id, calc.id]);
+      expect(selectors[prop.id].kind).to.equal("property");
+      expect(selectors[calc.id].kind).to.equal("calculated");
+      expect(fieldSelectorIds).to.deep.equal({ [prop.id]: prop.id, [calc.id]: calc.id });
     });
 
     it("carries a calculated field's expression, targetAlias, and bindings onto its selector", () => {
@@ -87,10 +86,10 @@ describe("ValueSelector", () => {
         targetAlias: "this",
         bindings: { factor: { type: "double", value: 2 } },
       });
-      const selectors = collectSelectors({ fields: [calc], externalInputs: [] });
-      expect(selectors[calc.selectorId]).to.deep.equal({
+      const { selectors } = collectValueRequirements({ fields: [calc], externalInputs: [] });
+      expect(selectors[calc.id]).to.deep.equal({
         kind: "calculated",
-        id: calc.selectorId,
+        id: calc.id,
         expression: "this.A * :factor",
         targetAlias: "this",
         bindings: { factor: { type: "double", value: 2 } },
@@ -107,12 +106,16 @@ describe("ValueSelector", () => {
       const fork = createTransformableDescriptor(descriptor).forkField(field.id, ["Stuff.Door"]);
       expect(fork.id).to.not.equal(field.id);
 
-      const selectors = collectSelectors({ fields: Object.values(descriptor.fields), externalInputs: [] });
-      expect(Object.keys(selectors)).to.deep.equal([field.selectorId]);
+      const { selectors, fieldSelectorIds } = collectValueRequirements({
+        fields: Object.values(descriptor.fields),
+        externalInputs: [],
+      });
+      expect(Object.keys(selectors)).to.deep.equal([field.id]);
+      expect(fieldSelectorIds).to.deep.equal({ [field.id]: field.id, [fork.id]: field.id });
     });
 
     it("adds a field-less selector for an external input with no matching field", () => {
-      const selectors = collectSelectors({
+      const { selectors } = collectValueRequirements({
         fields: [],
         externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
       });
@@ -133,11 +136,11 @@ describe("ValueSelector", () => {
         propertyName: "Height",
         valueClassNames: ["Stuff.Door"],
       });
-      const selectors = collectSelectors({
+      const { selectors } = collectValueRequirements({
         fields: [prop],
         externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
       });
-      expect(Object.keys(selectors)).to.deep.equal([prop.selectorId]);
+      expect(Object.keys(selectors)).to.deep.equal([prop.id]);
     });
 
     it("keeps selector ids distinct for the same property reached through different filtered paths", () => {
@@ -192,9 +195,9 @@ describe("ValueSelector", () => {
       transformable.removeField(removable.id);
       transformable.removeField(inputBacked.id);
 
-      const selectors = collectSelectors({ fields: Object.values(descriptor.fields), externalInputs });
-      expect(selectors).to.have.property(inputBacked.selectorId);
-      expect(selectors).to.not.have.property(removable.selectorId);
+      const { selectors } = collectValueRequirements({ fields: Object.values(descriptor.fields), externalInputs });
+      expect(selectors).to.have.property(inputBacked.id);
+      expect(selectors).to.not.have.property(removable.id);
     });
   });
 });

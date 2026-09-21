@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectClassPropertyFields } from "../../content/descriptor-building/ClassPropertyFields.js";
+import { collectClassPropertyFields } from "../../content/definition-building/ClassPropertyFields.js";
 import { PropertyField } from "../../content/model/Field.js";
 import { createEntityClass, createPrimitiveProperty } from "../MetadataStubs.js";
 
@@ -40,11 +40,6 @@ describe("collectClassPropertyFields", () => {
       {
         kind: "property",
         id: PropertyField.computeId({ propertyClassName: "TestSchema.B", propertyName: "Prop", pathFromTarget: path }),
-        selectorId: PropertyField.computeId({
-          propertyClassName: "TestSchema.B",
-          propertyName: "Prop",
-          pathFromTarget: path,
-        }),
         label: "Prop",
         type: { kind: "primitive", type: "String" },
         propertyClassName: "TestSchema.B",

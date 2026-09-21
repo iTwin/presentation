@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { buildContentDescriptor } from "./descriptor-building/BuildDescriptor.js";
+import { buildContentDefinition } from "./definition-building/BuildContentDefinition.js";
 import { getInstanceKeys } from "./query/GetInstanceKeys.js";
 import { getSize } from "./query/GetSize.js";
 
 import type { Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";
-import type { ContentDescriptor } from "./model/ContentDescriptor.js";
+import type { ContentDefinition } from "./definition-building/BuildContentDefinition.js";
 
 /**
  * Builds the stateful content provider returned by `createContentProvider`.
@@ -21,13 +21,16 @@ import type { ContentDescriptor } from "./model/ContentDescriptor.js";
  */
 export function createContentProviderImpl(props: Props<typeof createContentProvider>): ContentProvider {
   const { imodelAccess, sources, config } = props;
-  let descriptor: Promise<ContentDescriptor> | undefined;
-  async function getContentDescriptor() {
-    descriptor ??= buildContentDescriptor({ imodelAccess, sources, config });
-    return descriptor;
+  let definition: Promise<ContentDefinition> | undefined;
+  async function getContentDefinition() {
+    definition ??= buildContentDefinition({ imodelAccess, sources, config });
+    return definition;
   }
   return {
-    getContentDescriptor,
+    async getContentDescriptor() {
+      const contentDefinition = await getContentDefinition();
+      return contentDefinition.descriptor;
+    },
     async getSize(options) {
       return getSize({ imodelAccess, sources, queryFilterers: config?.queryFilterers, filters: options?.filters });
     },

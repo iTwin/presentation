@@ -2,7 +2,6 @@ sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;BisCoreLocalizedStrings
 public;interface;CalculatedField
-public;interface;CalculatedValueSelector
 public;interface;CategoryDefinition
 public;namespace;CategoryDefinition
 public;interface;ContentConfiguration
@@ -25,7 +24,6 @@ public;function;getDistinctFieldValues
 public;function;mapItems
 public;interface;PropertyField
 public;namespace;PropertyField
-public;interface;PropertyValueSelector
 public;type;ReadonlyCalculatedField
 public;type;ReadonlyContentDescriptor
 public;type;ReadonlyExternalField
@@ -33,4 +31,3 @@ public;type;ReadonlyField
 public;type;ReadonlyPropertyField
 public;function;reduceItems
 public;function;resolveContentSources
-public;type;ValueSelector

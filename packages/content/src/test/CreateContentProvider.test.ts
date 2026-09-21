@@ -6,6 +6,7 @@
 import { collect, ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { createContentProvider, resolveContentSources } from "../content/Content.js";
+import * as BuildContentDefinition from "../content/definition-building/BuildContentDefinition.js";
 import { createEntityClass, createPrimitiveProperty, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSqlQueryExecutor } from "@itwin/presentation-shared";
@@ -65,11 +66,14 @@ describe("createContentProvider", () => {
       expect(descriptor.sources).to.equal(sources);
     });
 
-    it("builds the descriptor lazily and caches it across calls", async () => {
+    it("builds the content definition lazily and reuses it across descriptor calls", async () => {
+      const buildDefinitionSpy = vi.spyOn(BuildContentDefinition, "buildContentDefinition");
       const provider = createContentProvider({ imodelAccess, sources: [createSource("Schema.A")] });
+      expect(buildDefinitionSpy).not.toHaveBeenCalled();
       const first = await provider.getContentDescriptor();
       const second = await provider.getContentDescriptor();
       expect(first).to.equal(second);
+      expect(buildDefinitionSpy).toHaveBeenCalledOnce();
     });
 
     it("includes subclass fields for a provider-free polymorphic target", async () => {
@@ -130,7 +134,6 @@ describe("createContentProvider", () => {
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
         pathCardinality: "one",
-        selectorId: "Schema.A.Length",
       };
       const sizeIModelAccess = createSizeIModelAccess({ counts: [2] });
       const provider = createContentProvider({ imodelAccess: sizeIModelAccess, sources: [createSource("Schema.A")] });
@@ -231,7 +234,6 @@ describe("createContentProvider", () => {
         valueClassNames: ["Schema.A"],
         primaryClassNames: ["Schema.A"],
         pathCardinality: "one",
-        selectorId: "Schema.A.Length",
       };
       const keysIModelAccess = createInstanceKeysIModelAccess({ keyBatches: [[{ id: "0x2", className: "Schema.A" }]] });
       const provider = createContentProvider({ imodelAccess: keysIModelAccess, sources: [createSource("Schema.A")] });
