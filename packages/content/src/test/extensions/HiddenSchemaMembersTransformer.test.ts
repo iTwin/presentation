@@ -52,6 +52,7 @@ function calculatedField(id: string): CalculatedField {
     label: "Calc",
     type: { kind: "primitive", type: "String" },
     expression: "1+1",
+    primaryClassNames: ["TestSchema.Thing"],
   };
 }
 

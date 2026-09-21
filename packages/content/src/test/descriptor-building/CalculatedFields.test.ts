@@ -12,10 +12,10 @@ import type { IModelFieldsProvider } from "../../content/extensions/IModelFields
 
 type Contribution = Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>;
 
-function createSource(): ContentSource {
+function createSource(props?: Partial<Pick<ContentSource, "target" | "resolvedPrimaryClasses">>): ContentSource {
   return {
-    target: { primaryClass: "TestSchema.A" },
-    resolvedPrimaryClasses: ["TestSchema.A"],
+    target: props?.target ?? { primaryClass: "TestSchema.A" },
+    resolvedPrimaryClasses: props?.resolvedPrimaryClasses ?? ["TestSchema.A"],
     resolvedDeclarations: [],
   };
 }
@@ -74,6 +74,7 @@ describe("collectCalculatedFields", () => {
         label: "Flow",
         expression: "this.FlowRate * 2",
         type: { kind: "primitive", type: "Double" },
+        primaryClassNames: ["TestSchema.A"],
       },
     });
   });
@@ -113,6 +114,58 @@ describe("collectCalculatedFields", () => {
       getContribution,
     });
     expect(Object.keys(fields)).to.deep.equal(["p_v1:calc"]);
+  });
+
+  it("unions primaryClassNames across sources the same declaration was contributed for", async () => {
+    const provider = createProvider("p_v1", {
+      calculatedFields: [{ id: "calc", label: "Calc", expression: "1", type: { kind: "primitive", type: "Integer" } }],
+    });
+    const fields = await collectCalculatedFields({
+      sources: [
+        createSource({
+          target: { primaryClass: "TestSchema.A" },
+          resolvedPrimaryClasses: ["TestSchema.A1", "TestSchema.A2"],
+        }),
+        createSource({ target: { primaryClass: "TestSchema.B" }, resolvedPrimaryClasses: ["TestSchema.B1"] }),
+      ],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
+    expect(fields["p_v1:calc"].primaryClassNames).to.deep.equal(["TestSchema.A1", "TestSchema.A2", "TestSchema.B1"]);
+  });
+
+  it("falls back to the target's primary class when no concrete classes were resolved", async () => {
+    const provider = createProvider("p_v1", {
+      calculatedFields: [{ id: "calc", label: "Calc", expression: "1", type: { kind: "primitive", type: "Integer" } }],
+    });
+    const fields = await collectCalculatedFields({
+      sources: [createSource({ target: { primaryClass: "TestSchema.A" }, resolvedPrimaryClasses: [] })],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
+    expect(fields["p_v1:calc"].primaryClassNames).to.deep.equal(["TestSchema.A"]);
+  });
+
+  it("does not treat differing primaryClassNames alone as a divergent declaration", async () => {
+    const provider: IModelFieldsProvider = {
+      id: "p_v1",
+      async getContribution() {
+        return {
+          calculatedFields: [
+            { id: "calc", label: "Calc", expression: "1", type: { kind: "primitive", type: "Integer" } },
+          ],
+        };
+      },
+    };
+    const fields = await collectCalculatedFields({
+      sources: [
+        createSource({ target: { primaryClass: "TestSchema.A" }, resolvedPrimaryClasses: ["TestSchema.A"] }),
+        createSource({ target: { primaryClass: "TestSchema.B" }, resolvedPrimaryClasses: ["TestSchema.B"] }),
+      ],
+      imodelFieldsProviders: [provider],
+      getContribution,
+    });
+    expect(fields["p_v1:calc"].primaryClassNames).to.deep.equal(["TestSchema.A", "TestSchema.B"]);
   });
 
   it("throws when a provider declares divergent calculated fields for one id across targets", async () => {

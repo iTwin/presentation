@@ -237,6 +237,7 @@ describe("createTransformableDescriptor", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "1",
+        primaryClassNames: ["Stuff.Thing"],
       };
       const descriptor = createDescriptor([calculated]);
       const transformable = createTransformableDescriptor(descriptor);

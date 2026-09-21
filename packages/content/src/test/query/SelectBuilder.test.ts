@@ -219,6 +219,7 @@ describe("buildSelectProjection", () => {
       expression: "this.Code * :factor",
       bindings: { factor: { type: "int", value: 2 } },
       selectorId: "calculations_v1:score",
+      primaryClassNames: [primaryClass],
     };
     const projection = await buildSelectProjection({
       schemaProvider,

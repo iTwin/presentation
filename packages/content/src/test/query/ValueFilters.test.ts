@@ -33,6 +33,7 @@ describe("buildValueFilterClauses", () => {
     type: { kind: "primitive", type: "String" },
     expression: "this.CodeValue || '-' || this.UserLabel",
     selectorId: "calculated-id",
+    primaryClassNames: ["TestSchema.TestClass"],
   };
 
   const stringField: PropertyField = { ...propertyField, type: { kind: "primitive", type: "String" } };

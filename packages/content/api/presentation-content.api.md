@@ -48,6 +48,7 @@ export interface CalculatedField extends BaseField {
     expression: string;
     // (undocumented)
     kind: "calculated";
+    primaryClassNames: EC.FullClassNameDotNotation[];
     selectorId: string;
     targetAlias?: string;
 }
@@ -167,11 +168,7 @@ export interface ContentSource {
 
 // @public
 export interface ContentTarget {
-    instanceFilter?: {
-        expression: string;
-        primaryClassAlias?: string;
-        bindings?: Record<string, ECSqlBinding>;
-    };
+    instanceFilter?: InstanceFilterExpression;
     instanceIds?: Id64String[];
     primaryClass: EC.FullClassNameDotNotation;
 }
@@ -300,8 +297,11 @@ interface GetDistinctFieldValuesProps {
     field: PropertyField | CalculatedField;
     filters?: ContentValueFilter[];
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    instanceFiltering?: {
+        ids?: Id64String[];
+        filter?: InstanceFilterExpression;
+    };
     labelsFactory?: IInstanceLabelSelectClauseFactory;
-    targets: ContentTarget[];
 }
 
 // @public
@@ -318,6 +318,13 @@ interface InputPropertyDeclaration {
     path?: RelationshipPath;
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
+}
+
+// @public
+interface InstanceFilterExpression {
+    bindings?: Record<string, ECSqlBinding>;
+    expression: string;
+    primaryClassAlias?: string;
 }
 
 // @public

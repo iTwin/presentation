@@ -189,6 +189,14 @@ export interface CalculatedField extends BaseField {
    */
   bindings?: Record<string, ECSqlBinding>;
   /**
+   * Concrete primary (content target) classes whose instances have access to this field — the
+   * union, across every content target the contributing declaration applied to, of each target's
+   * resolved concrete classes (see `ContentSource.resolvedPrimaryClasses`).
+   *
+   * Always non-empty, de-duplicated, and sorted by full name.
+   */
+  primaryClassNames: EC.FullClassNameDotNotation[];
+  /**
    * ID of the {@link ValueSelector} (column) this field reads. Equals this field's id
    * (`${providerId}:${localId}`). Immutable in the transformer view.
    */

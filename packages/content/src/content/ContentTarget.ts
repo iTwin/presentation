@@ -45,35 +45,44 @@ export interface ContentTarget {
    * Optional filter predicate to further restrict which instances are in scope.
    * Applied during source resolution (Stage 1) — affects which paths are discovered.
    */
-  instanceFilter?: {
-    /**
-     * ECSQL WHERE clause expression (without the WHERE keyword).
-     *
-     * Use `primaryClassAlias` (defaults to `"this"`) followed by a dot to reference properties
-     * of the primary class. At query generation time, the pipeline performs
-     * a literal replacement of all `{primaryClassAlias}.` occurrences with the actual query alias.
-     *
-     * @example
-     * ```
-     * expression: "this.Area > :minArea"
-     * ```
-     */
-    expression: string;
+  instanceFilter?: InstanceFilterExpression;
+}
 
-    /**
-     * The placeholder used in `expression` to reference the primary class (`primaryClass`).
-     * Every occurrence of `{primaryClassAlias}.` in the expression will be replaced with the
-     * actual query alias at query generation time.
-     *
-     * @default "this"
-     */
-    primaryClassAlias?: string;
+/**
+ * An ECSQL `WHERE`-clause expression scoping which instances of a primary class are in scope,
+ * optionally parameterized with bind values. Used as {@link ContentTarget.instanceFilter} and as the
+ * `instanceFiltering.filter` prop of `getDistinctFieldValues`.
+ *
+ * @public
+ */
+export interface InstanceFilterExpression {
+  /**
+   * ECSQL WHERE clause expression (without the WHERE keyword).
+   *
+   * Use `primaryClassAlias` (defaults to `"this"`) followed by a dot to reference properties
+   * of the primary class. At query generation time, the pipeline performs
+   * a literal replacement of all `{primaryClassAlias}.` occurrences with the actual query alias.
+   *
+   * @example
+   * ```
+   * expression: "this.Area > :minArea"
+   * ```
+   */
+  expression: string;
 
-    /**
-     * Bind values for the expression, keyed by parameter name.
-     */
-    bindings?: Record<string, ECSqlBinding>;
-  };
+  /**
+   * The placeholder used in `expression` to reference the primary class (`primaryClass`).
+   * Every occurrence of `{primaryClassAlias}.` in the expression will be replaced with the
+   * actual query alias at query generation time.
+   *
+   * @default "this"
+   */
+  primaryClassAlias?: string;
+
+  /**
+   * Bind values for the expression, keyed by parameter name.
+   */
+  bindings?: Record<string, ECSqlBinding>;
 }
 
 /**

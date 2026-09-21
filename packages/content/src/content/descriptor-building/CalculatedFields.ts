@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collectInParallel, stableStringify } from "../InternalUtils.js";
+import { toSortedUniqueClassNames } from "../model/Utils.js";
 
 import type { ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
@@ -19,8 +20,10 @@ import type { GetContributionFn } from "./ContributionMemoizer.js";
  * contribute the same local id for several targets; because the id doubles as the selector id, the
  * same calculated field must be one field/one selector across the descriptor. Declarations that
  * collapse to the same id are therefore deduplicated, but only after asserting they are structurally
- * identical — a divergence (different expression, type, category, etc. under one id) is a provider
- * bug and throws, mirroring the intra-provider check in `mergePropertyFieldsByIdentity`.
+ * identical (ignoring `primaryClassNames`, which is expected to differ per contributing target and is
+ * unioned instead) — a divergence in any other respect (different expression, type, category, etc.
+ * under one id) is a provider bug and throws, mirroring the intra-provider check in
+ * `mergePropertyFieldsByIdentity`.
  *
  * @internal
  */
@@ -40,13 +43,15 @@ export async function collectCalculatedFields(props: {
           return (contribution?.calculatedFields ?? []).map((declaration) => ({
             providerId: provider.id,
             declaration,
+            primaryClassNames:
+              source.resolvedPrimaryClasses.length > 0 ? source.resolvedPrimaryClasses : [source.target.primaryClass],
           }));
         },
       }),
   });
 
   const result: Record<Field["id"], CalculatedField> = {};
-  for (const { providerId, declaration } of declared) {
+  for (const { providerId, declaration, primaryClassNames } of declared) {
     const id = `${providerId}:${declaration.id}`;
     const field: CalculatedField = {
       kind: "calculated",
@@ -55,6 +60,7 @@ export async function collectCalculatedFields(props: {
       type: declaration.type,
       expression: declaration.expression,
       selectorId: id,
+      primaryClassNames,
     };
     if (declaration.targetAlias !== undefined) {
       field.targetAlias = declaration.targetAlias;
@@ -66,21 +72,28 @@ export async function collectCalculatedFields(props: {
       field.categoryId = declaration.categoryId;
     }
 
-    if (id in result && !calculatedFieldsAgree(result[id], field)) {
+    const existing = id in result ? result[id] : undefined;
+    if (existing && !calculatedFieldsAgree(existing, field)) {
       throw new Error(
         `Cannot merge calculated field "${id}": provider "${providerId}" produced divergent declarations for one id across targets.`,
       );
     }
-    result[id] = field;
+    result[id] = existing
+      ? { ...field, primaryClassNames: toSortedUniqueClassNames([...existing.primaryClassNames, ...primaryClassNames]) }
+      : { ...field, primaryClassNames: toSortedUniqueClassNames(primaryClassNames) };
   }
   return result;
 }
 
 /**
- * Structural equality for two calculated fields that collapsed to the same id. The fields carry
- * nested value shapes (`type`) and `bindings` records that cannot be compared by reference, so both
- * are reduced to a canonical, key-sorted JSON form and compared as strings.
+ * Structural equality for two calculated fields that collapsed to the same id, ignoring
+ * `primaryClassNames` (expected to differ across contributing targets and unioned separately by the
+ * caller). The fields carry nested value shapes (`type`) and `bindings` records that cannot be
+ * compared by reference, so both are reduced to a canonical, key-sorted JSON form (minus
+ * `primaryClassNames`) and compared as strings.
  */
 function calculatedFieldsAgree(a: CalculatedField, b: CalculatedField): boolean {
-  return stableStringify(a) === stableStringify(b);
+  const { primaryClassNames: _aClasses, ...aRest } = a;
+  const { primaryClassNames: _bClasses, ...bRest } = b;
+  return stableStringify(aRest) === stableStringify(bRest);
 }
