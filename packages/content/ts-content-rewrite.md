@@ -598,7 +598,8 @@ interface ExternalFieldsProvider<TInputKeys, TOutputFieldIds> {
 interface InputPropertyDeclaration {
   className: EC.FullClassName; // class that owns the property
   propertyName: string; // the EC property name
-  related?: { // omit for a direct property input
+  related?: {
+    // omit for a direct property input
     path: RelationshipPath; // nonempty path from target to property's class
     cardinalityHint?: "one" | "many";
   };
