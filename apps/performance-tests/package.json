@@ -25,7 +25,7 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-hierarchies": "workspace:*",
-    "@itwin/presentation-models-tree": "workspace:*",
+    "@itwin/presentation-tree-definitions": "workspace:*",
     "@itwin/presentation-shared": "workspace:*",
     "@itwin/unified-selection": "workspace:*",
     "@types/node": "catalog:build-tools",

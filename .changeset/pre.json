@@ -14,7 +14,6 @@
     "@itwin/presentation-core-interop": "1.2.0",
     "@itwin/presentation-hierarchies": "1.4.1",
     "@itwin/presentation-hierarchies-react": "1.6.0",
-    "@itwin/presentation-models-tree": "0.0.0",
     "@itwin/presentation-opentelemetry": "4.1.1",
     "@itwin/presentation-shared": "1.2.0",
     "presentation-test-utilities": "0.0.0",

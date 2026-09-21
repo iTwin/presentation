@@ -11,7 +11,7 @@ on:
       - apps/performance-tests/package.json
       - packages/core-interop/**
       - packages/hierarchies/**
-      - packages/models-tree/**
+      - packages/tree-definitions/**
       - packages/shared/**
 
 jobs:

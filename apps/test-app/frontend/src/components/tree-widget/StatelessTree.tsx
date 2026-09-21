@@ -23,7 +23,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import { setupModelsTree } from "@itwin/presentation-models-tree";
+import { createModelsTree } from "@itwin/presentation-tree-definitions";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Button, CircularProgress, Stack, Switch, TextField, Typography } from "@mui/material";
@@ -89,7 +89,7 @@ function Tree({
   treeLabel: string;
 }) {
   const [searchText, setSearchText] = useState("");
-  const modelsTree = useMemo(() => setupModelsTree({ imodelAccess }), [imodelAccess]);
+  const modelsTree = useMemo(() => createModelsTree({ imodelAccess }), [imodelAccess]);
 
   const getSearchPaths = useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
     return async ({ abortSignal }) =>
