@@ -57,7 +57,7 @@ The package provides four extension mechanisms, each targeting a different stage
 
 - **`defineDescriptorTransformer`** — customize the descriptor after all fields providers have contributed. Use this to hide fields, override labels, change categories, or apply any cross-cutting metadata adjustments.
 
-- **`defineExternalFieldsProvider`** — declare fields whose values come from external sources. The provider specifies what input values it needs (from already-loaded iModel fields) and supplies values for its own fields in a batch callback.
+- **`defineExternalFieldsProvider`** — declare fields whose values come from external sources. The provider specifies which iModel properties it needs as inputs and supplies values for its own fields in a batch callback. Direct inputs pass through the property's value unchanged. Related inputs specify `related.path`, which must be nonempty, and an optional `related.cardinalityHint`. A `"many"` hint supplies an array with one value per related instance.
 
 - **`defineQueryFilterer`** — inject additional WHERE clauses or JOINs into the generated ECSQL query without modifying the descriptor.
 

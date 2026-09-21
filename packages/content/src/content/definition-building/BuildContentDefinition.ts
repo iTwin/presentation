@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass } from "@itwin/presentation-shared";
+import { type EC, type ECSchemaProvider, getClass, type ValueDescriptor } from "@itwin/presentation-shared";
 import {
   createTransformableDescriptor,
   DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY,
@@ -17,18 +17,18 @@ import { collectCategories, pruneUnreferencedCategories } from "./Categories.js"
 import { createContributionMemoizer } from "./ContributionMemoizer.js";
 import { collectDirectPropertyFields } from "./DirectFields.js";
 import { collectExternalFields } from "./ExternalFields.js";
+import { prepareExternalProviders } from "./ExternalProviders.js";
 import { mergePropertyFieldsByIdentity } from "./PropertyFieldMerge.js";
 import { collectRelatedPropertyFields } from "./RelatedFields.js";
 import { collectValueRequirements } from "./Selectors.js";
 import { computePropertySelectorId } from "./ValueSelector.js";
 
-import type { EC, ECSchemaProvider, ValueDescriptor } from "@itwin/presentation-shared";
 import type { ContentConfiguration } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field, PropertyField } from "../model/Field.js";
 import type { PropertyValueReader } from "../query/value-loading/RowDecoder.js";
-import type { ExternalInput } from "./ExternalFields.js";
+import type { ExternalInput, ExternalProviderPlan } from "./ExternalProviders.js";
 import type { ValueSelector } from "./ValueSelector.js";
 
 /**
@@ -43,6 +43,7 @@ export interface ContentDefinition {
   propertyReaders: Record<ValueSelector["id"], PropertyValueReader>;
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
   externalInputs: ExternalInput[];
+  externalProviders: ExternalProviderPlan[];
   /** Calculated fields contributed to each source, keyed by the original source object. */
   calculatedFieldIdsBySource: Map<ContentSource, Set<Field["id"]>>;
 }
@@ -68,8 +69,8 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
   const externalFieldsProviders = config?.externalFieldsProviders ?? [];
   const imodelFieldsProvidersById = new Map(imodelFieldsProviders.map((provider) => [provider.id, provider]));
   const { getContribution, getAnchorContribution } = createContributionMemoizer({ imodelAccess });
+  const externalFields = collectExternalFields(externalFieldsProviders);
   const classifier = createPathCardinalityClassifier(imodelAccess);
-
   const candidates = await collectInParallel({
     inputs: sources,
     expand: async (source) => {
@@ -103,7 +104,6 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     }),
     collectCalculatedFields({ sources, imodelFieldsProviders, getContribution }),
   ]);
-  const { fields: externalFields, inputs: externalInputs } = collectExternalFields(externalFieldsProviders);
   const propertyFields: Record<Field["id"], PropertyField> = Object.fromEntries(
     mergedPropertyFields.map(({ field }) => [field.id, field]),
   );
@@ -130,13 +130,27 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     categories: pruneUnreferencedCategories({ fields: transformed.fields, categories: transformed.categories }),
   };
 
+  const { inputs: externalInputs, plans: externalProviders } = await prepareExternalProviders({
+    providers: externalFieldsProviders,
+    sources,
+    fields: descriptor.fields,
+    classifier,
+  });
   const { selectors, fieldSelectorIds } = collectValueRequirements({
     fields: Object.values(descriptor.fields),
     externalInputs,
   });
   const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
 
-  return { descriptor, selectors, calculatedFieldIdsBySource, propertyReaders, fieldSelectorIds, externalInputs };
+  return {
+    descriptor,
+    selectors,
+    propertyReaders,
+    fieldSelectorIds,
+    externalInputs,
+    externalProviders,
+    calculatedFieldIdsBySource,
+  };
 }
 
 export async function preparePropertyReaders(props: {

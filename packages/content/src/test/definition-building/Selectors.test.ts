@@ -117,7 +117,7 @@ describe("ValueSelector", () => {
     it("adds a field-less selector for an external input with no matching field", () => {
       const { selectors } = collectValueRequirements({
         fields: [],
-        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
+        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height", cardinality: "one" }],
       });
       const id = computePropertySelectorId({ propertyClassName: "Stuff.Thing", propertyName: "Height" });
       expect(Object.keys(selectors)).to.deep.equal([id]);
@@ -138,7 +138,7 @@ describe("ValueSelector", () => {
       });
       const { selectors } = collectValueRequirements({
         fields: [prop],
-        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height" }],
+        externalInputs: [{ propertyClassName: "Stuff.Thing", propertyName: "Height", cardinality: "one" }],
       });
       expect(Object.keys(selectors)).to.deep.equal([prop.id]);
     });
@@ -189,7 +189,9 @@ describe("ValueSelector", () => {
         valueClassNames: ["Stuff.Door"],
       });
       const descriptor = createDescriptor([removable, inputBacked]);
-      const externalInputs = [{ propertyClassName: "Stuff.Thing" as const, propertyName: "Width" }];
+      const externalInputs = [
+        { propertyClassName: "Stuff.Thing" as const, propertyName: "Width", cardinality: "one" as const },
+      ];
 
       const transformable = createTransformableDescriptor(descriptor);
       transformable.removeField(removable.id);

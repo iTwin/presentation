@@ -207,8 +207,12 @@ interface ResolveContentSourcesProps {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   /** The content targets to resolve. */
   targets: ContentTarget[];
-  /** Extension point configuration (only `imodelFieldsProviders` is used for resolution). */
-  config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
+  /**
+   * Extension point configuration. Only `imodelFieldsProviders` contributes fields directly, but
+   * `externalFieldsProviders` is also read here: a provider input declared over a related path needs
+   * that path joined during resolution.
+   */
+  config?: Pick<ContentConfiguration, "imodelFieldsProviders" | "externalFieldsProviders">;
 }
 
 /**
@@ -236,6 +240,7 @@ export async function resolveContentSources(props: ResolveContentSourcesProps): 
     imodelAccess: props.imodelAccess,
     targets: props.targets,
     imodelFieldsProviders: props.config?.imodelFieldsProviders ?? [],
+    externalFieldsProviders: props.config?.externalFieldsProviders ?? [],
   });
 }
 

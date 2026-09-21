@@ -5,11 +5,10 @@
 
 import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
-import { computePropertySelectorId } from "../../../content/definition-building/ValueSelector.js";
 import { PropertyField } from "../../../content/model/Field.js";
+import { serializeRelationshipPath } from "../../../content/model/Utils.js";
 import { PAGE_SIZE } from "../../../content/query/QueryLimits.js";
 import { getItems } from "../../../content/query/value-loading/GetItems.js";
-import { createPropertyValueDecoder } from "../../../content/query/value-loading/RowDecoder.js";
 import {
   createEntityClass,
   createPrimitiveProperty,
@@ -21,43 +20,34 @@ import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlQueryDef, ECSqlQueryRow, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../../content/ContentTarget.js";
 import type { ContentDefinition } from "../../../content/definition-building/BuildContentDefinition.js";
-import type { PropertyValueSelector } from "../../../content/definition-building/ValueSelector.js";
+import type { ExternalFieldsProvider } from "../../../content/extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { ContentQuerySort } from "../../../content/query/SelectBuilder.js";
+import type { PropertyValueReader } from "../../../content/query/value-loading/RowDecoder.js";
 
-function createTestDefinition(contentDescriptor: ContentDescriptor): ContentDefinition {
-  const selectors: ContentDefinition["selectors"] = {};
-  const fieldSelectorIds: ContentDefinition["fieldSelectorIds"] = {};
-  const propertyReaders: ContentDefinition["propertyReaders"] = {};
-  for (const field of Object.values(contentDescriptor.fields)) {
-    if (field.kind !== "property") {
-      continue;
-    }
-    const selector: PropertyValueSelector = {
-      kind: "property",
-      id: computePropertySelectorId({
-        propertyClassName: field.propertyClassName,
-        propertyName: field.propertyName,
-        pathFromTarget: field.pathFromTarget,
-      }),
-      propertyClassName: field.propertyClassName,
-      propertyName: field.propertyName,
-      pathFromTarget: field.pathFromTarget,
-    };
-    selectors[selector.id] = selector;
-    fieldSelectorIds[field.id] = selector.id;
-    const decode = createPropertyValueDecoder(field.type);
-    const applicableClasses = new Set(field.valueClassNames.map((name) => name.toLowerCase()));
-    propertyReaders[selector.id] = (className, value) =>
-      applicableClasses.has(className.toLowerCase()) ? decode(value) : undefined;
-  }
+const readProperty: PropertyValueReader = (_className, value) => value ?? undefined;
+
+function createTestDefinition(
+  contentDescriptor: ContentDescriptor,
+  overrides: Partial<Omit<ContentDefinition, "descriptor">> = {},
+): ContentDefinition {
   return {
     descriptor: contentDescriptor,
-    selectors,
+    selectors: {
+      "Schema.A.Code": {
+        kind: "property",
+        id: "Schema.A.Code",
+        propertyClassName: "Schema.A",
+        propertyName: "Code",
+        pathFromTarget: [],
+      },
+    },
     calculatedFieldIdsBySource: new Map(),
-    propertyReaders,
-    fieldSelectorIds,
+    propertyReaders: { "Schema.A.Code": readProperty },
+    fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code" },
     externalInputs: [],
+    externalProviders: [],
+    ...overrides,
   };
 }
 
@@ -79,6 +69,38 @@ const descriptor = {
   categories: {},
   fields: { "Schema.A.Code": codeField },
 } as unknown as ContentDescriptor;
+
+const externalDescriptor = {
+  sources: [],
+  categories: {},
+  fields: {
+    "Schema.A.Code": codeField,
+    "ext_v1:status": {
+      kind: "external",
+      id: "ext_v1:status",
+      label: "Status",
+      type: { kind: "primitive", type: "String" },
+      providerId: "ext_v1",
+    },
+  },
+} as unknown as ContentDescriptor;
+
+function createExternalStatusDefinition(getValues: ExternalFieldsProvider["getValues"]): ContentDefinition {
+  return createTestDefinition(externalDescriptor, {
+    externalInputs: [{ propertyClassName: "Schema.A", propertyName: "Code", cardinality: "one" }],
+    externalProviders: [
+      {
+        provider: {
+          id: "ext_v1",
+          fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+          getValues,
+        },
+        inputs: [{ key: "code", cardinality: "one", selectors: [{ selectorId: "Schema.A.Code" }] }],
+        outputs: [{ localId: "status", fieldId: "ext_v1:status" }],
+      },
+    ],
+  });
+}
 
 const manyPath: RelationshipPath = [
   { sourceClassName: "TestSchema.Primary", relationshipName: "TestSchema.RelMany", targetClassName: "TestSchema.Many" },
@@ -116,6 +138,27 @@ const relDescriptor = {
   fields: { code: relCodeField, name: relNameField },
 } as unknown as ContentDescriptor;
 
+const relatedRequirements = {
+  selectors: {
+    code: {
+      kind: "property",
+      id: "code",
+      propertyClassName: "TestSchema.Primary",
+      propertyName: "Code",
+      pathFromTarget: [],
+    },
+    name: {
+      kind: "property",
+      id: "name",
+      propertyClassName: "TestSchema.Many",
+      propertyName: "Name",
+      pathFromTarget: manyPath,
+    },
+  },
+  propertyReaders: { code: readProperty, name: readProperty },
+  fieldSelectorIds: { code: "code", name: "name" },
+} satisfies Pick<ContentDefinition, "selectors" | "propertyReaders" | "fieldSelectorIds">;
+
 function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, related: boolean): ContentSource {
   return {
     target: { primaryClass },
@@ -129,6 +172,7 @@ function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, relat
           },
         ]
       : [],
+    resolvedExternalInputs: [],
   } as unknown as ContentSource;
 }
 
@@ -165,7 +209,12 @@ function createRelationalIModelAccess(handler: (query: ECSqlQueryDef) => ECSqlQu
 }
 
 function createSource(primaryClass: ContentSource["target"]["primaryClass"]): ContentSource {
-  return { target: { primaryClass }, resolvedPrimaryClasses: [primaryClass], resolvedDeclarations: [] };
+  return {
+    target: { primaryClass },
+    resolvedPrimaryClasses: [primaryClass],
+    resolvedDeclarations: [],
+    resolvedExternalInputs: [],
+  };
 }
 
 function valueRow(className: EC.FullClassNameDotNotation, id: Id64String, code: string, sort?: string): ECSqlQueryRow {
@@ -511,7 +560,27 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getContentDefinition: async () => createTestDefinition(twoFieldDescriptor),
+        getContentDefinition: async () =>
+          createTestDefinition(twoFieldDescriptor, {
+            selectors: {
+              "Schema.A.Code": {
+                kind: "property",
+                id: "Schema.A.Code",
+                propertyClassName: "Schema.A",
+                propertyName: "Code",
+                pathFromTarget: [],
+              },
+              "Schema.B.Label": {
+                kind: "property",
+                id: "Schema.B.Label",
+                propertyClassName: "Schema.B",
+                propertyName: "Label",
+                pathFromTarget: [],
+              },
+            },
+            propertyReaders: { "Schema.A.Code": readProperty, "Schema.B.Label": readProperty },
+            fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code", "Schema.B.Label": "Schema.B.Label" },
+          }),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
         sorting,
       }),
@@ -550,7 +619,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getContentDefinition: async () => createTestDefinition(relDescriptor),
+        getContentDefinition: async () => createTestDefinition(relDescriptor, relatedRequirements),
         sources: [createRelationalSource("TestSchema.Primary", true)],
       }),
     );
@@ -599,7 +668,8 @@ describe("getItems", () => {
             ],
           },
         ],
-      } as unknown as ContentSource;
+        resolvedExternalInputs: [],
+      };
     }
 
     const { imodelAccess, queries } = createRelationalIModelAccess((query) => {
@@ -634,7 +704,28 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getContentDefinition: async () => createTestDefinition(filteredPathsDescriptor),
+        getContentDefinition: async () =>
+          createTestDefinition(filteredPathsDescriptor, {
+            selectors: {
+              code: relatedRequirements.selectors.code,
+              filteredNameA: {
+                ...relatedRequirements.selectors.name,
+                id: "filteredNameA",
+                pathFromTarget: filteredManyPathA,
+              },
+              filteredNameB: {
+                ...relatedRequirements.selectors.name,
+                id: "filteredNameB",
+                pathFromTarget: filteredManyPathB,
+              },
+            },
+            propertyReaders: { code: readProperty, filteredNameA: readProperty, filteredNameB: readProperty },
+            fieldSelectorIds: {
+              [relCodeField.id]: "code",
+              [filteredNameFieldA.id]: "filteredNameA",
+              [filteredNameFieldB.id]: "filteredNameB",
+            },
+          }),
         sources: [createFilteredPathsSource("TestSchema.Primary")],
       }),
     );
@@ -676,7 +767,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getContentDefinition: async () => createTestDefinition(relDescriptor),
+        getContentDefinition: async () => createTestDefinition(relDescriptor, relatedRequirements),
         sources: [createRelationalSource("TestSchema.Primary", true)],
       }),
     );
@@ -688,6 +779,90 @@ describe("getItems", () => {
     // Index alignment holds end to end: each related instance's own `getValue` sees only its row's hole.
     expect(relatedInstances[0].getValue(relNameField)).to.equal("name-1");
     expect(relatedInstances[1].getValue(relNameField)).to.equal(undefined);
+  });
+
+  it("populates an external field whose inputs span the anchor query and an additional related group", async () => {
+    // Input-only requirements (no backing field) for an external field whose inputs span the anchor's direct
+    // `Code` and the 1:many related group's `Name`.
+    const relExternalDescriptor = {
+      sources: [],
+      categories: {},
+      fields: {
+        "ext_v1:combined": {
+          kind: "external",
+          id: "ext_v1:combined",
+          label: "Combined",
+          type: { kind: "primitive", type: "String" },
+          providerId: "ext_v1",
+        },
+      },
+    } as unknown as ContentDescriptor;
+    const getValues = vi.fn(
+      async ({ items: batch }: { items: Array<{ inputValues: { code: string; name: string[] } }> }) =>
+        batch.map((item) => ({ combined: `${item.inputValues.code}+${item.inputValues.name.join(",")}` })),
+    );
+    const { imodelAccess } = createRelationalIModelAccess((query) => {
+      if (query.ecsql.includes("pres_t0")) {
+        // Additional (1:many) group value query — the provider's "name" input is read from here.
+        return [
+          {
+            ["pres_primary_class"]: "TestSchema.Primary",
+            ["pres_primary_id"]: "0x1",
+            ["pres_t0"]: JSON.stringify({ ["ECInstanceId"]: "0x2", ["Name"]: "name-1" }),
+            ["pres_t0_cls"]: "TestSchema.Many",
+          },
+        ];
+      }
+      // Anchor page query — the provider's "code" input is read from here.
+      return [
+        {
+          ["pres_primary_class"]: "TestSchema.Primary",
+          ["pres_primary_id"]: "0x1",
+          ["this"]: JSON.stringify({ ["Code"]: "code-1" }),
+        },
+      ];
+    });
+    const items = await collect(
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () =>
+          createTestDefinition(relExternalDescriptor, {
+            ...relatedRequirements,
+            fieldSelectorIds: {},
+            externalInputs: [
+              { propertyClassName: "TestSchema.Primary", propertyName: "Code", cardinality: "one" },
+              {
+                propertyClassName: "TestSchema.Many",
+                propertyName: "Name",
+                pathFromTarget: manyPath,
+                cardinality: "many",
+              },
+            ],
+            externalProviders: [
+              {
+                provider: {
+                  id: "ext_v1",
+                  fields: [{ id: "combined", label: "Combined", type: { kind: "primitive", type: "String" } }],
+                  getValues,
+                },
+                inputs: [
+                  { key: "code", cardinality: "one", selectors: [{ selectorId: "code" }] },
+                  {
+                    key: "name",
+                    cardinality: "many",
+                    selectors: [{ selectorId: "name", pathKey: serializeRelationshipPath({ path: manyPath }) }],
+                  },
+                ],
+                outputs: [{ localId: "combined", fieldId: "ext_v1:combined" }],
+              },
+            ],
+          }),
+        sources: [createRelationalSource("TestSchema.Primary", true)],
+      }),
+    );
+
+    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "code-1", name: ["name-1"] } }] });
+    expect(items[0].getValue(relExternalDescriptor.fields["ext_v1:combined"])).to.equal("code-1+name-1");
   });
 
   it("merges anchor and additional group values fetched for a sorted key", async () => {
@@ -720,7 +895,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getContentDefinition: async () => createTestDefinition(relDescriptor),
+        getContentDefinition: async () => createTestDefinition(relDescriptor, relatedRequirements),
         sources: [
           createRelationalSource("TestSchema.Primary", true),
           createRelationalSource("TestSchema.Other", false),
@@ -780,7 +955,7 @@ describe("getItems", () => {
     const items = await collect(
       getItems({
         imodelAccess,
-        getContentDefinition: async () => createTestDefinition(relDescriptor),
+        getContentDefinition: async () => createTestDefinition(relDescriptor, relatedRequirements),
         sources: [createRelationalSource("TestSchema.Primary", true)],
         sorting: [{ field: sortField, direction: "asc" }],
       }),
@@ -788,5 +963,85 @@ describe("getItems", () => {
     expect(items).to.have.lengthOf(1);
     expect(items[0].getValue(relCodeField)).to.equal("code-1");
     expect(items[0].getValue(relNameField)).to.deep.equal(["name-1"]);
+  });
+
+  it("populates external field values from the page's decoded input selectors", async () => {
+    const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { code: string } }> }) =>
+      batch.map((item) => ({ status: `${item.inputValues.code}!` })),
+    );
+    const { imodelAccess } = createIModelAccess(() => [
+      valueRow("Schema.A", "0x1", "A1"),
+      valueRow("Schema.A", "0x2", "A2"),
+    ]);
+    const items = await collect(
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createExternalStatusDefinition(getValues),
+        sources: [createSource("Schema.A")],
+      }),
+    );
+
+    expect(getValues).toHaveBeenCalledTimes(1);
+    expect(items.map((item) => item.getValue(externalDescriptor.fields["ext_v1:status"]))).to.deep.equal([
+      "A1!",
+      "A2!",
+    ]);
+  });
+
+  it("projects and decodes private prepared selectors absent from the public descriptor", async () => {
+    const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { code: string } }> }) =>
+      batch.map((item) => ({ status: `${item.inputValues.code}!` })),
+    );
+    const publicDescriptor: ContentDescriptor = {
+      ...externalDescriptor,
+      fields: { "ext_v1:status": externalDescriptor.fields["ext_v1:status"] },
+    };
+    const readCode = vi.fn(readProperty);
+    const definition = {
+      ...createExternalStatusDefinition(getValues),
+      descriptor: publicDescriptor,
+      propertyReaders: { "Schema.A.Code": readCode },
+      fieldSelectorIds: {},
+    } satisfies ContentDefinition;
+    const { imodelAccess, queries } = createIModelAccess(() => [valueRow("Schema.A", "0x1", "A1")]);
+
+    const items = await collect(
+      getItems({ imodelAccess, getContentDefinition: async () => definition, sources: [createSource("Schema.A")] }),
+    );
+
+    expect(queries[0].ecsql).to.contain("[this].$ AS [this]");
+    expect(readCode).toHaveBeenCalledWith("Schema.A", "A1");
+    expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: "A1" } }] });
+    expect(items[0].getValue(publicDescriptor.fields["ext_v1:status"])).to.equal("A1!");
+  });
+
+  it("calls an external fields provider once per loaded page", async () => {
+    const getValues = vi.fn(async ({ items: batch }: { items: Array<unknown> }) => batch.map(() => ({ status: "ok" })));
+    const firstPage = Array.from({ length: PAGE_SIZE }, (_, index) =>
+      valueRow("Schema.A", `0x${index + 1}`, `C${index}`),
+    );
+    const { imodelAccess } = createIModelAccess((query) =>
+      query.ecsql.includes("WHERE") ? [valueRow("Schema.A", "0xffff", "last")] : firstPage,
+    );
+    await collect(
+      getItems({
+        imodelAccess,
+        getContentDefinition: async () => createExternalStatusDefinition(getValues),
+        sources: [createSource("Schema.A")],
+      }),
+    );
+
+    expect(getValues).toHaveBeenCalledTimes(2);
+  });
+
+  it("propagates a rejection from an external fields provider", async () => {
+    const definition = createExternalStatusDefinition(async () => Promise.reject(new Error("external service down")));
+    const { imodelAccess } = createIModelAccess(() => [valueRow("Schema.A", "0x1", "A1")]);
+
+    await expect(
+      collect(
+        getItems({ imodelAccess, getContentDefinition: async () => definition, sources: [createSource("Schema.A")] }),
+      ),
+    ).rejects.toThrow(/external service down/);
   });
 });

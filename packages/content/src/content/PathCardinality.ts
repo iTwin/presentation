@@ -9,6 +9,7 @@ import { serializeRelationshipPath } from "./model/Utils.js";
 
 import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "./ContentTarget.js";
+import type { ExternalInput } from "./definition-building/ExternalProviders.js";
 import type { ContentDescriptor } from "./model/ContentDescriptor.js";
 
 /**
@@ -70,8 +71,8 @@ export interface PathCardinalityClassifier {
 /**
  * Creates a {@link PathCardinalityClassifier} over the given schema.
  *
- * Each verdict reflects one declaration's view of a path. Declarations that disagree about a shared
- * path produce fields that `mergePropertyFieldsByIdentity` reconciles into one.
+ * Each declaration uses its own hint, falling back to schema multiplicity when that hint does not
+ * apply. Sharing a query path does not change a declaration's value shape.
  */
 export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider): PathCardinalityClassifier {
   const cache = new Map<string, Promise<CardinalityHint>>();
@@ -89,10 +90,10 @@ export function createPathCardinalityClassifier(imodelAccess: ECSchemaProvider):
 }
 
 /**
- * Folds several cardinality verdicts for the same path into one: `"many"` wins if any of them says so —
- * describing a many-valued path as single-valued would silently drop every related instance but one.
- * Shared by `mergePropertyFieldsByIdentity` (candidate fields declaring the same path) and
- * `collectPathCardinalities` (descriptor fields declaring the same path).
+ * Folds effective cardinality verdicts into one: `"many"` wins if any of them says so.
+ * Shared by `mergePropertyFieldsByIdentity` for candidates of the same property field and
+ * `collectPathCardinalities` for declarations using the same query path. Combining query cardinalities
+ * does not change individual fields' or external inputs' value shapes.
  */
 export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): CardinalityHint {
   for (const cardinality of cardinalities) {
@@ -104,18 +105,30 @@ export function resolveCardinality(cardinalities: Iterable<CardinalityHint>): Ca
 }
 
 /**
- * Derives per-path cardinality hints from a descriptor's property fields, keyed by
- * `serializeRelationshipPath(pathFromTarget)`, so a query built from the same descriptor classifies
- * every path exactly as the descriptor already does (feed the result to `buildBaseQuery` as
- * `cardinalityHints`).
+ * Derives per-path cardinality hints from a descriptor's property fields and, since an
+ * external-input-only path has no field to consult, from prepared external inputs,
+ * keyed by `serializeRelationshipPath(pathFromTarget)`. Pass the result to
+ * `buildBaseQuery` as `cardinalityHints`.
+ *
+ * The shared query uses `"many"` if any consumer needs it. Each field and external input keeps its
+ * own value shape, and loading fails for a `"one"` consumer only when it reaches multiple instances.
  */
-export function collectPathCardinalities(descriptor: ContentDescriptor): Map<string, CardinalityHint> {
+export function collectPathCardinalities(
+  descriptor: ContentDescriptor,
+  externalInputs: Iterable<ExternalInput> = [],
+): Map<string, CardinalityHint> {
   const declarations: Array<{ path: RelationshipPath; cardinality: CardinalityHint }> = [];
   for (const field of Object.values(descriptor.fields)) {
     if (field.kind === "property" && field.pathFromTarget.length > 0) {
       declarations.push({ path: field.pathFromTarget, cardinality: field.pathCardinality });
     }
   }
+  for (const input of externalInputs) {
+    if (input.pathFromTarget && input.pathFromTarget.length > 0) {
+      declarations.push({ path: input.pathFromTarget, cardinality: input.cardinality });
+    }
+  }
+
   const cardinalitiesByKey = new Map<string, CardinalityHint[]>();
   for (const { path, cardinality } of declarations) {
     const key = serializeRelationshipPath({ path, includeInstanceFilters: true });

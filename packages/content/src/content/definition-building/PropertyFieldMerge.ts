@@ -46,9 +46,9 @@ interface PropertyFieldCandidate extends CategorizedField {
  *   - **Inter-provider** (candidates from different providers) may disagree; the candidate with the
  *     highest `priority` wins (ties resolve to input order). `valueClassNames` and `primaryClassNames`
  *     are still unioned.
- * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority:
- *   describing a many-valued path as single-valued would drop every related instance but one (see
- *   {@link resolveCardinality}).
+ * - `pathCardinality` is `"many"` when any candidate says so, regardless of provider or priority (see
+ *   {@link resolveCardinality}). This merges candidates of the same property field, not the shapes
+ *   of other fields or external inputs that happen to use the same path.
  *
  * The winning candidate's {@link FieldCategorization} is carried on each merged field so the
  * categorization pass can turn it into a `categoryId`. This is the inverse of `forkField`: it merges

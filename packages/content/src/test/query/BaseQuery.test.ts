@@ -45,6 +45,7 @@ function makeSource(paths: RelationshipPath[], target: ContentTarget = { primary
   return {
     target,
     resolvedPrimaryClasses: [primaryClass],
+    resolvedExternalInputs: [],
     resolvedDeclarations:
       paths.length > 0
         ? [
@@ -72,7 +73,7 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames ?? [primaryClass],
     primaryClassNames: props.primaryClassNames ?? [primaryClass],
-    pathCardinality: "one",
+    pathCardinality: props.pathCardinality ?? "one",
   };
 }
 
@@ -253,6 +254,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           { providerId: "a_v1", declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.Target"] }] },
           { providerId: "b_v1", declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.Target"] }] },
@@ -280,6 +282,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           {
             providerId: "a_v1",
@@ -537,6 +540,24 @@ describe("buildBaseQuery", () => {
       ).rejects.toThrow("Cannot sort by a 1:many related path");
     });
 
+    it("sorts a one-valued field while loading its shared path in a many-valued group", async () => {
+      const path = makeOneToOnePath();
+      const pathKey = serializeRelationshipPath({ path });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+        cardinalityHints: new Map([[pathKey, "many"]]),
+        sortFields: [makeOneToOneNameField(path)],
+      });
+      expect(result.anchor.paths).to.deep.equal([]);
+      expect(result.anchor.parts.relatedClassAliases.has(pathKey)).to.be.true;
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].cardinality).to.equal("many");
+      expect(result.additional![0].paths.map((resolved) => resolved.path)).to.deep.equal([path]);
+    });
+
     it("counts a selected path's prefix shared with a sort path only once against the budget", async () => {
       const prefix = [makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared")];
       const extension = [...prefix, makeStep("TestSchema.Shared", "TestSchema.RelLeaf", "TestSchema.Leaf")];
@@ -558,6 +579,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           {
             providerId: "provider_v1",
@@ -1213,6 +1235,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           { providerId: "provider_v1", declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
         ],
@@ -1238,6 +1261,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           { providerId: "provider_v1", declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
         ],
@@ -1259,12 +1283,32 @@ describe("buildBaseQuery", () => {
       expect(result.additional![0].parts.joins).to.include("INNER JOIN");
     });
 
+    it("joins input-only paths once when multiple external input groups share them", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const source = makeSource([]);
+      source.resolvedExternalInputs = [
+        { providerId: "first_v1", inputKey: "name", paths: [{ path, targetClassNames: [primaryClass] }] },
+        { providerId: "second_v1", inputKey: "name", paths: [{ path, targetClassNames: [primaryClass] }] },
+        { providerId: "first_v1", inputKey: "missing", paths: [] },
+      ];
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
+      expect(result.anchor.paths).to.deep.equal([{ path, targetClassNames: [primaryClass] }]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+      expect(result.additional).to.be.undefined;
+    });
+
     it("ignores a propertySelectorPaths entry that is not a prefix of any resolved path", async () => {
       const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
       const unrelated = [makeStep(primaryClass, "TestSchema.RelOther", "TestSchema.Other")];
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           { providerId: "provider_v1", declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
         ],
@@ -1303,6 +1347,7 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           {
             providerId: "provider_v1",

@@ -16,12 +16,12 @@ import type { PropertyField } from "../../model/Field.js";
 import type { SelectProjection } from "../SelectBuilder.js";
 
 /**
- * One primary instance's stitched SQL-backed values: `selectorId -> value` and
- * `join-path key -> related instances`. A `"one"`-cardinality group contributes scalar values and 0/1-entry
- * arrays; a `"many"`-cardinality group contributes index-aligned arrays (see {@link decodeGroupRows}).
+ * One primary instance's stitched SQL-backed values. Every selector stores one value per contributing
+ * instance, regardless of query cardinality. Direct and calculated values have one entry; related
+ * values align with their path's related-instance entries. EC array properties remain nested values.
  */
 export interface GroupValues {
-  selectorValues: Map<string, Value>;
+  selectorValues: Map<string, Value[]>;
   relatedInstances: Map<string, RelatedInstanceEntry[]>;
 }
 
@@ -225,9 +225,9 @@ function createNonNullPropertyValueDecoder(type: ValueDescriptor): (value: NonNu
 
 /**
  * Decodes one query group's rows into `instance key -> values` (keyed by {@link toInstanceKeyString}),
- * giving every value the shape the group's cardinality dictates: `"one"` (the anchor, a 1:1 partition)
- * gets scalar values and single-entry related-instance arrays; `"many"` (an isolated 1:many path) gets
- * index-aligned arrays, one element per row.
+ * storing each selector's values in an instance-aligned array. A `"one"` group accepts at most one
+ * row per primary; a `"many"` group appends one entry per row. A missing property contributes
+ * `undefined`, while a missing related instance contributes no entry.
  */
 export function decodeGroupRows(props: {
   rows: ECSqlQueryRow[];
@@ -248,6 +248,7 @@ export function decodeGroupRows(props: {
   const keyOf = (row: ECSqlQueryRow) => toInstanceKeyString(decodePrimaryKey({ row, columnNames }));
   const allowedKeys = keys && new Set(keys.map(toInstanceKeyString));
   const ownRows = allowedKeys ? rows.filter((row) => allowedKeys.has(keyOf(row))) : rows;
+  const selectorIds = [...Object.keys(columnNames.propertyBlobs), ...Object.keys(columnNames.calculatedValues)];
 
   if (cardinality === "one") {
     // One row per primary — a second row means a `"one"` cardinality hint was wrong for this path.
@@ -262,20 +263,26 @@ export function decodeGroupRows(props: {
       }
       const { selectorValues, relatedInstances } = rowDecoder(row);
       byKey.set(key, {
-        selectorValues,
+        selectorValues: new Map(
+          selectorIds.map((selectorId) => {
+            const column = columnNames.propertyBlobs[selectorId];
+            const hasInstance =
+              !(column in columnNames.relatedBlobs) || relatedInstances.has(columnNames.relatedBlobs[column].pathKey);
+            return [selectorId, hasInstance ? [selectorValues.get(selectorId)] : []];
+          }),
+        ),
         relatedInstances: new Map(Array.from(relatedInstances, ([pathKey, entry]) => [pathKey, [entry]])),
       });
     }
     return byKey;
   }
 
-  const selectorIds = [...Object.keys(columnNames.propertyBlobs), ...Object.keys(columnNames.calculatedValues)];
   const pathKeys = [...new Set(Object.values(columnNames.relatedBlobs).map((blob) => blob.pathKey))];
   // Every key in `keys` starts from empty arrays, so a primary that reached no related instance ends
   // with `[]` rather than an absent map entry.
   const emptyValues = (): GroupValues => ({
-    selectorValues: new Map(selectorIds.map((selectorId) => [selectorId, [] as Value[]])),
-    relatedInstances: new Map(pathKeys.map((pathKey) => [pathKey, [] as RelatedInstanceEntry[]])),
+    selectorValues: new Map(selectorIds.map((selectorId) => [selectorId, []])),
+    relatedInstances: new Map(pathKeys.map((pathKey) => [pathKey, []])),
   });
   for (const key of keys ?? []) {
     byKey.set(toInstanceKeyString(key), emptyValues());
@@ -289,7 +296,7 @@ export function decodeGroupRows(props: {
     }
     const { selectorValues, relatedInstances } = rowDecoder(row);
     for (const selectorId of selectorIds) {
-      (target.selectorValues.get(selectorId) as Value[]).push(selectorValues.get(selectorId));
+      target.selectorValues.get(selectorId)!.push(selectorValues.get(selectorId));
     }
     for (const pathKey of pathKeys) {
       const entry = relatedInstances.get(pathKey);
@@ -321,10 +328,19 @@ export function mergeGroupValues(target: GroupValues, source: GroupValues): void
   }
 }
 
+/** Returns one value per related instance without flattening EC array properties or dropping missing values. */
+export function getRelatedSelectorValues(props: { values: GroupValues; selectorId: string; pathKey: string }): Value[] {
+  const { values, selectorId, pathKey } = props;
+  const count = values.relatedInstances.get(pathKey)?.length ?? 0;
+  const selectorValues = values.selectorValues.get(selectorId) ?? [];
+  assert(selectorValues.length === count, `Expected aligned values for selector "${selectorId}".`);
+  return selectorValues;
+}
+
 /**
  * Projects decoded selector values onto descriptor fields through private field bindings, producing
  * the `ContentValues` for one instance. External fields have no binding and are left `undefined`.
- * Property fields apply their value-class scope without changing the shared selector values.
+ * Property fields apply their own cardinality and value-class scope without changing shared selector values.
  */
 export function toContentValues(props: {
   descriptor: ContentDescriptor;
@@ -339,14 +355,10 @@ export function toContentValues(props: {
     if (selectorId === undefined) {
       continue;
     }
-    const selectorValue = groupValues.selectorValues.get(selectorId);
-    if (selectorValue === undefined) {
-      continue;
-    }
     const value =
       field.kind === "property"
-        ? applyPropertyFieldScope({ field, primaryKey, value: selectorValue, groupValues })
-        : selectorValue;
+        ? projectPropertyFieldValue({ field, primaryKey, selectorId, groupValues })
+        : groupValues.selectorValues.get(selectorId)?.[0];
     if (value !== undefined) {
       values[field.id] = value;
     }
@@ -355,28 +367,36 @@ export function toContentValues(props: {
   return { primaryKey, values, relatedInstances: Object.fromEntries(groupValues.relatedInstances) };
 }
 
-function applyPropertyFieldScope(props: {
+function projectPropertyFieldValue(props: {
   field: PropertyField;
   primaryKey: InstanceKey;
-  value: Value;
+  selectorId: string;
   groupValues: GroupValues;
 }): Value {
-  const { field, primaryKey, value, groupValues } = props;
+  const { field, primaryKey, selectorId, groupValues } = props;
   const applicableClassNames = new Set(field.valueClassNames);
   if (field.pathFromTarget.length === 0) {
-    return applicableClassNames.has(primaryKey.className) ? value : undefined;
+    return applicableClassNames.has(primaryKey.className) ? groupValues.selectorValues.get(selectorId)?.[0] : undefined;
   }
 
   const pathKey = serializeRelationshipPath({ path: field.pathFromTarget, includeInstanceFilters: true });
   const entries = groupValues.relatedInstances.get(pathKey) ?? [];
+  if (field.pathCardinality === "one" && entries.length > 1) {
+    throw new Error(
+      `Field "${field.id}" has more than one related instance for primary "${toInstanceKeyString(primaryKey)}" despite "one" path cardinality.`,
+    );
+  }
+  if (!groupValues.selectorValues.has(selectorId)) {
+    return undefined;
+  }
+  const values = getRelatedSelectorValues({ values: groupValues, selectorId, pathKey });
   const appliesToEntry = (entry: RelatedInstanceEntry | undefined): boolean => {
     const key = field.propertyClassKind === "relationship" ? entry?.relationshipKey : entry?.key;
     return key !== undefined && applicableClassNames.has(key.className);
   };
   if (field.pathCardinality === "many") {
-    assert(Array.isArray(value), `Expected an array value for field "${field.id}".`);
     // Mask rather than filter so values stay aligned with the path's related-instance entries.
-    return value.map((element, index) => (appliesToEntry(entries[index]) ? element : undefined));
+    return values.map((element, index) => (appliesToEntry(entries[index]) ? element : undefined));
   }
-  return appliesToEntry(entries[0]) ? value : undefined;
+  return appliesToEntry(entries[0]) ? values[0] : undefined;
 }

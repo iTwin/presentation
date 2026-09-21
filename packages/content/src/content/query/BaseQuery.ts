@@ -173,9 +173,8 @@ export async function buildBaseQuery(
   // predicate is still evaluable even when its selected columns are owned by an additional group.
   const filterPaths = collectFilterPaths(filters);
   const filterCardinalityHints = collectFilterPathCardinalities(filters);
-  const sortPaths = collectSortPaths(
-    (props.sortFields ?? []).filter((field): field is PropertyField => field.kind === "property"),
-  );
+  const sortFields = (props.sortFields ?? []).filter((field): field is PropertyField => field.kind === "property");
+  const sortPaths = collectSortPaths(sortFields);
 
   // 1:many filter paths must use correlated subqueries to avoid duplicating primary rows. 1:1 filter
   // paths keep join-and-compare evaluation while they fit the anchor's JOIN budget; overflow paths use
@@ -195,18 +194,20 @@ export async function buildBaseQuery(
     return cardinality;
   };
 
-  const groupPaths = includeRelatedJoins ? collectGroupPaths(source, props.propertySelectorPaths) : [];
-
-  const [classifiedFilterPaths, classifiedSortPaths] = await Promise.all([
-    Promise.all(filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) }))),
-    Promise.all(sortPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) }))),
-  ]);
-  const manyValuedSort = classifiedSortPaths.find(({ cardinality }) => cardinality === "many");
+  const manyValuedSort = sortFields.find(
+    (field) => field.pathFromTarget.length > 0 && field.pathCardinality === "many",
+  );
   if (manyValuedSort) {
     throw new Error(
-      `Cannot sort by a 1:many related path: ${serializeRelationshipPath({ path: manyValuedSort.path })}.`,
+      `Cannot sort by a 1:many related path: ${serializeRelationshipPath({ path: manyValuedSort.pathFromTarget })}.`,
     );
   }
+
+  const groupPaths = includeRelatedJoins ? collectGroupPaths(source, props.propertySelectorPaths) : [];
+
+  const classifiedFilterPaths = await Promise.all(
+    filterPaths.map(async (path) => ({ path, cardinality: await classifyCardinality(path) })),
+  );
   const oneToOneFilterPaths = classifiedFilterPaths
     .filter((entry) => entry.cardinality !== "many")
     .map((entry) => entry.path);
@@ -306,15 +307,17 @@ export async function buildBaseQuery(
   // its share of 1:1 related columns) plus additional groups for budget-overflow 1:1 partitions and each
   // 1:many path (isolated so the anchor stays one row per primary).
   //
-  // A selected path the anchor already joins to evaluate a value filter or sort costs nothing further
-  // (already reflected in `anchorBudget`) and must never be packed into an overflow group instead —
-  // every such path is `"one"` by construction (a 1:many filter path is always existential, and a
-  // 1:many sort path already threw above), so it bypasses `splitRelatedPaths` and seeds `anchorPaths`.
+  // A selected 1:1 path already joined for filtering or sorting costs nothing further and stays on
+  // the anchor. Sorting a "one" field may still share its path with many-valued consumers; load that
+  // path's values in a separate "many" group, leaving the anchor join only for the sort key.
   const preJoinedKeys = new Set([...joinedFilterPaths, ...sortPaths].map((path) => serializeJoinPath(path)));
   const preSeededPaths: ResolvedPath[] = [];
   const packablePaths: ResolvedPath[] = [];
   for (const resolved of groupPaths) {
-    (preJoinedKeys.has(serializeJoinPath(resolved.path)) ? preSeededPaths : packablePaths).push(resolved);
+    (preJoinedKeys.has(serializeJoinPath(resolved.path)) && (await classifyCardinality(resolved.path)) === "one"
+      ? preSeededPaths
+      : packablePaths
+    ).push(resolved);
   }
   const { anchorPaths: packedAnchorPaths, additionalGroups } = await splitRelatedPaths({
     resolvePathInfo,
@@ -440,7 +443,13 @@ function serializeJoinPath(path: RelationshipPath): string {
  * if it can resolve to a joined alias.
  */
 function collectGroupPaths(source: ContentSource, propertySelectorPaths: RelationshipPath[]): ResolvedPath[] {
-  const resolvedPaths = source.resolvedDeclarations.flatMap((group) => group.paths);
+  // `resolvedDeclarations` + `resolvedExternalInputs` together cover every path a selector could read from —
+  // `propertySelectorPaths` already includes external-input selectors (which have a selector but no
+  // field), so both kinds of groups contribute their resolved paths here.
+  const resolvedPaths = [
+    ...source.resolvedDeclarations.flatMap((group) => group.paths),
+    ...source.resolvedExternalInputs.flatMap((group) => group.paths),
+  ];
   const byKey = new Map<string, ResolvedPath>();
   for (const selectorPath of propertySelectorPaths) {
     if (selectorPath.length === 0) {

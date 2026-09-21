@@ -80,7 +80,12 @@ function wireProviders(providers: IModelFieldsProvider[]) {
 }
 
 function createSource(resolvedDeclarations: ContentSource["resolvedDeclarations"]): ContentSource {
-  return { target: { primaryClass: "TestSchema.A" }, resolvedPrimaryClasses: ["TestSchema.A"], resolvedDeclarations };
+  return {
+    target: { primaryClass: "TestSchema.A" },
+    resolvedPrimaryClasses: ["TestSchema.A"],
+    resolvedDeclarations,
+    resolvedExternalInputs: [],
+  };
 }
 
 function resolvedPath(path: RelationshipPath, targetClassNames: EC.FullClassNameDotNotation[]): ResolvedPath {
