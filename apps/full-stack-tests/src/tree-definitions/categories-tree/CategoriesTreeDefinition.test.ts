@@ -8,14 +8,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CategoriesTreeDefinition,
   CLASS_NAMES,
   createBaseIdsProvider,
   createCategoriesTreeIdsProvider,
-  defaultCategoriesTreeHierarchyConfiguration as defaultHierarchyConfiguration,
   getClassesByView,
-  mergeWithDefaults,
 } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
@@ -1539,23 +1538,8 @@ function createCategoryTreeProvider(
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration,
 ): HierarchyProvider & Disposable {
   const imodelAccess = createIModelAccess(imodelConnection);
-  const excludedElementClassNames =
-    hierarchyConfig?.elements?.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined;
-  const baseIdsProvider = createBaseIdsProvider({
-    queryExecutor: imodelAccess,
-    elementClassName: getClassesByView(viewType).elementClass,
-    excludedElementClassNames,
-  });
-  const idsProvider = createCategoriesTreeIdsProvider({ queryExecutor: imodelAccess, type: viewType, baseIdsProvider });
-  const hierarchyProvider = createIModelHierarchyProvider({
-    imodelAccess,
-    hierarchyDefinition: new CategoriesTreeDefinition({
-      imodelAccess,
-      viewType,
-      idsProvider,
-      hierarchyConfig: mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: hierarchyConfig }),
-    }),
-  });
+  const { definition } = createCategoriesTree({ imodelAccess, viewType, hierarchyConfig });
+  const hierarchyProvider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
   return {
     hierarchyChanged: hierarchyProvider.hierarchyChanged,
     getNodes: (props) => hierarchyProvider.getNodes(props),

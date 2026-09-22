@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubCategory } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { Id64 } from "@itwin/core-bentley";
+import { Guid, Id64 } from "@itwin/core-bentley";
+import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CategoriesTreeDefinition,
   CLASS_NAMES,
@@ -37,6 +38,10 @@ import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-t
 
 describe("Categories tree", () => {
   describe("Hierarchy search", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     beforeAll(async () => {
       await initialize();
     });
@@ -74,6 +79,45 @@ describe("Categories tree", () => {
         await imodelConnection.close();
       });
 
+      it.each([undefined, "categories-tree-test"])("shares factory inputs with unique ID %s", async (uniqueId) => {
+        const imodelAccess = createIModelAccess(imodelConnection);
+        const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
+        const { createInstanceKeyPaths, createSearchTree } = createCategoriesTree({
+          imodelAccess,
+          viewType: "3d",
+          hierarchyConfig: { elements: { nodes: "include" } },
+          uniqueId,
+        });
+        const expectedPath = [keys.category, { ...keys.elements[0], className: CLASS_NAMES.GeometricElement3d }];
+        const paths = [];
+        for await (const path of createInstanceKeyPaths({ label: "matching element 0" })) {
+          paths.push(path);
+        }
+        expect(paths).toEqual([{ path: expectedPath, target: keys.elements[0].id }]);
+        const restartToken = queryReader.mock.calls.find(([, options]) =>
+          options?.restartToken?.endsWith("/filter-by-label"),
+        )?.[1]?.restartToken;
+        expect(restartToken).toBeDefined();
+        const resolvedUniqueId = restartToken!.split("/")[1];
+        if (uniqueId) {
+          expect(resolvedUniqueId).toBe(uniqueId);
+        } else {
+          expect(Guid.isGuid(resolvedUniqueId)).toBe(true);
+        }
+
+        queryReader.mockClear();
+        expect(await createSearchTree({ label: "matching element 0", revealTargets: true })).toEqual([
+          {
+            identifier: expectedPath[0],
+            options: { autoExpand: true },
+            children: [
+              { identifier: expectedPath[1], options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } },
+            ],
+          },
+        ]);
+        expect(queryReader).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ restartToken }));
+      });
+
       it.each([
         { limit: undefined, exceedsLimit: true },
         { limit: 2, exceedsLimit: true },
@@ -81,16 +125,15 @@ describe("Categories tree", () => {
         { limit: "unbounded" as const, exceedsLimit: false },
       ])("honors label search limit $limit with 103 matches", async ({ limit, exceedsLimit }) => {
         const imodelAccess = createIModelAccess(imodelConnection);
-        const searchProps = createCategoriesTreeSearchProps({
-          imodelConnection,
+        const { createSearchTree } = createCategoriesTree({
+          imodelAccess,
           hierarchyConfig: { elements: { nodes: "include" } },
           viewType: "3d",
-          searchText: "matching element",
-          searchLimit: limit,
         });
-        const searchPaths = CategoriesTreeDefinition.createSearchTree({
-          ...searchProps,
-          imodelAccess,
+        const searchPaths = createSearchTree({
+          label: "matching element",
+          limit,
+          revealTargets: true,
           abortSignal: new AbortController().signal,
         });
         if (exceedsLimit) {
@@ -117,7 +160,7 @@ describe("Categories tree", () => {
         const { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement } =
           getInsertFunctionByViewType(viewType);
 
-        it("does not emit search paths for a hidden default subcategory", async () => {
+        it("does not emit search paths for a hidden default sub-category", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>
             withEditTxn(imodel, (txn) => {
               const elementsModel = insertElementsModel({ txn, codeValue: "model" });
@@ -489,7 +532,7 @@ describe("Categories tree", () => {
           ]);
         });
 
-        it("finds subcategories by label containing special SQLite characters", async () => {
+        it("finds sub-categories by label containing special SQLite characters", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>
             withEditTxn(imodel, (txn) => {
               const elementsModel = insertElementsModel({ txn, codeValue: "m" });

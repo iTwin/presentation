@@ -5,3 +5,6 @@
 
 export { ModelsTreeNode } from "./tree-definitions/trees/models-tree/ModelsTreeNode.js";
 export { createModelsTree } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+
+export { CategoriesTreeNode } from "./tree-definitions/trees/categories-tree/CategoriesTreeNode.js";
+export { createCategoriesTree } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
