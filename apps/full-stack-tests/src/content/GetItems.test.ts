@@ -1398,42 +1398,6 @@ describe("Content", () => {
       });
     });
 
-    describe("query filterers", () => {
-      it("restricts items using an injected WHERE clause", async () => {
-        using setup = await buildTestECDb(async (builder, testName) => {
-          const schema = await importSchema(
-            testName,
-            builder,
-            `
-              <ECEntityClass typeName="A">
-                <ECProperty propertyName="Prop" typeName="string" />
-              </ECEntityClass>
-            `,
-          );
-          const a1 = builder.insertInstance(schema.items.A.fullName, { prop: "keep" });
-          builder.insertInstance(schema.items.A.fullName, { prop: "drop" });
-          return { schema, a1 };
-        });
-        const imodelAccess = createContentIModelAccess(setup.ecdb);
-        const queryFilterer = {
-          getFilterClauses({ targetAlias }: { targetAlias: string }) {
-            return { where: [`[${targetAlias}].[Prop] = 'keep'`] };
-          },
-        };
-        const provider = await createProvider({
-          imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName }],
-          config: { queryFilterers: [queryFilterer] },
-        });
-
-        const items = await collect(provider.getItems());
-        expectKeys(
-          items.map((item) => item.primaryKey),
-          [setup.a1],
-        );
-      });
-    });
-
     describe("paging", () => {
       it("pages through more items than a single page holds without gaps or duplicates", async () => {
         const count = 1050; // exceeds the internal PAGE_SIZE of 1000

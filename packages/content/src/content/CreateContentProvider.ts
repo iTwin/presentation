@@ -32,13 +32,12 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
       return contentDefinition.descriptor;
     },
     async getSize(options) {
-      return getSize({ imodelAccess, sources, queryFilterers: config?.queryFilterers, filters: options?.filters });
+      return getSize({ imodelAccess, sources, filters: options?.filters });
     },
     getInstanceKeys(options) {
       return getInstanceKeys({
         imodelAccess,
         sources,
-        queryFilterers: config?.queryFilterers,
         filters: options?.filters,
       });
     },
@@ -47,7 +46,6 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
         imodelAccess,
         getContentDefinition,
         sources,
-        queryFilterers: config?.queryFilterers,
         filters: options?.filters,
         sorting: options?.sorting,
       });

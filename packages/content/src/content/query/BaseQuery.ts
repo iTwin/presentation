@@ -22,7 +22,6 @@ import type {
 } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "../ContentTarget.js";
-import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
 import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
 
@@ -84,8 +83,6 @@ export interface BaseQueryGroup {
 interface BuildBaseQueryProps {
   schemaProvider: ECSchemaProvider;
   source: ContentSource;
-  /** Query filterers to inject WHERE/JOIN (default: none). */
-  queryFilterers?: QueryFilterer[];
   /** Value filters to translate into WHERE (default: none). */
   filters?: ContentValueFilter[];
   /** Fields whose related paths must be joined by the anchor to support sorting. */
@@ -161,11 +158,6 @@ export async function buildBaseQuery(
 
   const from = `FROM ${ECSql.createClassSelector(source.target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`;
   const targetFilter = buildTargetFilter(source.target);
-  // Query filterers are resolved once (side-effect-free per their contract) and shared by the group
-  // that carries the primary-restricting clauses.
-  const filtererClauses = (props.queryFilterers ?? []).map((filterer) =>
-    filterer.getFilterClauses({ targetAlias: PRIMARY_CLASS_ALIAS }),
-  );
 
   // Related-columns mode joins every resolved path; primaries-only mode joins only the paths a value
   // filter references (to evaluate it). Value-filter paths are collected in both modes: primaries-only
@@ -247,7 +239,6 @@ export async function buildBaseQuery(
       schemaProvider,
       from,
       targetFilter,
-      filtererClauses,
       filters,
       relatedClassAliases,
       getPrefixKeys,
@@ -261,8 +252,7 @@ export async function buildBaseQuery(
   const fixedReserves =
     1 +
     (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) +
-    (targetFilter.joins?.length ?? 0) +
-    filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
+    (targetFilter.joins?.length ?? 0)
   // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
   // filter paths, then (below, related-columns mode only) selected 1:1 paths — so a path sharing a
   // prefix with one already added costs only its own unshared suffix, not its full cost again.
@@ -880,7 +870,6 @@ async function buildQueryParts(props: {
   schemaProvider: ECSchemaProvider;
   from: string;
   targetFilter: ReturnType<typeof buildTargetFilter>;
-  filtererClauses: ReturnType<QueryFilterer["getFilterClauses"]>[];
   filters: ContentValueFilter[];
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   getPrefixKeys: (path: RelationshipPath) => readonly string[];
@@ -894,7 +883,6 @@ async function buildQueryParts(props: {
     schemaProvider,
     from,
     targetFilter,
-    filtererClauses,
     filters,
     relatedClassAliases,
     getPrefixKeys,
@@ -921,17 +909,6 @@ async function buildQueryParts(props: {
   mergeBindings(bindings, rendered.bindings);
 
   if (props.includePrimaryFilters) {
-    // Query filterers inject WHERE/JOIN clauses only (never SELECT), scoped to the primary alias.
-    for (const clauses of filtererClauses) {
-      if (clauses.joins) {
-        joinFragments.push(...clauses.joins);
-      }
-      if (clauses.where) {
-        whereConditions.push(...clauses.where);
-      }
-      mergeBindings(bindings, clauses.bindings);
-    }
-
     // Value filters resolve relationship-class properties against the step's relationship alias; classify
     // once up front which of the referenced property classes are relationship classes.
     const relationshipPropertyClasses = await collectRelationshipPropertyClasses(schemaProvider, filters);
@@ -1026,7 +1003,6 @@ export async function buildTargetScopedQuery(props: {
     schemaProvider,
     from: `FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`,
     targetFilter: buildTargetFilter(target),
-    filtererClauses: [],
     filters,
     relatedClassAliases,
     getPrefixKeys,

@@ -39,7 +39,6 @@ import type { ContentSource } from "../../ContentTarget.js";
 import type { ContentDefinition } from "../../definition-building/BuildContentDefinition.js";
 import type { ExternalInput } from "../../definition-building/ExternalProviders.js";
 import type { PropertyValueSelector } from "../../definition-building/ValueSelector.js";
-import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
 import type { BaseQueryGroup } from "../BaseQuery.js";
@@ -58,7 +57,6 @@ export function getItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   getContentDefinition: () => Promise<ContentDefinition>;
   sources: ContentSource[];
-  queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
 }): AsyncIterable<ContentItem> {
@@ -73,11 +71,10 @@ function loadItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   getContentDefinition: () => Promise<ContentDefinition>;
   sources: ContentSource[];
-  queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
 }): Observable<ContentItem> {
-  const { imodelAccess, getContentDefinition, sources, queryFilterers, filters } = props;
+  const { imodelAccess, getContentDefinition, sources, filters } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
   return from(getContentDefinition()).pipe(
@@ -102,7 +99,6 @@ function loadItems(props: {
               propertyReaders,
               source,
               sorting,
-              queryFilterers,
               filters,
               externalInputs,
             }),
@@ -145,7 +141,6 @@ async function createSourcePlan(props: {
   propertyReaders: ContentDefinition["propertyReaders"];
   source: ContentSource;
   sorting: ContentQuerySort[];
-  queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   externalInputs: ExternalInput[];
 }): Promise<SourcePlan> {
@@ -157,7 +152,6 @@ async function createSourcePlan(props: {
     propertyReaders,
     source,
     sorting,
-    queryFilterers,
     filters,
     externalInputs,
   } = props;
@@ -168,7 +162,6 @@ async function createSourcePlan(props: {
   const { anchor, additional = [] } = await buildBaseQuery({
     schemaProvider: imodelAccess,
     source,
-    queryFilterers,
     filters,
     sortFields: sorting.map((sort) => sort.field),
     includeRelatedJoins: true,

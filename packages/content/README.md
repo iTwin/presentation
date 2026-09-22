@@ -59,6 +59,4 @@ The package provides four extension mechanisms, each targeting a different stage
 
 - **`defineExternalFieldsProvider`** — declare fields whose values come from external sources. The provider specifies which iModel properties it needs as inputs and supplies values for its own fields in a batch callback. Direct inputs pass through the property's value unchanged. Related inputs specify `related.path`, which must be nonempty, and an optional `related.cardinalityHint`. A `"many"` hint supplies an array with one value per related instance.
 
-- **`defineQueryFilterer`** — inject additional WHERE clauses or JOINs into the generated ECSQL query without modifying the descriptor.
-
 All extension points are registered through the `ContentConfiguration` object passed to `resolveContentSources` and `createContentProvider`.
