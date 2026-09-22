@@ -20,7 +20,8 @@ When reviewing pull requests in this repository, check the following:
 ### Public API
 
 - Any change to an exported symbol (added, removed, or signature-changed) must update the corresponding `api/*.api.md` report file in the affected package.
-- Breaking changes to public APIs must be clearly justified and coordinated with the team. Private packages may break their public APIs when a better API design requires it.
+- Breaking changes to public APIs in public packages must be clearly justified and coordinated with the team.
+- For private packages, prefer breaking public APIs over preserving compatibility when doing so produces a better API design.
 - Do not add `@internal` tags. APIs not reachable through a barrel export are internal. Every API reachable through a barrel export requires an `@public` or `@beta` release tag.
 - `extract-api` must fail when an API reachable through barrel exports lacks a release tag.
 - Run `pnpm build` and `pnpm extract-api` in the affected package, then check the `api/*.api.md` report files and verify no unexpected API diff is introduced.
