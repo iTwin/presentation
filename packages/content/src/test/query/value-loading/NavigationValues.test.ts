@@ -289,7 +289,13 @@ describe("createNavigationValuePopulator", () => {
               label: "Nested",
               type: {
                 kind: "struct",
-                members: [{ name: "Navs", label: "Navs", type: { kind: "array", elementType: navigationType } }],
+                members: [
+                  {
+                    name: "NavigationValues",
+                    label: "NavigationValues",
+                    type: { kind: "array", elementType: navigationType },
+                  },
+                ],
               },
             },
           ],
@@ -302,7 +308,10 @@ describe("createNavigationValuePopulator", () => {
       rows: [
         createRow({
           payloads: [
-            [{ ["Nav"]: "0x2", ["Code"]: "c1", ["Nested"]: { ["Navs"]: ["0x3", undefined] } }, { ["Code"]: "c2" }],
+            [
+              { ["Nav"]: "0x2", ["Code"]: "c1", ["Nested"]: { ["NavigationValues"]: ["0x3", undefined] } },
+              { ["Code"]: "c2" },
+            ],
           ],
         }),
       ],
@@ -313,7 +322,9 @@ describe("createNavigationValuePopulator", () => {
         {
           ["Nav"]: { key: { className: "Schema.B", id: "0x2" }, label: "first" },
           ["Code"]: "c1",
-          ["Nested"]: { ["Navs"]: [{ key: { className: "Schema.B", id: "0x3" }, label: "second" }, undefined] },
+          ["Nested"]: {
+            ["NavigationValues"]: [{ key: { className: "Schema.B", id: "0x3" }, label: "second" }, undefined],
+          },
         },
         // Members the instance didn't supply stay absent rather than becoming `undefined` entries.
         { ["Code"]: "c2" },
