@@ -9,7 +9,6 @@ export { SearchLimitExceededError } from "./tree-definitions/shared/TreeErrors.j
 export { getClassesByView, mergeWithDefaults } from "./tree-definitions/shared/Utils.js";
 export { defaultHierarchyConfiguration as defaultCategoriesTreeHierarchyConfiguration } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 export { createCategoriesTreeIdsProvider } from "./tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
-export { ClassificationsTreeDefinition } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
 export { createClassificationsTreeIdsProvider } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 export {
   createModelsTree,
