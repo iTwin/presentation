@@ -15,7 +15,6 @@ export function createDescriptor(source: ContentSource | ContentSource[], fields
     sources: Array.isArray(source) ? source : [source],
     fields: Object.fromEntries(fields.map((field) => [field.id, field])),
     categories: {},
-    selectors: {},
   };
 }
 
@@ -30,6 +29,7 @@ export function createSource(props: {
     resolvedDeclarations: props.resolvedPaths.length
       ? [{ providerId: "test_v1", declarationIndex: 0, paths: props.resolvedPaths }]
       : [],
+    resolvedExternalInputs: [],
   };
 }
 
@@ -52,7 +52,6 @@ export function createPropertyField(props: {
     pathCardinality: "one",
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
-    selectorId: props.id,
     ...(props.hidden ? { hidden: true } : undefined),
   };
 }

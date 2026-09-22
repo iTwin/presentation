@@ -23,7 +23,6 @@ describe("buildValueFilterClauses", () => {
     valueClassNames: ["TestSchema.TestClass"],
     primaryClassNames: ["TestSchema.TestClass"],
     pathCardinality: "one",
-    selectorId: "selector-id",
   };
 
   const calculatedField: CalculatedField = {
@@ -32,7 +31,6 @@ describe("buildValueFilterClauses", () => {
     label: "Calculated",
     type: { kind: "primitive", type: "String" },
     expression: "this.CodeValue || '-' || this.UserLabel",
-    selectorId: "calculated-id",
     primaryClassNames: ["TestSchema.TestClass"],
   };
 

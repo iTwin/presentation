@@ -6,6 +6,7 @@
 import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
 import type { BaseFieldsProvider } from "./extensions/BaseFieldsProvider.js";
+import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
 
 /**
  * Hint about the effective cardinality of a relationship path.
@@ -24,6 +25,9 @@ export type CardinalityHint = "one" | "many";
  *
  * When the consumer selects instances of multiple different classes,
  * this becomes multiple content targets — one per distinct class.
+ *
+ * @throws when resolved alongside another target whose scope can reach the same instance —
+ * see `resolveContentSources`.
  *
  * @public
  */
@@ -131,6 +135,35 @@ export interface ContentSource {
    * deterministic and stable across runs for the same inputs, keeping serialized sources cacheable.
    */
   resolvedDeclarations: ResolvedDeclarationGroup[];
+
+  /**
+   * One group per external fields provider's related-property input, in provider and input
+   * declaration order. Groups retain their origin even when no concrete paths resolve.
+   * Direct-property inputs do not produce groups.
+   *
+   * Each group identifies the input declaration so later stages can retrieve its property
+   * specification and cardinality hint without storing them on the cached source.
+   */
+  resolvedExternalInputs: ResolvedExternalInputGroup[];
+}
+
+/**
+ * Concrete relationship paths resolved for a single external fields provider input.
+ *
+ * Identifies the originating input declaration without copying its path or cardinality hint.
+ * Inputs sharing the same path retain separate groups and cardinality contracts.
+ *
+ * @public
+ */
+interface ResolvedExternalInputGroup {
+  /** ID of the external fields provider that declared the input. */
+  providerId: ExternalFieldsProvider["id"];
+
+  /** Key of the originating declaration in the provider's `inputs` record. */
+  inputKey: string;
+
+  /** Concrete paths for this input, or an empty array when no related instances resolve. */
+  paths: ResolvedPath[];
 }
 
 /**

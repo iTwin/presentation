@@ -17,7 +17,7 @@ import {
 
 import type { ECSqlWriteStatement } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
-import type { EC, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
+import type { ArrayValue, EC, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 
 export class ECDbBuilder {
   public constructor(
@@ -32,7 +32,9 @@ export class ECDbBuilder {
     this._ecdb.importSchema(schemaFilePath);
   }
 
-  private createECSqlStatementBinder(values: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+  private createECSqlStatementBinder(values: {
+    [propertyName: string]: ECSqlBinding | PrimitiveValue | ArrayValue | undefined;
+  }) {
     return (stmt: ECSqlWriteStatement) => {
       Object.values(values).forEach((value, i) => {
         const bindingIndex = i + 1;
@@ -58,7 +60,9 @@ export class ECDbBuilder {
             }
             return;
           case "object":
-            if (value instanceof Date) {
+            if (Array.isArray(value)) {
+              stmt.bindArray(bindingIndex, value);
+            } else if (value instanceof Date) {
               stmt.bindDateTime(bindingIndex, value.toISOString());
             } else if (isBinding(value)) {
               if (value.value === undefined) {
@@ -104,7 +108,7 @@ export class ECDbBuilder {
 
   private createInsertQuery(
     fullClassName: string,
-    props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined },
+    props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | ArrayValue | undefined },
   ) {
     if (!props) {
       props = { ecInstanceId: undefined };
@@ -121,7 +125,7 @@ export class ECDbBuilder {
 
   private createUpdateQuery(
     key: InstanceKey,
-    props: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined },
+    props: { [propertyName: string]: ECSqlBinding | PrimitiveValue | ArrayValue | undefined },
   ) {
     const { schemaName, className } = parseFullClassName(key.className);
     const clause = `
@@ -136,7 +140,7 @@ export class ECDbBuilder {
 
   public insertInstance(
     fullClassName: EC.FullClassNameDotNotation,
-    props?: { [propertyName: string]: PrimitiveValue | undefined },
+    props?: { [propertyName: string]: PrimitiveValue | ArrayValue | undefined },
   ) {
     const query = this.createInsertQuery(fullClassName, props);
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -156,7 +160,7 @@ export class ECDbBuilder {
     fullClassName: EC.FullClassNameDotNotation,
     sourceId: Id64String,
     targetId: Id64String,
-    props?: { [propertyName: string]: PrimitiveValue | undefined },
+    props?: { [propertyName: string]: PrimitiveValue | ArrayValue | undefined },
   ) {
     const query = this.createInsertQuery(fullClassName, {
       ...props,
@@ -176,7 +180,7 @@ export class ECDbBuilder {
     });
   }
 
-  public updateInstance(key: InstanceKey, props: { [propertyName: string]: PrimitiveValue | undefined }) {
+  public updateInstance(key: InstanceKey, props: { [propertyName: string]: PrimitiveValue | ArrayValue | undefined }) {
     const query = this.createUpdateQuery(key, props);
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
       query.binder(stmt);

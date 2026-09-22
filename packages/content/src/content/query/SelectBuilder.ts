@@ -8,12 +8,14 @@ import { ECSQL_PREFIX, mergeBindings, substituteExpressionAlias } from "../Inter
 import { serializeRelationshipPath } from "../model/Utils.js";
 
 import type { EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentDescriptor } from "../model/ContentDescriptor.js";
+import type {
+  CalculatedValueSelector,
+  PropertyValueSelector,
+  ValueSelector,
+} from "../definition-building/ValueSelector.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
-import type { PropertyValueSelector } from "../model/ValueSelector.js";
 import type { BaseQueryGroup } from "./BaseQuery.js";
 
-/** @internal */
 export interface ContentQuerySort {
   field: PropertyField | CalculatedField;
   direction: "asc" | "desc";
@@ -22,8 +24,6 @@ export interface ContentQuerySort {
 /**
  * The columns selected for one `BaseQueryGroup`, together with the information required to locate
  * descriptor selectors in the returned row.
- *
- * @internal
  */
 export interface SelectProjection {
   /** ECSQL clause fragments contributed by this group's projection. */
@@ -49,6 +49,19 @@ export interface SelectProjection {
     propertyBlobs: Record<string, string>;
     /** Calculated selector id -> alias of its scalar column. */
     calculatedValues: Record<string, string>;
+    /**
+     * Projected related `$`-blob column -> its identity columns, one entry per related blob column
+     * actually projected (never `this`'s own blob). `pathKey` is the owned join-path key
+     * ({@link serializeRelationshipPath} with `includeInstanceFilters: true`) the blob belongs to;
+     * `role` says whether it's the path's target instance or its last step's relationship instance;
+     * `className` is the blob's `ec_classname(...)` column. See the projection loop below for how
+     * `"target"`/`"relationship"` entries pair up.
+     *
+     * Example: a path `A-[Rel]->B` with a projected `B` property and a projected `Rel` property yields two
+     * entries, one per blob column: `{ b_alias: { className: "b_alias_cls", pathKey: "A-[Rel]->B", role:
+     * "target" }, rel_alias: { className: "rel_alias_cls", pathKey: "A-[Rel]->B", role: "relationship" } }`.
+     */
+    relatedBlobs: Record<string, { className: string; pathKey: string; role: "target" | "relationship" }>;
   };
   /** Private sort-key columns read by the keyset cursor and re-emitted in the ECSQL `ORDER BY`. */
   sort: { fieldId: string; column: string; direction: "asc" | "desc" }[];
@@ -57,16 +70,26 @@ export interface SelectProjection {
 /**
  * Builds the SELECT projection for one base-query group. Property selectors sharing one table alias
  * read from a single `$` blob; each calculated selector has its own scalar result column.
- *
- * @internal
  */
 export async function buildSelectProjection(props: {
   schemaProvider: ECSchemaProvider;
-  descriptor: ContentDescriptor;
+  selectors: Record<ValueSelector["id"], ValueSelector>;
   group: BaseQueryGroup;
   sorting?: ContentQuerySort[];
+  /**
+   * Calculated fields contributed to this source. When supplied, other calculated values are omitted
+   * and their sort columns select NULL to preserve the shared UNION/keyset column layout.
+   */
+  applicableCalculatedFieldIds?: ReadonlySet<string>;
+  /**
+   * Join-path keys (`serializeRelationshipPath(path, { includeInstanceFilters: true })`) this group owns
+   * for `SELECT` projection — a selector whose path is not in this set is skipped even if `group`'s alias
+   * map can resolve it (e.g. a path that overflowed into another group). Direct properties and calculated
+   * selectors share the key `""`, owned by whichever group's set contains it — normally the anchor only.
+   */
+  ownedPathKeys: Set<string>;
 }): Promise<SelectProjection> {
-  const { schemaProvider, descriptor, group, sorting = [] } = props;
+  const { schemaProvider, selectors, group, sorting = [], applicableCalculatedFieldIds, ownedPathKeys } = props;
   const primaryKey = { className: `${ECSQL_PREFIX}primary_class`, id: `${ECSQL_PREFIX}primary_id` };
   const select = [
     `ec_classname([${group.parts.primaryClassAlias}].[ECClassId], 's.c') AS [${primaryKey.className}]`,
@@ -74,26 +97,67 @@ export async function buildSelectProjection(props: {
   ];
 
   const propertyBlobs: Record<string, string> = {};
-  const propertySelectors = Object.values(descriptor.selectors).filter(
+  const propertySelectors = Object.values(selectors).filter(
     (selector): selector is PropertyValueSelector => selector.kind === "property",
   );
   const relationshipClassNames = await collectRelationshipClassNames({ schemaProvider, selectors: propertySelectors });
   const projectedAliases = new Set<string>();
+  const relatedBlobs: SelectProjection["columnNames"]["relatedBlobs"] = {};
+  const projectBlob = (alias: string): void => {
+    if (!projectedAliases.has(alias)) {
+      select.push(`[${alias}].$ AS [${alias}]`);
+      projectedAliases.add(alias);
+    }
+  };
+  // Projects an alias's `$` blob plus its class-name column and `relatedBlobs` entry, once per alias.
+  const projectRelatedBlob = (relatedBlobProps: {
+    alias: string;
+    pathKey: string;
+    role: "target" | "relationship";
+  }): void => {
+    const { alias, pathKey, role } = relatedBlobProps;
+    if (alias in relatedBlobs) {
+      return;
+    }
+    projectBlob(alias);
+    const classNameColumn = `${alias}_cls`;
+    select.push(`ec_classname([${alias}].[ECClassId], 's.c') AS [${classNameColumn}]`);
+    relatedBlobs[alias] = { className: classNameColumn, pathKey, role };
+  };
   for (const selector of propertySelectors) {
+    const key = serializeRelationshipPath({ path: selector.pathFromTarget, includeInstanceFilters: true });
+    if (!ownedPathKeys.has(key)) {
+      continue;
+    }
     const alias = resolvePropertyAlias({ selector, group, relationshipClassNames });
     if (!alias) {
       continue;
     }
-    if (!projectedAliases.has(alias)) {
-      select.push(`[${alias}].$ AS [${alias}]`);
-      projectedAliases.add(alias);
+    if (selector.pathFromTarget.length === 0) {
+      projectBlob(alias);
+    } else {
+      const role = relationshipClassNames.has(selector.propertyClassName) ? "relationship" : "target";
+      // A `"target"` entry is projected for every owned related path key that has at least one projected
+      // selector, even one with only relationship-class selectors below — so a `"relationship"` entry
+      // never exists without a paired `"target"` one.
+      projectRelatedBlob({ alias, pathKey: key, role });
+      if (role === "relationship") {
+        const targetAlias = group.parts.relatedClassAliases.get(key)!.target;
+        projectRelatedBlob({ alias: targetAlias, pathKey: key, role: "target" });
+      }
     }
     propertyBlobs[selector.id] = alias;
   }
 
   const bindings: Record<string, ECSqlBinding> = {};
   const calculatedValues: Record<string, string> = {};
-  const calculatedSelectors = Object.values(descriptor.selectors).filter((selector) => selector.kind === "calculated");
+  const calculatedSelectors = ownedPathKeys.has("")
+    ? Object.values(selectors).filter(
+        (selector): selector is CalculatedValueSelector =>
+          selector.kind === "calculated" &&
+          (!applicableCalculatedFieldIds || applicableCalculatedFieldIds.has(selector.id)),
+      )
+    : [];
   for (const [index, selector] of calculatedSelectors.entries()) {
     // Alias by a controlled name rather than the raw selector id so ids with special characters (e.g. `:`)
     // stay addressable under the name-based row format.
@@ -115,11 +179,12 @@ export async function buildSelectProjection(props: {
   });
   for (const [index, entry] of sorting.entries()) {
     const column = `${ECSQL_PREFIX}sort_${index}`;
-    const selector = resolveSortSelector({
-      field: entry.field,
-      group,
-      relationshipClassNames: sortingRelationshipClasses,
-    });
+    const selector =
+      entry.field.kind === "calculated" &&
+      applicableCalculatedFieldIds &&
+      !applicableCalculatedFieldIds.has(entry.field.id)
+        ? { selector: "NULL" }
+        : resolveSortSelector({ field: entry.field, group, relationshipClassNames: sortingRelationshipClasses });
     // Emit the sort key as a private column so the loader can read its value into the keyset cursor.
     select.push(`${selector.selector} AS [${column}]`);
     mergeBindings(bindings, selector.bindings);
@@ -133,7 +198,7 @@ export async function buildSelectProjection(props: {
   return {
     clauses: { select: `SELECT ${select.join(",\n")}`, ...(orderBy ? { orderBy } : undefined) },
     ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
-    columnNames: { primaryKey, propertyBlobs, calculatedValues },
+    columnNames: { primaryKey, propertyBlobs, calculatedValues, relatedBlobs },
     sort,
   };
 }

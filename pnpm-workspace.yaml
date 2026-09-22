@@ -107,6 +107,9 @@ catalogs:
     playwright: ^1.59.1
     vitest: ^4.1.11
     vitest-browser-react: ^2.2.0
+  miscellaneous:
+    fast-xml-parser: ^5.11.1
+
 
 hoistPattern:
   - '!*'

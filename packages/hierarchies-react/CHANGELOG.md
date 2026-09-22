@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.68
+
+### Major Changes
+
+- [#1571](https://github.com/iTwin/presentation/pull/1571): Moved `@stratakit/icons` from a regular dependency to an optional peer dependency.
+
 ## 2.0.0-alpha.67
 
 ### Patch Changes

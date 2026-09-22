@@ -22,7 +22,7 @@ A `ContentSource` is the resolved join shape for a content target. It captures w
 
 ### Content descriptor
 
-A `ContentDescriptor` is the schema of the result — it describes all available fields, their metadata (labels, types, categories, read-only flags), and the sources they originate from. It is computed before loading any values, allowing consumers to inspect and customize what will be loaded.
+A `ContentDescriptor` is the public schema of the result — it describes all available fields, their metadata (labels, types, categories, read-only flags), and the sources they originate from. It does not expose query columns or field-to-column bindings; the provider keeps those loading details private. The descriptor is computed before loading any values, allowing consumers to inspect and customize what will be loaded.
 
 ### Fields
 
@@ -44,7 +44,7 @@ The content loading process is split into four stages:
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **Source resolution**   | Queries the iModel to resolve declared relationship paths to concrete classes, producing `ContentSource` objects.  |
 | **Descriptor building** | Reads EC schema metadata and consults fields providers to produce a `ContentDescriptor` with all available fields. |
-| **Query building**      | Constructs an ECSQL query from the descriptor, applying any registered query filterers.                            |
+| **Query building**      | Constructs ECSQL from provider-owned loading requirements, applying any registered query filterers.                |
 | **Value loading**       | Executes the query and populates field values, calling external providers for non-iModel fields.                   |
 
 Not all requests execute every stage. For example, `ContentProvider.getContentDescriptor()` only runs stages 1–2, and `getSize()` runs a simplified COUNT query after stage 1.
@@ -57,7 +57,7 @@ The package provides four extension mechanisms, each targeting a different stage
 
 - **`defineDescriptorTransformer`** — customize the descriptor after all fields providers have contributed. Use this to hide fields, override labels, change categories, or apply any cross-cutting metadata adjustments.
 
-- **`defineExternalFieldsProvider`** — declare fields whose values come from external sources. The provider specifies what input values it needs (from already-loaded iModel fields) and supplies values for its own fields in a batch callback.
+- **`defineExternalFieldsProvider`** — declare fields whose values come from external sources. The provider specifies which iModel properties it needs as inputs and supplies values for its own fields in a batch callback. Direct inputs pass through the property's value unchanged. Related inputs specify `related.path`, which must be nonempty, and an optional `related.cardinalityHint`. A `"many"` hint supplies an array with one value per related instance.
 
 - **`defineQueryFilterer`** — inject additional WHERE clauses or JOINs into the generated ECSQL query without modifying the descriptor.
 

@@ -42,7 +42,6 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     valueClassNames: props.valueClassNames ?? ["TestSchema.Primary"],
     primaryClassNames: props.primaryClassNames ?? ["TestSchema.Primary"],
     pathCardinality: "one",
-    selectorId: props.selectorId ?? `selector-${props.propertyName}`,
   };
 }
 
@@ -184,7 +183,6 @@ describe("getDistinctFieldValues", () => {
       label: "Calc",
       type: { kind: "primitive", type: "Point2d" },
       expression: "this.X + this.Y",
-      selectorId: "calc",
       primaryClassNames: ["TestSchema.ClassA"],
     };
 
@@ -588,7 +586,6 @@ describe("getDistinctFieldValues", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "1",
-        selectorId: "calc",
         primaryClassNames: [a1.fullName, a2.fullName],
       };
 
@@ -612,7 +609,6 @@ describe("getDistinctFieldValues", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "1",
-        selectorId: "calc",
         primaryClassNames: [derived.fullName, a1.fullName],
       };
 
@@ -823,7 +819,6 @@ describe("buildDistinctValuesQuery", () => {
       type: { kind: "primitive", type: "String" },
       expression: "this.CodeValue || :scale",
       bindings: { scale: { type: "double", value: 2 } },
-      selectorId: "calc",
       primaryClassNames: ["TestSchema.Primary"],
     };
 
@@ -1136,7 +1131,6 @@ describe("validateFilterApplicability", () => {
       label: "Calc",
       type: { kind: "primitive", type: "String" },
       expression: "1",
-      selectorId: "calc",
       primaryClassNames: props.primaryClassNames,
     };
   }

@@ -45,6 +45,7 @@ function makeSource(paths: RelationshipPath[], target: ContentTarget = { primary
   return {
     target,
     resolvedPrimaryClasses: [primaryClass],
+    resolvedExternalInputs: [],
     resolvedDeclarations:
       paths.length > 0
         ? [
@@ -72,8 +73,7 @@ function makePropertyField(props: Partial<PropertyField> & Pick<PropertyField, "
     pathFromTarget: props.pathFromTarget ?? [],
     valueClassNames: props.valueClassNames ?? [primaryClass],
     primaryClassNames: props.primaryClassNames ?? [primaryClass],
-    pathCardinality: "one",
-    selectorId: props.selectorId ?? `selector-${props.propertyName}`,
+    pathCardinality: props.pathCardinality ?? "one",
   };
 }
 
@@ -106,10 +106,25 @@ function makeOneToManyNameField(path: RelationshipPath = makeOneToManyPath()): P
   });
 }
 
+function makeMultiStepPath(length: number, relationshipPrefix: string): RelationshipPath {
+  let sourceClassName = primaryClass;
+  return Array.from({ length }, (_, index) => {
+    const targetClassName = `TestSchema.Target${index}` as EC.FullClassNameDotNotation;
+    const step = makeStep(sourceClassName, `TestSchema.${relationshipPrefix}${index}`, targetClassName);
+    sourceClassName = targetClassName;
+    return step;
+  });
+}
+
 describe("buildBaseQuery", () => {
   describe("FROM + related JOINs", () => {
     it("builds a direct-only query with no related joins", async () => {
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [],
+      });
 
       expect(result.additional).to.be.undefined;
       expect(result.anchor.paths).to.deep.equal([]);
@@ -123,7 +138,12 @@ describe("buildBaseQuery", () => {
 
     it("builds a single related-path join with prefixed outer-join aliases", async () => {
       const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path, path],
+      });
 
       const key = "TestSchema.Primary-[TestSchema.Rel]->TestSchema.Target";
       expect(result.anchor.parts.relatedClassAliases.get(key)).to.deep.equal({
@@ -140,6 +160,7 @@ describe("buildBaseQuery", () => {
           LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
         `),
       );
+      // Duplicate selectors for the same path still produce one query group and one join.
       expect(result.anchor.paths).to.have.length(1);
     });
 
@@ -148,7 +169,12 @@ describe("buildBaseQuery", () => {
         makeStep(primaryClass, "TestSchema.Rel1", "TestSchema.Mid"),
         makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.Target"),
       ];
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
 
       const midKey = "TestSchema.Primary-[TestSchema.Rel1]->TestSchema.Mid";
       const fullKey = `${midKey}-[TestSchema.Rel2]->TestSchema.Target`;
@@ -188,6 +214,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([pathB, pathC]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [pathB, pathC],
       });
 
       // The shared prefix step (joining to `Mid`) is emitted exactly once, even though two paths use it.
@@ -210,6 +237,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([pathA, pathB]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [pathA, pathB],
       });
 
       // Same classes but different filters => two distinct paths, aliases, and joins (not merged).
@@ -226,12 +254,18 @@ describe("buildBaseQuery", () => {
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           { providerId: "a_v1", declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.Target"] }] },
           { providerId: "b_v1", declarationIndex: 0, paths: [{ path, targetClassNames: ["TestSchema.Target"] }] },
         ],
       };
-      const result = await buildBaseQuery({ schemaProvider, source, includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
 
       expect(result.anchor.paths).to.have.length(1);
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
@@ -239,49 +273,44 @@ describe("buildBaseQuery", () => {
 
     it("throws when identical paths across declaration groups uses same bindings with different values", async () => {
       const step = makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target");
+      const pathA: RelationshipPath = [
+        { ...step, instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 1 } } } },
+      ];
+      const pathB: RelationshipPath = [
+        { ...step, instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 2 } } } },
+      ];
       const source: ContentSource = {
         target: { primaryClass },
         resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
         resolvedDeclarations: [
           {
             providerId: "a_v1",
             declarationIndex: 0,
-            paths: [
-              {
-                path: [
-                  {
-                    ...step,
-                    instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 1 } } },
-                  },
-                ],
-                targetClassNames: ["TestSchema.Target"],
-              },
-            ],
+            paths: [{ path: pathA, targetClassNames: ["TestSchema.Target"] }],
           },
           {
             providerId: "b_v1",
             declarationIndex: 0,
-            paths: [
-              {
-                path: [
-                  {
-                    ...step,
-                    instanceFilter: { expression: "this.X > :p", bindings: { p: { type: "int", value: 2 } } },
-                  },
-                ],
-                targetClassNames: ["TestSchema.Target"],
-              },
-            ],
+            paths: [{ path: pathB, targetClassNames: ["TestSchema.Target"] }],
           },
         ],
       };
-      await expect(buildBaseQuery({ schemaProvider, source, includeRelatedJoins: true })).rejects.toThrow(
-        `Duplicate ECSQL binding name "p" with different values.`,
-      );
+      // A differing binding *value* still serializes to a distinct join-path key (so both are joined,
+      // each under its own alias) — the conflict is the reused literal SQL parameter name "p", surfaced
+      // only once both variants are actually selected and joined.
+      await expect(
+        buildBaseQuery({ schemaProvider, source, includeRelatedJoins: true, propertySelectorPaths: [pathA, pathB] }),
+      ).rejects.toThrow(`Duplicate ECSQL binding name "p" with different values.`);
     });
 
     it("ignores zero-step resolved paths", async () => {
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([[]]), includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([[]]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [],
+      });
 
       expect(result.anchor.parts.joins).to.equal("");
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(0);
@@ -293,7 +322,12 @@ describe("buildBaseQuery", () => {
           instanceFilter: { expression: "this.Prop > 0", bindings: { stepBinding: { type: "int", value: 1 } } },
         }),
       ];
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([path]), includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
 
       expect(result.anchor.parts.bindings).to.deep.equal({ stepBinding: { type: "int", value: 1 } });
     });
@@ -309,6 +343,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([pathB, pathC]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [pathB, pathC],
       });
 
       // Both paths carry the same shared step (and its binding); the merged joins keep it once.
@@ -413,6 +448,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [],
         sortFields: [makePropertyField({ propertyName: "Code" }), relatedField, relatedField],
       });
 
@@ -428,6 +464,7 @@ describe("buildBaseQuery", () => {
           schemaProvider,
           source: makeSource(paths),
           includeRelatedJoins: true,
+          propertySelectorPaths: [],
           sortFields: paths.map((path) =>
             makePropertyField({
               propertyName: "Name",
@@ -441,10 +478,10 @@ describe("buildBaseQuery", () => {
     });
 
     it("counts shared sort-path prefixes once against the JOIN-table limit", async () => {
-      // 20 two-step sort paths sharing the same first step. Summed per-path the shared step is counted
-      // 20 times (over the 64-table limit); merged, it is joined once and the paths fit the anchor.
+      // 19 two-step sort paths sharing the same first step. Summed per-path the shared step is counted
+      // 19 times (over the 64-table limit); merged, it is joined once and the paths fit the anchor.
       const sharedStep = makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared");
-      const paths = Array.from({ length: 20 }, (_, index) => [
+      const paths = Array.from({ length: 19 }, (_, index) => [
         sharedStep,
         makeStep("TestSchema.Shared", `TestSchema.RelLeaf${index}`, `TestSchema.Leaf${index}`),
       ]);
@@ -452,6 +489,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [],
         sortFields: paths.map((path) =>
           makePropertyField({
             propertyName: "Name",
@@ -462,8 +500,8 @@ describe("buildBaseQuery", () => {
         ),
       });
 
-      // One shared prefix + 20 distinct leaf prefixes are all joined by the anchor.
-      expect(result.anchor.parts.relatedClassAliases).to.have.length(21);
+      // One shared prefix + 19 distinct leaf prefixes are all joined by the anchor.
+      expect(result.anchor.parts.relatedClassAliases).to.have.length(20);
     });
 
     it("keeps an otherwise-overflowed 1:1 sort path on the anchor", async () => {
@@ -475,6 +513,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource(paths),
         includeRelatedJoins: true,
+        propertySelectorPaths: paths,
         sortFields: [
           makePropertyField({
             propertyName: "Name",
@@ -495,9 +534,71 @@ describe("buildBaseQuery", () => {
           schemaProvider,
           source: makeSource([makeOneToManyPath()]),
           includeRelatedJoins: true,
+          propertySelectorPaths: [],
           sortFields: [makeOneToManyNameField()],
         }),
       ).rejects.toThrow("Cannot sort by a 1:many related path");
+    });
+
+    it("sorts a one-valued field while loading its shared path in a many-valued group", async () => {
+      const path = makeOneToOnePath();
+      const pathKey = serializeRelationshipPath({ path });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+        cardinalityHints: new Map([[pathKey, "many"]]),
+        sortFields: [makeOneToOneNameField(path)],
+      });
+      expect(result.anchor.paths).to.deep.equal([]);
+      expect(result.anchor.parts.relatedClassAliases.has(pathKey)).to.be.true;
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].cardinality).to.equal("many");
+      expect(result.additional![0].paths.map((resolved) => resolved.path)).to.deep.equal([path]);
+    });
+
+    it("counts a selected path's prefix shared with a sort path only once against the budget", async () => {
+      const prefix = [makeStep(primaryClass, "TestSchema.RelShared", "TestSchema.Shared")];
+      const extension = [...prefix, makeStep("TestSchema.Shared", "TestSchema.RelLeaf", "TestSchema.Leaf")];
+      const sortField = makePropertyField({
+        propertyName: "Name",
+        propertyClassName: "TestSchema.Shared",
+        pathFromTarget: prefix,
+        valueClassNames: ["TestSchema.Shared"],
+      });
+      // 18 unrelated single-step paths fill most of the rest of the budget so that only *incremental*
+      // (not independent, per-path) accounting of `extension`'s prefix — already reserved by the sort
+      // field above — lets everything still fit the anchor: 1 (FROM) + 1 (`PAGE_ID_SET_JOIN_TABLES`) +
+      // 3 (sort's `prefix` hop) + 18*3 (unrelated) + 3 (`extension`'s own unshared suffix hop) = 62
+      // tables, fitting the 64-table budget. Counted independently, `extension` would cost 6 (its own
+      // two hops) instead of 3, totalling 65 — over budget — and would force an overflow group instead.
+      const otherPaths = Array.from({ length: 18 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+      ]);
+      const source: ContentSource = {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
+        resolvedDeclarations: [
+          {
+            providerId: "provider_v1",
+            declarationIndex: 0,
+            paths: [extension, ...otherPaths].map((path) => ({ path, targetClassNames: [primaryClass] })),
+          },
+        ],
+      };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [extension, ...otherPaths],
+        sortFields: [sortField],
+      });
+
+      expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([extension, ...otherPaths]);
+      expect(result.additional).to.be.undefined;
     });
   });
 
@@ -745,7 +846,6 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "this.CodeValue || this.UserLabel",
-        selectorId: "calc",
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
@@ -765,7 +865,6 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "String" },
         expression: "e.CodeValue",
         targetAlias: "e",
-        selectorId: "calc",
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
@@ -782,7 +881,6 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "Boolean" },
         expression: "this.FlagA OR this.FlagB",
-        selectorId: "calc",
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: true }];
@@ -800,7 +898,6 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "Double" },
         expression: "this.Length * :scale",
         bindings: { scale: { type: "double", value: 2 } },
-        selectorId: "calc",
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "greater-than", value: 10 }];
@@ -893,6 +990,30 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
     });
 
+    it("uses a filter field's many-valued path hint", async () => {
+      const path = makeOneToOnePath();
+      const field = { ...makeOneToOneNameField(path), pathCardinality: "many" as const };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: false,
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      expect(result.anchor.parts.joins).to.equal("");
+      expect(trimWhitespace(result.anchor.parts.where!)).to.equal(
+        trimWhitespace(`
+          WHERE EXISTS (
+            SELECT 1
+            FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+            WHERE [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND ([${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0)
+          )
+        `),
+      );
+    });
+
     it("de-duplicates filter-referenced paths and ignores direct fields", async () => {
       const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
       const relatedField = makePropertyField({
@@ -928,6 +1049,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([pathB, pathC]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [pathB, pathC],
       });
 
       expect(result.additional).to.be.undefined;
@@ -938,27 +1060,79 @@ describe("buildBaseQuery", () => {
       expect(trimWhitespace(result.anchor.parts.joins).split("LEFT OUTER JOIN").length - 1).to.equal(4);
     });
 
+    it("reserves a table for the paging IdSet join, so a would-be-full anchor still leaves it room", async () => {
+      // 21 single-step 1:1 paths cost exactly 63 tables (21 × 3) — precisely `SQLITE_MAX_JOIN_TABLES`
+      // minus the 1 FROM table, i.e. what a "full" anchor would use if nothing reserved room for the
+      // `IdSet` join `buildValueQuery` (PageQueries.ts) appends when paging. With that table reserved,
+      // only 20 of the 21 paths fit and the last one spills into its own additional group.
+      const paths = Array.from({ length: 21 }, (_, index) => [
+        makeStep(primaryClass, `TestSchema.Rel${index}`, `TestSchema.Target${index}`),
+      ]);
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource(paths),
+        includeRelatedJoins: true,
+        propertySelectorPaths: paths,
+      });
+
+      expect(result.anchor.paths).to.have.length(20);
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].paths).to.have.length(1);
+    });
+
     it("splits 1:1 paths across groups when they exceed the join budget", async () => {
       const paths = Array.from({ length: 40 }, (_, i) => [
         makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
       ]);
 
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource(paths), includeRelatedJoins: true });
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource(paths),
+        includeRelatedJoins: true,
+        propertySelectorPaths: paths,
+      });
 
       expect(result.additional).to.have.length(1);
       const anchorCount = result.anchor.paths.length;
       const additionalCount = result.additional![0].paths.length;
-      // Disjoint partition of all 40 paths, each group within the 64-table budget (1 reserved for FROM;
-      // 3 tables per single-step outer link-table path).
+      // Disjoint partition of all 40 paths, each group within the 64-table budget (1 reserved for FROM
+      // + 1 for the paging IdSet join; 3 tables per single-step outer link-table path).
       expect(anchorCount + additionalCount).to.equal(40);
-      expect(1 + anchorCount * 3).to.be.at.most(64);
-      expect(additionalCount * 3).to.be.at.most(64);
+      expect(2 + anchorCount * 3).to.be.at.most(64);
+      expect(2 + additionalCount * 3).to.be.at.most(64);
       const relationshipName = (group: (typeof result.anchor.paths)[number]) => group.path[0].relationshipName;
       const anchorKeys = new Set(result.anchor.paths.map(relationshipName));
       expect(result.additional![0].paths.some((p) => anchorKeys.has(relationshipName(p)))).to.equal(false);
       // Both groups join more than one path → outer-joined, and share the same FROM.
       expect(result.additional![0].parts.from).to.equal(result.anchor.parts.from);
       expect(result.additional![0].parts.joins).to.include("LEFT OUTER JOIN");
+    });
+
+    it("rejects a 1:1 path that cannot fit in an additional group", async () => {
+      const path = makeMultiStepPath(21, "Rel");
+
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource([path]),
+          includeRelatedJoins: true,
+          propertySelectorPaths: [path],
+        }),
+      ).rejects.toThrow("A relationship path exceeds the SQLite JOIN-table limit.");
+    });
+
+    it("rejects a 1:many path that cannot fit in its isolated group", async () => {
+      const path = makeMultiStepPath(32, "RelMany");
+
+      await expect(
+        buildBaseQuery({
+          schemaProvider,
+          source: makeSource([path]),
+          includeRelatedJoins: true,
+          propertySelectorPaths: [path],
+        }),
+      ).rejects.toThrow("A relationship path exceeds the SQLite JOIN-table limit.");
     });
 
     it("shares the target filter and query-filterer joins on the anchor", async () => {
@@ -975,6 +1149,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path], { primaryClass, instanceIds: ["0x1"] }),
         includeRelatedJoins: true,
+        propertySelectorPaths: [path],
         queryFilterers: [joiningFilterer, whereOnlyFilterer],
       });
 
@@ -992,6 +1167,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([oneToOne, oneToMany]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [oneToOne, oneToMany],
       });
 
       expect(result.anchor.paths).to.deep.equal([{ path: oneToOne, targetClassNames: ["TestSchema.One"] }]);
@@ -1010,6 +1186,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [path],
         cardinalityHints,
       });
 
@@ -1027,11 +1204,181 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [path],
         cardinalityHints,
       });
 
       expect(result.additional).to.be.undefined;
       expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([path]);
+    });
+  });
+
+  describe("selector-driven candidate paths", () => {
+    it("joins no path when no property selector reads it or a prefix of it", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [],
+      });
+
+      // A resolved declaration alone earns a path no place in the query — nothing selects it.
+      expect(result.anchor.paths).to.deep.equal([]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(0);
+      expect(result.additional).to.be.undefined;
+    });
+
+    it("joins a selected strict prefix without joining the un-selected 1:many leaf it prefixes", async () => {
+      const prefix = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
+      const path = [...prefix, makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many")];
+      // `targetClassNames` is the near-end primary classes reaching a path, not the path's own far end
+      // (unlike `makeSource`'s shortcut elsewhere in this file) — using the primary class here keeps the
+      // validated prefix's inherited value unambiguous.
+      const source: ContentSource = {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
+        resolvedDeclarations: [
+          { providerId: "provider_v1", declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
+        ],
+      };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [prefix],
+      });
+
+      // Only `prefix` is selected, so only it is joined — the longer, 1:many `path` it prefixes is a
+      // resolved declaration but no selector reads it, so it is never joined at all.
+      expect(result.anchor.paths).to.deep.equal([{ path: prefix, targetClassNames: [primaryClass] }]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+      expect(result.additional).to.be.undefined;
+    });
+
+    it("joins a selected 1:1 prefix and its selected 1:many leaf as independent paths", async () => {
+      const prefix = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
+      const path = [...prefix, makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many")];
+      const source: ContentSource = {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
+        resolvedDeclarations: [
+          { providerId: "provider_v1", declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
+        ],
+      };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [prefix, path],
+      });
+
+      // Both `prefix` (1:1) and `path` (1:many) are selected — each is classified and packed on its own,
+      // so the 1:1 field is never read from the leaf's inner-joined, many-valued group.
+      expect(result.anchor.paths).to.deep.equal([{ path: prefix, targetClassNames: [primaryClass] }]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
+      expect(result.additional![0].parts.joins).to.include("INNER JOIN");
+    });
+
+    it("joins input-only paths once when multiple external input groups share them", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const source = makeSource([]);
+      source.resolvedExternalInputs = [
+        { providerId: "first_v1", inputKey: "name", paths: [{ path, targetClassNames: [primaryClass] }] },
+        { providerId: "second_v1", inputKey: "name", paths: [{ path, targetClassNames: [primaryClass] }] },
+        { providerId: "first_v1", inputKey: "missing", paths: [] },
+      ];
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
+      expect(result.anchor.paths).to.deep.equal([{ path, targetClassNames: [primaryClass] }]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+      expect(result.additional).to.be.undefined;
+    });
+
+    it("ignores a propertySelectorPaths entry that is not a prefix of any resolved path", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+      const unrelated = [makeStep(primaryClass, "TestSchema.RelOther", "TestSchema.Other")];
+      const source: ContentSource = {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
+        resolvedDeclarations: [
+          { providerId: "provider_v1", declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
+        ],
+      };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path, unrelated],
+      });
+
+      // `unrelated` shares no prefix with any resolved path, so it contributes no path and no alias —
+      // only `path`, which a selector actually reads, is joined.
+      expect(result.anchor.paths).to.deep.equal([{ path, targetClassNames: [primaryClass] }]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+    });
+
+    it("ignores an empty (direct-property) propertySelectorPaths entry", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.One")];
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [[], path],
+      });
+
+      expect(result.anchor.paths).to.deep.equal([{ path, targetClassNames: ["TestSchema.One"] }]);
+      expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
+    });
+
+    it("joins a prefix once when it is both its own declared path and a longer selected path's prefix", async () => {
+      const prefix = [makeStep(primaryClass, "TestSchema.RelOne", "TestSchema.Mid")];
+      const path = [...prefix, makeStep("TestSchema.Mid", "TestSchema.RelMany", "TestSchema.Many")];
+      const source: ContentSource = {
+        target: { primaryClass },
+        resolvedPrimaryClasses: [primaryClass],
+        resolvedExternalInputs: [],
+        resolvedDeclarations: [
+          {
+            providerId: "provider_v1",
+            declarationIndex: 0,
+            paths: [
+              { path: prefix, targetClassNames: ["TestSchema.PrefixOwner"] },
+              { path, targetClassNames: [primaryClass] },
+            ],
+          },
+        ],
+      };
+
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source,
+        includeRelatedJoins: true,
+        propertySelectorPaths: [prefix, path],
+      });
+
+      // `prefix` is both its own declared path (e.g. a direct `A->B` field) and a prefix of the longer,
+      // also-selected `A->B->C` path; it validates against both resolved declarations and is joined
+      // exactly once, inheriting the sorted-unique union of both owners' target classes.
+      expect(result.anchor.paths).to.deep.equal([
+        { path: prefix, targetClassNames: [primaryClass, "TestSchema.PrefixOwner"].sort() },
+      ]);
+      expect(result.additional).to.have.length(1);
+      expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
     });
   });
 
@@ -1056,7 +1403,7 @@ describe("buildBaseQuery", () => {
     }
 
     it("keeps fitting 1:1 filters joined and spills overflow filters to existential subqueries", async () => {
-      const paths = Array.from({ length: 22 }, (_, index) => makeIndexedOneToOnePath(index));
+      const paths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
       const oneToOneFilters = paths.map((path, index) => makeIndexedOneToOneFilter(path, index));
       const oneToManyPath = makeOneToManyPath();
       const filters: ContentValueFilter[] = [
@@ -1066,29 +1413,44 @@ describe("buildBaseQuery", () => {
 
       const result = await buildBaseQuery({
         schemaProvider,
-        source: makeSource([paths[21]]),
+        source: makeSource([paths[20]]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [paths[20]],
         filters,
       });
 
-      // FROM consumes one table, leaving room for 21 three-table outer link paths. The 22nd 1:1
-      // filter and the 1:many filter use independent EXISTS scopes.
-      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
-      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
+      // FROM + the reserved paging IdSet join consume 2 tables, leaving room for 20 three-table outer
+      // link paths. The 21st 1:1 filter and the 1:many filter use independent EXISTS scopes.
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(40);
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel20]");
       expect(result.anchor.parts.joins).to.not.include("[TestSchema].[RelMany]");
-      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel21]");
+      expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[Rel20]");
       expect(result.anchor.parts.where).to.include("EXISTS (SELECT 1 FROM [TestSchema].[RelMany]");
 
       // Selected overflow path is owned by an additional group instead of being pulled back onto anchor.
       expect(result.anchor.paths).to.deep.equal([]);
       expect(result.additional).to.have.length(1);
-      expect(result.additional![0].paths.map((entry) => entry.path)).to.deep.equal([[...paths[21]]]);
+      expect(result.additional![0].paths.map((entry) => entry.path)).to.deep.equal([[...paths[20]]]);
 
-      // 21 joined + overflow 1:1 + 1:many filters each own a distinct binding index.
-      expect(Object.keys(result.anchor.parts.bindings!)).to.have.length(23);
-      for (let index = 0; index < 23; ++index) {
+      // 20 joined + overflow 1:1 + 1:many filters each own a distinct binding index.
+      expect(Object.keys(result.anchor.parts.bindings!)).to.have.length(22);
+      for (let index = 0; index < 22; ++index) {
         expect(result.anchor.parts.bindings).to.have.property(`${ECSQL_PREFIX}vf${index}`);
       }
+    });
+
+    it("uses the full JOIN budget in primaries-only mode", async () => {
+      const paths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
+      const result = await buildBaseQuery({
+        schemaProvider,
+        source: makeSource([]),
+        includeRelatedJoins: false,
+        filters: paths.map((path, index) => makeIndexedOneToOneFilter(path, index)),
+      });
+
+      expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(42);
+      expect(result.anchor.parts.joins).to.include("[TestSchema].[Rel20]");
+      expect(result.anchor.parts.where).to.not.include("EXISTS");
     });
 
     it("spills overflowing 1:1 filters in primaries-only mode", async () => {
@@ -1106,15 +1468,15 @@ describe("buildBaseQuery", () => {
     });
 
     it("evaluates an overflowing 1:1 is-null filter with the aggregate existential form", async () => {
-      const fittingPaths = Array.from({ length: 21 }, (_, index) => makeIndexedOneToOnePath(index));
-      const overflowPath = makeIndexedOneToOnePath(21);
+      const fittingPaths = Array.from({ length: 20 }, (_, index) => makeIndexedOneToOnePath(index));
+      const overflowPath = makeIndexedOneToOnePath(20);
       const filters = fittingPaths.map((path, index) => makeIndexedOneToOneFilter(path, index));
       filters.push({
         field: makePropertyField({
           propertyName: "Name",
-          propertyClassName: "TestSchema.Target21",
+          propertyClassName: "TestSchema.Target20",
           pathFromTarget: overflowPath,
-          valueClassNames: ["TestSchema.Target21"],
+          valueClassNames: ["TestSchema.Target20"],
           primaryClassNames: [primaryClass],
           pathCardinality: "one",
         }),
@@ -1125,10 +1487,11 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [],
         filters,
       });
 
-      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel21]");
+      expect(result.anchor.parts.joins).to.not.include("[TestSchema].[Rel20]");
       const allPaths = [...fittingPaths, overflowPath];
       const sortedPathKeys = allPaths.map((path) => serializeRelationshipPath({ path })).sort();
       const targetAlias = (path: RelationshipPath) =>
@@ -1144,8 +1507,8 @@ describe("buildBaseQuery", () => {
           WHERE (${joinedPredicates}) AND (
             (
               SELECT COUNT(*) = 0 OR COUNT([${targetAlias(overflowPath)}].[Name]) < COUNT(*)
-              FROM [TestSchema].[Rel21] [${relationshipAlias(overflowPath)}]
-              INNER JOIN [TestSchema].[Target21] [${targetAlias(overflowPath)}] ON [${targetAlias(overflowPath)}].[ECInstanceId] = [${relationshipAlias(overflowPath)}].[TargetECInstanceId]
+              FROM [TestSchema].[Rel20] [${relationshipAlias(overflowPath)}]
+              INNER JOIN [TestSchema].[Target20] [${targetAlias(overflowPath)}] ON [${targetAlias(overflowPath)}].[ECInstanceId] = [${relationshipAlias(overflowPath)}].[TargetECInstanceId]
               WHERE [${relationshipAlias(overflowPath)}].[SourceECInstanceId] = [this].[ECInstanceId]
             )
           )
@@ -1180,6 +1543,7 @@ describe("buildBaseQuery", () => {
           schemaProvider,
           source: makeSource([path]),
           includeRelatedJoins: true,
+          propertySelectorPaths: [path],
           filters: [{ field, ...filterProps }],
         });
 
@@ -1232,6 +1596,7 @@ describe("buildBaseQuery", () => {
           schemaProvider,
           source: makeSource([path]),
           includeRelatedJoins: true,
+          propertySelectorPaths: [],
           filters: [{ field, ...filterProps }],
         });
 
@@ -1260,6 +1625,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([oneToOnePath, oneToManyPath]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [],
         // Put the 1:many filter first to verify binding spaces are partitioned by cardinality,
         // not by input order.
         filters: [
@@ -1344,6 +1710,7 @@ describe("buildBaseQuery", () => {
         schemaProvider: navSchemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [],
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
 
@@ -1375,6 +1742,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [path],
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
 
@@ -1409,6 +1777,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [path],
         cardinalityHints,
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
@@ -1429,11 +1798,10 @@ describe("buildBaseQuery", () => {
       expect(result.additional![0].paths.map((p) => p.path)).to.deep.equal([path]);
     });
 
-    it("joins a filtered path from an overflow 1:1 partition onto the anchor", async () => {
+    it("keeps a filtered-and-selected path on the anchor even when other selected paths overflow", async () => {
       const paths = Array.from({ length: 40 }, (_, i) => [
         makeStep(primaryClass, `TestSchema.Rel${i}`, `TestSchema.Target${i}`),
       ]);
-      // Paths are packed in source order, so the last path lands in an overflow partition.
       const filteredPath = paths[paths.length - 1];
       const field = makePropertyField({
         propertyName: "Name",
@@ -1448,20 +1816,28 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource(paths),
         includeRelatedJoins: true,
+        propertySelectorPaths: paths,
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
-
-      // The filtered path's columns are owned by an overflow additional group, not the anchor...
       const relationshipName = (p: { path: RelationshipPath }) => p.path[0].relationshipName;
-      expect(result.anchor.paths.some((p) => relationshipName(p) === "TestSchema.Rel39")).to.equal(false);
-      expect(result.additional!.some((g) => g.paths.some((p) => relationshipName(p) === "TestSchema.Rel39"))).to.equal(
-        true,
+
+      // All 40 paths are accounted for
+      expect(result.additional).to.have.length(1);
+      expect(result.anchor.paths.length + result.additional![0].paths.length).to.equal(40);
+
+      // The filtered path is pre-seeded onto the anchor (its join is already reserved to evaluate the
+      // filter), so it is never packed into an overflow group — only the other, unfiltered paths spill.
+      expect(result.anchor.paths.some((p) => relationshipName(p) === "TestSchema.Rel39")).to.equal(true);
+      expect(result.additional![0].paths.some((p) => relationshipName(p) === "TestSchema.Rel39")).to.equal(false);
+
+      const aliases = result.anchor.parts.relatedClassAliases.get(
+        "TestSchema.Primary-[TestSchema.Rel39]->TestSchema.Target39",
       );
-      // ...yet the anchor joins it (under its globally-assigned alias) and evaluates the filter.
-      const key = "TestSchema.Primary-[TestSchema.Rel39]->TestSchema.Target39";
-      const aliases = result.anchor.parts.relatedClassAliases.get(key);
       expect(aliases).to.not.be.undefined;
       expect(result.anchor.parts.where).to.equal(`WHERE [${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
+
+      // Overflow partition is non-empty — the other, unfiltered paths really did split under the ordinary budget.
+      expect(result.additional![0].paths.length).to.be.greaterThan(0);
     });
 
     it("evaluates an `is-null` filter on a 1:many path as no-related-instance-or-null-value, via a single aggregate scan", async () => {
@@ -1472,6 +1848,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [],
         filters: [{ field, operator: "is-null" }],
       });
 
@@ -1500,6 +1877,7 @@ describe("buildBaseQuery", () => {
         schemaProvider,
         source: makeSource([path]),
         includeRelatedJoins: true,
+        propertySelectorPaths: [path],
         filters: [{ field, operator: "is-equal", value: "A" }],
       });
 

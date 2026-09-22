@@ -74,6 +74,8 @@ export interface PropertyField extends BaseField {
    *
    * Taken from the contributing declaration's `cardinalityHint` where given, else from schema
    * multiplicity of the traversed relationship constraints.
+   * Other fields and external inputs on the same query path do not change this field's value shape.
+   * Loading fails if a `"one"` field reaches more than one related instance.
    */
   pathCardinality: CardinalityHint;
   /**
@@ -114,12 +116,6 @@ export interface PropertyField extends BaseField {
    * Always non-empty, de-duplicated, and sorted by full name.
    */
   primaryClassNames: EC.FullClassNameDotNotation[];
-  /**
-   * ID of the {@link ValueSelector} (column) this field reads. Equals this field's *base* id (its
-   * {@link (PropertyField:namespace).computeId} result without a `forkKey`), so all fork/override
-   * variants of the same underlying property share one selector. Immutable in the transformer view.
-   */
-  selectorId: string;
 }
 /** @public */
 export namespace PropertyField {
@@ -141,7 +137,7 @@ export namespace PropertyField {
   }): Field["id"] {
     let identity = `${props.propertyClassName}.${props.propertyName}`;
     if (props.pathFromTarget && props.pathFromTarget.length > 0) {
-      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget })})`;
+      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true })})`;
     }
     if (props.forkKey) {
       identity += `#${props.forkKey}`;
@@ -196,11 +192,6 @@ export interface CalculatedField extends BaseField {
    * Always non-empty, de-duplicated, and sorted by full name.
    */
   primaryClassNames: EC.FullClassNameDotNotation[];
-  /**
-   * ID of the {@link ValueSelector} (column) this field reads. Equals this field's id
-   * (`${providerId}:${localId}`). Immutable in the transformer view.
-   */
-  selectorId: string;
 }
 
 /**

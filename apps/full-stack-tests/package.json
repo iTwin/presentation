@@ -14,6 +14,7 @@
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "devDependencies": {
+    "@bentley/classification-systems-schema": "1.0.4",
     "@bentley/functional-schema": "^1.0.4",
     "@itwin/appui-abstract": "catalog:itwinjs-core-dev",
     "@itwin/build-tools": "catalog:build-tools",
@@ -41,6 +42,7 @@
     "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-hierarchies-react": "workspace:*",
     "@itwin/presentation-shared": "workspace:*",
+    "@itwin/presentation-tree-definitions": "workspace:*",
     "@itwin/unified-selection": "workspace:*",
     "@itwin/unified-selection-react": "workspace:*",
     "@testing-library/dom": "catalog:test-tools",
@@ -57,7 +59,7 @@
     "deep-equal-in-any-order": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
-    "fast-xml-parser": "^5.11.1",
+    "fast-xml-parser": "catalog:miscellaneous",
     "happy-dom": "catalog:test-tools",
     "i18next-http-backend": "^3.0.6",
     "object-hash": "^3.0.0",

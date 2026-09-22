@@ -1,0 +1,50 @@
+{
+  "name": "@itwin/presentation-tree-definitions",
+  "version": "0.1.0",
+  "description": "Reusable tree hierarchy definitions for iTwin Presentation",
+  "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/tree-definitions"
+  },
+  "type": "module",
+  "main": "lib/presentation-tree-definitions.js",
+  "types": "lib/presentation-tree-definitions.d.ts",
+  "exports": {
+    ".": "./lib/presentation-tree-definitions.js",
+    "./internal": {
+      "import": "./lib/presentation-tree-definitions-internal.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "npm run -s typecheck && tsc -p tsconfig.build.json",
+    "clean": "rimraf lib",
+    "extract-api": "betools extract-api --entry=lib/presentation-tree-definitions --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "lint": "eslint \"./src/**/*.ts\"",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-common": "catalog:itwinjs-core",
+    "@itwin/presentation-hierarchies": "workspace:*",
+    "@itwin/presentation-shared": "workspace:*",
+    "rxjs": "catalog:rxjs"
+  },
+  "devDependencies": {
+    "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
+    "@types/node": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
+    "rimraf": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
+    "typescript": "catalog:build-tools",
+    "vitest": "catalog:test-tools"
+  }
+}

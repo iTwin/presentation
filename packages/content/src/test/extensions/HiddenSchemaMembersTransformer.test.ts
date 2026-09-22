@@ -29,7 +29,6 @@ function propertyField(props: {
   return {
     kind: "property",
     id,
-    selectorId: id,
     label: "Label",
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.sourceClassName,
@@ -48,7 +47,6 @@ function calculatedField(id: string): CalculatedField {
   return {
     kind: "calculated",
     id,
-    selectorId: id,
     label: "Calc",
     type: { kind: "primitive", type: "String" },
     expression: "1+1",
@@ -67,7 +65,7 @@ function externalField(id: string): ExternalField {
 }
 
 function createDescriptor(fields: Field[]): ContentDescriptor {
-  return { sources: [], categories: {}, selectors: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
+  return { sources: [], categories: {}, fields: Object.fromEntries(fields.map((f) => [f.id, f])) };
 }
 
 describe("createHiddenSchemaMembersDescriptorTransformer", () => {

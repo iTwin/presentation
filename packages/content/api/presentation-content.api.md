@@ -49,7 +49,6 @@ export interface CalculatedField extends BaseField {
     // (undocumented)
     kind: "calculated";
     primaryClassNames: EC.FullClassNameDotNotation[];
-    selectorId: string;
     targetAlias?: string;
 }
 
@@ -62,13 +61,6 @@ interface CalculatedFieldDeclaration {
     label: string;
     targetAlias?: string;
     type: ValueDescriptor;
-}
-
-// @public
-export interface CalculatedValueSelector extends Pick<CalculatedField, "expression" | "targetAlias" | "bindings"> {
-    id: string;
-    // (undocumented)
-    kind: "calculated";
 }
 
 // @public
@@ -112,7 +104,6 @@ export interface ContentConfiguration {
 export interface ContentDescriptor {
     categories: Record<CategoryDefinition["id"], CategoryDefinition>;
     fields: Record<Field["id"], Field>;
-    selectors: Record<ValueSelector["id"], ValueSelector>;
     sources: ContentSource[];
 }
 
@@ -128,7 +119,6 @@ export interface ContentItem {
     }>;
     getValue(field: ReadonlyField): DeepReadonly<Value>;
     readonly primaryKey: DeepReadonly<InstanceKey>;
-    readonly relatedInstances: DeepReadonly<Record<string, RelatedInstanceEntry[]>>;
     readonly values: DeepReadonly<Record<Field["id"], Value>>;
 }
 
@@ -162,6 +152,7 @@ interface ContentSortSpec {
 // @public
 export interface ContentSource {
     resolvedDeclarations: ResolvedDeclarationGroup[];
+    resolvedExternalInputs: ResolvedExternalInputGroup[];
     resolvedPrimaryClasses: EC.FullClassNameDotNotation[];
     target: ContentTarget;
 }
@@ -224,7 +215,7 @@ export const DEFAULT_FIELDS_PROVIDER_PRIORITY = 1000;
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer;
 
 // @public
-export function defineExternalFieldsProvider<const TInputKeys extends string, const TOutputFieldIds extends readonly string[]>(provider: ExternalFieldsProvider<TInputKeys, TOutputFieldIds>): ExternalFieldsProvider<TInputKeys, TOutputFieldIds>;
+export function defineExternalFieldsProvider<const TInputs extends Record<string, InputPropertyDeclaration>, const TOutputFieldIds extends readonly string[]>(provider: ExternalFieldsProvider<TInputs, TOutputFieldIds>): ExternalFieldsProvider<TInputs, TOutputFieldIds>;
 
 // @public
 export function defineIModelFieldsProvider(provider: IModelFieldsProvider): IModelFieldsProvider;
@@ -257,26 +248,31 @@ interface ExternalFieldDeclaration<TId extends string = string> {
 }
 
 // @public
-interface ExternalFieldsProvider<TInputKeys extends string = never, TOutputFieldIds extends readonly string[] = readonly string[]> extends BaseFieldsProvider {
+interface ExternalFieldsProvider<TInputs extends Record<string, InputPropertyDeclaration> = Record<never, never>, TOutputFieldIds extends readonly string[] = readonly string[]> extends BaseFieldsProvider {
     categories?: Record<CategoryDefinition["id"], CategoryDefinition>;
     fields: {
         [K in keyof TOutputFieldIds]: ExternalFieldDeclaration<TOutputFieldIds[K]>;
     };
     getValues(props: {
         items: Array<{
-            inputValues: {
-                [K in TInputKeys]: Value;
-            };
+            inputValues: ExternalInputValues<TInputs>;
         }>;
     }): Promise<Array<ExternalFieldValueRecord<TOutputFieldIds>>>;
-    inputs?: {
-        [K in TInputKeys]: InputPropertyDeclaration;
-    };
+    inputs?: TInputs;
 }
 
 // @public
 type ExternalFieldValueRecord<TFieldIds extends readonly string[]> = {
     [K in TFieldIds[number]]: Value;
+};
+
+// @public
+type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration>> = {
+    [K in keyof TInputs]: TInputs[K] extends {
+        related: {
+            cardinalityHint: "many";
+        };
+    } ? Value[] : Value;
 };
 
 // @public
@@ -315,9 +311,12 @@ interface IModelFieldsProvider extends BaseFieldsProvider {
 
 // @public
 interface InputPropertyDeclaration {
-    path?: RelationshipPath;
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
+    related?: {
+        path: RelationshipPath;
+        cardinalityHint?: CardinalityHint;
+    };
 }
 
 // @public
@@ -343,7 +342,6 @@ export interface PropertyField extends BaseField {
     propertyClassKind?: "target" | "relationship";
     propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
-    selectorId: string;
     valueClassNames: EC.FullClassNameDotNotation[];
 }
 
@@ -375,13 +373,6 @@ type PropertySelection = "all" | "none" | {
 } | {
     exclude: string[];
 };
-
-// @public
-export interface PropertyValueSelector extends Pick<PropertyField, "propertyClassName" | "propertyName" | "pathFromTarget"> {
-    id: string;
-    // (undocumented)
-    kind: "property";
-}
 
 // @public
 interface QueryFilterClauses {
@@ -416,12 +407,6 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
 
 // @public
-interface RelatedInstanceEntry {
-    key: InstanceKey;
-    relationshipKey?: InstanceKey;
-}
-
-// @public
 interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
     path: RelationshipPath;
@@ -437,7 +422,7 @@ export function resolveContentSources(props: ResolveContentSourcesProps): Promis
 
 // @public
 interface ResolveContentSourcesProps {
-    config?: Pick<ContentConfiguration, "imodelFieldsProviders">;
+    config?: Pick<ContentConfiguration, "imodelFieldsProviders" | "externalFieldsProviders">;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     targets: ContentTarget[];
 }
@@ -452,6 +437,13 @@ interface ResolvedDeclarationGroup {
     };
     paths: ResolvedPath[];
     providerId: BaseFieldsProvider["id"];
+}
+
+// @public
+interface ResolvedExternalInputGroup {
+    inputKey: string;
+    paths: ResolvedPath[];
+    providerId: ExternalFieldsProvider["id"];
 }
 
 // @public
@@ -488,9 +480,6 @@ type TransformableField<TField extends Field = Field> = TField extends Field ? D
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";
-
-// @public
-export type ValueSelector = PropertyValueSelector | CalculatedValueSelector;
 
 // (No @packageDocumentation comment for this package)
 

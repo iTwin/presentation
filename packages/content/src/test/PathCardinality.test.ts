@@ -4,10 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { classifyPathCardinality, createPathCardinalityClassifier } from "../content/PathCardinality.js";
+import { serializeRelationshipPath } from "../content/model/Utils.js";
+import {
+  classifyPathCardinality,
+  collectPathCardinalities,
+  createPathCardinalityClassifier,
+  resolveCardinality,
+} from "../content/PathCardinality.js";
 import { createRelationshipClass, createSchemaAccess } from "./MetadataStubs.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../content/ContentTarget.js";
+import type { ContentDescriptor } from "../content/model/ContentDescriptor.js";
+import type { ExternalField, Field, PropertyField } from "../content/model/Field.js";
 
 describe("createPathCardinalityClassifier", () => {
   const aToB: RelationshipPath[number] = {
@@ -59,6 +68,16 @@ describe("createPathCardinalityClassifier", () => {
     const path = [aToB, bToC];
     expect(await classifier.classify({ path, declaredPath: path })).to.equal("many");
     expect(await classifier.classify({ path, declaredPath: path, hint: "one" })).to.equal("one");
+  });
+});
+
+describe("resolveCardinality", () => {
+  it("returns `one` when every declaration is single-valued", () => {
+    expect(resolveCardinality(["one", "one"])).to.equal("one");
+  });
+
+  it("returns `many` when any declaration is many-valued", () => {
+    expect(resolveCardinality(["one", "many", "one"])).to.equal("many");
   });
 });
 
@@ -157,5 +176,188 @@ describe("classifyPathCardinality", () => {
     await expect(classifyPathCardinality({ schemaProvider, path: [step("AtoB")] })).rejects.toThrow(
       "TestSchema.AtoB is not a relationship class",
     );
+  });
+});
+
+describe("collectPathCardinalities", () => {
+  const aToB: RelationshipPath[number] = {
+    sourceClassName: "TestSchema.A",
+    targetClassName: "TestSchema.B",
+    relationshipName: "TestSchema.AToB",
+  };
+  const bToC: RelationshipPath[number] = {
+    sourceClassName: "TestSchema.B",
+    targetClassName: "TestSchema.C",
+    relationshipName: "TestSchema.BToC",
+  };
+
+  function makeField(props: {
+    id: string;
+    pathFromTarget: RelationshipPath;
+    pathCardinality: CardinalityHint;
+  }): PropertyField {
+    return {
+      kind: "property",
+      id: props.id,
+      label: props.id,
+      type: { kind: "primitive", type: "String" },
+      propertyClassName: "TestSchema.B",
+      propertyName: "Name",
+      pathFromTarget: props.pathFromTarget,
+      pathCardinality: props.pathCardinality,
+      valueClassNames: ["TestSchema.B"],
+      primaryClassNames: ["TestSchema.A"],
+    };
+  }
+
+  function makeDescriptor(fields: Field[]): ContentDescriptor {
+    return { fields: Object.fromEntries(fields.map((field) => [field.id, field])) } as unknown as ContentDescriptor;
+  }
+
+  it("ignores a direct field and a non-property field", () => {
+    const directField = makeField({ id: "direct", pathFromTarget: [], pathCardinality: "one" });
+    const externalField: ExternalField = {
+      kind: "external",
+      id: "ext",
+      label: "Ext",
+      type: { kind: "primitive", type: "String" },
+      providerId: "provider_v1",
+    };
+
+    expect(collectPathCardinalities(makeDescriptor([directField, externalField])).size).to.equal(0);
+  });
+
+  it("keys a related field's own path with its cardinality", () => {
+    const field = makeField({ id: "b", pathFromTarget: [aToB], pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([field]));
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+
+  it("keeps differently filtered paths isolated when only one path is hinted", () => {
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+    ];
+    const fieldA = makeField({ id: "filtered-a", pathFromTarget: filteredA, pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([fieldA]));
+
+    expect(hints.get(serializeRelationshipPath({ path: filteredA }))).to.equal("one");
+    expect(hints.has(serializeRelationshipPath({ path: filteredB }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+  });
+
+  it("does not leak a `one` hint across filtered prefixes or into the unfiltered path", () => {
+    const filteredA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+      bToC,
+    ];
+    const filteredB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+      bToC,
+    ];
+    const fieldA = makeField({ id: "a", pathFromTarget: filteredA, pathCardinality: "one" });
+    const fieldB = makeField({ id: "b", pathFromTarget: filteredB, pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([fieldA, fieldB]));
+
+    expect(hints.get(serializeRelationshipPath({ path: filteredA }))).to.equal("one");
+    expect(hints.get(serializeRelationshipPath({ path: filteredB }))).to.equal("many");
+    expect(hints.get(serializeRelationshipPath({ path: filteredA.slice(0, 1) }))).to.equal("one");
+    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+  });
+
+  it("reuses the schema-cardinality cache for equivalent filtered lookups", async () => {
+    const getClass = vi.fn(async () => ({
+      fullName: "TestSchema.AToB",
+      isRelationshipClass: () => true,
+      source: { multiplicity: { upperLimit: 1 } },
+      target: { multiplicity: { upperLimit: 1 } },
+    }));
+    const schemaProvider = {
+      getSchema: vi.fn(async () => ({ getClass })),
+      classDerivesFrom: async () => false,
+    } as unknown as ECSchemaProvider;
+
+    const classifier = createPathCardinalityClassifier(schemaProvider);
+    const pathA: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindA", bindings: { kindA: { type: "int", value: 1 } } } },
+    ];
+    const pathB: RelationshipPath = [
+      { ...aToB, instanceFilter: { expression: "this.Kind = :kindB", bindings: { kindB: { type: "int", value: 2 } } } },
+    ];
+
+    await expect(classifier.classify({ path: pathA, declaredPath: pathA })).resolves.to.equal("one");
+    await expect(classifier.classify({ path: pathB, declaredPath: pathB })).resolves.to.equal("one");
+    expect(getClass).toHaveBeenCalledTimes(1);
+  });
+
+  it("seeds every unhinted prefix of a `one` path", () => {
+    const field = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([field]));
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("one");
+    expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("one");
+  });
+
+  it("does not seed a prefix of a `many` path", () => {
+    const field = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([field]));
+
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+    expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("many");
+  });
+
+  it("does not overwrite a prefix's own directly-declared verdict", () => {
+    const prefixField = makeField({ id: "b", pathFromTarget: [aToB], pathCardinality: "many" });
+    const fullField = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([prefixField, fullField]));
+
+    // The prefix has its own `many` declaration, so the full path's `one` prefix-seed must not override it.
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+
+  it("resolves disagreeing fields on the same path to `many`", () => {
+    const oneField = makeField({ id: "one", pathFromTarget: [aToB], pathCardinality: "one" });
+    const manyField = makeField({ id: "many", pathFromTarget: [aToB], pathCardinality: "many" });
+    const hints = collectPathCardinalities(makeDescriptor([oneField, manyField]));
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+  it("folds in a prepared external input on a path with no field", () => {
+    const hints = collectPathCardinalities(makeDescriptor([]), [
+      { propertyClassName: "TestSchema.B", propertyName: "Name", pathFromTarget: [aToB], cardinality: "many" },
+    ]);
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
+  });
+
+  it("ignores a direct external input", () => {
+    const hints = collectPathCardinalities(makeDescriptor([]), [
+      { propertyClassName: "TestSchema.A", propertyName: "Name", cardinality: "one" },
+    ]);
+
+    expect(hints.size).to.equal(0);
+  });
+
+  it("seeds prefixes from a one-valued external input the same way a field would", () => {
+    const hints = collectPathCardinalities(makeDescriptor([]), [
+      { propertyClassName: "TestSchema.C", propertyName: "Name", pathFromTarget: [aToB, bToC], cardinality: "one" },
+    ]);
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("one");
+    expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("one");
+  });
+
+  it("resolves a field and an external input disagreeing on the same path to `many`", () => {
+    const oneField = makeField({ id: "one", pathFromTarget: [aToB], pathCardinality: "one" });
+    const hints = collectPathCardinalities(makeDescriptor([oneField]), [
+      { propertyClassName: "TestSchema.B", propertyName: "Other", pathFromTarget: [aToB], cardinality: "many" },
+    ]);
+
+    expect(hints.get(serializeRelationshipPath({ path: [aToB] }))).to.equal("many");
   });
 });
