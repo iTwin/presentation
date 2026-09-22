@@ -51,7 +51,7 @@ interface CategoriesInfo {
 export interface CachedCategoryInfo {
   /** The category's element ID. */
   id: Id64String;
-  /** Number of non-private subcategories, including the default subcategory. */
+  /** Number of non-private sub-categories, including the default sub-category. */
   subCategoryChildCount: number;
   /** Whether the category contains elements of the configured class, including excluded classes. */
   hasElements: boolean;
@@ -88,7 +88,7 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
     parentDefinitionContainerIds: Id64Arg;
     includeEmpty?: boolean;
   }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
-  /** Yields root-to-subcategory paths, omitting subcategories whose parent category has only one subcategory. */
+  /** Yields root-to-sub-category paths, omitting sub-categories whose parent category has only one sub-category. */
   getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
   /** Yields root-to-definition-container paths, including each container itself. Unknown IDs yield empty paths. */
   getDefinitionContainersSearchPaths(props: {

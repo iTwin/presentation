@@ -18,7 +18,7 @@ import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies
 import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
 
 /**
- * Provides model, category, and subcategory IDs for tree hierarchy definitions.
+ * Provides model, category, and sub-category IDs for tree hierarchy definitions.
  * Element data is limited to the configured element class and non-private models.
  * @internal
  */
@@ -53,9 +53,9 @@ export interface BaseIdsProvider {
     /** Requires the category to contain both top-level elements and non-excluded elements in the model. */
     excludeIfOnlyExcludedClasses?: boolean;
   }): AsyncIterableIterator<ModelId>;
-  /** Returns a mapping from category IDs to their subcategory IDs. */
+  /** Returns a mapping from category IDs to their sub-category IDs. */
   getCategorySubCategoriesMap(): Promise<Map<CategoryId, SubCategoryId[]>>;
-  /** Groups the supplied subcategory IDs by parent category, omitting categories with only one subcategory. */
+  /** Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category. */
   getSubCategoryCategories(props: { subCategoryIds: Id64Arg }): Promise<Map<CategoryId, SubCategoryId[]>>;
 }
 

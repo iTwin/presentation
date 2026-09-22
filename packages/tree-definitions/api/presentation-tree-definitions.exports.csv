@@ -1,4 +1,6 @@
 sep=;
 Release Tag;API Item Type;API Item Name
+beta;namespace;CategoriesTreeNode
+beta;function;createCategoriesTree
 beta;function;createModelsTree
 beta;namespace;ModelsTreeNode
