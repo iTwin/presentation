@@ -3,12 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { createIModelInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 import { buildContentDefinition } from "./definition-building/BuildContentDefinition.js";
 import { getInstanceKeys } from "./query/GetInstanceKeys.js";
 import { getSize } from "./query/GetSize.js";
 import { getItems } from "./query/value-loading/GetItems.js";
 
-import type { Props } from "@itwin/presentation-shared";
+import type { IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 import type { ContentProvider, createContentProvider } from "./Content.js";
 import type { ContentDefinition } from "./definition-building/BuildContentDefinition.js";
 
@@ -24,6 +25,13 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
   async function getContentDefinition() {
     definition ??= buildContentDefinition({ imodelAccess, sources, config });
     return definition;
+  }
+  // The default factory reads its label override rules lazily, on the first select clause it creates, so
+  // content without navigation properties never pays for them.
+  let labelsFactory: IInstanceLabelSelectClauseFactory | undefined;
+  function getLabelsFactory() {
+    labelsFactory ??= config?.labelsFactory ?? createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+    return labelsFactory;
   }
 
   return {
@@ -47,6 +55,7 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
         imodelAccess,
         getContentDefinition,
         sources,
+        labelsFactory: getLabelsFactory(),
         queryFilterers: config?.queryFilterers,
         filters: options?.filters,
         sorting: options?.sorting,

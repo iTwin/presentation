@@ -29,7 +29,7 @@ import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field, PropertyField } from "../model/Field.js";
 import type { PropertyValueReader } from "../query/value-loading/RowDecoder.js";
 import type { ExternalInput, ExternalProviderPlan } from "./ExternalProviders.js";
-import type { ValueSelector } from "./ValueSelector.js";
+import type { CalculatedValueSelector, PropertyValueSelector, ValueSelector } from "./ValueSelector.js";
 
 /**
  * The descriptor and private requirements for loading its values, built after transforms run.
@@ -39,13 +39,33 @@ import type { ValueSelector } from "./ValueSelector.js";
  */
 export interface ContentDefinition {
   descriptor: ContentDescriptor;
-  selectors: Record<ValueSelector["id"], ValueSelector>;
-  propertyReaders: Record<ValueSelector["id"], PropertyValueReader>;
+  /**
+   * Everything needed to select and decode each column, keyed by selector id. Includes selectors
+   * backing no descriptor field (external fields provider inputs).
+   */
+  selectors: Record<ValueSelector["id"], SelectorDefinition>;
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
   externalInputs: ExternalInput[];
   externalProviders: ExternalProviderPlan[];
   /** Calculated fields contributed to each source, keyed by the original source object. */
   calculatedFieldIdsBySource: Map<ContentSource, Set<Field["id"]>>;
+}
+
+/**
+ * A {@link ValueSelector} together with whatever decoding its column needs. Calculated selectors read
+ * straight from a scalar column, so they need nothing beyond the selector itself.
+ */
+export type SelectorDefinition = PropertySelectorDefinition | CalculatedValueSelector;
+
+/**
+ * A {@link PropertyValueSelector} carrying the resolved value type of the column it selects and the
+ * reader that decodes that column's raw value. Pairing them with the selector makes it impossible to
+ * project a property column with no way to decode it, and gives the value loader the type it needs to
+ * find the navigation target ids a decoded value carries without re-reading schema.
+ */
+export interface PropertySelectorDefinition extends PropertyValueSelector {
+  type: ValueDescriptor;
+  read: PropertyValueReader;
 }
 
 /**
@@ -136,28 +156,29 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     fields: descriptor.fields,
     classifier,
   });
-  const { selectors, fieldSelectorIds } = collectValueRequirements({
+  const { selectors: rawSelectors, fieldSelectorIds } = collectValueRequirements({
     fields: Object.values(descriptor.fields),
     externalInputs,
   });
-  const propertyReaders = await preparePropertyReaders({ imodelAccess, selectors, fields: descriptor.fields });
+  const selectors = await prepareSelectorDefinitions({
+    imodelAccess,
+    selectors: rawSelectors,
+    fields: descriptor.fields,
+  });
 
-  return {
-    descriptor,
-    selectors,
-    propertyReaders,
-    fieldSelectorIds,
-    externalInputs,
-    externalProviders,
-    calculatedFieldIdsBySource,
-  };
+  return { descriptor, selectors, fieldSelectorIds, externalInputs, externalProviders, calculatedFieldIdsBySource };
 }
 
-export async function preparePropertyReaders(props: {
+/**
+ * Pairs each selector with whatever decoding its column needs: a property selector gets its value type
+ * and the reader derived from it, while a calculated selector passes through unchanged. Types come from
+ * the backing descriptor field where there is one, and from schema otherwise.
+ */
+export async function prepareSelectorDefinitions(props: {
   imodelAccess: ECSchemaProvider;
-  selectors: ContentDefinition["selectors"];
+  selectors: Record<ValueSelector["id"], ValueSelector>;
   fields: ContentDescriptor["fields"];
-}): Promise<ContentDefinition["propertyReaders"]> {
+}): Promise<ContentDefinition["selectors"]> {
   const { imodelAccess, selectors, fields } = props;
   const fieldTypes = new Map<string, ValueDescriptor>();
   for (const field of Object.values(fields)) {
@@ -167,13 +188,17 @@ export async function preparePropertyReaders(props: {
     }
   }
   const classes = new Map<EC.FullClassNameDotNotation, Promise<EC.Class>>();
-  const propertyReaders: ContentDefinition["propertyReaders"] = {};
+  const definitions: ContentDefinition["selectors"] = {};
   for (const selector of Object.values(selectors)) {
     if (selector.kind !== "property") {
+      definitions[selector.id] = selector;
       continue;
     }
     let type = fieldTypes.get(selector.id);
     if (!type) {
+      // External input selectors exist whether or not the property has a field — the provider may
+      // request one that was never exposed, or whose field a descriptor transformer removed. With no
+      // field to take the type from, it comes from the schema.
       const ecClass = await getOrCreate({
         map: classes,
         key: selector.propertyClassName,
@@ -197,8 +222,11 @@ export async function preparePropertyReaders(props: {
     });
     const applicableClassNames = new Set<string>([declaringClass.fullName, ...declaringClass.getDerivedClassNames()]);
     const decode = createPropertyValueDecoder(type);
-    propertyReaders[selector.id] = (className, value) =>
-      applicableClassNames.has(className) ? decode(value) : undefined;
+    definitions[selector.id] = {
+      ...selector,
+      type,
+      read: (className, value) => (applicableClassNames.has(className) ? decode(value) : undefined),
+    };
   }
-  return propertyReaders;
+  return definitions;
 }

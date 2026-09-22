@@ -96,6 +96,7 @@ export interface ContentConfiguration {
     descriptorTransformers?: DescriptorTransformer[];
     externalFieldsProviders?: ExternalFieldsProvider[];
     imodelFieldsProviders?: IModelFieldsProvider[];
+    labelsFactory?: IInstanceLabelSelectClauseFactory;
     queryFilterers?: QueryFilterer[];
 }
 

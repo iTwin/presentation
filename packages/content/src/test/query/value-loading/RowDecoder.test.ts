@@ -96,7 +96,7 @@ const descriptor = {
 
 function createTestRowDecoder(props: {
   descriptor: ContentDescriptor;
-  selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
+  selectors?: Record<ValueSelector["id"], ValueSelector>;
   columnNames: SelectProjection["columnNames"];
   decoderTypes?: Record<string, ValueDescriptor>;
   propertyApplicableClasses?: Record<string, Set<string>>;
@@ -107,23 +107,34 @@ function createTestRowDecoder(props: {
       .map((selector) => [selector.id, new Set([selector.propertyClassName.toLowerCase()])]),
   );
   const applicableClasses = props.propertyApplicableClasses ?? defaultApplicableClasses;
-  const propertyReaders = Object.fromEntries(
-    Object.entries(props.decoderTypes ?? defaultDecoderTypes).map(([selectorId, type]) => {
-      const decode = createPropertyValueDecoder(type);
-      return [
-        selectorId,
-        (className: string, value: Value | null) =>
-          applicableClasses[selectorId].has(className.toLowerCase()) ? decode(value) : undefined,
-      ];
-    }),
+  const decoderTypes = props.decoderTypes ?? defaultDecoderTypes;
+  const definitions = Object.fromEntries(
+    Object.entries(props.selectors ?? selectors)
+      .filter(([selectorId, selector]) => selector.kind !== "property" || selectorId in decoderTypes)
+      .map(([selectorId, selector]) => {
+        if (selector.kind !== "property") {
+          return [selectorId, selector];
+        }
+        const type = decoderTypes[selectorId];
+        const decode = createPropertyValueDecoder(type);
+        return [
+          selectorId,
+          {
+            ...selector,
+            type,
+            read: (className: string, value: Value | null) =>
+              applicableClasses[selectorId].has(className.toLowerCase()) ? decode(value) : undefined,
+          },
+        ];
+      }),
   );
-  return createRowDecoder({ columnNames: props.columnNames, selectors: props.selectors ?? selectors, propertyReaders });
+  return createRowDecoder({ columnNames: props.columnNames, selectors: definitions });
 }
 
 function decodeRow(props: {
   row: ECSqlQueryRow;
   descriptor: ContentDescriptor;
-  selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
+  selectors?: Record<ValueSelector["id"], ValueSelector>;
   columnNames: SelectProjection["columnNames"];
   decoderTypes?: Record<string, ValueDescriptor>;
   propertyApplicableClasses?: Record<string, Set<string>>;
@@ -134,7 +145,7 @@ function decodeRow(props: {
 function decodeGroupRows(props: {
   rows: ECSqlQueryRow[];
   descriptor: ContentDescriptor;
-  selectors?: Parameters<typeof createRowDecoder>[0]["selectors"];
+  selectors?: Record<ValueSelector["id"], ValueSelector>;
   cardinality: CardinalityHint;
   columnNames: SelectProjection["columnNames"];
   keys?: readonly InstanceKey[];
@@ -157,16 +168,17 @@ describe("RowDecoder", () => {
   });
 
   describe("decodeRow — selector values", () => {
-    it("rejects projected selectors without prepared property decoders", () => {
-      expect(() => decodeRow({ row: {}, descriptor, columnNames, decoderTypes: {} })).toThrow(
-        'Missing property reader for selector "Schema.A.Code".',
-      );
+    it("rejects projected selectors missing from the definition", () => {
+      expect(() => createRowDecoder({ columnNames, selectors: {} })).toThrow('Missing selector "Schema.A.Code".');
     });
 
-    it("rejects projected selectors without property readers", () => {
-      expect(() => createRowDecoder({ columnNames, selectors, propertyReaders: {} })).toThrow(
-        'Missing property reader for selector "Schema.A.Code".',
-      );
+    it("rejects a projected selector that is not a property selector", () => {
+      expect(() =>
+        createRowDecoder({
+          columnNames,
+          selectors: { "Schema.A.Code": { kind: "calculated", id: "Schema.A.Code", expression: "1" } },
+        }),
+      ).toThrow('Selector "Schema.A.Code" is not a property selector.');
     });
 
     it.each([

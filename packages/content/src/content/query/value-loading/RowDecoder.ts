@@ -9,7 +9,6 @@ import { serializeRelationshipPath } from "../../model/Utils.js";
 import type { EC, ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../ContentTarget.js";
 import type { ContentDefinition } from "../../definition-building/BuildContentDefinition.js";
-import type { ValueSelector } from "../../definition-building/ValueSelector.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentValues, RelatedInstanceEntry } from "../../model/ContentItem.js";
 import type { PropertyField } from "../../model/Field.js";
@@ -56,16 +55,14 @@ export type PropertyValueReader = (className: string, value: Value | null) => Va
 
 export function createRowDecoder(props: {
   columnNames: SelectProjection["columnNames"];
-  selectors: Record<ValueSelector["id"], ValueSelector>;
-  propertyReaders: ContentDefinition["propertyReaders"];
+  selectors: ContentDefinition["selectors"];
 }): RowDecoder {
-  const { columnNames, selectors, propertyReaders } = props;
+  const { columnNames, selectors } = props;
   const propertyReads = Object.entries(columnNames.propertyBlobs).map(([selectorId, column]) => {
     assert(Object.hasOwn(selectors, selectorId), `Missing selector "${selectorId}".`);
     const selector = selectors[selectorId];
     assert(selector.kind === "property", `Selector "${selectorId}" is not a property selector.`);
-    assert(Object.hasOwn(propertyReaders, selectorId), `Missing property reader for selector "${selectorId}".`);
-    return { selectorId, column, propertyName: selector.propertyName, read: propertyReaders[selectorId] };
+    return { selectorId, column, propertyName: selector.propertyName, read: selector.read };
   });
 
   return (row) => decodeRow({ row, columnNames, propertyReads });

@@ -11,6 +11,7 @@ import {
   type ECSqlQueryDef,
   type ECSqlQueryExecutor,
   type ECSqlQueryRow,
+  type IInstanceLabelSelectClauseFactory,
   type InstanceKey,
   type PrimitiveValue,
 } from "@itwin/presentation-shared";
@@ -22,6 +23,7 @@ import { QUERY_CONCURRENCY } from "../QueryConcurrency.js";
 import { PAGE_SIZE } from "../QueryLimits.js";
 import { buildSelectProjection } from "../SelectBuilder.js";
 import { createExternalValuePopulator } from "./ExternalValues.js";
+import { createNavigationValuePopulator } from "./NavigationValues.js";
 import { buildAnchorPageQuery, buildKeyStreamQuery, buildValueQuery } from "./PageQueries.js";
 import {
   createRowDecoder,
@@ -36,28 +38,34 @@ import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ContentValueFilter } from "../../Content.js";
 import type { ContentSource } from "../../ContentTarget.js";
-import type { ContentDefinition } from "../../definition-building/BuildContentDefinition.js";
+import type {
+  ContentDefinition,
+  PropertySelectorDefinition,
+} from "../../definition-building/BuildContentDefinition.js";
 import type { ExternalInput } from "../../definition-building/ExternalProviders.js";
-import type { PropertyValueSelector } from "../../definition-building/ValueSelector.js";
 import type { QueryFilterer } from "../../extensions/QueryFilterer.js";
 import type { ContentDescriptor } from "../../model/ContentDescriptor.js";
 import type { ContentItem } from "../../model/ContentItem.js";
 import type { BaseQueryGroup } from "../BaseQuery.js";
 import type { ContentQuerySort, SelectProjection } from "../SelectBuilder.js";
 import type { ExternalValuePopulator } from "./ExternalValues.js";
+import type { NavigationValuePopulator } from "./NavigationValues.js";
 import type { Cursor, PlannedGroup, SourcePlan } from "./PageQueries.js";
 import type { GroupValues } from "./RowDecoder.js";
 
 /**
  * Loads content items for the configured sources, paging with a keyset cursor and stitching SQL-backed
- * values into `ContentItem` accessors. Once a page's SQL-backed values are stitched, every configured
- * external fields provider is called once with that page's pre-extracted input values and its declared
- * fields are merged in before the items are emitted.
+ * values into `ContentItem` accessors. Once a page's SQL-backed values are stitched, navigation property
+ * values are loaded into full `NavigationValue`s and every configured external fields provider is called
+ * once with that page's pre-extracted input values, whose declared fields are merged in before the items
+ * are emitted.
  */
 export function getItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   getContentDefinition: () => Promise<ContentDefinition>;
   sources: ContentSource[];
+  /** Selects labels for navigation property values' target instances. */
+  labelsFactory: IInstanceLabelSelectClauseFactory;
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
@@ -73,25 +81,19 @@ function loadItems(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   getContentDefinition: () => Promise<ContentDefinition>;
   sources: ContentSource[];
+  labelsFactory: IInstanceLabelSelectClauseFactory;
   queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
   sorting?: ContentQuerySort[];
 }): Observable<ContentItem> {
-  const { imodelAccess, getContentDefinition, sources, queryFilterers, filters } = props;
+  const { imodelAccess, getContentDefinition, sources, labelsFactory, queryFilterers, filters } = props;
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
   return from(getContentDefinition()).pipe(
     mergeMap(
-      ({
-        descriptor,
-        selectors,
-        calculatedFieldIdsBySource,
-        propertyReaders,
-        fieldSelectorIds,
-        externalInputs,
-        externalProviders,
-      }) => {
+      ({ descriptor, selectors, calculatedFieldIdsBySource, fieldSelectorIds, externalInputs, externalProviders }) => {
         const populateExternalValues = createExternalValuePopulator({ descriptor, plans: externalProviders });
+        const populateNavigationValues = createNavigationValuePopulator({ imodelAccess, selectors, labelsFactory });
         return from(sources).pipe(
           mergeMap(async (source) =>
             createSourcePlan({
@@ -99,7 +101,6 @@ function loadItems(props: {
               descriptor,
               selectors,
               applicableCalculatedFieldIds: calculatedFieldIdsBySource.get(source) ?? new Set(),
-              propertyReaders,
               source,
               sorting,
               queryFilterers,
@@ -115,7 +116,15 @@ function loadItems(props: {
               return from(plans).pipe(
                 mergeMap(
                   (plan) =>
-                    pageAnchor({ imodelAccess, descriptor, fieldSelectorIds, plan, sorting, populateExternalValues }),
+                    pageAnchor({
+                      imodelAccess,
+                      descriptor,
+                      fieldSelectorIds,
+                      plan,
+                      sorting,
+                      populateNavigationValues,
+                      populateExternalValues,
+                    }),
                   QUERY_CONCURRENCY,
                 ),
               );
@@ -128,6 +137,7 @@ function loadItems(props: {
               fieldSelectorIds,
               plans,
               sorting,
+              populateNavigationValues,
               populateExternalValues,
             });
           }),
@@ -142,7 +152,6 @@ async function createSourcePlan(props: {
   descriptor: ContentDescriptor;
   selectors: ContentDefinition["selectors"];
   applicableCalculatedFieldIds: ReadonlySet<string>;
-  propertyReaders: ContentDefinition["propertyReaders"];
   source: ContentSource;
   sorting: ContentQuerySort[];
   queryFilterers?: QueryFilterer[];
@@ -154,7 +163,6 @@ async function createSourcePlan(props: {
     descriptor,
     selectors,
     applicableCalculatedFieldIds,
-    propertyReaders,
     source,
     sorting,
     queryFilterers,
@@ -162,7 +170,7 @@ async function createSourcePlan(props: {
     externalInputs,
   } = props;
   const propertySelectorPaths = Object.values(selectors)
-    .filter((selector): selector is PropertyValueSelector => selector.kind === "property")
+    .filter((selector): selector is PropertySelectorDefinition => selector.kind === "property")
     .map((selector) => selector.pathFromTarget)
     .filter((path) => path.length > 0);
   const { anchor, additional = [] } = await buildBaseQuery({
@@ -208,7 +216,7 @@ async function createSourcePlan(props: {
     ),
   ]);
   const createDecoder = (projection: SelectProjection) =>
-    createRowDecoder({ columnNames: projection.columnNames, selectors, propertyReaders });
+    createRowDecoder({ columnNames: projection.columnNames, selectors });
   return {
     anchor: {
       baseQuery: anchor,
@@ -274,9 +282,18 @@ function pageAnchor(props: {
   fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
   plan: SourcePlan;
   sorting: ContentQuerySort[];
+  populateNavigationValues: NavigationValuePopulator | undefined;
   populateExternalValues: ExternalValuePopulator | undefined;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, fieldSelectorIds, plan, sorting, populateExternalValues } = props;
+  const {
+    imodelAccess,
+    descriptor,
+    fieldSelectorIds,
+    plan,
+    sorting,
+    populateNavigationValues,
+    populateExternalValues,
+  } = props;
   const { columnNames } = plan.anchor.projection;
   const fetchPage = (cursor: Cursor | undefined): Observable<PageResult> =>
     readRows(imodelAccess, buildAnchorPageQuery({ plan, sorting, cursor })).pipe(
@@ -299,7 +316,13 @@ function pageAnchor(props: {
         });
       }),
       mergeMap((decoded) =>
-        materializeItems({ descriptor, fieldSelectorIds, populateExternalValues, rows: decoded }).pipe(
+        materializeItems({
+          descriptor,
+          fieldSelectorIds,
+          populateNavigationValues,
+          populateExternalValues,
+          rows: decoded,
+        }).pipe(
           map((items): PageResult => {
             if (decoded.length < PAGE_SIZE) {
               return { items, next: undefined };
@@ -328,9 +351,18 @@ function pageMultiSourceSorted(props: {
   fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
   plans: SourcePlan[];
   sorting: ContentQuerySort[];
+  populateNavigationValues: NavigationValuePopulator | undefined;
   populateExternalValues: ExternalValuePopulator | undefined;
 }): Observable<ContentItem> {
-  const { imodelAccess, descriptor, fieldSelectorIds, plans, sorting, populateExternalValues } = props;
+  const {
+    imodelAccess,
+    descriptor,
+    fieldSelectorIds,
+    plans,
+    sorting,
+    populateNavigationValues,
+    populateExternalValues,
+  } = props;
   const keyProjection = plans[0].anchor.keyProjection;
 
   // Phase 1: page the globally ordered key stream. The next cursor is derived from the key rows alone, so
@@ -362,6 +394,7 @@ function pageMultiSourceSorted(props: {
         return materializeItems({
           descriptor,
           fieldSelectorIds,
+          populateNavigationValues,
           populateExternalValues,
           rows: keys.map((key) => ({
             primaryKey: key,
@@ -388,28 +421,42 @@ function pageMultiSourceSorted(props: {
 }
 
 // Maps stitched values onto descriptor fields and, when providers are configured, enriches the resulting
-// items with external field values before wrapping them as `ContentItem`s.
+// items with external field values before wrapping them as `ContentItem`s. Navigation values are loaded
+// into the rows first, so both item accessors and external fields providers see full `NavigationValue`s
+// rather than bare target ids.
 function materializeItems(props: {
   descriptor: ContentDescriptor;
   fieldSelectorIds: ContentDefinition["fieldSelectorIds"];
+  populateNavigationValues: NavigationValuePopulator | undefined;
   populateExternalValues: ExternalValuePopulator | undefined;
   rows: Array<{ primaryKey: InstanceKey; values: GroupValues }>;
 }): Observable<ContentItem[]> {
-  const { descriptor, fieldSelectorIds, populateExternalValues, rows } = props;
-  const contentValues = rows.map((row) =>
-    toContentValues({ descriptor, fieldSelectorIds, primaryKey: row.primaryKey, values: row.values }),
-  );
-  if (!populateExternalValues || rows.length === 0) {
-    return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));
+  const { descriptor, fieldSelectorIds, populateNavigationValues, populateExternalValues, rows } = props;
+  if (rows.length === 0) {
+    return of([]);
   }
-  return populateExternalValues(rows.map((row) => row.values)).pipe(
-    map((externalValuesByRow) =>
-      contentValues.map((values, index) => {
-        Object.assign(values.values, externalValuesByRow[index]);
-        return createContentItem({ descriptor, contentValues: values });
-      }),
-    ),
-  );
+  const createItems = defer(() => {
+    const contentValues = rows.map((row) =>
+      toContentValues({ descriptor, fieldSelectorIds, primaryKey: row.primaryKey, values: row.values }),
+    );
+    if (!populateExternalValues) {
+      return of(contentValues.map((values) => createContentItem({ descriptor, contentValues: values })));
+    }
+    return populateExternalValues(rows.map((row) => row.values)).pipe(
+      map((externalValuesByRow) =>
+        contentValues.map((values, index) => {
+          Object.assign(values.values, externalValuesByRow[index]);
+          return createContentItem({ descriptor, contentValues: values });
+        }),
+      ),
+    );
+  });
+  if (!populateNavigationValues) {
+    return createItems;
+  }
+  // The populator rewrites the rows' values in place and emits nothing, so this only orders the two
+  // steps: everything below reads the same `GroupValues` objects once they hold loaded values.
+  return populateNavigationValues(rows.map((row) => row.values.selectorValues)).pipe(mergeMap(() => createItems));
 }
 
 // Runs every group's value query for the page's ids — a flat pipeline sharing a single QUERY_CONCURRENCY

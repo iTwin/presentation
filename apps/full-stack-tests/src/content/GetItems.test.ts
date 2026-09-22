@@ -223,7 +223,9 @@ describe("Content", () => {
                 <ECArrayProperty propertyName="Points" typeName="point2d" />
                 <ECStructArrayProperty propertyName="Payloads" typeName="Outer" />
               </ECEntityClass>
-              <ECEntityClass typeName="B" />
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Label" typeName="string" />
+              </ECEntityClass>
               <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
                 <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
                   <Class class="A" />
@@ -234,7 +236,7 @@ describe("Content", () => {
               </ECRelationshipClass>
             `,
           );
-          const b = builder.insertInstance(schema.items.B.fullName);
+          const b = builder.insertInstance(schema.items.B.fullName, { label: "B label" });
           const points = [
             { x: 1, y: 2 },
             { x: 3, y: 4 },
@@ -248,6 +250,7 @@ describe("Content", () => {
           imodelAccess: createContentIModelAccess(setup.ecdb),
           targets: [{ primaryClass: setup.schema.items.A.fullName }],
           config: {
+            labelsFactory: { createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]` },
             externalFieldsProviders: [
               defineExternalFieldsProvider({
                 id: "decoded_v1",
@@ -277,16 +280,148 @@ describe("Content", () => {
         });
         const descriptor = await provider.getContentDescriptor();
         const [item] = await collect(provider.getItems());
+        const navValue = { key: { className: setup.schema.items.B.fullName, id: setup.b.id }, label: "B label" };
         expect(getValues).toHaveBeenCalledExactlyOnceWith({
-          items: [{ inputValues: { nav: setup.b.id, points: setup.points, payloads: setup.payloads } }],
+          items: [{ inputValues: { nav: navValue, points: setup.points, payloads: setup.payloads } }],
         });
         if (externalOnly) {
           expect(Object.values(descriptor.fields).every((field) => field.kind === "external")).toBe(true);
         } else {
-          expect(item.getValue(getPropertyFieldByName(descriptor, "NavToB"))).toBe(setup.b.id);
+          expect(item.getValue(getPropertyFieldByName(descriptor, "NavToB"))).toEqual(navValue);
           expect(item.getValue(getPropertyFieldByName(descriptor, "Points"))).toEqual(setup.points);
           expect(item.getValue(getPropertyFieldByName(descriptor, "Payloads"))).toEqual(setup.payloads);
         }
+      });
+
+      it("loads navigation values with their target instances' keys and labels", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Code" typeName="string" />
+                <ECNavigationProperty propertyName="NavToB" relationshipName="AtoB" direction="Forward" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECCustomAttributes>
+                  <ClassMap xmlns="ECDbMap.02.00.01">
+                    <MapStrategy>TablePerHierarchy</MapStrategy>
+                  </ClassMap>
+                </ECCustomAttributes>
+                <ECProperty propertyName="Label" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="BSub">
+                <BaseClass>B</BaseClass>
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          // Two target instances of different classes sharing a label, referenced twice and not at all.
+          const b = builder.insertInstance(schema.items.B.fullName, { label: "shared" });
+          const bSub = builder.insertInstance(schema.items.BSub.fullName, { label: "shared" });
+          builder.insertInstance(schema.items.A.fullName, { code: "a1", "NavToB.Id": b.id });
+          builder.insertInstance(schema.items.A.fullName, { code: "a2", "NavToB.Id": bSub.id });
+          builder.insertInstance(schema.items.A.fullName, { code: "a3", "NavToB.Id": b.id });
+          builder.insertInstance(schema.items.A.fullName, { code: "a4" });
+          return { schema, bId: b.id, bSubId: bSub.id };
+        });
+        const provider = await createProvider({
+          imodelAccess: createContentIModelAccess(setup.ecdb),
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { labelsFactory: { createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]` } },
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const items = await collect(provider.getItems());
+        const navField = getPropertyFieldByName(descriptor, "NavToB");
+        const codeField = getPropertyFieldByName(descriptor, "Code");
+
+        // The subclass target resolves through the polymorphic lookup, repeat references each get their
+        // own value, and the missing reference stays `undefined`.
+        expect(items.map((item) => ({ code: item.getValue(codeField), nav: item.getValue(navField) }))).toEqual([
+          { code: "a1", nav: { key: { className: setup.schema.items.B.fullName, id: setup.bId }, label: "shared" } },
+          {
+            code: "a2",
+            nav: { key: { className: setup.schema.items.BSub.fullName, id: setup.bSubId }, label: "shared" },
+          },
+          { code: "a3", nav: { key: { className: setup.schema.items.B.fullName, id: setup.bId }, label: "shared" } },
+          { code: "a4", nav: undefined },
+        ]);
+      });
+
+      it("loads navigation values of a related property", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A" />
+              <ECEntityClass typeName="B">
+                <ECNavigationProperty propertyName="NavToC" relationshipName="BtoC" direction="Forward" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C">
+                <ECProperty propertyName="Label" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+              <ECRelationshipClass typeName="BtoC" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="b to c" polymorphic="true">
+                  <Class class="B" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="c to b" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const c = builder.insertInstance(schema.items.C.fullName, { label: "C label" });
+          const a = builder.insertInstance(schema.items.A.fullName);
+          const b = builder.insertInstance(schema.items.B.fullName, { "NavToC.Id": c.id });
+          builder.insertRelationship(schema.items.AtoB.fullName, a.id, b.id);
+          return { schema, cId: c.id };
+        });
+        const relationshipPath: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+            relationshipReverse: false,
+            targetClassName: setup.schema.items.B.fullName,
+          },
+        ];
+        const provider = await createProvider({
+          imodelAccess: createContentIModelAccess(setup.ecdb),
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: {
+            labelsFactory: { createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]` },
+            imodelFieldsProviders: [
+              defineIModelFieldsProvider({
+                id: "provider_v1",
+                async getContribution() {
+                  return { relatedProperties: [{ path: relationshipPath }] };
+                },
+              }),
+            ],
+          },
+        });
+        const descriptor = await provider.getContentDescriptor();
+        const [item] = await collect(provider.getItems());
+
+        expect(item.getValue(getPropertyFieldByName(descriptor, "NavToC"))).toEqual([
+          { key: { className: setup.schema.items.C.fullName, id: setup.cId }, label: "C label" },
+        ]);
       });
 
       it("omits null values so their fields decode to undefined", async () => {
