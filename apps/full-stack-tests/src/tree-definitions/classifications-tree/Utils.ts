@@ -7,12 +7,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import {
-  CLASS_NAMES,
-  ClassificationsTreeDefinition,
-  createBaseIdsProvider,
-  createClassificationsTreeIdsProvider,
-} from "@itwin/presentation-tree-definitions/internal";
+import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
 import { createIModelAccess } from "../Common.js";
 
 import type { EditTxn, IModelDb } from "@itwin/core-backend";
@@ -39,15 +34,9 @@ export function createClassificationsTreeProvider(
   imodel: IModelConnection,
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
 ): HierarchyProvider & Disposable {
-  const { imodelAccess, idsProvider } = createAccessAndIdsProvider({ imodelConnection: imodel, hierarchyConfig });
-  const hierarchyProvider = createIModelHierarchyProvider({
-    imodelAccess,
-    hierarchyDefinition: new ClassificationsTreeDefinition({
-      imodelAccess,
-      getIdsProvider: () => idsProvider,
-      hierarchyConfig,
-    }),
-  });
+  const imodelAccess = createIModelAccess(imodel);
+  const { definition } = createClassificationsTree({ imodelAccess, hierarchyConfig });
+  const hierarchyProvider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
   return {
     hierarchyChanged: hierarchyProvider.hierarchyChanged,
     getNodes: (props) => hierarchyProvider.getNodes(props),
@@ -155,25 +144,4 @@ export async function importClassificationSchema(imodel: IModelDb) {
   const schemaPath = require.resolve("@bentley/classification-systems-schema/ClassificationSystems.ecschema.xml");
   const schemaXml = fs.readFileSync(fs.realpathSync(schemaPath), { encoding: "utf-8" });
   await imodel.importSchemaStrings([schemaXml]);
-}
-
-export function createAccessAndIdsProvider({
-  imodelConnection,
-  hierarchyConfig,
-}: {
-  imodelConnection: IModelConnection;
-  hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
-}) {
-  const imodelAccess = createIModelAccess(imodelConnection);
-  const baseIdsProvider = createBaseIdsProvider({
-    queryExecutor: imodelAccess,
-    elementClassName: CLASS_NAMES.GeometricElement3d,
-    excludedElementClassNames: hierarchyConfig.elements?.excludedClasses,
-  });
-  const idsProvider = createClassificationsTreeIdsProvider({
-    queryExecutor: imodelAccess,
-    hierarchyConfig,
-    baseIdsProvider,
-  });
-  return { imodelAccess, idsProvider };
 }
