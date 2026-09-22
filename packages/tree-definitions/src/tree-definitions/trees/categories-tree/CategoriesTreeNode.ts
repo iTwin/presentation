@@ -15,7 +15,7 @@ import type {
 
 /**
  * Contains utility functions for working with Categories Tree nodes.
- * @internal
+ * @beta
  */
 export namespace CategoriesTreeNode {
   /** Checks if the given node represents a `BisCore.DefinitionContainer` element. */

@@ -31,6 +31,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -45,6 +46,7 @@ import {
   ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
+import { createCategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
 import { CategoriesTreeNodeInternal } from "./CategoriesTreeNodeInternal.js";
 
 import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
@@ -81,43 +83,47 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
  * Data access, view type, and configuration for a categories hierarchy.
- * @internal
+ * @beta
  */
-interface CategoriesTreeDefinitionProps {
+interface CategoriesTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   viewType: "2d" | "3d";
-  idsProvider: CategoriesTreeIdsProvider;
+  /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID. */
+  uniqueId?: GuidString;
+}
+
+/** @internal */
+interface CategoriesTreeDefinitionProps extends CategoriesTreeProps {
+  idsProvider: CategoriesTreeIdsProvider;
 }
 
 /**
- * Shared data access, configuration, and cancellation options for categories hierarchy searches.
- * @internal
+ * Search-specific options for a categories tree with shared data access and configuration.
+ * @beta
  */
-interface CategoriesTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+interface CategoriesTreeSearchProps {
+  /** Substring of the instance label to search for. */
+  label: string;
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
-  viewType: "2d" | "3d";
-  idsProvider: CategoriesTreeIdsProvider;
-  hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
-  /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
-  uniqueId?: GuidString;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
+
+/** @internal */
+type CategoriesTreeInstanceKeyPathsBaseProps = CategoriesTreeDefinitionProps & Omit<CategoriesTreeSearchProps, "label">;
 
 /**
  * Options for locating categories hierarchy paths by a substring of the instance label.
  * @internal
  */
-interface CategoriesTreeInstanceKeyPathsFromInstanceLabelProps extends CategoriesTreeInstanceKeyPathsBaseProps {
-  label: string;
-}
+type CategoriesTreeInstanceKeyPathsFromInstanceLabelProps = CategoriesTreeDefinitionProps & CategoriesTreeSearchProps;
 
 /**
- * Configures category, subcategory, and element nodes produced by `CategoriesTreeDefinition`.
- * @internal
+ * Configures category, sub-category, and element nodes produced by `createCategoriesTree`.
+ * @beta
  */
 export interface CategoriesTreeHierarchyConfiguration {
   /**
@@ -187,7 +193,53 @@ export const defaultHierarchyConfiguration: RequiredCategoriesTreeHierarchyConfi
 };
 
 /**
- * Defines a hierarchy of definition containers, categories, subcategories, and optional elements for a 2D or 3D view.
+ * Creates a categories hierarchy definition and label search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Creates and shares cached ID providers for the specified view type using the resolved hierarchy configuration.
+ * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @beta
+ */
+export function createCategoriesTree(props: CategoriesTreeProps) {
+  const hierarchyConfig = mergeWithDefaults({
+    defaults: defaultHierarchyConfiguration,
+    overrides: props.hierarchyConfig,
+  });
+  const idsProvider = createCategoriesTreeIdsProvider({
+    queryExecutor: props.imodelAccess,
+    type: props.viewType,
+    baseIdsProvider: createBaseIdsProvider({
+      queryExecutor: props.imodelAccess,
+      elementClassName: getClassesByView(props.viewType).elementClass,
+      excludedElementClassNames:
+        hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
+    }),
+  });
+  const sharedProps = {
+    imodelAccess: props.imodelAccess,
+    viewType: props.viewType,
+    idsProvider,
+    hierarchyConfig,
+    uniqueId: props.uniqueId ?? Guid.createValue(),
+  };
+  const definition: HierarchyDefinition = new CategoriesTreeDefinition(sharedProps);
+  return {
+    definition,
+    /**
+     * Yields hierarchy paths to instances whose labels contain the supplied text.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) =>
+      CategoriesTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+    /**
+     * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createSearchTree: async (searchProps: CategoriesTreeSearchProps & { revealTargets?: boolean }) =>
+      CategoriesTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+  };
+}
+
+/**
+ * Defines a hierarchy of definition containers, categories, sub-categories, and optional elements for a 2D or 3D view.
  * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @internal
  */

@@ -8,7 +8,7 @@ import type { HierarchyNode, InstancesNodeKey, NonGroupingHierarchyNode } from "
 
 /**
  * Contains utility functions for working with Classifications Tree nodes.
- * @internal
+ * @beta
  */
 export namespace ClassificationsTreeNode {
   /** Checks if the given node represents a `ClassificationSystems.ClassificationTable` element. */

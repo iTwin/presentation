@@ -8,15 +8,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import {
-  CategoriesTreeDefinition,
-  CLASS_NAMES,
-  createBaseIdsProvider,
-  createCategoriesTreeIdsProvider,
-  defaultCategoriesTreeHierarchyConfiguration as defaultHierarchyConfiguration,
-  getClassesByView,
-  mergeWithDefaults,
-} from "@itwin/presentation-tree-definitions/internal";
+import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -1491,26 +1484,16 @@ describe("Categories tree", () => {
           ].forEach(({ queryIdentifier, description }) => {
             it(`doesn't throw on ecsql query interrupt in ${description}`, async () => {
               const imodelAccess = createIModelAccess(imodelConnection);
-              const baseIdsProvider = createBaseIdsProvider({
-                queryExecutor: imodelAccess,
-                elementClassName: getClassesByView(viewType).elementClass,
-              });
-              const idsProvider = createCategoriesTreeIdsProvider({
-                queryExecutor: imodelAccess,
-                type: viewType,
-                baseIdsProvider,
-              });
-              const iter = CategoriesTreeDefinition.createInstanceKeyPaths({
+              const { createInstanceKeyPaths } = createCategoriesTree({
                 imodelAccess,
-                idsProvider,
                 viewType,
                 hierarchyConfig: {
                   subCategories: { nodes: "include" },
                   categories: { withoutElements: "include" },
                   elements: { nodes: "include", excludedClasses: [] },
                 },
-                label: "x",
               });
+              const iter = createInstanceKeyPaths({ label: "x" });
               let didInterrupt = false;
               const originalQueryReader = imodelConnection.createQueryReader.bind(imodelConnection);
               vi.spyOn(imodelConnection, "createQueryReader").mockImplementation(async function* (...args): any {
@@ -1539,23 +1522,8 @@ function createCategoryTreeProvider(
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration,
 ): HierarchyProvider & Disposable {
   const imodelAccess = createIModelAccess(imodelConnection);
-  const excludedElementClassNames =
-    hierarchyConfig?.elements?.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined;
-  const baseIdsProvider = createBaseIdsProvider({
-    queryExecutor: imodelAccess,
-    elementClassName: getClassesByView(viewType).elementClass,
-    excludedElementClassNames,
-  });
-  const idsProvider = createCategoriesTreeIdsProvider({ queryExecutor: imodelAccess, type: viewType, baseIdsProvider });
-  const hierarchyProvider = createIModelHierarchyProvider({
-    imodelAccess,
-    hierarchyDefinition: new CategoriesTreeDefinition({
-      imodelAccess,
-      viewType,
-      idsProvider,
-      hierarchyConfig: mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: hierarchyConfig }),
-    }),
-  });
+  const { definition } = createCategoriesTree({ imodelAccess, viewType, hierarchyConfig });
+  const hierarchyProvider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
   return {
     hierarchyChanged: hierarchyProvider.hierarchyChanged,
     getNodes: (props) => hierarchyProvider.getNodes(props),
