@@ -81,7 +81,7 @@ export function mergeJoinInfos(infos: readonly RelationshipPathJoinInfo[]): Rela
 
 /**
  * A running SQLite JOIN-table budget accumulator, seeded with `reservedTables` (tables already consumed
- * outside whatever infos get added — the primary `FROM`, target filter, and query-filterer joins).
+ * outside whatever infos get added — the primary `FROM` and target filter).
  *
  * Packing logic (`packPathsWithinBudget`, `partitionPathsByJoinBudget`) only ever calls `tryAdd`;
  * `costOf`/`remaining` are exposed so the budget's arithmetic — prefix-sharing dedup, reserved-tables
@@ -129,7 +129,7 @@ export function createJoinBudget(props: { reservedTables: number; budget?: numbe
  * a group but not across groups (each group renders its joins independently).
  *
  * `reservedTables` accounts for tables already consumed outside the packed paths (the primary `FROM`,
- * target filter, and query-filterer joins). `budget` defaults to {@link SQLITE_MAX_JOIN_TABLES}.
+ * target filter). `budget` defaults to {@link SQLITE_MAX_JOIN_TABLES}.
  *
  * Paths are packed in the given order. Throws when a single path exceeds the available budget because
  * it cannot be split into valid queries.

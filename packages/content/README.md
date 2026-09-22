@@ -44,14 +44,14 @@ The content loading process is split into four stages:
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **Source resolution**   | Queries the iModel to resolve declared relationship paths to concrete classes, producing `ContentSource` objects.  |
 | **Descriptor building** | Reads EC schema metadata and consults fields providers to produce a `ContentDescriptor` with all available fields. |
-| **Query building**      | Constructs ECSQL from provider-owned loading requirements, applying any registered query filterers.                |
+| **Query building**      | Constructs ECSQL from provider-owned loading requirements.                                                        |
 | **Value loading**       | Executes the query and populates field values, calling external providers for non-iModel fields.                   |
 
 Not all requests execute every stage. For example, `ContentProvider.getContentDescriptor()` only runs stages 1–2, and `getSize()` runs a simplified COUNT query after stage 1.
 
 ## Extension points
 
-The package provides four extension mechanisms, each targeting a different stage of the pipeline:
+The package provides three extension mechanisms, each targeting a different stage of the pipeline:
 
 - **`defineIModelFieldsProvider`** — contribute related properties and calculated fields by declaring relationship paths and ECSQL expressions. The provider is consulted during source resolution and descriptor building.
 

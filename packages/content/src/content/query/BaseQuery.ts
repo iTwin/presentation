@@ -41,7 +41,7 @@ const PAGE_ID_SET_JOIN_TABLES = 1;
 export interface BaseQueryParts {
   /** `FROM <primary-selector> [this]`. */
   from: string;
-  /** IdSet join + merged relationship-path joins + query-filterer joins. */
+  /** IdSet join + merged relationship-path joins. */
   joins: string;
   /** Complete WHERE clause with ANDed conditions, or undefined. */
   where?: string;
@@ -97,7 +97,7 @@ export interface BaseQuery {
   /**
    * The **anchor** group — always present (even for a direct-only source). Owns the primary-key +
    * direct + calculated columns plus its share of 1:1 related columns, and drives ORDER BY + paging.
-   * Also carries the primary-restricting clauses (query filterers + value filters), so it additionally
+   * Also carries the primary-restricting value filters, so it additionally
    * joins budget-fitting 1:1 paths referenced by value filters or sorting — a selected path that is also
    * filtered/sorted is always owned by the anchor and never split into an `additional` group. Overflow
    * 1:1 paths and all 1:many paths use correlated subqueries for filtering.
@@ -228,7 +228,7 @@ export async function buildBaseQuery(
 
   // Assembles one group's parts: every group shares FROM + target filter and renders its own subset of
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the
-  // anchor, or the primaries-only group) additionally carries the query-filterer and value-filter clauses.
+  // anchor, or the primaries-only group) additionally carries the value-filter clauses.
   const buildGroupParts = async (groupProps: {
     paths: RelationshipPath[];
     joinType: "inner" | "outer";
@@ -246,7 +246,7 @@ export async function buildBaseQuery(
       ...groupProps,
     });
 
-  // Primary FROM, target-filter join, query-filterer joins, and sort paths cannot spill. Sort paths
+  // Primary FROM, target-filter join and sort paths cannot spill. Sort paths
   // must stay on the anchor for ORDER BY, so reserve their complete cost before packing optional 1:1
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
   const fixedReserves = 1 + (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) + (targetFilter.joins?.length ?? 0);
@@ -312,7 +312,7 @@ export async function buildBaseQuery(
     paths: packablePaths,
     budget: anchorBudget,
     // An overflow partition is its own outer-joined group sharing only FROM + the target filter — no
-    // query-filterer joins or sort paths — so it gets a fresh, more modestly reserved budget of its own.
+    // sort paths — so it gets a fresh, more modestly reserved budget of its own.
     overflowReservedTables: 1 + PAGE_ID_SET_JOIN_TABLES + (targetFilter.joins?.length ?? 0),
   });
   const anchorPaths = [...preSeededPaths, ...packedAnchorPaths];
@@ -860,7 +860,7 @@ function createPathInfoResolver(props: {
  * Assembles one query's `FROM`/`JOIN`/`WHERE`/bindings parts: renders the given related paths (merged
  * so a shared prefix is joined once) onto the shared FROM + target filter, and — only when the query
  * owns the primary-restricting clauses (`includePrimaryFilters`) — additionally applies the
- * query-filterer and value-filter clauses, evaluating filters on `existentialFilterPathKeys` paths as
+ * value-filter clauses, evaluating filters on `existentialFilterPathKeys` paths as
  * correlated subqueries instead of join-and-compare.
  */
 async function buildQueryParts(props: {
