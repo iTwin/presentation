@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, distinct, finalize, from, map, mergeAll, mergeMap } from "rxjs";
+import { distinct, finalize, from, map, mergeAll, mergeMap } from "rxjs";
 import {
   createIModelInstanceLabelSelectClauseFactory,
   eachValueFrom,
@@ -28,7 +28,6 @@ import type {
   NavigationValue,
   Value,
 } from "@itwin/presentation-shared";
-import type { ContentValueFilter } from "./Content.js";
 import type { ContentTarget, InstanceFilterExpression } from "./ContentTarget.js";
 import type { CalculatedField, PropertyField } from "./model/Field.js";
 import type { PrimaryClassScope } from "./query/BaseQuery.js";
@@ -69,13 +68,6 @@ interface GetDistinctFieldValuesProps {
   field: PropertyField | CalculatedField;
 
   /**
-   * Optional filters (restricts which rows contribute distinct values). A filter must apply to every
-   * one of `field.primaryClassNames`, so its field must be resolvable from the base class(es) those
-   * collapse to — otherwise this throws.
-   */
-  filters?: ContentValueFilter[];
-
-  /**
    * Optional further scoping of which instances contribute values, applied uniformly across every
    * class in `field.primaryClassNames`.
    *
@@ -108,12 +100,10 @@ export async function buildDistinctValuesQuery(props: {
   schemaProvider: ECSchemaProvider;
   target: ContentTarget;
   field: PropertyField | CalculatedField;
-  filters?: ContentValueFilter[];
   labelsFactory: IInstanceLabelSelectClauseFactory;
   primaryClassScope: PrimaryClassScope;
 }): Promise<ECSqlQueryDef> {
   const { schemaProvider, target, field, primaryClassScope } = props;
-  const filters = props.filters ?? [];
 
   if (field.type.kind === "array" || field.type.kind === "struct") {
     throw new Error(`Getting distinct values for ${field.type.kind} fields is not supported.`);
@@ -125,7 +115,7 @@ export async function buildDistinctValuesQuery(props: {
     schemaProvider,
     target,
     paths: fieldPath ? [fieldPath] : [],
-    filters,
+    filters: [],
     primaryClassScope,
   });
 
@@ -227,21 +217,13 @@ function streamTargetDistinctValues(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
   field: PropertyField | CalculatedField;
-  filters?: ContentValueFilter[];
   labelsFactory: IInstanceLabelSelectClauseFactory;
   primaryClassScope: PrimaryClassScope;
 }): Observable<Value> {
-  const { imodelAccess, target, field, filters, labelsFactory, primaryClassScope } = props;
+  const { imodelAccess, target, field, labelsFactory, primaryClassScope } = props;
   const isNavigationField = field.type.kind === "navigation";
   return from(
-    buildDistinctValuesQuery({
-      schemaProvider: imodelAccess,
-      target,
-      field,
-      filters,
-      labelsFactory,
-      primaryClassScope,
-    }),
+    buildDistinctValuesQuery({ schemaProvider: imodelAccess, target, field, labelsFactory, primaryClassScope }),
   ).pipe(
     mergeMap((query) => {
       const reader = imodelAccess.createQueryReader(query, { rowFormat: "Indexes" });
@@ -250,30 +232,6 @@ function streamTargetDistinctValues(props: {
     }),
     map((row): Value => (isNavigationField ? rowValueToNavigationValue({ row }) : rowValueToValue(field, row[0]))),
   );
-}
-
-/**
- * The class(es) that must resolve `field`'s own column — i.e. the classes a query's `FROM`
- * class must be, or derive from, for the field to be addressable at all:
- * - a direct property field's anchor is its declaring class (`propertyClassName`);
- * - a related property field's anchor is its relationship path's first-step source class — the
- *   primary-side class the path is declared from, not the (possibly narrower, data-resolved) classes
- *   in `primaryClassNames`;
- * - a calculated field has no declaring class, so its whole `primaryClassNames` list stands in as
- *   the anchor set (a query class must derive from *any* one of them).
- */
-function getFieldAnchors(field: PropertyField | CalculatedField): EC.FullClassNameDotNotation[] {
-  if (field.kind === "calculated") {
-    return field.primaryClassNames;
-  }
-  return [field.pathFromTarget.length > 0 ? field.pathFromTarget[0].sourceClassName : field.propertyClassName];
-}
-
-/** A short, human-readable identifier for a field, used in error messages. */
-function describeField(field: PropertyField | CalculatedField): string {
-  return field.kind === "calculated"
-    ? `calculated field "${field.id}"`
-    : `property "${field.propertyClassName}.${field.propertyName}"`;
 }
 
 /** Whether `derivedClassName` is, or derives from, at least one of `candidateBaseClassNames`. */
@@ -288,37 +246,6 @@ async function classDerivesFromAny(
     }
   }
   return false;
-}
-
-/**
- * Validates that every filter in `filters` can be evaluated by every query that will run — each
- * query's `FROM` class must be, or derive from, at least one of the filter field's own anchor classes
- * (see `getFieldAnchors`).
- *
- * A filter is meant to narrow *all* of the selected field's primary classes uniformly. Each anchor is
- * a class those primary classes share, so a filter that does not resolve from an anchor does not
- * apply to all of the classes behind it — filtering on a subclass-declared property while selecting a
- * base-declared one, say. Rejecting that here, before any query runs, turns what would otherwise be
- * an opaque backend "no such property" ECSQL error into a clear one.
- *
- * @throws if a filter's field cannot be evaluated from one of `anchorClassNames`.
- */
-export async function validateFilterApplicability(props: {
-  schemaProvider: ECSchemaProvider;
-  anchorClassNames: EC.FullClassNameDotNotation[];
-  filters: ContentValueFilter[];
-}): Promise<void> {
-  const { schemaProvider, anchorClassNames, filters } = props;
-  for (const filter of filters) {
-    const filterAnchors = getFieldAnchors(filter.field);
-    for (const anchorClassName of anchorClassNames) {
-      if (!(await classDerivesFromAny(schemaProvider, anchorClassName, filterAnchors))) {
-        throw new Error(
-          `Cannot apply filter on ${describeField(filter.field)}: it is not accessible from "${anchorClassName}", which the selected field's values are queried from.`,
-        );
-      }
-    }
-  }
 }
 
 /**
@@ -343,8 +270,7 @@ interface QueryAnchorGroup {
 
 /**
  * Splits `field.primaryClassNames` into the fewest groups that can each be served by a single query,
- * and picks the `FROM` class for each. Filters play no part here — they are checked against the
- * resulting anchors afterwards, by `validateFilterApplicability`.
+ * and picks the `FROM` class for each.
  *
  * A **calculated field** short-circuits all of this: it has no declaring class, so it is resolved for
  * `primaryClassNames` as a set and its expression is only known to be valid against those exact
@@ -375,7 +301,7 @@ async function resolveQueryAnchors(props: {
     return field.primaryClassNames.map((anchorClassName) => ({ anchorClassName, scope: { kind: "exact" } }));
   }
 
-  const anchors = getFieldAnchors(field);
+  const anchors = [field.pathFromTarget.length > 0 ? field.pathFromTarget[0].sourceClassName : field.propertyClassName];
   const paths = await Promise.all(
     field.primaryClassNames.map(async (className) => buildAccessiblePath(schemaProvider, className, anchors)),
   );
@@ -385,7 +311,7 @@ async function resolveQueryAnchors(props: {
     const className = field.primaryClassNames[index];
     if (path.length === 0) {
       throw new Error(
-        `Cannot get distinct values for ${describeField(field)}: it is not accessible from "${className}", one of the classes it was resolved for.`,
+        `Cannot get distinct values for property "${field.propertyClassName}.${field.propertyName}": it is not accessible from "${className}", one of the classes it was resolved for.`,
       );
     }
     const existingGroup = groups.find((group) => path.some((name) => group.path.includes(name)));
@@ -443,13 +369,10 @@ async function buildAccessiblePath(
  * carve or instance scoping excluded can't reappear). Classes with no such shared base get a query of
  * their own. Results are merged and de-duplicated.
  *
- * Every filter in `filters` is then validated against the classes those queries run from — before any
- * of them executes — and an inapplicable one throws.
- *
  * @public
  */
 export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): AsyncIterable<Value> {
-  const { imodelAccess, field, filters, instanceFiltering } = props;
+  const { imodelAccess, field, instanceFiltering } = props;
   const labelsFactory = props.labelsFactory ?? createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
   const isNavigation = field.type.kind === "navigation";
   const makeTarget = (primaryClass: EC.FullClassNameDotNotation): ContentTarget => ({
@@ -459,15 +382,7 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
   });
   return {
     [Symbol.asyncIterator]: (): AsyncIterableIterator<Value> => {
-      const values = defer(async () => {
-        const anchors = await resolveQueryAnchors({ schemaProvider: imodelAccess, field });
-        await validateFilterApplicability({
-          schemaProvider: imodelAccess,
-          anchorClassNames: anchors.map((anchor) => anchor.anchorClassName),
-          filters: filters ?? [],
-        });
-        return anchors;
-      }).pipe(
+      const values = from(resolveQueryAnchors({ schemaProvider: imodelAccess, field })).pipe(
         mergeAll(),
         mergeMap(
           (anchor) =>
@@ -475,7 +390,6 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
               imodelAccess,
               target: makeTarget(anchor.anchorClassName),
               field,
-              filters,
               labelsFactory,
               primaryClassScope: anchor.scope,
             }),

@@ -6,11 +6,7 @@
 import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
 import { trimWhitespace } from "@itwin/presentation-shared";
-import {
-  buildDistinctValuesQuery,
-  getDistinctFieldValues,
-  validateFilterApplicability,
-} from "../content/DistinctValues.js";
+import { buildDistinctValuesQuery, getDistinctFieldValues } from "../content/DistinctValues.js";
 import { ECSQL_PREFIX } from "../content/InternalUtils.js";
 import { createEntityClass, createMixinClass, createRelationshipClass, createSchemaAccess } from "./MetadataStubs.js";
 
@@ -26,7 +22,6 @@ import type {
   Value,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { ContentValueFilter } from "../content/Content.js";
 import type { ContentTarget } from "../content/ContentTarget.js";
 import type { CalculatedField, PropertyField } from "../content/model/Field.js";
 
@@ -232,33 +227,6 @@ describe("getDistinctFieldValues", () => {
     expect(results).to.deep.include("onlyB");
   });
 
-  it("builds and applies value filters, forwarding them into the generated query", async () => {
-    const imodelAccess = createMockIModelAccess({ rowsByMarker: new Map([["ClassA", [{ 0: "a" }]]]) });
-    const field = makePropertyField({ propertyName: "Name", primaryClassNames: ["TestSchema.ClassA"] });
-    // Same class as `field` — the minimal `schemaProvider` stub's `classDerivesFrom` only recognizes
-    // self-derivation, so the filter's class must match exactly to pass `validateFilterApplicability`.
-    const filterField = makePropertyField({ propertyName: "Category", propertyClassName: "TestSchema.ClassA" });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await collect(getDistinctFieldValues({ imodelAccess, field, filters }));
-
-    const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
-    expect(query.ecsql).to.include("SELECT DISTINCT [this].[Name]");
-    expect(query.ecsql).to.include("[this].[Category] IS NOT NULL");
-  });
-
-  it("rejects a filter that is not accessible from the selected field's resolved class, before running any query", async () => {
-    const imodelAccess = createMockIModelAccess({ rowsByMarker: new Map([["ClassA", [{ 0: "a" }]]]) });
-    const field = makePropertyField({ propertyName: "Name", primaryClassNames: ["TestSchema.ClassA"] });
-    const filterField = makePropertyField({ propertyName: "Category", propertyClassName: "TestSchema.ClassB" });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(collect(getDistinctFieldValues({ imodelAccess, field, filters }))).rejects.toThrow(
-      /Cannot apply filter on property "TestSchema.ClassB.Category"/,
-    );
-    expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
-  });
-
   it("scopes every resolved class's query to the given instance IDs and instance filter", async () => {
     const imodelAccess = createMockIModelAccess({ rowsByMarker: new Map([["ClassA", [{ 0: "a" }]]]) });
     const field = makePropertyField({ propertyName: "Name", primaryClassNames: ["TestSchema.ClassA"] });
@@ -452,44 +420,6 @@ describe("getDistinctFieldValues", () => {
       await collect(getDistinctFieldValues({ imodelAccess, field }));
 
       expect(executedQuery(imodelAccess)).to.include(`FROM [TestSchema].[Derived] [this]`);
-    });
-
-    it("rejects a filter the collapsed class cannot resolve", async () => {
-      const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
-      // `A1` and `Sibling` collapse onto `Base`, their nearest common ancestor.
-      const field = makePropertyField({
-        propertyName: "PropBase",
-        propertyClassName: base.fullName,
-        primaryClassNames: [a1.fullName, sibling.fullName],
-      });
-      // `PropDer` is declared on `Derived`, which `Sibling` does not derive from — so the filter does
-      // not apply to every resolved class, and `Base` cannot resolve it either.
-      const filterField = makePropertyField({ propertyName: "PropDer", propertyClassName: derived.fullName });
-
-      await expect(
-        collect(
-          getDistinctFieldValues({ imodelAccess, field, filters: [{ field: filterField, operator: "is-not-null" }] }),
-        ),
-      ).rejects.toThrow(/Cannot apply filter on property "TestSchema.Derived.PropDer"/);
-      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
-    });
-
-    it("keeps a filter that the collapsed class can resolve", async () => {
-      const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
-      const field = makePropertyField({
-        propertyName: "PropBase",
-        propertyClassName: base.fullName,
-        primaryClassNames: [a1.fullName, a2.fullName],
-      });
-      // `A1`/`A2` collapse onto `Derived`, which declares `PropDer`, so the filter applies to both.
-      const filterField = makePropertyField({ propertyName: "PropDer", propertyClassName: derived.fullName });
-
-      await collect(
-        getDistinctFieldValues({ imodelAccess, field, filters: [{ field: filterField, operator: "is-not-null" }] }),
-      );
-
-      expect(executedQuery(imodelAccess)).to.include(`FROM [TestSchema].[Derived] [this]`);
-      expect(executedQuery(imodelAccess)).to.include(`[this].[PropDer]`);
     });
 
     it("falls back to per-class queries when no entity ancestor implements the declaring mixin", async () => {
@@ -733,6 +663,28 @@ describe("getDistinctFieldValues", () => {
       ]);
     });
 
+    it("carries the instance-scoping bindings through to the navigation-wrapped query", async () => {
+      // The navigation branch wraps the inner distinct-ids query in an outer `SELECT`; the inner
+      // query's own bindings (here, `instanceFiltering.ids`' IdSet binding) must still reach the
+      // final query's `bindings`, not just its `WHERE`.
+      const imodelAccess = createMockIModelAccess({
+        rowsByMarker: new Map([["ClassA", [{ 0: "0x1", 1: "TestSchema.Target", 2: "Target 1" }]]]),
+      });
+
+      const results = await collect(
+        getDistinctFieldValues({
+          imodelAccess,
+          field: navigationField,
+          labelsFactory,
+          instanceFiltering: { ids: ["0x2"] },
+        }),
+      );
+
+      expect(results).to.deep.equal([{ key: { className: "TestSchema.Target", id: "0x1" }, label: "Target 1" }]);
+      const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
+      expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}TargetInstanceIds`]: { type: "idset", value: ["0x2"] } });
+    });
+
     it("uses the supplied labels factory to select the target instances' labels", async () => {
       const imodelAccess = createMockIModelAccess({ rowsByMarker: new Map([["ClassA", []]]) });
       const customLabelsFactory: IInstanceLabelSelectClauseFactory = {
@@ -795,7 +747,6 @@ describe("buildDistinctValuesQuery", () => {
       schemaProvider,
       target,
       field,
-      filters: [],
       labelsFactory,
       primaryClassScope: { kind: "exact" },
     });
@@ -858,37 +809,6 @@ describe("buildDistinctValuesQuery", () => {
         SELECT [navIds].[id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
         FROM (
           SELECT DISTINCT [this].[Parent].[Id] AS [id] FROM ONLY [TestSchema].[Primary] [this]
-        ) [navIds]
-        LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]
-      `),
-    );
-  });
-
-  it("carries a value filter's bindings through to the wrapped navigation query", async () => {
-    const field = makePropertyField({
-      propertyName: "Parent",
-      type: { kind: "navigation", targetClassName: "TestSchema.Target" },
-    });
-    const filterField = makePropertyField({ propertyName: "Category" });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
-
-    const query = await buildDistinctValuesQuery({
-      schemaProvider,
-      target,
-      field,
-      filters,
-      labelsFactory,
-      primaryClassScope: { kind: "exact" },
-    });
-
-    expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
-    expect(trimWhitespace(query.ecsql)).to.equal(
-      trimWhitespace(`
-        SELECT [navIds].[id], ec_classname([navTarget].[ECClassId], 's.c'), [navTarget].[Label]
-        FROM (
-          SELECT DISTINCT [this].[Parent].[Id] AS [id]
-          FROM ONLY [TestSchema].[Primary] [this]
-          WHERE [this].[Category] = :${ECSQL_PREFIX}vf0
         ) [navIds]
         LEFT JOIN [TestSchema].[Target] [navTarget] ON [navTarget].[ECInstanceId] = [navIds].[id]
       `),
@@ -982,116 +902,6 @@ describe("buildDistinctValuesQuery", () => {
     ).rejects.toThrow(`Getting distinct values for ${expectedKind} fields is not supported.`);
   });
 
-  it("joins and filters on a related path referenced only by a value filter (not the selected field)", async () => {
-    const directField = makePropertyField({ propertyName: "Name" });
-    const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
-    const filterField = makePropertyField({
-      propertyName: "Flag",
-      propertyClassName: "TestSchema.Target",
-      pathFromTarget: path,
-      valueClassNames: ["TestSchema.Target"],
-    });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
-
-    const query = await buildDistinctValuesQuery({
-      schemaProvider,
-      target,
-      field: directField,
-      filters,
-      labelsFactory,
-      primaryClassScope: { kind: "exact" },
-    });
-
-    expect(trimWhitespace(query.ecsql)).to.equal(
-      trimWhitespace(`
-        SELECT DISTINCT [this].[Name]
-        FROM ONLY [TestSchema].[Primary] [this]
-        LEFT OUTER JOIN (
-          SELECT [${ECSQL_PREFIX}r0].*
-          FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
-          INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-        ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
-        LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-        WHERE [${ECSQL_PREFIX}t0].[Flag] = :${ECSQL_PREFIX}vf0
-      `),
-    );
-    expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
-  });
-
-  it("joins and filters on a 1:many related path referenced only by a value filter", async () => {
-    const directField = makePropertyField({ propertyName: "Name" });
-    const path = [makeStep(primaryClass, "TestSchema.RelMany", "TestSchema.Many")];
-    const filterField = makePropertyField({
-      propertyName: "Flag",
-      propertyClassName: "TestSchema.Many",
-      pathFromTarget: path,
-      valueClassNames: ["TestSchema.Many"],
-    });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-equal", value: "abc" }];
-
-    const query = await buildDistinctValuesQuery({
-      schemaProvider,
-      target,
-      field: directField,
-      filters,
-      labelsFactory,
-      primaryClassScope: { kind: "exact" },
-    });
-
-    // Unlike `buildBaseQuery` — which spills 1:many filter paths into correlated subqueries to avoid
-    // duplicating primary rows — a 1:many path is joined and compared directly here, because
-    // `SELECT DISTINCT` collapses the duplicate rows the join produces.
-    expect(trimWhitespace(query.ecsql)).to.equal(
-      trimWhitespace(`
-        SELECT DISTINCT [this].[Name]
-        FROM ONLY [TestSchema].[Primary] [this]
-        LEFT OUTER JOIN (
-          SELECT [${ECSQL_PREFIX}r0].*
-          FROM [TestSchema].[RelMany] [${ECSQL_PREFIX}r0]
-          INNER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-        ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
-        LEFT OUTER JOIN [TestSchema].[Many] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-        WHERE [${ECSQL_PREFIX}t0].[Flag] = :${ECSQL_PREFIX}vf0
-      `),
-    );
-    expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "string", value: "abc" } });
-  });
-
-  it("de-duplicates the selected field's own path with an identical filter path", async () => {
-    const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
-    const field = makePropertyField({
-      propertyName: "Name",
-      propertyClassName: "TestSchema.Target",
-      pathFromTarget: path,
-      valueClassNames: ["TestSchema.Target"],
-    });
-    const filters: ContentValueFilter[] = [{ field, operator: "is-not-null" }];
-
-    const query = await buildDistinctValuesQuery({
-      schemaProvider,
-      target,
-      field,
-      filters,
-      labelsFactory,
-      primaryClassScope: { kind: "exact" },
-    });
-
-    // The path is joined exactly once even though both the selector and the filter reference it.
-    expect(trimWhitespace(query.ecsql)).to.equal(
-      trimWhitespace(`
-        SELECT DISTINCT [${ECSQL_PREFIX}t0].[Name]
-        FROM ONLY [TestSchema].[Primary] [this]
-        LEFT OUTER JOIN (
-          SELECT [${ECSQL_PREFIX}r0].*
-          FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
-          INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-        ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId]
-        LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
-        WHERE [${ECSQL_PREFIX}t0].[Name] IS NOT NULL
-      `),
-    );
-  });
-
   it("scopes the query to the target's instance IDs and instance filter", async () => {
     const field = makePropertyField({ propertyName: "Name" });
 
@@ -1112,174 +922,5 @@ describe("buildDistinctValuesQuery", () => {
       `),
     );
     expect(query.bindings).to.deep.equal({ [`${ECSQL_PREFIX}TargetInstanceIds`]: { type: "idset", value: ["0x1"] } });
-  });
-});
-
-describe("validateFilterApplicability", () => {
-  // Base <- Derived <- A1
-  //                  <- A2
-  // mirrors the canonical case filter validation must get right: with `A1`/`A2` collapsing onto
-  // `Derived`, `PropDer` is a valid filter, but a property declared below or beside `Derived` is not.
-  const base = createEntityClass({ fullName: "TestSchema.Base" });
-  const derived = createEntityClass({ fullName: "TestSchema.Derived", baseClass: base });
-  const a1 = createEntityClass({ fullName: "TestSchema.A1", baseClass: derived });
-  const a2 = createEntityClass({ fullName: "TestSchema.A2", baseClass: derived });
-  const sibling = createEntityClass({ fullName: "TestSchema.Sibling", baseClass: base });
-  const hierarchySchemaProvider = createSchemaAccess([base, derived, a1, a2, sibling]);
-
-  function makeCalculatedField(props: { primaryClassNames: EC.FullClassNameDotNotation[] }): CalculatedField {
-    return {
-      kind: "calculated",
-      id: "calc",
-      label: "Calc",
-      type: { kind: "primitive", type: "String" },
-      expression: "1",
-      primaryClassNames: props.primaryClassNames,
-    };
-  }
-
-  it("allows a filter declared on the class being queried from", async () => {
-    const filterField = makePropertyField({ propertyName: "PropDer", propertyClassName: derived.fullName });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).resolves.toBeUndefined();
-  });
-
-  it("allows a filter declared on a base of the class being queried from", async () => {
-    const filterField = makePropertyField({ propertyName: "PropBase", propertyClassName: base.fullName });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).resolves.toBeUndefined();
-  });
-
-  it("throws when the filter's property is declared beside the class being queried from", async () => {
-    // `PropSibling` is declared on `Sibling`, a class `Derived` does not derive from.
-    const filterField = makePropertyField({ propertyName: "PropSibling", propertyClassName: sibling.fullName });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).rejects.toThrow(/Cannot apply filter on property "TestSchema.Sibling.PropSibling"/);
-  });
-
-  it("throws when the filter's property is declared below the class being queried from", async () => {
-    // `PropA1` is declared on `A1`, so it applies to only part of what a `Derived` query returns.
-    const filterField = makePropertyField({ propertyName: "PropA1", propertyClassName: a1.fullName });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).rejects.toThrow(/it is not accessible from "TestSchema.Derived"/);
-  });
-
-  it("throws when a filter fits one queried class but not another", async () => {
-    // `A1`/`A2` collapsed onto `Derived` while `Sibling` got its own query; a `Derived`-declared
-    // filter covers the former but not the latter, so it does not apply to every resolved class.
-    const filterField = makePropertyField({ propertyName: "PropDer", propertyClassName: derived.fullName });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName, sibling.fullName],
-        filters,
-      }),
-    ).rejects.toThrow(/it is not accessible from "TestSchema.Sibling"/);
-  });
-
-  it("validates a related filter field using its path's first-step source class, not its primaryClassNames", async () => {
-    // The filter field's own resolved `primaryClassNames` is narrower (just `A1`), but its
-    // relationship path is declared from the base `Derived` class — that declared anchor, not the
-    // data-resolved `primaryClassNames`, is what governs applicability.
-    const filterField = makePropertyField({
-      propertyName: "PropRelated",
-      propertyClassName: "TestSchema.Target",
-      pathFromTarget: [
-        { sourceClassName: derived.fullName, targetClassName: "TestSchema.Target", relationshipName: "TestSchema.Rel" },
-      ],
-      primaryClassNames: [a1.fullName],
-    });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).resolves.toBeUndefined();
-  });
-
-  it("validates a calculated filter field against its whole primaryClassNames list", async () => {
-    const filterField = makeCalculatedField({ primaryClassNames: [derived.fullName, sibling.fullName] });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).resolves.toBeUndefined();
-  });
-
-  it("throws when a calculated filter field's primaryClassNames cannot cover the queried class", async () => {
-    const filterField = makeCalculatedField({ primaryClassNames: [a1.fullName] });
-    const filters: ContentValueFilter[] = [{ field: filterField, operator: "is-not-null" }];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).rejects.toThrow(/Cannot apply filter on calculated field "calc"/);
-  });
-
-  it("validates every filter, not just the first", async () => {
-    const validFilterField = makePropertyField({ propertyName: "PropDer", propertyClassName: derived.fullName });
-    const invalidFilterField = makePropertyField({ propertyName: "PropSibling", propertyClassName: sibling.fullName });
-    const filters: ContentValueFilter[] = [
-      { field: validFilterField, operator: "is-not-null" },
-      { field: invalidFilterField, operator: "is-not-null" },
-    ];
-
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters,
-      }),
-    ).rejects.toThrow(/Cannot apply filter on property "TestSchema.Sibling.PropSibling"/);
-  });
-
-  it("passes with no filters", async () => {
-    await expect(
-      validateFilterApplicability({
-        schemaProvider: hierarchySchemaProvider,
-        anchorClassNames: [derived.fullName],
-        filters: [],
-      }),
-    ).resolves.toBeUndefined();
   });
 });
