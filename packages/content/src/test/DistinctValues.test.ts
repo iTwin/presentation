@@ -437,7 +437,7 @@ describe("getDistinctFieldValues", () => {
 
       expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
       expect(executedQuery(imodelAccess)).to.include(`FROM ONLY [TestSchema].[A1] [this]`);
-      expect(executedQuery(imodelAccess)).to.not.include("ECClassId IS");
+      expect(executedQuery(imodelAccess)).to.not.include("[ECClassId] IS");
     });
 
     it("does not collapse above a class the selected property is inaccessible from", async () => {
@@ -549,13 +549,15 @@ describe("getDistinctFieldValues", () => {
       );
       // A group of one stays exactly scoped instead of being lifted onto `MixSibling`'s own subtree.
       expect(executedQuery(imodelAccess, 1)).to.include(`FROM ONLY [TestSchema].[MixSibling] [this]`);
-      expect(executedQuery(imodelAccess, 1)).to.not.include("ECClassId IS");
+      expect(executedQuery(imodelAccess, 1)).to.not.include("[ECClassId] IS");
     });
 
-    it("restricts rows so a sibling excluded from the resolved classes cannot contribute", async () => {
+    it("restricts rows so a leaf class absent from the resolved classes cannot contribute", async () => {
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
-      // `Sibling` also derives from `Base` and has data, but is absent from `primaryClassNames` (e.g.
-      // carved away by `forkField`) — the restriction must exclude it even though `FROM` reaches it.
+      // `A1` and `Sibling` collapse onto their nearest common ancestor `Base`. `A2` is `A1`'s sibling
+      // under `Derived` and has data too, but is absent from `primaryClassNames` (e.g. carved away by
+      // `forkField`) — the restriction must exclude it even though `FROM Base` polymorphically reaches
+      // it (through `Derived`).
       const field = makePropertyField({
         propertyName: "PropBase",
         propertyClassName: base.fullName,
@@ -568,7 +570,8 @@ describe("getDistinctFieldValues", () => {
       expect(executedQuery(imodelAccess)).to.include(
         `[this].[ECClassId] IS (ONLY [TestSchema].[A1], ONLY [TestSchema].[Sibling])`,
       );
-      // `Derived` is deliberately absent from the restriction, so its other leaf cannot contribute.
+      // Neither `A2` (the excluded leaf) nor the intermediate `Derived` appears in the restriction.
+      expect(executedQuery(imodelAccess)).to.not.include("[TestSchema].[A2]");
       expect(executedQuery(imodelAccess)).to.not.include("ONLY [TestSchema].[Derived]");
     });
 
@@ -617,7 +620,7 @@ describe("getDistinctFieldValues", () => {
       expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
       expect(executedQuery(imodelAccess, 0)).to.include(`FROM ONLY [TestSchema].[Derived] [this]`);
       expect(executedQuery(imodelAccess, 1)).to.include(`FROM ONLY [TestSchema].[A1] [this]`);
-      expect(executedQuery(imodelAccess, 0)).to.not.include("ECClassId IS");
+      expect(executedQuery(imodelAccess, 0)).to.not.include("[ECClassId] IS");
     });
 
     it("throws when the field is not resolvable from one of its resolved classes", async () => {

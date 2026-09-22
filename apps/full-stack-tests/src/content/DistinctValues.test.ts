@@ -404,9 +404,7 @@ describe("Content", () => {
       const field = getPropertyFieldByName(descriptor, "Name");
       // The field's resolved classes span both sibling subclasses — no explicit multi-target caller
       // input is needed to drive the one-query-per-class merge below.
-      expect(field.primaryClassNames.slice().sort()).toEqual(
-        [setup.schema.items.A.fullName, setup.schema.items.B.fullName].sort(),
-      );
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A.fullName, setup.schema.items.B.fullName]);
 
       const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
@@ -437,6 +435,36 @@ describe("Content", () => {
 
       const values = await collect(
         getDistinctFieldValues({ imodelAccess, field, instanceFiltering: { ids: [setup.includedId] } }),
+      );
+
+      expect(values).toEqual(["included"]);
+    });
+
+    it("scopes distinct values using an instance filter expression", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="Name" typeName="string" />
+              <ECProperty propertyName="Included" typeName="boolean" />
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.A.fullName, { name: "included", included: true });
+        builder.insertInstance(s.items.A.fullName, { name: "excluded", included: false });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+      const field = getPropertyFieldByName(descriptor, "Name");
+
+      const values = await collect(
+        getDistinctFieldValues({ imodelAccess, field, instanceFiltering: { filter: { expression: `this.Included` } } }),
       );
 
       expect(values).toEqual(["included"]);
@@ -548,9 +576,7 @@ describe("Content", () => {
         config: { imodelFieldsProviders: [provider] },
       });
       const field = getPropertyFieldByName(descriptor, "PropB");
-      expect(field.primaryClassNames.slice().sort()).toEqual(
-        [setup.schema.items.A1.fullName, setup.schema.items.A2.fullName].sort(),
-      );
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
 
       const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
@@ -600,9 +626,11 @@ describe("Content", () => {
       const field = getPropertyFieldByName(descriptor, "PropBase");
       // The field's resolved classes span all three levels with instances — `Derived` itself plus
       // both of its leaf subclasses — driving one query per class.
-      expect(field.primaryClassNames.slice().sort()).toEqual(
-        [setup.schema.items.A1.fullName, setup.schema.items.A2.fullName, setup.schema.items.Derived.fullName].sort(),
-      );
+      expect(field.primaryClassNames).toEqual([
+        setup.schema.items.A1.fullName,
+        setup.schema.items.A2.fullName,
+        setup.schema.items.Derived.fullName,
+      ]);
 
       const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
@@ -650,9 +678,7 @@ describe("Content", () => {
         targets: [{ primaryClass: setup.schema.items.Base.fullName, instanceIds: [setup.a1.id, setup.a3.id] }],
       });
       const field = getPropertyFieldByName(descriptor, "PropBase");
-      expect(field.primaryClassNames.slice().sort()).toEqual(
-        [setup.schema.items.A1.fullName, setup.schema.items.A3.fullName].sort(),
-      );
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A3.fullName]);
 
       const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
@@ -707,9 +733,7 @@ describe("Content", () => {
         targets: [{ primaryClass: setup.schema.items.Base.fullName }],
       });
       const field = getPropertyFieldByName(descriptor, "SharedProp");
-      expect(field.primaryClassNames.slice().sort()).toEqual(
-        [setup.schema.items.A1.fullName, setup.schema.items.A2.fullName].sort(),
-      );
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
 
       const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 

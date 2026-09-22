@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, distinct, finalize, from, map, mergeMap } from "rxjs";
+import { defer, distinct, finalize, from, map, mergeAll, mergeMap } from "rxjs";
 import {
   createIModelInstanceLabelSelectClauseFactory,
   eachValueFrom,
@@ -468,21 +468,18 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
         });
         return anchors;
       }).pipe(
-        mergeMap((anchors) =>
-          from(anchors).pipe(
-            mergeMap(
-              (anchor) =>
-                streamTargetDistinctValues({
-                  imodelAccess,
-                  target: makeTarget(anchor.anchorClassName),
-                  field,
-                  filters,
-                  labelsFactory,
-                  primaryClassScope: anchor.scope,
-                }),
-              QUERY_CONCURRENCY,
-            ),
-          ),
+        mergeAll(),
+        mergeMap(
+          (anchor) =>
+            streamTargetDistinctValues({
+              imodelAccess,
+              target: makeTarget(anchor.anchorClassName),
+              field,
+              filters,
+              labelsFactory,
+              primaryClassScope: anchor.scope,
+            }),
+          QUERY_CONCURRENCY,
         ),
         distinct((value): string | undefined => {
           if (value === undefined) {
