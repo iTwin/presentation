@@ -9,13 +9,7 @@ import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
-import {
-  CategoriesTreeDefinition,
-  CLASS_NAMES,
-  createBaseIdsProvider,
-  createCategoriesTreeIdsProvider,
-  getClassesByView,
-} from "@itwin/presentation-tree-definitions/internal";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -1490,26 +1484,16 @@ describe("Categories tree", () => {
           ].forEach(({ queryIdentifier, description }) => {
             it(`doesn't throw on ecsql query interrupt in ${description}`, async () => {
               const imodelAccess = createIModelAccess(imodelConnection);
-              const baseIdsProvider = createBaseIdsProvider({
-                queryExecutor: imodelAccess,
-                elementClassName: getClassesByView(viewType).elementClass,
-              });
-              const idsProvider = createCategoriesTreeIdsProvider({
-                queryExecutor: imodelAccess,
-                type: viewType,
-                baseIdsProvider,
-              });
-              const iter = CategoriesTreeDefinition.createInstanceKeyPaths({
+              const { createInstanceKeyPaths } = createCategoriesTree({
                 imodelAccess,
-                idsProvider,
                 viewType,
                 hierarchyConfig: {
                   subCategories: { nodes: "include" },
                   categories: { withoutElements: "include" },
                   elements: { nodes: "include", excludedClasses: [] },
                 },
-                label: "x",
               });
+              const iter = createInstanceKeyPaths({ label: "x" });
               let didInterrupt = false;
               const originalQueryReader = imodelConnection.createQueryReader.bind(imodelConnection);
               vi.spyOn(imodelConnection, "createQueryReader").mockImplementation(async function* (...args): any {
