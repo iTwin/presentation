@@ -35,11 +35,7 @@ export function createContentProviderImpl(props: Props<typeof createContentProvi
       return getSize({ imodelAccess, sources, filters: options?.filters });
     },
     getInstanceKeys(options) {
-      return getInstanceKeys({
-        imodelAccess,
-        sources,
-        filters: options?.filters,
-      });
+      return getInstanceKeys({ imodelAccess, sources, filters: options?.filters });
     },
     getItems(options) {
       return getItems({

@@ -877,9 +877,7 @@ describe("buildBaseQuery", () => {
         filters: [{ field, operator: "is-equal", value: 1 }],
       });
 
-      expect(result.anchor.parts.where).to.equal(
-        `WHERE ([this].Area > 5) AND ([this].[Length] = :${ECSQL_PREFIX}vf0)`,
-      );
+      expect(result.anchor.parts.where).to.equal(`WHERE ([this].Area > 5) AND ([this].[Length] = :${ECSQL_PREFIX}vf0)`);
     });
   });
 

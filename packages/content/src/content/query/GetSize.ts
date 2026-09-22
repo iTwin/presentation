@@ -24,11 +24,7 @@ export async function getSize(props: {
   return lastValueFrom(
     from(props.sources).pipe(
       mergeMap(async (source) =>
-        buildBaseQuery({
-          schemaProvider: props.imodelAccess,
-          source,
-          filters: props.filters,
-        }),
+        buildBaseQuery({ schemaProvider: props.imodelAccess, source, filters: props.filters }),
       ),
       mergeMap(({ anchor: { parts } }) => {
         const reader = props.imodelAccess.createQueryReader(

@@ -249,10 +249,7 @@ export async function buildBaseQuery(
   // Primary FROM, target-filter join, query-filterer joins, and sort paths cannot spill. Sort paths
   // must stay on the anchor for ORDER BY, so reserve their complete cost before packing optional 1:1
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
-  const fixedReserves =
-    1 +
-    (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) +
-    (targetFilter.joins?.length ?? 0)
+  const fixedReserves = 1 + (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) + (targetFilter.joins?.length ?? 0);
   // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
   // filter paths, then (below, related-columns mode only) selected 1:1 paths — so a path sharing a
   // prefix with one already added costs only its own unshared suffix, not its full cost again.
@@ -879,15 +876,7 @@ async function buildQueryParts(props: {
   includePrimaryFilters: boolean;
   existentialFilterPathKeys: Set<string>;
 }): Promise<BaseQueryParts> {
-  const {
-    schemaProvider,
-    from,
-    targetFilter,
-    filters,
-    relatedClassAliases,
-    getPrefixKeys,
-    resolvePathInfo,
-  } = props;
+  const { schemaProvider, from, targetFilter, filters, relatedClassAliases, getPrefixKeys, resolvePathInfo } = props;
   const infos = await Promise.all(props.paths.map(async (path) => resolvePathInfo(path, props.joinType)));
   const rendered = ECSql.createRelationshipPathJoinClause(mergeJoinInfos(infos));
   const groupAliases = collectPrefixAliases(props.paths, relatedClassAliases, getPrefixKeys);
