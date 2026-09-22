@@ -8,3 +8,6 @@ export { createModelsTree } from "./tree-definitions/trees/models-tree/ModelsTre
 
 export { CategoriesTreeNode } from "./tree-definitions/trees/categories-tree/CategoriesTreeNode.js";
 export { createCategoriesTree } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
+
+export { ClassificationsTreeNode } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeNode.js";
+export { createClassificationsTree } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
