@@ -237,7 +237,7 @@ export function decodeGroupRows(props: {
   /**
    * The complete set of primaries this group describes; rows for any other instance key are ignored.
    * An additional group's value query is restricted only by an `ECInstanceId` IN-list and its own
-   * source's target — not by class, nor by the anchor's query filterers/value filters — so it can return
+   * source's target — not by class, nor by the anchor's value filters — so it can return
    * rows for a primary belonging to another source (overlapping targets) or another plan entirely (two
    * classes sharing an `ECInstanceId`). Omit to accept every row.
    */

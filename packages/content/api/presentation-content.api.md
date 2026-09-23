@@ -97,7 +97,6 @@ export interface ContentConfiguration {
     descriptorTransformers?: DescriptorTransformer[];
     externalFieldsProviders?: ExternalFieldsProvider[];
     imodelFieldsProviders?: IModelFieldsProvider[];
-    queryFilterers?: QueryFilterer[];
 }
 
 // @public
@@ -219,9 +218,6 @@ export function defineExternalFieldsProvider<const TInputs extends Record<string
 
 // @public
 export function defineIModelFieldsProvider(provider: IModelFieldsProvider): IModelFieldsProvider;
-
-// @public
-export function defineQueryFilterer(filterer: QueryFilterer): QueryFilterer;
 
 // @public
 interface DescriptorTransformer {
@@ -372,20 +368,6 @@ type PropertySelection = "all" | "none" | {
 } | {
     exclude: string[];
 };
-
-// @public
-interface QueryFilterClauses {
-    bindings?: Record<string, ECSqlBinding>;
-    joins?: string[];
-    where?: string[];
-}
-
-// @public
-interface QueryFilterer {
-    getFilterClauses(props: {
-        targetAlias: string;
-    }): QueryFilterClauses;
-}
 
 // @public
 export type ReadonlyCalculatedField = DeepReadonly<CalculatedField>;

@@ -17,7 +17,6 @@ public;const;DEFAULT_FIELDS_PROVIDER_PRIORITY
 public;function;defineDescriptorTransformer
 public;function;defineExternalFieldsProvider
 public;function;defineIModelFieldsProvider
-public;function;defineQueryFilterer
 public;interface;ExternalField
 public;type;Field
 public;function;getDistinctFieldValues

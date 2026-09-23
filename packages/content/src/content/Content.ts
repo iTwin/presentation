@@ -35,7 +35,6 @@
  *   - Output: frozen `ContentDescriptor`.
  *
  * Stage 3 — Query building (`getItems` / `getSize` / `getInstanceKeys`)
- *   - Calls `QueryFilterer.getFilterClauses()` to inject WHERE/JOIN clauses.
  *   - Applies `ContentValueFilter` entries as additional WHERE clauses.
  *   - Builds ECSQL.
  *     - `getSize` and `getInstanceKeys` depend only on Stage 1 (resolved sources).
@@ -68,7 +67,6 @@ import type { ContentSource, ContentTarget } from "./ContentTarget.js";
 import type { DescriptorTransformer } from "./extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "./extensions/IModelFieldsProvider.js";
-import type { QueryFilterer } from "./extensions/QueryFilterer.js";
 import type { ReadonlyContentDescriptor } from "./model/ContentDescriptor.js";
 import type { ContentItem } from "./model/ContentItem.js";
 import type { CalculatedField, PropertyField } from "./model/Field.js";
@@ -192,9 +190,6 @@ export interface ContentConfiguration {
 
   /** Descriptor transformers (modify descriptor after field enumeration). */
   descriptorTransformers?: DescriptorTransformer[];
-
-  /** Query filterers (inject WHERE clauses into built queries). */
-  queryFilterers?: QueryFilterer[];
 }
 
 /**
