@@ -211,13 +211,10 @@ export async function collectCategories(props: {
   // synthesized categories are eligible — a provider's declared parent/child hierarchy is left as-is,
   // even when its labels happen to match.
   for (const id of synthesizedIds) {
-    const category = registry.get(id)?.category;
-    if (!category) {
-      continue;
-    }
+    const category = registry.get(id)!.category;
     while (category.parentId !== undefined) {
-      const parent = registry.get(category.parentId)?.category;
-      if (!parent || parent.label !== category.label) {
+      const parent = registry.get(category.parentId)!.category;
+      if (parent.label !== category.label) {
         break;
       }
       if (parent.parentId === undefined) {

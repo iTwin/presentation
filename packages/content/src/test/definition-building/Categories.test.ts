@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { collectCategories, pruneUnreferencedCategories } from "../../content/definition-building/Categories.js";
 import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
-import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
+import { createEntityClass, createRelationshipClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
@@ -551,6 +551,45 @@ describe("collectCategories", () => {
     expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "Same Label" });
     // ...but the provider's own category is untouched.
     expect(categories[anchorId]).to.deep.equal({ id: anchorId, label: "Same Label" });
+  });
+
+  it("elides through more than one same-label ancestor when walking up the synthesized chain", async () => {
+    // Path a-[ab]->b-[bc]->c, with "ab" (relationship), "b" (target), and "bc" (relationship) all
+    // sharing "Same Label" — "bc" must walk past both "b" and "ab", not stop after just one hop.
+    const abField = createCategorizedField({
+      id: "ab",
+      propertyName: "AB",
+      pathFromTarget: [aToB],
+      anchor: "relationshipClass",
+    });
+    const bField = createCategorizedField({
+      id: "b",
+      propertyName: "B",
+      pathFromTarget: [aToB],
+      anchor: "targetClass",
+    });
+    const bcField = createCategorizedField({
+      id: "bc",
+      propertyName: "BC",
+      pathFromTarget: [aToB, bToC],
+      anchor: "relationshipClass",
+    });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([
+        createEntityClass({ fullName: "TestSchema.B", label: "Same Label" }),
+        createRelationshipClass({ fullName: "TestSchema.aToB", label: "Same Label" }),
+        createRelationshipClass({ fullName: "TestSchema.bToC", label: "Same Label" }),
+      ]),
+      sources: [createSource()],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
+      getContribution,
+      getAnchorContribution,
+      fields: [abField, bField, bcField],
+    });
+    const bcId = CategoryDefinition.computeId({ path: [aToB, bToC], omitTargetClass: true });
+    // "bc" ends up top-level — reparented past "b", then past "ab" above it.
+    expect(categories[bcId]).to.deep.equal({ id: bcId, label: "Same Label" });
   });
 
   it("nests the target category and both schema sub-categories under the relationship category", async () => {
