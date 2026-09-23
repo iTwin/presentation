@@ -1,0 +1,174 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { PropertyValueFormat, Value } from "@itwin/presentation-common";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { stableStringify } from "../Persistence.js";
+
+import type {
+  CategoryDescriptionJSON,
+  DescriptorJSON,
+  FieldJSON,
+  PropertiesFieldJSON,
+  TypeDescription,
+  ValuesDictionary,
+} from "@itwin/presentation-common";
+import type {
+  CanonicalCapture,
+  CanonicalDescriptor,
+  CanonicalField,
+  CanonicalFieldType,
+  CanonicalItem,
+} from "../NormalizationCommon.js";
+import type { LegacyCapture } from "./Adapter.js";
+
+interface LegacyFieldMapping {
+  canonicalKey: CanonicalField["key"];
+  sourcePath: string[];
+}
+
+function getCategoryPath(
+  category: CategoryDescriptionJSON,
+  categories: Map<string, CategoryDescriptionJSON>,
+): string[] {
+  const path = [
+    ...(category.parent ? getCategoryPath(categories.get(category.parent)!, categories) : []),
+    category.label,
+  ];
+  return path.length === 1 && path[0] === "Selected Item(s)" ? [] : path;
+}
+
+function createCanonicalFieldType(type: TypeDescription): CanonicalFieldType {
+  switch (type.valueFormat) {
+    case PropertyValueFormat.Primitive: {
+      const name = type.typeName.toLowerCase();
+      return name === "navigation" ? { kind: "navigation", name } : { kind: "primitive", name };
+    }
+    case PropertyValueFormat.Array:
+      return { kind: "array", name: "array", member: createCanonicalFieldType(type.memberType) };
+    case PropertyValueFormat.Struct:
+      return {
+        kind: "struct",
+        name: "struct",
+        members: type.members
+          .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type) }))
+          .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
+      };
+  }
+}
+
+function createCanonicalField(props: {
+  field: PropertiesFieldJSON<string>;
+  sourcePath: string[];
+  categories: Map<string, CategoryDescriptionJSON>;
+  classes: DescriptorJSON["classesMap"];
+}): CanonicalField {
+  const { field, sourcePath, categories, classes } = props;
+  const properties = field.properties.map(({ property }) => property);
+  const canonicalField = {
+    category: field.category ? getCategoryPath(categories.get(field.category)!, categories) : [],
+    label: field.label,
+    type: createCanonicalFieldType(field.type),
+    propertyNames: [...new Set(properties.map((property) => property.name))].sort(),
+    propertyClassNames: [
+      ...new Set(properties.map((property) => normalizeFullClassName(classes[property.classInfo].name))),
+    ].sort(),
+    kind: "property",
+    sourcePaths: [sourcePath],
+  } satisfies Omit<CanonicalField, "key">;
+  return {
+    ...canonicalField,
+    key: stableStringify({
+      category: canonicalField.category,
+      label: canonicalField.label,
+      type: canonicalField.type,
+      propertyNames: canonicalField.propertyNames,
+      kind: canonicalField.kind,
+    }),
+  };
+}
+
+function createCanonicalDescriptor(descriptor: LegacyCapture["descriptor"]): {
+  descriptor: CanonicalDescriptor;
+  fieldMappings: LegacyFieldMapping[];
+} {
+  const categories = new Map(descriptor.categories.map((category) => [category.name, category]));
+  const classes = descriptor.classesMap;
+  const fields: CanonicalDescriptor["fields"] = [];
+  const fieldMappings: LegacyFieldMapping[] = [];
+  const unsupportedFields: CanonicalDescriptor["unsupportedFields"] = [];
+
+  const visit = (field: FieldJSON<string>, parentPath: string[]) => {
+    const sourcePath = [...parentPath, field.name];
+    if ("nestedFields" in field) {
+      field.nestedFields.forEach((nestedField) => visit(nestedField, sourcePath));
+      return;
+    }
+    if (!("properties" in field)) {
+      unsupportedFields.push({ sourcePath, reason: "Legacy field is not property-backed." });
+      return;
+    }
+    const canonicalField = createCanonicalField({ field, sourcePath, categories, classes });
+    fields.push(canonicalField);
+    fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath });
+  };
+  descriptor.fields.forEach((field) => visit(field, []));
+  return {
+    descriptor: { fields: fields.sort((lhs, rhs) => lhs.key.localeCompare(rhs.key)), unsupportedFields },
+    fieldMappings,
+  };
+}
+
+function createCanonicalValues(values: ValuesDictionary<Value>, sourcePath: string[]): unknown {
+  if (sourcePath.length === 1) {
+    return normalizeLegacyValue(values[sourcePath[0]]);
+  }
+  const [nestedFieldName, ...rest] = sourcePath;
+  const nestedValue = values[nestedFieldName];
+  if (!Value.isNestedContent(nestedValue)) {
+    return nestedValue;
+  }
+  return nestedValue
+    .map((entry) => ({
+      primaryKeys: entry.primaryKeys
+        .map((key) => ({ className: normalizeFullClassName(key.className), id: key.id }))
+        .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
+      value: createCanonicalValues(entry.values, rest),
+    }))
+    .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
+}
+
+// TODO: normalize to InstanceKey + label when https://github.com/iTwin/presentation/pull/1585 merges
+function normalizeLegacyValue(value: Value): unknown {
+  if (Value.isNavigationValue(value)) {
+    return value.id;
+  }
+  return value;
+}
+
+function createCanonicalItems(
+  items: NonNullable<LegacyCapture["items"]>,
+  fieldMappings: LegacyFieldMapping[],
+): CanonicalItem[] {
+  return items.map((item) => {
+    return {
+      primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
+      values: Object.fromEntries(
+        fieldMappings.map(({ canonicalKey, sourcePath }) => [
+          canonicalKey,
+          createCanonicalValues(item.values, sourcePath),
+        ]),
+      ),
+    };
+  });
+}
+
+export function createCanonicalCapture(capture: LegacyCapture): CanonicalCapture {
+  const { descriptor, fieldMappings } = createCanonicalDescriptor(capture.descriptor);
+  return {
+    descriptor,
+    ...(capture.items === undefined ? {} : { items: createCanonicalItems(capture.items, fieldMappings) }),
+  };
+}
