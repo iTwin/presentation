@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { ECSql, trimWhitespace } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
-import { buildBaseQuery } from "../../content/query/BaseQuery.js";
+import { buildBaseQuery, buildTargetScopedQuery } from "../../content/query/BaseQuery.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../../content/Content.js";
@@ -805,6 +805,7 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "this.CodeValue || this.UserLabel",
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
 
@@ -823,6 +824,7 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "String" },
         expression: "e.CodeValue",
         targetAlias: "e",
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
 
@@ -838,6 +840,7 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "Boolean" },
         expression: "this.FlagA OR this.FlagB",
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: true }];
 
@@ -854,6 +857,7 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "Double" },
         expression: "this.Length * :scale",
         bindings: { scale: { type: "double", value: 2 } },
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "greater-than", value: 10 }];
 
@@ -1802,5 +1806,70 @@ describe("buildBaseQuery", () => {
       // A single link-table path renders exactly two `OUTER JOIN`s; a duplicated join would double that.
       expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(2);
     });
+  });
+});
+
+describe("buildTargetScopedQuery", () => {
+  it("uses a plain (polymorphic) FROM class selector by default", async () => {
+    const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, paths: [], filters: [] });
+
+    expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
+  });
+
+  it("scopes FROM to exactly the target's primary class for an `exact` scope", async () => {
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [],
+      primaryClassScope: { kind: "exact" },
+    });
+
+    expect(trimWhitespace(parts.from)).to.equal(`FROM ONLY [TestSchema].[Primary] [this]`);
+  });
+
+  it("restricts rows to exactly the given classes via `ECClassId IS (ONLY ...)`", async () => {
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [],
+      primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1", "TestSchema.A2"] },
+    });
+
+    // The `FROM` stays polymorphic so the collapsed ancestor reaches its whole subtree; the predicate
+    // then narrows rows back to exactly the listed classes. Each is wrapped in `ONLY` so an unlisted
+    // subclass of a listed class cannot slip through.
+    expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
+    expect(trimWhitespace(parts.where!)).to.equal(
+      `WHERE [this].[ECClassId] IS (ONLY [TestSchema].[A1], ONLY [TestSchema].[A2])`,
+    );
+  });
+
+  it("ANDs the class restriction with value filters", async () => {
+    const field = makePropertyField({ propertyName: "Name" });
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [{ field, operator: "is-not-null" }],
+      primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1"] },
+    });
+
+    expect(trimWhitespace(parts.where!)).to.equal(
+      `WHERE ([this].[ECClassId] IS (ONLY [TestSchema].[A1])) AND ([this].[Name] IS NOT NULL)`,
+    );
+  });
+
+  it("omits the class restriction when the list is empty", async () => {
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [],
+      primaryClassScope: { kind: "restricted", classNames: [] },
+    });
+
+    expect(parts.where).to.be.undefined;
   });
 });

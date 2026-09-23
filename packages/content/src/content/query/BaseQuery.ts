@@ -875,6 +875,7 @@ async function buildQueryParts(props: {
   joinType: "inner" | "outer";
   includePrimaryFilters: boolean;
   existentialFilterPathKeys: Set<string>;
+  where?: string[];
 }): Promise<BaseQueryParts> {
   const { schemaProvider, from, targetFilter, filters, relatedClassAliases, getPrefixKeys, resolvePathInfo } = props;
   const infos = await Promise.all(props.paths.map(async (path) => resolvePathInfo(path, props.joinType)));
@@ -882,7 +883,7 @@ async function buildQueryParts(props: {
   const groupAliases = collectPrefixAliases(props.paths, relatedClassAliases, getPrefixKeys);
 
   const joinFragments: string[] = [];
-  const whereConditions: string[] = [];
+  const whereConditions: string[] = [...(props.where ?? [])];
   const bindings: Record<string, ECSqlBinding> = {};
 
   if (targetFilter.joins) {
@@ -965,10 +966,29 @@ async function buildQueryParts(props: {
 }
 
 /**
+ * How a target-scoped query keeps contributing rows restricted to an exact set of concrete classes.
+ * The two forms are mutually exclusive by construction, so a query can never ask for both at once:
+ * - `exact` — `target.primaryClass` *is* the single concrete class, so scoping `FROM` to it
+ *   (`FROM ONLY <class>`) excludes subclasses on its own and no predicate is needed.
+ * - `restricted` — `target.primaryClass` is a *collapsed ancestor* standing in for several concrete
+ *   classes, so `FROM` stays polymorphic to reach the whole subtree and an `ECClassId IS (ONLY ...)`
+ *   predicate narrows rows back to exactly `classNames`. Each entry is wrapped in `ONLY` so an
+ *   unlisted *subclass* of a listed class cannot slip through.
+ *
+ * @internal
+ */
+export type PrimaryClassScope = { kind: "exact" } | { kind: "restricted"; classNames: EC.FullClassNameDotNotation[] };
+
+/**
  * Builds a target-scoped, non-grouped query scaffold: outer-joins exactly the given related paths
  * (preserving rows whose related instance is missing) plus whatever the target filter and value
  * filters need, and returns the `FROM`/`JOIN`/`WHERE`/bindings shape plus the alias map a `SELECT`
  * builder needs.
+ *
+ * Pass `primaryClassScope` to keep rows restricted to an exact set of concrete classes. The
+ * distinct-values query builder always does: a class outside a field's data-resolved
+ * `primaryClassNames` — one a `forkField` carve or an `instanceIds`/`instanceFilter` scoping
+ * excluded, say — must never contribute rows. Defaults to an ordinary polymorphic `FROM`.
  *
  * Used by the distinct-values query builder to reuse the existing target-filter and value-filter
  * building blocks without the source-oriented anchor/additional grouping performed by `buildBaseQuery`.
@@ -983,14 +1003,25 @@ export async function buildTargetScopedQuery(props: {
   paths: RelationshipPath[];
   /** Value filters to translate into WHERE. */
   filters: ContentValueFilter[];
+  /** How to keep rows scoped to exactly a set of concrete classes. See the function doc. */
+  primaryClassScope?: PrimaryClassScope;
 }): Promise<BaseQueryParts> {
-  const { schemaProvider, target, filters } = props;
+  const { schemaProvider, target, filters, primaryClassScope } = props;
   const paths = unionPaths([...props.paths, ...collectFilterPaths(filters)]);
   const getPrefixKeys = createPrefixKeyResolver();
   const relatedClassAliases = assignPrefixAliases(paths, getPrefixKeys);
+  const classSelector = ECSql.createClassSelector(target.primaryClass);
+  const classRestriction =
+    primaryClassScope?.kind === "restricted" && primaryClassScope.classNames.length > 0
+      ? [
+          `[${PRIMARY_CLASS_ALIAS}].[ECClassId] IS (${primaryClassScope.classNames
+            .map((className) => `ONLY ${ECSql.createClassSelector(className)}`)
+            .join(", ")})`,
+        ]
+      : undefined;
   return buildQueryParts({
     schemaProvider,
-    from: `FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`,
+    from: `FROM ${primaryClassScope?.kind === "exact" ? `ONLY ${classSelector}` : classSelector} [${PRIMARY_CLASS_ALIAS}]`,
     targetFilter: buildTargetFilter(target),
     filters,
     relatedClassAliases,
@@ -1002,5 +1033,6 @@ export async function buildTargetScopedQuery(props: {
     joinType: "outer",
     includePrimaryFilters: true,
     existentialFilterPathKeys: new Set(),
+    ...(classRestriction ? { where: classRestriction } : undefined),
   });
 }
