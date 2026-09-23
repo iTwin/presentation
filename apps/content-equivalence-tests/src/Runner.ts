@@ -207,11 +207,34 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
   });
 
   for (const imodel of config.imodels) {
-    const imodelFingerprint = await hashFile(imodel.path);
-    const sample = await loadOrCreateSample({ config, imodel, imodelFingerprint });
-    const scenarios: Scenario[] = [{ id: "all-elements-descriptor" }, { id: "sampled-elements", keys: sample.keys }];
     const imodelDirectory = path.join(runDirectory, imodel.name);
-    writeJson(path.join(imodelDirectory, "sample.json"), sample);
+    let imodelFingerprint: string;
+    try {
+      imodelFingerprint = await hashFile(imodel.path);
+    } catch (error) {
+      const message = `${imodel.name}: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`;
+      errors.push(message);
+      writeJson(path.join(imodelDirectory, "error.json"), { message });
+      continue;
+    }
+
+    // Sampling failure only rules out the "sampled-elements" scenario; the descriptor scenario needs no sample.
+    let sample: Sample | undefined;
+    try {
+      sample = await loadOrCreateSample({ config, imodel, imodelFingerprint });
+      writeJson(path.join(imodelDirectory, "sample.json"), sample);
+    } catch (error) {
+      const message = `${imodel.name}/sampling: ${
+        error instanceof Error ? (error.stack ?? error.message) : String(error)
+      }`;
+      errors.push(message);
+      writeJson(path.join(imodelDirectory, "sampling-error.json"), { message });
+    }
+
+    const scenarios: Scenario[] = [
+      { id: "all-elements-descriptor" },
+      ...(sample ? [{ id: "sampled-elements", keys: sample.keys } satisfies Scenario] : []),
+    ];
 
     for (const scenario of scenarios) {
       const scenarioDirectory = path.join(imodelDirectory, scenario.id);
