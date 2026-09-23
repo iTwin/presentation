@@ -407,6 +407,63 @@ describe("Content", () => {
       validateCategoryChain(descriptor, categorized!, ["Class B", "B Category"]);
     });
 
+    it("elides a related field's EC schema property category when it shares its class anchor's label", async () => {
+      // The class anchor's label is resolved from the target class only after all fields are
+      // enumerated, so a schema property category coincidentally sharing that label (e.g. a class and
+      // its own property category both named "Same Label") is only detected once both are known. The
+      // now-redundant, same-label anchor level must be elided instead of appearing twice in the chain.
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <PropertyCategory typeName="BCat" displayLabel="Same Label" priority="10" />
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B" displayLabel="Same Label">
+              <ECProperty propertyName="Categorized" typeName="string" category="BCat" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+        const b = builder.insertInstance(s.items.B.fullName, { categorized: "c" });
+        builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const path: RelationshipPath = [
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ];
+      const provider = defineIModelFieldsProvider({
+        id: "provider_v1",
+        async getContribution() {
+          return { relatedProperties: [{ path }] };
+        },
+      });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      const categorized = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "Categorized");
+      // A single "Same Label" level, not ["Same Label", "Same Label"].
+      validateCategoryChain(descriptor, categorized!, ["Same Label"]);
+    });
+
     it("leaves a direct field without a category when it has none", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(

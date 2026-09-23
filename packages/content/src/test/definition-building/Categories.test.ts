@@ -481,6 +481,31 @@ describe("collectCategories", () => {
     expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
   });
 
+  it("elides a schema category that shares its auto-created parent's label", async () => {
+    // The path category's label is resolved from the class only after all fields are processed, so a
+    // schema property category sharing that same label (e.g. an ElementAspect class named the same as
+    // its own property category) is detected here and reparented past the now-redundant level.
+    const parentId = CategoryDefinition.computeId({ path: [aToB] });
+    const schemaCategoryId = `${parentId}/TestSchema.Geometry`;
+    const field = createCategorizedField({
+      pathFromTarget: [aToB],
+      schemaCategory: { id: "TestSchema.Geometry", label: "B Label" },
+    });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "B Label" })]),
+      sources: [createSource()],
+      imodelFieldsProviders: [],
+      externalFieldsProviders: [],
+      getContribution,
+      getAnchorContribution,
+      fields: [field],
+    });
+    expect(field.field.categoryId).to.equal(schemaCategoryId);
+    // No `parentId` — the redundant "B Label" path category is elided from the tree.
+    expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "B Label" });
+    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
+  });
+
   it("nests the target category and both schema sub-categories under the relationship category", async () => {
     // A step that loads both target- and relationship-class properties (both with the same schema
     // category): the relationship class becomes the top-level group, the target class nests under it,

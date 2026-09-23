@@ -198,6 +198,24 @@ export async function collectCategories(props: {
     }),
   );
 
+  // A class-based (anchor) category's label is resolved only above, so a schema category nesting
+  // under one that turns out to share its label (e.g. an ElementAspect class and its own schema
+  // property category both named "Foo") can only be detected now. Elide such redundant, same-label
+  // levels by reparenting to the nearest ancestor with a distinct label, walking up as needed.
+  for (const { category } of registry.values()) {
+    while (category.parentId !== undefined) {
+      const parent = registry.get(category.parentId)?.category;
+      if (!parent || parent.label !== category.label) {
+        break;
+      }
+      if (parent.parentId === undefined) {
+        delete category.parentId;
+      } else {
+        category.parentId = parent.parentId;
+      }
+    }
+  }
+
   return Object.fromEntries(Array.from(registry, ([id, { category }]) => [id, category]));
 }
 
