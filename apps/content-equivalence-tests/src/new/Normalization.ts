@@ -13,6 +13,7 @@ import type {
   CanonicalField,
   CanonicalFieldType,
   CanonicalItem,
+  CanonicalRelationshipStep,
 } from "../NormalizationCommon.js";
 import type { CapturedNewItem, CapturedNewValue, NewCapture } from "./Adapter.js";
 
@@ -33,6 +34,14 @@ function getCategoryPath(
   categories: Readonly<Record<string, Readonly<CategoryDefinition>>>,
 ): string[] {
   return [...(category.parentId ? getCategoryPath(categories[category.parentId], categories) : []), category.label];
+}
+
+function createCanonicalPath(field: ReadonlyPropertyField): CanonicalRelationshipStep[] {
+  return field.pathFromTarget.map((step) => ({
+    relationshipName: step.relationshipName,
+    targetClassName: step.targetClassName,
+    relationshipReverse: step.relationshipReverse ?? false,
+  }));
 }
 
 function createCanonicalType(type: NewFieldType): CanonicalFieldType {
@@ -64,6 +73,7 @@ function createCanonicalField(
     propertyNames: [field.propertyName],
     propertyClassNames: [normalizeFullClassName(field.propertyClassName)],
     kind: "property",
+    path: createCanonicalPath(field),
     sourcePaths: [[field.id]],
   } satisfies Omit<CanonicalField, "key">;
   return {
@@ -74,6 +84,7 @@ function createCanonicalField(
       type: canonicalField.type,
       propertyNames: canonicalField.propertyNames,
       kind: canonicalField.kind,
+      path: canonicalField.path,
     }),
   };
 }

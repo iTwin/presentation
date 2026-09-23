@@ -5,7 +5,7 @@
 
 import { stableStringify } from "./Persistence.js";
 
-import type { InstanceKey } from "@itwin/presentation-shared";
+import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
 import type { Scenario } from "./Persistence.js";
 
 export type JsonObject = Record<string, unknown>;
@@ -16,6 +16,14 @@ export type CanonicalFieldType =
   | { kind: "array"; member: CanonicalFieldType }
   | { kind: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };
 
+/**
+ * A single relationship hop from the content target class to a related class. Deliberately omits
+ * `sourceClassName` and `instanceFilter` from `RelationshipPathStep`: legacy reports the concrete
+ * runtime class of the source instance where new-generation reports the query's declared target
+ * class, so the two aren't comparable, and legacy captures no equivalent for `instanceFilter`.
+ */
+export type CanonicalRelationshipStep = Omit<RelationshipPath[number], "sourceClassName" | "instanceFilter">;
+
 export interface CanonicalField {
   key: string;
   category: string[];
@@ -24,6 +32,8 @@ export interface CanonicalField {
   propertyNames: string[];
   propertyClassNames: string[];
   kind: string;
+  /** The relationship path from the content target to this field's related class, empty for direct fields. */
+  path: CanonicalRelationshipStep[];
   sourcePaths: string[][];
 }
 

@@ -12,6 +12,7 @@ import type {
   DescriptorJSON,
   FieldJSON,
   PropertiesFieldJSON,
+  RelationshipPathJSON,
   TypeDescription,
   ValuesDictionary,
 } from "@itwin/presentation-common";
@@ -22,6 +23,7 @@ import type {
   CanonicalField,
   CanonicalFieldType,
   CanonicalItem,
+  CanonicalRelationshipStep,
 } from "../NormalizationCommon.js";
 import type { LegacyCapture } from "./Adapter.js";
 
@@ -77,9 +79,32 @@ function createCanonicalFieldType(type: TypeDescription): CanonicalFieldType {
   }
 }
 
+/**
+ * `pathToPrimaryClass` runs from a nested field's own class back to the content's primary class, the
+ * opposite direction of the new-generation `pathFromTarget`. Reversing it (and flipping the forward
+ * flag, since going against a step also flips whether it matches the relationship's declared direction)
+ * yields the same target-oriented identity `pathFromTarget` uses.
+ */
+function createCanonicalPath(
+  path: RelationshipPathJSON<string> | undefined,
+  classes: DescriptorJSON["classesMap"],
+): CanonicalRelationshipStep[] {
+  if (!path) {
+    return [];
+  }
+  return [...path]
+    .reverse()
+    .map((step) => ({
+      relationshipName: normalizeFullClassName(classes[step.relationshipInfo].name),
+      targetClassName: normalizeFullClassName(classes[step.sourceClassInfo].name),
+      relationshipReverse: step.isForwardRelationship,
+    }));
+}
+
 function createCanonicalField(props: {
   field: PropertiesFieldJSON<string>;
   sourcePath: string[];
+  path: RelationshipPathJSON<string> | undefined;
   categories: Map<string, CategoryDescriptionJSON>;
   classes: DescriptorJSON["classesMap"];
 }): CanonicalField {
@@ -94,6 +119,7 @@ function createCanonicalField(props: {
       ...new Set(properties.map((property) => normalizeFullClassName(classes[property.classInfo].name))),
     ].sort(),
     kind: "property",
+    path: createCanonicalPath(props.path, classes),
     sourcePaths: [sourcePath],
   } satisfies Omit<CanonicalField, "key">;
   return {
@@ -104,6 +130,7 @@ function createCanonicalField(props: {
       type: canonicalField.type,
       propertyNames: canonicalField.propertyNames,
       kind: canonicalField.kind,
+      path: canonicalField.path,
     }),
   };
 }
@@ -118,21 +145,25 @@ function createCanonicalDescriptor(descriptor: LegacyCapture["descriptor"]): {
   const fieldMappings: LegacyFieldMapping[] = [];
   const unsupportedFields: CanonicalDescriptor["unsupportedFields"] = [];
 
-  const visit = (field: FieldJSON<string>, parentPath: string[]) => {
+  const visit = (
+    field: FieldJSON<string>,
+    parentPath: string[],
+    relationshipPath: RelationshipPathJSON<string> | undefined,
+  ) => {
     const sourcePath = [...parentPath, field.name];
     if ("nestedFields" in field) {
-      field.nestedFields.forEach((nestedField) => visit(nestedField, sourcePath));
+      field.nestedFields.forEach((child) => visit(child, sourcePath, field.pathToPrimaryClass));
       return;
     }
     if (!("properties" in field)) {
       unsupportedFields.push({ sourcePath, reason: "Legacy field is not property-backed." });
       return;
     }
-    const canonicalField = createCanonicalField({ field, sourcePath, categories, classes });
+    const canonicalField = createCanonicalField({ field, sourcePath, path: relationshipPath, categories, classes });
     fields.push(canonicalField);
     fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath });
   };
-  descriptor.fields.forEach((field) => visit(field, []));
+  descriptor.fields.forEach((field) => visit(field, [], undefined));
   return {
     descriptor: { fields: fields.sort((lhs, rhs) => lhs.key.localeCompare(rhs.key)), unsupportedFields },
     fieldMappings,
