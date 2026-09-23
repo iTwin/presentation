@@ -506,6 +506,53 @@ describe("collectCategories", () => {
     expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
   });
 
+  it("keeps a provider-declared parent/child hierarchy even when their labels coincidentally match", async () => {
+    const parentId = "provider-parent";
+    const childId = "provider-child";
+    const provider = createProvider("p_v1", {
+      [parentId]: { id: parentId, label: "Same Label" },
+      [childId]: { id: childId, label: "Same Label", parentId },
+    });
+    const field = createCategorizedField({ overrideCategoryId: childId });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      externalFieldsProviders: [],
+      getContribution,
+      getAnchorContribution,
+      fields: [field],
+    });
+    expect(categories[childId]).to.deep.equal({ id: childId, label: "Same Label", parentId });
+    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "Same Label" });
+  });
+
+  it("elides a synthesized schema category nesting under a provider-declared anchor with the same label, without touching the provider category", async () => {
+    // The anchor id below is already declared by a provider, so `collectCategories` reuses it instead
+    // of synthesizing its own — only the schema category nesting under it is synthesized.
+    const anchorId = CategoryDefinition.computeId({ path: [aToB] });
+    const provider = createProvider("p_v1", { [anchorId]: { id: anchorId, label: "Same Label" } });
+    const schemaCategoryId = `${anchorId}/TestSchema.Geometry`;
+    const field = createCategorizedField({
+      pathFromTarget: [aToB],
+      schemaCategory: { id: "TestSchema.Geometry", label: "Same Label" },
+    });
+    const categories = await collectCategories({
+      imodelAccess: createSchemaAccess([]),
+      sources: [createSource()],
+      imodelFieldsProviders: [provider],
+      externalFieldsProviders: [],
+      getContribution,
+      getAnchorContribution,
+      fields: [field],
+    });
+    expect(field.field.categoryId).to.equal(schemaCategoryId);
+    // The synthesized schema category is elided past the same-label provider anchor...
+    expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "Same Label" });
+    // ...but the provider's own category is untouched.
+    expect(categories[anchorId]).to.deep.equal({ id: anchorId, label: "Same Label" });
+  });
+
   it("nests the target category and both schema sub-categories under the relationship category", async () => {
     // A step that loads both target- and relationship-class properties (both with the same schema
     // category): the relationship class becomes the top-level group, the target class nests under it,

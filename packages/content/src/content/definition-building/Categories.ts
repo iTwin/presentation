@@ -158,6 +158,10 @@ export async function collectCategories(props: {
   //    `rel_0 → tgt_0 → rel_1 → tgt_1 → …` chain (a step's target nests under its relationship; a
   //    step nests under the previous step's target).
   const labelsToResolve: Array<{ category: CategoryDefinition; className: EC.FullClassNameDotNotation }> = [];
+  // Ids of categories synthesized by this function (as opposed to provider-declared ones), whose
+  // labels are only known after `labelsToResolve` is resolved below. Only these are eligible for the
+  // same-label elision pass further down — a provider's own declared hierarchy must never be altered.
+  const synthesizedIds = new Set<CategoryDefinition["id"]>();
   const registerAnchorCategory = (
     id: CategoryDefinition["id"],
     path: RelationshipPath,
@@ -172,6 +176,7 @@ export async function collectCategories(props: {
       category.parentId = parentId;
     }
     registry.set(id, { category, priority: DEFAULT_FIELDS_PROVIDER_PRIORITY });
+    synthesizedIds.add(id);
     const lastStep = path[path.length - 1];
     labelsToResolve.push({
       category,
@@ -188,6 +193,7 @@ export async function collectCategories(props: {
   for (const [id, category] of schemaCategories) {
     if (!registry.has(id)) {
       registry.set(id, { category, priority: DEFAULT_FIELDS_PROVIDER_PRIORITY });
+      synthesizedIds.add(id);
     }
   }
   // The category objects registered above are the same references, so resolving labels here updates
@@ -201,8 +207,14 @@ export async function collectCategories(props: {
   // A class-based (anchor) category's label is resolved only above, so a schema category nesting
   // under one that turns out to share its label (e.g. an ElementAspect class and its own schema
   // property category both named "Foo") can only be detected now. Elide such redundant, same-label
-  // levels by reparenting to the nearest ancestor with a distinct label, walking up as needed.
-  for (const { category } of registry.values()) {
+  // levels by reparenting to the nearest ancestor with a distinct label, walking up as needed. Only
+  // synthesized categories are eligible — a provider's declared parent/child hierarchy is left as-is,
+  // even when its labels happen to match.
+  for (const id of synthesizedIds) {
+    const category = registry.get(id)?.category;
+    if (!category) {
+      continue;
+    }
     while (category.parentId !== undefined) {
       const parent = registry.get(category.parentId)?.category;
       if (!parent || parent.label !== category.label) {
