@@ -15,6 +15,7 @@ import type {
   TypeDescription,
   ValuesDictionary,
 } from "@itwin/presentation-common";
+import type { PrimitiveValueType } from "@itwin/presentation-shared";
 import type {
   CanonicalCapture,
   CanonicalDescriptor,
@@ -28,6 +29,22 @@ interface LegacyFieldMapping {
   canonicalKey: CanonicalField["key"];
   sourcePath: string[];
 }
+
+/**
+ * Maps a legacy `TypeDescription.typeName` to the `presentation-shared` primitive vocabulary used
+ * by the new-generation pipeline, so canonical field keys and value types compare equal across
+ * implementations.
+ */
+const SHARED_PRIMITIVE_TYPE_NAMES = new Map<string, PrimitiveValueType>([
+  ["int", "Integer"],
+  ["long", "Long"],
+  ["double", "Double"],
+  ["string", "String"],
+  ["boolean", "Boolean"],
+  ["dateTime", "DateTime"],
+  ["point2d", "Point2d"],
+  ["point3d", "Point3d"],
+]);
 
 function getCategoryPath(
   category: CategoryDescriptionJSON,
@@ -43,15 +60,16 @@ function getCategoryPath(
 function createCanonicalFieldType(type: TypeDescription): CanonicalFieldType {
   switch (type.valueFormat) {
     case PropertyValueFormat.Primitive: {
-      const name = type.typeName.toLowerCase();
-      return name === "navigation" ? { kind: "navigation", name } : { kind: "primitive", name };
+      if (type.typeName === "navigation") {
+        return { kind: "navigation" };
+      }
+      return { kind: "primitive", name: SHARED_PRIMITIVE_TYPE_NAMES.get(type.typeName) ?? type.typeName };
     }
     case PropertyValueFormat.Array:
-      return { kind: "array", name: "array", member: createCanonicalFieldType(type.memberType) };
+      return { kind: "array", member: createCanonicalFieldType(type.memberType) };
     case PropertyValueFormat.Struct:
       return {
         kind: "struct",
-        name: "struct",
         members: type.members
           .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type) }))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),

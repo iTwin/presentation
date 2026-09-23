@@ -12,9 +12,9 @@ export type JsonObject = Record<string, unknown>;
 
 export type CanonicalFieldType =
   | { kind: "primitive"; name: string }
-  | { kind: "navigation"; name: "navigation" }
-  | { kind: "array"; name: "array"; member: CanonicalFieldType }
-  | { kind: "struct"; name: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };
+  | { kind: "navigation" }
+  | { kind: "array"; member: CanonicalFieldType }
+  | { kind: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };
 
 export interface CanonicalField {
   key: string;

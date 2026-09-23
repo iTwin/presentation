@@ -38,15 +38,14 @@ function getCategoryPath(
 function createCanonicalType(type: NewFieldType): CanonicalFieldType {
   switch (type.kind) {
     case "primitive":
-      return { kind: "primitive", name: type.type.toLowerCase() };
+      return { kind: "primitive", name: type.type };
     case "navigation":
-      return { kind: "navigation", name: "navigation" };
+      return { kind: "navigation" };
     case "array":
-      return { kind: "array", name: "array", member: createCanonicalType(type.elementType) };
+      return { kind: "array", member: createCanonicalType(type.elementType) };
     case "struct":
       return {
         kind: "struct",
-        name: "struct",
         members: type.members
           .map((member) => ({ name: member.name, type: createCanonicalType(member.type) }))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
