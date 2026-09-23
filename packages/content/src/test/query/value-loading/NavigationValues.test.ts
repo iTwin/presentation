@@ -152,28 +152,6 @@ describe("createNavigationValuePopulator", () => {
     expect(boundIds(queries[0])).to.deep.equal(["0x2"]);
   });
 
-  it.each(["array", "struct"] as const)(
-    "preserves undefined %s values while loading other navigation values",
-    async (kind) => {
-      const { imodelAccess } = createIModelAccess(() => [targetRow("0x2", "Schema.B", "target")]);
-      const [row] = await populate({
-        imodelAccess,
-        selectorTypes: {
-          nav: navigationType,
-          optional:
-            kind === "array"
-              ? { kind, elementType: navigationType }
-              : { kind, members: [{ name: "Nav", label: "Nav", type: navigationType }] },
-        },
-        rows: [createRow({ nav: ["0x2"], optional: [undefined] })],
-      });
-
-      expect(row).to.deep.equal(
-        createRow({ nav: [{ key: { className: "Schema.B", id: "0x2" }, label: "target" }], optional: [undefined] }),
-      );
-    },
-  );
-
   it("replaces a target id with its actual class and label", async () => {
     const { imodelAccess, queries } = createIModelAccess(() => [targetRow("0x2", "Schema.BSub", "Target label")]);
     const [row] = await populate({
@@ -269,67 +247,6 @@ describe("createNavigationValuePopulator", () => {
 
     expect(row.get("nav")).to.deep.equal([undefined, undefined]);
     expect(createQueryReader).not.toHaveBeenCalled();
-  });
-
-  it("loads navigation values nested in structs and arrays", async () => {
-    const { imodelAccess } = createIModelAccess(() => [
-      targetRow("0x2", "Schema.B", "first"),
-      targetRow("0x3", "Schema.B", "second"),
-    ]);
-    const selectorTypes: Record<string, ValueDescriptor> = {
-      payloads: {
-        kind: "array",
-        elementType: {
-          kind: "struct",
-          members: [
-            { name: "Nav", label: "Nav", type: navigationType },
-            { name: "Code", label: "Code", type: { kind: "primitive", type: "String" } },
-            {
-              name: "Nested",
-              label: "Nested",
-              type: {
-                kind: "struct",
-                members: [
-                  {
-                    name: "NavigationValues",
-                    label: "NavigationValues",
-                    type: { kind: "array", elementType: navigationType },
-                  },
-                ],
-              },
-            },
-          ],
-        },
-      },
-    };
-    const [row] = await populate({
-      imodelAccess,
-      selectorTypes,
-      rows: [
-        createRow({
-          payloads: [
-            [
-              { ["Nav"]: "0x2", ["Code"]: "c1", ["Nested"]: { ["NavigationValues"]: ["0x3", undefined] } },
-              { ["Code"]: "c2" },
-            ],
-          ],
-        }),
-      ],
-    });
-
-    expect(row.get("payloads")).to.deep.equal([
-      [
-        {
-          ["Nav"]: { key: { className: "Schema.B", id: "0x2" }, label: "first" },
-          ["Code"]: "c1",
-          ["Nested"]: {
-            ["NavigationValues"]: [{ key: { className: "Schema.B", id: "0x3" }, label: "second" }, undefined],
-          },
-        },
-        // Members the instance didn't supply stay absent rather than becoming `undefined` entries.
-        { ["Code"]: "c2" },
-      ],
-    ]);
   });
 
   it("looks a class's ids up in one query", async () => {

@@ -107,66 +107,24 @@ export function createNavigationValuePopulator(props: {
 /** Maps one navigation target reference onto the value that should take its place. */
 type MapNavigationValue = (props: { id: Id64String; targetClassName: EC.FullClassNameDotNotation }) => Value;
 
-/**
- * Applies `mapTarget` to every navigation target reference within a decoded value, returning the value with
- * the mapped results substituted in place. Struct and array values are copied rather than mutated.
- */
+/** Applies `mapTarget` to a decoded navigation target reference. */
 type NavigationValueMapper = (value: Value, mapTarget: MapNavigationValue) => Value;
 
 /**
- * Compiles a {@link NavigationValueMapper} for a value type, or returns `undefined` when the type
- * carries no navigation values anywhere — which doubles as the test for whether a selector needs
- * navigation loading at all. Compiling once per selector keeps the per-value traversal from re-walking
- * type metadata for every array element.
+ * Creates a {@link NavigationValueMapper} for a navigation property, or returns `undefined` for
+ * all other property types.
  */
 function createNavigationValueMapper(type: ValueDescriptor): NavigationValueMapper | undefined {
-  switch (type.kind) {
-    case "navigation":
-      return (value, mapTarget) => {
-        if (value === undefined) {
-          return undefined;
-        }
-        assert(typeof value === "string", "Expected a decoded navigation value to be a target instance id.");
-        return mapTarget({ id: value, targetClassName: type.targetClassName });
-      };
-    case "array": {
-      const mapElement = createNavigationValueMapper(type.elementType);
-      if (!mapElement) {
-        return undefined;
-      }
-      return (value, mapTarget) => {
-        if (value === undefined) {
-          return undefined;
-        }
-        assert(Array.isArray(value), "Expected a decoded array value.");
-        return value.map((element) => mapElement(element, mapTarget));
-      };
-    }
-    case "struct": {
-      const members = type.members
-        .map((member) => ({ name: member.name, mapMember: createNavigationValueMapper(member.type) }))
-        .filter((member): member is { name: string; mapMember: NavigationValueMapper } => !!member.mapMember);
-      if (members.length === 0) {
-        return undefined;
-      }
-      return (value, mapTarget) => {
-        if (value === undefined) {
-          return undefined;
-        }
-        assert(typeof value === "object" && !Array.isArray(value), "Expected a decoded struct value.");
-        const result: Record<string, Value> = { ...(value as Record<string, Value>) };
-        for (const { name, mapMember } of members) {
-          // The decoder omits members the instance didn't supply, so only present ones are mapped.
-          if (name in result) {
-            result[name] = mapMember(result[name], mapTarget);
-          }
-        }
-        return result;
-      };
-    }
-    case "primitive":
-      return undefined;
+  if (type.kind !== "navigation") {
+    return undefined;
   }
+  return (value, mapTarget) => {
+    if (value === undefined) {
+      return undefined;
+    }
+    assert(typeof value === "string", "Expected a decoded navigation value to be a target instance id.");
+    return mapTarget({ id: value, targetClassName: type.targetClassName });
+  };
 }
 
 type NavigationTargets = Map<EC.FullClassNameDotNotation, Map<Id64String, NavigationValue>>;
