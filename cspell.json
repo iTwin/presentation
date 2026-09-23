@@ -63,6 +63,8 @@
     "populator",
     "propertygrid",
     "readded",
+    "reparented",
+    "reparenting",
     "rpcinterface",
     "selectables",
     "spacebar",
@@ -98,6 +100,8 @@
     "**/*.patch",
     ".oxfmtrc.json",
     "cspell.json",
-    "dependabot.yml"
+    "dependabot.yml",
+    "apps/content-equivalence-tests/imodels.json",
+    "apps/content-equivalence-tests/output"
   ]
 }
