@@ -48,6 +48,7 @@ export interface CalculatedField extends BaseField {
     expression: string;
     // (undocumented)
     kind: "calculated";
+    primaryClassNames: EC.FullClassNameDotNotation[];
     targetAlias?: string;
 }
 
@@ -97,7 +98,6 @@ export interface ContentConfiguration {
     externalFieldsProviders?: ExternalFieldsProvider[];
     imodelFieldsProviders?: IModelFieldsProvider[];
     labelsFactory?: IInstanceLabelSelectClauseFactory;
-    queryFilterers?: QueryFilterer[];
 }
 
 // @public
@@ -159,11 +159,7 @@ export interface ContentSource {
 
 // @public
 export interface ContentTarget {
-    instanceFilter?: {
-        expression: string;
-        primaryClassAlias?: string;
-        bindings?: Record<string, ECSqlBinding>;
-    };
+    instanceFilter?: InstanceFilterExpression;
     instanceIds?: Id64String[];
     primaryClass: EC.FullClassNameDotNotation;
 }
@@ -223,9 +219,6 @@ export function defineExternalFieldsProvider<const TInputs extends Record<string
 
 // @public
 export function defineIModelFieldsProvider(provider: IModelFieldsProvider): IModelFieldsProvider;
-
-// @public
-export function defineQueryFilterer(filterer: QueryFilterer): QueryFilterer;
 
 // @public
 interface DescriptorTransformer {
@@ -295,10 +288,12 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
 // @public
 interface GetDistinctFieldValuesProps {
     field: PropertyField | CalculatedField;
-    filters?: ContentValueFilter[];
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    instanceFiltering?: {
+        ids?: Id64String[];
+        filter?: InstanceFilterExpression;
+    };
     labelsFactory?: IInstanceLabelSelectClauseFactory;
-    targets: ContentTarget[];
 }
 
 // @public
@@ -318,6 +313,13 @@ interface InputPropertyDeclaration {
         path: RelationshipPath;
         cardinalityHint?: CardinalityHint;
     };
+}
+
+// @public
+interface InstanceFilterExpression {
+    bindings?: Record<string, ECSqlBinding>;
+    expression: string;
+    primaryClassAlias?: string;
 }
 
 // @public
@@ -367,20 +369,6 @@ type PropertySelection = "all" | "none" | {
 } | {
     exclude: string[];
 };
-
-// @public
-interface QueryFilterClauses {
-    bindings?: Record<string, ECSqlBinding>;
-    joins?: string[];
-    where?: string[];
-}
-
-// @public
-interface QueryFilterer {
-    getFilterClauses(props: {
-        targetAlias: string;
-    }): QueryFilterClauses;
-}
 
 // @public
 export type ReadonlyCalculatedField = DeepReadonly<CalculatedField>;

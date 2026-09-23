@@ -56,6 +56,7 @@ function calculatedField(props: {
     expression: props.expression,
     targetAlias: props.targetAlias,
     bindings: props.bindings,
+    primaryClassNames: ["TestSchema.Primary"],
   };
 }
 

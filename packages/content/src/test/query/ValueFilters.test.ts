@@ -31,6 +31,7 @@ describe("buildValueFilterClauses", () => {
     label: "Calculated",
     type: { kind: "primitive", type: "String" },
     expression: "this.CodeValue || '-' || this.UserLabel",
+    primaryClassNames: ["TestSchema.TestClass"],
   };
 
   const stringField: PropertyField = { ...propertyField, type: { kind: "primitive", type: "String" } };
