@@ -6,7 +6,6 @@
 import { stableStringify } from "./Persistence.js";
 
 import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
-import type { Scenario } from "./Persistence.js";
 
 export type JsonObject = Record<string, unknown>;
 
@@ -80,14 +79,14 @@ export interface CanonicalDescriptor {
 }
 
 export interface CanonicalItem {
+  descriptor: CanonicalDescriptor;
   primaryKeys: InstanceKey[];
   values: Record<string, unknown>;
 }
 
-export interface CanonicalCapture {
-  descriptor: CanonicalDescriptor;
-  items?: CanonicalItem[];
-}
+export type CanonicalCapture =
+  | { descriptor: CanonicalDescriptor; items?: never }
+  | { descriptor?: never; items: CanonicalItem[] };
 
 interface Difference {
   path: string;
@@ -189,61 +188,106 @@ function collectDifferences(legacy: unknown, current: unknown, path: string): Di
   return [{ path, legacy, new: current }];
 }
 
-function itemsByPrimaryKey(items: CanonicalItem[] | undefined): Record<string, CanonicalItem[]> | undefined {
-  if (!items) {
-    return undefined;
-  }
-  const result: Record<string, CanonicalItem[]> = {};
+function getItemIdentity(item: CanonicalItem): string {
+  return item.primaryKeys
+    .map((key) => `${key.className}:${key.id}`)
+    .sort()
+    .join("|");
+}
+
+function indexItems(items: CanonicalItem[]): Map<string, CanonicalItem[]> {
+  const result = new Map<string, CanonicalItem[]>();
   for (const item of items) {
-    const identity = item.primaryKeys
-      .map((key) => `${key.className}:${key.id}`)
-      .sort()
-      .join("|");
-    (result[identity] ??= []).push(item);
+    const identity = getItemIdentity(item);
+    const matchingItems = result.get(identity);
+    if (matchingItems) {
+      matchingItems.push(item);
+    } else {
+      result.set(identity, [item]);
+    }
   }
   return result;
 }
 
-function getPrimaryKeys(items: CanonicalItem[] | undefined): string[] {
-  return (items ?? []).flatMap((item) => item.primaryKeys.map((key) => `${key.className}:${key.id}`)).sort();
+function getPrimaryKeys(items: CanonicalItem[]): string[] {
+  return items.flatMap((item) => item.primaryKeys.map((key) => `${key.className}:${key.id}`)).sort();
 }
 
-export function compareCaptures(
-  legacy: CanonicalCapture,
-  current: CanonicalCapture,
-  scenario: Scenario,
-): ComparisonResult {
-  const comparableDescriptor = (descriptor: CanonicalDescriptor) => ({
+function comparableDescriptor(descriptor: CanonicalDescriptor) {
+  return {
     fields: descriptor.fields.map(({ sourcePaths: _sourcePaths, ...field }) => field),
     unsupportedFields: descriptor.unsupportedFields.map(({ sourcePath: _sourcePath, ...field }) => field),
-  });
-  const descriptorDifferences = collectDifferences(
-    comparableDescriptor(legacy.descriptor),
-    comparableDescriptor(current.descriptor),
-    "descriptor",
+  };
+}
+
+function collectDescriptorDifferences(
+  legacy: CanonicalDescriptor | undefined,
+  current: CanonicalDescriptor | undefined,
+  path: string,
+): Difference[] {
+  const differences = collectDifferences(
+    legacy ? comparableDescriptor(legacy) : undefined,
+    current ? comparableDescriptor(current) : undefined,
+    path,
   );
-  const valueDifferences = collectDifferences(
-    itemsByPrimaryKey(legacy.items),
-    itemsByPrimaryKey(current.items),
-    "items",
-  );
-  if (legacy.descriptor.unsupportedFields.length > 0 || current.descriptor.unsupportedFields.length > 0) {
-    descriptorDifferences.push({
-      path: "descriptor.unsupportedFields",
-      legacy: legacy.descriptor.unsupportedFields,
-      new: current.descriptor.unsupportedFields,
+  const legacyUnsupportedFields = legacy?.unsupportedFields ?? [];
+  const currentUnsupportedFields = current?.unsupportedFields ?? [];
+  if (legacyUnsupportedFields.length > 0 || currentUnsupportedFields.length > 0) {
+    differences.push({
+      path: `${path}.unsupportedFields`,
+      legacy: legacyUnsupportedFields,
+      new: currentUnsupportedFields,
     });
   }
-  if (scenario.id === "sampled-elements") {
-    const expected = scenario.keys.map((key) => `${key.className}:${key.id}`).sort();
-    const legacyKeys = getPrimaryKeys(legacy.items);
-    const newKeys = getPrimaryKeys(current.items);
-    if (stableStringify(legacyKeys) !== stableStringify(expected)) {
-      valueDifferences.push({ path: "items.legacyPrimaryKeys", legacy: legacyKeys, new: expected });
+  return differences;
+}
+
+export function compareDescriptors(legacy: CanonicalDescriptor, current: CanonicalDescriptor): ComparisonResult {
+  return { descriptorDifferences: collectDescriptorDifferences(legacy, current, "descriptor"), valueDifferences: [] };
+}
+
+function comparableItem(item: CanonicalItem | undefined) {
+  if (!item) {
+    return undefined;
+  }
+  const { descriptor: _descriptor, ...result } = item;
+  return result;
+}
+
+export function compareContentItems(
+  legacy: CanonicalItem[],
+  current: CanonicalItem[],
+  expectedKeys: InstanceKey[],
+): ComparisonResult {
+  const descriptorDifferences: Difference[] = [];
+  const valueDifferences: Difference[] = [];
+  const legacyItems = indexItems(legacy);
+  const currentItems = indexItems(current);
+  const identities = new Set([...legacyItems.keys(), ...currentItems.keys()]);
+  for (const identity of [...identities].sort()) {
+    const matchingLegacyItems = legacyItems.get(identity) ?? [];
+    const matchingCurrentItems = currentItems.get(identity) ?? [];
+    const matchingItemCount = Math.max(matchingLegacyItems.length, matchingCurrentItems.length);
+    for (let index = 0; index < matchingItemCount; ++index) {
+      const legacyItem = matchingLegacyItems.at(index);
+      const currentItem = matchingCurrentItems.at(index);
+      const identityPath = `${identity}${matchingItemCount > 1 ? `[${index}]` : ""}`;
+      descriptorDifferences.push(
+        ...collectDescriptorDifferences(legacyItem?.descriptor, currentItem?.descriptor, `descriptor.${identityPath}`),
+      );
+      valueDifferences.push(
+        ...collectDifferences(comparableItem(legacyItem), comparableItem(currentItem), `items.${identityPath}`),
+      );
     }
-    if (stableStringify(newKeys) !== stableStringify(expected)) {
-      valueDifferences.push({ path: "items.newPrimaryKeys", legacy: expected, new: newKeys });
-    }
+  }
+  const expected = expectedKeys.map((key) => `${key.className}:${key.id}`).sort();
+  const legacyKeys = getPrimaryKeys(legacy);
+  const currentKeys = getPrimaryKeys(current);
+  if (stableStringify(legacyKeys) !== stableStringify(expected)) {
+    valueDifferences.push({ path: "items.legacyPrimaryKeys", legacy: legacyKeys, new: expected });
+  }
+  if (stableStringify(currentKeys) !== stableStringify(expected)) {
+    valueDifferences.push({ path: "items.newPrimaryKeys", legacy: expected, new: currentKeys });
   }
   return { descriptorDifferences, valueDifferences };
 }

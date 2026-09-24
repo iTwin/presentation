@@ -27,7 +27,7 @@ import type {
   CanonicalItem,
   CanonicalRelationshipStep,
 } from "../NormalizationCommon.js";
-import type { LegacyCapture } from "./Adapter.js";
+import type { CapturedLegacyItem, LegacyCapture } from "./Adapter.js";
 
 interface LegacyFieldMapping {
   canonicalKey: CanonicalField["key"];
@@ -189,7 +189,7 @@ function createCanonicalField(props: {
   };
 }
 
-function createCanonicalDescriptor(descriptor: LegacyCapture["descriptor"]): {
+function createCanonicalDescriptor(descriptor: DescriptorJSON): {
   descriptor: CanonicalDescriptor;
   fieldMappings: LegacyFieldMapping[];
 } {
@@ -256,27 +256,24 @@ function normalizeLegacyValue(value: Value): unknown {
   return value;
 }
 
-function createCanonicalItems(
-  items: NonNullable<LegacyCapture["items"]>,
-  fieldMappings: LegacyFieldMapping[],
-): CanonicalItem[] {
-  return items.map((item) => {
-    return {
-      primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
-      values: Object.fromEntries(
-        fieldMappings.map(({ canonicalKey, sourcePath, type }) => [
-          canonicalKey,
-          createCanonicalValues(item.values, sourcePath, type),
-        ]),
-      ),
-    };
-  });
+function createCanonicalItem({ descriptor: sourceDescriptor, item }: CapturedLegacyItem): CanonicalItem {
+  const { descriptor, fieldMappings } = createCanonicalDescriptor(sourceDescriptor);
+  return {
+    descriptor,
+    primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
+    values: Object.fromEntries(
+      fieldMappings.map(({ canonicalKey, sourcePath, type }) => [
+        canonicalKey,
+        createCanonicalValues(item.values, sourcePath, type),
+      ]),
+    ),
+  };
 }
 
 export function createCanonicalCapture(capture: LegacyCapture): CanonicalCapture {
-  const { descriptor, fieldMappings } = createCanonicalDescriptor(capture.descriptor);
-  return {
-    descriptor,
-    ...(capture.items === undefined ? {} : { items: createCanonicalItems(capture.items, fieldMappings) }),
-  };
+  if ("descriptor" in capture) {
+    const { descriptor } = createCanonicalDescriptor(capture.descriptor);
+    return { descriptor };
+  }
+  return { items: capture.items.map(createCanonicalItem) };
 }

@@ -14,25 +14,27 @@ export const CAPTURE_FORMAT_VERSION = 1;
 
 export type ImplementationName = "legacy" | "new";
 
-export type Scenario = { id: "all-elements-descriptor" } | { id: "sampled-elements"; keys: InstanceKey[] };
+export interface AllElementsDescriptorScenario {
+  id: "all-elements-descriptor";
+}
 
-export interface CaptureEnvelope<
-  TDescriptor = unknown,
-  TItem = unknown,
-  TImplementation extends ImplementationName = ImplementationName,
-> {
+export interface SampledElementsScenario {
+  id: "sampled-elements";
+  keys: InstanceKey[];
+}
+export type Scenario = AllElementsDescriptorScenario | SampledElementsScenario;
+
+export interface CaptureEnvelope<TImplementation extends ImplementationName = ImplementationName> {
   captureFormatVersion: number;
   implementation: TImplementation;
   implementationFingerprint: string;
   imodelFingerprint: string;
   scenario: Scenario;
   createdAt: string;
-  descriptor: TDescriptor;
-  items?: TItem[];
 }
 
 export type CaptureMetadata<TImplementation extends ImplementationName = ImplementationName> = Pick<
-  CaptureEnvelope<unknown, unknown, TImplementation>,
+  CaptureEnvelope<TImplementation>,
   "captureFormatVersion" | "implementation" | "implementationFingerprint" | "imodelFingerprint" | "scenario"
 >;
 
