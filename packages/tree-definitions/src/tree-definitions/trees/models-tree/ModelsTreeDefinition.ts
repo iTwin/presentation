@@ -1051,12 +1051,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   private async isSupported() {
     const { schemaName, className } = parseFullClassName(this.#hierarchyConfig.elements.baseClass);
-    const ecClass = (await this.#schemaProvider.getSchema(schemaName))?.getClass(className);
-    return (
-      ecClass !== undefined &&
-      ecClass.isEntityClass() &&
-      (await this.#schemaProvider.classDerivesFrom(ecClass.fullName, CLASS_NAMES.GeometricElement3d))
-    );
+    return await this.#schemaProvider.classDerivesFrom(ecClass.fullName, CLASS_NAMES.GeometricElement3d);
   }
 }
 
