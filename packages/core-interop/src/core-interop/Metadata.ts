@@ -179,6 +179,36 @@ interface SchemaViewProviderContext {
   classCache: Map<string, EC.Class>;
 }
 
+/**
+ * Matches the `__xHHHH__` hex-escape sequences ECObjects substitutes for characters that aren't valid in an EC
+ * identifier (e.g. a space becomes `__x0020__`), when turning a display string into a name.
+ */
+const EC_NAME_ESCAPE_PATTERN = /__x([0-9a-fA-F]{4})__/g;
+
+/**
+ * Reverses EC identifier escaping (see `EC_NAME_ESCAPE_PATTERN`), turning a raw EC name back into a readable
+ * string. A no-op for names that contain no escape sequences.
+ */
+function decodeEscapedECName(name: string): string {
+  return name.replace(EC_NAME_ESCAPE_PATTERN, (_match, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+/**
+ * Resolves a schema item's display label from its (possibly absent) `label` and its `name`.
+ *
+ * The native `ECNameValidation` only decodes EC name-escaping into a display label when no explicit label was set
+ * (see `ECValidatedName::SetName` in `imodel-native`), so a `SchemaView` reporting `label` equal to (undecoded)
+ * `name` is indistinguishable from no label being set at all - in both cases, this falls back to decoding EC
+ * name-escaping in `name`, rather than surfacing the raw, potentially unreadable, escaped name.
+ */
+function resolveSchemaItemLabel(label: string | undefined, name: string): string | undefined {
+  if (label !== undefined && label !== name) {
+    return label;
+  }
+  const decoded = decodeEscapedECName(name);
+  return decoded !== name ? decoded : label;
+}
+
 export function createECSchemaFromSchemaView(
   svSchema: CoreSchemaView.Schema,
   context: Omit<SchemaViewProviderContext, "schema">,
@@ -234,7 +264,7 @@ export function createECClassFromSchemaView(
     schema,
     fullName,
     name: svClass.name,
-    label: svClass.label,
+    label: resolveSchemaItemLabel(svClass.label, svClass.name),
     description: svClass.description,
     isHidden: svClass.isHidden,
     isEntityClass(): this is EC.EntityClass {
@@ -373,7 +403,7 @@ export function createECPropertyFromSchemaView(
     },
     name: svProp.name,
     description: svProp.description,
-    label: svProp.label,
+    label: resolveSchemaItemLabel(svProp.label, svProp.name),
     isHidden: svProp.isHidden,
     get category(): EC.PropertyCategory | undefined {
       return svProp.category
@@ -525,11 +555,15 @@ function createECEnumerationFromSchemaView(svEnum: CoreSchemaView.Enumeration, s
     schema,
     fullName: normalizeFullClassName(svEnum.fullName),
     name: svEnum.name,
-    label: svEnum.label,
+    label: resolveSchemaItemLabel(svEnum.label, svEnum.name),
     description: svEnum.description,
     type: svEnum.primitiveType === SchemaViewPrimitiveType.Integer ? "Number" : "String",
     isStrict: svEnum.isStrict,
-    enumerators: [...svEnum.getEnumerators()].map((e) => ({ name: e.name, label: e.label, value: e.value })),
+    enumerators: [...svEnum.getEnumerators()].map((e) => ({
+      name: e.name,
+      label: resolveSchemaItemLabel(e.label, e.name),
+      value: e.value,
+    })),
   };
 }
 
@@ -538,7 +572,7 @@ function createECKoqFromSchemaView(svKoq: CoreSchemaView.KindOfQuantity, schema:
     schema,
     fullName: normalizeFullClassName(svKoq.fullName),
     name: svKoq.name,
-    label: svKoq.label,
+    label: resolveSchemaItemLabel(svKoq.label, svKoq.name),
     description: svKoq.description,
     relativeError: svKoq.relativeError,
     persistenceUnit: svKoq.persistenceUnit,
@@ -553,7 +587,7 @@ function createECPropertyCategoryFromSchemaView(
     schema,
     fullName: normalizeFullClassName(svCategory.fullName),
     name: svCategory.name,
-    label: svCategory.label,
+    label: resolveSchemaItemLabel(svCategory.label, svCategory.name),
     description: svCategory.description,
     priority: svCategory.priority,
   };
