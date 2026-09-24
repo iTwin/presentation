@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { normalizeFloatingPointValue } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type { CategoryDefinition, ReadonlyPropertyField } from "@itwin/presentation-content";
@@ -22,6 +23,7 @@ type NewFieldType = NewCapture["descriptor"]["fields"][string]["type"];
 interface NewFieldMapping {
   canonicalKey: CanonicalField["key"];
   sourceFields: ReadonlyPropertyField[];
+  type: CanonicalFieldType;
 }
 
 interface CanonicalRelatedValue {
@@ -123,16 +125,14 @@ function createCanonicalDescriptor(descriptor: NewCapture["descriptor"]): {
     fieldMappings: fields.map((field) => ({
       canonicalKey: field.key,
       sourceFields: sourceFieldsByKey.get(field.key)!,
+      type: field.type,
     })),
   };
 }
 
-function createCanonicalValue(
-  item: CapturedNewItem,
-  field: ReadonlyPropertyField,
-): CapturedNewValue | CanonicalRelatedValue[] {
+function createCanonicalValue(item: CapturedNewItem, field: ReadonlyPropertyField, type: CanonicalFieldType): unknown {
   if (field.pathFromTarget.length === 0) {
-    return item.values[field.id];
+    return normalizeFloatingPointValue(item.values[field.id], type);
   }
   const relatedGroup = item.related.find(
     (group) => stableStringify(group.path) === stableStringify(field.pathFromTarget),
@@ -140,7 +140,7 @@ function createCanonicalValue(
   return (relatedGroup?.entries ?? [])
     .map((entry) => ({
       primaryKeys: [{ className: normalizeFullClassName(entry.key.className), id: entry.key.id }],
-      value: entry.values[field.id],
+      value: normalizeFloatingPointValue(entry.values[field.id], type),
     }))
     .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
 }
@@ -153,7 +153,7 @@ function createCanonicalItems(
     return {
       primaryKeys: [{ className: normalizeFullClassName(item.primaryKey.className), id: item.primaryKey.id }],
       values: Object.fromEntries(
-        fieldMappings.map(({ canonicalKey, sourceFields }) => {
+        fieldMappings.map(({ canonicalKey, sourceFields, type }) => {
           const applicableFields = sourceFields.filter((field) =>
             field.primaryClassNames.includes(item.primaryKey.className),
           );
@@ -162,7 +162,10 @@ function createCanonicalItems(
               `Expected at most one source field for canonical field '${canonicalKey}' and primary class '${item.primaryKey.className}', found ${applicableFields.length}.`,
             );
           }
-          return [canonicalKey, applicableFields[0] ? createCanonicalValue(item, applicableFields[0]) : undefined];
+          return [
+            canonicalKey,
+            applicableFields[0] ? createCanonicalValue(item, applicableFields[0], type) : undefined,
+          ];
         }),
       ),
     };

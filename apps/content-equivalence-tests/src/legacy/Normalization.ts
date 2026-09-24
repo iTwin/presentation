@@ -5,6 +5,7 @@
 
 import { PropertyValueFormat, Value } from "@itwin/presentation-common";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { normalizeFloatingPointValue } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type {
@@ -30,6 +31,7 @@ import type { LegacyCapture } from "./Adapter.js";
 interface LegacyFieldMapping {
   canonicalKey: CanonicalField["key"];
   sourcePath: string[];
+  type: CanonicalFieldType;
 }
 
 /**
@@ -162,7 +164,7 @@ function createCanonicalDescriptor(descriptor: LegacyCapture["descriptor"]): {
     }
     const canonicalField = createCanonicalField({ field, sourcePath, path: relationshipPath, categories, classes });
     fields.push(canonicalField);
-    fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath });
+    fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
   };
   descriptor.fields.forEach((field) => visit(field, [], undefined));
   return {
@@ -171,9 +173,13 @@ function createCanonicalDescriptor(descriptor: LegacyCapture["descriptor"]): {
   };
 }
 
-function createCanonicalValues(values: ValuesDictionary<Value>, sourcePath: string[]): unknown {
+function createCanonicalValues(
+  values: ValuesDictionary<Value>,
+  sourcePath: string[],
+  type: CanonicalFieldType,
+): unknown {
   if (sourcePath.length === 1) {
-    return normalizeLegacyValue(values[sourcePath[0]]);
+    return normalizeFloatingPointValue(normalizeLegacyValue(values[sourcePath[0]]), type);
   }
   const [nestedFieldName, ...rest] = sourcePath;
   const nestedValue = values[nestedFieldName];
@@ -185,7 +191,7 @@ function createCanonicalValues(values: ValuesDictionary<Value>, sourcePath: stri
       primaryKeys: entry.primaryKeys
         .map((key) => ({ className: normalizeFullClassName(key.className), id: key.id }))
         .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
-      value: createCanonicalValues(entry.values, rest),
+      value: createCanonicalValues(entry.values, rest, type),
     }))
     .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
 }
@@ -206,9 +212,9 @@ function createCanonicalItems(
     return {
       primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
       values: Object.fromEntries(
-        fieldMappings.map(({ canonicalKey, sourcePath }) => [
+        fieldMappings.map(({ canonicalKey, sourcePath, type }) => [
           canonicalKey,
-          createCanonicalValues(item.values, sourcePath),
+          createCanonicalValues(item.values, sourcePath, type),
         ]),
       ),
     };

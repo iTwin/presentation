@@ -63,6 +63,59 @@ export interface ComparisonResult {
   valueDifferences: Difference[];
 }
 
+const SIGNIFICANT_DIGITS_FOR_FLOATING_POINT_COMPARISON = 12;
+
+/**
+ * Rounds a `Double` value to a fixed number of significant digits, discarding the last few bits of a double's
+ * ~15-17 significant decimal digits. The legacy and new-generation pipelines can produce values that differ only
+ * in those last bits (e.g. due to differing floating-point computation or serialization paths for the same
+ * underlying value).
+ */
+function roundFloatingPointNoise(value: number): number {
+  return Number.isFinite(value) ? Number(value.toPrecision(SIGNIFICANT_DIGITS_FOR_FLOATING_POINT_COMPARISON)) : value;
+}
+
+/**
+ * Recursively rounds away floating-point noise (see `roundFloatingPointNoise`) in values of `Double`, `Point2d`,
+ * and `Point3d` typed canonical fields, guided by the field's `CanonicalFieldType` so that unrelated numeric
+ * values (e.g. `Integer`/`Long` property values, which must compare exactly) are left untouched.
+ */
+export function normalizeFloatingPointValue(value: unknown, type: CanonicalFieldType): unknown {
+  if (value === undefined || value === null) {
+    return value;
+  }
+  switch (type.kind) {
+    case "primitive":
+      if (type.name === "Double") {
+        return typeof value === "number" ? roundFloatingPointNoise(value) : value;
+      }
+      if (type.name === "Point2d" || type.name === "Point3d") {
+        return typeof value === "object" && !Array.isArray(value)
+          ? Object.fromEntries(
+              Object.entries(value as JsonObject).map(([key, coordinate]) => [
+                key,
+                typeof coordinate === "number" ? roundFloatingPointNoise(coordinate) : coordinate,
+              ]),
+            )
+          : value;
+      }
+      return value;
+    case "array":
+      return Array.isArray(value) ? value.map((entry) => normalizeFloatingPointValue(entry, type.member)) : value;
+    case "struct":
+      return typeof value === "object" && !Array.isArray(value)
+        ? Object.fromEntries(
+            Object.entries(value as JsonObject).map(([key, memberValue]) => {
+              const memberType = type.members.find((member) => member.name === key)?.type;
+              return [key, memberType ? normalizeFloatingPointValue(memberValue, memberType) : memberValue];
+            }),
+          )
+        : value;
+    case "navigation":
+      return value;
+  }
+}
+
 export function asObject(value: unknown, description: string): JsonObject {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error(`${description} must be an object.`);
