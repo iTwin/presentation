@@ -58,6 +58,7 @@ import { resolveContentSourcesImpl } from "./ResolveContentSources.js";
 import type {
   ECSchemaProvider,
   ECSqlQueryExecutor,
+  IInstanceLabelSelectClauseFactory,
   InstanceKey,
   Point2dValue,
   Point3dValue,
@@ -190,6 +191,13 @@ export interface ContentConfiguration {
 
   /** Descriptor transformers (modify descriptor after field enumeration). */
   descriptorTransformers?: DescriptorTransformer[];
+
+  /**
+   * Selects labels for the target instances of navigation property values. Defaults to
+   * `createIModelInstanceLabelSelectClauseFactory({ imodelAccess })`. Only used when the loaded
+   * content carries navigation properties.
+   */
+  labelsFactory?: IInstanceLabelSelectClauseFactory;
 }
 
 /**
