@@ -11,7 +11,7 @@ import type { Scenario } from "./Persistence.js";
 export type JsonObject = Record<string, unknown>;
 
 export type CanonicalFieldType =
-  | { kind: "primitive"; name: string }
+  | { kind: "primitive"; name: string; extendedType?: string }
   | { kind: "navigation" }
   | { kind: "array"; member: CanonicalFieldType }
   | { kind: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };

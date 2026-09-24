@@ -16,7 +16,7 @@ import type {
   CanonicalItem,
   CanonicalRelationshipStep,
 } from "../NormalizationCommon.js";
-import type { CapturedNewItem, CapturedNewValue, NewCapture } from "./Adapter.js";
+import type { CapturedNewItem, NewCapture } from "./Adapter.js";
 
 type NewFieldType = NewCapture["descriptor"]["fields"][string]["type"];
 
@@ -24,11 +24,6 @@ interface NewFieldMapping {
   canonicalKey: CanonicalField["key"];
   sourceFields: ReadonlyPropertyField[];
   type: CanonicalFieldType;
-}
-
-interface CanonicalRelatedValue {
-  primaryKeys: CapturedNewItem["primaryKey"][];
-  value: CapturedNewValue;
 }
 
 function getCategoryPath(
@@ -49,7 +44,11 @@ function createCanonicalPath(field: ReadonlyPropertyField): CanonicalRelationshi
 function createCanonicalType(type: NewFieldType): CanonicalFieldType {
   switch (type.kind) {
     case "primitive":
-      return { kind: "primitive", name: type.type };
+      return {
+        kind: "primitive",
+        name: type.type,
+        ...(type.extendedType !== undefined ? { extendedType: type.extendedType } : undefined),
+      };
     case "navigation":
       return { kind: "navigation" };
     case "array":

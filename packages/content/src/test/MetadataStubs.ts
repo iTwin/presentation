@@ -15,6 +15,8 @@ export function createPrimitiveProperty(props: {
   koq?: string;
   /** When `true`, the property reports as an array of the given primitive type. */
   array?: boolean;
+  /** The property's extended type name, e.g. `"Json"` or `"BeGuid"`. */
+  extendedTypeName?: string;
   /**
    * The class that declares the property. Use a full name for simple fixtures, or an `EC.Class` when
    * a test needs to walk the declaring class's `isHidden`/`baseClass` chain (e.g. `EC.Property.class`).
@@ -47,6 +49,7 @@ export function createPrimitiveProperty(props: {
     isEnumeration: () => false,
     isNavigation: () => false,
     primitiveType: props.primitiveType ?? "String",
+    extendedTypeName: props.extendedTypeName,
   } as unknown as EC.Property;
 }
 

@@ -13,6 +13,7 @@ import type {
   DescriptorJSON,
   FieldJSON,
   PropertiesFieldJSON,
+  PropertyInfoJSON,
   RelationshipPathJSON,
   TypeDescription,
   ValuesDictionary,
@@ -33,6 +34,12 @@ interface LegacyFieldMapping {
   sourcePath: string[];
   type: CanonicalFieldType;
 }
+
+/**
+ * Legacy's `PropertyInfoJSON` carries an `extendedType` at runtime (e.g. `"Json"`, `"BeGuid"`) that its
+ * type declarations omit.
+ */
+type LegacyPropertyInfo = PropertyInfoJSON<string> & { extendedType?: string };
 
 /**
  * Maps a legacy `TypeDescription.typeName` to the `presentation-shared` primitive vocabulary used
@@ -61,21 +68,47 @@ function getCategoryPath(
   return path.length === 1 && path[0] === "Selected Item(s)" ? [] : path;
 }
 
-function createCanonicalFieldType(type: TypeDescription): CanonicalFieldType {
+/**
+ * Builds the canonical type for a primitive field's `typeName`, using `properties` (the field's raw
+ * EC properties) to recover its `extendedType`.
+ *
+ * Legacy reports a primitive property's `extendedTypeName` (e.g. `"Json"`) by replacing the type's
+ * `typeName` with the extended type name itself, rather than keeping the underlying primitive name and
+ * exposing the extended type separately (the way `presentation-shared`'s `PrimitiveValueDescriptor`
+ * does, via its own `extendedType` property). This detects that substitution and recovers the real
+ * primitive name from the raw property's own `type`, so the canonical type compares equal to the
+ * new-generation pipeline's.
+ */
+function createCanonicalPrimitiveFieldType(typeName: string, properties: LegacyPropertyInfo[]): CanonicalFieldType {
+  const extendedType = properties.find((property) => property.extendedType !== undefined)?.extendedType;
+  const isSubstitutedByExtendedType = extendedType !== undefined && extendedType === typeName;
+  const primitiveTypeName = isSubstitutedByExtendedType
+    ? properties.find((property) => property.extendedType === extendedType)!.type
+    : typeName;
+  return {
+    kind: "primitive",
+    name: SHARED_PRIMITIVE_TYPE_NAMES.get(primitiveTypeName) ?? primitiveTypeName,
+    ...(extendedType !== undefined ? { extendedType } : undefined),
+  };
+}
+
+function createCanonicalFieldType(type: TypeDescription, properties: LegacyPropertyInfo[]): CanonicalFieldType {
   switch (type.valueFormat) {
     case PropertyValueFormat.Primitive: {
       if (type.typeName === "navigation") {
         return { kind: "navigation" };
       }
-      return { kind: "primitive", name: SHARED_PRIMITIVE_TYPE_NAMES.get(type.typeName) ?? type.typeName };
+      return createCanonicalPrimitiveFieldType(type.typeName, properties);
     }
     case PropertyValueFormat.Array:
-      return { kind: "array", member: createCanonicalFieldType(type.memberType) };
+      return { kind: "array", member: createCanonicalFieldType(type.memberType, properties) };
     case PropertyValueFormat.Struct:
       return {
         kind: "struct",
+        // A struct member's own extended type isn't captured separately in legacy's `TypeDescription`,
+        // so it can't be recovered here - members are normalized without `properties` context.
         members: type.members
-          .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type) }))
+          .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type, []) }))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
       };
   }
@@ -111,11 +144,11 @@ function createCanonicalField(props: {
   classes: DescriptorJSON["classesMap"];
 }): CanonicalField {
   const { field, sourcePath, categories, classes } = props;
-  const properties = field.properties.map(({ property }) => property);
+  const properties: LegacyPropertyInfo[] = field.properties.map(({ property }) => property);
   const canonicalField = {
     category: field.category ? getCategoryPath(categories.get(field.category)!, categories) : [],
     label: field.label,
-    type: createCanonicalFieldType(field.type),
+    type: createCanonicalFieldType(field.type, properties),
     propertyNames: [...new Set(properties.map((property) => property.name))].sort(),
     propertyClassNames: [
       ...new Set(properties.map((property) => normalizeFullClassName(classes[property.classInfo].name))),
