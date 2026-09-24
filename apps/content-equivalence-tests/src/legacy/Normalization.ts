@@ -5,7 +5,7 @@
 
 import { PropertyValueFormat, Value } from "@itwin/presentation-common";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { normalizeFloatingPointValue } from "../NormalizationCommon.js";
+import { createCanonicalEnumeration, normalizeFloatingPointValue } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type {
@@ -70,7 +70,7 @@ function getCategoryPath(
 
 /**
  * Builds the canonical type for a primitive field's `typeName`, using `properties` (the field's raw
- * EC properties) to recover its `extendedType`.
+ * EC properties) to recover its `extendedType` and enumeration metadata.
  *
  * Legacy reports a primitive property's `extendedTypeName` (e.g. `"Json"`) by replacing the type's
  * `typeName` with the extended type name itself, rather than keeping the underlying primitive name and
@@ -78,8 +78,24 @@ function getCategoryPath(
  * does, via its own `extendedType` property). This detects that substitution and recovers the real
  * primitive name from the raw property's own `type`, so the canonical type compares equal to the
  * new-generation pipeline's.
+ *
+ * Legacy does the same for enumeration-backed properties: `typeName` becomes the generic `"enum"`
+ * sentinel instead of the backing primitive type name, and the raw property's own `type` is `"enum"`
+ * too (unlike the `extendedType` case, it can't be recovered from there). The backing type is instead
+ * inferred from the declared enumerator values' JS type (EC enumerations are only backed by `int` or
+ * `string`). Legacy's `EnumerationInfo` also doesn't expose the enumeration's own name, so the
+ * canonical enumeration only carries what both implementations can supply: strictness and enumerators.
  */
 function createCanonicalPrimitiveFieldType(typeName: string, properties: LegacyPropertyInfo[]): CanonicalFieldType {
+  const enumerationInfo = properties.find((property) => property.enumerationInfo !== undefined)?.enumerationInfo;
+  if (typeName === "enum" && enumerationInfo) {
+    const isNumeric = enumerationInfo.choices.every((choice) => typeof choice.value === "number");
+    return {
+      kind: "primitive",
+      name: isNumeric ? "Integer" : "String",
+      enumeration: createCanonicalEnumeration(enumerationInfo.isStrict, enumerationInfo.choices),
+    };
+  }
   const extendedType = properties.find((property) => property.extendedType !== undefined)?.extendedType;
   const isSubstitutedByExtendedType = extendedType !== undefined && extendedType === typeName;
   const primitiveTypeName = isSubstitutedByExtendedType

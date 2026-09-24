@@ -10,11 +10,34 @@ import type { Scenario } from "./Persistence.js";
 
 export type JsonObject = Record<string, unknown>;
 
+/**
+ * Metadata about the enumeration backing a primitive value. Deliberately omits the enumeration's own
+ * name, since legacy's `EnumerationInfo` doesn't expose it - only what both implementations can supply
+ * (the strictness flag and declared enumerators) is comparable.
+ */
+export interface CanonicalEnumerationInfo {
+  isStrict: boolean;
+  enumerators: Array<{ label: string; value: string | number }>;
+}
+
 export type CanonicalFieldType =
-  | { kind: "primitive"; name: string; extendedType?: string }
+  | { kind: "primitive"; name: string; extendedType?: string; enumeration?: CanonicalEnumerationInfo }
   | { kind: "navigation" }
   | { kind: "array"; member: CanonicalFieldType }
   | { kind: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };
+
+/** Sorts enumerators by value so both implementations produce the same order regardless of declaration order. */
+export function createCanonicalEnumeration(
+  isStrict: boolean,
+  enumerators: ReadonlyArray<{ label: string; value: string | number }>,
+): CanonicalEnumerationInfo {
+  return {
+    isStrict,
+    enumerators: enumerators
+      .map(({ label, value }) => ({ label, value }))
+      .sort((lhs, rhs) => (lhs.value < rhs.value ? -1 : lhs.value > rhs.value ? 1 : 0)),
+  };
+}
 
 /**
  * A single relationship hop from the content target class to a related class. Deliberately omits

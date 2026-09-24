@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { normalizeFloatingPointValue } from "../NormalizationCommon.js";
+import { createCanonicalEnumeration, normalizeFloatingPointValue } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type { CategoryDefinition, ReadonlyPropertyField } from "@itwin/presentation-content";
@@ -48,6 +48,9 @@ function createCanonicalType(type: NewFieldType): CanonicalFieldType {
         kind: "primitive",
         name: type.type,
         ...(type.extendedType !== undefined ? { extendedType: type.extendedType } : undefined),
+        ...(type.enumeration !== undefined
+          ? { enumeration: createCanonicalEnumeration(type.enumeration.isStrict, type.enumeration.enumerators) }
+          : undefined),
       };
     case "navigation":
       return { kind: "navigation" };
