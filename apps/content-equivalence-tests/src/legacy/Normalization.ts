@@ -85,10 +85,23 @@ function getCategoryPath(
  * inferred from the declared enumerator values' JS type (EC enumerations are only backed by `int` or
  * `string`). Legacy's `EnumerationInfo` also doesn't expose the enumeration's own name, so the
  * canonical enumeration only carries what both implementations can supply: strictness and enumerators.
+ *
+ * `properties` is `undefined` for struct members, which have no EC property context to recover any of
+ * this from, so their substituted `typeName` is kept as-is.
  */
-function createCanonicalPrimitiveFieldType(typeName: string, properties: LegacyPropertyInfo[]): CanonicalFieldType {
-  const enumerationInfo = properties.find((property) => property.enumerationInfo !== undefined)?.enumerationInfo;
-  if (typeName === "enum" && enumerationInfo) {
+function createCanonicalPrimitiveFieldType(
+  typeName: string,
+  properties: LegacyPropertyInfo[] | undefined,
+): CanonicalFieldType {
+  if (!properties) {
+    return { kind: "primitive", name: SHARED_PRIMITIVE_TYPE_NAMES.get(typeName) ?? typeName };
+  }
+  if (typeName === "enum") {
+    const enumerationInfo = properties.find((property) => property.enumerationInfo !== undefined)?.enumerationInfo;
+    if (!enumerationInfo) {
+      // Same fallback the new-generation pipeline uses for enumerations it can't resolve.
+      return { kind: "primitive", name: "String" };
+    }
     const isNumeric = enumerationInfo.choices.every((choice) => typeof choice.value === "number");
     return {
       kind: "primitive",
@@ -108,7 +121,10 @@ function createCanonicalPrimitiveFieldType(typeName: string, properties: LegacyP
   };
 }
 
-function createCanonicalFieldType(type: TypeDescription, properties: LegacyPropertyInfo[]): CanonicalFieldType {
+function createCanonicalFieldType(
+  type: TypeDescription,
+  properties: LegacyPropertyInfo[] | undefined,
+): CanonicalFieldType {
   switch (type.valueFormat) {
     case PropertyValueFormat.Primitive: {
       if (type.typeName === "navigation") {
@@ -121,10 +137,10 @@ function createCanonicalFieldType(type: TypeDescription, properties: LegacyPrope
     case PropertyValueFormat.Struct:
       return {
         kind: "struct",
-        // A struct member's own extended type isn't captured separately in legacy's `TypeDescription`,
-        // so it can't be recovered here - members are normalized without `properties` context.
+        // A struct member's enumeration and extended type metadata isn't captured in legacy's
+        // `TypeDescription`, so it can't be recovered here - members are normalized without `properties` context.
         members: type.members
-          .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type, []) }))
+          .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type, undefined) }))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
       };
   }

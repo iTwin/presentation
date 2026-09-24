@@ -41,9 +41,17 @@ function createCanonicalPath(field: ReadonlyPropertyField): CanonicalRelationshi
   }));
 }
 
-function createCanonicalType(type: NewFieldType): CanonicalFieldType {
+/**
+ * `isStructMember` reduces primitives to the shape legacy reports for struct members, which lack the EC
+ * property context to recover enumeration and extended type metadata: legacy substitutes the type name
+ * with the `"enum"` sentinel or the extended type name instead.
+ */
+function createCanonicalType(type: NewFieldType, isStructMember = false): CanonicalFieldType {
   switch (type.kind) {
     case "primitive":
+      if (isStructMember) {
+        return { kind: "primitive", name: type.enumeration !== undefined ? "enum" : (type.extendedType ?? type.type) };
+      }
       return {
         kind: "primitive",
         name: type.type,
@@ -55,12 +63,12 @@ function createCanonicalType(type: NewFieldType): CanonicalFieldType {
     case "navigation":
       return { kind: "navigation" };
     case "array":
-      return { kind: "array", member: createCanonicalType(type.elementType) };
+      return { kind: "array", member: createCanonicalType(type.elementType, isStructMember) };
     case "struct":
       return {
         kind: "struct",
         members: type.members
-          .map((member) => ({ name: member.name, type: createCanonicalType(member.type) }))
+          .map((member) => ({ name: member.name, type: createCanonicalType(member.type, true) }))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
       };
   }
