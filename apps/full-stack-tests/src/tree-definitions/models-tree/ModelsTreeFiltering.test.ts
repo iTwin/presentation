@@ -231,13 +231,6 @@ describe("Models tree", () => {
           type: "instances",
           instanceKeys: [hierarchyConfig ? keys.model : rootSubject],
         });
-        const definitionToken = queryReader.mock.calls.find(([, options]) =>
-          options?.restartToken?.endsWith("/is-class-supported"),
-        )?.[1]?.restartToken;
-        expect(definitionToken).toBeDefined();
-        const resolvedUniqueId = definitionToken!.split("/")[1];
-        expect(resolvedUniqueId).toEqual(uniqueId ?? expect.any(String));
-
         const expectedPath = [
           ...(hierarchyConfig ? [] : [rootSubject]),
           adjustedModelKey(keys.model),
@@ -248,6 +241,12 @@ describe("Models tree", () => {
         expect(await collect(createInstanceKeyPaths({ label: "matching element 0" }))).toEqual([
           { path: expectedPath, target: keys.elements[0].id },
         ]);
+        const instanceKeyPathsToken = queryReader.mock.calls.find(([, options]) =>
+          options?.restartToken?.endsWith("/filter-by-label"),
+        )?.[1]?.restartToken;
+        expect(instanceKeyPathsToken).toBeDefined();
+        const resolvedUniqueId = instanceKeyPathsToken!.split("/")[1];
+        expect(resolvedUniqueId).toEqual(uniqueId ?? expect.any(String));
         expect(queryReader).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({ restartToken: `ModelsTreeDefinition/${resolvedUniqueId}/filter-by-label` }),

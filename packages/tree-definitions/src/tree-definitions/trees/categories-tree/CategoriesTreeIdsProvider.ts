@@ -16,7 +16,6 @@ import {
   reduce,
   shareReplay,
   tap,
-  toArray,
 } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom } from "@itwin/presentation-shared";
@@ -28,6 +27,7 @@ import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/U
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
 
@@ -64,7 +64,7 @@ export interface CachedCategoryInfo {
  * @internal
  */
 interface CategoriesTreeIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   baseIdsProvider: BaseIdsProvider;
   type: "2d" | "3d";
 }
@@ -115,7 +115,7 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
  * @internal
  */
 export function createCategoriesTreeIdsProvider({
-  queryExecutor,
+  imodelAccess,
   type,
   baseIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
@@ -161,7 +161,7 @@ export function createCategoriesTreeIdsProvider({
             ${createWhereClause({ conditions: ["NOT this.IsPrivate", "NOT m.IsPrivate OR m.ECClassId IS (BisCore.DictionaryModel)"] })}
             GROUP BY this.ECInstanceId
           `;
-          return queryExecutor.createQueryReader(
+          return imodelAccess.createQueryReader(
             { ecsql: categoriesQuery },
             {
               rowFormat: "ECSqlPropertyNames",
@@ -180,28 +180,6 @@ export function createCategoriesTreeIdsProvider({
           }),
         ),
       ),
-    );
-  }
-
-  function queryIsDefinitionContainersSupported(): Observable<boolean> {
-    return defer(() => {
-      const query = `
-        SELECT
-          1
-        FROM
-          ECDbMeta.ECSchemaDef s
-          JOIN ECDbMeta.ECClassDef c ON c.Schema.Id = s.ECInstanceId
-        ${createWhereClause({ conditions: ["s.Name = 'BisCore'", "c.Name = 'DefinitionContainer'"] })}
-      `;
-
-      return queryExecutor.createQueryReader(
-        { ecsql: query },
-        { restartToken: `${componentName}/${componentId}/is-definition-container-supported` },
-      );
-    }).pipe(
-      catchBeSQLiteInterrupts,
-      toArray(),
-      map((rows) => rows.length > 0),
     );
   }
 
@@ -242,7 +220,7 @@ export function createCategoriesTreeIdsProvider({
           dc.ModelId modelId
           FROM ${DEFINITION_CONTAINERS_CTE} dc
       `;
-      return queryExecutor.createQueryReader(
+      return imodelAccess.createQueryReader(
         { ctes, ecsql: definitionsQuery, bindings: [{ type: "idset", value: categoryIds }] },
         {
           rowFormat: "ECSqlPropertyNames",
@@ -456,7 +434,10 @@ export function createCategoriesTreeIdsProvider({
   }
 
   function getIsDefinitionContainerSupported(): Observable<boolean> {
-    cachedData.isDefinitionContainerSupported ??= queryIsDefinitionContainersSupported().pipe(shareReplay());
+    cachedData.isDefinitionContainerSupported ??= defer(async () => {
+      const schema = await imodelAccess.getSchema("BisCore");
+      return schema?.getClass("DefinitionContainer") !== undefined;
+    }).pipe(shareReplay());
     return cachedData.isDefinitionContainerSupported;
   }
 

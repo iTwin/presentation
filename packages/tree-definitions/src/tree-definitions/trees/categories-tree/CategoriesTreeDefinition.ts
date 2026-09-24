@@ -204,7 +204,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     overrides: props.hierarchyConfig,
   });
   const idsProvider = createCategoriesTreeIdsProvider({
-    queryExecutor: props.imodelAccess,
+    imodelAccess: props.imodelAccess,
     type: props.viewType,
     baseIdsProvider: createBaseIdsProvider({
       queryExecutor: props.imodelAccess,

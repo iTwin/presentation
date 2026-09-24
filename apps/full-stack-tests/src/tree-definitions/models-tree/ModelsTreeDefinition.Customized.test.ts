@@ -425,7 +425,7 @@ describe("ModelsTreeDefinition", () => {
       });
     });
 
-    it("returns empty hierarchy when the iModel doesn't have any elements of `elements.baseClass` class", async () => {
+    it("returns empty hierarchy when `elements.baseClass` is not derived from `GeometricElement3d`", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -438,6 +438,18 @@ describe("ModelsTreeDefinition", () => {
       using provider = createModelsTreeProvider({
         imodelConnection,
         hierarchyConfig: { elements: { baseClass: CLASS_NAMES.GeometricElement2d } },
+      });
+      await validateHierarchy({ provider, expect: [] });
+    });
+
+    it.each([
+      { label: "does not exist", baseClass: "BisCore.DoesNotExist" as const },
+      { label: "is not an entity class", baseClass: "BisCore.ModelModelsElement" as const },
+    ])("returns empty hierarchy when `elements.baseClass` $label", async ({ baseClass }) => {
+      await using buildIModelResult = await buildIModel();
+      using provider = createModelsTreeProvider({
+        imodelConnection: buildIModelResult.imodelConnection,
+        hierarchyConfig: { elements: { baseClass } },
       });
       await validateHierarchy({ provider, expect: [] });
     });
