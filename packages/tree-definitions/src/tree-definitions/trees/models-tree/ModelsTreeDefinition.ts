@@ -27,12 +27,7 @@ import {
   HierarchySearchTree,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  eachValueFrom,
-  ECSql,
-  parseFullClassName,
-} from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
@@ -1050,8 +1045,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   }
 
   private async isSupported() {
-    const { schemaName, className } = parseFullClassName(this.#hierarchyConfig.elements.baseClass);
-    return await this.#schemaProvider.classDerivesFrom(ecClass.fullName, CLASS_NAMES.GeometricElement3d);
+    return this.#schemaProvider.classDerivesFrom(
+      this.#hierarchyConfig.elements.baseClass,
+      CLASS_NAMES.GeometricElement3d,
+    );
   }
 }
 
