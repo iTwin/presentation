@@ -7,7 +7,13 @@ import { Presentation } from "@itwin/presentation-backend";
 import { ContentFlags, DefaultContentDisplayTypes, KeySet, RuleTypes } from "@itwin/presentation-common";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { DescriptorJSON, ItemJSON, InstanceKey as LegacyInstanceKey, Ruleset } from "@itwin/presentation-common";
+import type {
+  DescriptorJSON,
+  ItemJSON,
+  InstanceKey as LegacyInstanceKey,
+  Rule,
+  Ruleset,
+} from "@itwin/presentation-common";
 import type { InstanceKey } from "@itwin/presentation-shared";
 import type { CaptureEnvelope, Scenario } from "../Persistence.js";
 
@@ -19,12 +25,21 @@ function toLegacyKey(key: InstanceKey): LegacyInstanceKey {
   return { ...key, className: key.className.replace(".", ":") };
 }
 
+const supplementalRules: Rule[] = [
+  {
+    ruleType: "ContentModifier",
+    class: { schemaName: "BisCore", className: "DefinitionElement" },
+    propertyOverrides: [{ name: "IsPrivate", isDisplayed: false }],
+  },
+];
+
 async function createConsolidatedContentDescriptor({ imodel }: { imodel: IModelDb }) {
   const ruleset: Ruleset = {
     id: `${RULESET_ID}-consolidated`,
     rules: [
+      ...supplementalRules,
       {
-        ruleType: RuleTypes.Content,
+        ruleType: "Content",
         specifications: [
           {
             specType: "ContentInstancesOfSpecificClasses",
@@ -57,7 +72,10 @@ async function createSelectedInstancesContent({
 }) {
   const ruleset: Ruleset = {
     id: `${RULESET_ID}-selected-instances`,
-    rules: [{ ruleType: RuleTypes.Content, specifications: [{ specType: "SelectedNodeInstances" }] }],
+    rules: [
+      ...supplementalRules,
+      { ruleType: RuleTypes.Content, specifications: [{ specType: "SelectedNodeInstances" }] },
+    ],
   };
   const content = await Presentation.getManager().getContent({
     imodel,
