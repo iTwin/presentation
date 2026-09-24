@@ -27,12 +27,7 @@ import {
   HierarchySearchTree,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  eachValueFrom,
-  ECSql,
-  parseFullClassName,
-} from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
@@ -70,7 +65,6 @@ import type {
   EC,
   ECSchemaProvider,
   ECSqlBinding,
-  ECSqlQueryDef,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
@@ -289,10 +283,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   #impl: HierarchyDefinition;
   #idsProvider: ModelsTreeIdsProvider;
   #hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
-  #queryExecutor: LimitingECSqlQueryExecutor;
+  #schemaProvider: ECSchemaProvider;
   #isSupported?: Promise<boolean>;
   static #componentName = "ModelsTreeDefinition";
-  #uniqueId: GuidString;
 
   public constructor(props: ModelsTreeDefinitionProps) {
     this.#hierarchyConfig = mergeWithDefaults({
@@ -336,9 +329,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         ],
       },
     });
-    this.#uniqueId = props.uniqueId ?? Guid.createValue();
     this.#idsProvider = props.idsProvider;
-    this.#queryExecutor = props.imodelAccess;
+    this.#schemaProvider = props.imodelAccess;
   }
 
   public preProcessNode: NodePreProcessor = async ({ node }) => {
@@ -1053,27 +1045,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   }
 
   private async isSupported() {
-    const { schemaName, className } = parseFullClassName(this.#hierarchyConfig.elements.baseClass);
-
-    const query: ECSqlQueryDef = {
-      ecsql: `
-        SELECT 1
-        FROM ECDbMeta.ECSchemaDef s
-        JOIN ECDbMeta.ECClassDef c ON c.Schema.Id = s.ECInstanceId
-        ${createWhereClause({ conditions: ["s.Name = ?", "c.Name = ?", `c.ECInstanceId IS (${CLASS_NAMES.GeometricElement3d})`] })}
-      `,
-      bindings: [
-        { type: "string", value: schemaName },
-        { type: "string", value: className },
-      ],
-    };
-
-    for await (const _row of this.#queryExecutor.createQueryReader(query, {
-      restartToken: `${ModelsTreeDefinition.#componentName}/${this.#uniqueId}/is-class-supported`,
-    })) {
-      return true;
-    }
-    return false;
+    return this.#schemaProvider.classDerivesFrom(
+      this.#hierarchyConfig.elements.baseClass,
+      CLASS_NAMES.GeometricElement3d,
+    );
   }
 }
 
