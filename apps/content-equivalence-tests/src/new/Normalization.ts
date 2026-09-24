@@ -34,10 +34,10 @@ function getCategoryPath(
 }
 
 function createCanonicalPath(field: ReadonlyPropertyField): CanonicalRelationshipStep[] {
-  return field.pathFromTarget.map((step) => ({
+  return field.pathFromTarget.map((step, index, steps) => ({
     relationshipName: step.relationshipName,
-    targetClassName: step.targetClassName,
     relationshipReverse: step.relationshipReverse ?? false,
+    ...(index === steps.length - 1 ? { targetClassName: step.targetClassName } : undefined),
   }));
 }
 

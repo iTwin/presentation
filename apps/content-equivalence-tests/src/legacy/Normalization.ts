@@ -143,13 +143,16 @@ function createCanonicalPath(
   if (!path) {
     return [];
   }
-  return [...path]
+  const steps: CanonicalRelationshipStep[] = [...path]
     .reverse()
     .map((step) => ({
       relationshipName: normalizeFullClassName(classes[step.relationshipInfo].name),
-      targetClassName: normalizeFullClassName(classes[step.sourceClassInfo].name),
       relationshipReverse: step.isForwardRelationship,
     }));
+  // `path[0].sourceClassInfo` is the nested field's own concrete class - the leaf of `pathToPrimaryClass`,
+  // which becomes the last step once reversed into the target-oriented order `pathFromTarget` uses.
+  steps[steps.length - 1].targetClassName = normalizeFullClassName(classes[path[0].sourceClassInfo].name);
+  return steps;
 }
 
 function createCanonicalField(props: {

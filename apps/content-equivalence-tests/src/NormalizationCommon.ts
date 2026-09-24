@@ -41,11 +41,25 @@ export function createCanonicalEnumeration(
 
 /**
  * A single relationship hop from the content target class to a related class. Deliberately omits
- * `sourceClassName` and `instanceFilter` from `RelationshipPathStep`: legacy reports the concrete
- * runtime class of the source instance where new-generation reports the query's declared target
- * class, so the two aren't comparable, and legacy captures no equivalent for `instanceFilter`.
+ * `sourceClassName` and `instanceFilter` from `RelationshipPathStep`, and makes `targetClassName`
+ * optional, populated only for the path's last step:
+ * - `sourceClassName` - legacy reports the concrete runtime class of the source instance where
+ *   new-generation reports the query's declared target class, so the two aren't comparable.
+ * - `targetClassName` (non-last steps) - legacy reports the relationship's schema-declared (often
+ *   abstract/base) constraint class uniformly for every intermediate step, while new-generation
+ *   enumerates the concrete classes that actually have instances in scope for the step, intentionally
+ *   splitting what legacy treats as a single field into several concrete-class-specific fields.
+ *   Omitting it from the canonical identity lets those concrete-class variants collapse back into
+ *   one comparable field, matching legacy's shape.
+ * - `targetClassName` (last step) - both implementations report the concrete class of the actual
+ *   related instance the property is read from (it's determined by the queried data itself, not by
+ *   path-node specialization), so it's kept as part of the field's identity.
+ * - `instanceFilter` - legacy captures no equivalent.
  */
-export type CanonicalRelationshipStep = Omit<RelationshipPath[number], "sourceClassName" | "instanceFilter">;
+export type CanonicalRelationshipStep = Omit<
+  RelationshipPath[number],
+  "sourceClassName" | "targetClassName" | "instanceFilter"
+> & { targetClassName?: RelationshipPath[number]["targetClassName"] };
 
 export interface CanonicalField {
   key: string;
