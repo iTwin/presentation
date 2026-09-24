@@ -169,7 +169,7 @@ describe("Categories tree", () => {
           const { imodelConnection, ...keys } = buildIModelResult;
           const imodelAccess = createIModelAccess(imodelConnection);
           const idsProvider = createCategoriesTreeIdsProvider({
-            queryExecutor: imodelAccess,
+            imodelAccess,
             type: viewType,
             baseIdsProvider: createBaseIdsProvider({
               queryExecutor: imodelAccess,
