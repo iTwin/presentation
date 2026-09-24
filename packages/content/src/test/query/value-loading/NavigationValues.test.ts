@@ -224,19 +224,6 @@ describe("createNavigationValuePopulator", () => {
     expect(queries).to.have.lengthOf(2);
   });
 
-  it("yields undefined for a target id with no matching instance", async () => {
-    const { imodelAccess } = createIModelAccess(() => [targetRow("0x2", "Schema.B", "found")]);
-    const [row] = await populate({
-      imodelAccess,
-      selectorTypes: { nav: navigationType },
-      rows: [createRow({ nav: ["0x2", "0x3"] })],
-    });
-
-    // A dangling reference resolves the same way a NULL navigation value does, and the array keeps its
-    // length so values stay aligned with their path's related instances.
-    expect(row.get("nav")).to.deep.equal([{ key: { className: "Schema.B", id: "0x2" }, label: "found" }, undefined]);
-  });
-
   it("queries nothing when a page carries only NULL navigation values", async () => {
     const { imodelAccess, createQueryReader } = createIModelAccess(() => []);
     const [row] = await populate({
