@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
+import { getFullSchemaXml } from "presentation-test-utilities";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
@@ -33,6 +34,31 @@ describe("Core interop", () => {
         // the created schema provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
         // __PUBLISH_EXTRACT_END__
         expect(await schemaProvider.getSchema("BisCore")).toBeDefined();
+      });
+
+      it("preserves explicit schema class visibility", async function () {
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          await imodel.importSchemaStrings([
+            getFullSchemaXml({
+              schemaName: "ShownSchema",
+              schemaContentXml: `
+                <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+                <ECCustomAttributes>
+                  <HiddenSchema xmlns="CoreCustomAttributes.01.00.03">
+                    <ShowClasses>true</ShowClasses>
+                  </HiddenSchema>
+                </ECCustomAttributes>
+                <ECEntityClass typeName="ShownClass">
+                  <BaseClass>bis:PhysicalElement</BaseClass>
+                </ECEntityClass>
+              `,
+            }),
+          ]);
+        });
+        const schemaProvider = createECSchemaProvider(imodelConnection);
+
+        const schema = await schemaProvider.getSchema("ShownSchema");
+        expect(schema?.getClass("ShownClass")?.isHidden).toBe(false);
       });
     });
   });

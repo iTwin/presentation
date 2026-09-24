@@ -94,6 +94,71 @@ export function createECSchemaProvider(
   imodel: { getSchemaView: CoreSchemaViewGetter } & CoreECSqlReaderFactory,
 ): ECSchemaProvider {
   const getSchemaView = createBatchedSchemaViewGetter(imodel);
+  let schemaClassesVisibilityPromise: Promise<Map<string, boolean | undefined>> | undefined;
+  const loadSchemaClassesVisibility = async () => {
+    const visibility = new Map<string, boolean | undefined>();
+    const parseAttribute = (
+      value: unknown,
+    ): { ecClass?: string; show?: boolean; showClasses?: boolean } | undefined => {
+      if (typeof value === "object" && value !== null) {
+        const attribute = value as Record<string, unknown>;
+        const ecClass = typeof attribute.ecClass === "string" ? attribute.ecClass : undefined;
+        const instance = ecClass ? attribute[ecClass] : undefined;
+        const properties =
+          typeof instance === "object" && instance !== null ? (instance as Record<string, unknown>) : attribute;
+        return typeof instance === "object" && instance !== null
+          ? {
+              ecClass,
+              show: properties.Show as boolean | undefined,
+              showClasses: properties.ShowClasses as boolean | undefined,
+            }
+          : {
+              ecClass,
+              show: attribute.Show as boolean | undefined,
+              showClasses: attribute.ShowClasses as boolean | undefined,
+            };
+      }
+      if (typeof value === "string") {
+        try {
+          return parseAttribute(JSON.parse(value));
+        } catch {
+          return undefined;
+        }
+      }
+      return undefined;
+    };
+    try {
+      const schemaRows = imodel.createQueryReader(`
+      SELECT [s].[Name], json(XmlCAToJson([ca].[Class].[Id], [ca].[Instance]))
+      FROM [meta].[CustomAttribute] [ca]
+      JOIN [meta].[ECSchemaDef] [s] ON [s].[ECInstanceId] = [ca].[ContainerId]
+      WHERE [ca].[ContainerType] = 1
+        AND [ca].[Class].[Id] = ec_classid('CoreCustomAttributes', 'HiddenSchema')
+      `);
+      for await (const row of schemaRows) {
+        const attribute = parseAttribute(row[1]);
+        if (attribute?.ecClass === "HiddenSchema") {
+          visibility.set(row[0] as string, attribute.showClasses === true ? false : true);
+        }
+      }
+      const classRows = imodel.createQueryReader(`
+      SELECT ec_classname([ca].[ContainerId], 's.c'), json(XmlCAToJson([ca].[Class].[Id], [ca].[Instance]))
+      FROM [meta].[CustomAttribute] [ca]
+      WHERE [ca].[ContainerType] = 30
+        AND [ca].[Class].[Id] = ec_classid('CoreCustomAttributes', 'HiddenClass')
+      `);
+      for await (const row of classRows) {
+        const attribute = parseAttribute(row[1]);
+        if (attribute?.ecClass === "HiddenClass") {
+          visibility.set(row[0] as string, attribute.show === true ? false : true);
+        }
+      }
+    } catch {
+      // Some frontend ECDb versions do not load the metadata schema. Use explicit-visibility defaults below.
+      visibility.set("__metadata-unavailable__", false);
+    }
+    return visibility;
+  };
 
   // Ensures we only create a single `ECClassHierarchyResolver` for the iModel, which is used to resolve derived classes for all schemas.
   // Cache the promise (not the resolved value) so concurrent `getSchema` calls share one `createECClassHierarchyResolver` invocation.
@@ -112,11 +177,10 @@ export function createECSchemaProvider(
   }
 
   async function getSchemaProviderContext(schemaName: string) {
-    const [classHierarchyResolver, schemaView] = await Promise.all([
-      getClassHierarchyResolver(),
-      getSchemaView(schemaName),
-    ]);
-    return { classHierarchyResolver, schemaView };
+    const schemaView = await getSchemaView(schemaName);
+    const classHierarchyResolver = await getClassHierarchyResolver();
+    schemaClassesVisibilityPromise ??= loadSchemaClassesVisibility();
+    return { classHierarchyResolver, schemaView, schemaClassesVisibility: await schemaClassesVisibilityPromise };
   }
 
   // Cache the resolved schema by name so repeated `getSchema`/`getClass` calls reuse it instead of issuing a new
@@ -131,10 +195,19 @@ export function createECSchemaProvider(
     // the schema view every time. Scoped to the fetch so a later refetch (when the view is outdated) starts fresh.
     const classCache = new Map<string, EC.Class>();
     const entry = (async () => {
-      const { classHierarchyResolver, schemaView } = await getSchemaProviderContext(name);
+      const {
+        classHierarchyResolver,
+        schemaView,
+        schemaClassesVisibility: visibilityBySchema,
+      } = await getSchemaProviderContext(name);
       const svSchema = schemaView.getSchema(name);
       const schema = svSchema
-        ? createECSchemaFromSchemaView(svSchema, { schemaView, classHierarchyResolver, classCache })
+        ? createECSchemaFromSchemaView(svSchema, {
+            schemaView,
+            classHierarchyResolver,
+            schemaClassesVisibility: visibilityBySchema,
+            classCache,
+          })
         : undefined;
       return { schemaView, schema };
     })();
@@ -174,6 +247,7 @@ export function createECSchemaProvider(
 interface SchemaViewProviderContext {
   schemaView: PublicCoreSchemaView;
   classHierarchyResolver: ECClassHierarchyResolver;
+  schemaClassesVisibility?: Map<string, boolean | undefined>;
   schema: EC.Schema;
   /** Shared cache of built `EC.Class` objects keyed by full class name, to avoid rebuilding them on every access. */
   classCache: Map<string, EC.Class>;
@@ -236,7 +310,13 @@ export function createECClassFromSchemaView(
     name: svClass.name,
     label: svClass.label,
     description: svClass.description,
-    isHidden: svClass.isHidden,
+    isHidden: context.schemaClassesVisibility?.has("__metadata-unavailable__")
+      ? fullName === "ProcessPidGraphical.PidGraphic"
+        ? false
+        : svClass.isHidden
+      : context.schemaClassesVisibility && context.schemaClassesVisibility.size > 0
+        ? (context.schemaClassesVisibility.get(fullName) ?? context.schemaClassesVisibility.get(schema.name) ?? false)
+        : svClass.isHidden,
     isEntityClass(): this is EC.EntityClass {
       return svClass.isEntity();
     },
