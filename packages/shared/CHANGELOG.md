@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.15
+
+### Minor Changes
+
+- [#1595](https://github.com/iTwin/presentation/pull/1595): `PrimitiveValueDescriptor`: Add an `extendedType` property that carries a primitive property's `extendedTypeName` (e.g. `"Json"`, `"BeGuid"`), when set, so consumers can refine how a `type`-typed value should be interpreted without re-reading schema. `@itwin/presentation-content` now populates it for primitive properties.
+
 ## 2.0.0-alpha.14
 
 ### Minor Changes

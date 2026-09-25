@@ -1,5 +1,13 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0-alpha.6
+
+### Patch Changes
+
+- [#1593](https://github.com/iTwin/presentation/pull/1593): Fixed schema item labels (classes, properties, enumerations, enumerators, kind of quantities and property categories) not decoding EC name-escaping (e.g. `Foo__x0020__Bar`) when no explicit display label was set. Names containing escaped characters are now decoded into their unescaped form (e.g. `Foo Bar`), matching the behavior of the native `ECObjects` library.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.15
+
 ## 2.0.0-alpha.5
 
 ### Patch Changes
