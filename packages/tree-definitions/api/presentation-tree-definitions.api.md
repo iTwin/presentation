@@ -207,6 +207,9 @@ interface ElementsGroupInfo {
 
 // @beta
 interface ModelsTreeHierarchyConfiguration {
+    categories?: {
+        labelMerging?: "enable" | "disable";
+    };
     elements?: {
         baseClass?: EC.FullClassNameDotNotation;
         excludedClasses?: EC.FullClassNameDotNotation[];
@@ -215,9 +218,11 @@ interface ModelsTreeHierarchyConfiguration {
     hierarchyLevelFiltering?: "enable" | "disable";
     models?: {
         withoutElements?: "include" | "exclude";
+        labelMerging?: "enable" | "disable";
     };
     subjects?: {
         root?: "include" | "exclude";
+        labelMerging?: "enable" | "disable";
     };
 }
 

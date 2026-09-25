@@ -97,7 +97,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /**
    * Subject node's configuration options.
    *
-   * Defaults to `{ root: "include" }`.
+   * Defaults to `{ root: "include", labelMerging: "enable" }`.
    */
   subjects?: {
     /**
@@ -106,6 +106,25 @@ export interface ModelsTreeHierarchyConfiguration {
      * Defaults to `"include"`.
      */
     root?: "include" | "exclude";
+    /**
+     * Controls whether sibling Subject nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
+  };
+  /**
+   * Category node's configuration options.
+   *
+   * Defaults to `{ labelMerging: "enable" }`.
+   */
+  categories?: {
+    /**
+     * Controls whether sibling Category nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
   };
   /**
    * Element node's configuration options.
@@ -138,7 +157,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /**
    * Model node's configuration options.
    *
-   * Defaults to `{ withoutElements: "exclude" }`.
+   * Defaults to `{ withoutElements: "exclude", labelMerging: "enable" }`.
    */
   models?: {
     /**
@@ -147,6 +166,12 @@ export interface ModelsTreeHierarchyConfiguration {
      * Defaults to `"exclude"`.
      */
     withoutElements?: "include" | "exclude";
+    /**
+     * Controls whether sibling Model nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
   };
 }
 
@@ -155,9 +180,10 @@ export type RequiredModelsTreeHierarchyConfiguration = DeepRequired<ModelsTreeHi
 
 /** @internal */
 export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfiguration = {
-  subjects: { root: "include" },
+  subjects: { root: "include", labelMerging: "enable" },
+  categories: { labelMerging: "enable" },
   elements: { baseClass: CLASS_NAMES.GeometricElement3d, excludedClasses: [], classGrouping: "enable" },
-  models: { withoutElements: "exclude" },
+  models: { withoutElements: "exclude", labelMerging: "enable" },
   hierarchyLevelFiltering: "enable",
 };
 
@@ -503,7 +529,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     0
                   )`,
                 },
-                grouping: { byLabel: { action: "merge", groupId: "subject" } },
+                ...(this.#hierarchyConfig.subjects.labelMerging === "enable"
+                  ? { grouping: { byLabel: { action: "merge", groupId: "subject" } } }
+                  : {}),
                 extendedData: {
                   isRootSubject: { selector: `IIF(this.ECInstanceId = ${IModel.rootSubjectId}, true, false)` },
                   type: "subject",
@@ -538,6 +566,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   this.#hierarchyConfig.elements.excludedClasses.length
                     ? { selector: "model.HasChildren" }
                     : true,
+                ...(this.#hierarchyConfig.models.labelMerging === "enable"
+                  ? { grouping: { byLabel: { action: "merge", groupId: "model" } } }
+                  : {}),
                 extendedData: { type: "model" },
                 supportsFiltering: this.supportsFiltering(),
               })}
@@ -837,7 +868,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ecClassId: { selector: "this.ECClassId" },
       ecInstanceId: { selector: "this.ECInstanceId" },
       nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.SpatialCategory } },
-      grouping: { byLabel: { action: "merge", groupId: "category" } },
+      ...(this.#hierarchyConfig.categories.labelMerging === "enable"
+        ? { grouping: { byLabel: { action: "merge", groupId: "category" } } }
+        : {}),
       hasChildren: true,
       extendedData: { type: "category", ...extendedData },
       supportsFiltering: this.supportsFiltering(),
