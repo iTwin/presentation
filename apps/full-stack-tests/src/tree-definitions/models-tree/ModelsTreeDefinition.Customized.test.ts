@@ -139,6 +139,82 @@ describe("ModelsTreeDefinition", () => {
       });
     });
 
+    it("does not merge models with same label when `models.labelMerging` is set to `disable`", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, (txn) => {
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
+          const partition1 = insertPhysicalPartition({
+            txn,
+            codeValue: "model1",
+            userLabel: "model",
+            parentId: rootSubject.id,
+          });
+          const model1 = insertPhysicalSubModel({ txn, modeledElementId: partition1.id });
+          insertPhysicalElement({ txn, userLabel: `element1`, modelId: model1.id, categoryId: category.id });
+          const partition2 = insertPhysicalPartition({
+            txn,
+            codeValue: "model2",
+            userLabel: "model",
+            parentId: rootSubject.id,
+          });
+          const model2 = insertPhysicalSubModel({ txn, modeledElementId: partition2.id });
+          insertPhysicalElement({ txn, userLabel: `element2`, modelId: model2.id, categoryId: category.id });
+          return { rootSubject, model1, model2, category };
+        }),
+      );
+      const { imodelConnection, ...keys } = buildIModelResult;
+      using defaultProvider = createModelsTreeProvider({ imodelConnection });
+      await validateHierarchy({
+        provider: defaultProvider,
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.model1, keys.model2],
+            supportsFiltering: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.category],
+                supportsFiltering: true,
+                children: true,
+              }),
+            ],
+          }),
+        ],
+      });
+
+      using provider = createModelsTreeProvider({
+        imodelConnection,
+        hierarchyConfig: { models: { labelMerging: "disable" } },
+      });
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.model2],
+            supportsFiltering: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.category],
+                supportsFiltering: true,
+                children: true,
+              }),
+            ],
+          }),
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.model1],
+            supportsFiltering: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.category],
+                supportsFiltering: true,
+                children: true,
+              }),
+            ],
+          }),
+        ],
+      });
+    });
+
     it("does not merge categories with same label when `categories.labelMerging` is set to `disable`", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {

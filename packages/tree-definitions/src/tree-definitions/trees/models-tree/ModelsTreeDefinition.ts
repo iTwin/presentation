@@ -157,7 +157,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /**
    * Model node's configuration options.
    *
-   * Defaults to `{ withoutElements: "exclude" }`.
+   * Defaults to `{ withoutElements: "exclude", labelMerging: "enable" }`.
    */
   models?: {
     /**
@@ -166,6 +166,12 @@ export interface ModelsTreeHierarchyConfiguration {
      * Defaults to `"exclude"`.
      */
     withoutElements?: "include" | "exclude";
+    /**
+     * Controls whether sibling Model nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
   };
 }
 
@@ -177,7 +183,7 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
   subjects: { root: "include", labelMerging: "enable" },
   categories: { labelMerging: "enable" },
   elements: { baseClass: CLASS_NAMES.GeometricElement3d, excludedClasses: [], classGrouping: "enable" },
-  models: { withoutElements: "exclude" },
+  models: { withoutElements: "exclude", labelMerging: "enable" },
   hierarchyLevelFiltering: "enable",
 };
 
@@ -560,6 +566,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   this.#hierarchyConfig.elements.excludedClasses.length
                     ? { selector: "model.HasChildren" }
                     : true,
+                ...(this.#hierarchyConfig.models.labelMerging === "enable"
+                  ? { grouping: { byLabel: { action: "merge", groupId: "model" } } }
+                  : {}),
                 extendedData: { type: "model" },
                 supportsFiltering: this.supportsFiltering(),
               })}

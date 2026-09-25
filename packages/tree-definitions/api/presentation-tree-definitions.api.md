@@ -218,6 +218,7 @@ interface ModelsTreeHierarchyConfiguration {
     hierarchyLevelFiltering?: "enable" | "disable";
     models?: {
         withoutElements?: "include" | "exclude";
+        labelMerging?: "enable" | "disable";
     };
     subjects?: {
         root?: "include" | "exclude";
