@@ -7,12 +7,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { IModelHost, SnapshotDb } from "@itwin/core-backend";
 import { Presentation } from "@itwin/presentation-backend";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { getImplementationFingerprints, getSamplingImplementationFingerprint } from "./Fingerprints.js";
 import { captureLegacy } from "./legacy/Adapter.js";
 import { createCanonicalCapture as normalizeLegacyCapture } from "./legacy/Normalization.js";
 import { captureNew } from "./new/Adapter.js";
 import { createCanonicalCapture as normalizeNewCapture } from "./new/Normalization.js";
-import { compareCaptures } from "./NormalizationCommon.js";
+import { compareContentItems, compareDescriptors } from "./NormalizationCommon.js";
 import {
   cachePath,
   CAPTURE_FORMAT_VERSION,
@@ -257,9 +258,28 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           scenario,
           createCapture: captureNew,
         });
-        const normalizedLegacy = normalizeLegacyCapture(legacy.capture);
-        const normalizedNew = normalizeNewCapture(current.capture);
-        const differences = compareCaptures(normalizedLegacy, normalizedNew, scenario);
+        const imodelDb = openIModel(imodel.path);
+        let normalizedLegacy, normalizedNew;
+        try {
+          const imodelAccess = { ...createECSchemaProvider(imodelDb), ...createECSqlQueryExecutor(imodelDb) };
+          normalizedLegacy = await normalizeLegacyCapture(legacy.capture, imodelAccess);
+          normalizedNew = await normalizeNewCapture(current.capture, imodelAccess);
+        } finally {
+          imodelDb.close();
+        }
+
+        let differences;
+        if (scenario.id === "all-elements-descriptor") {
+          if (normalizedLegacy.descriptor === undefined || normalizedNew.descriptor === undefined) {
+            throw new Error("Expected descriptor-only canonical captures.");
+          }
+          differences = compareDescriptors(normalizedLegacy.descriptor, normalizedNew.descriptor);
+        } else {
+          if (normalizedLegacy.items === undefined || normalizedNew.items === undefined) {
+            throw new Error("Expected canonical content items.");
+          }
+          differences = compareContentItems(normalizedLegacy.items, normalizedNew.items, scenario.keys);
+        }
 
         writeJson(path.join(scenarioDirectory, "legacy.normalized.json"), normalizedLegacy);
         writeJson(path.join(scenarioDirectory, "new.normalized.json"), normalizedNew);

@@ -9,12 +9,17 @@ import {
   resolveContentSources,
 } from "@itwin/presentation-content";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { stableStringify } from "../Persistence.js";
+import { CAPTURE_FORMAT_VERSION, stableStringify } from "../Persistence.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { ContentItem, ContentTarget, PropertyField, ReadonlyContentDescriptor } from "@itwin/presentation-content";
-import type { EC, InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
-import type { CaptureEnvelope, Scenario } from "../Persistence.js";
+import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
+import type {
+  AllElementsDescriptorScenario,
+  CaptureEnvelope,
+  SampledElementsScenario,
+  Scenario,
+} from "../Persistence.js";
 
 function createIModelAccess(imodel: IModelDb) {
   return { ...createECSchemaProvider(imodel), ...createECSqlQueryExecutor(imodel) };
@@ -28,12 +33,19 @@ export interface CapturedRelatedValues {
 }
 
 export interface CapturedNewItem {
+  descriptor: ReadonlyContentDescriptor;
   primaryKey: InstanceKey;
   values: ContentItem["values"];
   related: CapturedRelatedValues[];
 }
 
-export type NewCapture = CaptureEnvelope<ReadonlyContentDescriptor, CapturedNewItem, "new">;
+type NewCaptureEnvelope = Omit<CaptureEnvelope<"new">, "scenario">;
+
+export type NewCapture = NewCaptureEnvelope &
+  (
+    | { scenario: AllElementsDescriptorScenario; descriptor: ReadonlyContentDescriptor }
+    | { scenario: SampledElementsScenario; items: CapturedNewItem[] }
+  );
 
 function captureNewItem(item: ContentItem, descriptor: ReadonlyContentDescriptor): CapturedNewItem {
   const fields = Object.values(descriptor.fields);
@@ -60,7 +72,7 @@ function captureNewItem(item: ContentItem, descriptor: ReadonlyContentDescriptor
         ),
       })),
   }));
-  return { primaryKey: item.primaryKey, values: item.values, related };
+  return { descriptor, primaryKey: item.primaryKey, values: item.values, related };
 }
 
 export async function captureNew(props: {
@@ -72,32 +84,47 @@ export async function captureNew(props: {
   const { imodel, scenario } = props;
   const imodelAccess = createIModelAccess(imodel);
   const config = await createIModelContentConfiguration({ imodelAccess });
-  const targets: ContentTarget[] =
-    scenario.id === "all-elements-descriptor"
-      ? [{ primaryClass: "BisCore.GeometricElement3d" as const }]
-      : Object.entries(Object.groupBy(scenario.keys, (key) => key.className)).map(([primaryClass, keys]) => ({
-          primaryClass: primaryClass as EC.FullClassNameDotNotation,
-          instanceIds: keys!.map((key) => key.id),
-        }));
-  const sources = await resolveContentSources({ imodelAccess, targets, config });
-  const provider = createContentProvider({ imodelAccess, sources, config });
-  const descriptor = await provider.getContentDescriptor();
-  let items: CapturedNewItem[] | undefined;
   if (scenario.id === "sampled-elements") {
-    items = [];
-    for await (const item of provider.getItems()) {
-      items.push(captureNewItem(item, descriptor));
-    }
+    const results = await Promise.all(
+      scenario.keys.map(async (key) => {
+        const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
+        const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
+        const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
+        const itemDescriptor = await itemProvider.getContentDescriptor();
+        const items: CapturedNewItem[] = [];
+        for await (const item of itemProvider.getItems()) {
+          items.push(captureNewItem(item, itemDescriptor));
+        }
+        if (items.length !== 1) {
+          throw new Error(
+            `Expected one new-generation content item for '${key.className}:${key.id}', found ${items.length}.`,
+          );
+        }
+        return items[0];
+      }),
+    );
+    return {
+      captureFormatVersion: CAPTURE_FORMAT_VERSION,
+      implementation: "new",
+      implementationFingerprint: props.implementationFingerprint,
+      imodelFingerprint: props.imodelFingerprint,
+      scenario,
+      createdAt: new Date().toISOString(),
+      items: results,
+    };
   }
 
+  const allElementTargets: ContentTarget[] = [{ primaryClass: "BisCore.GeometricElement3d" as const }];
+  const allElementSources = await resolveContentSources({ imodelAccess, targets: allElementTargets, config });
+  const allElementProvider = createContentProvider({ imodelAccess, sources: allElementSources, config });
+  const allElementDescriptor = await allElementProvider.getContentDescriptor();
   return {
-    captureFormatVersion: 1,
+    captureFormatVersion: CAPTURE_FORMAT_VERSION,
     implementation: "new",
     implementationFingerprint: props.implementationFingerprint,
     imodelFingerprint: props.imodelFingerprint,
     scenario,
     createdAt: new Date().toISOString(),
-    descriptor,
-    ...(items !== undefined ? { items } : {}),
+    descriptor: allElementDescriptor,
   };
 }
