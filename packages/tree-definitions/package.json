@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-tree-definitions",
-  "version": "0.1.0",
+  "version": "0.1.1-alpha.0",
   "description": "Reusable tree hierarchy definitions for iTwin Presentation",
   "license": "MIT",
   "author": {
