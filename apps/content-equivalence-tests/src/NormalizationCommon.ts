@@ -116,7 +116,7 @@ function roundFloatingPointNoise(value: number): number {
  * and `Point3d` typed canonical fields, guided by the field's `CanonicalFieldType` so that unrelated numeric
  * values (e.g. `Integer`/`Long` property values, which must compare exactly) are left untouched.
  */
-export function normalizeFloatingPointValue(value: unknown, type: CanonicalFieldType): unknown {
+export function normalizeValueForComparison(value: unknown, type: CanonicalFieldType): unknown {
   if (value === undefined || value === null) {
     return value;
   }
@@ -137,13 +137,13 @@ export function normalizeFloatingPointValue(value: unknown, type: CanonicalField
       }
       return value;
     case "array":
-      return Array.isArray(value) ? value.map((entry) => normalizeFloatingPointValue(entry, type.member)) : value;
+      return Array.isArray(value) ? value.map((entry) => normalizeValueForComparison(entry, type.member)) : value;
     case "struct":
       return typeof value === "object" && !Array.isArray(value)
         ? Object.fromEntries(
             Object.entries(value as JsonObject).map(([key, memberValue]) => {
               const memberType = type.members.find((member) => member.name === key)?.type;
-              return [key, memberType ? normalizeFloatingPointValue(memberValue, memberType) : memberValue];
+              return [key, memberType ? normalizeValueForComparison(memberValue, memberType) : memberValue];
             }),
           )
         : value;

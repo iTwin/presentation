@@ -5,7 +5,7 @@
 
 import { PropertyValueFormat, Value } from "@itwin/presentation-common";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { createCanonicalEnumeration, normalizeFloatingPointValue } from "../NormalizationCommon.js";
+import { createCanonicalEnumeration, normalizeValueForComparison } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type {
@@ -247,7 +247,7 @@ function createCanonicalValues(
   type: CanonicalFieldType,
 ): unknown {
   if (sourcePath.length === 1) {
-    return normalizeFloatingPointValue(normalizeLegacyValue(values[sourcePath[0]]), type);
+    return normalizeValueForComparison(normalizeLegacyValue(values[sourcePath[0]]), type);
   }
   const [nestedFieldName, ...rest] = sourcePath;
   const nestedValue = values[nestedFieldName];
@@ -264,10 +264,12 @@ function createCanonicalValues(
     .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
 }
 
-// TODO: normalize to InstanceKey + label when https://github.com/iTwin/presentation/pull/1585 merges
 function normalizeLegacyValue(value: Value): unknown {
   if (Value.isNavigationValue(value)) {
-    return value.id;
+    return {
+      key: { className: normalizeFullClassName(value.className), id: value.id },
+      label: value.label.displayValue,
+    };
   }
   return value;
 }

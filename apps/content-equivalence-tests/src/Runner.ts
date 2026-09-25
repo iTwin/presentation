@@ -258,7 +258,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           createCapture: captureNew,
         });
         const normalizedLegacy = normalizeLegacyCapture(legacy.capture);
-        const normalizedNew = normalizeNewCapture(current.capture);
+        const normalizedNew = await normalizeNewCapture(current.capture);
 
         let differences;
         if (scenario.id === "all-elements-descriptor") {

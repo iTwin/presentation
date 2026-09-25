@@ -3,11 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { createCanonicalEnumeration, normalizeFloatingPointValue } from "../NormalizationCommon.js";
+import {
+  createDefaultValueFormatter,
+  formatConcatenatedValue,
+  normalizeFullClassName,
+} from "@itwin/presentation-shared";
+import { createCanonicalEnumeration, normalizeValueForComparison } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type { CategoryDefinition, ReadonlyContentDescriptor, ReadonlyPropertyField } from "@itwin/presentation-content";
+import type { NavigationValue } from "@itwin/presentation-shared";
 import type {
   CanonicalCapture,
   CanonicalDescriptor,
@@ -17,6 +22,8 @@ import type {
   CanonicalRelationshipStep,
 } from "../NormalizationCommon.js";
 import type { CapturedNewItem, NewCapture } from "./Adapter.js";
+
+const valueFormatter = createDefaultValueFormatter();
 
 type NewFieldType = ReadonlyContentDescriptor["fields"][string]["type"];
 
@@ -140,9 +147,23 @@ function createCanonicalDescriptor(descriptor: ReadonlyContentDescriptor): {
   };
 }
 
-function createCanonicalValue(item: CapturedNewItem, field: ReadonlyPropertyField, type: CanonicalFieldType): unknown {
+function isNavigationValue(value: unknown, type: CanonicalFieldType): value is NavigationValue {
+  return (
+    type.kind === "navigation" && typeof value === "object" && value !== null && "key" in value && "label" in value
+  );
+}
+
+async function createCanonicalValue(
+  item: CapturedNewItem,
+  field: ReadonlyPropertyField,
+  type: CanonicalFieldType,
+): Promise<unknown> {
   if (field.pathFromTarget.length === 0) {
-    return normalizeFloatingPointValue(item.values[field.id], type);
+    let value = item.values[field.id];
+    if (isNavigationValue(value, type)) {
+      value = { key: value.key, label: await formatConcatenatedValue({ value: value.label, valueFormatter }) };
+    }
+    return normalizeValueForComparison(value, type);
   }
   const relatedGroup = item.related.find(
     (group) => stableStringify(group.path) === stableStringify(field.pathFromTarget),
@@ -150,36 +171,41 @@ function createCanonicalValue(item: CapturedNewItem, field: ReadonlyPropertyFiel
   return (relatedGroup?.entries ?? [])
     .map((entry) => ({
       primaryKeys: [{ className: normalizeFullClassName(entry.key.className), id: entry.key.id }],
-      value: normalizeFloatingPointValue(entry.values[field.id], type),
+      value: normalizeValueForComparison(entry.values[field.id], type),
     }))
     .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
 }
 
-function createCanonicalItem(item: CapturedNewItem): CanonicalItem {
+async function createCanonicalItem(item: CapturedNewItem): Promise<CanonicalItem> {
   const { descriptor, fieldMappings } = createCanonicalDescriptor(item.descriptor);
   return {
     descriptor,
     primaryKeys: [{ className: normalizeFullClassName(item.primaryKey.className), id: item.primaryKey.id }],
     values: Object.fromEntries(
-      fieldMappings.map(({ canonicalKey, sourceFields, type }) => {
-        const applicableFields = sourceFields.filter((field) =>
-          field.primaryClassNames.includes(item.primaryKey.className),
-        );
-        if (applicableFields.length > 1) {
-          throw new Error(
-            `Expected at most one source field for canonical field '${canonicalKey}' and primary class '${item.primaryKey.className}', found ${applicableFields.length}.`,
+      await Promise.all(
+        fieldMappings.map(async ({ canonicalKey, sourceFields, type }) => {
+          const applicableFields = sourceFields.filter((field) =>
+            field.primaryClassNames.includes(item.primaryKey.className),
           );
-        }
-        return [canonicalKey, applicableFields[0] ? createCanonicalValue(item, applicableFields[0], type) : undefined];
-      }),
+          if (applicableFields.length > 1) {
+            throw new Error(
+              `Expected at most one source field for canonical field '${canonicalKey}' and primary class '${item.primaryKey.className}', found ${applicableFields.length}.`,
+            );
+          }
+          return [
+            canonicalKey,
+            applicableFields[0] ? await createCanonicalValue(item, applicableFields[0], type) : undefined,
+          ];
+        }),
+      ),
     ),
   };
 }
 
-export function createCanonicalCapture(capture: NewCapture): CanonicalCapture {
+export async function createCanonicalCapture(capture: NewCapture): Promise<CanonicalCapture> {
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor);
     return { descriptor };
   }
-  return { items: capture.items.map(createCanonicalItem) };
+  return { items: await Promise.all(capture.items.map(createCanonicalItem)) };
 }
