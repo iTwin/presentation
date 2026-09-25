@@ -247,7 +247,7 @@ importers:
     dependencies:
       '@changesets/cli':
         specifier: ^2.31.1
-        version: 2.31.1(@types/node@24.13.3)
+        version: 2.31.1(@types/node@24.13.4)
       '@stylistic/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.10.0(eslint@9.39.5(supports-color@8.1.1))
@@ -293,6 +293,52 @@ importers:
       yargs:
         specifier: ^17.7.3
         version: 17.7.3
+
+  apps/content-equivalence-tests:
+    dependencies:
+      '@itwin/core-backend':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+      '@itwin/core-bentley':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1
+      '@itwin/presentation-backend':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-backend@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@itwin/presentation-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))))
+      '@itwin/presentation-common':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))
+      '@itwin/presentation-content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@itwin/presentation-core-interop':
+        specifier: workspace:*
+        version: link:../../packages/core-interop
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+    devDependencies:
+      '@itwin/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 6.1.0(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
+      '@types/node':
+        specifier: catalog:build-tools
+        version: 24.13.4
+      '@typescript/native':
+        specifier: catalog:build-tools
+        version: typescript@7.0.2
+      eslint:
+        specifier: catalog:build-tools
+        version: 9.39.5(supports-color@8.1.1)
+      rimraf:
+        specifier: catalog:build-tools
+        version: 6.1.3
+      typescript:
+        specifier: catalog:build-tools
+        version: '@typescript/typescript6@6.0.2'
+      vitest:
+        specifier: catalog:test-tools
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
 
   apps/full-stack-tests:
     devDependencies:
@@ -500,12 +546,12 @@ importers:
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../packages/hierarchies
-      '@itwin/presentation-tree-definitions':
-        specifier: workspace:*
-        version: link:../../packages/tree-definitions
       '@itwin/presentation-shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@itwin/presentation-tree-definitions':
+        specifier: workspace:*
+        version: link:../../packages/tree-definitions
       '@itwin/unified-selection':
         specifier: workspace:*
         version: link:../../packages/unified-selection
@@ -725,12 +771,12 @@ importers:
       '@itwin/presentation-hierarchies-react':
         specifier: workspace:*
         version: link:../../../packages/hierarchies-react
-      '@itwin/presentation-tree-definitions':
-        specifier: workspace:*
-        version: link:../../../packages/tree-definitions
       '@itwin/presentation-shared':
         specifier: workspace:*
         version: link:../../../packages/shared
+      '@itwin/presentation-tree-definitions':
+        specifier: workspace:*
+        version: link:../../../packages/tree-definitions
       '@itwin/unified-selection':
         specifier: workspace:*
         version: link:../../../packages/unified-selection
@@ -1002,7 +1048,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
 
   packages/content-react:
     dependencies:
@@ -1048,7 +1094,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
 
   packages/core-interop:
     dependencies:
@@ -1103,7 +1149,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
 
   packages/hierarchies:
     dependencies:
@@ -1558,7 +1604,7 @@ importers:
         version: '@typescript/typescript6@6.0.2'
       vitest:
         specifier: catalog:test-tools
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
 
 packages:
 
@@ -3480,9 +3526,6 @@ packages:
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
-
-  '@types/node@24.13.3':
-    resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
   '@types/node@24.13.4':
     resolution: {integrity: sha512-YJ7EqCstVTzIr0fMr7qul/977en+pQHrfmuKIo6Zr9i75Be21dr3MovcfvGtyvi2HAUrRerWps5sMO9I7WaxDw==}
@@ -7575,7 +7618,7 @@ snapshots:
     dependencies:
       '@changesets/types': 6.1.0
 
-  '@changesets/cli@2.31.1(@types/node@24.13.3)':
+  '@changesets/cli@2.31.1(@types/node@24.13.4)':
     dependencies:
       '@changesets/apply-release-plan': 7.1.1
       '@changesets/assemble-release-plan': 6.0.10
@@ -7591,7 +7634,7 @@ snapshots:
       '@changesets/should-skip-package': 0.1.2
       '@changesets/types': 6.1.0
       '@changesets/write': 0.4.0
-      '@inquirer/external-editor': 1.0.3(@types/node@24.13.3)
+      '@inquirer/external-editor': 1.0.3(@types/node@24.13.4)
       '@manypkg/get-packages': 1.1.3
       ansi-colors: 4.1.3
       enquirer: 2.4.1
@@ -8124,12 +8167,12 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@inquirer/external-editor@1.0.3(@types/node@24.13.3)':
+  '@inquirer/external-editor@1.0.3(@types/node@24.13.4)':
     dependencies:
       chardet: 2.2.0
       iconv-lite: 0.7.3
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
 
   '@isaacs/cliui@9.0.0': {}
 
@@ -9044,7 +9087,7 @@ snapshots:
       detect-libc: 2.1.2
       is-glob: 4.0.3
       node-addon-api: 7.1.1
-      picomatch: 4.0.5
+      picomatch: 4.0.7
     optionalDependencies:
       '@parcel/watcher-android-arm64': 2.6.0
       '@parcel/watcher-darwin-arm64': 2.6.0
@@ -9409,10 +9452,6 @@ snapshots:
   '@types/natural-compare-lite@1.4.2': {}
 
   '@types/node@12.20.55': {}
-
-  '@types/node@24.13.3':
-    dependencies:
-      undici-types: 7.18.2
 
   '@types/node@24.13.4':
     dependencies:
@@ -10601,7 +10640,7 @@ snapshots:
     dependencies:
       '@electron-internal/extract-zip': 1.0.5
       '@electron/get': 5.1.0(supports-color@8.1.1)
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
     transitivePeerDependencies:
       - supports-color
 
@@ -11348,7 +11387,7 @@ snapshots:
 
   happy-dom@20.14.5:
     dependencies:
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       buffer-image-size: 0.6.4
@@ -13256,37 +13295,6 @@ snapshots:
       '@types/react': 19.3.0
       '@types/react-dom': 19.3.0(@types/react@19.3.0)
 
-  vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1)):
-    dependencies:
-      '@vitest/expect': 4.1.11
-      '@vitest/mocker': 4.1.11(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))
-      '@vitest/pretty-format': 4.1.11
-      '@vitest/runner': 4.1.11
-      '@vitest/snapshot': 4.1.11
-      '@vitest/spy': 4.1.11
-      '@vitest/utils': 4.1.11
-      es-module-lexer: 2.3.2
-      expect-type: 1.4.0
-      magic-string: 0.30.21
-      obug: 2.1.4
-      pathe: 2.0.3
-      picomatch: 4.0.5
-      std-env: 4.2.0
-      tinybench: 2.9.0
-      tinyexec: 1.3.0
-      tinyglobby: 0.2.17
-      tinyrainbow: 3.1.1
-      vite: 8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-      '@types/node': 24.13.3
-      '@vitest/browser-playwright': 4.1.11(playwright@1.62.1)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1))(vitest@4.1.11)
-      '@vitest/coverage-v8': 4.1.11(@vitest/browser@4.1.11)(vitest@4.1.11)
-      happy-dom: 20.14.5
-    transitivePeerDependencies:
-      - msw
-
   vitest@4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.4)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(happy-dom@20.14.5)(vite@8.3.0(@types/node@24.13.4)(sass@1.104.1)(yaml@2.9.1)):
     dependencies:
       '@vitest/expect': 4.1.11
@@ -13301,7 +13309,7 @@ snapshots:
       magic-string: 0.30.21
       obug: 2.1.4
       pathe: 2.0.3
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       std-env: 4.2.0
       tinybench: 2.9.0
       tinyexec: 1.3.0
