@@ -117,17 +117,17 @@ function Tree({
     imodelAccess,
     imodelChanged,
     getSearchPaths,
-    getHierarchyDefinition: () => modelsTree.definition,
-    getTreeNodeErrors: (node) => {
+    getHierarchyDefinition: useCallback(() => modelsTree.definition, [modelsTree]),
+    getTreeNodeErrors: useCallback((node) => {
       return [
         { type: "Unknown", id: `${node.label}-error-1`, message: `test error node`, isNodeExpandable: true },
         { type: "Unknown", id: `${node.label}-error-2`, message: `test error node 2`, isNodeExpandable: true },
       ];
-    },
-    onPerformanceMeasured: (action, duration) => {
+    }, []),
+    onPerformanceMeasured: useCallback((action, duration) => {
       // eslint-disable-next-line no-console
       console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
-    },
+    }, []),
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
