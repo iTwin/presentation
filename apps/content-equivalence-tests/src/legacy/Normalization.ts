@@ -80,9 +80,9 @@ function createCanonicalFieldType(type: TypeDescription): CanonicalFieldType {
 }
 
 /**
- * `pathToPrimaryClass` runs from a nested field's own class back to the content's primary class, the
- * opposite direction of the new-generation `pathFromTarget`. Reversing it (and flipping the forward
- * flag, since going against a step also flips whether it matches the relationship's declared direction)
+ * The accumulated `pathToPrimaryClass` steps run from a nested field's own class back to the content's
+ * primary class, the opposite direction of the new-generation `pathFromTarget`. Reversing them (and
+ * flipping the forward flag, since going against a step also flips whether it matches the relationship's declared direction)
  * yields the same target-oriented identity `pathFromTarget` uses.
  */
 function createCanonicalPath(
@@ -152,7 +152,8 @@ function createCanonicalDescriptor(descriptor: LegacyCapture["descriptor"]): {
   ) => {
     const sourcePath = [...parentPath, field.name];
     if ("nestedFields" in field) {
-      field.nestedFields.forEach((child) => visit(child, sourcePath, field.pathToPrimaryClass));
+      const pathToPrimaryClass = [...field.pathToPrimaryClass, ...(relationshipPath ?? [])];
+      field.nestedFields.forEach((child) => visit(child, sourcePath, pathToPrimaryClass));
       return;
     }
     if (!("properties" in field)) {
