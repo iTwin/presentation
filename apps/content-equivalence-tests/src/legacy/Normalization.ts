@@ -5,7 +5,12 @@
 
 import { PropertyValueFormat, Value } from "@itwin/presentation-common";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { createCanonicalEnumeration, normalizeValueForComparison } from "../NormalizationCommon.js";
+import {
+  createCanonicalEnumeration,
+  createCanonicalRelationshipPath,
+  getRelationshipConstraints,
+  normalizeValueForComparison,
+} from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
 import type {
@@ -18,7 +23,7 @@ import type {
   TypeDescription,
   ValuesDictionary,
 } from "@itwin/presentation-common";
-import type { PrimitiveValueType } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, PrimitiveValueType } from "@itwin/presentation-shared";
 import type {
   CanonicalCapture,
   CanonicalDescriptor,
@@ -26,6 +31,7 @@ import type {
   CanonicalFieldType,
   CanonicalItem,
   CanonicalRelationshipStep,
+  RelationshipConstraints,
 } from "../NormalizationCommon.js";
 import type { CapturedLegacyItem, LegacyCapture } from "./Adapter.js";
 
@@ -155,20 +161,22 @@ function createCanonicalFieldType(
 function createCanonicalPath(
   path: RelationshipPathJSON<string> | undefined,
   classes: DescriptorJSON["classesMap"],
+  constraints: RelationshipConstraints,
 ): CanonicalRelationshipStep[] {
   if (!path) {
     return [];
   }
-  const steps: CanonicalRelationshipStep[] = [...path]
-    .reverse()
-    .map((step) => ({
+  return createCanonicalRelationshipPath({
+    steps: [...path].reverse().map((step, index, steps) => ({
       relationshipName: normalizeFullClassName(classes[step.relationshipInfo].name),
       relationshipReverse: step.isForwardRelationship,
-    }));
-  // `path[0].sourceClassInfo` is the nested field's own concrete class - the leaf of `pathToPrimaryClass`,
-  // which becomes the last step once reversed into the target-oriented order `pathFromTarget` uses.
-  steps[steps.length - 1].targetClassName = normalizeFullClassName(classes[path[0].sourceClassInfo].name);
-  return steps;
+      // The last step's target is the nested field's own concrete class.
+      ...(index === steps.length - 1
+        ? { targetClassName: normalizeFullClassName(classes[step.sourceClassInfo].name) }
+        : undefined),
+    })),
+    constraints,
+  });
 }
 
 function createCanonicalField(props: {
@@ -177,8 +185,9 @@ function createCanonicalField(props: {
   path: RelationshipPathJSON<string> | undefined;
   categories: Map<string, CategoryDescriptionJSON>;
   classes: DescriptorJSON["classesMap"];
+  constraints: RelationshipConstraints;
 }): CanonicalField {
-  const { field, sourcePath, categories, classes } = props;
+  const { field, sourcePath, categories, classes, constraints } = props;
   const properties: LegacyPropertyInfo[] = field.properties.map(({ property }) => property);
   const canonicalField = {
     category: field.category ? getCategoryPath(categories.get(field.category)!, categories) : [],
@@ -189,7 +198,7 @@ function createCanonicalField(props: {
       ...new Set(properties.map((property) => normalizeFullClassName(classes[property.classInfo].name))),
     ].sort(),
     kind: "property",
-    path: createCanonicalPath(props.path, classes),
+    path: createCanonicalPath(props.path, classes, constraints),
     sourcePaths: [sourcePath],
   } satisfies Omit<CanonicalField, "key">;
   return {
@@ -205,10 +214,18 @@ function createCanonicalField(props: {
   };
 }
 
-function createCanonicalDescriptor(descriptor: DescriptorJSON): {
-  descriptor: CanonicalDescriptor;
-  fieldMappings: LegacyFieldMapping[];
-} {
+interface NormalizationContext {
+  constraints: RelationshipConstraints;
+}
+
+function createCanonicalDescriptor({
+  descriptor,
+  context,
+}: {
+  descriptor: DescriptorJSON;
+  context: NormalizationContext;
+}): { descriptor: CanonicalDescriptor; fieldMappings: LegacyFieldMapping[] } {
+  const { constraints } = context;
   const categories = new Map(descriptor.categories.map((category) => [category.name, category]));
   const classes = descriptor.classesMap;
   const fields: CanonicalDescriptor["fields"] = [];
@@ -230,7 +247,14 @@ function createCanonicalDescriptor(descriptor: DescriptorJSON): {
       unsupportedFields.push({ sourcePath, reason: "Legacy field is not property-backed." });
       return;
     }
-    const canonicalField = createCanonicalField({ field, sourcePath, path: relationshipPath, categories, classes });
+    const canonicalField = createCanonicalField({
+      field,
+      sourcePath,
+      path: relationshipPath,
+      categories,
+      classes,
+      constraints,
+    });
     fields.push(canonicalField);
     fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
   };
@@ -274,8 +298,14 @@ function normalizeLegacyValue(value: Value): unknown {
   return value;
 }
 
-function createCanonicalItem({ descriptor: sourceDescriptor, item }: CapturedLegacyItem): CanonicalItem {
-  const { descriptor, fieldMappings } = createCanonicalDescriptor(sourceDescriptor);
+function createCanonicalItem({
+  item: { descriptor: sourceDescriptor, item },
+  context,
+}: {
+  item: CapturedLegacyItem;
+  context: NormalizationContext;
+}): CanonicalItem {
+  const { descriptor, fieldMappings } = createCanonicalDescriptor({ descriptor: sourceDescriptor, context });
   return {
     descriptor,
     primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
@@ -288,10 +318,33 @@ function createCanonicalItem({ descriptor: sourceDescriptor, item }: CapturedLeg
   };
 }
 
-export function createCanonicalCapture(capture: LegacyCapture): CanonicalCapture {
+function collectRelationshipNames(descriptors: DescriptorJSON[]): Set<EC.FullClassNameDotNotation> {
+  const names = new Set<EC.FullClassNameDotNotation>();
+  for (const descriptor of descriptors) {
+    const visit = (field: FieldJSON<string>) => {
+      if ("nestedFields" in field) {
+        field.pathToPrimaryClass.forEach((step) =>
+          names.add(normalizeFullClassName(descriptor.classesMap[step.relationshipInfo].name)),
+        );
+        field.nestedFields.forEach(visit);
+      }
+    };
+    descriptor.fields.forEach(visit);
+  }
+  return names;
+}
+
+export async function createCanonicalCapture(
+  capture: LegacyCapture,
+  schemaProvider: ECSchemaProvider,
+): Promise<CanonicalCapture> {
+  const descriptors = "descriptor" in capture ? [capture.descriptor] : capture.items.map((item) => item.descriptor);
+  const context = {
+    constraints: await getRelationshipConstraints(schemaProvider, collectRelationshipNames(descriptors)),
+  };
   if ("descriptor" in capture) {
-    const { descriptor } = createCanonicalDescriptor(capture.descriptor);
+    const { descriptor } = createCanonicalDescriptor({ descriptor: capture.descriptor, context });
     return { descriptor };
   }
-  return { items: capture.items.map(createCanonicalItem) };
+  return { items: capture.items.map((item) => createCanonicalItem({ item, context })) };
 }

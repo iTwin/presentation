@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { IModelHost, SnapshotDb } from "@itwin/core-backend";
 import { Presentation } from "@itwin/presentation-backend";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { getImplementationFingerprints, getSamplingImplementationFingerprint } from "./Fingerprints.js";
 import { captureLegacy } from "./legacy/Adapter.js";
 import { createCanonicalCapture as normalizeLegacyCapture } from "./legacy/Normalization.js";
@@ -257,8 +258,15 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           scenario,
           createCapture: captureNew,
         });
-        const normalizedLegacy = normalizeLegacyCapture(legacy.capture);
-        const normalizedNew = await normalizeNewCapture(current.capture);
+        const imodelDb = openIModel(imodel.path);
+        let normalizedLegacy, normalizedNew;
+        try {
+          const imodelAccess = { ...createECSchemaProvider(imodelDb), ...createECSqlQueryExecutor(imodelDb) };
+          normalizedLegacy = await normalizeLegacyCapture(legacy.capture, imodelAccess);
+          normalizedNew = await normalizeNewCapture(current.capture, imodelAccess);
+        } finally {
+          imodelDb.close();
+        }
 
         let differences;
         if (scenario.id === "all-elements-descriptor") {

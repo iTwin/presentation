@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { getClass } from "@itwin/presentation-shared";
 import { stableStringify } from "./Persistence.js";
 
-import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
 
 export type JsonObject = Record<string, unknown>;
 
@@ -38,27 +39,82 @@ export function createCanonicalEnumeration(
   };
 }
 
+export interface RelationshipConstraintClasses {
+  sourceClassName: EC.FullClassNameDotNotation;
+  targetClassName: EC.FullClassNameDotNotation;
+}
+
+/** Schema constraint classes of a relationship, keyed by normalized relationship class name. */
+export type RelationshipConstraints = Record<EC.FullClassNameDotNotation, RelationshipConstraintClasses>;
+
+function getConstraintClassName(constraint: EC.RelationshipConstraint): EC.FullClassNameDotNotation {
+  const constraintClass = constraint.abstractConstraint ?? constraint.constraintClasses[0];
+  return constraintClass.fullName;
+}
+
+export async function getRelationshipConstraints(
+  schemaProvider: ECSchemaProvider,
+  relationshipNames: Iterable<EC.FullClassNameDotNotation>,
+): Promise<RelationshipConstraints> {
+  const names = [...relationshipNames].sort();
+  const entries = await Promise.all(
+    names.map(async (name) => {
+      const relationship = await getClass(schemaProvider, name);
+      if (!relationship.isRelationshipClass()) {
+        throw new Error(`Expected '${name}' to be a relationship class.`);
+      }
+      return [
+        name,
+        {
+          sourceClassName: getConstraintClassName(relationship.source),
+          targetClassName: getConstraintClassName(relationship.target),
+        },
+      ] as const;
+    }),
+  );
+  return Object.fromEntries(entries);
+}
+
 /**
- * A single relationship hop from the content target class to a related class. Deliberately omits
- * `sourceClassName` and `instanceFilter` from `RelationshipPathStep`, and makes `targetClassName`
- * optional, populated only for the path's last step:
- * - `sourceClassName` - legacy reports the concrete runtime class of the source instance where
- *   new-generation reports the query's declared target class, so the two aren't comparable.
- * - `targetClassName` (non-last steps) - legacy reports the relationship's schema-declared (often
- *   abstract/base) constraint class uniformly for every intermediate step, while new-generation
- *   enumerates the concrete classes that actually have instances in scope for the step, intentionally
- *   splitting what legacy treats as a single field into several concrete-class-specific fields.
- *   Omitting it from the canonical identity lets those concrete-class variants collapse back into
- *   one comparable field, matching legacy's shape.
- * - `targetClassName` (last step) - both implementations report the concrete class of the actual
- *   related instance the property is read from (it's determined by the queried data itself, not by
- *   path-node specialization), so it's kept as part of the field's identity.
- * - `instanceFilter` - legacy captures no equivalent.
+ * A single relationship hop from the content target class to a related class, expressed through the
+ * relationship selected by the path's declaration (rather than the concrete relationship subclass found
+ * in the data) and that relationship's schema constraint classes at each end. Only the last step's
+ * target stays concrete: it's the class the field's properties are read from. `instanceFilter` is
+ * omitted, since legacy captures no equivalent.
  */
-export type CanonicalRelationshipStep = Omit<
-  RelationshipPath[number],
-  "sourceClassName" | "targetClassName" | "instanceFilter"
-> & { targetClassName?: RelationshipPath[number]["targetClassName"] };
+export interface CanonicalRelationshipStep {
+  sourceClassName: EC.FullClassNameDotNotation;
+  relationshipName: EC.FullClassNameDotNotation;
+  relationshipReverse: boolean;
+  targetClassName: EC.FullClassNameDotNotation;
+}
+
+/** Builds canonical steps, falling back to the relationship's constraint classes for step classes that aren't set. */
+export function createCanonicalRelationshipPath(props: {
+  steps: Array<
+    Pick<CanonicalRelationshipStep, "relationshipName" | "relationshipReverse"> &
+      Partial<Pick<CanonicalRelationshipStep, "sourceClassName" | "targetClassName">>
+  >;
+  constraints: RelationshipConstraints;
+}): CanonicalRelationshipStep[] {
+  const { steps, constraints } = props;
+  return steps.map((step) => {
+    const { relationshipName, relationshipReverse } = step;
+    const relationship = constraints[relationshipName] as RelationshipConstraintClasses | undefined;
+    if (!relationship) {
+      throw new Error(`Missing captured constraints for relationship '${relationshipName}'.`);
+    }
+    const [sourceClassName, targetClassName] = relationshipReverse
+      ? [relationship.targetClassName, relationship.sourceClassName]
+      : [relationship.sourceClassName, relationship.targetClassName];
+    return {
+      sourceClassName: step.sourceClassName ?? sourceClassName,
+      relationshipName,
+      relationshipReverse,
+      targetClassName: step.targetClassName ?? targetClassName,
+    };
+  });
+}
 
 export interface CanonicalField {
   key: string;
