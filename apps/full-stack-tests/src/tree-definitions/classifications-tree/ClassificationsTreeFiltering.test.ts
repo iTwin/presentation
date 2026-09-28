@@ -16,7 +16,7 @@ import { createClassificationsTree } from "@itwin/presentation-tree-definitions"
 import { CLASS_NAMES, SearchLimitExceededError } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, importHiddenElementClasses } from "../IModelUtils.js";
 import {
   importClassificationSchema,
   insertClassification,
@@ -45,7 +45,198 @@ describe("Classifications tree", () => {
   });
 
   describe("Hierarchy search", () => {
-    describe("Label search limits", () => {
+    describe("Hidden element classes and schemas", () => {
+      const searchTags = {
+        visibleChild: "[visible-child]",
+        hidden: "[hidden]",
+        underHidden: "[under-hidden]",
+        elementLimit: "[element-limit]",
+        hiddenClassification: "[hidden-classification]",
+      };
+
+      async function setupIModel() {
+        return buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "Table" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "Classification" });
+            const hiddenOnlyClassification = insertClassification({
+              txn,
+              modelId: table.id,
+              codeValue: `classification with only hidden elements ${searchTags.hiddenClassification}`,
+            });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+            const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            const elementProps = { txn, modelId: model.id, categoryId: category.id };
+            const visibleElement = insertPhysicalElement({
+              ...elementProps,
+              userLabel: `visible element ${searchTags.elementLimit}`,
+            });
+            const visibleChild = insertPhysicalElement({
+              ...elementProps,
+              parentId: visibleElement.id,
+              userLabel: `visible child element ${searchTags.visibleChild}`,
+            });
+            insertElementHasClassificationsRelationship({
+              txn,
+              elementId: visibleElement.id,
+              classificationId: classification.id,
+            });
+            const hiddenElements = Object.entries(hiddenClassNames).map(([variant, classFullName]) => {
+              const root = insertPhysicalElement({
+                ...elementProps,
+                classFullName,
+                userLabel: `hidden root element (${variant}) ${searchTags.hidden} ${searchTags.elementLimit}`,
+              });
+              const child = insertPhysicalElement({
+                ...elementProps,
+                parentId: visibleElement.id,
+                classFullName,
+                userLabel: `hidden child element (${variant}) ${searchTags.hidden} ${searchTags.elementLimit}`,
+              });
+              const rootBlocked = insertPhysicalElement({
+                ...elementProps,
+                parentId: root.id,
+                userLabel: `visible element under hidden root (${variant}) ${searchTags.underHidden}`,
+              });
+              const nestedBlocked = insertPhysicalElement({
+                ...elementProps,
+                parentId: child.id,
+                userLabel: `visible element under hidden child (${variant}) ${searchTags.underHidden}`,
+              });
+              for (const classificationId of [classification.id, hiddenOnlyClassification.id]) {
+                insertElementHasClassificationsRelationship({ txn, elementId: root.id, classificationId });
+              }
+              return { root, child, rootBlocked, nestedBlocked };
+            });
+            return { table, classification, hiddenOnlyClassification, visibleElement, visibleChild, hiddenElements };
+          });
+        });
+      }
+
+      let setup: Awaited<ReturnType<typeof setupIModel>>;
+      beforeAll(async () => {
+        setup = await setupIModel();
+      });
+      afterAll(async () => {
+        await setup[Symbol.asyncDispose]();
+      });
+
+      async function search(props: Parameters<ReturnType<typeof createClassificationsTree>["createSearchTree"]>[0]) {
+        return createClassificationsTree({
+          imodelAccess: createIModelAccess(setup.imodelConnection),
+          hierarchyConfig: defaultHierarchyConfiguration,
+        }).createSearchTree({ ...props, revealTargets: true });
+      }
+
+      it.each(["targetItems", "label"] as const)("keeps visible descendants using %s", async (input) => {
+        expect(
+          await search(
+            input === "targetItems" ? { targetItems: [setup.visibleChild] } : { label: searchTags.visibleChild },
+          ),
+        ).toEqual([
+          {
+            identifier: setup.table,
+            options: { autoExpand: true },
+            children: [
+              {
+                identifier: setup.classification,
+                options: { autoExpand: true },
+                children: [
+                  {
+                    identifier: { ...setup.visibleElement, className: CLASS_NAMES.GeometricElement3d },
+                    options: { autoExpand: true },
+                    children: [
+                      {
+                        identifier: { ...setup.visibleChild, className: CLASS_NAMES.GeometricElement3d },
+                        options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
+
+      it.each(["targetItems", "label"] as const)("omits hidden element targets using %s", async (input) => {
+        expect(
+          await search(
+            input === "targetItems"
+              ? { targetItems: setup.hiddenElements.flatMap(({ root, child }) => [root, child]) }
+              : { label: searchTags.hidden },
+          ),
+        ).toEqual([]);
+      });
+
+      it.each(["targetItems", "label"] as const)(
+        "omits visible targets behind hidden ancestors using %s",
+        async (input) => {
+          expect(
+            await search(
+              input === "targetItems"
+                ? {
+                    targetItems: setup.hiddenElements.flatMap(({ rootBlocked, nestedBlocked }) => [
+                      rootBlocked,
+                      nestedBlocked,
+                    ]),
+                  }
+                : { label: searchTags.underHidden },
+            ),
+          ).toEqual([]);
+        },
+      );
+
+      it.each(["targetItems", "label"] as const)(
+        "keeps classifications with only hidden related elements using %s",
+        async (input) => {
+          expect(
+            await search(
+              input === "targetItems"
+                ? { targetItems: [setup.hiddenOnlyClassification] }
+                : { label: searchTags.hiddenClassification },
+            ),
+          ).toEqual([
+            {
+              identifier: setup.table,
+              options: { autoExpand: true },
+              children: [
+                {
+                  identifier: setup.hiddenOnlyClassification,
+                  options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                },
+              ],
+            },
+          ]);
+        },
+      );
+
+      it("does not count hidden element label matches toward the search limit", async () => {
+        expect(await search({ label: searchTags.elementLimit, limit: 1 })).toEqual([
+          {
+            identifier: setup.table,
+            options: { autoExpand: true },
+            children: [
+              {
+                identifier: setup.classification,
+                options: { autoExpand: true },
+                children: [
+                  {
+                    identifier: { ...setup.visibleElement, className: CLASS_NAMES.GeometricElement3d },
+                    options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
+    });
+
+    describe("label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { table: InstanceKey; classification: InstanceKey; elements: InstanceKey[] };
 

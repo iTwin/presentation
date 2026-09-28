@@ -15,7 +15,7 @@ import { createClassificationsTree } from "@itwin/presentation-tree-definitions"
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, importHiddenElementClasses } from "../IModelUtils.js";
 import {
   importClassificationSchema,
   insertClassification,
@@ -209,6 +209,139 @@ describe("Classifications tree", () => {
             ],
           }),
         ],
+      });
+    });
+
+    describe("Hidden element classes and schemas", () => {
+      it("treats classifications with only hidden elements as childless", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "Classification" });
+
+            const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "PhysicalModel" });
+            const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+              const hiddenClassifiedElement = insertPhysicalElement({
+                txn,
+                classFullName,
+                modelId: physicalModel.id,
+                categoryId: category.id,
+                userLabel: `hidden classified element (${variant})`,
+              });
+              insertPhysicalElement({
+                txn,
+                modelId: physicalModel.id,
+                categoryId: category.id,
+                parentId: hiddenClassifiedElement.id,
+                userLabel: `visible descendant of hidden element (${variant})`,
+              });
+              insertElementHasClassificationsRelationship({
+                txn,
+                elementId: hiddenClassifiedElement.id,
+                classificationId: classification.id,
+              });
+            }
+
+            return { table, classification };
+          });
+        });
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("hides hidden classified elements while preserving visible elements", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "Classification" });
+            const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "PhysicalModel" });
+            const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            const visibleClassifiedElement = insertPhysicalElement({
+              txn,
+              modelId: physicalModel.id,
+              categoryId: category.id,
+              userLabel: "visible classified element",
+            });
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+              insertPhysicalElement({
+                txn,
+                classFullName,
+                modelId: physicalModel.id,
+                categoryId: category.id,
+                parentId: visibleClassifiedElement.id,
+                userLabel: `hidden child element (${variant})`,
+              });
+            }
+            const visibleChildElement = insertPhysicalElement({
+              txn,
+              modelId: physicalModel.id,
+              categoryId: category.id,
+              parentId: visibleClassifiedElement.id,
+              userLabel: "visible child element",
+            });
+            insertElementHasClassificationsRelationship({
+              txn,
+              elementId: visibleClassifiedElement.id,
+              classificationId: classification.id,
+            });
+            return { table, classification, visibleClassifiedElement, visibleChildElement };
+          });
+        });
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.visibleClassifiedElement],
+                      supportsFiltering: true,
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          instanceKeys: [keys.visibleChildElement],
+                          supportsFiltering: true,
+                          children: false,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
       });
     });
 
