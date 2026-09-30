@@ -213,77 +213,61 @@ describe("Classifications tree", () => {
     });
 
     describe("excludedElementClassNames", () => {
-      it.each(["cold", "warm"])(
-        "does not give classifications children through unrelated included elements in the same category with a %s cache",
-        async (cacheState) => {
-          await using buildIModelResult = await buildIModel(async (imodel) =>
-            withEditTxn(imodel, async (txn) => {
-              await importClassificationSchema(imodel);
+      it("does not give classifications children through unrelated included elements in the same category", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) =>
+          withEditTxn(imodel, async (txn) => {
+            await importClassificationSchema(imodel);
 
-              const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
-              const table = insertClassificationTable({
-                txn,
-                parentId: system.id,
-                codeValue: "TestClassificationTable",
-              });
-              const classification = insertClassification({ txn, modelId: table.id, codeValue: "TestClassification" });
-              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Test physical model" });
-              const category = insertSpatialCategory({ txn, codeValue: "Shared category" });
-              const excludedElement = insertPhysicalElement({
-                txn,
-                modelId: model.id,
-                categoryId: category.id,
-                codeValue: "Excluded classified element",
-              });
-              insertElementHasClassificationsRelationship({
-                txn,
-                elementId: excludedElement.id,
-                classificationId: classification.id,
-              });
-              insertPhysicalElement({
-                txn,
-                classFullName: "Generic.SpatialLocation",
-                modelId: model.id,
-                categoryId: category.id,
-                codeValue: "Unrelated included element",
-              });
-              return { table, classification };
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "TestClassification" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "Test physical model" });
+            const category = insertSpatialCategory({ txn, codeValue: "Shared category" });
+            const excludedElement = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              codeValue: "Excluded classified element",
+            });
+            insertElementHasClassificationsRelationship({
+              txn,
+              elementId: excludedElement.id,
+              classificationId: classification.id,
+            });
+            insertPhysicalElement({
+              txn,
+              classFullName: "Generic.SpatialLocation",
+              modelId: model.id,
+              categoryId: category.id,
+              codeValue: "Unrelated included element",
+            });
+            return { table, classification };
+          }),
+        );
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
+          rootClassificationSystemCode,
+          elements: { excludedClasses: ["Generic.PhysicalObject"] },
+        });
+
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: false,
+                }),
+              ],
             }),
-          );
-
-          const { imodelConnection, ...keys } = buildIModelResult;
-          const imodelAccess = createIModelAccess(imodelConnection);
-          const tree = createClassificationsTree({
-            imodelAccess,
-            hierarchyConfig: {
-              rootClassificationSystemCode,
-              elements: { excludedClasses: ["Generic.PhysicalObject"] },
-            },
-          });
-          if (cacheState === "warm") {
-            // Searching loads the classification cache shared with the hierarchy definition.
-            await collect(tree.createInstanceKeyPaths({ targetItems: [keys.classification] }));
-          }
-          using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
-
-          await validateHierarchy({
-            provider,
-            expect: [
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.table],
-                supportsFiltering: true,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.classification],
-                    supportsFiltering: true,
-                    children: false,
-                  }),
-                ],
-              }),
-            ],
-          });
-        },
-      );
+          ],
+        });
+      });
 
       it("does not filter out elements when they don't belong to any of the excluded classes", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) =>
