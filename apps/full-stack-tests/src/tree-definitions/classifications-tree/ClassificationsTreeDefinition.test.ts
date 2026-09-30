@@ -107,7 +107,15 @@ describe("Classifications tree", () => {
       },
     );
 
-    it("loads classification table with private child classification and non-private nested classification", async () => {
+    it.each([
+      { name: "private root classification", includeNested: false, includeVisibleRoot: false },
+      { name: "private root and non-private nested classification", includeNested: true, includeVisibleRoot: false },
+      {
+        name: "private root, non-private nested and visible root classification",
+        includeNested: true,
+        includeVisibleRoot: true,
+      },
+    ])("loads classification table with $name", async ({ includeNested, includeVisibleRoot }) => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, async (txn) => {
           await importClassificationSchema(imodel);
@@ -120,18 +128,23 @@ describe("Classifications tree", () => {
             codeValue: "RootClassification",
             isPrivate: true,
           });
-          insertClassification({
-            txn,
-            modelId: table.id,
-            parentId: classification.id,
-            codeValue: "PublicChildClassification",
-          });
-          return { table, classification };
+          if (includeNested) {
+            insertClassification({
+              txn,
+              modelId: table.id,
+              parentId: classification.id,
+              codeValue: "PublicChildClassification",
+            });
+          }
+          const visibleRoot = includeVisibleRoot
+            ? insertClassification({ txn, modelId: table.id, codeValue: "VisibleRootClassification" })
+            : undefined;
+          return { table, visibleRoot };
         }),
       );
 
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
 
       await validateHierarchy({
         provider,
@@ -139,7 +152,15 @@ describe("Classifications tree", () => {
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.table],
             supportsFiltering: true,
-            children: false,
+            children: keys.visibleRoot
+              ? [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.visibleRoot],
+                    supportsFiltering: true,
+                    children: false,
+                  }),
+                ]
+              : false,
           }),
         ],
       });
