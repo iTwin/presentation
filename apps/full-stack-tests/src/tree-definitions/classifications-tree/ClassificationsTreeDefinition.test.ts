@@ -107,6 +107,44 @@ describe("Classifications tree", () => {
       },
     );
 
+    it("loads classification table with private child classification and non-private nested classification", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, async (txn) => {
+          await importClassificationSchema(imodel);
+
+          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+          const classification = insertClassification({
+            txn,
+            modelId: table.id,
+            codeValue: "RootClassification",
+            isPrivate: true,
+          });
+          insertClassification({
+            txn,
+            modelId: table.id,
+            parentId: classification.id,
+            codeValue: "PublicChildClassification",
+          });
+          return { table, classification };
+        }),
+      );
+
+      const { imodelConnection, ...keys } = buildIModelResult;
+      using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.table],
+            supportsFiltering: true,
+            children: false,
+          }),
+        ],
+      });
+    });
+
     it("loads classification elements", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, async (txn) => {
