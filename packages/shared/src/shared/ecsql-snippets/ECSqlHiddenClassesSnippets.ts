@@ -5,6 +5,7 @@
 
 import { createClassSelector } from "./ECSqlValueSelectorSnippets.js";
 
+import type { DeepReadonly } from "../MappedTypes.js";
 import type { HiddenClassesTreeNode } from "../Metadata.js";
 
 /**
@@ -29,7 +30,7 @@ import type { HiddenClassesTreeNode } from "../Metadata.js";
  */
 export function createHiddenClassesWhereClause(props: {
   /** Hidden classes tree of the selected class. */
-  tree: ReadonlyArray<HiddenClassesTreeNode>;
+  tree: DeepReadonly<HiddenClassesTreeNode[]>;
   /** Alias of the selected class in the query. */
   classAlias: string;
 }): string {
@@ -39,12 +40,12 @@ export function createHiddenClassesWhereClause(props: {
   return createClauses(rootNodes, props.classAlias).hideClause ?? "";
 }
 
-function getRestrictingRootNodes(nodes: ReadonlyArray<HiddenClassesTreeNode>): HiddenClassesTreeNode[] {
+function getRestrictingRootNodes(nodes: DeepReadonly<HiddenClassesTreeNode[]>): DeepReadonly<HiddenClassesTreeNode[]> {
   return nodes.flatMap((node) => (node.state === "show" ? getRestrictingRootNodes(node.children) : [node]));
 }
 
 function createClauses(
-  nodes: ReadonlyArray<HiddenClassesTreeNode>,
+  nodes: DeepReadonly<HiddenClassesTreeNode[]>,
   classAlias: string,
 ): { showClause?: string; hideClause?: string } {
   const result: { showClause?: string; hideClause?: string } = {};
@@ -78,6 +79,6 @@ function createClauses(
   return result;
 }
 
-function createClassesList(nodes: ReadonlyArray<HiddenClassesTreeNode>) {
+function createClassesList(nodes: DeepReadonly<HiddenClassesTreeNode[]>) {
   return nodes.map(({ fullName }) => createClassSelector(fullName)).join(", ");
 }

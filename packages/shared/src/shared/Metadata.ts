@@ -7,6 +7,7 @@ import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils.js";
 
 import type { ECSqlBinding } from "./ECSqlCore.js";
+import type { DeepReadonly } from "./MappedTypes.js";
 
 /**
  * An interface for an object that knows how to get an ECSchema from an iModel.
@@ -41,7 +42,7 @@ export interface ECSchemaProvider {
    *
    * @throws Error if the selected class or any of its derived classes' schemas can't be found.
    */
-  getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<HiddenClassesTreeNode[]>;
+  getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<DeepReadonly<HiddenClassesTreeNode[]>>;
 }
 
 /**

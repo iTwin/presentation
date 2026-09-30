@@ -19,7 +19,7 @@ export { createBisInstanceLabelSelectClauseFactory } from "./shared/instance-lab
 export { createIModelInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/IModelInstanceLabelSelectClauseFactory.js";
 export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
 export { NOOP_LOGGER } from "./shared/Logging.js";
-export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js";
+export type { ArrayElement, DeepReadonly, OmitOverUnion, Props } from "./shared/MappedTypes.js";
 export type {
   ArrayValueDescriptor,
   EC,

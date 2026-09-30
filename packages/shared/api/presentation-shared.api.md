@@ -98,7 +98,7 @@ export function createHiddenClassesTree(props: {
 
 // @public
 function createHiddenClassesWhereClause(props: {
-    tree: ReadonlyArray<HiddenClassesTreeNode>;
+    tree: DeepReadonly<HiddenClassesTreeNode[]>;
     classAlias: string;
 }): string;
 
@@ -156,6 +156,11 @@ interface CreateRelationshipPathJoinClauseProps {
 
 // @public
 function createRelationshipPathJoinInfo(props: CreateRelationshipPathJoinClauseProps): Promise<RelationshipPathJoinInfo>;
+
+// @public
+export type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
+    readonly [K in keyof T]: DeepReadonly<T[K]>;
+} : T;
 
 // @public
 export function eachValueFrom<T>(source: Subscribable<T>): AsyncIterableIterator<T>;
@@ -354,7 +359,7 @@ export interface ECClassHierarchyInspector {
 // @public
 export interface ECSchemaProvider {
     classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
-    getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<HiddenClassesTreeNode[]>;
+    getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<DeepReadonly<HiddenClassesTreeNode[]>>;
     // (undocumented)
     getSchema(schemaName: string): Promise<EC.Schema | undefined>;
 }

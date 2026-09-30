@@ -5,10 +5,9 @@
 
 import { serializeRelationshipPath } from "./Utils.js";
 
-import type { InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
+import type { DeepReadonly, InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
 import type { ContentDescriptor, ReadonlyContentDescriptor } from "./ContentDescriptor.js";
 import type { Field, PropertyField, ReadonlyField, ReadonlyPropertyField } from "./Field.js";
-import type { DeepReadonly } from "./Utils.js";
 
 /**
  * One related instance reached over a relationship path.
