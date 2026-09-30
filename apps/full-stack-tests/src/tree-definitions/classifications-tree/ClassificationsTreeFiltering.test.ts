@@ -32,20 +32,20 @@ const rootClassificationSystemCode = "TestClassificationSystem";
 const defaultHierarchyConfiguration = { rootClassificationSystemCode };
 
 describe("Classifications tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe("Hierarchy search", () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
-
-    describe("label search limits", () => {
+    describe("Label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { table: InstanceKey; classification: InstanceKey; elements: InstanceKey[] };
 

@@ -83,19 +83,19 @@ namespace TreeSearchTestCaseDefinition {
 }
 
 describe("Models tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe("Hierarchy search", () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
-
     it.each(["model", "category", "element"] as const)("finds all subject paths to a shared %s", async (target) => {
       await using setupResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
@@ -180,7 +180,7 @@ describe("Models tree", () => {
       );
     });
 
-    describe("label search limits", () => {
+    describe("Label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { model: InstanceKey; category: InstanceKey; elements: InstanceKey[] };
 

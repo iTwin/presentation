@@ -10,11 +10,13 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel } from "../IModelUtils.js";
 import {
-  createClassificationsTreeProvider,
   importClassificationSchema,
   insertClassification,
   insertClassificationSystem,
@@ -22,17 +24,33 @@ import {
   insertElementHasClassificationsRelationship,
 } from "./Utils.js";
 
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
+
 const rootClassificationSystemCode = "TestClassificationSystem";
 
 describe("Classifications tree", () => {
-  describe("Hierarchy definition", () => {
-    beforeAll(async () => {
-      await initialize();
-    });
+  beforeAll(async () => {
+    await initialize();
+  });
 
-    afterAll(async () => {
-      await terminate();
-    });
+  afterAll(async () => {
+    await terminate();
+  });
+
+  describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
+    async function createClassificationsTreeProvider(
+      imodel: IModelConnection,
+      hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
+    ) {
+      const imodelAccess = createIModelAccess(imodel);
+      const tree = createClassificationsTree({ imodelAccess, hierarchyConfig });
+      if (cacheState === "warm") {
+        // Label search populates the same ID cache used by the hierarchy definition.
+        await collect(tree.createInstanceKeyPaths({ label: "no matching labels", limit: "unbounded" }));
+      }
+      return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+    }
 
     it.each([rootClassificationSystemCode, "Owner's Classification"])(
       "loads classifications' hierarchy without elements for system code %s",
@@ -60,7 +78,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode: systemCode,
         });
 
@@ -124,7 +142,7 @@ describe("Classifications tree", () => {
       );
 
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
 
       await validateHierarchy({
         provider,
@@ -185,7 +203,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["BisCore.GeometricElement2d"] },
         });
@@ -254,7 +272,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -325,7 +343,7 @@ describe("Classifications tree", () => {
 
         const { imodelConnection, ...keys } = buildIModelResult;
         // Omitting the base class should filter out elements of all derived classes due to polymorphic class exclusion.
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["BisCore.PhysicalElement"] },
         });
@@ -382,7 +400,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -441,7 +459,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -514,7 +532,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
