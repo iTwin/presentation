@@ -34,20 +34,20 @@ import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-t
 // cspell complains about Cat_egory and Cat%egory
 
 describe("Categories tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe("Hierarchy search", () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
-
-    describe("label search limits", () => {
+    describe("Label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { category: InstanceKey; elements: InstanceKey[] };
 

@@ -45,15 +45,15 @@ import type { Descriptor, NestedContentField, PropertiesField } from "@itwin/pre
 import type { DefineHierarchyLevelProps, HierarchyProvider } from "@itwin/presentation-hierarchies";
 
 describe("Models tree", () => {
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe("Hierarchy level filtering", () => {
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
-
     it("can filter root level", async () => {
       await using imodelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {

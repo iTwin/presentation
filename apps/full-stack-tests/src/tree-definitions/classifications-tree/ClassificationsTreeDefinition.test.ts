@@ -30,6 +30,14 @@ import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentat
 const rootClassificationSystemCode = "TestClassificationSystem";
 
 describe("Classifications tree", () => {
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createClassificationsTreeProvider(
       imodel: IModelConnection,
@@ -43,14 +51,6 @@ describe("Classifications tree", () => {
       }
       return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
     }
-
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
 
     it.each([rootClassificationSystemCode, "Owner's Classification"])(
       "loads classifications' hierarchy without elements for system code %s",

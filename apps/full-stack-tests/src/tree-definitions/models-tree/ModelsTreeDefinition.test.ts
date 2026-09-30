@@ -25,18 +25,18 @@ import { createModelsTreeProvider } from "./Utils.js";
 import type { InstanceKey } from "@itwin/presentation-shared";
 
 describe("Models tree", () => {
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createProvider(props: Omit<Parameters<typeof createModelsTreeProvider>[0], "cacheState">) {
       return createModelsTreeProvider({ ...props, cacheState });
     }
-
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
 
     it("creates Subject - Model - Category - Element hierarchy", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>

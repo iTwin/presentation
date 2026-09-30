@@ -21,6 +21,18 @@ import type { EC } from "@itwin/presentation-shared";
 import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 describe("Categories tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  beforeAll(async () => {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createTree(props: Parameters<typeof createCategoriesTree>[0]) {
       const tree = createCategoriesTree(props);
@@ -40,18 +52,6 @@ describe("Categories tree", () => {
       const tree = await createTree({ imodelAccess, viewType, hierarchyConfig });
       return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
     }
-
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    beforeAll(async () => {
-      await initialize();
-    });
-
-    afterAll(async () => {
-      await terminate();
-    });
 
     ["2d" as const, "3d" as const].forEach((viewType) => {
       describe(`${viewType} view`, () => {
