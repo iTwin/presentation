@@ -60,6 +60,7 @@ export class ElementModelCategoriesProvider {
     categoryId: Id64String;
     isTopMostElementCategory: boolean;
     hasElementsFromNonExcludedClasses: boolean;
+    hasNonExcludedTopMostElements: boolean;
     isPlanProjectionModel: boolean;
   }> {
     const excludedClause = createExcludedClassesClause({
@@ -73,7 +74,12 @@ export class ElementModelCategoriesProvider {
             this.Category.Id categoryId,
             MAX(IIF(this.Parent.Id IS NULL, 1, 0)) isTopMostElementCategory,
             IIF(m.$->IsPlanProjection?, 1, 0) isPlanProjectionModel
-            ${excludedClause ? `, MAX(IIF((${excludedClause}), 1, 0)) hasElementsFromNonExcludedClasses` : ""}
+            ${
+              excludedClause
+                ? `, MAX(IIF((${excludedClause}), 1, 0)) hasElementsFromNonExcludedClasses
+                   , MAX(IIF(this.Parent.Id IS NULL AND (${excludedClause}), 1, 0)) hasNonExcludedTopMostElements`
+                : ""
+            }
           FROM ${this.#elementClassName} this
           JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
           WHERE m.IsPrivate = false
@@ -95,6 +101,9 @@ export class ElementModelCategoriesProvider {
           categoryId: row.categoryId,
           isTopMostElementCategory: !!row.isTopMostElementCategory,
           hasElementsFromNonExcludedClasses: excludedClause ? !!row.hasElementsFromNonExcludedClasses : true,
+          hasNonExcludedTopMostElements: excludedClause
+            ? !!row.hasNonExcludedTopMostElements
+            : !!row.isTopMostElementCategory,
           isPlanProjectionModel: !!row.isPlanProjectionModel,
         };
       }),
@@ -123,8 +132,7 @@ export class ElementModelCategoriesProvider {
           categoryModelsEntry.push({
             id: queriedCategory.modelId,
             categoryIsOfTopMostElement: queriedCategory.isTopMostElementCategory,
-            hasNonExcludedTopMostElements:
-              queriedCategory.hasElementsFromNonExcludedClasses && queriedCategory.isTopMostElementCategory,
+            hasNonExcludedTopMostElements: queriedCategory.hasNonExcludedTopMostElements,
           });
           const modelEntry = getOrCreate({
             map: acc.modelsCategoriesInfo,
@@ -140,7 +148,7 @@ export class ElementModelCategoriesProvider {
           if (queriedCategory.hasElementsFromNonExcludedClasses) {
             modelEntry.hasNonExcludedElements = true;
             acc.categoriesContainingNonExcludedElements.add(queriedCategory.categoryId);
-            if (queriedCategory.isTopMostElementCategory) {
+            if (queriedCategory.hasNonExcludedTopMostElements) {
               modelEntry.categoriesOfTopMostNonExcludedElements.add(queriedCategory.categoryId);
             }
           }

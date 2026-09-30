@@ -2179,6 +2179,39 @@ describe("Models tree", () => {
         getExpectedHierarchy: () => [],
         getHierarchyConfig: () => ({ elements: { excludedClasses: ["Generic.PhysicalObject"] } }),
       }),
+      TreeSearchTestCaseDefinition.create({
+        name: "does not return the category of an excluded parent element with an included child",
+        setupIModel: async (imodel, testSchema) =>
+          withEditTxn(imodel, (txn) => {
+            const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: `model`,
+              partitionParentId: rootSubject.id,
+            });
+            const excludedCategory = insertSpatialCategory({ txn, codeValue: "matching excluded category" });
+            const excludedParent = insertPhysicalElement({
+              txn,
+              userLabel: `excluded parent`,
+              modelId: model.id,
+              categoryId: excludedCategory.id,
+            });
+            insertPhysicalElement({
+              txn,
+              userLabel: `included child`,
+              classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+              modelId: model.id,
+              categoryId: excludedCategory.id,
+              parentId: excludedParent.id,
+            });
+            return { excludedCategory };
+          }),
+        getTargetInstancePaths: () => [],
+        getTargetItems: (x) => [x.excludedCategory],
+        getTargetInstanceLabel: (_x) => "matching",
+        getExpectedHierarchy: () => [],
+        getHierarchyConfig: () => ({ elements: { excludedClasses: ["Generic.PhysicalObject"] } }),
+      }),
     );
 
     describe("when expanding up to element class grouping nodes", () => {
