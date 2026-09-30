@@ -6,6 +6,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { assert } from "@itwin/core-bentley";
 import { SchemaViewPrimitiveType, StrengthDirection } from "@itwin/ecschema-metadata";
+import { type EC, parseFullClassName, type Props } from "@itwin/presentation-shared";
 import {
   createECClassHierarchyResolver,
   createECPropertyFromSchemaView,
@@ -16,7 +17,6 @@ import { createCoreECSqlReaderStub } from "./Utils.js";
 
 import type { QueryRowProxy } from "@itwin/core-common";
 import type { SchemaView } from "@itwin/ecschema-metadata";
-import type { EC, Props } from "@itwin/presentation-shared";
 import type { ECClassHierarchyResolver } from "../core-interop/Metadata.js";
 import type { CoreECSqlReaderFactory } from "../core-interop/QueryExecutor.js";
 
@@ -423,6 +423,173 @@ describe("createECSchemaProvider", () => {
       const provider = createECSchemaProvider(stubIModelWithQueryRows([["Schema.B", "Schema.A"]]));
       await provider.classDerivesFrom("Schema.B", "Schema.A");
       expect(provider.classDerivesFrom("Schema.B", "Schema.A")).toBe(true);
+    });
+
+    it("retries loading the class hierarchy after a failure", async () => {
+      const imodel = stubIModelWithQueryRows([["Schema.B", "Schema.A"]]);
+      imodel.createQueryReader.mockImplementationOnce(() => {
+        throw new Error("transient failure");
+      });
+      const provider = createECSchemaProvider(imodel);
+      await expect(provider.classDerivesFrom("Schema.B", "Schema.A")).rejects.toThrow("transient failure");
+      expect(await provider.classDerivesFrom("Schema.B", "Schema.A")).toBe(true);
+    });
+  });
+
+  describe("getHiddenClassesTree", () => {
+    function createSchemaView(props: {
+      schemaViewToken?: string;
+      hiddenSchemas?: string[];
+      classes: EC.FullClassNameDotNotation[];
+    }) {
+      const schemas = new Map<string, MockSchemaProps>();
+      for (const fullName of props.classes) {
+        const { schemaName, className } = parseFullClassName(fullName);
+        let schema = schemas.get(schemaName);
+        if (!schema) {
+          schema = { name: schemaName, isHidden: props.hiddenSchemas?.includes(schemaName), classes: new Map() };
+          schemas.set(schemaName, schema);
+        }
+        schema.classes!.set(className, { name: className, schemaName });
+      }
+      return { ...createMockSchemaView(schemas), schemaToken: props.schemaViewToken ?? "" };
+    }
+    function createIModel(props: {
+      getSchemaView: (schemas: string[]) => PublicSchemaView | Promise<PublicSchemaView>;
+      classHierarchies: Array<Array<[EC.FullClassNameDotNotation, EC.FullClassNameDotNotation]>>;
+    }) {
+      const getSchemaView = vi.fn(async (viewProps?: { schemas?: string[] }) =>
+        props.getSchemaView(viewProps?.schemas ?? []),
+      );
+      const createQueryReader = vi.fn<CoreECSqlReaderFactory["createQueryReader"]>();
+      props.classHierarchies.forEach((rows, i) =>
+        i === props.classHierarchies.length - 1
+          ? createQueryReader.mockImplementation(() => createCoreECSqlReaderStub(rows))
+          : createQueryReader.mockImplementationOnce(() => createCoreECSqlReaderStub(rows)),
+      );
+      return { getSchemaView, createQueryReader };
+    }
+
+    it("creates tree of hidden derived classes", async () => {
+      const imodel = createIModel({
+        getSchemaView: () => createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "A.Visible", "B.Hidden"] }),
+        classHierarchies: [
+          [
+            ["A.Visible", "A.Base"],
+            ["B.Hidden", "A.Base"],
+          ],
+        ],
+      });
+      const provider = createECSchemaProvider(imodel);
+      expect(await provider.getHiddenClassesTree("A.Base")).toEqual([
+        { fullName: "B.Hidden", state: "hide", children: [] },
+      ]);
+    });
+
+    it("deeply freezes cached hidden classes trees", async () => {
+      const imodel = createIModel({
+        getSchemaView: () =>
+          createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "A.VisibleChild", "B.Hidden"] }),
+        classHierarchies: [
+          [
+            ["B.Hidden", "A.Base"],
+            ["A.VisibleChild", "B.Hidden"],
+          ],
+        ],
+      });
+      const provider = createECSchemaProvider(imodel);
+
+      const tree = await provider.getHiddenClassesTree("A.Base");
+      expect(Object.isFrozen(tree)).toBe(true);
+      expect(Object.isFrozen(tree[0])).toBe(true);
+      expect(Object.isFrozen(tree[0].children)).toBe(true);
+      expect(Object.isFrozen(tree[0].children[0])).toBe(true);
+    });
+
+    it("shares a single computation between concurrent and subsequent calls", async () => {
+      const view = createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "B.Hidden"] });
+      const imodel = createIModel({ getSchemaView: () => view, classHierarchies: [[["B.Hidden", "A.Base"]]] });
+      const provider = createECSchemaProvider(imodel);
+      const [first, second] = await Promise.all([
+        provider.getHiddenClassesTree("A.Base"),
+        provider.getHiddenClassesTree("A.Base"),
+      ]);
+      const schemaViewRequestsCount = imodel.getSchemaView.mock.calls.length;
+      const third = await provider.getHiddenClassesTree("A.Base");
+      expect(first).toBe(second);
+      expect(first).toBe(third);
+      expect(imodel.getSchemaView).toHaveBeenCalledTimes(schemaViewRequestsCount);
+      expect(imodel.createQueryReader).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(["schema view", "class hierarchy"])("retries after a failed %s computation", async (failureSource) => {
+      const view = createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "B.Hidden"] });
+      let failNextRequest = true;
+      const imodel = createIModel({
+        getSchemaView: () => {
+          if (failureSource === "schema view" && failNextRequest) {
+            failNextRequest = false;
+            throw new Error("transient failure");
+          }
+          return view;
+        },
+        classHierarchies: [[["B.Hidden", "A.Base"]]],
+      });
+      if (failureSource === "class hierarchy") {
+        imodel.createQueryReader.mockImplementationOnce(() => {
+          throw new Error("transient failure");
+        });
+      }
+      const provider = createECSchemaProvider(imodel);
+      await expect(provider.getHiddenClassesTree("A.Base")).rejects.toThrow("transient failure");
+      expect(await provider.getHiddenClassesTree("A.Base")).toEqual([
+        { fullName: "B.Hidden", state: "hide", children: [] },
+      ]);
+    });
+
+    it("keeps trees for the provider lifetime and reads schema changes with a new provider", async () => {
+      const view1 = createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "B.Hidden1"] });
+      const view2 = createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "B.Hidden1", "B.Hidden2"] });
+      let currentView = view1;
+      const imodel = createIModel({
+        getSchemaView: () => currentView,
+        classHierarchies: [
+          [["B.Hidden1", "A.Base"]],
+          [
+            ["B.Hidden1", "A.Base"],
+            ["B.Hidden2", "A.Base"],
+          ],
+        ],
+      });
+      const provider = createECSchemaProvider(imodel);
+      const originalTree = await provider.getHiddenClassesTree("A.Base");
+      expect(originalTree).toEqual([{ fullName: "B.Hidden1", state: "hide", children: [] }]);
+
+      currentView = view2;
+      expect(await provider.getHiddenClassesTree("A.Base")).toBe(originalTree);
+      expect(provider.classDerivesFrom("B.Hidden2", "A.Base")).toBe(false);
+      expect(imodel.createQueryReader).toHaveBeenCalledTimes(1);
+
+      const newProvider = createECSchemaProvider(imodel);
+      expect(await newProvider.getHiddenClassesTree("A.Base")).toEqual([
+        { fullName: "B.Hidden1", state: "hide", children: [] },
+        { fullName: "B.Hidden2", state: "hide", children: [] },
+      ]);
+      expect(imodel.createQueryReader).toHaveBeenCalledTimes(2);
+      expect(await newProvider.classDerivesFrom("B.Hidden2", "A.Base")).toBe(true);
+    });
+
+    it("caches empty trees separately for each selected class", async () => {
+      const view = createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "B.Hidden"] });
+      const imodel = createIModel({ getSchemaView: () => view, classHierarchies: [[["B.Hidden", "A.Base"]]] });
+      const provider = createECSchemaProvider(imodel);
+      expect(await provider.getHiddenClassesTree("A.Base")).toEqual([
+        { fullName: "B.Hidden", state: "hide", children: [] },
+      ]);
+      const tree = await provider.getHiddenClassesTree("B.Hidden");
+      expect(tree).toEqual([]);
+      expect(await provider.getHiddenClassesTree("B.Hidden")).toBe(tree);
+      expect(imodel.createQueryReader).toHaveBeenCalledTimes(1);
     });
   });
 });

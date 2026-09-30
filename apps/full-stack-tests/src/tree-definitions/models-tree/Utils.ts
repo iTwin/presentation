@@ -20,43 +20,32 @@ import type { IModelConnection } from "@itwin/core-frontend";
 import type {
   ClassGroupingNodeKey,
   GroupingHierarchyNode,
-  HierarchyProvider,
-  HierarchySearchTree,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import type { EC, InstanceKey } from "@itwin/presentation-shared";
+import type { EC, InstanceKey, Props } from "@itwin/presentation-shared";
 import type {
   ModelsTreeHierarchyConfiguration,
   ParentElementsPath,
 } from "@itwin/presentation-tree-definitions/internal";
 
-interface CreateModelsTreeProviderProps {
-  imodelConnection: IModelConnection;
-  cacheState?: "cold" | "warm";
-  searchPaths?: HierarchySearchTree[];
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-  imodelAccess?: ReturnType<typeof createIModelAccess>;
-}
-
-export async function createModelsTreeProvider({
-  imodelConnection,
-  cacheState = "cold",
-  searchPaths,
-  hierarchyConfig,
-  imodelAccess,
-}: CreateModelsTreeProviderProps): Promise<HierarchyProvider & Disposable> {
-  const configOverrides: ModelsTreeHierarchyConfiguration = { subjects: { root: "exclude" }, ...hierarchyConfig };
-  const createdImodelAccess = imodelAccess ?? createIModelAccess(imodelConnection);
-  const tree = createModelsTree({ imodelAccess: createdImodelAccess, hierarchyConfig: configOverrides });
+export async function createModelsTreeProvider(
+  props: Omit<Props<typeof createModelsTree>, "imodelAccess"> & {
+    imodelConnection: IModelConnection;
+    cacheState: "cold" | "warm";
+  },
+) {
+  const { cacheState, imodelConnection, ...restProps } = props;
+  const imodelAccess = createIModelAccess(imodelConnection);
+  const tree = createModelsTree({
+    ...restProps,
+    imodelAccess,
+    hierarchyConfig: { subjects: { root: "exclude" }, ...restProps.hierarchyConfig },
+  });
   if (cacheState === "warm") {
-    // Matching all elements also populates modeled-element path caches.
+    // Label search populates the same ID cache used by the hierarchy definition.
     await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
   }
-  return createIModelHierarchyProvider({
-    imodelAccess: createdImodelAccess,
-    hierarchyDefinition: tree.definition,
-    ...(searchPaths ? { search: { paths: searchPaths } } : undefined),
-  });
+  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
 }
 
 export function createSubjectHierarchyNode(props?: {
@@ -215,10 +204,10 @@ export function createAccessAndIdsProvider({
     overrides: hierarchyConfig,
   });
   const baseIdsProvider = createBaseIdsProvider({
-    queryExecutor: imodelAccess,
+    imodelAccess,
     elementClassName: requiredHierarchyConfig.elements.baseClass,
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsProvider = createModelsTreeIdsProvider({ queryExecutor: imodelAccess, hierarchyConfig, baseIdsProvider });
+  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, baseIdsProvider });
   return { imodelAccess, idsProvider, hierarchyConfig: requiredHierarchyConfig };
 }

@@ -6,10 +6,15 @@
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { eachValueFrom, type InstanceKey } from "@itwin/presentation-shared";
+import { eachValueFrom, type ECSchemaProvider, type ECSqlBinding, type InstanceKey } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getOrCreate, mergeWithDefaults } from "../../shared/Utils.js";
+import {
+  createHiddenClassesWhereClauseFactory,
+  createWhereClause,
+  getOrCreate,
+  mergeWithDefaults,
+} from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
@@ -24,7 +29,7 @@ import type { ModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js
  * @internal
  */
 interface ModelsTreeIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /** Hierarchy options. Omitted properties use the defaults of `ModelsTreeHierarchyConfiguration`. */
   hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
   /** Base provider using the same element class and exclusions as `hierarchyConfig`. */
@@ -68,7 +73,7 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
  * @internal
  */
 export function createModelsTreeIdsProvider({
-  queryExecutor,
+  imodelAccess,
   hierarchyConfig: configOverrides,
   baseIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
@@ -81,14 +86,39 @@ export function createModelsTreeIdsProvider({
   const componentId = Guid.createValue();
   const componentName = "ModelsTreeIdsProvider";
 
+  async function createModelElementsFilter(
+    modelAlias: string,
+  ): Promise<{ clause?: string; bindings?: ECSqlBinding[] }> {
+    if (hierarchyConfig.models.withoutElements === "include") {
+      return {};
+    }
+    if (baseIdsProvider.elementModelCategoriesLoaded()) {
+      return {
+        clause: `${modelAlias}.ECInstanceId IN (SELECT id FROM IdSet(?))`,
+        bindings: [{ type: "idset", value: await baseIdsProvider.getAllModels() }],
+      };
+    }
+    const createElementVisibilityClause = await createHiddenClassesWhereClauseFactory({
+      schemaProvider: imodelAccess,
+      className: hierarchyConfig.elements.baseClass,
+    });
+    return {
+      clause: `EXISTS (
+        SELECT 1 FROM ${hierarchyConfig.elements.baseClass} e
+        ${createWhereClause({ conditions: [`e.Model.Id = ${modelAlias}.ECInstanceId`, createElementVisibilityClause("e")] })}
+      )`,
+    };
+  }
+
   function querySubjects(): Observable<{
     id: SubjectId;
     parentId?: SubjectId;
     targetPartitionId?: ModelId;
     hideInHierarchy: boolean;
   }> {
-    return defer(() => {
-      const subjectsQuery = `
+    return defer(async () => createModelElementsFilter("m")).pipe(
+      mergeMap((elementsFilter) => {
+        const subjectsQuery = `
         SELECT
           s.ECInstanceId id,
           s.Parent.Id parentId,
@@ -99,8 +129,7 @@ export function createModelsTreeIdsProvider({
               conditions: [
                 "m.ECInstanceId = HexToId(json_extract(s.JsonProperties, '$.Subject.Model.TargetPartition'))",
                 "NOT m.IsPrivate",
-                hierarchyConfig.models.withoutElements === "exclude" &&
-                  `EXISTS (SELECT 1 FROM ${hierarchyConfig.elements.baseClass} WHERE Model.Id = m.ECInstanceId)`,
+                elementsFilter.clause,
               ],
             })}
           ) targetPartitionId,
@@ -113,15 +142,15 @@ export function createModelsTreeIdsProvider({
           END hideInHierarchy
         FROM bis.Subject s
       `;
-      return queryExecutor.createQueryReader(
-        { ecsql: subjectsQuery },
-        {
-          rowFormat: "ECSqlPropertyNames",
-          limit: "unbounded",
-          restartToken: `${componentName}/${componentId}/subjects`,
-        },
-      );
-    }).pipe(
+        return imodelAccess.createQueryReader(
+          { ecsql: subjectsQuery, bindings: elementsFilter.bindings },
+          {
+            rowFormat: "ECSqlPropertyNames",
+            limit: "unbounded",
+            restartToken: `${componentName}/${componentId}/subjects`,
+          },
+        );
+      }),
       catchBeSQLiteInterrupts,
       map((row) => {
         return {
@@ -135,18 +164,23 @@ export function createModelsTreeIdsProvider({
   }
 
   function queryModels(): Observable<{ id: ModelId; parentId: SubjectId }> {
-    return defer(() => {
-      const modelsQuery = `
+    return defer(async () => createModelElementsFilter("m")).pipe(
+      mergeMap((elementsFilter) => {
+        const modelsQuery = `
         SELECT p.ECInstanceId id, p.Parent.Id parentId
         FROM ${CLASS_NAMES.InformationPartitionElement} p
         INNER JOIN ${CLASS_NAMES.GeometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
-        ${createWhereClause({ conditions: ["NOT m.IsPrivate", hierarchyConfig.models.withoutElements === "exclude" && `EXISTS (SELECT 1 FROM ${hierarchyConfig.elements.baseClass} WHERE Model.Id = m.ECInstanceId)`] })}
+        ${createWhereClause({ conditions: ["NOT m.IsPrivate", elementsFilter.clause] })}
       `;
-      return queryExecutor.createQueryReader(
-        { ecsql: modelsQuery },
-        { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${componentName}/${componentId}/models` },
-      );
-    }).pipe(
+        return imodelAccess.createQueryReader(
+          { ecsql: modelsQuery, bindings: elementsFilter.bindings },
+          {
+            rowFormat: "ECSqlPropertyNames",
+            limit: "unbounded",
+            restartToken: `${componentName}/${componentId}/models`,
+          },
+        );
+      }),
       catchBeSQLiteInterrupts,
       map((row) => {
         return { id: row.id, parentId: row.parentId };

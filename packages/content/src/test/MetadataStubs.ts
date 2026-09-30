@@ -164,6 +164,7 @@ export function createMixinClass(props: {
 export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider {
   const byFullName = new Map(classes.map((cls) => [cls.fullName, cls]));
   return {
+    getHiddenClassesTree: async () => [],
     getSchema: async (schemaName: string) => ({
       name: schemaName,
       version: { read: 1, write: 0, minor: 0 },

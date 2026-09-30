@@ -3,21 +3,26 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, delay, map, reduce, shareReplay, tap } from "rxjs";
+import { delay, forkJoin, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import { createExcludedClassesClause, getOrCreate } from "../Utils.js";
+import {
+  createExcludedClassesClause,
+  createHiddenClassesWhereClauseFactory,
+  createWhereClause,
+  getOrCreate,
+} from "../Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
 
 interface ElementModelCategoriesProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   componentId: GuidString;
-  elementClassName: string;
+  elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
 }
 interface ModelsCategoriesInfoEntry {
@@ -38,17 +43,17 @@ interface ElementModelCategoriesProviderData {
 
 /** @internal */
 export class ElementModelCategoriesProvider {
-  #queryExecutor: LimitingECSqlQueryExecutor;
+  #imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
-  #elementClassName: string;
+  #elementClassName: EC.FullClassNameDotNotation;
   #excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
   #cachedData: Observable<ElementModelCategoriesProviderData> | undefined;
   #dataLoaded = false;
   #subscriberBatches: Array<{ obs: Observable<ElementModelCategoriesProviderData>; subscriberCount: number }> = [];
 
   constructor(props: ElementModelCategoriesProviderProps) {
-    this.#queryExecutor = props.queryExecutor;
+    this.#imodelAccess = props.imodelAccess;
     this.#elementClassName = props.elementClassName;
     this.#excludedElementClassNames = props.excludedElementClassNames;
     this.#componentId = props.componentId;
@@ -67,8 +72,14 @@ export class ElementModelCategoriesProvider {
       alias: "this",
       excludedClassNames: this.#excludedElementClassNames,
     });
-    return defer(() => {
-      const query = `
+    return forkJoin({
+      createHiddenClassesClause: createHiddenClassesWhereClauseFactory({
+        schemaProvider: this.#imodelAccess,
+        className: this.#elementClassName,
+      }),
+    }).pipe(
+      mergeMap(({ createHiddenClassesClause }) => {
+        const query = `
           SELECT
             this.Model.Id modelId,
             this.Category.Id categoryId,
@@ -82,18 +93,18 @@ export class ElementModelCategoriesProvider {
             }
           FROM ${this.#elementClassName} this
           JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
-          WHERE m.IsPrivate = false
+          ${createWhereClause({ conditions: ["m.IsPrivate = false", createHiddenClassesClause("this")] })}
           GROUP BY modelId, categoryId
         `;
-      return this.#queryExecutor.createQueryReader(
-        { ecsql: query },
-        {
-          rowFormat: "ECSqlPropertyNames",
-          limit: "unbounded",
-          restartToken: `${this.#componentName}/${this.#componentId}/element-models-and-categories`,
-        },
-      );
-    }).pipe(
+        return this.#imodelAccess.createQueryReader(
+          { ecsql: query },
+          {
+            rowFormat: "ECSqlPropertyNames",
+            limit: "unbounded",
+            restartToken: `${this.#componentName}/${this.#componentId}/element-models-and-categories`,
+          },
+        );
+      }),
       catchBeSQLiteInterrupts,
       map((row) => {
         return {

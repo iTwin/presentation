@@ -84,3 +84,34 @@ interface TestSchemaDefinition extends Awaited<ReturnType<typeof importSchema>> 
     [TestSchema.subModel2dClassName]: { name: string; fullName: EC.FullClassNameDotNotation; label: string };
   };
 }
+
+/** Imports one element class hidden by `HiddenClass` and one hidden by its schema's `HiddenSchema` attribute. */
+export async function importHiddenElementClasses(
+  imodel: IModelDb,
+  baseClassName: "PhysicalElement" | "GraphicalElement2d" = "PhysicalElement",
+): Promise<Record<"hiddenClass" | "hiddenSchema", EC.FullClassNameDotNotation>> {
+  const importHiddenElementClass = async (
+    schemaName: string,
+    schemaAlias: string,
+    customAttributeName: "HiddenClass" | "HiddenSchema",
+  ) => {
+    const customAttributes = `<ECCustomAttributes><${customAttributeName} xmlns="CoreCustomAttributes.01.00.01" /></ECCustomAttributes>`;
+    const schema = await importSchema(
+      { schemaName, schemaAlias },
+      imodel,
+      `
+        <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+        ${customAttributeName === "HiddenSchema" ? customAttributes : ""}
+        <ECEntityClass typeName="HiddenElement">
+          <BaseClass>bis:${baseClassName}</BaseClass>
+          ${customAttributeName === "HiddenClass" ? customAttributes : ""}
+        </ECEntityClass>
+      `,
+    );
+    return schema.items.HiddenElement.fullName;
+  };
+  return {
+    hiddenClass: await importHiddenElementClass("HiddenClassTest", "hiddenClass", "HiddenClass"),
+    hiddenSchema: await importHiddenElementClass("HiddenSchemaTest", "hiddenSchema", "HiddenSchema"),
+  };
+}

@@ -19,13 +19,14 @@ export { createBisInstanceLabelSelectClauseFactory } from "./shared/instance-lab
 export { createIModelInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/IModelInstanceLabelSelectClauseFactory.js";
 export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
 export { NOOP_LOGGER } from "./shared/Logging.js";
-export type { ArrayElement, OmitOverUnion, Props } from "./shared/MappedTypes.js";
+export type { ArrayElement, DeepReadonly, OmitOverUnion, Props } from "./shared/MappedTypes.js";
 export type {
   ArrayValueDescriptor,
   EC,
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  HiddenClassesTreeNode,
   NavigationValueDescriptor,
   PrimitiveValueDescriptor,
   PrimitiveValueType,
@@ -38,6 +39,7 @@ export {
   createCachingECClassHierarchyInspector,
   getClass,
 } from "./shared/Metadata.js";
+export { createHiddenClassesTree } from "./shared/HiddenClasses.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,

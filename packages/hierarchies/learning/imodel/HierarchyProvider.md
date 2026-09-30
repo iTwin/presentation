@@ -58,7 +58,7 @@ Below are the steps the provider takes to process a hierarchy from the moment th
 
 6. Nodes are passed through the grouping processor.
 
-7. If nodes' children flag is undefined, it is determined by loading the children.
+7. If nodes' children flag is undefined, it is determined by loading the children. Otherwise the supplied flag is used as-is, so it's the hierarchy definition's responsibility to make sure it matches the actual children, e.g. by excluding instances of hidden classes the same way `createFilterClauses` does.
 
 8. Nodes are passed through the hierarchy definition's `postProcessNode` function, if one is defined.
 

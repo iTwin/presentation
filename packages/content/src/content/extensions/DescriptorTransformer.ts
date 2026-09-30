@@ -6,12 +6,11 @@
 import { PropertyField } from "../model/Field.js";
 import { computeFieldForkKey, toSortedUniqueClassNames } from "../model/Utils.js";
 
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { DeepReadonly, EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ContentDescriptor } from "../model/ContentDescriptor.js";
 import type { Field } from "../model/Field.js";
-import type { DeepReadonly } from "../model/Utils.js";
 
 /**
  * Default priority for descriptor transformers.

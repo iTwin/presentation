@@ -7,6 +7,7 @@ import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils.js";
 
 import type { ECSqlBinding } from "./ECSqlCore.js";
+import type { DeepReadonly } from "./MappedTypes.js";
 
 /**
  * An interface for an object that knows how to get an ECSchema from an iModel.
@@ -28,6 +29,47 @@ export interface ECSchemaProvider {
     derivedClassFullName: EC.FullClassNameDotNotation,
     candidateBaseClassFullName: EC.FullClassNameDotNotation,
   ): Promise<boolean> | boolean;
+
+  /**
+   * Returns a tree of classes, derived from the given class, whose visibility is changed through `HiddenClass`
+   * or `HiddenSchema` custom attributes. See `HiddenClassesTreeNode` for details on the tree structure.
+   *
+   * Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected
+   * to cache the result per selected class and share it between callers - including concurrent ones.
+   *
+   * Use `ECSql.createHiddenClassesWhereClause` to create an ECSQL condition that selects only visible instances
+   * of the class. Implementations may use `createHiddenClassesTree` to build the tree.
+   *
+   * @throws Error if the selected class or any of its derived classes' schemas can't be found.
+   */
+  getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<DeepReadonly<HiddenClassesTreeNode[]>>;
+}
+
+/**
+ * A node in a tree of classes, derived from some selected class, whose schema-defined visibility differs from
+ * their parent's. Visibility is defined through `CoreCustomAttributes.HiddenClass` and `CoreCustomAttributes.HiddenSchema`
+ * custom attributes.
+ *
+ * The tree is relative to the selected class, which is always considered visible - even if it's hidden itself:
+ * - Root nodes are the outermost derived classes that are hidden (`state: "hide"`).
+ * - Children of a `"hide"` node are its derived classes that are explicitly shown (`state: "show"`), overriding
+ *   the inherited hiding.
+ * - Children of a `"show"` node are its derived classes that are hidden again, and so on.
+ *
+ * Derived classes whose visibility matches their parent's are not included - their descendants are attached
+ * directly to the closest included ancestor. An empty tree means all instances of the selected class are visible.
+ *
+ * @see `ECSchemaProvider.getHiddenClassesTree`
+ * @see `ECSql.createHiddenClassesWhereClause`
+ * @public
+ */
+export interface HiddenClassesTreeNode {
+  /** Full name of the class this node represents. */
+  fullName: EC.FullClassNameDotNotation;
+  /** Visibility state of the class and its derived classes, unless overridden by `children`. */
+  state: "hide" | "show";
+  /** Derived classes whose visibility state differs from this node's `state`. */
+  children: HiddenClassesTreeNode[];
 }
 
 /**
@@ -611,7 +653,7 @@ export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPa
  * @public
  */
 export async function getClass(
-  schemaProvider: ECSchemaProvider,
+  schemaProvider: Pick<ECSchemaProvider, "getSchema">,
   fullClassName: EC.FullClassNameDotNotation,
 ): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);

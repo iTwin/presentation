@@ -19,7 +19,7 @@ import {
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, importHiddenElementClasses } from "../IModelUtils.js";
 import {
   getDefaultSubCategoryId,
   getInsertFunctionByViewType,
@@ -159,6 +159,193 @@ describe("Categories tree", () => {
         const { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement } =
           getInsertFunctionByViewType(viewType);
 
+        describe("Hidden element classes and schemas", () => {
+          const searchTags = {
+            visibleChild: "[visible-child]",
+            hidden: "[hidden]",
+            underHidden: "[under-hidden]",
+            elementLimit: "[element-limit]",
+            categoryLimit: "[category-limit]",
+            categoryOfHiddenChildren: "[category-of-hidden-children]",
+            categoryUnderHidden: "[category-under-hidden]",
+            hiddenContainer: "[hidden-container]",
+            hiddenCategory: "[hidden-category]",
+          };
+
+          async function setupIModel() {
+            return buildIModel(async (imodel) => {
+              const hiddenClassNames = await importHiddenElementClasses(
+                imodel,
+                viewType === "3d" ? "PhysicalElement" : "GraphicalElement2d",
+              );
+              return withEditTxn(imodel, (txn) => {
+                const model = insertElementsModel({ txn, codeValue: "Model" });
+                const category = insertCategory({
+                  txn,
+                  codeValue: `category with visible elements ${searchTags.categoryLimit}`,
+                });
+                const hiddenChildCategory = insertCategory({
+                  txn,
+                  codeValue: `category of hidden children ${searchTags.categoryOfHiddenChildren}`,
+                });
+                const blockedCategory = insertCategory({
+                  txn,
+                  codeValue: `category under hidden parent ${searchTags.categoryUnderHidden}`,
+                });
+                const elementProps = { txn, modelId: model.id, categoryId: category.id };
+                const visibleElement = insertElement({
+                  ...elementProps,
+                  userLabel: `visible element ${searchTags.elementLimit}`,
+                });
+                const visibleChild = insertElement({
+                  ...elementProps,
+                  parentId: visibleElement.id,
+                  userLabel: `visible child element ${searchTags.visibleChild}`,
+                });
+                for (const visibleCategory of [hiddenChildCategory, blockedCategory]) {
+                  insertElement({ ...elementProps, categoryId: visibleCategory.id });
+                }
+                const hiddenContainer = insertDefinitionContainer({
+                  txn,
+                  codeValue: "HiddenContainer",
+                  userLabel: `container with only hidden elements ${searchTags.hiddenContainer}`,
+                });
+                const definitionModel = insertSubModel({
+                  txn,
+                  classFullName: CLASS_NAMES.DefinitionModel,
+                  modeledElementId: hiddenContainer.id,
+                });
+                const hiddenOnlyCategory = insertCategory({
+                  txn,
+                  modelId: definitionModel.id,
+                  codeValue: `category with only hidden elements ${searchTags.hiddenCategory} ${searchTags.categoryLimit}`,
+                });
+                for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+                  const hiddenRoot = insertElement({
+                    ...elementProps,
+                    classFullName,
+                    userLabel: `hidden root element (${variant}) ${searchTags.hidden} ${searchTags.elementLimit}`,
+                  });
+                  const hiddenChild = insertElement({
+                    ...elementProps,
+                    categoryId: hiddenChildCategory.id,
+                    parentId: visibleElement.id,
+                    classFullName,
+                    userLabel: `hidden child element (${variant}) ${searchTags.hidden} ${searchTags.elementLimit}`,
+                  });
+                  insertElement({
+                    ...elementProps,
+                    parentId: hiddenRoot.id,
+                    userLabel: `visible element under hidden root (${variant}) ${searchTags.underHidden}`,
+                  });
+                  insertElement({
+                    ...elementProps,
+                    categoryId: blockedCategory.id,
+                    parentId: hiddenChild.id,
+                    userLabel: `visible element under hidden child (${variant}) ${searchTags.underHidden}`,
+                  });
+                  insertElement({ ...elementProps, categoryId: hiddenOnlyCategory.id, classFullName });
+                }
+                return { category, hiddenChildCategory, blockedCategory, visibleElement, visibleChild };
+              });
+            });
+          }
+
+          let setup: Awaited<ReturnType<typeof setupIModel>>;
+          beforeAll(async () => {
+            setup = await setupIModel();
+          });
+          afterAll(async () => {
+            await setup[Symbol.asyncDispose]();
+          });
+
+          const { elementClass } = getClassesByView(viewType);
+
+          async function search(props: Parameters<ReturnType<typeof createCategoriesTree>["createSearchTree"]>[0]) {
+            return createCategoriesTree({
+              imodelAccess: createIModelAccess(setup.imodelConnection),
+              viewType,
+              hierarchyConfig: { elements: { nodes: "include" }, subCategories: { nodes: "exclude" } },
+            }).createSearchTree({ ...props, revealTargets: true });
+          }
+
+          it("keeps visible descendants", async () => {
+            expect(await search({ label: searchTags.visibleChild })).toEqual([
+              {
+                identifier: setup.category,
+                options: { autoExpand: true },
+                children: [
+                  {
+                    identifier: { ...setup.visibleElement, className: elementClass },
+                    options: { autoExpand: true },
+                    children: [
+                      {
+                        identifier: { ...setup.visibleChild, className: elementClass },
+                        options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ]);
+          });
+
+          it("omits hidden element targets", async () => {
+            expect(await search({ label: searchTags.hidden })).toEqual([]);
+          });
+
+          it("omits visible targets behind hidden ancestors", async () => {
+            expect(await search({ label: searchTags.underHidden })).toEqual([]);
+          });
+
+          it("omits intermediate category paths containing only hidden children but keeps the root category", async () => {
+            expect(await search({ label: searchTags.categoryOfHiddenChildren })).toEqual([
+              {
+                identifier: setup.hiddenChildCategory,
+                options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+              },
+            ]);
+          });
+
+          it("omits intermediate category paths behind hidden ancestors but keeps the root category", async () => {
+            expect(await search({ label: searchTags.categoryUnderHidden })).toEqual([
+              {
+                identifier: setup.blockedCategory,
+                options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+              },
+            ]);
+          });
+
+          it("omits definition containers containing only hidden elements", async () => {
+            expect(await search({ label: searchTags.hiddenContainer })).toEqual([]);
+          });
+
+          it("omits categories containing only hidden elements", async () => {
+            expect(await search({ label: searchTags.hiddenCategory })).toEqual([]);
+          });
+
+          it("does not count hidden element label matches toward the search limit", async () => {
+            expect(await search({ label: searchTags.elementLimit, limit: 1 })).toEqual([
+              {
+                identifier: setup.category,
+                options: { autoExpand: true },
+                children: [
+                  {
+                    identifier: { ...setup.visibleElement, className: elementClass },
+                    options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                  },
+                ],
+              },
+            ]);
+          });
+
+          it("does not count hidden-only category label matches toward the search limit", async () => {
+            expect(await search({ label: searchTags.categoryLimit, limit: 1 })).toEqual([
+              { identifier: setup.category, options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } },
+            ]);
+          });
+        });
+
         it("does not emit search paths for a hidden default sub-category", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>
             withEditTxn(imodel, (txn) => {
@@ -174,7 +361,7 @@ describe("Categories tree", () => {
             imodelAccess,
             type: viewType,
             baseIdsProvider: createBaseIdsProvider({
-              queryExecutor: imodelAccess,
+              imodelAccess,
               elementClassName: getClassesByView(viewType).elementClass,
             }),
           });
