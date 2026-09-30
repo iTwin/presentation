@@ -100,7 +100,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using defaultProvider = createModelsTreeProvider({ imodelConnection });
+      using defaultProvider = await createModelsTreeProvider({ imodelConnection });
       await validateHierarchy({
         provider: defaultProvider,
         expect: [
@@ -123,7 +123,7 @@ describe("Models tree", () => {
         ],
       });
 
-      using provider = createModelsTreeProvider({
+      using provider = await createModelsTreeProvider({
         imodelConnection,
         hierarchyConfig: { subjects: { root: "exclude", labelMerging: "disable" } },
       });
@@ -181,7 +181,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using defaultProvider = createModelsTreeProvider({ imodelConnection });
+      using defaultProvider = await createModelsTreeProvider({ imodelConnection });
       await validateHierarchy({
         provider: defaultProvider,
         expect: [
@@ -199,7 +199,7 @@ describe("Models tree", () => {
         ],
       });
 
-      using provider = createModelsTreeProvider({
+      using provider = await createModelsTreeProvider({
         imodelConnection,
         hierarchyConfig: { models: { labelMerging: "disable" } },
       });
@@ -249,7 +249,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using defaultProvider = createModelsTreeProvider({ imodelConnection });
+      using defaultProvider = await createModelsTreeProvider({ imodelConnection });
       await validateHierarchy({
         provider: defaultProvider,
         expect: [
@@ -267,7 +267,7 @@ describe("Models tree", () => {
         ],
       });
 
-      using provider = createModelsTreeProvider({
+      using provider = await createModelsTreeProvider({
         imodelConnection,
         hierarchyConfig: { categories: { labelMerging: "disable" } },
       });
