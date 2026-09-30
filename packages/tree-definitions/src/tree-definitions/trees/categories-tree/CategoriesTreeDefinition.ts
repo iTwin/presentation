@@ -862,6 +862,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                     categoryId,
                     excludeSubModels: true,
                     includeOnlyTopMostElementCategory: true,
+                    excludeIfOnlyExcludedClasses: true,
                   }),
                 ).pipe(
                   take(1),

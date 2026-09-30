@@ -1227,6 +1227,56 @@ describe("Categories tree", () => {
                 ],
               });
             });
+
+            it("does not treat included children of excluded parents as top-level content", async () => {
+              await using buildIModelResult = await buildIModel(async (imodel) =>
+                withEditTxn(imodel, (txn) => {
+                  const elementsModel = insertElementsModel({ txn, codeValue: "m" });
+                  const excludedCategory = insertCategory({ txn, codeValue: "excluded category" });
+                  const excludedParent = insertElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: excludedCategory.id,
+                  });
+                  insertModeledElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: excludedCategory.id,
+                    parentId: excludedParent.id,
+                  });
+                  const keptCategory = insertCategory({ txn, codeValue: "kept category" });
+                  const keptElement = insertModeledElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: keptCategory.id,
+                  });
+                  return { excludedCategory, keptCategory, keptElement };
+                }),
+              );
+
+              const { imodelConnection, ...keys } = buildIModelResult;
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+                elements: { nodes: "include", excludedClasses: [elementClassName] },
+              });
+
+              await validateHierarchy({
+                provider,
+                expect: [
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedCategory], children: false }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.keptCategory],
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        className: keys.keptElement.className,
+                        children: [
+                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.keptElement], children: false }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              });
+            });
           });
 
           describe("child elements of excluded classes", () => {
@@ -1471,6 +1521,74 @@ describe("Categories tree", () => {
                   }),
                   NodeValidators.createForInstanceNode({ instanceKeys: [keys.childCategory], children: false }),
                   NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedChildCategory], children: false }),
+                ],
+              });
+            });
+
+            it("does not treat included children of excluded sub-model parents as sub-model top-level content", async () => {
+              await using buildIModelResult = await buildIModel(async (imodel) =>
+                withEditTxn(imodel, (txn) => {
+                  const elementsModel = insertElementsModel({ txn, codeValue: "m" });
+                  const category = insertCategory({ txn, codeValue: "cat" });
+                  const modeledElement = insertModeledElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: category.id,
+                  });
+                  const subModel = insertElementsSubModel({ txn, modeledElementId: modeledElement.id });
+                  const excludedCategory = insertCategory({ txn, codeValue: "excluded category" });
+                  const excludedParent = insertElement({ txn, modelId: subModel.id, categoryId: excludedCategory.id });
+                  insertModeledElement({
+                    txn,
+                    modelId: subModel.id,
+                    categoryId: excludedCategory.id,
+                    parentId: excludedParent.id,
+                  });
+                  const keptCategory = insertCategory({ txn, codeValue: "kept category" });
+                  const keptElement = insertModeledElement({ txn, modelId: subModel.id, categoryId: keptCategory.id });
+                  return { category, modeledElement, excludedCategory, keptCategory, keptElement };
+                }),
+              );
+
+              const { imodelConnection, ...keys } = buildIModelResult;
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+                elements: { nodes: "include", excludedClasses: [elementClassName] },
+              });
+
+              await validateHierarchy({
+                provider,
+                expect: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.category],
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        className: keys.modeledElement.className,
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.modeledElement],
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.keptCategory],
+                                children: [
+                                  NodeValidators.createForClassGroupingNode({
+                                    className: keys.keptElement.className,
+                                    children: [
+                                      NodeValidators.createForInstanceNode({
+                                        instanceKeys: [keys.keptElement],
+                                        children: false,
+                                      }),
+                                    ],
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedCategory], children: false }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.keptCategory], children: false }),
                 ],
               });
             });

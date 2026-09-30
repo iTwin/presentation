@@ -804,6 +804,60 @@ describe("Models tree", () => {
       });
 
       describe("root elements of excluded classes", () => {
+        it("does not treat included children of excluded parents as top-level content", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) =>
+            withEditTxn(imodel, (txn) => {
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+              const excludedCategory = insertSpatialCategory({ txn, codeValue: "excluded category" });
+              const excludedParent = insertPhysicalElement({ txn, modelId: model.id, categoryId: excludedCategory.id });
+              insertPhysicalElement({
+                txn,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
+                modelId: model.id,
+                categoryId: excludedCategory.id,
+                parentId: excludedParent.id,
+              });
+              const keptCategory = insertSpatialCategory({ txn, codeValue: "kept category" });
+              const keptElement = insertPhysicalElement({
+                txn,
+                classFullName: `${TestSchema.name}.${TestSchema.modeledElement3dClassName}`,
+                modelId: model.id,
+                categoryId: keptCategory.id,
+              });
+              const excludedOnlyModel = insertPhysicalModelWithPartition({ txn, codeValue: "excluded only model" });
+              insertPhysicalElement({ txn, modelId: excludedOnlyModel.id, categoryId: excludedCategory.id });
+              return { model, excludedCategory, keptCategory, keptElement, excludedOnlyModel };
+            }),
+          );
+          const { imodelConnection, ...keys } = buildIModelResult;
+          using provider = await createProvider({
+            imodelConnection,
+            hierarchyConfig: { elements: { excludedClasses: ["Generic.PhysicalObject"] } },
+          });
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedOnlyModel], children: false }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.model],
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.keptCategory],
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        className: keys.keptElement.className,
+                        children: [
+                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.keptElement], children: false }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
         it("filters out elements of excluded classes", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>
             withEditTxn(imodel, (txn) => {

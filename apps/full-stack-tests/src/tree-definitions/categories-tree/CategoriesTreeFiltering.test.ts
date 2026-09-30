@@ -7,6 +7,7 @@ import { insertSubCategory } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CLASS_NAMES,
@@ -17,6 +18,7 @@ import {
 } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel } from "../IModelUtils.js";
 import {
   getDefaultSubCategoryId,
@@ -1262,6 +1264,94 @@ describe("Categories tree", () => {
                 options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
               },
             ]);
+          });
+
+          it("does not show categories of excluded sub-model parents with included children", async () => {
+            await using buildIModelResult = await buildIModel(async (imodel) =>
+              withEditTxn(imodel, (txn) => {
+                const model = insertElementsModel({ txn, codeValue: "model" });
+                const category = insertCategory({ txn, codeValue: "cat" });
+                const modeledElement = insertModeledElement({
+                  txn,
+                  userLabel: "matching modeled element",
+                  modelId: model.id,
+                  categoryId: category.id,
+                });
+                const subModel = insertElementsSubModel({ txn, modeledElementId: modeledElement.id });
+                const excludedCategory = insertCategory({ txn, codeValue: "excluded category" });
+                const excludedParent = insertElement({
+                  txn,
+                  userLabel: "excluded parent",
+                  modelId: subModel.id,
+                  categoryId: excludedCategory.id,
+                });
+                insertModeledElement({
+                  txn,
+                  userLabel: "included child",
+                  modelId: subModel.id,
+                  categoryId: excludedCategory.id,
+                  parentId: excludedParent.id,
+                });
+                const keptCategory = insertCategory({ txn, codeValue: "kept category" });
+                const keptElement = insertModeledElement({
+                  txn,
+                  userLabel: "kept element",
+                  modelId: subModel.id,
+                  categoryId: keptCategory.id,
+                });
+                return { category, modeledElement, keptCategory, keptElement };
+              }),
+            );
+            const { imodelConnection, ...keys } = buildIModelResult;
+            const imodelAccess = createIModelAccess(imodelConnection);
+            const hierarchyConfig = {
+              elements: { ...showElementsConfig.elements, excludedClasses: [elementClassName] },
+            };
+            const { definition, createSearchTree } = createCategoriesTree({ imodelAccess, viewType, hierarchyConfig });
+            const searchPaths = await createSearchTree({
+              label: "matching",
+              revealTargets: true,
+              abortSignal: new AbortController().signal,
+            });
+            using provider = createIModelHierarchyProvider({
+              imodelAccess,
+              hierarchyDefinition: definition,
+              search: { paths: searchPaths },
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.category],
+                  children: [
+                    NodeValidators.createForClassGroupingNode({
+                      className: keys.modeledElement.className,
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          instanceKeys: [keys.modeledElement],
+                          children: [
+                            NodeValidators.createForInstanceNode({
+                              instanceKeys: [keys.keptCategory],
+                              children: [
+                                NodeValidators.createForClassGroupingNode({
+                                  className: keys.keptElement.className,
+                                  children: [
+                                    NodeValidators.createForInstanceNode({
+                                      instanceKeys: [keys.keptElement],
+                                      children: false,
+                                    }),
+                                  ],
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
           });
         });
       });

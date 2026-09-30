@@ -37,7 +37,7 @@ export interface BaseIdsProvider {
   getAllModels(): Promise<Array<ModelId>>;
   /** Returns IDs of non-private plan projection models containing elements of the configured class. */
   getPlanProjectionModels(): Promise<Id64Set>;
-  /** Returns categories containing top-level elements and non-excluded elements in the specified model. */
+  /** Returns categories containing non-excluded top-level elements in the specified model. */
   getCategories(props: { modelId: Id64String }): Promise<Id64Set>;
   /** Returns category IDs of non-excluded elements. */
   getCategoriesContainingNonExcludedElements(): Promise<Id64Set>;
@@ -50,7 +50,7 @@ export interface BaseIdsProvider {
     excludeSubModels?: boolean;
     /** Requires the category to contain elements without a parent element in the model. */
     includeOnlyTopMostElementCategory?: boolean;
-    /** Requires the category to contain both top-level elements and non-excluded elements in the model. */
+    /** Requires the category to contain non-excluded top-level elements in the model. */
     excludeIfOnlyExcludedClasses?: boolean;
   }): AsyncIterableIterator<ModelId>;
   /** Returns a mapping from category IDs to their sub-category IDs. */
