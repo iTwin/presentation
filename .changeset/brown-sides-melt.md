@@ -2,4 +2,4 @@
 "@itwin/presentation-tree-definitions": patch
 ---
 
-Fixed class exclusions in models and categories trees so an included child of an excluded parent does not make its category eligible for top-level content in cached hierarchies or category search paths.
+Fixed top-level category detection in models and categories tree definitions when excluded parents have included children.
