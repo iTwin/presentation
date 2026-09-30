@@ -75,7 +75,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = imodelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
@@ -168,7 +168,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
       const parentNode = createSubjectHierarchyNode({ ids: keys.rootSubject.id });
 
       // validate hierarchy level without filter
@@ -258,7 +258,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
       const parentNode = createModelHierarchyNode({
         modelId: keys.model.id,
         hasChildren: true,
@@ -324,7 +324,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
       const parentNode = createCategoryHierarchyNode({
         modelId: keys.model.id,
         categoryId: keys.category.id,
@@ -408,7 +408,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
       const parentNode = createElementHierarchyNode({
         modelId: keys.model.id,
         categoryId: keys.category.id,
@@ -495,7 +495,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
       const parentNode = createElementHierarchyNode({
         modelId: keys.model.id,
         categoryId: keys.category.id,
@@ -575,7 +575,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createModelsTreeProvider({ imodelConnection });
+      using provider = await createModelsTreeProvider({ imodelConnection });
       const parentNode = createCategoryHierarchyNode({
         modelId: keys.model.id,
         hasChildren: true,
@@ -640,7 +640,7 @@ describe("Models tree", () => {
           }),
         );
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createModelsTreeProvider({
+        using provider = await createModelsTreeProvider({
           imodelConnection,
           hierarchyConfig: { models: { withoutElements: "include" } },
         });
@@ -707,7 +707,7 @@ describe("Models tree", () => {
           }),
         );
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createModelsTreeProvider({
+        using provider = await createModelsTreeProvider({
           imodelConnection,
           hierarchyConfig: { elements: { baseClass: keys.element1.className } },
         });
