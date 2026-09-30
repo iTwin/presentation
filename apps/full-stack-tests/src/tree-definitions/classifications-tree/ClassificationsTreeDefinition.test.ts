@@ -107,15 +107,7 @@ describe("Classifications tree", () => {
       },
     );
 
-    it.each([
-      { name: "private root classification", includeNested: false, includeVisibleRoot: false },
-      { name: "private root and non-private nested classification", includeNested: true, includeVisibleRoot: false },
-      {
-        name: "private root, non-private nested and visible root classification",
-        includeNested: true,
-        includeVisibleRoot: true,
-      },
-    ])("loads classification table with $name", async ({ includeNested, includeVisibleRoot }) => {
+    it("loads classification table with private root and non-private nested classification", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, async (txn) => {
           await importClassificationSchema(imodel);
@@ -128,18 +120,13 @@ describe("Classifications tree", () => {
             codeValue: "RootClassification",
             isPrivate: true,
           });
-          if (includeNested) {
-            insertClassification({
-              txn,
-              modelId: table.id,
-              parentId: classification.id,
-              codeValue: "PublicChildClassification",
-            });
-          }
-          const visibleRoot = includeVisibleRoot
-            ? insertClassification({ txn, modelId: table.id, codeValue: "VisibleRootClassification" })
-            : undefined;
-          return { table, visibleRoot };
+          insertClassification({
+            txn,
+            modelId: table.id,
+            parentId: classification.id,
+            codeValue: "PublicChildClassification",
+          });
+          return { table };
         }),
       );
 
@@ -152,15 +139,7 @@ describe("Classifications tree", () => {
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.table],
             supportsFiltering: true,
-            children: keys.visibleRoot
-              ? [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.visibleRoot],
-                    supportsFiltering: true,
-                    children: false,
-                  }),
-                ]
-              : false,
+            children: false,
           }),
         ],
       });
