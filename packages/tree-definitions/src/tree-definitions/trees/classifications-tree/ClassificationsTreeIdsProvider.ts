@@ -9,7 +9,7 @@ import { eachValueFrom, type EC } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
@@ -153,7 +153,15 @@ export function createClassificationsTreeIdsProvider({
           JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = e.Category.Id
           JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
           ${createWhereClause({
-            conditions: ["e.Parent.Id IS NULL", "NOT cat.IsPrivate", "ehc.TargetECInstanceId = cl.ClassificationId"],
+            conditions: [
+              "e.Parent.Id IS NULL",
+              "NOT cat.IsPrivate",
+              "ehc.TargetECInstanceId = cl.ClassificationId",
+              createExcludedClassesClause({
+                alias: "e",
+                excludedClassNames: hierarchyConfig.elements?.excludedClasses,
+              }),
+            ],
           })}
           GROUP BY ehc.TargetECInstanceId
         `;
