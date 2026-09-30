@@ -26,6 +26,7 @@ export type {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  HiddenClassesTreeNode,
   NavigationValueDescriptor,
   PrimitiveValueDescriptor,
   PrimitiveValueType,
@@ -38,6 +39,7 @@ export {
   createCachingECClassHierarchyInspector,
   getClass,
 } from "./shared/Metadata.js";
+export { createHiddenClassesTree } from "./shared/HiddenClasses.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,

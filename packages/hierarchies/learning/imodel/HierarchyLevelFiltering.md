@@ -120,3 +120,65 @@ const hierarchyDefinition: HierarchyDefinition = {
 ```
 
 <!-- END EXTRACTION -->
+
+In addition to applying the instance filter, the returned `where` clause excludes instances of classes that are hidden through `CoreCustomAttributes.HiddenClass` or `CoreCustomAttributes.HiddenSchema` custom attributes. Hiding is relative to the content class - if the content class itself is hidden, its instances are still returned, but instances of its hidden sub-classes are not. The hidden classes' information is obtained through `ECSchemaProvider.getHiddenClassesTree` of the provider's `imodelAccess`, which is expected to cache it.
+
+The same rules should be applied when determining whether a node has children. Values of `hasChildren`, supplied through `createSelectClause`, are used as-is, so custom selectors should apply the rules using `ECSchemaProvider.getHiddenClassesTree` and `ECSql.createHiddenClassesWhereClause` from `@itwin/presentation-shared`:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyLevelFiltering.Imports, Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesImports, Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesInHasChildren], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { ECSql } from "@itwin/presentation-shared";
+
+const hierarchyDefinition: HierarchyDefinition = {
+  async defineHierarchyLevel({ imodelAccess, parentNode, instanceFilter, createSelectClause, createFilterClauses }) {
+    const parentIds =
+      parentNode && HierarchyNode.isInstancesNode(parentNode)
+        ? parentNode.key.instanceKeys.map(({ id }) => id)
+        : undefined;
+    // the returned `where` clause excludes instances of hidden classes...
+    const { from, joins, where } = await createFilterClauses({
+      contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
+      filter: instanceFilter,
+    });
+    // ... so the `hasChildren` selector, which checks for children of the same class, has to exclude them too
+    const childVisibilityClause = ECSql.createHiddenClassesWhereClause({
+      tree: await imodelAccess.getHiddenClassesTree("BisCore.PhysicalElement"),
+      classAlias: "child",
+    });
+    return [
+      {
+        fullClassName: "BisCore.PhysicalElement",
+        query: {
+          ecsql: `
+            SELECT ${await createSelectClause({
+              ecClassId: { selector: "this.ECClassId" },
+              ecInstanceId: { selector: "this.ECInstanceId" },
+              nodeLabel: { selector: "this.UserLabel" },
+              hasChildren: {
+                selector: `IFNULL((
+                  SELECT 1
+                  FROM BisCore.PhysicalElement child
+                  WHERE child.Parent.Id = this.ECInstanceId ${childVisibilityClause ? `AND ${childVisibilityClause}` : ""}
+                  LIMIT 1
+                ), 0)`,
+              },
+            })}
+            FROM ${from} this
+            ${joins}
+            WHERE ${parentIds ? "InVirtualSet(?, this.Parent.Id)" : "this.Parent.Id IS NULL"}
+              ${where ? `AND ${where}` : ""}
+          `,
+          bindings: parentIds ? [{ type: "idset", value: parentIds }] : [],
+        },
+      },
+    ];
+  },
+};
+```
+
+<!-- END EXTRACTION -->

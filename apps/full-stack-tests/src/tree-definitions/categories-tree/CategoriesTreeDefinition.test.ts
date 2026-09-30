@@ -772,7 +772,7 @@ describe("Categories tree", () => {
             });
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
               elements: { nodes: "include" },
               subCategories: { nodes: "exclude" },
             });
@@ -837,7 +837,7 @@ describe("Categories tree", () => {
             });
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
               elements: { nodes: "include" },
               subCategories: { nodes: "exclude" },
             });
@@ -906,7 +906,7 @@ describe("Categories tree", () => {
             });
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
               elements: { nodes: "include" },
               subCategories: { nodes: "exclude" },
             });
@@ -955,7 +955,7 @@ describe("Categories tree", () => {
             });
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
               elements: { nodes: "include" },
               subCategories: { nodes: "exclude" },
             });

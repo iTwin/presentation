@@ -91,6 +91,18 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @public
+export function createHiddenClassesTree(props: {
+    schemaProvider: Pick<ECSchemaProvider, "getSchema">;
+    selectClassName: EC.FullClassNameDotNotation;
+}): Promise<HiddenClassesTreeNode[]>;
+
+// @public
+function createHiddenClassesWhereClause(props: {
+    tree: ReadonlyArray<HiddenClassesTreeNode>;
+    classAlias: string;
+}): string;
+
+// @public
 export function createIModelInstanceLabelSelectClauseFactory(props: IModelInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @public
@@ -342,6 +354,7 @@ export interface ECClassHierarchyInspector {
 // @public
 export interface ECSchemaProvider {
     classDerivesFrom(derivedClassFullName: EC.FullClassNameDotNotation, candidateBaseClassFullName: EC.FullClassNameDotNotation): Promise<boolean> | boolean;
+    getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<HiddenClassesTreeNode[]>;
     // (undocumented)
     getSchema(schemaName: string): Promise<EC.Schema | undefined>;
 }
@@ -357,7 +370,8 @@ declare namespace ECSql {
         createInstanceKeySelector,
         createPrimitivePropertyValueSelectorProps,
         createRelationshipPathJoinClause,
-        createRelationshipPathJoinInfo
+        createRelationshipPathJoinInfo,
+        createHiddenClassesWhereClause
     }
 }
 
@@ -469,7 +483,14 @@ export function formatConcatenatedValue(props: {
 }): Promise<string>;
 
 // @public
-export function getClass(schemaProvider: ECSchemaProvider, fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class>;
+export function getClass(schemaProvider: Pick<ECSchemaProvider, "getSchema">, fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class>;
+
+// @public
+export interface HiddenClassesTreeNode {
+    children: HiddenClassesTreeNode[];
+    fullName: EC.FullClassNameDotNotation;
+    state: "hide" | "show";
+}
 
 // @public
 export interface IInstanceLabelSelectClauseFactory {

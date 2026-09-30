@@ -22,7 +22,7 @@ import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel, importHiddenElementClasses, TestSchema } from "../IModelUtils.js";
 import { createModelsTreeProvider } from "./Utils.js";
 
-import type { InstanceKey } from "@itwin/presentation-shared";
+import type { InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Models tree", () => {
   beforeAll(async () => {
@@ -34,7 +34,7 @@ describe("Models tree", () => {
   });
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
-    async function createProvider(props: Omit<Parameters<typeof createModelsTreeProvider>[0], "cacheState">) {
+    async function createProvider(props: Omit<Props<typeof createModelsTreeProvider>, "cacheState">) {
       return createModelsTreeProvider({ ...props, cacheState });
     }
 

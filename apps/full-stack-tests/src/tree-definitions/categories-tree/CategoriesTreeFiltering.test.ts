@@ -8,7 +8,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { createECSchemaVisibilityFilter } from "@itwin/presentation-shared";
 import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CLASS_NAMES,
@@ -358,14 +357,12 @@ describe("Categories tree", () => {
           );
           const { imodelConnection, ...keys } = buildIModelResult;
           const imodelAccess = createIModelAccess(imodelConnection);
-          const schemaVisibilityFilter = createECSchemaVisibilityFilter({ schemaProvider: imodelAccess });
           const idsProvider = createCategoriesTreeIdsProvider({
             imodelAccess,
             type: viewType,
             baseIdsProvider: createBaseIdsProvider({
-              queryExecutor: imodelAccess,
+              imodelAccess,
               elementClassName: getClassesByView(viewType).elementClass,
-              schemaVisibilityFilter,
             }),
           });
           const defaultSubCategoryId = getDefaultSubCategoryId(keys.category.id);

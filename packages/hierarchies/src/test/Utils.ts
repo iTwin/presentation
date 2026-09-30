@@ -5,7 +5,7 @@
 
 import { vi } from "vitest";
 import { Logger } from "@itwin/core-bentley";
-import { getClass } from "@itwin/presentation-shared";
+import { createHiddenClassesTree, getClass } from "@itwin/presentation-shared";
 
 import type { Mock } from "vitest";
 import type { LogLevel } from "@itwin/core-bentley";
@@ -298,6 +298,8 @@ export function createECSchemaProviderStub() {
       const baseClass = await getClass(stubProvider, base);
       return derivedClass.is(baseClass);
     },
+    getHiddenClassesTree: async (selectClassName: EC.FullClassNameDotNotation) =>
+      createHiddenClassesTree({ schemaProvider: stubProvider, selectClassName }),
   };
   return stubProvider;
 }

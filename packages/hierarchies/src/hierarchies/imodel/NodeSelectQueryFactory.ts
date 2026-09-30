@@ -77,6 +77,12 @@ interface NodeSelectClauseProps {
   extendedData?: { [key: string]: Id64String | string | number | boolean | ECSqlValueSelector };
   autoExpand?: boolean | ECSqlValueSelector;
   supportsFiltering?: boolean | ECSqlValueSelector;
+  /**
+   * Specifies whether the node has children. When omitted, children are determined by requesting them, which is
+   * expensive, so supplying a value is preferred.
+   *
+   * Supplied values are used as-is, so they must account for the same rules as the child hierarchy level queries.
+   */
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
@@ -238,12 +244,18 @@ export interface NodesQueryClauseFactory {
    * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
    * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
    * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
-   * `filter.filterClassNames` and by properties as described by `filter.rules`.
+   * `filter.filterClassNames` and by properties as described by `filter.rules`. In addition, it excludes instances of
+   * `from` sub-classes that are hidden through `HiddenClass` or `HiddenSchema` custom attributes.
    *
    * Special cases:
-   * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
+   * - If `filter` is `undefined`, `joins` is set to an empty string, `from` is set to `contentClass.fullName` and `where`
+   * only excludes instances of hidden classes (or is empty, if there are none).
    * - If the provided content class doesn't intersect with the property class in provided filter OR referenced schema items (classes/properties)
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
+   *
+   * Custom `hasChildren` selectors, checking for children that are loaded using this function, should exclude hidden
+   * classes' instances as well. Use `ECSchemaProvider.getHiddenClassesTree` of `imodelAccess` together with
+   * `ECSql.createHiddenClassesWhereClause` from `@itwin/presentation-shared` to create the condition.
    */
   createFilterClauses(props: {
     contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
@@ -254,9 +266,7 @@ export interface NodesQueryClauseFactory {
 /**
  * Creates an instance of `NodeSelectQueryFactory`.
  *
- * The created factory caches metadata derived from the iModel's schemas (e.g. the tree of hidden classes for a
- * given select class). The cache lives for the lifetime of the factory and is not invalidated automatically, so
- * the factory must be re-created when the iModel's schemas may have changed.
+ * The created factory relies on `imodelAccess` for caching schema-derived metadata, such as hidden classes trees.
  */
 export function createNodesQueryClauseFactory(props: {
   imodelAccess: ECSchemaProvider;
@@ -269,7 +279,6 @@ export function createNodesQueryClauseFactory(props: {
 class NodeSelectQueryFactory {
   private _imodelAccess: ECSchemaProvider;
   private _instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
-  private _hiddenClassesTreeCache = new Map<string, Promise<HiddenClassNode[]>>();
 
   public constructor(props: {
     imodelAccess: ECSchemaProvider;
@@ -306,18 +315,7 @@ class NodeSelectQueryFactory {
     `;
   }
 
-  /**
-   * Creates the necessary ECSQL snippets to create an instance filter described by the `filter` argument.
-   * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
-   * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
-   * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
-   * `filter.filterClassNames` and by properties as described by `filter.rules`.
-   *
-   * Special cases:
-   * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
-   * - If the provided content class doesn't intersect with the property class in provided filter OR referenced schema items (classes/properties)
-   * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
-   */
+  /** See `NodesQueryClauseFactory.createFilterClauses`. */
   public async createFilterClauses(props: {
     contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
     filter?: GenericInstanceFilter;
@@ -327,23 +325,11 @@ class NodeSelectQueryFactory {
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
       : { from: contentClass.fullName, joins: [], where: [] };
 
-    const normalizedFrom = normalizeFullClassName(from);
-    const fromClass = await getClass(this._imodelAccess, normalizedFrom);
-    // The hidden-classes tree depends only on the select class and the (static) schema metadata, but it is
-    // expensive to compute (it recursively walks the whole derived-class subtree). The same select classes
-    // recur across every hierarchy level, so memoize the result per class for the lifetime of this factory.
-    let hiddenClassesPromise = this._hiddenClassesTreeCache.get(normalizedFrom);
-    if (!hiddenClassesPromise) {
-      hiddenClassesPromise = getHiddenClassesTree(this._imodelAccess, fromClass);
-      // Don't keep a rejected result cached - drop it so a later call can retry. Until this handler runs, the
-      // entry stays this same promise (concurrent calls get a cache hit), so an unconditional delete is safe.
-      hiddenClassesPromise.catch(() => this._hiddenClassesTreeCache.delete(normalizedFrom));
-      this._hiddenClassesTreeCache.set(normalizedFrom, hiddenClassesPromise);
-    }
-    const hiddenClasses = await hiddenClassesPromise;
-    const hiddenClassesWhereClause = createWhereClauseForHiddenClasses(hiddenClasses, contentClass.alias);
-    hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
-    assert(!hiddenClassesWhereClause.showClause, "`showClause` is expected to always be empty here");
+    const hiddenClassesWhereClause = ECSql.createHiddenClassesWhereClause({
+      tree: await this._imodelAccess.getHiddenClassesTree(from),
+      classAlias: contentClass.alias,
+    });
+    hiddenClassesWhereClause && where.push(hiddenClassesWhereClause);
 
     return { from, joins: joins.join("\n"), where: where.join(" AND ") };
   }
@@ -900,124 +886,6 @@ async function getSpecializedPropertyClass(
     }
   }
   return resolvedClassName;
-}
-
-interface HiddenClassNode {
-  fullName: EC.FullClassNameDotNotation;
-  state: "hide" | "show";
-  children: HiddenClassNode[];
-}
-
-async function getHiddenClassesTree(
-  schemaProvider: ECSchemaProvider,
-  selectClass: EC.Class,
-  selectClassAttribute: "show" | "hide" = "show",
-): Promise<HiddenClassNode[]> {
-  const derivedClassNames = selectClass.getDerivedClassNames({ onlyDirect: true });
-  const derivedClassNamesBySchema = derivedClassNames.reduce((acc, fullClassName) => {
-    const { schemaName, className } = parseFullClassName(fullClassName);
-    let entry = acc.get(schemaName);
-    if (!entry) {
-      entry = [];
-      acc.set(schemaName, entry);
-    }
-    entry.push(className);
-    return acc;
-  }, new Map<string, string[]>());
-  const derivedClassesBySchema = await Promise.all(
-    [...derivedClassNamesBySchema.entries()].map(async ([schemaName, classNames]) => {
-      const schema = await schemaProvider.getSchema(schemaName);
-      /* v8 ignore next 3 -- @preserve */
-      if (!schema) {
-        throw new Error(`Schema "${schemaName}" not found.`);
-      }
-      return {
-        schema,
-        classes: classNames.map((className) => {
-          const lookupClass = schema.getClass(className);
-          /* v8 ignore next 3 -- @preserve */
-          if (!lookupClass) {
-            throw new Error(`Class "${className}" not found in schema "${schemaName}".`);
-          }
-          return lookupClass;
-        }),
-      };
-    }),
-  );
-
-  const hiddenSchemas = new Map<string, "hide" | "show" | undefined>();
-  for (const { schema } of derivedClassesBySchema) {
-    hiddenSchemas.set(schema.name, schema.isHidden ? "hide" : undefined);
-  }
-
-  return Promise.all(
-    derivedClassesBySchema
-      .flatMap(({ classes }) => classes)
-      .map(async (ecClass): Promise<HiddenClassNode[]> => {
-        const hiddenClassAttr = (() => {
-          switch (ecClass.isHidden) {
-            case true:
-              return "hide";
-            case false:
-              return "show";
-            default:
-              return undefined;
-          }
-        })();
-        const attr = hiddenClassAttr ?? hiddenSchemas.get(ecClass.schema.name);
-        if (!attr || attr === selectClassAttribute) {
-          return getHiddenClassesTree(schemaProvider, ecClass, selectClassAttribute);
-        }
-        return [
-          {
-            fullName: ecClass.fullName,
-            state: attr,
-            children: await getHiddenClassesTree(schemaProvider, ecClass, attr),
-          },
-        ];
-      }),
-  ).then((results) => results.flat());
-}
-
-function createWhereClauseForHiddenClasses(
-  hiddenClasses: HiddenClassNode[],
-  selectAlias: string,
-): { showClause?: string; hideClause?: string } {
-  const res: { showClause?: string; hideClause?: string } = {};
-
-  const show = hiddenClasses.filter(({ state }) => state === "show");
-  if (show.length > 0) {
-    let showClause = `[${selectAlias}].[ECClassId] IS (${show
-      .map(({ fullName }) => parseFullClassName(fullName))
-      .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
-      .join(", ")})`;
-    const childClauses = createWhereClauseForHiddenClasses(
-      show.flatMap(({ children }) => children),
-      selectAlias,
-    );
-    if (childClauses.hideClause) {
-      showClause = `(${showClause} AND ${childClauses.hideClause})`;
-    }
-    res.showClause = showClause;
-  }
-
-  const hide = hiddenClasses.filter(({ state }) => state === "hide");
-  if (hide.length > 0) {
-    let hideClause = `[${selectAlias}].[ECClassId] IS NOT (${hide
-      .map(({ fullName }) => parseFullClassName(fullName))
-      .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
-      .join(", ")})`;
-    const childClauses = createWhereClauseForHiddenClasses(
-      hide.flatMap(({ children }) => children),
-      selectAlias,
-    );
-    if (childClauses.showClause) {
-      hideClause = `(${hideClause} OR ${childClauses.showClause})`;
-    }
-    res.hideClause = hideClause;
-  }
-
-  return res;
 }
 
 async function tryGetClass(

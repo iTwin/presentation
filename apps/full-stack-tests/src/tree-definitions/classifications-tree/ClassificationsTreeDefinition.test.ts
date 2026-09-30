@@ -39,7 +39,7 @@ describe("Classifications tree", () => {
   });
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
-    async function createClassificationsTreeProvider(
+    async function createProvider(
       imodel: IModelConnection,
       hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
     ) {
@@ -78,9 +78,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
-          rootClassificationSystemCode: systemCode,
-        });
+        using provider = await createProvider(imodelConnection, { rootClassificationSystemCode: systemCode });
 
         await validateHierarchy({
           provider,
@@ -131,7 +129,7 @@ describe("Classifications tree", () => {
       );
 
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+      using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
 
       await validateHierarchy({
         provider,
@@ -180,7 +178,7 @@ describe("Classifications tree", () => {
       );
 
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+      using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
 
       await validateHierarchy({
         provider,
@@ -224,6 +222,12 @@ describe("Classifications tree", () => {
 
             const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "PhysicalModel" });
             const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            insertPhysicalElement({
+              txn,
+              modelId: physicalModel.id,
+              categoryId: category.id,
+              userLabel: "visible unclassified element in the same category",
+            });
             for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
               const hiddenClassifiedElement = insertPhysicalElement({
                 txn,
@@ -251,7 +255,7 @@ describe("Classifications tree", () => {
         });
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+        using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
         await validateHierarchy({
           provider,
           expect: [
@@ -313,7 +317,7 @@ describe("Classifications tree", () => {
         });
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+        using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
         await validateHierarchy({
           provider,
           expect: [
@@ -379,7 +383,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -430,7 +434,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["BisCore.GeometricElement2d"] },
         });
@@ -499,7 +503,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -570,7 +574,7 @@ describe("Classifications tree", () => {
 
         const { imodelConnection, ...keys } = buildIModelResult;
         // Omitting the base class should filter out elements of all derived classes due to polymorphic class exclusion.
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["BisCore.PhysicalElement"] },
         });
@@ -627,7 +631,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -686,7 +690,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -759,7 +763,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = await createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
