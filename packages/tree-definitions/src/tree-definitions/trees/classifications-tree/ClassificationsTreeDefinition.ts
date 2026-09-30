@@ -290,6 +290,8 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
                       SELECT 1
                       FROM ${CLASS_NAMES.Classification} classification
                       WHERE classification.Model.Id = this.ECInstanceId
+                        AND classification.Parent.Id IS NULL
+                        AND NOT classification.IsPrivate
                       LIMIT 1
                     ), 0)
                   `,
