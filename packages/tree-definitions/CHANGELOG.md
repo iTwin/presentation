@@ -1,5 +1,22 @@
 # @itwin/presentation-tree-definitions
 
+## 0.1.2
+
+### Patch Changes
+
+- [#1604](https://github.com/iTwin/presentation/pull/1604): Fixed top-level category detection in models and categories tree definitions when excluded parents have included children.
+- [#1611](https://github.com/iTwin/presentation/pull/1611): `createModelsTree`: Added an optional `includeOnlyVisibleNodeInstanceKeys` search flag to omit hidden model entries from paths returned by `createInstanceKeyPaths` and trees returned by `createSearchTree`. Hidden models remain included by default, and existing subject-visibility behavior is unchanged.
+- [#1601](https://github.com/iTwin/presentation/pull/1601): Classifications tree: Fix classification tables indicating children when they contain no non-private root classifications.
+- [#1610](https://github.com/iTwin/presentation/pull/1610): Narrowed the `className` type in search paths and search trees returned by `createModelsTree`, `createCategoriesTree` and `createClassificationsTree`.
+
+  `createInstanceKeyPaths` now yields `ModelsTreeSearchPath` / `CategoriesTreeSearchPath` / `ClassificationsTreeSearchPath`, and `createSearchTree` resolves to `ModelsTreeSearchTree[]` / `CategoriesTreeSearchTree[]` / `ClassificationsTreeSearchTree[]`. In these types, `className` is a string union of the classes that specific hierarchy can return, so it can be switched on in a type-safe way without casting:
+
+  - Models tree: `"BisCore.Subject" | "BisCore.GeometricModel3d" | "BisCore.SpatialCategory" | "BisCore.GeometricElement3d"`
+  - Categories tree: `"BisCore.DefinitionContainer" | "BisCore.SpatialCategory" | "BisCore.DrawingCategory" | "BisCore.SubCategory" | "BisCore.GeometricModel3d" | "BisCore.GeometricModel2d" | "BisCore.GeometricElement3d" | "BisCore.GeometricElement2d"`
+  - Classifications tree: `"ClassificationSystems.Classification" | "ClassificationSystems.ClassificationTable" | "BisCore.GeometricElement3d"`
+
+- [#1603](https://github.com/iTwin/presentation/pull/1603): Classifications tree: Fix classifications incorrectly indicating children when all classified elements are excluded but share a category with unrelated included elements.
+
 ## 0.1.1
 
 ### Patch Changes
