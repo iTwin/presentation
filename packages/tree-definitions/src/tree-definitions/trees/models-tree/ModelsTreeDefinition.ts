@@ -247,12 +247,17 @@ export interface ElementsGroupInfo {
 }
 
 /**
- * Limits and cancellation options for models hierarchy searches.
+ * Visibility, limits, and cancellation options for models hierarchy searches.
  * @beta
  */
 interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
+  /**
+   * Excludes hidden hierarchy nodes from the returned search paths.
+   * Defaults to `false`.
+   */
+  excludeHiddenEntries?: boolean;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
@@ -1499,8 +1504,8 @@ function createSearchPathsForDifferentTypes(
   { key: Id64String; type: number } | { key: ElementsGroupInfo; type: typeof ELEMENT_TYPE_AS_NUMBER },
   { path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }
 > {
-  return (obs) =>
-    obs.pipe(
+  return (obs) => {
+    const paths = obs.pipe(
       reduce(
         (acc, value) => {
           if (value.type === SUBJECT_TYPE_AS_NUMBER) {
@@ -1576,6 +1581,24 @@ function createSearchPathsForDifferentTypes(
         );
       }),
     );
+    if (!props.excludeHiddenEntries) {
+      return paths;
+    }
+    return defer(async () => props.idsProvider.getHiddenModelIds()).pipe(
+      switchMap((hiddenModelIds) =>
+        paths.pipe(
+          map(({ path, target }) => ({
+            path: path.filter(
+              (key, index) =>
+                key.className !== CLASS_NAMES.GeometricModel3d ||
+                (!hiddenModelIds.has(key.id) && path[index - 1]?.className !== CLASS_NAMES.GeometricElement3d),
+            ),
+            target,
+          })),
+        ),
+      ),
+    );
+  };
 }
 
 function createInstanceKeyPathsFromInstanceLabelObs(

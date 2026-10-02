@@ -305,6 +305,7 @@ interface ModelsTreeProps {
 // @beta
 interface ModelsTreeSearchOptions {
     abortSignal?: AbortSignal;
+    excludeHiddenEntries?: boolean;
     limit?: number | "unbounded";
 }
 
