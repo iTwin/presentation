@@ -305,7 +305,7 @@ interface ModelsTreeProps {
 // @beta
 interface ModelsTreeSearchOptions {
     abortSignal?: AbortSignal;
-    excludeHiddenEntries?: boolean;
+    includeOnlyVisibleNodeInstanceKeys?: boolean;
     limit?: number | "unbounded";
 }
 

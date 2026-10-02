@@ -7,6 +7,7 @@ import {
   bufferCount,
   defer,
   EMPTY,
+  filter,
   firstValueFrom,
   forkJoin,
   from,
@@ -254,13 +255,13 @@ interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
   /**
-   * Excludes hidden hierarchy nodes from the returned search paths.
+   * Includes only visible hierarchy node instance keys in the returned search paths.
    * Defaults to `false`.
    *
    * Leave disabled when passing results to `createIModelHierarchyProvider`, which requires hidden entries
    * for traversal.
    */
-  excludeHiddenEntries?: boolean;
+  includeOnlyVisibleNodeInstanceKeys?: boolean;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
@@ -1584,20 +1585,22 @@ function createSearchPathsForDifferentTypes(
         );
       }),
     );
-    if (!props.excludeHiddenEntries) {
+    if (!props.includeOnlyVisibleNodeInstanceKeys) {
       return paths;
     }
     return defer(async () => props.idsProvider.getHiddenModelIds()).pipe(
       switchMap((hiddenModelIds) =>
         paths.pipe(
-          map(({ path, target }) => ({
-            path: path.filter(
+          map(({ path, target }) => {
+            const targetEntry = path[path.length - 1];
+            const visiblePath = path.filter(
               (key, index) =>
                 key.className !== CLASS_NAMES.GeometricModel3d ||
                 (!hiddenModelIds.has(key.id) && path[index - 1]?.className !== CLASS_NAMES.GeometricElement3d),
-            ),
-            target,
-          })),
+            );
+            return visiblePath[visiblePath.length - 1] === targetEntry ? { path: visiblePath, target } : undefined;
+          }),
+          filter((result) => result !== undefined),
         ),
       ),
     );

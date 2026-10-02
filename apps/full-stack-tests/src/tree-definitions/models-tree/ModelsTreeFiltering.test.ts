@@ -152,7 +152,7 @@ describe("Models tree", () => {
       );
     });
 
-    it("excludes hidden entries from label search paths only when requested", async () => {
+    it("excludes hidden entries from search paths only when requested", async () => {
       await using setupResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
           const subject = insertSubject({ txn, codeValue: "child subject", parentId: IModel.rootSubjectId });
@@ -228,7 +228,7 @@ describe("Models tree", () => {
         imodelAccess,
         hierarchyConfig: { subjects: { root: "exclude" } },
       });
-      for (const excludeHiddenEntries of [true, false]) {
+      for (const includeOnlyVisibleNodeInstanceKeys of [true, false]) {
         const {
           subject,
           physicalModel,
@@ -248,7 +248,7 @@ describe("Models tree", () => {
           {
             path: [
               ...subjectPath,
-              ...(!excludeHiddenEntries ? [adjustedModelKey(physicalModel)] : []),
+              ...(!includeOnlyVisibleNodeInstanceKeys ? [adjustedModelKey(physicalModel)] : []),
               category,
               adjustedElementKey(physicalElement),
             ],
@@ -257,7 +257,7 @@ describe("Models tree", () => {
           {
             path: [
               ...subjectPath,
-              ...(!excludeHiddenEntries ? [adjustedModelKey(graphicalModel)] : []),
+              ...(!includeOnlyVisibleNodeInstanceKeys ? [adjustedModelKey(graphicalModel)] : []),
               category,
               adjustedElementKey(graphicalElement),
             ],
@@ -269,13 +269,13 @@ describe("Models tree", () => {
             path: [
               ...visibleModelPath,
               adjustedElementKey(modeledElement),
-              ...(!excludeHiddenEntries ? [adjustedModelKey(subModel)] : []),
+              ...(!includeOnlyVisibleNodeInstanceKeys ? [adjustedModelKey(subModel)] : []),
               adjustedElementKey(subModelElement),
             ],
             target: subModelElement.id,
           },
         ];
-        const searchProps = { label: "matching", excludeHiddenEntries };
+        const searchProps = { label: "matching", includeOnlyVisibleNodeInstanceKeys };
         const paths = await collect(createInstanceKeyPaths(searchProps));
         expect(paths).toHaveLength(5);
         expect(paths).toEqual(expect.arrayContaining(expectedPaths));
@@ -284,6 +284,39 @@ describe("Models tree", () => {
           expectedTree.accept({ path: { path } });
         }
         expect(await createSearchTree(searchProps)).toEqual(expectedTree.getTree());
+
+        const targetSearchProps = {
+          targetItems: [
+            physicalModel,
+            graphicalModel,
+            visibleModel,
+            subModel,
+            physicalElement,
+            graphicalElement,
+            visibleElement,
+            modeledElement,
+            subModelElement,
+          ],
+          includeOnlyVisibleNodeInstanceKeys,
+        };
+        const expectedTargetPaths = [
+          ...expectedPaths,
+          { path: [...subjectPath, adjustedModelKey(visibleModel)], target: visibleModel.id },
+          ...(!includeOnlyVisibleNodeInstanceKeys
+            ? [
+                { path: [...subjectPath, adjustedModelKey(physicalModel)], target: physicalModel.id },
+                { path: [...subjectPath, adjustedModelKey(graphicalModel)], target: graphicalModel.id },
+              ]
+            : []),
+        ];
+        const targetPaths = await collect(createInstanceKeyPaths(targetSearchProps));
+        expect(targetPaths).toHaveLength(expectedTargetPaths.length);
+        expect(targetPaths).toEqual(expect.arrayContaining(expectedTargetPaths));
+        const expectedTargetTree = HierarchySearchTree.createBuilder();
+        for (const { path } of expectedTargetPaths) {
+          expectedTargetTree.accept({ path: { path } });
+        }
+        expect(await createSearchTree(targetSearchProps)).toEqual(expectedTargetTree.getTree());
       }
     });
 
