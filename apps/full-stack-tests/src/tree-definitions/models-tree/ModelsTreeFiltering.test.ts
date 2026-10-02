@@ -279,11 +279,8 @@ describe("Models tree", () => {
         const paths = await collect(createInstanceKeyPaths(searchProps));
         expect(paths).toHaveLength(5);
         expect(paths).toEqual(expect.arrayContaining(expectedPaths));
-        const expectedTree = HierarchySearchTree.createBuilder();
-        for (const { path } of expectedPaths) {
-          expectedTree.accept({ path: { path } });
-        }
-        expect(await createSearchTree(searchProps)).toEqual(expectedTree.getTree());
+        const expectedTree = await HierarchySearchTree.createFromPathsList(expectedPaths);
+        expect(await createSearchTree(searchProps)).toEqual(expectedTree);
 
         const targetSearchProps = {
           targetItems: [
@@ -312,11 +309,8 @@ describe("Models tree", () => {
         const targetPaths = await collect(createInstanceKeyPaths(targetSearchProps));
         expect(targetPaths).toHaveLength(expectedTargetPaths.length);
         expect(targetPaths).toEqual(expect.arrayContaining(expectedTargetPaths));
-        const expectedTargetTree = HierarchySearchTree.createBuilder();
-        for (const { path } of expectedTargetPaths) {
-          expectedTargetTree.accept({ path: { path } });
-        }
-        expect(await createSearchTree(targetSearchProps)).toEqual(expectedTargetTree.getTree());
+        const expectedTargetTree = await HierarchySearchTree.createFromPathsList(expectedTargetPaths);
+        expect(await createSearchTree(targetSearchProps)).toEqual(expectedTargetTree);
       }
     });
 

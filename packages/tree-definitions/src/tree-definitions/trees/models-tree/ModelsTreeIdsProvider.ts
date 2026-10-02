@@ -54,7 +54,7 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
   getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
   /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
   getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
-  /** Returns cached eligible model IDs hidden by partition content properties. Does not include sub-models modeled by elements. */
+  /** Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy. */
   getHiddenModelIds(): Promise<Set<ModelId>>;
   /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
   createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;

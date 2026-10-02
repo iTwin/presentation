@@ -1593,11 +1593,19 @@ function createSearchPathsForDifferentTypes(
         paths.pipe(
           map(({ path, target }) => {
             const targetEntry = path[path.length - 1];
-            const visiblePath = path.filter(
-              (key, index) =>
-                key.className !== CLASS_NAMES.GeometricModel3d ||
-                (!hiddenModelIds.has(key.id) && path[index - 1]?.className !== CLASS_NAMES.GeometricElement3d),
-            );
+            const visiblePath = path.filter((key, index) => {
+              if (key.className !== CLASS_NAMES.GeometricModel3d) {
+                return true;
+              }
+              if (hiddenModelIds.has(key.id)) {
+                return false;
+              }
+              if (path[index - 1]?.className === CLASS_NAMES.GeometricElement3d) {
+                // Sub-models follow their modeled element in the path and are always hidden in the hierarchy.
+                return false;
+              }
+              return true;
+            });
             return visiblePath[visiblePath.length - 1] === targetEntry ? { path: visiblePath, target } : undefined;
           }),
           filter((result) => result !== undefined),
