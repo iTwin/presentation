@@ -7,6 +7,7 @@ import {
   bufferCount,
   defer,
   EMPTY,
+  filter,
   firstValueFrom,
   forkJoin,
   from,
@@ -247,12 +248,20 @@ export interface ElementsGroupInfo {
 }
 
 /**
- * Limits and cancellation options for models hierarchy searches.
+ * Visibility, limits, and cancellation options for models hierarchy searches.
  * @beta
  */
 interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
+  /**
+   * Includes only visible hierarchy node instance keys in the returned search paths.
+   * Defaults to `false`.
+   *
+   * Leave disabled when passing results to `createIModelHierarchyProvider`, which requires hidden entries
+   * for traversal.
+   */
+  includeOnlyVisibleNodeInstanceKeys?: boolean;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
@@ -1499,8 +1508,8 @@ function createSearchPathsForDifferentTypes(
   { key: Id64String; type: number } | { key: ElementsGroupInfo; type: typeof ELEMENT_TYPE_AS_NUMBER },
   { path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }
 > {
-  return (obs) =>
-    obs.pipe(
+  return (obs) => {
+    const paths = obs.pipe(
       reduce(
         (acc, value) => {
           if (value.type === SUBJECT_TYPE_AS_NUMBER) {
@@ -1576,6 +1585,34 @@ function createSearchPathsForDifferentTypes(
         );
       }),
     );
+    if (!props.includeOnlyVisibleNodeInstanceKeys) {
+      return paths;
+    }
+    return defer(async () => props.idsProvider.getHiddenModelIds()).pipe(
+      switchMap((hiddenModelIds) =>
+        paths.pipe(
+          map(({ path, target }) => {
+            const targetEntry = path[path.length - 1];
+            const visiblePath = path.filter((key, index) => {
+              if (key.className !== CLASS_NAMES.GeometricModel3d) {
+                return true;
+              }
+              if (hiddenModelIds.has(key.id)) {
+                return false;
+              }
+              if (path[index - 1]?.className === CLASS_NAMES.GeometricElement3d) {
+                // Sub-models follow their modeled element in the path and are always hidden in the hierarchy.
+                return false;
+              }
+              return true;
+            });
+            return visiblePath[visiblePath.length - 1] === targetEntry ? { path: visiblePath, target } : undefined;
+          }),
+          filter((result) => result !== undefined),
+        ),
+      ),
+    );
+  };
 }
 
 function createInstanceKeyPathsFromInstanceLabelObs(
