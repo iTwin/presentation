@@ -1298,11 +1298,11 @@ describe("Models tree", () => {
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { ...x.rootElement1, className: "TestSchema.SubModelablePhysicalObject" },
+                    identifier: { ...x.rootElement1, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                   {
-                    identifier: { ...x.rootElement3, className: "TestSchema.SubModelablePhysicalObject" },
+                    identifier: { ...x.rootElement3, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                 ],
