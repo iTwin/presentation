@@ -256,6 +256,9 @@ interface ModelsTreeSearchOptions {
   /**
    * Excludes hidden hierarchy nodes from the returned search paths.
    * Defaults to `false`.
+   *
+   * Leave disabled when passing results to `createIModelHierarchyProvider`, which requires hidden entries
+   * for traversal.
    */
   excludeHiddenEntries?: boolean;
   /** Stops loading further paths when aborted. */
