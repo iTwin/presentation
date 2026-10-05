@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { assert } from "@itwin/core-bentley";
 import {
   buildContentDefinition,
-  preparePropertyReaders,
+  prepareSelectorDefinitions,
 } from "../../content/definition-building/BuildContentDefinition.js";
 import { computePropertySelectorId } from "../../content/definition-building/ValueSelector.js";
 import { defineExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
@@ -23,9 +23,16 @@ import {
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
+import type { ContentDefinition } from "../../content/definition-building/BuildContentDefinition.js";
 import type { DescriptorTransformer } from "../../content/extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
+
+function readerOf(selectors: ContentDefinition["selectors"], id: string) {
+  const selector = selectors[id];
+  assert(selector.kind === "property");
+  return selector.read;
+}
 
 function createSource(
   primaryClass: EC.FullClassNameDotNotation,
@@ -51,7 +58,7 @@ describe("buildContentDefinition", () => {
     });
     base.getDerivedClassNames = () => [d1.fullName, d2.fullName];
     const imodelAccess = createSchemaAccess([base, d1, d2]);
-    const readers = await preparePropertyReaders({
+    const definitions = await prepareSelectorDefinitions({
       imodelAccess,
       selectors: {
         "TestSchema.D1.Prop": {
@@ -72,14 +79,14 @@ describe("buildContentDefinition", () => {
       fields: {},
     });
 
-    expect(readers["TestSchema.D1.Prop"]("TestSchema.D2", "d2")).to.equal(undefined);
-    expect(readers["TestSchema.D1.Prop"]("TestSchema.D1", "d1")).to.equal("d1");
-    expect(readers["TestSchema.Base.Inherited"]("TestSchema.D1", "base")).to.equal("base");
+    expect(readerOf(definitions, "TestSchema.D1.Prop")("TestSchema.D2", "d2")).to.equal(undefined);
+    expect(readerOf(definitions, "TestSchema.D1.Prop")("TestSchema.D1", "d1")).to.equal("d1");
+    expect(readerOf(definitions, "TestSchema.Base.Inherited")("TestSchema.D1", "base")).to.equal("base");
   });
 
   it("rejects a prepared property selector whose property does not exist", async () => {
     await expect(
-      preparePropertyReaders({
+      prepareSelectorDefinitions({
         imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.A" })]),
         selectors: {
           missing: {
@@ -99,7 +106,7 @@ describe("buildContentDefinition", () => {
     "rejects a prepared property selector with unsupported %s type",
     async (primitiveType) => {
       await expect(
-        preparePropertyReaders({
+        prepareSelectorDefinitions({
           imodelAccess: createSchemaAccess([
             createEntityClass({
               fullName: "TestSchema.A",
@@ -641,7 +648,7 @@ describe("buildContentDefinition", () => {
     expect(fields).to.have.lengthOf(1);
     expect(fields[0].valueClassNames).to.deep.equal([a.fullName]);
     expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.Base.Code"]);
-    const read = definition.propertyReaders["TestSchema.Base.Code"];
+    const read = readerOf(definition.selectors, "TestSchema.Base.Code");
     expect(read(a.fullName, "a")).to.equal("a");
     expect(read(b.fullName, "b")).to.equal("b");
   });
@@ -711,7 +718,7 @@ describe("buildContentDefinition", () => {
     expect(definition.descriptor.fields).to.deep.equal({});
     expect(definition.externalProviders).to.deep.equal([]);
     expect(Object.keys(definition.selectors)).to.deep.equal(["TestSchema.A.Code"]);
-    expect(definition.propertyReaders["TestSchema.A.Code"]("TestSchema.A", "code")).to.equal("code");
+    expect(readerOf(definition.selectors, "TestSchema.A.Code")("TestSchema.A", "code")).to.equal("code");
   });
 
   it("validates related input properties even when no paths or output fields remain", async () => {
@@ -997,8 +1004,8 @@ describe("buildContentDefinition", () => {
       { propertyClassName: "TestSchema.A", propertyName: "First", cardinality: "one" },
       { propertyClassName: "TestSchema.A", propertyName: "Second", cardinality: "one" },
     ]);
-    expect(definition.propertyReaders["TestSchema.A.First"]("TestSchema.A", "first")).to.equal("first");
-    expect(definition.propertyReaders["TestSchema.A.Second"]("TestSchema.A", "second")).to.equal("second");
+    expect(readerOf(definition.selectors, "TestSchema.A.First")("TestSchema.A", "first")).to.equal("first");
+    expect(readerOf(definition.selectors, "TestSchema.A.Second")("TestSchema.A", "second")).to.equal("second");
     expect(getSchema).toHaveBeenCalledOnce();
   });
 

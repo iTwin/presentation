@@ -131,6 +131,37 @@ describe("createValueDescriptorFromProperty", () => {
       );
       expect(result).to.be.undefined;
     });
+
+    it("preserves extendedTypeName on a String property", () => {
+      const result = createValueDescriptorFromProperty(
+        createPrimitiveProperty({ name: "Data", primitiveType: "String", extendedTypeName: "Json" }),
+      );
+      expect(result).to.deep.equal({ kind: "primitive", type: "String", extendedType: "Json" });
+    });
+
+    it("preserves extendedTypeName on a numeric property alongside kind of quantity", () => {
+      const result = createValueDescriptorFromProperty(
+        createPrimitiveProperty({
+          name: "Length",
+          primitiveType: "Double",
+          koq: "Units.LENGTH",
+          extendedTypeName: "SomeExtendedType",
+        }),
+      );
+      expect(result).to.deep.equal({
+        kind: "primitive",
+        type: "Double",
+        kindOfQuantity: "Units.LENGTH",
+        extendedType: "SomeExtendedType",
+      });
+    });
+
+    it("omits extendedType when the property has none", () => {
+      const result = createValueDescriptorFromProperty(
+        createPrimitiveProperty({ name: "Code", primitiveType: "String" }),
+      );
+      expect(result).to.deep.equal({ kind: "primitive", type: "String" });
+    });
   });
 
   describe("enumeration properties", () => {

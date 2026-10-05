@@ -18,7 +18,7 @@ import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies
 import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
 
 /**
- * Provides model, category, and subcategory IDs for tree hierarchy definitions.
+ * Provides model, category, and sub-category IDs for tree hierarchy definitions.
  * Element data is limited to the configured element class and non-private models.
  * @internal
  */
@@ -37,7 +37,7 @@ export interface BaseIdsProvider {
   getAllModels(): Promise<Array<ModelId>>;
   /** Returns IDs of non-private plan projection models containing elements of the configured class. */
   getPlanProjectionModels(): Promise<Id64Set>;
-  /** Returns categories containing top-level elements and non-excluded elements in the specified model. */
+  /** Returns categories containing non-excluded top-level elements in the specified model. */
   getCategories(props: { modelId: Id64String }): Promise<Id64Set>;
   /** Returns category IDs of non-excluded elements. */
   getCategoriesContainingNonExcludedElements(): Promise<Id64Set>;
@@ -50,12 +50,12 @@ export interface BaseIdsProvider {
     excludeSubModels?: boolean;
     /** Requires the category to contain elements without a parent element in the model. */
     includeOnlyTopMostElementCategory?: boolean;
-    /** Requires the category to contain both top-level elements and non-excluded elements in the model. */
+    /** Requires the category to contain non-excluded top-level elements in the model. */
     excludeIfOnlyExcludedClasses?: boolean;
   }): AsyncIterableIterator<ModelId>;
-  /** Returns a mapping from category IDs to their subcategory IDs. */
+  /** Returns a mapping from category IDs to their sub-category IDs. */
   getCategorySubCategoriesMap(): Promise<Map<CategoryId, SubCategoryId[]>>;
-  /** Groups the supplied subcategory IDs by parent category, omitting categories with only one subcategory. */
+  /** Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category. */
   getSubCategoryCategories(props: { subCategoryIds: Id64Arg }): Promise<Map<CategoryId, SubCategoryId[]>>;
 }
 

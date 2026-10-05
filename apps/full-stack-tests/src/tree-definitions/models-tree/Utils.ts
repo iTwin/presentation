@@ -13,7 +13,7 @@ import {
   defaultModelsTreeHierarchyConfiguration as defaultHierarchyConfiguration,
   mergeWithDefaults,
 } from "@itwin/presentation-tree-definitions/internal";
-import { createIModelAccess } from "../Common.js";
+import { collect, createIModelAccess } from "../Common.js";
 
 import type { Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -32,39 +32,31 @@ import type {
 
 interface CreateModelsTreeProviderProps {
   imodelConnection: IModelConnection;
+  cacheState?: "cold" | "warm";
   searchPaths?: HierarchySearchTree[];
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   imodelAccess?: ReturnType<typeof createIModelAccess>;
 }
 
-export function createModelsTreeProvider({
+export async function createModelsTreeProvider({
   imodelConnection,
+  cacheState = "cold",
   searchPaths,
   hierarchyConfig,
   imodelAccess,
-}: CreateModelsTreeProviderProps): HierarchyProvider & { dispose: () => void; [Symbol.dispose]: () => void } {
+}: CreateModelsTreeProviderProps): Promise<HierarchyProvider & Disposable> {
   const configOverrides: ModelsTreeHierarchyConfiguration = { subjects: { root: "exclude" }, ...hierarchyConfig };
   const createdImodelAccess = imodelAccess ?? createIModelAccess(imodelConnection);
-  const provider = createIModelHierarchyProvider({
+  const tree = createModelsTree({ imodelAccess: createdImodelAccess, hierarchyConfig: configOverrides });
+  if (cacheState === "warm") {
+    // Matching all elements also populates modeled-element path caches.
+    await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
+  }
+  return createIModelHierarchyProvider({
     imodelAccess: createdImodelAccess,
-    hierarchyDefinition: createModelsTree({ imodelAccess: createdImodelAccess, hierarchyConfig: configOverrides })
-      .definition,
+    hierarchyDefinition: tree.definition,
     ...(searchPaths ? { search: { paths: searchPaths } } : undefined),
   });
-  const dispose = () => {
-    provider[Symbol.dispose]();
-  };
-  return {
-    hierarchyChanged: provider.hierarchyChanged,
-    getNodes: (props) => provider.getNodes(props),
-    getNodeInstanceKeys: (props) => provider.getNodeInstanceKeys(props),
-    setFormatter: (formatter) => provider.setFormatter(formatter),
-    setHierarchySearch: (props) => provider.setHierarchySearch(props),
-    dispose,
-    [Symbol.dispose]() {
-      dispose();
-    },
-  };
 }
 
 export function createSubjectHierarchyNode(props?: {

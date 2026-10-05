@@ -107,6 +107,40 @@ describe("createECSchemaProvider", () => {
     expect(enumeration.enumerators).toEqual([{ name: "One", label: "One Label", value: 1 }]);
   });
 
+  it("decodes EC name-escaping in enumeration and enumerator names when no distinct label is reported", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              enumerations: new Map([
+                [
+                  "Foo__x0020__Enum",
+                  {
+                    name: "Foo__x0020__Enum",
+                    schemaName: "TestSchema",
+                    primitiveType: SchemaViewPrimitiveType.Integer,
+                    isStrict: true,
+                    enumerators: [{ name: "Foo__x0020__One", value: 1 }],
+                  },
+                ],
+              ]),
+            },
+          ],
+        ]),
+      ),
+    });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    const enumeration = schema.getEnumeration("Foo__x0020__Enum");
+    assert(enumeration !== undefined);
+    expect(enumeration.label).toBe("Foo Enum");
+    expect(enumeration.enumerators).toEqual([{ name: "Foo__x0020__One", label: "Foo One", value: 1 }]);
+  });
+
   it("returns kind of quantity from schema view", async () => {
     const imodel = createMockIModel({
       schemaView: createMockSchemaView(
@@ -146,6 +180,38 @@ describe("createECSchemaProvider", () => {
     expect(koq.schema).toBe(schema);
   });
 
+  it("decodes EC name-escaping in the KOQ name when no distinct label is reported", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              kindOfQuantities: new Map([
+                [
+                  "Foo__x0020__Koq",
+                  {
+                    name: "Foo__x0020__Koq",
+                    schemaName: "TestSchema",
+                    relativeError: 0.001,
+                    persistenceUnit: "Units.M",
+                  },
+                ],
+              ]),
+            },
+          ],
+        ]),
+      ),
+    });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    const koq = schema.getKindOfQuantity("Foo__x0020__Koq");
+    assert(koq !== undefined);
+    expect(koq.label).toBe("Foo Koq");
+  });
+
   it("returns property category from schema view", async () => {
     const imodel = createMockIModel({
       schemaView: createMockSchemaView(
@@ -176,6 +242,30 @@ describe("createECSchemaProvider", () => {
     expect(category.label).toBe("Test Category");
     expect(category.priority).toBe(5);
     expect(category.schema).toBe(schema);
+  });
+
+  it("decodes EC name-escaping in the property category name when no distinct label is reported", async () => {
+    const imodel = createMockIModel({
+      schemaView: createMockSchemaView(
+        new Map([
+          [
+            "TestSchema",
+            {
+              name: "TestSchema",
+              propertyCategories: new Map([
+                ["Foo__x0020__Category", { name: "Foo__x0020__Category", schemaName: "TestSchema", priority: 5 }],
+              ]),
+            },
+          ],
+        ]),
+      ),
+    });
+    const provider = createECSchemaProvider(imodel);
+    const schema = await provider.getSchema("TestSchema");
+    assert(schema !== undefined);
+    const category = schema.getPropertyCategory("Foo__x0020__Category");
+    assert(category !== undefined);
+    expect(category.label).toBe("Foo Category");
   });
 
   it("returns property from schema view class", async () => {
@@ -402,6 +492,40 @@ describe("createECClassFromSchemaView", () => {
     const cls = ecSchema.getClass("HiddenClassX");
     assert(cls !== undefined);
     expect(cls.isHidden).toBe(true);
+  });
+
+  it("uses the reported label when it's distinct from the name", () => {
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([
+        ["Foo__x0020__Bar", { name: "Foo__x0020__Bar", schemaName: "ClassSchema", label: "My Class" }],
+      ]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    const cls = ecSchema.getClass("Foo__x0020__Bar");
+    assert(cls !== undefined);
+    expect(cls.label).toBe("My Class");
+  });
+
+  it("decodes EC name-escaping in the class name when no distinct label is reported", () => {
+    // Some `SchemaView` implementations report `label` equal to (escaped) `name` rather than leaving it
+    // `undefined` when no display label is set - either way, falls back to decoding the name.
+    const mockSchema = createMockSchema({
+      name: "ClassSchema",
+      classes: new Map([
+        ["Foo__x0020__Bar", { name: "Foo__x0020__Bar", schemaName: "ClassSchema", label: "Foo__x0020__Bar" }],
+        ["Foo__x0020__Baz", { name: "Foo__x0020__Baz", schemaName: "ClassSchema" }],
+      ]),
+    });
+    const mockContext = createMockSchemaViewContext({
+      schemaView: createMockSchemaView(new Map([["ClassSchema", { name: "ClassSchema" }]])),
+    });
+    const ecSchema = createECSchemaFromSchemaView(mockSchema, mockContext);
+    expect(ecSchema.getClass("Foo__x0020__Bar")?.label).toBe("Foo Bar");
+    expect(ecSchema.getClass("Foo__x0020__Baz")?.label).toBe("Foo Baz");
   });
 
   it("returns base class within the same schema", () => {
@@ -997,6 +1121,37 @@ describe("createECPropertyFromSchemaView", () => {
     }),
     schema: dummyEcSchema,
   };
+
+  it("uses the reported label when it's distinct from the name", () => {
+    const mockProp = createMockProperty({
+      name: "Foo__x0020__Bar",
+      label: "My Property",
+      isPrimitive: () => true,
+      primitiveType: SchemaViewPrimitiveType.String,
+    } as unknown as SchemaView.Property);
+    const ecProp = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+    expect(ecProp.label).toBe("My Property");
+  });
+
+  it("decodes EC name-escaping in the property name when no distinct label is reported", () => {
+    const mockProp = createMockProperty({
+      name: "Foo__x0020__Bar",
+      isPrimitive: () => true,
+      primitiveType: SchemaViewPrimitiveType.String,
+    } as unknown as SchemaView.Property);
+    const ecProp = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+    expect(ecProp.label).toBe("Foo Bar");
+  });
+
+  it("does not decode the property name when it contains no escape sequences and has no distinct label", () => {
+    const mockProp = createMockProperty({
+      name: "TestProp",
+      isPrimitive: () => true,
+      primitiveType: SchemaViewPrimitiveType.String,
+    } as unknown as SchemaView.Property);
+    const ecProp = createECPropertyFromSchemaView(mockProp, dummyEcClass, dummyMockContext);
+    expect(ecProp.label).toBeUndefined();
+  });
 
   describe("Property class (declaring class)", () => {
     it("uses declaringClass for property.class, including its own schema context", () => {

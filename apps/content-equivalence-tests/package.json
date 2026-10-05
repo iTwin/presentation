@@ -1,0 +1,30 @@
+{
+  "name": "presentation-content-equivalence-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "lint": "eslint \"./src/**/*.ts\"",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@itwin/core-backend": "catalog:itwinjs-core-dev",
+    "@itwin/core-bentley": "catalog:itwinjs-core-dev",
+    "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
+    "@itwin/presentation-common": "catalog:itwinjs-core-dev",
+    "@itwin/presentation-content": "workspace:*",
+    "@itwin/presentation-core-interop": "workspace:*",
+    "@itwin/presentation-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@itwin/eslint-plugin": "catalog:build-tools",
+    "@types/node": "catalog:build-tools",
+    "@typescript/native": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
+    "rimraf": "catalog:build-tools",
+    "typescript": "catalog:build-tools",
+    "vitest": "catalog:test-tools"
+  }
+}

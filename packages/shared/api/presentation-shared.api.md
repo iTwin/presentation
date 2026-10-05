@@ -634,6 +634,7 @@ export namespace PrimitiveValue {
 // @public
 export type PrimitiveValueDescriptor = {
     kind: "primitive";
+    extendedType?: string;
 } & ({
     type: Extract<PrimitiveValueType, "String">;
     kindOfQuantity?: undefined;

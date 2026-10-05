@@ -217,7 +217,7 @@ Provider specs are applied first (the system uses them during field generation t
 **Input:** Provider-owned content definition plus request options.
 **Output:** ECSQL query (or queries).
 
-This stage translates private value requirements into one or more ECSQL queries. It emits one column per deduplicated requirement, not one per field. Multiple fields can share a requirement (for example, forks), and external-input columns may have no field. Hidden fields are still queried; removing an output field drops its requirement unless the same column is required by another field or external input. Calculated requirements carry their ECSQL expression. Query filterers can inject additional WHERE clauses or JOINs at this point.
+This stage translates private value requirements into one or more ECSQL queries. It emits one column per deduplicated requirement, not one per field. Multiple fields can share a requirement (for example, forks), and external-input columns may have no field. Hidden fields are still queried; removing an output field drops its requirement unless the same column is required by another field or external input. Calculated requirements carry their ECSQL expression.
 
 A property requirement carries semantic coordinates (`propertyClassName`, `propertyName`, `pathFromTarget`) but no column alias. The builder assigns deterministic aliases while constructing each request's FROM/JOIN shape, then combines those aliases with the cached requirements to create request-specific projections and row decoders.
 
@@ -364,9 +364,6 @@ Note: external fields are NOT part of the ECSQL query — they have no SQL expre
       Only iModel-backed fields (property + SQL calculated) are queried.
       Hidden fields ("Pump.FlowRate") ARE still queried — hidden ≠ removed.
 
-Query filterer runs (e.g., spatial filter — only elements in building zone A):
-  - Injects: WHERE ... AND pump.ECInstanceId IN (SELECT SourceId FROM ...)
-
 Output (simplified ECSQL):
   SELECT
     pump.$,
@@ -377,7 +374,6 @@ Output (simplified ECSQL):
   JOIN ProcessPhysical.PumpType pumpType ON ...
   JOIN ProcessPhysical.OperatingParametersAspect aspect ON ...
   WHERE pump.ECInstanceId = 0x3a
-    AND pump.ECInstanceId IN (SELECT SourceId FROM ...)   ← from query filterer
   ORDER BY pump.Name ASC
 ```
 
@@ -548,18 +544,9 @@ Multiple transformers run sequentially in priority order. Each receives the desc
 
 Inspiration: [PropertySpecification](https://www.itwinjs.org/presentation/content/propertyspecification/), [PropertyCategorySpecification](https://www.itwinjs.org/presentation/content/propertycategoryspecification/).
 
-### Query filterer
+### SQL calculated fields
 
-Modifies the built ECSQL query before execution. Query filterers have a single, narrow purpose: **injecting additional WHERE clauses** (and any JOINs needed by those WHERE clauses). They do not add SELECT columns.
-
-Use cases:
-
-- Spatial filtering (e.g., only include elements within a bounding box).
-- App-specific business logic filters that apply across all content requests.
-
-**Rule:** Query filterers must not add or remove SELECT columns. They may only add WHERE clauses and JOINs needed to support those clauses.
-
-Computed columns are handled differently: **SQL calculated fields** (declared by a provider) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor.
+SQL calculated fields (declared by a provider) carry their ECSQL expression as metadata. The query builder includes those expressions in the SELECT clause, and the value loader reads them like any other field. This keeps the invariant that every column in the query corresponds to a field in the descriptor.
 
 ### External fields provider
 
@@ -619,7 +606,7 @@ External fields providers run during Stage 4, after query execution but before i
 
 ### Registration and ordering
 
-All extension points — iModel fields providers, descriptor transformers, query filterers, and external fields providers — are registered on the pipeline instance with a numeric priority. The pipeline calls them in priority order (iModel fields providers are collected additively, transformers and filterers run sequentially, external fields providers contribute fields during Stage 2 and run their resolve function in order during Stage 4). This registration mechanism is intentionally left unspecified at the conceptual level — concrete API design will define the exact registration surface.
+All extension points — iModel fields providers, descriptor transformers, and external fields providers — are registered on the pipeline instance with a numeric priority. The pipeline calls them in priority order (iModel fields providers are collected additively, transformers run sequentially, external fields providers contribute fields during Stage 2 and run their resolve function in order during Stage 4). This registration mechanism is intentionally left unspecified at the conceptual level — concrete API design will define the exact registration surface.
 
 ### Consumer utilities
 

@@ -10,11 +10,13 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel } from "../IModelUtils.js";
 import {
-  createClassificationsTreeProvider,
   importClassificationSchema,
   insertClassification,
   insertClassificationSystem,
@@ -22,17 +24,33 @@ import {
   insertElementHasClassificationsRelationship,
 } from "./Utils.js";
 
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
+
 const rootClassificationSystemCode = "TestClassificationSystem";
 
 describe("Classifications tree", () => {
-  describe("Hierarchy definition", () => {
-    beforeAll(async () => {
-      await initialize();
-    });
+  beforeAll(async () => {
+    await initialize();
+  });
 
-    afterAll(async () => {
-      await terminate();
-    });
+  afterAll(async () => {
+    await terminate();
+  });
+
+  describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
+    async function createClassificationsTreeProvider(
+      imodel: IModelConnection,
+      hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
+    ) {
+      const imodelAccess = createIModelAccess(imodel);
+      const tree = createClassificationsTree({ imodelAccess, hierarchyConfig });
+      if (cacheState === "warm") {
+        // Label search populates the same ID cache used by the hierarchy definition.
+        await collect(tree.createInstanceKeyPaths({ label: "no matching labels", limit: "unbounded" }));
+      }
+      return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+    }
 
     it.each([rootClassificationSystemCode, "Owner's Classification"])(
       "loads classifications' hierarchy without elements for system code %s",
@@ -60,7 +78,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode: systemCode,
         });
 
@@ -88,6 +106,44 @@ describe("Classifications tree", () => {
         });
       },
     );
+
+    it("loads classification table with private root and non-private nested classification", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, async (txn) => {
+          await importClassificationSchema(imodel);
+
+          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+          const classification = insertClassification({
+            txn,
+            modelId: table.id,
+            codeValue: "RootClassification",
+            isPrivate: true,
+          });
+          insertClassification({
+            txn,
+            modelId: table.id,
+            parentId: classification.id,
+            codeValue: "PublicChildClassification",
+          });
+          return { table };
+        }),
+      );
+
+      const { imodelConnection, ...keys } = buildIModelResult;
+      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.table],
+            supportsFiltering: true,
+            children: false,
+          }),
+        ],
+      });
+    });
 
     it("loads classification elements", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
@@ -124,7 +180,7 @@ describe("Classifications tree", () => {
       );
 
       const { imodelConnection, ...keys } = buildIModelResult;
-      using provider = createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
 
       await validateHierarchy({
         provider,
@@ -157,6 +213,62 @@ describe("Classifications tree", () => {
     });
 
     describe("excludedElementClassNames", () => {
+      it("does not give classifications children through unrelated included elements in the same category", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) =>
+          withEditTxn(imodel, async (txn) => {
+            await importClassificationSchema(imodel);
+
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "TestClassification" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "Test physical model" });
+            const category = insertSpatialCategory({ txn, codeValue: "Shared category" });
+            const excludedElement = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              codeValue: "Excluded classified element",
+            });
+            insertElementHasClassificationsRelationship({
+              txn,
+              elementId: excludedElement.id,
+              classificationId: classification.id,
+            });
+            insertPhysicalElement({
+              txn,
+              classFullName: "Generic.SpatialLocation",
+              modelId: model.id,
+              categoryId: category.id,
+              codeValue: "Unrelated included element",
+            });
+            return { table, classification };
+          }),
+        );
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
+          rootClassificationSystemCode,
+          elements: { excludedClasses: ["Generic.PhysicalObject"] },
+        });
+
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
       it("does not filter out elements when they don't belong to any of the excluded classes", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) =>
           withEditTxn(imodel, async (txn) => {
@@ -185,7 +297,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["BisCore.GeometricElement2d"] },
         });
@@ -254,7 +366,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -325,7 +437,7 @@ describe("Classifications tree", () => {
 
         const { imodelConnection, ...keys } = buildIModelResult;
         // Omitting the base class should filter out elements of all derived classes due to polymorphic class exclusion.
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["BisCore.PhysicalElement"] },
         });
@@ -382,7 +494,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -441,7 +553,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });
@@ -514,7 +626,7 @@ describe("Classifications tree", () => {
         );
 
         const { imodelConnection, ...keys } = buildIModelResult;
-        using provider = createClassificationsTreeProvider(imodelConnection, {
+        using provider = await createClassificationsTreeProvider(imodelConnection, {
           rootClassificationSystemCode,
           elements: { excludedClasses: ["Generic.PhysicalObject"] },
         });

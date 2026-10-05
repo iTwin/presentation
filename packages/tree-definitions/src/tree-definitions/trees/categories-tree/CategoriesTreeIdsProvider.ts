@@ -16,7 +16,6 @@ import {
   reduce,
   shareReplay,
   tap,
-  toArray,
 } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom } from "@itwin/presentation-shared";
@@ -27,9 +26,11 @@ import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/U
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
-import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
+import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
 interface DefinitionContainerInfo {
   modelId: Id64String;
@@ -51,7 +52,7 @@ interface CategoriesInfo {
 export interface CachedCategoryInfo {
   /** The category's element ID. */
   id: Id64String;
-  /** Number of non-private subcategories, including the default subcategory. */
+  /** Number of non-private sub-categories, including the default sub-category. */
   subCategoryChildCount: number;
   /** Whether the category contains elements of the configured class, including excluded classes. */
   hasElements: boolean;
@@ -64,7 +65,7 @@ export interface CachedCategoryInfo {
  * @internal
  */
 interface CategoriesTreeIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   baseIdsProvider: BaseIdsProvider;
   type: "2d" | "3d";
 }
@@ -88,14 +89,14 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
     parentDefinitionContainerIds: Id64Arg;
     includeEmpty?: boolean;
   }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
-  /** Yields root-to-subcategory paths, omitting subcategories whose parent category has only one subcategory. */
-  getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  /** Yields root-to-sub-category paths, omitting sub-categories whose parent category has only one sub-category. */
+  getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<CategoriesTreeSearchPath>;
   /** Yields root-to-definition-container paths, including each container itself. Unknown IDs yield empty paths. */
   getDefinitionContainersSearchPaths(props: {
     definitionContainerIds: Id64Arg;
-  }): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  }): AsyncIterableIterator<CategoriesTreeSearchPath>;
   /** Returns the category's ancestor path, excluding the category itself. Returns an empty path for root or unknown categories. */
-  getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Promise<HierarchyNodeIdentifiersPath>;
+  getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Promise<CategoriesTreeSearchPath>;
   /** Returns all category and definition container IDs, excluding empty entries unless requested. */
   getAllDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
@@ -115,7 +116,7 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
  * @internal
  */
 export function createCategoriesTreeIdsProvider({
-  queryExecutor,
+  imodelAccess,
   type,
   baseIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
@@ -126,7 +127,7 @@ export function createCategoriesTreeIdsProvider({
   } = { definitionContainersData: undefined, categoriesData: undefined, isDefinitionContainerSupported: undefined };
   const definitionContainerInstanceKeyPaths: Map<
     DefinitionContainerId,
-    Observable<HierarchyNodeIdentifiersPath>
+    Observable<CategoriesTreeSearchPath>
   > = new Map();
   const { categoryClass } = getClassesByView(type);
   let defContainersDataLoaded = false;
@@ -161,7 +162,7 @@ export function createCategoriesTreeIdsProvider({
             ${createWhereClause({ conditions: ["NOT this.IsPrivate", "NOT m.IsPrivate OR m.ECClassId IS (BisCore.DictionaryModel)"] })}
             GROUP BY this.ECInstanceId
           `;
-          return queryExecutor.createQueryReader(
+          return imodelAccess.createQueryReader(
             { ecsql: categoriesQuery },
             {
               rowFormat: "ECSqlPropertyNames",
@@ -180,28 +181,6 @@ export function createCategoriesTreeIdsProvider({
           }),
         ),
       ),
-    );
-  }
-
-  function queryIsDefinitionContainersSupported(): Observable<boolean> {
-    return defer(() => {
-      const query = `
-        SELECT
-          1
-        FROM
-          ECDbMeta.ECSchemaDef s
-          JOIN ECDbMeta.ECClassDef c ON c.Schema.Id = s.ECInstanceId
-        ${createWhereClause({ conditions: ["s.Name = 'BisCore'", "c.Name = 'DefinitionContainer'"] })}
-      `;
-
-      return queryExecutor.createQueryReader(
-        { ecsql: query },
-        { restartToken: `${componentName}/${componentId}/is-definition-container-supported` },
-      );
-    }).pipe(
-      catchBeSQLiteInterrupts,
-      toArray(),
-      map((rows) => rows.length > 0),
     );
   }
 
@@ -242,7 +221,7 @@ export function createCategoriesTreeIdsProvider({
           dc.ModelId modelId
           FROM ${DEFINITION_CONTAINERS_CTE} dc
       `;
-      return queryExecutor.createQueryReader(
+      return imodelAccess.createQueryReader(
         { ctes, ecsql: definitionsQuery, bindings: [{ type: "idset", value: categoryIds }] },
         {
           rowFormat: "ECSqlPropertyNames",
@@ -396,7 +375,7 @@ export function createCategoriesTreeIdsProvider({
     definitionContainerIds,
   }: {
     definitionContainerIds: Id64Arg;
-  }): Observable<HierarchyNodeIdentifiersPath> {
+  }): Observable<CategoriesTreeSearchPath> {
     return getDefinitionContainersInfo().pipe(
       mergeMap((definitionContainersInfo) =>
         fromWithRelease({ source: definitionContainerIds, releaseOnCount: 200 }).pipe(
@@ -434,7 +413,7 @@ export function createCategoriesTreeIdsProvider({
     categoryId,
   }: {
     categoryId: Id64String;
-  }): Observable<HierarchyNodeIdentifiersPath> {
+  }): Observable<CategoriesTreeSearchPath> {
     return getCategoryData().pipe(
       mergeMap(({ categoriesWithModel, categoriesGroupedByModel }) => {
         if (categoriesGroupedByModel.size === 0) {
@@ -456,7 +435,10 @@ export function createCategoriesTreeIdsProvider({
   }
 
   function getIsDefinitionContainerSupported(): Observable<boolean> {
-    cachedData.isDefinitionContainerSupported ??= queryIsDefinitionContainersSupported().pipe(shareReplay());
+    cachedData.isDefinitionContainerSupported ??= defer(async () => {
+      const schema = await imodelAccess.getSchema("BisCore");
+      return schema?.getClass("DefinitionContainer") !== undefined;
+    }).pipe(shareReplay());
     return cachedData.isDefinitionContainerSupported;
   }
 
@@ -505,7 +487,7 @@ export function createCategoriesTreeIdsProvider({
       subCategoryIds,
     }: {
       subCategoryIds: Id64Arg;
-    }): AsyncIterableIterator<HierarchyNodeIdentifiersPath> {
+    }): AsyncIterableIterator<CategoriesTreeSearchPath> {
       if (Id64.sizeOf(subCategoryIds) === 0) {
         return (async function* () {})();
       }

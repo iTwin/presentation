@@ -407,9 +407,12 @@ export type ValueDescriptor =
  * and their labels) so consumers can map raw values to display labels without re-reading schema. The
  * `type` discriminates the enumerator value type (`String` → `string`, `Integer | Long` → `number`).
  *
+ * `extendedType` carries the property's raw `extendedTypeName` (e.g. `"Json"`, `"BeGuid"`), when set,
+ * to let consumers refine how a `type`-typed value should be interpreted without re-reading schema.
+ *
  * @public
  */
-export type PrimitiveValueDescriptor = { kind: "primitive" } & (
+export type PrimitiveValueDescriptor = { kind: "primitive"; extendedType?: string } & (
   | {
       /** The primitive value type. */
       type: Extract<PrimitiveValueType, "String">;

@@ -5,10 +5,11 @@
 
 import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
+import { ECSQL_PREFIX } from "../../../content/InternalUtils.js";
 import { PropertyField } from "../../../content/model/Field.js";
 import { serializeRelationshipPath } from "../../../content/model/Utils.js";
 import { PAGE_SIZE } from "../../../content/query/QueryLimits.js";
-import { getItems } from "../../../content/query/value-loading/GetItems.js";
+import { getItems as getItemsImpl } from "../../../content/query/value-loading/GetItems.js";
 import {
   createEntityClass,
   createPrimitiveProperty,
@@ -17,15 +18,50 @@ import {
 } from "../../MetadataStubs.js";
 
 import type { Id64String } from "@itwin/core-bentley";
-import type { EC, ECSqlQueryDef, ECSqlQueryRow, RelationshipPath } from "@itwin/presentation-shared";
+import type {
+  EC,
+  ECSqlQueryDef,
+  ECSqlQueryRow,
+  IInstanceLabelSelectClauseFactory,
+  RelationshipPath,
+} from "@itwin/presentation-shared";
 import type { ContentSource } from "../../../content/ContentTarget.js";
-import type { ContentDefinition } from "../../../content/definition-building/BuildContentDefinition.js";
+import type {
+  ContentDefinition,
+  PropertySelectorDefinition,
+} from "../../../content/definition-building/BuildContentDefinition.js";
 import type { ExternalFieldsProvider } from "../../../content/extensions/ExternalFieldsProvider.js";
 import type { ContentDescriptor } from "../../../content/model/ContentDescriptor.js";
 import type { ContentQuerySort } from "../../../content/query/SelectBuilder.js";
 import type { PropertyValueReader } from "../../../content/query/value-loading/RowDecoder.js";
 
 const readProperty: PropertyValueReader = (_className, value) => value ?? undefined;
+
+/** Builds a property selector definition, defaulting to the pass-through reader and a string type. */
+function propertySelector(
+  props: Pick<PropertySelectorDefinition, "id" | "propertyClassName" | "propertyName"> &
+    Partial<Pick<PropertySelectorDefinition, "pathFromTarget" | "type" | "read">>,
+): PropertySelectorDefinition {
+  return {
+    kind: "property",
+    pathFromTarget: [],
+    type: { kind: "primitive", type: "String" },
+    read: readProperty,
+    ...props,
+  };
+}
+
+/**
+ * Calls `getItems` with a label factory, since most cases here carry no navigation properties and so
+ * never reach it. Cases that do pass their own.
+ */
+function getItems(
+  props: Omit<Parameters<typeof getItemsImpl>[0], "labelsFactory"> & {
+    labelsFactory?: IInstanceLabelSelectClauseFactory;
+  },
+) {
+  return getItemsImpl({ labelsFactory: navLabelsFactory, ...props });
+}
 
 function createTestDefinition(
   contentDescriptor: ContentDescriptor,
@@ -34,16 +70,9 @@ function createTestDefinition(
   return {
     descriptor: contentDescriptor,
     selectors: {
-      "Schema.A.Code": {
-        kind: "property",
-        id: "Schema.A.Code",
-        propertyClassName: "Schema.A",
-        propertyName: "Code",
-        pathFromTarget: [],
-      },
+      "Schema.A.Code": propertySelector({ id: "Schema.A.Code", propertyClassName: "Schema.A", propertyName: "Code" }),
     },
     calculatedFieldIdsBySource: new Map(),
-    propertyReaders: { "Schema.A.Code": readProperty },
     fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code" },
     externalInputs: [],
     externalProviders: [],
@@ -102,6 +131,61 @@ function createExternalStatusDefinition(getValues: ExternalFieldsProvider["getVa
   });
 }
 
+const navField: PropertyField = {
+  kind: "property",
+  id: "Schema.A.Nav",
+  label: "Nav",
+  type: { kind: "navigation", targetClassName: "Schema.Target" },
+  propertyClassName: "Schema.A",
+  propertyName: "Nav",
+  pathFromTarget: [],
+  pathCardinality: "one",
+  valueClassNames: ["Schema.A", "Schema.B"],
+  primaryClassNames: ["Schema.A"],
+};
+
+const navDescriptor = {
+  sources: [],
+  categories: {},
+  fields: { "Schema.A.Nav": navField },
+} as unknown as ContentDescriptor;
+
+const navRequirements = {
+  selectors: {
+    "Schema.A.Nav": propertySelector({
+      id: "Schema.A.Nav",
+      propertyClassName: "Schema.A",
+      propertyName: "Nav",
+      type: navField.type,
+    }),
+  },
+  fieldSelectorIds: { "Schema.A.Nav": "Schema.A.Nav" },
+} satisfies Pick<ContentDefinition, "selectors" | "fieldSelectorIds">;
+
+/** Selects the target's `Label` property, so a lookup query's canned rows stay easy to assert against. */
+const navLabelsFactory: IInstanceLabelSelectClauseFactory = {
+  createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]`,
+};
+
+/** A primary row whose `$` blob carries a navigation target id, as the row decoder leaves it. */
+function navValueRow(id: Id64String, targetId: Id64String | undefined): ECSqlQueryRow {
+  return {
+    ["pres_primary_class"]: "Schema.A",
+    ["pres_primary_id"]: id,
+    ["this"]: JSON.stringify(targetId === undefined ? {} : { ["Nav"]: targetId }),
+  };
+}
+
+/** Distinguishes a navigation target lookup from the primary value queries. */
+function isNavLookup(query: ECSqlQueryDef): boolean {
+  return query.ecsql.includes("[Schema].[Target]");
+}
+
+/** `[id, className, label]` — the column order a lookup query selects in, read as `"Indexes"`. */
+function navTargetRow(id: Id64String, className: string, label: string): ECSqlQueryRow {
+  return [id, className, label];
+}
+
 const manyPath: RelationshipPath = [
   { sourceClassName: "TestSchema.Primary", relationshipName: "TestSchema.RelMany", targetClassName: "TestSchema.Many" },
 ];
@@ -140,24 +224,16 @@ const relDescriptor = {
 
 const relatedRequirements = {
   selectors: {
-    code: {
-      kind: "property",
-      id: "code",
-      propertyClassName: "TestSchema.Primary",
-      propertyName: "Code",
-      pathFromTarget: [],
-    },
-    name: {
-      kind: "property",
+    code: propertySelector({ id: "code", propertyClassName: "TestSchema.Primary", propertyName: "Code" }),
+    name: propertySelector({
       id: "name",
       propertyClassName: "TestSchema.Many",
       propertyName: "Name",
       pathFromTarget: manyPath,
-    },
+    }),
   },
-  propertyReaders: { code: readProperty, name: readProperty },
   fieldSelectorIds: { code: "code", name: "name" },
-} satisfies Pick<ContentDefinition, "selectors" | "propertyReaders" | "fieldSelectorIds">;
+} satisfies Pick<ContentDefinition, "selectors" | "fieldSelectorIds">;
 
 function createRelationalSource(primaryClass: EC.FullClassNameDotNotation, related: boolean): ContentSource {
   return {
@@ -563,22 +639,17 @@ describe("getItems", () => {
         getContentDefinition: async () =>
           createTestDefinition(twoFieldDescriptor, {
             selectors: {
-              "Schema.A.Code": {
-                kind: "property",
+              "Schema.A.Code": propertySelector({
                 id: "Schema.A.Code",
                 propertyClassName: "Schema.A",
                 propertyName: "Code",
-                pathFromTarget: [],
-              },
-              "Schema.B.Label": {
-                kind: "property",
+              }),
+              "Schema.B.Label": propertySelector({
                 id: "Schema.B.Label",
                 propertyClassName: "Schema.B",
                 propertyName: "Label",
-                pathFromTarget: [],
-              },
+              }),
             },
-            propertyReaders: { "Schema.A.Code": readProperty, "Schema.B.Label": readProperty },
             fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code", "Schema.B.Label": "Schema.B.Label" },
           }),
         sources: [createSource("Schema.A"), createSource("Schema.B")],
@@ -719,7 +790,6 @@ describe("getItems", () => {
                 pathFromTarget: filteredManyPathB,
               },
             },
-            propertyReaders: { code: readProperty, filteredNameA: readProperty, filteredNameB: readProperty },
             fieldSelectorIds: {
               [relCodeField.id]: "code",
               [filteredNameFieldA.id]: "filteredNameA",
@@ -1000,7 +1070,14 @@ describe("getItems", () => {
     const definition = {
       ...createExternalStatusDefinition(getValues),
       descriptor: publicDescriptor,
-      propertyReaders: { "Schema.A.Code": readCode },
+      selectors: {
+        "Schema.A.Code": propertySelector({
+          id: "Schema.A.Code",
+          propertyClassName: "Schema.A",
+          propertyName: "Code",
+          read: readCode,
+        }),
+      },
       fieldSelectorIds: {},
     } satisfies ContentDefinition;
     const { imodelAccess, queries } = createIModelAccess(() => [valueRow("Schema.A", "0x1", "A1")]);
@@ -1043,5 +1120,144 @@ describe("getItems", () => {
         getItems({ imodelAccess, getContentDefinition: async () => definition, sources: [createSource("Schema.A")] }),
       ),
     ).rejects.toThrow(/external service down/);
+  });
+
+  describe("navigation values", () => {
+    it("loads a navigation field's target key and label", async () => {
+      const { imodelAccess, queries } = createIModelAccess((query) =>
+        isNavLookup(query)
+          ? [navTargetRow("0x10", "Schema.TargetSub", "Target label")]
+          : [navValueRow("0x1", "0x10"), navValueRow("0x2", undefined)],
+      );
+      const items = await collect(
+        getItems({
+          imodelAccess,
+          getContentDefinition: async () => createTestDefinition(navDescriptor, navRequirements),
+          sources: [createSource("Schema.A")],
+        }),
+      );
+
+      expect(items.map((item) => item.getValue(navField))).to.deep.equal([
+        { key: { className: "Schema.TargetSub", id: "0x10" }, label: "Target label" },
+        undefined,
+      ]);
+      // One primary query plus one target lookup — the target is not joined into the value query.
+      expect(queries).to.have.lengthOf(2);
+      expect(queries[1].bindings).to.deep.equal({ [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: ["0x10"] } });
+    });
+
+    it("loads no targets and runs no lookup when a page references none", async () => {
+      const { imodelAccess, queries } = createIModelAccess(() => [navValueRow("0x1", undefined)]);
+      const items = await collect(
+        getItems({
+          imodelAccess,
+          getContentDefinition: async () => createTestDefinition(navDescriptor, navRequirements),
+          sources: [createSource("Schema.A")],
+        }),
+      );
+
+      expect(items.map((item) => item.getValue(navField))).to.deep.equal([undefined]);
+      expect(queries).to.have.lengthOf(1);
+    });
+
+    it("gives an external fields provider loaded navigation values rather than target ids", async () => {
+      const getValues = vi.fn(async ({ items: batch }: { items: Array<unknown> }) => batch.map(() => ({ status: "" })));
+      const definition = createTestDefinition(navDescriptor, {
+        ...navRequirements,
+        externalInputs: [{ propertyClassName: "Schema.A", propertyName: "Nav", cardinality: "one" }],
+        externalProviders: [
+          {
+            provider: {
+              id: "ext_v1",
+              fields: [{ id: "status", label: "Status", type: { kind: "primitive", type: "String" } }],
+              getValues,
+            },
+            inputs: [{ key: "nav", cardinality: "one", selectors: [{ selectorId: "Schema.A.Nav" }] }],
+            outputs: [{ localId: "status", fieldId: "ext_v1:status" }],
+          },
+        ],
+      });
+      const { imodelAccess } = createIModelAccess((query) =>
+        isNavLookup(query) ? [navTargetRow("0x10", "Schema.Target", "Target label")] : [navValueRow("0x1", "0x10")],
+      );
+
+      await collect(
+        getItems({ imodelAccess, getContentDefinition: async () => definition, sources: [createSource("Schema.A")] }),
+      );
+
+      expect(getValues).toHaveBeenCalledExactlyOnceWith({
+        items: [{ inputValues: { nav: { key: { className: "Schema.Target", id: "0x10" }, label: "Target label" } } }],
+      });
+    });
+
+    it("looks targets up once per page", async () => {
+      const firstPage = Array.from({ length: PAGE_SIZE }, (_, index) => navValueRow(`0x${index + 1}`, "0x10"));
+      const { imodelAccess, queries } = createIModelAccess((query) => {
+        if (isNavLookup(query)) {
+          return [navTargetRow("0x10", "Schema.Target", "Target label")];
+        }
+        return query.ecsql.includes("WHERE") ? [navValueRow("0xffff", "0x10")] : firstPage;
+      });
+      const items = await collect(
+        getItems({
+          imodelAccess,
+          getContentDefinition: async () => createTestDefinition(navDescriptor, navRequirements),
+          sources: [createSource("Schema.A")],
+        }),
+      );
+
+      expect(items).to.have.lengthOf(PAGE_SIZE + 1);
+      const expected = { key: { className: "Schema.Target", id: "0x10" }, label: "Target label" };
+      expect(items[0].getValue(navField)).to.deep.equal(expected);
+      expect(items[items.length - 1].getValue(navField)).to.deep.equal(expected);
+      // The whole page's references share one lookup, so the two pages add two lookups in total.
+      expect(queries.filter(isNavLookup)).to.have.lengthOf(2);
+    });
+
+    it("loads navigation values for globally sorted multi-source pages", async () => {
+      const sortField: PropertyField = { ...navField, id: "Schema.A.Sort", propertyName: "Sort" };
+      const { imodelAccess } = createIModelAccess((query) => {
+        if (isNavLookup(query)) {
+          return [navTargetRow("0x10", "Schema.Target", "Target label")];
+        }
+        if (query.ecsql.includes("UNION ALL")) {
+          return [keyRow("Schema.A", "0x1", "A"), keyRow("Schema.A", "0x2", "B")];
+        }
+        // Both primaries belong to the `Schema.A` source, so only its value query returns rows.
+        return query.ecsql.includes("[Schema].[A]") ? [navValueRow("0x1", "0x10"), navValueRow("0x2", undefined)] : [];
+      });
+      const items = await collect(
+        getItems({
+          imodelAccess,
+          getContentDefinition: async () => createTestDefinition(navDescriptor, navRequirements),
+          sources: [createSource("Schema.A"), createSource("Schema.B")],
+          sorting: [{ field: sortField, direction: "asc" }],
+        }),
+      );
+
+      expect(items.map((item) => item.getValue(navField))).to.deep.equal([
+        { key: { className: "Schema.Target", id: "0x10" }, label: "Target label" },
+        undefined,
+      ]);
+    });
+
+    it("propagates a target lookup failure", async () => {
+      const { imodelAccess } = createIModelAccess((query) => {
+        if (isNavLookup(query)) {
+          throw new Error("target lookup failed");
+        }
+        return [navValueRow("0x1", "0x10")];
+      });
+
+      await expect(
+        collect(
+          getItems({
+            imodelAccess,
+            getContentDefinition: async () => createTestDefinition(navDescriptor, navRequirements),
+            sources: [createSource("Schema.A")],
+          }),
+        ),
+      ).rejects.toThrow(/target lookup failed/);
+    });
   });
 });
