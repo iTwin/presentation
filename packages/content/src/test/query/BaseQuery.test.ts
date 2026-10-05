@@ -3,16 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ECSql, trimWhitespace } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
-import { buildBaseQuery } from "../../content/query/BaseQuery.js";
+import { buildBaseQuery, buildTargetScopedQuery } from "../../content/query/BaseQuery.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../../content/Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget } from "../../content/ContentTarget.js";
-import type { QueryFilterer } from "../../content/extensions/QueryFilterer.js";
 import type { CalculatedField, PropertyField } from "../../content/model/Field.js";
 
 // A schema provider whose classes expose no navigation properties, so the real
@@ -397,46 +396,6 @@ describe("buildBaseQuery", () => {
 
       expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
       expect(result.anchor.parts.where).to.equal("WHERE [this].Area > 5");
-    });
-  });
-
-  describe("query filterers", () => {
-    it("injects joins, where, and bindings with the primary alias", async () => {
-      const getFilterClauses = vi.fn(() => ({
-        joins: ["JOIN filterer_table ft ON ft.id = this.ECInstanceId"],
-        where: ["ft.flag = 1"],
-        bindings: { fb: { type: "int" as const, value: 7 } },
-      }));
-      const filterer: QueryFilterer = { getFilterClauses };
-
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), queryFilterers: [filterer] });
-
-      expect(getFilterClauses).toHaveBeenCalledWith({ targetAlias: "this" });
-      expect(result.anchor.parts.joins).to.include("JOIN filterer_table ft");
-      expect(result.anchor.parts.where).to.equal("WHERE ft.flag = 1");
-      expect(result.anchor.parts.bindings).to.deep.equal({ fb: { type: "int", value: 7 } });
-    });
-
-    it("combines multiple filterers and ANDs their conditions", async () => {
-      const filtererA: QueryFilterer = { getFilterClauses: () => ({ where: ["a = 1"] }) };
-      const filtererB: QueryFilterer = { getFilterClauses: () => ({ where: ["b = 2"] }) };
-
-      const result = await buildBaseQuery({
-        schemaProvider,
-        source: makeSource([]),
-        queryFilterers: [filtererA, filtererB],
-      });
-
-      expect(result.anchor.parts.where).to.equal("WHERE (a = 1) AND (b = 2)");
-    });
-
-    it("handles a filterer contributing no clauses", async () => {
-      const filterer: QueryFilterer = { getFilterClauses: () => ({}) };
-      const result = await buildBaseQuery({ schemaProvider, source: makeSource([]), queryFilterers: [filterer] });
-
-      expect(result.anchor.parts.joins).to.equal("");
-      expect(result.anchor.parts.where).to.be.undefined;
-      expect(result.anchor.parts.bindings).to.be.undefined;
     });
   });
 
@@ -846,6 +805,7 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "this.CodeValue || this.UserLabel",
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
 
@@ -864,6 +824,7 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "String" },
         expression: "e.CodeValue",
         targetAlias: "e",
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
 
@@ -879,6 +840,7 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "Boolean" },
         expression: "this.FlagA OR this.FlagB",
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: true }];
 
@@ -895,6 +857,7 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "Double" },
         expression: "this.Length * :scale",
         bindings: { scale: { type: "double", value: 2 } },
+        primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "greater-than", value: 10 }];
 
@@ -909,35 +872,16 @@ describe("buildBaseQuery", () => {
   });
 
   describe("WHERE assembly", () => {
-    it("ANDs target-filter, query-filterer, and value-filter conditions", async () => {
+    it("ANDs target-filter and value-filter conditions", async () => {
       const field = makePropertyField({ propertyName: "Length", type: { kind: "primitive", type: "Double" } });
-      const filterer: QueryFilterer = { getFilterClauses: () => ({ where: ["ft.flag = 1"] }) };
 
       const result = await buildBaseQuery({
         schemaProvider,
         source: makeSource([], { primaryClass, instanceFilter: { expression: "this.Area > 5" } }),
-        queryFilterers: [filterer],
         filters: [{ field, operator: "is-equal", value: 1 }],
       });
 
-      expect(result.anchor.parts.where).to.equal(
-        `WHERE ([this].Area > 5) AND (ft.flag = 1) AND ([this].[Length] = :${ECSQL_PREFIX}vf0)`,
-      );
-    });
-  });
-
-  describe("binding conflicts", () => {
-    it("throws when two sources contribute the same binding name", async () => {
-      const filtererA: QueryFilterer = {
-        getFilterClauses: () => ({ where: ["a = :dup"], bindings: { dup: { type: "int", value: 1 } } }),
-      };
-      const filtererB: QueryFilterer = {
-        getFilterClauses: () => ({ where: ["b = :dup"], bindings: { dup: { type: "int", value: 2 } } }),
-      };
-
-      await expect(
-        buildBaseQuery({ schemaProvider, source: makeSource([]), queryFilterers: [filtererA, filtererB] }),
-      ).rejects.toThrow('Duplicate ECSQL binding name "dup"');
+      expect(result.anchor.parts.where).to.equal(`WHERE ([this].Area > 5) AND ([this].[Length] = :${ECSQL_PREFIX}vf0)`);
     });
   });
 
@@ -1129,30 +1073,6 @@ describe("buildBaseQuery", () => {
           propertySelectorPaths: [path],
         }),
       ).rejects.toThrow("A relationship path exceeds the SQLite JOIN-table limit.");
-    });
-
-    it("shares the target filter and query-filterer joins on the anchor", async () => {
-      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
-      const joiningFilterer: QueryFilterer = {
-        getFilterClauses: () => ({
-          joins: ["JOIN filterer_table ft ON ft.id = this.ECInstanceId"],
-          where: ["ft.flag = 1"],
-        }),
-      };
-      const whereOnlyFilterer: QueryFilterer = { getFilterClauses: () => ({ where: ["this.Flag = 1"] }) };
-
-      const result = await buildBaseQuery({
-        schemaProvider,
-        source: makeSource([path], { primaryClass, instanceIds: ["0x1"] }),
-        includeRelatedJoins: true,
-        propertySelectorPaths: [path],
-        queryFilterers: [joiningFilterer, whereOnlyFilterer],
-      });
-
-      expect(result.anchor.parts.joins).to.include(`IdSet(:${ECSQL_PREFIX}TargetInstanceIds)`);
-      expect(result.anchor.parts.joins).to.include("JOIN filterer_table ft");
-      expect(result.anchor.parts.joins).to.include("OUTER JOIN [TestSchema].[Target]");
-      expect(result.anchor.parts.where).to.equal("WHERE (ft.flag = 1) AND (this.Flag = 1)");
     });
 
     it("isolates a 1:many path (by schema multiplicity) into its own inner-joined group", async () => {
@@ -1886,5 +1806,70 @@ describe("buildBaseQuery", () => {
       // A single link-table path renders exactly two `OUTER JOIN`s; a duplicated join would double that.
       expect(trimWhitespace(result.anchor.parts.joins).split("OUTER JOIN").length - 1).to.equal(2);
     });
+  });
+});
+
+describe("buildTargetScopedQuery", () => {
+  it("uses a plain (polymorphic) FROM class selector by default", async () => {
+    const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, paths: [], filters: [] });
+
+    expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
+  });
+
+  it("scopes FROM to exactly the target's primary class for an `exact` scope", async () => {
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [],
+      primaryClassScope: { kind: "exact" },
+    });
+
+    expect(trimWhitespace(parts.from)).to.equal(`FROM ONLY [TestSchema].[Primary] [this]`);
+  });
+
+  it("restricts rows to exactly the given classes via `ECClassId IS (ONLY ...)`", async () => {
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [],
+      primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1", "TestSchema.A2"] },
+    });
+
+    // The `FROM` stays polymorphic so the collapsed ancestor reaches its whole subtree; the predicate
+    // then narrows rows back to exactly the listed classes. Each is wrapped in `ONLY` so an unlisted
+    // subclass of a listed class cannot slip through.
+    expect(trimWhitespace(parts.from)).to.equal(`FROM [TestSchema].[Primary] [this]`);
+    expect(trimWhitespace(parts.where!)).to.equal(
+      `WHERE [this].[ECClassId] IS (ONLY [TestSchema].[A1], ONLY [TestSchema].[A2])`,
+    );
+  });
+
+  it("ANDs the class restriction with value filters", async () => {
+    const field = makePropertyField({ propertyName: "Name" });
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [{ field, operator: "is-not-null" }],
+      primaryClassScope: { kind: "restricted", classNames: ["TestSchema.A1"] },
+    });
+
+    expect(trimWhitespace(parts.where!)).to.equal(
+      `WHERE ([this].[ECClassId] IS (ONLY [TestSchema].[A1])) AND ([this].[Name] IS NOT NULL)`,
+    );
+  });
+
+  it("omits the class restriction when the list is empty", async () => {
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [],
+      primaryClassScope: { kind: "restricted", classNames: [] },
+    });
+
+    expect(parts.where).to.be.undefined;
   });
 });

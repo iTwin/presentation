@@ -15,6 +15,8 @@ export function createPrimitiveProperty(props: {
   koq?: string;
   /** When `true`, the property reports as an array of the given primitive type. */
   array?: boolean;
+  /** The property's extended type name, e.g. `"Json"` or `"BeGuid"`. */
+  extendedTypeName?: string;
   /**
    * The class that declares the property. Use a full name for simple fixtures, or an `EC.Class` when
    * a test needs to walk the declaring class's `isHidden`/`baseClass` chain (e.g. `EC.Property.class`).
@@ -47,6 +49,7 @@ export function createPrimitiveProperty(props: {
     isEnumeration: () => false,
     isNavigation: () => false,
     primitiveType: props.primitiveType ?? "String",
+    extendedTypeName: props.extendedTypeName,
   } as unknown as EC.Property;
 }
 
@@ -153,8 +156,10 @@ export function createMixinClass(props: {
 }
 
 /**
- * Creates an `ECSchemaProvider` stub backed by the given classes,
- * looked up by their (normalized) full name. `classDerivesFrom` walks the stubs' `baseClass` chain.
+ * Creates an `ECSchemaProvider` stub backed by the given classes, looked up by their (normalized)
+ * full name. `classDerivesFrom` walks the stubs' `baseClass` chain *and* applied mixins (including
+ * mixins' own base chains), mirroring the real provider — a class implementing a mixin derives from
+ * it, so a mixin-declared property is reachable from that class.
  */
 export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider {
   const byFullName = new Map(classes.map((cls) => [cls.fullName, cls]));
@@ -170,12 +175,24 @@ export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider {
     }),
     classDerivesFrom: async (derivedClassFullName, candidateBaseClassFullName) => {
       const target = normalizeFullClassName(candidateBaseClassFullName);
-      let current = byFullName.get(normalizeFullClassName(derivedClassFullName));
-      while (current) {
+      const start = byFullName.get(normalizeFullClassName(derivedClassFullName));
+      const pending = start ? [start] : [];
+      const visited = new Set<string>();
+      while (pending.length > 0) {
+        const current = pending.pop()!;
+        if (visited.has(current.fullName)) {
+          continue;
+        }
+        visited.add(current.fullName);
         if (current.fullName === target) {
           return true;
         }
-        current = current.baseClass;
+        if (current.baseClass) {
+          pending.push(current.baseClass);
+        }
+        if (current.isEntityClass()) {
+          pending.push(...current.getMixins());
+        }
       }
       return false;
     },

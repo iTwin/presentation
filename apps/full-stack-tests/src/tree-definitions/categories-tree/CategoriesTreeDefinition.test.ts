@@ -8,39 +8,50 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import {
-  CategoriesTreeDefinition,
-  CLASS_NAMES,
-  createBaseIdsProvider,
-  createCategoriesTreeIdsProvider,
-  defaultCategoriesTreeHierarchyConfiguration as defaultHierarchyConfiguration,
-  getClassesByView,
-  mergeWithDefaults,
-} from "@itwin/presentation-tree-definitions/internal";
+import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { createIModelAccess } from "../Common.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel, TestSchema } from "../IModelUtils.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyProvider } from "@itwin/presentation-hierarchies";
 import type { EC } from "@itwin/presentation-shared";
 import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 describe("Categories tree", () => {
-  describe("Hierarchy definition", () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
-    beforeAll(async () => {
-      await initialize();
-    });
+  beforeAll(async () => {
+    await initialize();
+  });
 
-    afterAll(async () => {
-      await terminate();
-    });
+  afterAll(async () => {
+    await terminate();
+  });
+
+  describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
+    async function createTree(props: Parameters<typeof createCategoriesTree>[0]) {
+      const tree = createCategoriesTree(props);
+      if (cacheState === "warm") {
+        // Matching all categories also populates modeled-element paths when elements are included.
+        await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
+      }
+      return tree;
+    }
+
+    async function createCategoryTreeProvider(
+      imodelConnection: IModelConnection,
+      viewType: "2d" | "3d",
+      hierarchyConfig?: CategoriesTreeHierarchyConfiguration,
+    ) {
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const tree = await createTree({ imodelAccess, viewType, hierarchyConfig });
+      return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+    }
 
     ["2d" as const, "3d" as const].forEach((viewType) => {
       describe(`${viewType} view`, () => {
@@ -62,7 +73,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -96,7 +107,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -134,7 +145,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({ provider, expect: [] });
         });
@@ -157,7 +168,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({ provider, expect: [] });
         });
@@ -182,7 +193,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -216,7 +227,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
             categories: { withoutElements: "include" },
           });
 
@@ -257,7 +268,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({ provider, expect: [] });
         });
@@ -291,7 +302,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({ provider, expect: [] });
         });
@@ -316,7 +327,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -358,7 +369,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -416,7 +427,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -462,7 +473,9 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+            elements: { nodes: "include" },
+          });
 
           await validateHierarchy({
             provider,
@@ -515,7 +528,9 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+            elements: { nodes: "include" },
+          });
 
           await validateHierarchy({
             provider,
@@ -570,7 +585,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
             elements: { nodes: "include" },
             subCategories: { nodes: "exclude" },
           });
@@ -630,7 +645,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -678,7 +693,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -724,7 +739,7 @@ describe("Categories tree", () => {
           );
 
           const { imodelConnection, ...keys } = buildIModelResult;
-          using provider = createCategoryTreeProvider(imodelConnection, viewType);
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({
             provider,
@@ -765,7 +780,9 @@ describe("Categories tree", () => {
             );
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+            });
 
             await validateHierarchy({
               provider,
@@ -822,7 +839,9 @@ describe("Categories tree", () => {
             );
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+            });
 
             await validateHierarchy({
               provider,
@@ -878,7 +897,9 @@ describe("Categories tree", () => {
             );
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+            });
 
             await validateHierarchy({
               provider,
@@ -935,7 +956,9 @@ describe("Categories tree", () => {
             );
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+            });
 
             await validateHierarchy({
               provider,
@@ -1005,7 +1028,9 @@ describe("Categories tree", () => {
             );
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, { elements: { nodes: "include" } });
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+            });
 
             await validateHierarchy({
               provider,
@@ -1078,7 +1103,7 @@ describe("Categories tree", () => {
             );
 
             const { imodelConnection, ...keys } = buildIModelResult;
-            using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
               elements: { nodes: "include", excludedClasses: [unrelatedElementClassName] },
             });
 
@@ -1113,7 +1138,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [modeledElementClassName] },
               });
 
@@ -1147,7 +1172,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [subModeledElementBaseClassName] },
               });
 
@@ -1186,7 +1211,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [elementClassName] },
               });
 
@@ -1197,6 +1222,56 @@ describe("Categories tree", () => {
                     instanceKeys: [keys.definitionContainer],
                     children: [
                       NodeValidators.createForInstanceNode({ instanceKeys: [keys.category], children: false }),
+                    ],
+                  }),
+                ],
+              });
+            });
+
+            it("does not treat included children of excluded parents as top-level content", async () => {
+              await using buildIModelResult = await buildIModel(async (imodel) =>
+                withEditTxn(imodel, (txn) => {
+                  const elementsModel = insertElementsModel({ txn, codeValue: "m" });
+                  const excludedCategory = insertCategory({ txn, codeValue: "excluded category" });
+                  const excludedParent = insertElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: excludedCategory.id,
+                  });
+                  insertModeledElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: excludedCategory.id,
+                    parentId: excludedParent.id,
+                  });
+                  const keptCategory = insertCategory({ txn, codeValue: "kept category" });
+                  const keptElement = insertModeledElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: keptCategory.id,
+                  });
+                  return { excludedCategory, keptCategory, keptElement };
+                }),
+              );
+
+              const { imodelConnection, ...keys } = buildIModelResult;
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+                elements: { nodes: "include", excludedClasses: [elementClassName] },
+              });
+
+              await validateHierarchy({
+                provider,
+                expect: [
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedCategory], children: false }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.keptCategory],
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        className: keys.keptElement.className,
+                        children: [
+                          NodeValidators.createForInstanceNode({ instanceKeys: [keys.keptElement], children: false }),
+                        ],
+                      }),
                     ],
                   }),
                 ],
@@ -1229,7 +1304,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [modeledElementClassName] },
               });
 
@@ -1284,7 +1359,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [modeledElementClassName] },
               });
 
@@ -1350,7 +1425,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [elementClassName] },
               });
 
@@ -1407,7 +1482,7 @@ describe("Categories tree", () => {
               );
 
               const { imodelConnection, ...keys } = buildIModelResult;
-              using provider = createCategoryTreeProvider(imodelConnection, viewType, {
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
                 elements: { nodes: "include", excludedClasses: [elementClassName] },
               });
 
@@ -1446,6 +1521,74 @@ describe("Categories tree", () => {
                   }),
                   NodeValidators.createForInstanceNode({ instanceKeys: [keys.childCategory], children: false }),
                   NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedChildCategory], children: false }),
+                ],
+              });
+            });
+
+            it("does not treat included children of excluded sub-model parents as sub-model top-level content", async () => {
+              await using buildIModelResult = await buildIModel(async (imodel) =>
+                withEditTxn(imodel, (txn) => {
+                  const elementsModel = insertElementsModel({ txn, codeValue: "m" });
+                  const category = insertCategory({ txn, codeValue: "cat" });
+                  const modeledElement = insertModeledElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: category.id,
+                  });
+                  const subModel = insertElementsSubModel({ txn, modeledElementId: modeledElement.id });
+                  const excludedCategory = insertCategory({ txn, codeValue: "excluded category" });
+                  const excludedParent = insertElement({ txn, modelId: subModel.id, categoryId: excludedCategory.id });
+                  insertModeledElement({
+                    txn,
+                    modelId: subModel.id,
+                    categoryId: excludedCategory.id,
+                    parentId: excludedParent.id,
+                  });
+                  const keptCategory = insertCategory({ txn, codeValue: "kept category" });
+                  const keptElement = insertModeledElement({ txn, modelId: subModel.id, categoryId: keptCategory.id });
+                  return { category, modeledElement, excludedCategory, keptCategory, keptElement };
+                }),
+              );
+
+              const { imodelConnection, ...keys } = buildIModelResult;
+              using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+                elements: { nodes: "include", excludedClasses: [elementClassName] },
+              });
+
+              await validateHierarchy({
+                provider,
+                expect: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.category],
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        className: keys.modeledElement.className,
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.modeledElement],
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.keptCategory],
+                                children: [
+                                  NodeValidators.createForClassGroupingNode({
+                                    className: keys.keptElement.className,
+                                    children: [
+                                      NodeValidators.createForInstanceNode({
+                                        instanceKeys: [keys.keptElement],
+                                        children: false,
+                                      }),
+                                    ],
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.excludedCategory], children: false }),
+                  NodeValidators.createForInstanceNode({ instanceKeys: [keys.keptCategory], children: false }),
                 ],
               });
             });
@@ -1491,26 +1634,16 @@ describe("Categories tree", () => {
           ].forEach(({ queryIdentifier, description }) => {
             it(`doesn't throw on ecsql query interrupt in ${description}`, async () => {
               const imodelAccess = createIModelAccess(imodelConnection);
-              const baseIdsProvider = createBaseIdsProvider({
-                queryExecutor: imodelAccess,
-                elementClassName: getClassesByView(viewType).elementClass,
-              });
-              const idsProvider = createCategoriesTreeIdsProvider({
-                queryExecutor: imodelAccess,
-                type: viewType,
-                baseIdsProvider,
-              });
-              const iter = CategoriesTreeDefinition.createInstanceKeyPaths({
+              const { createInstanceKeyPaths } = await createTree({
                 imodelAccess,
-                idsProvider,
                 viewType,
                 hierarchyConfig: {
                   subCategories: { nodes: "include" },
                   categories: { withoutElements: "include" },
                   elements: { nodes: "include", excludedClasses: [] },
                 },
-                label: "x",
               });
+              const iter = createInstanceKeyPaths({ label: "x" });
               let didInterrupt = false;
               const originalQueryReader = imodelConnection.createQueryReader.bind(imodelConnection);
               vi.spyOn(imodelConnection, "createQueryReader").mockImplementation(async function* (...args): any {
@@ -1532,38 +1665,3 @@ describe("Categories tree", () => {
     });
   });
 });
-
-function createCategoryTreeProvider(
-  imodelConnection: IModelConnection,
-  viewType: "2d" | "3d",
-  hierarchyConfig?: CategoriesTreeHierarchyConfiguration,
-): HierarchyProvider & Disposable {
-  const imodelAccess = createIModelAccess(imodelConnection);
-  const excludedElementClassNames =
-    hierarchyConfig?.elements?.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined;
-  const baseIdsProvider = createBaseIdsProvider({
-    queryExecutor: imodelAccess,
-    elementClassName: getClassesByView(viewType).elementClass,
-    excludedElementClassNames,
-  });
-  const idsProvider = createCategoriesTreeIdsProvider({ queryExecutor: imodelAccess, type: viewType, baseIdsProvider });
-  const hierarchyProvider = createIModelHierarchyProvider({
-    imodelAccess,
-    hierarchyDefinition: new CategoriesTreeDefinition({
-      imodelAccess,
-      viewType,
-      idsProvider,
-      hierarchyConfig: mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: hierarchyConfig }),
-    }),
-  });
-  return {
-    hierarchyChanged: hierarchyProvider.hierarchyChanged,
-    getNodes: (props) => hierarchyProvider.getNodes(props),
-    getNodeInstanceKeys: (props) => hierarchyProvider.getNodeInstanceKeys(props),
-    setFormatter: (formatter) => hierarchyProvider.setFormatter(formatter),
-    setHierarchySearch: (props) => hierarchyProvider.setHierarchySearch(props),
-    [Symbol.dispose]() {
-      hierarchyProvider[Symbol.dispose]();
-    },
-  };
-}

@@ -11,6 +11,8 @@ built-packages
 /apps/performance-tests/*benchmark.json
 
 /apps/full-stack-tests/run-forever.sh
+/apps/content-equivalence-tests/imodels.json
+/apps/content-equivalence-tests/output/
 
 npm-debug.log*
 pnpm-debug.log*

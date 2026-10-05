@@ -47,9 +47,7 @@ describe("Content", () => {
       });
       const field = getPropertyFieldByName(descriptor, "Name");
 
-      const values = await collect(
-        getDistinctFieldValues({ imodelAccess, targets: [{ primaryClass: setup.schema.items.A.fullName }], field }),
-      );
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
       expect(values.slice().sort()).toEqual([undefined, "bar", "foo"].sort());
       expect(values).toHaveLength(3);
@@ -79,9 +77,7 @@ describe("Content", () => {
       });
       const field = getPropertyFieldByName(descriptor, "Origin");
 
-      const values = await collect(
-        getDistinctFieldValues({ imodelAccess, targets: [{ primaryClass: setup.schema.items.A.fullName }], field }),
-      );
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
       expect(values).toHaveLength(3);
       expect(values).toContainEqual({ x: 1, y: 2, z: 3 });
@@ -116,9 +112,7 @@ describe("Content", () => {
       });
       const field = getPropertyFieldByName(descriptor, "Color");
 
-      const values = await collect(
-        getDistinctFieldValues({ imodelAccess, targets: [{ primaryClass: setup.schema.items.A.fullName }], field }),
-      );
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
       // Raw underlying enum backing values (`1`/`2`), not the `"Red"`/`"Green"` display labels.
       expect(values.slice().sort()).toEqual([1, 2]);
@@ -174,7 +168,6 @@ describe("Content", () => {
       const values = await collect(
         getDistinctFieldValues({
           imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName }],
           field,
           labelsFactory: { createSelectClause: async ({ classAlias }) => `[${classAlias}].[Label]` },
         }),
@@ -252,146 +245,35 @@ describe("Content", () => {
       });
       const field = getPropertyFieldByName(descriptor, "PropB");
 
-      const values = await collect(
-        getDistinctFieldValues({ imodelAccess, targets: [{ primaryClass: setup.schema.items.A.fullName }], field }),
-      );
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
       expect(values.slice().sort()).toEqual(["shared", "unique1", "unique2"].sort());
     });
 
-    it("applies value filters, restricting which rows contribute distinct values", async () => {
+    it("merges and de-duplicates distinct values across the field's multiple resolved classes", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(
           testName,
           builder,
           `
-            <ECEntityClass typeName="A">
+            <ECEntityClass typeName="Base">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
               <ECProperty propertyName="Name" typeName="string" />
-              <ECProperty propertyName="Category" typeName="string" />
             </ECEntityClass>
-          `,
-        );
-        builder.insertInstance(s.items.A.fullName, { name: "foo", category: "x" });
-        builder.insertInstance(s.items.A.fullName, { name: "bar", category: "y" });
-        builder.insertInstance(s.items.A.fullName, { name: "baz", category: "x" });
-        return { schema: s };
-      });
-      const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const descriptor = await buildDescriptor({
-        imodelAccess,
-        targets: [{ primaryClass: setup.schema.items.A.fullName }],
-      });
-      const nameField = getPropertyFieldByName(descriptor, "Name");
-      const categoryField = getPropertyFieldByName(descriptor, "Category");
-
-      const values = await collect(
-        getDistinctFieldValues({
-          imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName }],
-          field: nameField,
-          filters: [{ field: categoryField, operator: "is-equal", value: "x" }],
-        }),
-      );
-
-      expect(values.slice().sort()).toEqual(["baz", "foo"].sort());
-    });
-
-    it("applies a value filter on a 1:many related path without duplicating or losing distinct values", async () => {
-      using setup = await buildTestECDb(async (builder, testName) => {
-        const s = await importSchema(
-          testName,
-          builder,
-          `
             <ECEntityClass typeName="A">
-              <ECProperty propertyName="Name" typeName="string" />
+              <BaseClass>Base</BaseClass>
             </ECEntityClass>
             <ECEntityClass typeName="B">
-              <ECProperty propertyName="PropB" typeName="string" />
-            </ECEntityClass>
-            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
-              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
-                <Class class="A" />
-              </Source>
-              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
-                <Class class="B" />
-              </Target>
-            </ECRelationshipClass>
-          `,
-        );
-        // `a1` has two related `B`s (a 1:many path): one matching the filter, one not. `a2`'s only
-        // related `B` doesn't match; `a3` has no related `B` at all.
-        const a1 = builder.insertInstance(s.items.A.fullName, { name: "first" });
-        const a2 = builder.insertInstance(s.items.A.fullName, { name: "second" });
-        builder.insertInstance(s.items.A.fullName, { name: "third" });
-        const b1 = builder.insertInstance(s.items.B.fullName, { propB: "match" });
-        const b2 = builder.insertInstance(s.items.B.fullName, { propB: "other" });
-        const b3 = builder.insertInstance(s.items.B.fullName, { propB: "other" });
-        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b1.id);
-        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b2.id);
-        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b3.id);
-        return { schema: s };
-      });
-      const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const path: RelationshipPath = [
-        {
-          sourceClassName: setup.schema.items.A.fullName,
-          targetClassName: setup.schema.items.B.fullName,
-          relationshipName: setup.schema.items.AtoB.fullName,
-        },
-      ];
-      const provider = defineIModelFieldsProvider({
-        id: "provider_v1",
-        async getContribution() {
-          return { relatedProperties: [{ path }] };
-        },
-      });
-      const descriptor = await buildDescriptor({
-        imodelAccess,
-        targets: [{ primaryClass: setup.schema.items.A.fullName }],
-        config: { imodelFieldsProviders: [provider] },
-      });
-      const nameField = getPropertyFieldByName(descriptor, "Name");
-      const propBField = getPropertyFieldByName(descriptor, "PropB");
-
-      // Filtering the *selected direct property* by the 1:many related property: only `a1` has a
-      // matching related instance, and the joined non-matching rows must not surface other names.
-      const namesFilteredByRelated = await collect(
-        getDistinctFieldValues({
-          imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName }],
-          field: nameField,
-          filters: [{ field: propBField, operator: "is-equal", value: "match" }],
-        }),
-      );
-      expect(namesFilteredByRelated).toEqual(["first"]);
-
-      // Selecting and filtering the same 1:many related property: per-related-row evaluation keeps
-      // exactly the matching values, once each despite multiple contributing rows.
-      const relatedValues = await collect(
-        getDistinctFieldValues({
-          imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName }],
-          field: propBField,
-          filters: [{ field: propBField, operator: "is-not-null" }],
-        }),
-      );
-      expect(relatedValues.slice().sort()).toEqual(["match", "other"].sort());
-    });
-
-    it("merges and de-duplicates distinct values across multiple targets", async () => {
-      using setup = await buildTestECDb(async (builder, testName) => {
-        const s = await importSchema(
-          testName,
-          builder,
-          `
-            <ECEntityClass typeName="A">
-              <ECProperty propertyName="Name" typeName="string" />
-            </ECEntityClass>
-            <ECEntityClass typeName="B">
-              <ECProperty propertyName="Name" typeName="string" />
+              <BaseClass>Base</BaseClass>
             </ECEntityClass>
           `,
         );
+        // `Name` is declared on the base class, but instances only exist for the two sibling
+        // subclasses — with "shared" reachable through both.
         builder.insertInstance(s.items.A.fullName, { name: "shared" });
         builder.insertInstance(s.items.A.fullName, { name: "onlyA" });
         builder.insertInstance(s.items.B.fullName, { name: "shared" });
@@ -399,30 +281,18 @@ describe("Content", () => {
         return { schema: s };
       });
       const imodelAccess = createContentIModelAccess(setup.ecdb);
-      const descriptorA = await buildDescriptor({
+      const descriptor = await buildDescriptor({
         imodelAccess,
-        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        targets: [{ primaryClass: setup.schema.items.Base.fullName }],
       });
-      const descriptorB = await buildDescriptor({
-        imodelAccess,
-        targets: [{ primaryClass: setup.schema.items.B.fullName }],
-      });
-      const fieldA = getPropertyFieldByName(descriptorA, "Name");
-      const fieldB = getPropertyFieldByName(descriptorB, "Name");
+      const field = getPropertyFieldByName(descriptor, "Name");
+      // The field's resolved classes span both sibling subclasses — no explicit multi-target caller
+      // input is needed to drive the one-query-per-class merge below.
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A.fullName, setup.schema.items.B.fullName]);
 
-      // Both fields declare the same property name/type on their respective primary classes, so either
-      // field's selector is structurally equivalent for this test's purposes — use field `A`'s to build
-      // both targets' queries, since `getDistinctFieldValues` takes a single field across all targets.
-      const values = await collect(
-        getDistinctFieldValues({
-          imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName }, { primaryClass: setup.schema.items.B.fullName }],
-          field: fieldA,
-        }),
-      );
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
 
       expect(values.slice().sort()).toEqual(["onlyA", "onlyB", "shared"].sort());
-      expect(fieldB.propertyName).toBe(fieldA.propertyName);
     });
 
     it("scopes distinct values to specific target instance IDs", async () => {
@@ -448,14 +318,312 @@ describe("Content", () => {
       const field = getPropertyFieldByName(descriptor, "Name");
 
       const values = await collect(
-        getDistinctFieldValues({
-          imodelAccess,
-          targets: [{ primaryClass: setup.schema.items.A.fullName, instanceIds: [setup.includedId] }],
-          field,
-        }),
+        getDistinctFieldValues({ imodelAccess, field, instanceFiltering: { ids: [setup.includedId] } }),
       );
 
       expect(values).toEqual(["included"]);
+    });
+
+    it("scopes distinct values using an instance filter expression", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="Name" typeName="string" />
+              <ECProperty propertyName="Included" typeName="boolean" />
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.A.fullName, { name: "included", included: true });
+        builder.insertInstance(s.items.A.fullName, { name: "excluded", included: false });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+      const field = getPropertyFieldByName(descriptor, "Name");
+
+      const values = await collect(
+        getDistinctFieldValues({ imodelAccess, field, instanceFiltering: { filter: { expression: `this.Included` } } }),
+      );
+
+      expect(values).toEqual(["included"]);
+    });
+
+    it("returns distinct values for a property defined only on a derived class, when the content target is the base class", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="ASub">
+              <BaseClass>A</BaseClass>
+              <ECProperty propertyName="PropASub" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        // A plain `A` instance (no `ASub`-specific data at all) alongside `ASub` instances that
+        // exercise both a `PropASub` value that's absent and a value duplicated across instances.
+        builder.insertInstance(s.items.A.fullName, { propA: "base-only" });
+        builder.insertInstance(s.items.ASub.fullName, { propA: "sub1", propASub: "foo" });
+        builder.insertInstance(s.items.ASub.fullName, { propA: "sub2", propASub: "bar" });
+        builder.insertInstance(s.items.ASub.fullName, { propA: "sub3", propASub: "foo" });
+        builder.insertInstance(s.items.ASub.fullName, { propA: "sub4" });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      // The content target is the *base* class `A`, even though `PropASub` is only declared on the
+      // derived `ASub`.
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+      const field = getPropertyFieldByName(descriptor, "PropASub");
+      expect(field.primaryClassNames).toEqual([setup.schema.items.ASub.fullName]);
+
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
+
+      expect(values.slice().sort()).toEqual([undefined, "bar", "foo"].sort());
+      expect(values).toHaveLength(3);
+    });
+
+    it("returns distinct values for a related property reached through instances of derived classes, when the content target is the base class", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="A1">
+              <BaseClass>A</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>A</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECProperty propertyName="PropB" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        // `A` has no direct instances of its own — it's only ever reached through the derived `A1`/`A2`
+        // — and each relates to a `B`, with "foo" reachable through both derived classes.
+        const a1 = builder.insertInstance(s.items.A1.fullName);
+        const a2 = builder.insertInstance(s.items.A2.fullName);
+        const b1 = builder.insertInstance(s.items.B.fullName, { propB: "foo" });
+        const b2 = builder.insertInstance(s.items.B.fullName, { propB: "bar" });
+        const b3 = builder.insertInstance(s.items.B.fullName, { propB: "foo" });
+        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b1.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a1.id, b2.id);
+        builder.insertRelationship(s.items.AtoB.fullName, a2.id, b3.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      // The relationship path is declared from the *base* class `A`, so the related property is only
+      // ever reached through its derived `A1`/`A2` instances.
+      const path: RelationshipPath = [
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName: setup.schema.items.B.fullName,
+          relationshipName: setup.schema.items.AtoB.fullName,
+        },
+      ];
+      const provider = defineIModelFieldsProvider({
+        id: "provider_v1",
+        async getContribution() {
+          return { relatedProperties: [{ path }] };
+        },
+      });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config: { imodelFieldsProviders: [provider] },
+      });
+      const field = getPropertyFieldByName(descriptor, "PropB");
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
+
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
+
+      expect(values.slice().sort()).toEqual(["bar", "foo"].sort());
+    });
+
+    it("returns distinct values for a base-declared property when instances exist at multiple levels of a derived chain", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="Base">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="PropBase" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="Derived">
+              <BaseClass>Base</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A1">
+              <BaseClass>Derived</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>Derived</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        // Instances exist at every level of the chain below `Base` — the mid-level `Derived` itself,
+        // plus its two leaf siblings `A1`/`A2` — with "shared" reachable through both siblings and
+        // "onlyDerived" only through the mid-level class.
+        builder.insertInstance(s.items.Derived.fullName, { propBase: "onlyDerived" });
+        builder.insertInstance(s.items.A1.fullName, { propBase: "shared" });
+        builder.insertInstance(s.items.A2.fullName, { propBase: "shared" });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      // The content target is the topmost base class `Base`, even though `PropBase` is declared there
+      // and every instance lives on a subclass of it.
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.Base.fullName }],
+      });
+      const field = getPropertyFieldByName(descriptor, "PropBase");
+      // The field's resolved classes span all three levels with instances — `Derived` itself plus
+      // both of its leaf subclasses — driving one query per class.
+      expect(field.primaryClassNames).toEqual([
+        setup.schema.items.A1.fullName,
+        setup.schema.items.A2.fullName,
+        setup.schema.items.Derived.fullName,
+      ]);
+
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
+
+      expect(values.slice().sort()).toEqual(["onlyDerived", "shared"].sort());
+      expect(values).toHaveLength(2);
+    });
+
+    it("excludes sibling subclasses absent from the field's resolved classes when collapsing onto a shared base", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="Base">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="PropBase" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="A1">
+              <BaseClass>Base</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>Base</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A3">
+              <BaseClass>Base</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        const a1 = builder.insertInstance(s.items.A1.fullName, { propBase: "fromA1" });
+        const a3 = builder.insertInstance(s.items.A3.fullName, { propBase: "fromA3" });
+        // `A2` has data too, and `Base`'s polymorphic `FROM` reaches it — but it is deliberately left
+        // out of the descriptor's scope below, so its value must never reach the results.
+        builder.insertInstance(s.items.A2.fullName, { propBase: "fromA2" });
+        return { schema: s, a1, a3 };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      // Scoping the descriptor to only `A1`/`A3` instances resolves the field to just those two
+      // classes, even though the target class `Base` has a third subclass carrying data.
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.Base.fullName, instanceIds: [setup.a1.id, setup.a3.id] }],
+      });
+      const field = getPropertyFieldByName(descriptor, "PropBase");
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A3.fullName]);
+
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
+
+      // `A1` and `A3` collapse onto their shared base `Base`, whose polymorphic `FROM` also reaches
+      // `A2` — so only the class restriction keeps `"fromA2"` out.
+      expect(values.slice().sort()).toEqual(["fromA1", "fromA3"].sort());
+      expect(values).not.toContain("fromA2");
+    });
+
+    it("returns distinct values for a mixin-declared property shared by sibling classes under a common base", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="Base" modifier="Abstract">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="IShared" modifier="Abstract">
+              <ECCustomAttributes>
+                <IsMixin xmlns="CoreCustomAttributes.01.00.04">
+                  <AppliesToEntityClass>Base</AppliesToEntityClass>
+                </IsMixin>
+              </ECCustomAttributes>
+              <ECProperty propertyName="SharedProp" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="A1">
+              <BaseClass>Base</BaseClass>
+              <BaseClass>IShared</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>Base</BaseClass>
+              <BaseClass>IShared</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        // `A1` and `A2` share both the base class `Base` and the mixin `IShared`, but `Base` itself
+        // does not implement the mixin — so `SharedProp` is not addressable from it.
+        builder.insertInstance(s.items.A1.fullName, { sharedProp: "fromA1" });
+        builder.insertInstance(s.items.A1.fullName, { sharedProp: "shared" });
+        builder.insertInstance(s.items.A2.fullName, { sharedProp: "shared" });
+        builder.insertInstance(s.items.A2.fullName, { sharedProp: undefined });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.Base.fullName }],
+      });
+      const field = getPropertyFieldByName(descriptor, "SharedProp");
+      expect(field.primaryClassNames).toEqual([setup.schema.items.A1.fullName, setup.schema.items.A2.fullName]);
+
+      const values = await collect(getDistinctFieldValues({ imodelAccess, field }));
+
+      // Values are merged and de-duplicated across both implementers, NULL included.
+      expect(values.slice().sort()).toEqual([undefined, "fromA1", "shared"].sort());
+      expect(values).toHaveLength(3);
     });
   });
 });

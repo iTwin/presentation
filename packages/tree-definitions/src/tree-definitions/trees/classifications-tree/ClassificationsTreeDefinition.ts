@@ -26,6 +26,7 @@ import { assert, Guid } from "@itwin/core-bentley";
 import { createPredicateBasedHierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -34,6 +35,7 @@ import {
   getOptimalBatchSize,
   ParentElementsPath,
 } from "../../shared/Utils.js";
+import { createClassificationsTreeIdsProvider } from "./ClassificationsTreeIdsProvider.js";
 import { ClassificationsTreeNodeInternal } from "./ClassificationsTreeNodeInternal.js";
 
 import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
@@ -44,8 +46,8 @@ import type {
   DefineRootHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyNodeIdentifiersPath,
   HierarchyNodesDefinition,
+  IModelInstanceKey,
   InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
@@ -64,17 +66,23 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
  * Data access and classification system configuration for a classifications hierarchy.
- * @internal
+ * @beta
  */
-interface ClassificationsTreeDefinitionProps {
+interface ClassificationsTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
-  getIdsProvider: (imodelKey: string) => ClassificationsTreeIdsProvider;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID. */
+  uniqueId?: GuidString;
+}
+
+/** @internal */
+interface ClassificationsTreeDefinitionProps extends ClassificationsTreeProps {
+  getIdsProvider: (imodelKey: string) => ClassificationsTreeIdsProvider;
 }
 
 /**
- * Selects the root classification system and excluded element classes for `ClassificationsTreeDefinition`.
- * @internal
+ * Selects the root classification system and excluded element classes for `createClassificationsTree`.
+ * @beta
  */
 export interface ClassificationsTreeHierarchyConfiguration {
   /**
@@ -101,19 +109,23 @@ export interface ClassificationsTreeHierarchyConfiguration {
 }
 
 /**
- * Shared data access, configuration, and cancellation options for classifications hierarchy searches.
- * @internal
+ * Limits and cancellation options for classifications hierarchy searches.
+ * @beta
  */
-interface ClassificationsTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+interface ClassificationsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
+  /** Stops loading further paths when aborted. */
+  abortSignal?: AbortSignal;
+}
+
+/** @internal */
+interface ClassificationsTreeInstanceKeyPathsBaseProps extends ClassificationsTreeSearchOptions {
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: ClassificationsTreeIdsProvider;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
   uniqueId?: GuidString;
-  /** Stops loading further paths when aborted. */
-  abortSignal?: AbortSignal;
 }
 
 /**
@@ -139,6 +151,87 @@ interface ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps extends Class
 type ClassificationsTreeInstanceKeyPathsProps =
   | ClassificationsTreeInstanceKeyPathsFromInstanceLabelProps
   | ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps;
+
+/**
+ * Search-specific options for a classifications tree with shared data access and configuration.
+ * @beta
+ */
+type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions &
+  ({ label: string } | { targetItems: Array<InstanceKey> });
+
+/**
+ * Full class names of instances that may appear in a classifications hierarchy search path.
+ * @beta
+ */
+type ClassificationsTreeSearchPathClasses =
+  | "ClassificationSystems.Classification"
+  | "ClassificationSystems.ClassificationTable"
+  | "BisCore.GeometricElement3d";
+
+/**
+ * Key of a single instance in a classifications hierarchy search path, with `className` narrowed to `ClassificationsTreeSearchPathClasses`.
+ * @beta
+ */
+export type ClassificationsTreeSearchPathKey = IModelInstanceKey & { className: ClassificationsTreeSearchPathClasses };
+
+/**
+ * A path of instance keys from a root node to a search target in a classifications hierarchy.
+ * @beta
+ */
+export type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+
+/**
+ * A `HierarchySearchTree` whose entries identify only the instance classes that a classifications hierarchy search can return.
+ * @beta
+ */
+export interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+  /** Key of the instance this tree entry represents. */
+  identifier: ClassificationsTreeSearchPathKey;
+  /** Child entries representing the next level(s) in the search paths. */
+  children?: ClassificationsTreeSearchTree[];
+}
+
+/**
+ * Creates a classifications hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @beta
+ */
+export function createClassificationsTree(props: ClassificationsTreeProps) {
+  const idsProvider = createClassificationsTreeIdsProvider({
+    queryExecutor: props.imodelAccess,
+    hierarchyConfig: props.hierarchyConfig,
+    baseIdsProvider: createBaseIdsProvider({
+      queryExecutor: props.imodelAccess,
+      elementClassName: CLASS_NAMES.GeometricElement3d,
+      excludedElementClassNames: props.hierarchyConfig.elements?.excludedClasses,
+    }),
+  });
+  const sharedProps = {
+    imodelAccess: props.imodelAccess,
+    hierarchyConfig: props.hierarchyConfig,
+    idsProvider,
+    uniqueId: props.uniqueId ?? Guid.createValue(),
+  };
+  const definition: HierarchyDefinition = new ClassificationsTreeDefinition({
+    ...sharedProps,
+    getIdsProvider: () => idsProvider,
+  });
+  return {
+    definition,
+    /**
+     * Yields hierarchy paths to instances matching the supplied label or instance keys.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) =>
+      ClassificationsTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+    /**
+     * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createSearchTree: async (searchProps: ClassificationsTreeSearchProps & { revealTargets?: boolean }) =>
+      ClassificationsTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+  };
+}
 
 /**
  * Defines a hierarchy of classification tables, classifications, and related geometric elements.
@@ -229,6 +322,8 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
                       SELECT 1
                       FROM ${CLASS_NAMES.Classification} classification
                       WHERE classification.Model.Id = this.ECInstanceId
+                        AND classification.Parent.Id IS NULL
+                        AND NOT classification.IsPrivate
                       LIMIT 1
                     ), 0)
                   `,
@@ -549,7 +644,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
    * @throws An error if the configured search limit is exceeded.
    */
   public static createInstanceKeyPaths(props: ClassificationsTreeInstanceKeyPathsProps) {
-    return eachValueFrom<{ path: HierarchyNodeIdentifiersPath; target: Id64String }>(
+    return eachValueFrom<{ path: ClassificationsTreeSearchPath; target: Id64String }>(
       defer(() => {
         const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
         if ("label" in props) {
@@ -565,7 +660,9 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
    * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
    * @throws An error if the configured search limit is exceeded.
    */
-  public static async createSearchTree(props: ClassificationsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
+  public static async createSearchTree(
+    props: ClassificationsTreeInstanceKeyPathsProps & { revealTargets?: boolean },
+  ): Promise<ClassificationsTreeSearchTree[]> {
     const builder = HierarchySearchTree.createBuilder();
     await firstValueFrom(
       defer(() => {
@@ -585,7 +682,8 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       ),
       { defaultValue: builder },
     );
-    return builder.getTree();
+    // the builder only receives `ClassificationsTreeSearchPath` entries, so the tree identifiers are guaranteed to be of those classes
+    return builder.getTree() as ClassificationsTreeSearchTree[];
   }
 }
 
@@ -900,7 +998,7 @@ function createGeometricElementInstanceKeyPaths(props: {
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+}): Observable<{ path: ClassificationsTreeSearchPath; target: Id64String }> {
   const { targetItems, imodelAccess, idsProvider, uniqueId, componentName, chunkIndex, excludedElementClassNames } =
     props;
   if (targetItems.length === 0) {
@@ -953,7 +1051,7 @@ function createGeometricElementInstanceKeyPaths(props: {
   }).pipe(
     catchBeSQLiteInterrupts,
     targetItems.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
-    map((row) => parseQueryRow(row, separator)),
+    map((row) => parseQueryRow({ row, separator })),
     mergeMap(({ path, parentClassificationId }) => {
       const target = path[path.length - 1].id;
       if (parentClassificationId) {
@@ -966,12 +1064,12 @@ function createGeometricElementInstanceKeyPaths(props: {
   );
 }
 
-function parseQueryRow(
-  row: ECSqlQueryRow,
-  separator: string,
-): { path: HierarchyNodeIdentifiersPath; parentClassificationId: Id64String | undefined } {
+function parseQueryRow({ row, separator }: { row: ECSqlQueryRow; separator: string }): {
+  path: ClassificationsTreeSearchPath;
+  parentClassificationId: Id64String | undefined;
+} {
   const rowElements: string[] = row.path.split(separator);
-  const path: HierarchyNodeIdentifiersPath = [];
+  const path: ClassificationsTreeSearchPath = [];
   for (let i = 0; i < rowElements.length; i += 2) {
     switch (rowElements[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:

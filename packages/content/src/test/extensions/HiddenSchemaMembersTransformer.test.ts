@@ -44,7 +44,14 @@ function propertyField(props: {
 }
 
 function calculatedField(id: string): CalculatedField {
-  return { kind: "calculated", id, label: "Calc", type: { kind: "primitive", type: "String" }, expression: "1+1" };
+  return {
+    kind: "calculated",
+    id,
+    label: "Calc",
+    type: { kind: "primitive", type: "String" },
+    expression: "1+1",
+    primaryClassNames: ["TestSchema.Thing"],
+  };
 }
 
 function externalField(id: string): ExternalField {

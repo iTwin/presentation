@@ -22,7 +22,6 @@ import type {
 } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "../ContentTarget.js";
-import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 import type { CalculatedField, PropertyField } from "../model/Field.js";
 import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
 
@@ -42,7 +41,7 @@ const PAGE_ID_SET_JOIN_TABLES = 1;
 export interface BaseQueryParts {
   /** `FROM <primary-selector> [this]`. */
   from: string;
-  /** IdSet join + merged relationship-path joins + query-filterer joins. */
+  /** IdSet join + merged relationship-path joins. */
   joins: string;
   /** Complete WHERE clause with ANDed conditions, or undefined. */
   where?: string;
@@ -84,8 +83,6 @@ export interface BaseQueryGroup {
 interface BuildBaseQueryProps {
   schemaProvider: ECSchemaProvider;
   source: ContentSource;
-  /** Query filterers to inject WHERE/JOIN (default: none). */
-  queryFilterers?: QueryFilterer[];
   /** Value filters to translate into WHERE (default: none). */
   filters?: ContentValueFilter[];
   /** Fields whose related paths must be joined by the anchor to support sorting. */
@@ -100,7 +97,7 @@ export interface BaseQuery {
   /**
    * The **anchor** group — always present (even for a direct-only source). Owns the primary-key +
    * direct + calculated columns plus its share of 1:1 related columns, and drives ORDER BY + paging.
-   * Also carries the primary-restricting clauses (query filterers + value filters), so it additionally
+   * Also carries the primary-restricting value filters, so it additionally
    * joins budget-fitting 1:1 paths referenced by value filters or sorting — a selected path that is also
    * filtered/sorted is always owned by the anchor and never split into an `additional` group. Overflow
    * 1:1 paths and all 1:many paths use correlated subqueries for filtering.
@@ -161,11 +158,6 @@ export async function buildBaseQuery(
 
   const from = `FROM ${ECSql.createClassSelector(source.target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`;
   const targetFilter = buildTargetFilter(source.target);
-  // Query filterers are resolved once (side-effect-free per their contract) and shared by the group
-  // that carries the primary-restricting clauses.
-  const filtererClauses = (props.queryFilterers ?? []).map((filterer) =>
-    filterer.getFilterClauses({ targetAlias: PRIMARY_CLASS_ALIAS }),
-  );
 
   // Related-columns mode joins every resolved path; primaries-only mode joins only the paths a value
   // filter references (to evaluate it). Value-filter paths are collected in both modes: primaries-only
@@ -236,7 +228,7 @@ export async function buildBaseQuery(
 
   // Assembles one group's parts: every group shares FROM + target filter and renders its own subset of
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the
-  // anchor, or the primaries-only group) additionally carries the query-filterer and value-filter clauses.
+  // anchor, or the primaries-only group) additionally carries the value-filter clauses.
   const buildGroupParts = async (groupProps: {
     paths: RelationshipPath[];
     joinType: "inner" | "outer";
@@ -247,7 +239,6 @@ export async function buildBaseQuery(
       schemaProvider,
       from,
       targetFilter,
-      filtererClauses,
       filters,
       relatedClassAliases,
       getPrefixKeys,
@@ -255,14 +246,10 @@ export async function buildBaseQuery(
       ...groupProps,
     });
 
-  // Primary FROM, target-filter join, query-filterer joins, and sort paths cannot spill. Sort paths
+  // Primary FROM, target-filter join and sort paths cannot spill. Sort paths
   // must stay on the anchor for ORDER BY, so reserve their complete cost before packing optional 1:1
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
-  const fixedReserves =
-    1 +
-    (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) +
-    (targetFilter.joins?.length ?? 0) +
-    filtererClauses.reduce((count, clauses) => count + (clauses.joins?.length ?? 0), 0);
+  const fixedReserves = 1 + (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) + (targetFilter.joins?.length ?? 0);
   // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
   // filter paths, then (below, related-columns mode only) selected 1:1 paths — so a path sharing a
   // prefix with one already added costs only its own unshared suffix, not its full cost again.
@@ -325,7 +312,7 @@ export async function buildBaseQuery(
     paths: packablePaths,
     budget: anchorBudget,
     // An overflow partition is its own outer-joined group sharing only FROM + the target filter — no
-    // query-filterer joins or sort paths — so it gets a fresh, more modestly reserved budget of its own.
+    // sort paths — so it gets a fresh, more modestly reserved budget of its own.
     overflowReservedTables: 1 + PAGE_ID_SET_JOIN_TABLES + (targetFilter.joins?.length ?? 0),
   });
   const anchorPaths = [...preSeededPaths, ...packedAnchorPaths];
@@ -873,14 +860,13 @@ function createPathInfoResolver(props: {
  * Assembles one query's `FROM`/`JOIN`/`WHERE`/bindings parts: renders the given related paths (merged
  * so a shared prefix is joined once) onto the shared FROM + target filter, and — only when the query
  * owns the primary-restricting clauses (`includePrimaryFilters`) — additionally applies the
- * query-filterer and value-filter clauses, evaluating filters on `existentialFilterPathKeys` paths as
+ * value-filter clauses, evaluating filters on `existentialFilterPathKeys` paths as
  * correlated subqueries instead of join-and-compare.
  */
 async function buildQueryParts(props: {
   schemaProvider: ECSchemaProvider;
   from: string;
   targetFilter: ReturnType<typeof buildTargetFilter>;
-  filtererClauses: ReturnType<QueryFilterer["getFilterClauses"]>[];
   filters: ContentValueFilter[];
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   getPrefixKeys: (path: RelationshipPath) => readonly string[];
@@ -889,23 +875,15 @@ async function buildQueryParts(props: {
   joinType: "inner" | "outer";
   includePrimaryFilters: boolean;
   existentialFilterPathKeys: Set<string>;
+  where?: string[];
 }): Promise<BaseQueryParts> {
-  const {
-    schemaProvider,
-    from,
-    targetFilter,
-    filtererClauses,
-    filters,
-    relatedClassAliases,
-    getPrefixKeys,
-    resolvePathInfo,
-  } = props;
+  const { schemaProvider, from, targetFilter, filters, relatedClassAliases, getPrefixKeys, resolvePathInfo } = props;
   const infos = await Promise.all(props.paths.map(async (path) => resolvePathInfo(path, props.joinType)));
   const rendered = ECSql.createRelationshipPathJoinClause(mergeJoinInfos(infos));
   const groupAliases = collectPrefixAliases(props.paths, relatedClassAliases, getPrefixKeys);
 
   const joinFragments: string[] = [];
-  const whereConditions: string[] = [];
+  const whereConditions: string[] = [...(props.where ?? [])];
   const bindings: Record<string, ECSqlBinding> = {};
 
   if (targetFilter.joins) {
@@ -921,17 +899,6 @@ async function buildQueryParts(props: {
   mergeBindings(bindings, rendered.bindings);
 
   if (props.includePrimaryFilters) {
-    // Query filterers inject WHERE/JOIN clauses only (never SELECT), scoped to the primary alias.
-    for (const clauses of filtererClauses) {
-      if (clauses.joins) {
-        joinFragments.push(...clauses.joins);
-      }
-      if (clauses.where) {
-        whereConditions.push(...clauses.where);
-      }
-      mergeBindings(bindings, clauses.bindings);
-    }
-
     // Value filters resolve relationship-class properties against the step's relationship alias; classify
     // once up front which of the referenced property classes are relationship classes.
     const relationshipPropertyClasses = await collectRelationshipPropertyClasses(schemaProvider, filters);
@@ -999,10 +966,29 @@ async function buildQueryParts(props: {
 }
 
 /**
+ * How a target-scoped query keeps contributing rows restricted to an exact set of concrete classes.
+ * The two forms are mutually exclusive by construction, so a query can never ask for both at once:
+ * - `exact` — `target.primaryClass` *is* the single concrete class, so scoping `FROM` to it
+ *   (`FROM ONLY <class>`) excludes subclasses on its own and no predicate is needed.
+ * - `restricted` — `target.primaryClass` is a *collapsed ancestor* standing in for several concrete
+ *   classes, so `FROM` stays polymorphic to reach the whole subtree and an `ECClassId IS (ONLY ...)`
+ *   predicate narrows rows back to exactly `classNames`. Each entry is wrapped in `ONLY` so an
+ *   unlisted *subclass* of a listed class cannot slip through.
+ *
+ * @internal
+ */
+export type PrimaryClassScope = { kind: "exact" } | { kind: "restricted"; classNames: EC.FullClassNameDotNotation[] };
+
+/**
  * Builds a target-scoped, non-grouped query scaffold: outer-joins exactly the given related paths
  * (preserving rows whose related instance is missing) plus whatever the target filter and value
  * filters need, and returns the `FROM`/`JOIN`/`WHERE`/bindings shape plus the alias map a `SELECT`
  * builder needs.
+ *
+ * Pass `primaryClassScope` to keep rows restricted to an exact set of concrete classes. The
+ * distinct-values query builder always does: a class outside a field's data-resolved
+ * `primaryClassNames` — one a `forkField` carve or an `instanceIds`/`instanceFilter` scoping
+ * excluded, say — must never contribute rows. Defaults to an ordinary polymorphic `FROM`.
  *
  * Used by the distinct-values query builder to reuse the existing target-filter and value-filter
  * building blocks without the source-oriented anchor/additional grouping performed by `buildBaseQuery`.
@@ -1017,16 +1003,26 @@ export async function buildTargetScopedQuery(props: {
   paths: RelationshipPath[];
   /** Value filters to translate into WHERE. */
   filters: ContentValueFilter[];
+  /** How to keep rows scoped to exactly a set of concrete classes. See the function doc. */
+  primaryClassScope?: PrimaryClassScope;
 }): Promise<BaseQueryParts> {
-  const { schemaProvider, target, filters } = props;
+  const { schemaProvider, target, filters, primaryClassScope } = props;
   const paths = unionPaths([...props.paths, ...collectFilterPaths(filters)]);
   const getPrefixKeys = createPrefixKeyResolver();
   const relatedClassAliases = assignPrefixAliases(paths, getPrefixKeys);
+  const classSelector = ECSql.createClassSelector(target.primaryClass);
+  const classRestriction =
+    primaryClassScope?.kind === "restricted" && primaryClassScope.classNames.length > 0
+      ? [
+          `[${PRIMARY_CLASS_ALIAS}].[ECClassId] IS (${primaryClassScope.classNames
+            .map((className) => `ONLY ${ECSql.createClassSelector(className)}`)
+            .join(", ")})`,
+        ]
+      : undefined;
   return buildQueryParts({
     schemaProvider,
-    from: `FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`,
+    from: `FROM ${primaryClassScope?.kind === "exact" ? `ONLY ${classSelector}` : classSelector} [${PRIMARY_CLASS_ALIAS}]`,
     targetFilter: buildTargetFilter(target),
-    filtererClauses: [],
     filters,
     relatedClassAliases,
     getPrefixKeys,
@@ -1037,5 +1033,6 @@ export async function buildTargetScopedQuery(props: {
     joinType: "outer",
     includePrimaryFilters: true,
     existentialFilterPathKeys: new Set(),
+    ...(classRestriction ? { where: classRestriction } : undefined),
   });
 }

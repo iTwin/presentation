@@ -11,13 +11,109 @@ import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import type { GuidString } from '@itwin/core-bentley';
 import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
-import type { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
+import type { Id64Array } from '@itwin/core-bentley';
 import type { Id64String } from '@itwin/core-bentley';
+import type { IModelInstanceKey } from '@itwin/presentation-hierarchies';
 import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+
+// @beta
+interface CategoriesTreeHierarchyConfiguration {
+    categories?: {
+        withoutElements?: "include" | "exclude";
+    };
+    elements?: {
+        nodes?: "exclude";
+    } | {
+        nodes: "include";
+        excludedClasses?: EC.FullClassNameDotNotation[];
+    };
+    subCategories?: {
+        nodes?: "include" | "exclude";
+    };
+}
+
+// @beta
+export namespace CategoriesTreeNode {
+    const isDefinitionContainerNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
+        key: InstancesNodeKey;
+    };
+    const isCategoryNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
+        key: InstancesNodeKey;
+    } & {
+        extendedData: {
+            description?: string;
+            hasSubCategories?: boolean;
+            modelIds: Id64Array;
+        };
+    };
+    const isModelNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
+        key: InstancesNodeKey;
+    };
+    const isElementNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
+        key: InstancesNodeKey;
+    } & {
+        extendedData: {
+            modelId: Id64String;
+            categoryId: Id64String;
+        };
+    };
+    const isElementClassGroupingNode: (node: Pick<HierarchyNode, "key">) => node is Omit<GroupingHierarchyNode, "extendedData"> & {
+        key: ClassGroupingNodeKey;
+    } & {
+        extendedData: {
+            categoryId: Id64String;
+            modelElementsMap: Map<Id64String, {
+                elementIds: Set<Id64String>;
+            }>;
+        };
+    };
+    const isSubCategoryNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
+        key: InstancesNodeKey;
+    } & {
+        extendedData: {
+            categoryId: Id64String;
+        };
+    };
+    const getType: (node: HierarchyNode) => "definition-container" | "category" | "element" | "sub-category" | "model" | "elements-class-group" | undefined;
+}
+
+// @beta
+interface CategoriesTreeProps {
+    hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    uniqueId?: GuidString;
+    // (undocumented)
+    viewType: "2d" | "3d";
+}
+
+// @beta
+type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+
+// @beta
+type CategoriesTreeSearchPathClasses = "BisCore.DefinitionContainer" | "BisCore.SpatialCategory" | "BisCore.DrawingCategory" | "BisCore.SubCategory" | "BisCore.GeometricModel3d" | "BisCore.GeometricModel2d" | "BisCore.GeometricElement3d" | "BisCore.GeometricElement2d";
+
+// @beta
+type CategoriesTreeSearchPathKey = IModelInstanceKey & {
+    className: CategoriesTreeSearchPathClasses;
+};
+
+// @beta
+interface CategoriesTreeSearchProps {
+    abortSignal?: AbortSignal;
+    label: string;
+    limit?: number | "unbounded";
+}
+
+// @beta
+interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+    children?: CategoriesTreeSearchTree[];
+    identifier: CategoriesTreeSearchPathKey;
+}
 
 // @beta
 type ClassGroupingHierarchyNode = GroupingHierarchyNode & {
@@ -25,15 +121,107 @@ type ClassGroupingHierarchyNode = GroupingHierarchyNode & {
 };
 
 // @beta
+interface ClassificationsTreeHierarchyConfiguration {
+    elements?: {
+        excludedClasses?: EC.FullClassNameDotNotation[];
+    };
+    rootClassificationSystemCode: string;
+}
+
+// @beta
+export namespace ClassificationsTreeNode {
+    const isClassificationTableNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
+        key: InstancesNodeKey;
+    };
+    const isClassificationNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
+        key: InstancesNodeKey;
+    };
+    const isGeometricElementNode: (node: Pick<HierarchyNode, "extendedData">) => node is Omit<NonGroupingHierarchyNode, "extendedData"> & {
+        key: InstancesNodeKey;
+    } & {
+        extendedData: {
+            modelId: Id64String;
+            categoryId: Id64String;
+        };
+    };
+    const getType: (node: HierarchyNode) => "classification-table" | "classification" | "element" | undefined;
+}
+
+// @beta
+interface ClassificationsTreeProps {
+    // (undocumented)
+    hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
+    uniqueId?: GuidString;
+}
+
+// @beta
+interface ClassificationsTreeSearchOptions {
+    abortSignal?: AbortSignal;
+    limit?: number | "unbounded";
+}
+
+// @beta
+type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+
+// @beta
+type ClassificationsTreeSearchPathClasses = "ClassificationSystems.Classification" | "ClassificationSystems.ClassificationTable" | "BisCore.GeometricElement3d";
+
+// @beta
+type ClassificationsTreeSearchPathKey = IModelInstanceKey & {
+    className: ClassificationsTreeSearchPathClasses;
+};
+
+// @beta
+type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & ({
+    label: string;
+} | {
+    targetItems: Array<InstanceKey>;
+});
+
+// @beta
+interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+    children?: ClassificationsTreeSearchTree[];
+    identifier: ClassificationsTreeSearchPathKey;
+}
+
+// @beta
+export function createCategoriesTree(props: CategoriesTreeProps): {
+    definition: HierarchyDefinition;
+    createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) => AsyncIterableIterator<{
+        path: CategoriesTreeSearchPath;
+        target: Id64String;
+    }>;
+    createSearchTree: (searchProps: CategoriesTreeSearchProps & {
+        revealTargets?: boolean;
+    }) => Promise<CategoriesTreeSearchTree[]>;
+};
+
+// @beta
+export function createClassificationsTree(props: ClassificationsTreeProps): {
+    definition: HierarchyDefinition;
+    createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) => AsyncIterableIterator<{
+        path: ClassificationsTreeSearchPath;
+        target: Id64String;
+    }>;
+    createSearchTree: (searchProps: ClassificationsTreeSearchProps & {
+        revealTargets?: boolean;
+    }) => Promise<ClassificationsTreeSearchTree[]>;
+};
+
+// @beta
 export function createModelsTree(props: ModelsTreeProps): {
     definition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
-        path: HierarchyNodeIdentifiersPath;
+        path: ModelsTreeSearchPath;
         target: Id64String | ElementsGroupInfo;
     }>;
     createSearchTree: (searchProps: ModelsTreeSearchProps & {
         revealTargets?: boolean;
-    }) => Promise<HierarchySearchTree[]>;
+    }) => Promise<ModelsTreeSearchTree[]>;
 };
 
 // @beta
@@ -53,6 +241,9 @@ interface ElementsGroupInfo {
 
 // @beta
 interface ModelsTreeHierarchyConfiguration {
+    categories?: {
+        labelMerging?: "enable" | "disable";
+    };
     elements?: {
         baseClass?: EC.FullClassNameDotNotation;
         excludedClasses?: EC.FullClassNameDotNotation[];
@@ -61,9 +252,11 @@ interface ModelsTreeHierarchyConfiguration {
     hierarchyLevelFiltering?: "enable" | "disable";
     models?: {
         withoutElements?: "include" | "exclude";
+        labelMerging?: "enable" | "disable";
     };
     subjects?: {
         root?: "include" | "exclude";
+        labelMerging?: "enable" | "disable";
     };
 }
 
@@ -112,8 +305,20 @@ interface ModelsTreeProps {
 // @beta
 interface ModelsTreeSearchOptions {
     abortSignal?: AbortSignal;
+    includeOnlyVisibleNodeInstanceKeys?: boolean;
     limit?: number | "unbounded";
 }
+
+// @beta
+type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+
+// @beta
+type ModelsTreeSearchPathClasses = "BisCore.Subject" | "BisCore.GeometricModel3d" | "BisCore.SpatialCategory" | "BisCore.GeometricElement3d";
+
+// @beta
+type ModelsTreeSearchPathKey = IModelInstanceKey & {
+    className: ModelsTreeSearchPathClasses;
+};
 
 // @beta
 type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
@@ -121,6 +326,12 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
 } | {
     label: string;
 });
+
+// @beta
+interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+    children?: ModelsTreeSearchTree[];
+    identifier: ModelsTreeSearchPathKey;
+}
 
 // (No @packageDocumentation comment for this package)
 

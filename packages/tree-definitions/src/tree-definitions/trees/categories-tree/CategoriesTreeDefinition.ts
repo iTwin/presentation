@@ -31,6 +31,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -45,9 +46,10 @@ import {
   ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
+import { createCategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
 import { CategoriesTreeNodeInternal } from "./CategoriesTreeNodeInternal.js";
 
-import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
+import type { Observable, OperatorFunction } from "rxjs";
 import type { GuidString, Id64Array, Id64String, MarkRequired } from "@itwin/core-bentley";
 import type {
   DefineHierarchyLevelProps,
@@ -56,8 +58,8 @@ import type {
   GenericInstanceFilter,
   HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyNodeIdentifiersPath,
   HierarchyNodesDefinition,
+  IModelInstanceKey,
   InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
@@ -69,7 +71,6 @@ import type {
   ECSqlBinding,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
-  InstanceKey,
   Props,
 } from "@itwin/presentation-shared";
 import type { CategoryId, DefinitionContainerId, ElementId, ModelId, SubCategoryId } from "../../shared/Types.js";
@@ -81,43 +82,47 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
  * Data access, view type, and configuration for a categories hierarchy.
- * @internal
+ * @beta
  */
-interface CategoriesTreeDefinitionProps {
+interface CategoriesTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   viewType: "2d" | "3d";
-  idsProvider: CategoriesTreeIdsProvider;
+  /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+  /** Identifier used in query restart tokens. Defaults to a generated GUID. */
+  uniqueId?: GuidString;
+}
+
+/** @internal */
+interface CategoriesTreeDefinitionProps extends CategoriesTreeProps {
+  idsProvider: CategoriesTreeIdsProvider;
 }
 
 /**
- * Shared data access, configuration, and cancellation options for categories hierarchy searches.
- * @internal
+ * Search-specific options for a categories tree with shared data access and configuration.
+ * @beta
  */
-interface CategoriesTreeInstanceKeyPathsBaseProps {
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+interface CategoriesTreeSearchProps {
+  /** Substring of the instance label to search for. */
+  label: string;
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
-  viewType: "2d" | "3d";
-  idsProvider: CategoriesTreeIdsProvider;
-  hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
-  /** Identifier used in query restart tokens. Defaults to a generated GUID for each search. */
-  uniqueId?: GuidString;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
+
+/** @internal */
+type CategoriesTreeInstanceKeyPathsBaseProps = CategoriesTreeDefinitionProps & Omit<CategoriesTreeSearchProps, "label">;
 
 /**
  * Options for locating categories hierarchy paths by a substring of the instance label.
  * @internal
  */
-interface CategoriesTreeInstanceKeyPathsFromInstanceLabelProps extends CategoriesTreeInstanceKeyPathsBaseProps {
-  label: string;
-}
+type CategoriesTreeInstanceKeyPathsFromInstanceLabelProps = CategoriesTreeDefinitionProps & CategoriesTreeSearchProps;
 
 /**
- * Configures category, subcategory, and element nodes produced by `CategoriesTreeDefinition`.
- * @internal
+ * Configures category, sub-category, and element nodes produced by `createCategoriesTree`.
+ * @beta
  */
 export interface CategoriesTreeHierarchyConfiguration {
   /**
@@ -187,7 +192,90 @@ export const defaultHierarchyConfiguration: RequiredCategoriesTreeHierarchyConfi
 };
 
 /**
- * Defines a hierarchy of definition containers, categories, subcategories, and optional elements for a 2D or 3D view.
+ * Full class names of instances that may appear in a categories hierarchy search path.
+ * @beta
+ */
+type CategoriesTreeSearchPathClasses =
+  | "BisCore.DefinitionContainer"
+  | "BisCore.SpatialCategory"
+  | "BisCore.DrawingCategory"
+  | "BisCore.SubCategory"
+  | "BisCore.GeometricModel3d"
+  | "BisCore.GeometricModel2d"
+  | "BisCore.GeometricElement3d"
+  | "BisCore.GeometricElement2d";
+
+/**
+ * Key of a single instance in a categories hierarchy search path, with `className` narrowed to `CategoriesTreeSearchPathClasses`.
+ * @beta
+ */
+export type CategoriesTreeSearchPathKey = IModelInstanceKey & { className: CategoriesTreeSearchPathClasses };
+
+/**
+ * A path of instance keys from a root node to a search target in a categories hierarchy.
+ * @beta
+ */
+export type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+
+/**
+ * A `HierarchySearchTree` whose entries identify only the instance classes that a categories hierarchy search can return.
+ * @beta
+ */
+export interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+  /** Key of the instance this tree entry represents. */
+  identifier: CategoriesTreeSearchPathKey;
+  /** Child entries representing the next level(s) in the search paths. */
+  children?: CategoriesTreeSearchTree[];
+}
+
+/**
+ * Creates a categories hierarchy definition and label search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Creates and shares cached ID providers for the specified view type using the resolved hierarchy configuration.
+ * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @beta
+ */
+export function createCategoriesTree(props: CategoriesTreeProps) {
+  const hierarchyConfig = mergeWithDefaults({
+    defaults: defaultHierarchyConfiguration,
+    overrides: props.hierarchyConfig,
+  });
+  const idsProvider = createCategoriesTreeIdsProvider({
+    imodelAccess: props.imodelAccess,
+    type: props.viewType,
+    baseIdsProvider: createBaseIdsProvider({
+      queryExecutor: props.imodelAccess,
+      elementClassName: getClassesByView(props.viewType).elementClass,
+      excludedElementClassNames:
+        hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
+    }),
+  });
+  const sharedProps = {
+    imodelAccess: props.imodelAccess,
+    viewType: props.viewType,
+    idsProvider,
+    hierarchyConfig,
+    uniqueId: props.uniqueId ?? Guid.createValue(),
+  };
+  const definition: HierarchyDefinition = new CategoriesTreeDefinition(sharedProps);
+  return {
+    definition,
+    /**
+     * Yields hierarchy paths to instances whose labels contain the supplied text.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) =>
+      CategoriesTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+    /**
+     * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+     * @throws An error if the configured search limit is exceeded.
+     */
+    createSearchTree: async (searchProps: CategoriesTreeSearchProps & { revealTargets?: boolean }) =>
+      CategoriesTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+  };
+}
+
+/**
+ * Defines a hierarchy of definition containers, categories, sub-categories, and optional elements for a 2D or 3D view.
  * Use with `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @internal
  */
@@ -810,6 +898,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                     categoryId,
                     excludeSubModels: true,
                     includeOnlyTopMostElementCategory: true,
+                    excludeIfOnlyExcludedClasses: true,
                   }),
                 ).pipe(
                   take(1),
@@ -1281,7 +1370,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
    */
   public static createInstanceKeyPaths(
     props: CategoriesTreeInstanceKeyPathsFromInstanceLabelProps,
-  ): AsyncIterableIterator<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+  ): AsyncIterableIterator<{ path: CategoriesTreeSearchPath; target: Id64String }> {
     const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
     const hierarchyConfig = mergeWithDefaults({
       defaults: defaultHierarchyConfiguration,
@@ -1304,7 +1393,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
    */
   public static async createSearchTree(
     props: CategoriesTreeInstanceKeyPathsFromInstanceLabelProps & { revealTargets?: boolean },
-  ) {
+  ): Promise<CategoriesTreeSearchTree[]> {
     const builder = HierarchySearchTree.createBuilder();
     const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
     const hierarchyConfig = mergeWithDefaults({
@@ -1328,7 +1417,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       ),
       { defaultValue: builder },
     );
-    return builder.getTree();
+    // the builder only receives `CategoriesTreeSearchPath` entries, so the tree identifiers are guaranteed to be of those classes
+    return builder.getTree() as CategoriesTreeSearchTree[];
   }
 }
 
@@ -1351,7 +1441,7 @@ function createInstanceKeyPathsFromInstanceLabel(
     hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
     componentName: string;
   },
-) {
+): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
   const { idsProvider, label, viewType, labelsFactory, limit, imodelAccess, uniqueId, componentName, hierarchyConfig } =
     props;
   const { categoryClass, elementClass } = getClassesByView(viewType);
@@ -1560,10 +1650,7 @@ function createSearchPathsForDifferentTypes(
     componentName: string;
     hierarchyConfig: RequiredCategoriesTreeHierarchyConfiguration;
   },
-): OperatorFunction<
-  { key: Id64String; type: number },
-  ObservedValueOf<ReturnType<typeof createGeometricElementInstanceKeyPaths>>
-> {
+): OperatorFunction<{ key: Id64String; type: number }, { path: CategoriesTreeSearchPath; target: Id64String }> {
   return (obs) =>
     obs.pipe(
       reduce(
@@ -1664,7 +1751,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+}): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
   const separator = ";";
   const {
     targetItems,
@@ -1756,7 +1843,15 @@ export function createGeometricElementInstanceKeyPaths(props: {
     }),
     catchBeSQLiteInterrupts,
     targetItems.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
-    map((row) => parseQueryRow(row, separator, elementClass, categoryClass, modelClass)),
+    map((row) =>
+      parseQueryRow({
+        row,
+        separator,
+        elementClassName: elementClass,
+        categoryClassName: categoryClass,
+        modelClassName: modelClass,
+      }),
+    ),
     mergeMap((elementHierarchyPath) =>
       from(idsProvider.getSearchPathsUpToRootCategory({ categoryId: elementHierarchyPath[0].id })).pipe(
         map((pathUpToCategory) => {
@@ -1778,7 +1873,7 @@ export function createCategoriesSearchPaths(props: {
   componentName: string;
   elements: "include" | "exclude";
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+}): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
   const separator = ";";
   const {
     targetCategoryIds,
@@ -1893,7 +1988,15 @@ export function createCategoriesSearchPaths(props: {
       }),
       catchBeSQLiteInterrupts,
       targetCategoryIds.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
-      map((row) => parseQueryRow(row, separator, elementClass, categoryClass, modelClass)),
+      map((row) =>
+        parseQueryRow({
+          row,
+          separator,
+          elementClassName: elementClass,
+          categoryClassName: categoryClass,
+          modelClassName: modelClass,
+        }),
+      ),
       mergeMap((categoryHierarchyPath) =>
         from(idsProvider.getSearchPathsUpToRootCategory({ categoryId: categoryHierarchyPath[0].id })).pipe(
           map((pathUpToCategory) => {
@@ -1906,15 +2009,21 @@ export function createCategoriesSearchPaths(props: {
   );
 }
 
-function parseQueryRow(
-  row: ECSqlQueryRow,
-  separator: string,
-  elementClassName: EC.FullClassNameDotNotation,
-  categoryClassName: EC.FullClassNameDotNotation,
-  modelClassName: EC.FullClassNameDotNotation,
-) {
+function parseQueryRow({
+  row,
+  separator,
+  elementClassName,
+  categoryClassName,
+  modelClassName,
+}: {
+  row: ECSqlQueryRow;
+  separator: string;
+  elementClassName: typeof CLASS_NAMES.GeometricElement3d | typeof CLASS_NAMES.GeometricElement2d;
+  categoryClassName: typeof CLASS_NAMES.SpatialCategory | typeof CLASS_NAMES.DrawingCategory;
+  modelClassName: typeof CLASS_NAMES.GeometricModel2d | typeof CLASS_NAMES.GeometricModel3d;
+}): CategoriesTreeSearchPath {
   const queriedPath: string[] = row[0].split(separator);
-  const path = new Array<InstanceKey>();
+  const path: CategoriesTreeSearchPath = [];
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:

@@ -11,7 +11,6 @@ import { QUERY_CONCURRENCY } from "./QueryConcurrency.js";
 import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../Content.js";
 import type { ContentSource } from "../ContentTarget.js";
-import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 
 /**
  * Gets keys of instances matching the supplied sources.
@@ -21,18 +20,12 @@ import type { QueryFilterer } from "../extensions/QueryFilterer.js";
 export function getInstanceKeys(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   sources: ContentSource[];
-  queryFilterers?: QueryFilterer[];
   filters?: ContentValueFilter[];
 }): AsyncIterable<InstanceKey> {
   return eachValueFrom(
     from(props.sources).pipe(
       mergeMap(async (source) =>
-        buildBaseQuery({
-          schemaProvider: props.imodelAccess,
-          source,
-          queryFilterers: props.queryFilterers,
-          filters: props.filters,
-        }),
+        buildBaseQuery({ schemaProvider: props.imodelAccess, source, filters: props.filters }),
       ),
       mergeMap(({ anchor: { parts } }) => {
         const reader = props.imodelAccess.createQueryReader(

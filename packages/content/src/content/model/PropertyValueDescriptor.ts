@@ -18,7 +18,8 @@ type PrimitiveValueType = PrimitiveValueDescriptor["type"];
  * shape. Navigation properties become `{ kind: "navigation", targetClassName }` carrying the
  * relationship's target-constraint class (the runtime value stays a bare id). Enumeration properties
  * become a `primitive` descriptor of their backing type with the enumeration's metadata preserved on
- * `enumeration` (the runtime value stays the raw backing value).
+ * `enumeration` (the runtime value stays the raw backing value). A primitive property's
+ * `extendedTypeName` (e.g. `"Json"`, `"BeGuid"`), when set, is preserved on `extendedType`.
  *
  * @internal
  */
@@ -49,7 +50,7 @@ function createScalarValueDescriptor(property: EC.Property): ValueDescriptor | u
     if (type === undefined) {
       return undefined;
     }
-    return createPrimitiveValueDescriptor(type, property.kindOfQuantity?.fullName);
+    return createPrimitiveValueDescriptor(type, property.kindOfQuantity?.fullName, property.extendedTypeName);
   }
   return undefined;
 }
@@ -117,14 +118,20 @@ function createStructValueDescriptor(property: EC.StructProperty): StructValueDe
 function createPrimitiveValueDescriptor(
   type: PrimitiveValueType,
   kindOfQuantity: string | undefined,
+  extendedType: string | undefined,
 ): PrimitiveValueDescriptor {
   switch (type) {
     case "Integer":
     case "Double":
     case "Long":
-      return kindOfQuantity !== undefined ? { kind: "primitive", type, kindOfQuantity } : { kind: "primitive", type };
+      return {
+        kind: "primitive",
+        type,
+        ...(kindOfQuantity !== undefined ? { kindOfQuantity } : undefined),
+        ...(extendedType !== undefined ? { extendedType } : undefined),
+      };
     default:
-      return { kind: "primitive", type };
+      return { kind: "primitive", type, ...(extendedType !== undefined ? { extendedType } : undefined) };
   }
 }
 

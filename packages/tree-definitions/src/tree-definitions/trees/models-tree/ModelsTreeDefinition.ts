@@ -7,6 +7,7 @@ import {
   bufferCount,
   defer,
   EMPTY,
+  filter,
   firstValueFrom,
   forkJoin,
   from,
@@ -27,12 +28,7 @@ import {
   HierarchySearchTree,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  eachValueFrom,
-  ECSql,
-  parseFullClassName,
-} from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
@@ -50,7 +46,7 @@ import {
 import { createModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
-import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
+import type { Observable, OperatorFunction } from "rxjs";
 import type { GuidString, Id64Array, Id64String } from "@itwin/core-bentley";
 import type {
   ClassGroupingNodeKey,
@@ -59,8 +55,8 @@ import type {
   GroupingHierarchyNode,
   HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyNodeIdentifiersPath,
   HierarchyNodesDefinition,
+  IModelInstanceKey,
   InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
@@ -70,7 +66,6 @@ import type {
   EC,
   ECSchemaProvider,
   ECSqlBinding,
-  ECSqlQueryDef,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
@@ -103,7 +98,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /**
    * Subject node's configuration options.
    *
-   * Defaults to `{ root: "include" }`.
+   * Defaults to `{ root: "include", labelMerging: "enable" }`.
    */
   subjects?: {
     /**
@@ -112,6 +107,25 @@ export interface ModelsTreeHierarchyConfiguration {
      * Defaults to `"include"`.
      */
     root?: "include" | "exclude";
+    /**
+     * Controls whether sibling Subject nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
+  };
+  /**
+   * Category node's configuration options.
+   *
+   * Defaults to `{ labelMerging: "enable" }`.
+   */
+  categories?: {
+    /**
+     * Controls whether sibling Category nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
   };
   /**
    * Element node's configuration options.
@@ -144,7 +158,7 @@ export interface ModelsTreeHierarchyConfiguration {
   /**
    * Model node's configuration options.
    *
-   * Defaults to `{ withoutElements: "exclude" }`.
+   * Defaults to `{ withoutElements: "exclude", labelMerging: "enable" }`.
    */
   models?: {
     /**
@@ -153,6 +167,12 @@ export interface ModelsTreeHierarchyConfiguration {
      * Defaults to `"exclude"`.
      */
     withoutElements?: "include" | "exclude";
+    /**
+     * Controls whether sibling Model nodes with the same label are merged into a single node.
+     *
+     * Defaults to `"enable"`.
+     */
+    labelMerging?: "enable" | "disable";
   };
 }
 
@@ -161,9 +181,10 @@ export type RequiredModelsTreeHierarchyConfiguration = DeepRequired<ModelsTreeHi
 
 /** @internal */
 export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfiguration = {
-  subjects: { root: "include" },
+  subjects: { root: "include", labelMerging: "enable" },
+  categories: { labelMerging: "enable" },
   elements: { baseClass: CLASS_NAMES.GeometricElement3d, excludedClasses: [], classGrouping: "enable" },
-  models: { withoutElements: "exclude" },
+  models: { withoutElements: "exclude", labelMerging: "enable" },
   hierarchyLevelFiltering: "enable",
 };
 
@@ -177,6 +198,39 @@ interface ModelsTreeProps {
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
   uniqueId?: GuidString;
+}
+
+/**
+ * Full class names of instances that may appear in a models hierarchy search path.
+ * @beta
+ */
+type ModelsTreeSearchPathClasses =
+  | "BisCore.Subject"
+  | "BisCore.GeometricModel3d"
+  | "BisCore.SpatialCategory"
+  | "BisCore.GeometricElement3d";
+
+/**
+ * Key of a single instance in a models hierarchy search path, with `className` narrowed to `ModelsTreeSearchPathClasses`.
+ * @beta
+ */
+export type ModelsTreeSearchPathKey = IModelInstanceKey & { className: ModelsTreeSearchPathClasses };
+
+/**
+ * A path of instance keys from a root node to a search target in a models hierarchy.
+ * @beta
+ */
+export type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+
+/**
+ * A `HierarchySearchTree` whose entries identify only the instance classes that a models hierarchy search can return.
+ * @beta
+ */
+export interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+  /** Key of the instance this tree entry represents. */
+  identifier: ModelsTreeSearchPathKey;
+  /** Child entries representing the next level(s) in the search paths. */
+  children?: ModelsTreeSearchTree[];
 }
 
 /** @internal */
@@ -194,12 +248,20 @@ export interface ElementsGroupInfo {
 }
 
 /**
- * Limits and cancellation options for models hierarchy searches.
+ * Visibility, limits, and cancellation options for models hierarchy searches.
  * @beta
  */
 interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
+  /**
+   * Includes only visible hierarchy node instance keys in the returned search paths.
+   * Defaults to `false`.
+   *
+   * Leave disabled when passing results to `createIModelHierarchyProvider`, which requires hidden entries
+   * for traversal.
+   */
+  includeOnlyVisibleNodeInstanceKeys?: boolean;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
@@ -289,10 +351,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   #impl: HierarchyDefinition;
   #idsProvider: ModelsTreeIdsProvider;
   #hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
-  #queryExecutor: LimitingECSqlQueryExecutor;
+  #schemaProvider: ECSchemaProvider;
   #isSupported?: Promise<boolean>;
   static #componentName = "ModelsTreeDefinition";
-  #uniqueId: GuidString;
 
   public constructor(props: ModelsTreeDefinitionProps) {
     this.#hierarchyConfig = mergeWithDefaults({
@@ -336,9 +397,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         ],
       },
     });
-    this.#uniqueId = props.uniqueId ?? Guid.createValue();
     this.#idsProvider = props.idsProvider;
-    this.#queryExecutor = props.imodelAccess;
+    this.#schemaProvider = props.imodelAccess;
   }
 
   public preProcessNode: NodePreProcessor = async ({ node }) => {
@@ -511,7 +571,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                     0
                   )`,
                 },
-                grouping: { byLabel: { action: "merge", groupId: "subject" } },
+                ...(this.#hierarchyConfig.subjects.labelMerging === "enable"
+                  ? { grouping: { byLabel: { action: "merge", groupId: "subject" } } }
+                  : {}),
                 extendedData: {
                   isRootSubject: { selector: `IIF(this.ECInstanceId = ${IModel.rootSubjectId}, true, false)` },
                   type: "subject",
@@ -546,6 +608,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   this.#hierarchyConfig.elements.excludedClasses.length
                     ? { selector: "model.HasChildren" }
                     : true,
+                ...(this.#hierarchyConfig.models.labelMerging === "enable"
+                  ? { grouping: { byLabel: { action: "merge", groupId: "model" } } }
+                  : {}),
                 extendedData: { type: "model" },
                 supportsFiltering: this.supportsFiltering(),
               })}
@@ -845,7 +910,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ecClassId: { selector: "this.ECClassId" },
       ecInstanceId: { selector: "this.ECInstanceId" },
       nodeLabel: { of: { classAlias: "this", className: CLASS_NAMES.SpatialCategory } },
-      grouping: { byLabel: { action: "merge", groupId: "category" } },
+      ...(this.#hierarchyConfig.categories.labelMerging === "enable"
+        ? { grouping: { byLabel: { action: "merge", groupId: "category" } } }
+        : {}),
       hasChildren: true,
       extendedData: { type: "category", ...extendedData },
       supportsFiltering: this.supportsFiltering(),
@@ -978,8 +1045,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
    * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
    * @throws An error if the configured search limit is exceeded.
    */
-  public static createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
-    return eachValueFrom<{ path: HierarchyNodeIdentifiersPath; target: Id64String | ElementsGroupInfo }>(
+  public static createInstanceKeyPaths(
+    props: ModelsTreeInstanceKeyPathsProps,
+  ): AsyncIterableIterator<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }> {
+    return eachValueFrom<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }>(
       defer(() => {
         const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
         const hierarchyConfig = mergeWithDefaults({
@@ -1004,7 +1073,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
    * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
    * @throws An error if the configured search limit is exceeded.
    */
-  public static async createSearchTree(props: ModelsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
+  public static async createSearchTree(
+    props: ModelsTreeInstanceKeyPathsProps & { revealTargets?: boolean },
+  ): Promise<ModelsTreeSearchTree[]> {
     const builder = HierarchySearchTree.createBuilder();
     await firstValueFrom(
       defer(() => {
@@ -1045,7 +1116,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ),
       { defaultValue: builder },
     );
-    return builder.getTree();
+    // the builder only receives `ModelsTreeSearchPath` entries, so the tree identifiers are guaranteed to be of those classes
+    return builder.getTree() as ModelsTreeSearchTree[];
   }
 
   private supportsFiltering() {
@@ -1053,27 +1125,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   }
 
   private async isSupported() {
-    const { schemaName, className } = parseFullClassName(this.#hierarchyConfig.elements.baseClass);
-
-    const query: ECSqlQueryDef = {
-      ecsql: `
-        SELECT 1
-        FROM ECDbMeta.ECSchemaDef s
-        JOIN ECDbMeta.ECClassDef c ON c.Schema.Id = s.ECInstanceId
-        ${createWhereClause({ conditions: ["s.Name = ?", "c.Name = ?", `c.ECInstanceId IS (${CLASS_NAMES.GeometricElement3d})`] })}
-      `,
-      bindings: [
-        { type: "string", value: schemaName },
-        { type: "string", value: className },
-      ],
-    };
-
-    for await (const _row of this.#queryExecutor.createQueryReader(query, {
-      restartToken: `${ModelsTreeDefinition.#componentName}/${this.#uniqueId}/is-class-supported`,
-    })) {
-      return true;
-    }
-    return false;
+    return this.#schemaProvider.classDerivesFrom(
+      this.#hierarchyConfig.elements.baseClass,
+      CLASS_NAMES.GeometricElement3d,
+    );
   }
 }
 
@@ -1096,7 +1151,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String | ElementsGroupInfo }> {
+}): Observable<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }> {
   const {
     targetItems,
     chunkIndex,
@@ -1215,7 +1270,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     }),
     catchBeSQLiteInterrupts,
     releaseMainThreadOnItemsCount(300),
-    map((row) => parseElementsQueryRow(row, groupInfos, separator, elementClassName)),
+    map((row) => parseElementsQueryRow({ row, groupInfos, separator })),
     mergeMap(({ elementHierarchyPath, groupingInfo }) =>
       from(idsProvider.createUpToModelInstanceKeyPaths(elementHierarchyPath[0].id)).pipe(
         map((modelPath) => {
@@ -1227,13 +1282,16 @@ export function createGeometricElementInstanceKeyPaths(props: {
   );
 }
 
-function parseElementsQueryRow(
-  row: ECSqlQueryRow,
-  groupInfos: ElementsGroupInfo[],
-  separator: string,
-  elementClassName: EC.FullClassNameDotNotation,
-) {
-  const path = parseQueriedPath({ queriedPathRaw: row[0], elementClassName, separator });
+function parseElementsQueryRow({
+  row,
+  groupInfos,
+  separator,
+}: {
+  row: ECSqlQueryRow;
+  groupInfos: ElementsGroupInfo[];
+  separator: string;
+}) {
+  const path = parseQueriedPath({ queriedPathRaw: row[0], separator });
   return { elementHierarchyPath: path, groupingInfo: row[1] === -1 ? undefined : groupInfos[row[1]] };
 }
 
@@ -1246,7 +1304,7 @@ export function createCategoriesSearchPaths(props: {
   componentName: string;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+}): Observable<{ path: ModelsTreeSearchPath; target: Id64String }> {
   const separator = ";";
   const {
     targetCategoryIds,
@@ -1367,9 +1425,7 @@ export function createCategoriesSearchPaths(props: {
       }),
       catchBeSQLiteInterrupts,
       targetCategoryIds.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
-      map((row) => {
-        return parseQueriedPath({ queriedPathRaw: row[0], elementClassName, separator });
-      }),
+      map((row) => parseQueriedPath({ queriedPathRaw: row[0], separator })),
       mergeMap((categoryHierarchyPath) =>
         from(idsProvider.createUpToModelInstanceKeyPaths(categoryHierarchyPath[0].id)).pipe(
           map((pathUpToCategory) => {
@@ -1384,19 +1440,17 @@ export function createCategoriesSearchPaths(props: {
 
 function parseQueriedPath({
   queriedPathRaw,
-  elementClassName,
   separator,
 }: {
   queriedPathRaw: string;
-  elementClassName: EC.FullClassNameDotNotation;
   separator: string;
-}): HierarchyNodeIdentifiersPath {
-  const path = new Array<InstanceKey>();
+}): ModelsTreeSearchPath {
+  const path: ModelsTreeSearchPath = [];
   const queriedPath: string[] = queriedPathRaw.split(separator);
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:
-        path.push({ className: elementClassName, id: queriedPath[i + 1] });
+        path.push({ className: CLASS_NAMES.GeometricElement3d, id: queriedPath[i + 1] });
         break;
       case CATEGORY_CLASS_NAME_QUERY_ALIAS:
         path.push({ className: CLASS_NAMES.SpatialCategory, id: queriedPath[i + 1] });
@@ -1452,10 +1506,10 @@ function createSearchPathsForDifferentTypes(
   },
 ): OperatorFunction<
   { key: Id64String; type: number } | { key: ElementsGroupInfo; type: typeof ELEMENT_TYPE_AS_NUMBER },
-  ObservedValueOf<ReturnType<typeof createGeometricElementInstanceKeyPaths>>
+  { path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }
 > {
-  return (obs) =>
-    obs.pipe(
+  return (obs) => {
+    const paths = obs.pipe(
       reduce(
         (acc, value) => {
           if (value.type === SUBJECT_TYPE_AS_NUMBER) {
@@ -1531,6 +1585,34 @@ function createSearchPathsForDifferentTypes(
         );
       }),
     );
+    if (!props.includeOnlyVisibleNodeInstanceKeys) {
+      return paths;
+    }
+    return defer(async () => props.idsProvider.getHiddenModelIds()).pipe(
+      switchMap((hiddenModelIds) =>
+        paths.pipe(
+          map(({ path, target }) => {
+            const targetEntry = path[path.length - 1];
+            const visiblePath = path.filter((key, index) => {
+              if (key.className !== CLASS_NAMES.GeometricModel3d) {
+                return true;
+              }
+              if (hiddenModelIds.has(key.id)) {
+                return false;
+              }
+              if (path[index - 1]?.className === CLASS_NAMES.GeometricElement3d) {
+                // Sub-models follow their modeled element in the path and are always hidden in the hierarchy.
+                return false;
+              }
+              return true;
+            });
+            return visiblePath[visiblePath.length - 1] === targetEntry ? { path: visiblePath, target } : undefined;
+          }),
+          filter((result) => result !== undefined),
+        ),
+      ),
+    );
+  };
 }
 
 function createInstanceKeyPathsFromInstanceLabelObs(
@@ -1540,7 +1622,7 @@ function createInstanceKeyPathsFromInstanceLabelObs(
     componentName: string;
     hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
   },
-) {
+): Observable<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }> {
   const { labelsFactory, label, imodelAccess, limit, hierarchyConfig } = props;
   return defer(async () => {
     const elementLabelSelectClause = await labelsFactory.createSelectClause({

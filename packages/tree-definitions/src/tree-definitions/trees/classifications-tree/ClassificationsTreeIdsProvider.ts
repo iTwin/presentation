@@ -9,14 +9,17 @@ import { eachValueFrom, type EC } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
-import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
-import type { ClassificationsTreeHierarchyConfiguration } from "./ClassificationsTreeDefinition.js";
+import type {
+  ClassificationsTreeHierarchyConfiguration,
+  ClassificationsTreeSearchPath,
+} from "./ClassificationsTreeDefinition.js";
 
 /**
  * Relationship used to determine related categories for classifications.
@@ -75,7 +78,7 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
    * Yields a path from the classification table to each supplied classification, including both endpoints.
    * Empty input yields no paths. Unknown IDs yield a path containing only the supplied classification.
    */
-  getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
   getAllClassifications(): Promise<ClassificationId[]>;
 }
@@ -153,7 +156,15 @@ export function createClassificationsTreeIdsProvider({
           JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = e.Category.Id
           JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
           ${createWhereClause({
-            conditions: ["e.Parent.Id IS NULL", "NOT cat.IsPrivate", "ehc.TargetECInstanceId = cl.ClassificationId"],
+            conditions: [
+              "e.Parent.Id IS NULL",
+              "NOT cat.IsPrivate",
+              "ehc.TargetECInstanceId = cl.ClassificationId",
+              createExcludedClassesClause({
+                alias: "e",
+                excludedClassNames: hierarchyConfig.elements?.excludedClasses,
+              }),
+            ],
           })}
           GROUP BY ehc.TargetECInstanceId
         `;
@@ -285,7 +296,7 @@ export function createClassificationsTreeIdsProvider({
         ),
       );
     },
-    getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<HierarchyNodeIdentifiersPath> {
+    getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath> {
       if (Id64.sizeOf(classificationIds) === 0) {
         return (async function* () {})();
       }
@@ -294,7 +305,7 @@ export function createClassificationsTreeIdsProvider({
           mergeMap(({ classificationOrTableInfos }) =>
             fromWithRelease({ source: classificationIds, releaseOnCount: 200 }).pipe(
               map((classificationId) => {
-                const path: HierarchyNodeIdentifiersPath = [
+                const path: ClassificationsTreeSearchPath = [
                   { id: classificationId, className: CLASS_NAMES.Classification },
                 ];
                 let parentId = classificationOrTableInfos.get(classificationId)?.parentClassificationOrTableId;

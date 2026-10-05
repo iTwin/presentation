@@ -6,7 +6,7 @@
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { eachValueFrom, type InstanceKey } from "@itwin/presentation-shared";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate, mergeWithDefaults } from "../../shared/Utils.js";
@@ -14,10 +14,10 @@ import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
-import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
-import type { ModelsTreeHierarchyConfiguration } from "./ModelsTreeDefinition.js";
+import type { ModelsTreeHierarchyConfiguration, ModelsTreeSearchPath } from "./ModelsTreeDefinition.js";
 
 /**
  * Data access and configuration for a models-tree ID provider.
@@ -38,6 +38,11 @@ interface SubjectInfo {
   childModelIds: Id64Set;
 }
 
+interface ModelInfo {
+  parentSubjectIds: Id64Set;
+  hideInHierarchy: boolean;
+}
+
 /**
  * Provides subject and model IDs and search paths for model tree hierarchies.
  * @internal
@@ -49,18 +54,20 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
   getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
   /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
   getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+  /** Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy. */
+  getHiddenModelIds(): Promise<Set<ModelId>>;
   /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
-  createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<HierarchyNodeIdentifiersPath>;
+  createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
   /**
    * Yields each subject path leading to the specified model, excluding the model itself.
    * Yields no paths if the model is excluded or is not associated with a subject.
    */
-  createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
   /**
    * Yields paths to models containing top-level, non-excluded elements in the specified category, excluding sub-models.
    * Paths include the model but not the category. Yields no paths if no eligible models exist.
    */
-  getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
 }
 
 /**
@@ -75,9 +82,17 @@ export function createModelsTreeIdsProvider({
   const hierarchyConfig = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const cachedData: {
     subjectInfos: Observable<Map<SubjectId, SubjectInfo>> | undefined;
+    modelInfos: Observable<Map<ModelId, ModelInfo>> | undefined;
     parentSubjectIds: Observable<Id64Array> | undefined;
-    upToModelInstanceKeyPaths: Map<ModelId, Observable<HierarchyNodeIdentifiersPath>>;
-  } = { parentSubjectIds: undefined, subjectInfos: undefined, upToModelInstanceKeyPaths: new Map() };
+    hiddenModelIds: Observable<Set<ModelId>> | undefined;
+    upToModelInstanceKeyPaths: Map<ModelId, Observable<ModelsTreeSearchPath>>;
+  } = {
+    parentSubjectIds: undefined,
+    subjectInfos: undefined,
+    modelInfos: undefined,
+    hiddenModelIds: undefined,
+    upToModelInstanceKeyPaths: new Map(),
+  };
   const componentId = Guid.createValue();
   const componentName = "ModelsTreeIdsProvider";
 
@@ -134,10 +149,19 @@ export function createModelsTreeIdsProvider({
     );
   }
 
-  function queryModels(): Observable<{ id: ModelId; parentId: SubjectId }> {
+  function queryModels(): Observable<{ id: ModelId; parentId: SubjectId; hideInHierarchy: boolean }> {
     return defer(() => {
       const modelsQuery = `
-        SELECT p.ECInstanceId id, p.Parent.Id parentId
+        SELECT
+          p.ECInstanceId id,
+          p.Parent.Id parentId,
+          CASE
+            WHEN (
+              json_extract(p.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+              OR json_extract(p.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+            ) THEN 1
+            ELSE 0
+          END hideInHierarchy
         FROM ${CLASS_NAMES.InformationPartitionElement} p
         INNER JOIN ${CLASS_NAMES.GeometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
         ${createWhereClause({ conditions: ["NOT m.IsPrivate", hierarchyConfig.models.withoutElements === "exclude" && `EXISTS (SELECT 1 FROM ${hierarchyConfig.elements.baseClass} WHERE Model.Id = m.ECInstanceId)`] })}
@@ -149,9 +173,25 @@ export function createModelsTreeIdsProvider({
     }).pipe(
       catchBeSQLiteInterrupts,
       map((row) => {
-        return { id: row.id, parentId: row.parentId };
+        return { id: row.id, parentId: row.parentId, hideInHierarchy: !!row.hideInHierarchy };
       }),
     );
+  }
+
+  function getModelInfos() {
+    cachedData.modelInfos ??= queryModels().pipe(
+      reduce((acc, model) => {
+        const entry = getOrCreate({
+          map: acc,
+          key: model.id,
+          createFunc: () => ({ parentSubjectIds: new Set<SubjectId>(), hideInHierarchy: model.hideInHierarchy }),
+        });
+        entry.parentSubjectIds.add(model.parentId);
+        return acc;
+      }, new Map<ModelId, ModelInfo>()),
+      shareReplay(),
+    );
+    return cachedData.modelInfos;
   }
 
   function getSubjectInfos() {
@@ -181,17 +221,11 @@ export function createModelsTreeIdsProvider({
           return subjectInfos;
         }),
       ),
-      modelInfos: queryModels().pipe(
-        reduce((acc, model) => {
-          const entry = getOrCreate({ map: acc, key: model.id, createFunc: () => new Set<SubjectId>() });
-          entry.add(model.parentId);
-          return acc;
-        }, new Map<ModelId, Set<SubjectId>>()),
-      ),
+      modelInfos: getModelInfos(),
     }).pipe(
       map(({ subjectInfos, modelInfos }) => {
-        for (const [modelId, subjects] of modelInfos) {
-          for (const subjectId of subjects) {
+        for (const [modelId, { parentSubjectIds }] of modelInfos) {
+          for (const subjectId of parentSubjectIds) {
             const subjectInfo = subjectInfos.get(subjectId);
             assert(!!subjectInfo);
             subjectInfo.childModelIds.add(modelId);
@@ -241,10 +275,10 @@ export function createModelsTreeIdsProvider({
     }
     return false;
   }
-  function createSubjectInstanceKeysPath(targetSubjectId: Id64String): Observable<HierarchyNodeIdentifiersPath> {
+  function createSubjectInstanceKeysPath(targetSubjectId: Id64String): Observable<ModelsTreeSearchPath> {
     return getSubjectInfos().pipe(
       map((subjectInfos) => {
-        const result = new Array<InstanceKey>();
+        const result: ModelsTreeSearchPath = [];
         if (
           hierarchyConfig.models.withoutElements === "exclude" &&
           !subjectHasNestedModels({ subjectId: targetSubjectId, subjectInfos })
@@ -266,7 +300,7 @@ export function createModelsTreeIdsProvider({
       }),
     );
   }
-  function createUpToModelInstanceKeyPaths(modelId: Id64String): Observable<HierarchyNodeIdentifiersPath> {
+  function createUpToModelInstanceKeyPaths(modelId: Id64String): Observable<ModelsTreeSearchPath> {
     return getOrCreate({
       map: cachedData.upToModelInstanceKeyPaths,
       key: modelId,
@@ -281,6 +315,21 @@ export function createModelsTreeIdsProvider({
   }
   return {
     ...baseIdsProvider,
+    async getHiddenModelIds(): Promise<Set<ModelId>> {
+      cachedData.hiddenModelIds ??= getModelInfos().pipe(
+        map((modelInfos) => {
+          const ids = new Set<ModelId>();
+          for (const [modelId, { hideInHierarchy }] of modelInfos) {
+            if (hideInHierarchy) {
+              ids.add(modelId);
+            }
+          }
+          return ids;
+        }),
+        shareReplay(),
+      );
+      return firstValueFrom(cachedData.hiddenModelIds);
+    },
     async getParentSubjectIds(): Promise<Id64Array> {
       cachedData.parentSubjectIds ??= getSubjectInfos().pipe(
         map((subjectInfos) => {
@@ -350,7 +399,7 @@ export function createModelsTreeIdsProvider({
     },
     createSubjectInstanceKeysPath: async (props) => firstValueFrom(createSubjectInstanceKeysPath(props)),
     createUpToModelInstanceKeyPaths: (modelId) => eachValueFrom(createUpToModelInstanceKeyPaths(modelId)),
-    getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<HierarchyNodeIdentifiersPath> {
+    getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath> {
       return eachValueFrom(
         from(
           baseIdsProvider.getModels({

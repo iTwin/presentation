@@ -68,6 +68,7 @@ describe("buildSelectProjection", () => {
         expression: "this.Missing * :factor",
         bindings: { factor: { type: "int", value: 2 } },
         type: { kind: "primitive", type: "Integer" },
+        primaryClassNames: [primaryClass],
       };
       const sharedField: CalculatedField = {
         kind: "calculated",
@@ -76,6 +77,7 @@ describe("buildSelectProjection", () => {
         expression: ":shared",
         bindings: { shared: { type: "int", value: 7 } },
         type: { kind: "primitive", type: "Integer" },
+        primaryClassNames: [primaryClass],
       };
       const projection = await buildSelectProjection({
         schemaProvider,
@@ -357,6 +359,7 @@ describe("buildSelectProjection", () => {
       type: { kind: "primitive", type: "Integer" },
       expression: "this.Code * :factor",
       bindings: { factor: { type: "int", value: 2 } },
+      primaryClassNames: [primaryClass],
     };
     const projection = await buildSelectProjection({
       schemaProvider,
