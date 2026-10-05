@@ -95,7 +95,7 @@ In addition to [props required by `useIModelTree`](#useimodeltree-props), the ho
 
 While the package provides a headless UI, it also delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover the majority of use cases. Consumers using the components below are required to provide compatible `@mui/material`, `@stratakit/foundations`, and `@stratakit/mui` packages, which are optional peer dependencies of this package.
 
-Our components use icons from [`@stratakit/icons`](https://www.npmjs.com/package/@stratakit/icons), which is a direct dependency of this package. Because `@stratakit/icons` loads icons as asset URLs, your bundler must be configured to emit `.svg` files rather than inline them. Follow the [StrataKit icons bundler configuration guide](https://www.npmjs.com/package/@stratakit/icons#bundler-configuration) to set this up for your bundler (Vite, Rsbuild, esbuild, etc.).
+Our components use icons from [`@stratakit/icons`](https://www.npmjs.com/package/@stratakit/icons), which is a direct dependency of this package. Because `@stratakit/icons` loads icons as asset URLs, your bundler must be configured to emit `.svg` files rather than inline them. Follow the [StrataKit icons bundler configuration guide](https://www.npmjs.com/package/@stratakit/icons#bundler-configuration) to set this up for your bundler (Vite, Rsbuild, esbuild, etc.). This configuration is only required when importing the components from `@itwin/presentation-hierarchies-react/stratakit`; applications using only the headless APIs from the root entry point do not need it.
 
 ### `StrataKitTreeRenderer`
 
