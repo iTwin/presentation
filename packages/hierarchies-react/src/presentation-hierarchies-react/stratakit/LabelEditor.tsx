@@ -129,10 +129,16 @@ export function LabelEditor({ initialLabel, labelValidationHint, onChange, onCan
             }
           }}
         />
-        <IconButton aria-label={translate("cancel")} onClick={cancelLabelChange} size="small">
+        <IconButton variant={"outlined"} aria-label={translate("cancel")} onClick={cancelLabelChange} size="small">
           <Icon href={dismissSvg} />
         </IconButton>
-        <IconButton aria-label={translate("confirm")} onClick={handleLabelChange} disabled={!canRename} size="small">
+        <IconButton
+          variant={"outlined"}
+          aria-label={translate("confirm")}
+          onClick={handleLabelChange}
+          disabled={!canRename}
+          size="small"
+        >
           <Icon href={checkmarkSvg} />
         </IconButton>
       </div>
