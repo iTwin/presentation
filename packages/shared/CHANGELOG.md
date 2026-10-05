@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.23
+
+### Patch Changes
+
+- [#1614](https://github.com/iTwin/presentation/pull/1614): Update iTwin.js Core dependencies to `5.14.0`.
+
 ## 1.2.22
 
 ### Patch Changes
