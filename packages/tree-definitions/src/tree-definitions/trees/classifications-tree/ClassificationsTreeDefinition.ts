@@ -69,6 +69,8 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
  * @beta
  */
 interface ClassificationsTreeProps {
+  /** Shared provider for hierarchy and search, using matching iModel, classification system, and element filters. Created internally when omitted. */
+  idsProvider?: ClassificationsTreeIdsProvider;
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -193,19 +195,24 @@ export interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree,
 
 /**
  * Creates a classifications hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
+ *
+ * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
+ *
  * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
 export function createClassificationsTree(props: ClassificationsTreeProps) {
-  const idsProvider = createClassificationsTreeIdsProvider({
-    queryExecutor: props.imodelAccess,
-    hierarchyConfig: props.hierarchyConfig,
-    baseIdsProvider: createBaseIdsProvider({
+  const idsProvider =
+    props.idsProvider ??
+    createClassificationsTreeIdsProvider({
       queryExecutor: props.imodelAccess,
-      elementClassName: CLASS_NAMES.GeometricElement3d,
-      excludedElementClassNames: props.hierarchyConfig.elements?.excludedClasses,
-    }),
-  });
+      hierarchyConfig: props.hierarchyConfig,
+      baseIdsProvider: createBaseIdsProvider({
+        queryExecutor: props.imodelAccess,
+        elementClassName: CLASS_NAMES.GeometricElement3d,
+        excludedElementClassNames: props.hierarchyConfig.elements?.excludedClasses,
+      }),
+    });
   const sharedProps = {
     imodelAccess: props.imodelAccess,
     hierarchyConfig: props.hierarchyConfig,
@@ -355,21 +362,22 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       return [];
     }
     const idsProvider = this.#props.getIdsProvider(imodelKey);
-    const childClassificationsDefinition = idsProvider.isDataLoaded
-      ? await this.#createCachedChildClassificationsQuery({
-          parentIds: classificationTableIds,
-          idsProvider,
-          instanceFilter,
-          createSelectClause,
-          createFilterClauses,
-        })
-      : await this.#createUncachedChildClassificationsQuery({
-          parentIds: classificationTableIds,
-          parentType: "classification-table",
-          instanceFilter,
-          createSelectClause,
-          createFilterClauses,
-        });
+    const childClassificationsDefinition =
+      idsProvider.dataState === "loaded"
+        ? await this.#createCachedChildClassificationsQuery({
+            parentIds: classificationTableIds,
+            idsProvider,
+            instanceFilter,
+            createSelectClause,
+            createFilterClauses,
+          })
+        : await this.#createUncachedChildClassificationsQuery({
+            parentIds: classificationTableIds,
+            parentType: "classification-table",
+            instanceFilter,
+            createSelectClause,
+            createFilterClauses,
+          });
     return childClassificationsDefinition ? [childClassificationsDefinition] : [];
   }
 
@@ -390,7 +398,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.GeometricElement3d, alias: "this" },
       }),
-      idsProvider.isDataLoaded
+      idsProvider.dataState === "loaded"
         ? this.#createCachedChildClassificationsQuery({
             parentIds: parentClassificationIds,
             idsProvider,

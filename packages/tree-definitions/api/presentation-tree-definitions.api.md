@@ -5,20 +5,67 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
-import type { EC } from '@itwin/presentation-shared';
+import { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import type { GuidString } from '@itwin/core-bentley';
 import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
+import type { Id64Arg } from '@itwin/core-bentley';
 import type { Id64Array } from '@itwin/core-bentley';
+import type { Id64Set } from '@itwin/core-bentley';
 import type { Id64String } from '@itwin/core-bentley';
 import type { IModelInstanceKey } from '@itwin/presentation-hierarchies';
 import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+
+// @beta
+export interface BaseIdsProvider {
+    readonly elementModelCategoriesState: IdsProviderDataState;
+    getAllCategoriesOfElements(): Promise<Id64Set>;
+    getAllModeledElements(props?: {
+        excludeIfOnlyExcludedClasses?: boolean;
+    }): Promise<Id64Set>;
+    getAllModels(): Promise<Array<ModelId>>;
+    getCategories(props: {
+        modelId: Id64String;
+    }): Promise<Id64Set>;
+    getCategoriesContainingNonExcludedElements(): Promise<Id64Set>;
+    getCategorySubCategoriesMap(): Promise<Map<CategoryId, SubCategoryId[]>>;
+    getModels(props: {
+        categoryId: Id64String;
+        excludeSubModels?: boolean;
+        includeOnlyTopMostElementCategory?: boolean;
+        excludeIfOnlyExcludedClasses?: boolean;
+    }): AsyncIterableIterator<ModelId>;
+    getPlanProjectionModels(): Promise<Id64Set>;
+    getSubCategoryCategories(props: {
+        subCategoryIds: Id64Arg;
+    }): Promise<Map<CategoryId, SubCategoryId[]>>;
+    readonly modeledElementsState: IdsProviderDataState;
+    readonly subCategoriesState: IdsProviderDataState;
+}
+
+// @beta
+interface BaseIdsProviderProps {
+    // (undocumented)
+    elementClassName: EC.FullClassNameDotNotation;
+    // (undocumented)
+    excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
+    // (undocumented)
+    queryExecutor: LimitingECSqlQueryExecutor;
+}
+
+// @beta
+interface CachedCategoryInfo {
+    hasElements: boolean;
+    hasElementsFromNonExcludedClasses: boolean;
+    id: Id64String;
+    subCategoryChildCount: number;
+}
 
 // @beta
 interface CategoriesTreeHierarchyConfiguration {
@@ -34,6 +81,49 @@ interface CategoriesTreeHierarchyConfiguration {
     subCategories?: {
         nodes?: "include" | "exclude";
     };
+}
+
+// @beta
+export interface CategoriesTreeIdsProvider extends Pick<BaseIdsProvider, "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"> {
+    readonly dataState: IdsProviderDataState;
+    getAllDefinitionContainersAndCategories(props?: {
+        includeEmpty?: boolean;
+    }): Promise<{
+        categories: Array<CategoryId>;
+        definitionContainers: Array<DefinitionContainerId>;
+    }>;
+    getDefinitionContainersSearchPaths(props: {
+        definitionContainerIds: Id64Arg;
+    }): AsyncIterableIterator<CategoriesTreeSearchPath>;
+    getDirectChildDefinitionContainersAndCategories(props: {
+        parentDefinitionContainerIds: Id64Arg;
+        includeEmpty?: boolean;
+    }): Promise<{
+        categories: CachedCategoryInfo[];
+        definitionContainers: Array<DefinitionContainerId>;
+    }>;
+    getIsDefinitionContainerSupported(): Promise<boolean>;
+    getRootDefinitionContainersAndCategories(props?: {
+        includeEmpty?: boolean;
+    }): Promise<{
+        categories: CachedCategoryInfo[];
+        definitionContainers: Array<DefinitionContainerId>;
+    }>;
+    getSearchPathsUpToRootCategory(props: {
+        categoryId: Id64String;
+    }): Promise<CategoriesTreeSearchPath>;
+    getSubCategoriesSearchPaths(props: {
+        subCategoryIds: Id64Arg;
+    }): AsyncIterableIterator<CategoriesTreeSearchPath>;
+}
+
+// @beta
+interface CategoriesTreeIdsProviderProps {
+    baseIdsProvider: Pick<BaseIdsProvider, "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements" | "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    // (undocumented)
+    type: "2d" | "3d";
 }
 
 // @beta
@@ -84,6 +174,7 @@ export namespace CategoriesTreeNode {
 // @beta
 interface CategoriesTreeProps {
     hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+    idsProvider?: CategoriesTreeIdsProvider;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     uniqueId?: GuidString;
@@ -116,9 +207,15 @@ interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "identifier
 }
 
 // @beta
+type CategoryId = Id64String;
+
+// @beta
 type ClassGroupingHierarchyNode = GroupingHierarchyNode & {
     key: ClassGroupingNodeKey;
 };
+
+// @beta
+type ClassificationId = Id64String;
 
 // @beta
 interface ClassificationsTreeHierarchyConfiguration {
@@ -126,6 +223,26 @@ interface ClassificationsTreeHierarchyConfiguration {
         excludedClasses?: EC.FullClassNameDotNotation[];
     };
     rootClassificationSystemCode: string;
+}
+
+// @beta
+export interface ClassificationsTreeIdsProvider {
+    readonly dataState: IdsProviderDataState;
+    getAllClassifications(): Promise<ClassificationId[]>;
+    getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
+    getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
+    hasChildren(classificationId: ClassificationId): Promise<boolean>;
+}
+
+// @beta
+interface ClassificationsTreeIdsProviderProps {
+    baseIdsProvider: Pick<BaseIdsProvider, "getCategoriesContainingNonExcludedElements">;
+    // (undocumented)
+    classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
+    // (undocumented)
+    hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
+    // (undocumented)
+    queryExecutor: LimitingECSqlQueryExecutor;
 }
 
 // @beta
@@ -151,6 +268,7 @@ export namespace ClassificationsTreeNode {
 interface ClassificationsTreeProps {
     // (undocumented)
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+    idsProvider?: ClassificationsTreeIdsProvider;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
         imodelKey: string;
@@ -189,6 +307,15 @@ interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "ident
 }
 
 // @beta
+interface ClassificationToCategoriesRelationshipSpecification {
+    fullClassName: EC.FullClassNameDotNotation;
+    source: "classification" | "category";
+}
+
+// @beta
+export function createBaseIdsProvider(input: BaseIdsProviderProps): BaseIdsProvider;
+
+// @beta
 export function createCategoriesTree(props: CategoriesTreeProps): {
     definition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) => AsyncIterableIterator<{
@@ -199,6 +326,9 @@ export function createCategoriesTree(props: CategoriesTreeProps): {
         revealTargets?: boolean;
     }) => Promise<CategoriesTreeSearchTree[]>;
 };
+
+// @beta
+export function createCategoriesTreeIdsProvider(input: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider;
 
 // @beta
 export function createClassificationsTree(props: ClassificationsTreeProps): {
@@ -213,6 +343,9 @@ export function createClassificationsTree(props: ClassificationsTreeProps): {
 };
 
 // @beta
+export function createClassificationsTreeIdsProvider(input: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider;
+
+// @beta
 export function createModelsTree(props: ModelsTreeProps): {
     definition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
@@ -223,6 +356,12 @@ export function createModelsTree(props: ModelsTreeProps): {
         revealTargets?: boolean;
     }) => Promise<ModelsTreeSearchTree[]>;
 };
+
+// @beta
+export function createModelsTreeIdsProvider(input: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider;
+
+// @beta
+type DefinitionContainerId = Id64String;
 
 // @beta
 interface ElementsGroupInfo {
@@ -238,6 +377,12 @@ interface ElementsGroupInfo {
         type: "category";
     };
 }
+
+// @beta
+export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "failed";
+
+// @beta
+type ModelId = Id64String;
 
 // @beta
 interface ModelsTreeHierarchyConfiguration {
@@ -258,6 +403,26 @@ interface ModelsTreeHierarchyConfiguration {
         root?: "include" | "exclude";
         labelMerging?: "enable" | "disable";
     };
+}
+
+// @beta
+export interface ModelsTreeIdsProvider extends Pick<BaseIdsProvider, "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories"> {
+    createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
+    createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
+    readonly dataState: IdsProviderDataState;
+    getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+    getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+    getHiddenModelIds(): Promise<Set<ModelId>>;
+    getParentSubjectIds(): Promise<Id64Array>;
+    getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
+}
+
+// @beta
+interface ModelsTreeIdsProviderProps {
+    baseIdsProvider: Pick<BaseIdsProvider, "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels">;
+    hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
+    // (undocumented)
+    queryExecutor: LimitingECSqlQueryExecutor;
 }
 
 // @beta
@@ -297,6 +462,7 @@ export namespace ModelsTreeNode {
 // @beta
 interface ModelsTreeProps {
     hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+    idsProvider?: ModelsTreeIdsProvider;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     uniqueId?: GuidString;
@@ -332,6 +498,9 @@ interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | 
     children?: ModelsTreeSearchTree[];
     identifier: ModelsTreeSearchPathKey;
 }
+
+// @beta
+type SubCategoryId = Id64String;
 
 // (No @packageDocumentation comment for this package)
 

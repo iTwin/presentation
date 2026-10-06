@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, filter, firstValueFrom, from, identity, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
+import { EMPTY, filter, firstValueFrom, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { eachValueFrom, type EC } from "@itwin/presentation-shared";
-import { fromWithRelease, toVoidPromise } from "../Rxjs.js";
+import { fromWithRelease } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
+import { DataStateTracker } from "./DataStateTracker.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
 import { ModeledElementsProvider } from "./ModeledElementsProvider.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
@@ -18,21 +19,36 @@ import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies
 import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
 
 /**
+ * The state of a cached ID dataset.
+ * - `not-requested` means no load has started;
+ * - `requested` means loading has started but the full dataset is not yet available;
+ * - `loaded` means cached data is available;
+ * - `failed` means a load or required dependency failed.
+ *
+ * Explicit retries transition from `failed` to `requested`. For datasets with independently loaded parts,
+ * any failed part keeps the dataset `failed` until that part is retried; partial success remains `requested`.
+ * Reading state never initiates work. Errors are delivered through getters, not stored in the state.
+ * Replace the provider to reset its state to `not-requested`.
+ * @beta
+ */
+export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "failed";
+
+/**
  * Provides model, category, and sub-category IDs for tree hierarchy definitions.
  * Element data is limited to the configured element class and non-private models.
- * @internal
+ * Getters initialize their datasets, share in-flight work, and reject on failure. Subsequent calls can retry.
+ * Custom implementations must expose live state and mark data `loaded` only when it is available.
+ * @beta
  */
 export interface BaseIdsProvider {
-  /** Starts loading modeled element data if it has not been requested yet. Loading errors are ignored. */
-  preloadModeledElements(): Promise<void>;
-  /** Starts loading element model and category data if it has not been requested yet. Loading errors are ignored. */
-  preloadElementModelCategories(): Promise<void>;
+  /** State of model/category data, including plan projection models. Loaded by `getAllModels`. */
+  readonly elementModelCategoriesState: IdsProviderDataState;
+  /** State of modeled-element data. `getAllModeledElements` loads this and model/category data. */
+  readonly modeledElementsState: IdsProviderDataState;
+  /** State of category/sub-category mappings, loaded independently by `getCategorySubCategoriesMap`. */
+  readonly subCategoriesState: IdsProviderDataState;
   /** Returns IDs of elements modeling non-empty sub-models, optionally omitting sub-models with only excluded elements. */
   getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<Id64Set>;
-  /** Indicates whether element model and category data has finished loading. */
-  elementModelCategoriesLoaded(): boolean;
-  /** Indicates whether modeled element data has finished loading. */
-  modeledElementsLoaded(): boolean;
   /** Returns IDs of non-private models containing elements of the configured class, including excluded classes. */
   getAllModels(): Promise<Array<ModelId>>;
   /** Returns IDs of non-private plan projection models containing elements of the configured class. */
@@ -61,7 +77,7 @@ export interface BaseIdsProvider {
 
 /**
  * Query access and element class filters shared by tree ID providers.
- * @internal
+ * @beta
  */
 interface BaseIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
@@ -71,7 +87,8 @@ interface BaseIdsProviderProps {
 
 /**
  * Creates a cached ID provider for elements of the specified class and optional excluded classes.
- * @internal
+ * Share it only across compatible iModel and filter configurations. Recreate it after relevant data changes.
+ * @beta
  */
 export function createBaseIdsProvider({
   elementClassName,
@@ -80,14 +97,14 @@ export function createBaseIdsProvider({
 }: BaseIdsProviderProps): BaseIdsProvider {
   const componentId: GuidString = Guid.createValue();
   const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor, componentId });
-  let modeledElementsProvider: Observable<ModeledElementsProvider> | undefined;
+  let modeledElementsData: ReturnType<ModeledElementsProvider["getData"]> | undefined;
   const elementModelCategoriesProvider = new ElementModelCategoriesProvider({
     queryExecutor,
     componentId,
     elementClassName,
     excludedElementClassNames,
   });
-  let modeledElementsLoaded = false;
+  const modeledElementsState = new DataStateTracker();
   let categoryModelsInfoWithoutSubModels:
     | Observable<
         Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
@@ -101,19 +118,19 @@ export function createBaseIdsProvider({
       .pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
   }
   function getModeledElementsData(): ReturnType<ModeledElementsProvider["getData"]> {
-    modeledElementsProvider ??= getAllModels().pipe(
-      map(
-        (allModels) =>
-          new ModeledElementsProvider({ queryExecutor, componentId, elementClassName, nonEmptyModelIds: allModels }),
+    modeledElementsData ??= getAllModels().pipe(
+      mergeMap((allModels) =>
+        new ModeledElementsProvider({
+          queryExecutor,
+          componentId,
+          elementClassName,
+          nonEmptyModelIds: allModels,
+        }).getData(),
       ),
+      modeledElementsState.track(),
       shareReplay(),
     );
-    return modeledElementsProvider.pipe(
-      mergeMap((provider) => provider.getData()),
-      tap(() => {
-        modeledElementsLoaded = true;
-      }),
-    );
+    return modeledElementsData;
   }
 
   function getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
@@ -167,29 +184,16 @@ export function createBaseIdsProvider({
   }
 
   return {
-    async preloadModeledElements(): Promise<void> {
-      if (modeledElementsProvider !== undefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(getModeledElementsData());
-      } catch {}
+    get elementModelCategoriesState(): IdsProviderDataState {
+      return elementModelCategoriesProvider.dataState;
     },
-    async preloadElementModelCategories(): Promise<void> {
-      if (elementModelCategoriesProvider.isDataDefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(elementModelCategoriesProvider.getData());
-      } catch {}
+    get modeledElementsState(): IdsProviderDataState {
+      return modeledElementsState.state;
+    },
+    get subCategoriesState(): IdsProviderDataState {
+      return subCategoriesProvider.dataState;
     },
     getAllModeledElements: async (props) => firstValueFrom(getAllModeledElements(props)),
-    elementModelCategoriesLoaded(): boolean {
-      return elementModelCategoriesProvider.isDataLoaded;
-    },
-    modeledElementsLoaded(): boolean {
-      return modeledElementsLoaded;
-    },
     getAllModels: async () => firstValueFrom(getAllModels()),
     getPlanProjectionModels: async (): Promise<Id64Set> => {
       return firstValueFrom(

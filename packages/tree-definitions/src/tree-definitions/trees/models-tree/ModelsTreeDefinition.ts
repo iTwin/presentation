@@ -193,6 +193,8 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
  * @beta
  */
 interface ModelsTreeProps {
+  /** Shared provider for hierarchy and search, using matching iModel, element filters, and hierarchy configuration. Created internally when omitted. */
+  idsProvider?: ModelsTreeIdsProvider;
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
@@ -301,6 +303,9 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions &
 /**
  * Creates a models hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
  * Creates and shares cached ID providers using the resolved hierarchy configuration.
+ *
+ * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
+ *
  * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
@@ -309,15 +314,17 @@ export function createModelsTree(props: ModelsTreeProps) {
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
   });
-  const idsProvider = createModelsTreeIdsProvider({
-    queryExecutor: props.imodelAccess,
-    hierarchyConfig,
-    baseIdsProvider: createBaseIdsProvider({
+  const idsProvider =
+    props.idsProvider ??
+    createModelsTreeIdsProvider({
       queryExecutor: props.imodelAccess,
-      elementClassName: hierarchyConfig.elements.baseClass,
-      excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
-    }),
-  });
+      hierarchyConfig,
+      baseIdsProvider: createBaseIdsProvider({
+        queryExecutor: props.imodelAccess,
+        elementClassName: hierarchyConfig.elements.baseClass,
+        excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
+      }),
+    });
   const sharedProps = {
     imodelAccess: props.imodelAccess,
     idsProvider,
@@ -726,10 +733,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
+      this.#idsProvider.modeledElementsState === "loaded"
         ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
-      this.#idsProvider.elementModelCategoriesLoaded()
+      this.#idsProvider.elementModelCategoriesState === "loaded"
         ? firstValueFrom(
             from(modelIds).pipe(
               mergeMap(async (modelId) => this.#idsProvider.getCategories({ modelId })),
@@ -933,7 +940,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
+      this.#idsProvider.modeledElementsState === "loaded"
         ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
@@ -987,7 +994,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.SpatialCategory, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
+      this.#idsProvider.modeledElementsState === "loaded"
         ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);

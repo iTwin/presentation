@@ -3,18 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { defer, EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom, type EC } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
+import { DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { BaseIdsProvider, IdsProviderDataState } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
@@ -26,7 +27,7 @@ import type {
  *
  * By default, categories are determined using `ClassificationSystems.ElementHasClassifications` and `BisCore.GeometricElement3dIsInCategory` relationships.
  *
- * @internal
+ * @beta
  */
 export interface ClassificationToCategoriesRelationshipSpecification {
   /**
@@ -47,13 +48,14 @@ interface ClassificationOrTableInfo {
 
 /**
  * Query access, root classification system, and category relationships for a classifications-tree ID provider.
- * @internal
+ * @beta
  */
 interface ClassificationsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
   classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
-  baseIdsProvider: BaseIdsProvider;
+  /** Base provider with matching element class and exclusions for the target tree. */
+  baseIdsProvider: Pick<BaseIdsProvider, "getCategoriesContainingNonExcludedElements">;
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -63,13 +65,15 @@ interface ClassificationsTreeIdsProviderData {
 
 /**
  * Provides classification IDs and search paths within the configured classification system.
- * @internal
+ * Getters share cached data and reject on failure. Only `loaded` state permits cached hierarchy queries.
+ * @beta
  */
-export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
-  /** Starts loading classification data if it has not been requested yet. Loading errors are ignored. */
-  preloadClassifications(): Promise<void>;
-  /** Indicates whether classification data has finished loading. */
-  readonly isDataLoaded: boolean;
+export interface ClassificationsTreeIdsProvider {
+  /**
+   * State of classification data. `getAllClassifications` loads this and base model/category data,
+   * but not modeled elements or sub-category mappings.
+   */
+  readonly dataState: IdsProviderDataState;
   /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
   hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
@@ -85,7 +89,8 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
 
 /**
  * Creates a cached classification tree ID provider using the supplied base provider and category relationships.
- * @internal
+ * Recreate it together with its base provider after relevant iModel or configuration changes.
+ * @beta
  */
 export function createClassificationsTreeIdsProvider({
   baseIdsProvider,
@@ -97,7 +102,7 @@ export function createClassificationsTreeIdsProvider({
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
   const rowLimit = 7500;
-  let cachedDataLoaded = false;
+  const dataState = new DataStateTracker();
 
   function queryClassifications(): Observable<
     { id: Id64String; relatedCategories: CategoryId[] } & (
@@ -207,7 +212,7 @@ export function createClassificationsTreeIdsProvider({
   }
 
   function getData() {
-    cachedData ??= from(baseIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
+    cachedData ??= defer(async () => baseIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
       mergeMap((categoriesContainingNonExcludedElements) =>
         queryClassifications().pipe(
           reduce(
@@ -245,26 +250,15 @@ export function createClassificationsTreeIdsProvider({
           ),
         ),
       ),
-      tap(() => {
-        cachedDataLoaded = true;
-      }),
+      dataState.track(),
       shareReplay(),
     );
     return cachedData;
   }
 
   return {
-    ...baseIdsProvider,
-    async preloadClassifications(): Promise<void> {
-      if (cachedData !== undefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(getData());
-      } catch {}
-    },
-    get isDataLoaded(): boolean {
-      return cachedDataLoaded;
+    get dataState(): IdsProviderDataState {
+      return dataState.state;
     },
     async hasChildren(classificationId: ClassificationId): Promise<boolean> {
       return firstValueFrom(

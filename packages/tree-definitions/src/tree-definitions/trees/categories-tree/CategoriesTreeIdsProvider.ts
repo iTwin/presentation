@@ -15,12 +15,12 @@ import {
   of,
   reduce,
   shareReplay,
-  tap,
 } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
+import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/Utils.js";
 
@@ -28,7 +28,7 @@ import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
-import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { BaseIdsProvider, IdsProviderDataState } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
 import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
@@ -47,7 +47,7 @@ interface CategoriesInfo {
 
 /**
  * Category metadata used to determine which child nodes are available in the hierarchy.
- * @internal
+ * @beta
  */
 export interface CachedCategoryInfo {
   /** The category's element ID. */
@@ -62,11 +62,23 @@ export interface CachedCategoryInfo {
 
 /**
  * Query access and view type for a categories-tree ID provider.
- * @internal
+ * @beta
  */
 interface CategoriesTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  baseIdsProvider: BaseIdsProvider;
+  /** Base provider with matching element class and exclusions for the target tree. */
+  baseIdsProvider: Pick<
+    BaseIdsProvider,
+    | "elementModelCategoriesState"
+    | "modeledElementsState"
+    | "getAllModeledElements"
+    | "getCategories"
+    | "getModels"
+    | "getCategoriesContainingNonExcludedElements"
+    | "getAllCategoriesOfElements"
+    | "getCategorySubCategoriesMap"
+    | "getSubCategoryCategories"
+  >;
   type: "2d" | "3d";
 }
 
@@ -79,11 +91,13 @@ interface CategoriesData {
 
 /**
  * Provides category and definition container IDs and search paths for category tree hierarchies.
- * @internal
+ * Getters share cached data and reject on failure. Only `loaded` state permits cached hierarchy queries.
+ * @beta
  */
-export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
-  /** Starts loading definition container and category data if not already requested. Loading errors are ignored. */
-  preloadDefinitionContainers(): Promise<void>;
+export interface CategoriesTreeIdsProvider extends Pick<
+  BaseIdsProvider,
+  "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"
+> {
   /** Returns direct child categories and definition container IDs, excluding empty entries unless requested. */
   getDirectChildDefinitionContainersAndCategories(props: {
     parentDefinitionContainerIds: Id64Arg;
@@ -105,15 +119,19 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
   getRootDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
   }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
-  /** Indicates whether definition container and category data has finished loading. */
-  readonly isDataLoaded: boolean;
+  /**
+   * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
+   * together with base model/category data and sub-category mappings, but not modeled elements.
+   */
+  readonly dataState: IdsProviderDataState;
   /** Indicates whether the iModel schema supports definition containers. */
   getIsDefinitionContainerSupported(): Promise<boolean>;
 }
 
 /**
  * Creates a cached category tree ID provider for the specified view type using the supplied base provider.
- * @internal
+ * Recreate it together with its base provider after relevant iModel or configuration changes.
+ * @beta
  */
 export function createCategoriesTreeIdsProvider({
   imodelAccess,
@@ -130,8 +148,8 @@ export function createCategoriesTreeIdsProvider({
     Observable<CategoriesTreeSearchPath>
   > = new Map();
   const { categoryClass } = getClassesByView(type);
-  let defContainersDataLoaded = false;
-  let categoriesDataLoaded = false;
+  const defContainersDataState = new DataStateTracker();
+  const categoriesDataState = new DataStateTracker();
   const componentId: GuidString = Guid.createValue();
   const componentName: string = "CategoriesTreeIdsProvider";
 
@@ -238,12 +256,12 @@ export function createCategoriesTreeIdsProvider({
   }
 
   function getCategoryData() {
-    cachedData.categoriesData ??= forkJoin({
-      categoriesContainingNonExcludedElements: baseIdsProvider.getCategoriesContainingNonExcludedElements(),
-      allCategories: baseIdsProvider.getAllCategoriesOfElements(),
-      categorySubCategoriesMap: baseIdsProvider.getCategorySubCategoriesMap(),
-    })
-      .pipe(
+    cachedData.categoriesData ??= defer(() =>
+      forkJoin({
+        categoriesContainingNonExcludedElements: baseIdsProvider.getCategoriesContainingNonExcludedElements(),
+        allCategories: baseIdsProvider.getAllCategoriesOfElements(),
+        categorySubCategoriesMap: baseIdsProvider.getCategorySubCategoriesMap(),
+      }).pipe(
         mergeMap(({ categoriesContainingNonExcludedElements, allCategories, categorySubCategoriesMap }) =>
           queryCategories().pipe(
             map((queriedCategory) => ({
@@ -283,13 +301,8 @@ export function createCategoriesTreeIdsProvider({
             categoriesWithModel: new Map<CategoryId, { modelId: ModelId; isDefinitionContainer: boolean }>(),
           },
         ),
-      )
-      .pipe(
-        tap(() => {
-          categoriesDataLoaded = true;
-        }),
-        shareReplay(),
-      );
+      ),
+    ).pipe(categoriesDataState.track(), shareReplay());
     return cachedData.categoriesData;
   }
 
@@ -341,12 +354,7 @@ export function createCategoriesTreeIdsProvider({
           );
         }),
       )
-      .pipe(
-        tap(() => {
-          defContainersDataLoaded = true;
-        }),
-        shareReplay(),
-      );
+      .pipe(defContainersDataState.track(), shareReplay());
     return cachedData.definitionContainersData;
   }
 
@@ -443,15 +451,15 @@ export function createCategoriesTreeIdsProvider({
   }
 
   return {
-    ...baseIdsProvider,
-    async preloadDefinitionContainers(): Promise<void> {
-      if (cachedData.definitionContainersData !== undefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(getDefinitionContainersInfo());
-      } catch {}
+    get elementModelCategoriesState() {
+      return baseIdsProvider.elementModelCategoriesState;
     },
+    get modeledElementsState() {
+      return baseIdsProvider.modeledElementsState;
+    },
+    getAllModeledElements: async (props) => baseIdsProvider.getAllModeledElements(props),
+    getCategories: async (props) => baseIdsProvider.getCategories(props),
+    getModels: (props) => baseIdsProvider.getModels(props),
     async getDirectChildDefinitionContainersAndCategories({
       parentDefinitionContainerIds,
       includeEmpty,
@@ -570,8 +578,8 @@ export function createCategoriesTreeIdsProvider({
         }),
       );
     },
-    get isDataLoaded(): boolean {
-      return defContainersDataLoaded && categoriesDataLoaded;
+    get dataState(): IdsProviderDataState {
+      return combineDataStates([defContainersDataState.state, categoriesDataState.state]);
     },
     getIsDefinitionContainerSupported: async () => firstValueFrom(getIsDefinitionContainerSupported()),
   };

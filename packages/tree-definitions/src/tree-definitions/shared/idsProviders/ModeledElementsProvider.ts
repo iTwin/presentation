@@ -65,16 +65,17 @@ export class ModeledElementsProvider {
   }
 
   public getData(): Observable<ModeledElementsProviderData> {
-    this.#cachedData ??= this.queryModeledElements().pipe(
-      reduce(
-        (acc, modeledElementId) => {
-          acc.allSubModels.add(modeledElementId);
-          return acc;
-        },
-        { allSubModels: new Set<ElementId>() },
+    this.#cachedData ??= defer(() =>
+      this.queryModeledElements().pipe(
+        reduce(
+          (acc, modeledElementId) => {
+            acc.allSubModels.add(modeledElementId);
+            return acc;
+          },
+          { allSubModels: new Set<ElementId>() },
+        ),
       ),
-      shareReplay(),
-    );
+    ).pipe(shareReplay());
     return this.#cachedData;
   }
 }
