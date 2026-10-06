@@ -13,11 +13,18 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import {
+  createBaseIdsProvider,
+  createModelsTree,
+  createModelsTreeIdsProvider,
+} from "@itwin/presentation-tree-definitions";
 import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel, TestSchema } from "../IModelUtils.js";
 import { createModelsTreeProvider } from "./Utils.js";
@@ -25,12 +32,51 @@ import { createModelsTreeProvider } from "./Utils.js";
 import type { InstanceKey } from "@itwin/presentation-shared";
 
 describe("Models tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     await initialize();
   });
 
   afterAll(async () => {
     await terminate();
+  });
+
+  it("uses the supplied models provider for hierarchy and search", async () => {
+    await using imodel = await buildIModel(async (db) =>
+      withEditTxn(db, (txn) => {
+        const subject = insertSubject({ txn, codeValue: "subject", parentId: IModel.rootSubjectId });
+        const model = insertPhysicalModelWithPartition({ txn, codeValue: "model", partitionParentId: subject.id });
+        const category = insertSpatialCategory({ txn, codeValue: "category" });
+        insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+        return { subject };
+      }),
+    );
+    const imodelAccess = createIModelAccess(imodel.imodelConnection);
+    const hierarchyConfig = { subjects: { root: "exclude" as const } };
+    const idsProvider = createModelsTreeIdsProvider({
+      queryExecutor: imodelAccess,
+      hierarchyConfig,
+      baseIdsProvider: createBaseIdsProvider({
+        queryExecutor: imodelAccess,
+        elementClassName: "BisCore.GeometricElement3d",
+      }),
+    });
+    await idsProvider.getParentSubjectIds();
+    const hierarchyGetter = vi.spyOn(idsProvider, "getChildSubjectIds").mockResolvedValue([]);
+    vi.spyOn(idsProvider, "getChildSubjectModelIds").mockResolvedValue([]);
+    const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockResolvedValue([]);
+    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
+    const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
+    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+
+    await validateHierarchy({ provider, expect: [] });
+    expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
+    expect(await tree.createSearchTree({ targetItems: [imodel.subject] })).toEqual([]);
+    expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
+    expect(queryReader).not.toHaveBeenCalled();
   });
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {

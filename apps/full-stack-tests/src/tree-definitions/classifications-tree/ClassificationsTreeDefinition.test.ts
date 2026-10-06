@@ -8,10 +8,14 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
+import {
+  createBaseIdsProvider,
+  createClassificationsTree,
+  createClassificationsTreeIdsProvider,
+} from "@itwin/presentation-tree-definitions";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -30,12 +34,54 @@ import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentat
 const rootClassificationSystemCode = "TestClassificationSystem";
 
 describe("Classifications tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     await initialize();
   });
 
   afterAll(async () => {
     await terminate();
+  });
+
+  it("uses the supplied classifications provider for hierarchy and search", async () => {
+    await using imodel = await buildIModel(async (db) =>
+      withEditTxn(db, async (txn) => {
+        await importClassificationSchema(db);
+        const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+        const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+        insertClassification({ txn, modelId: table.id, codeValue: "classification" });
+        return { table };
+      }),
+    );
+    const imodelAccess = createIModelAccess(imodel.imodelConnection);
+    const hierarchyConfig = { rootClassificationSystemCode };
+    const idsProvider = createClassificationsTreeIdsProvider({
+      queryExecutor: imodelAccess,
+      hierarchyConfig,
+      baseIdsProvider: createBaseIdsProvider({
+        queryExecutor: imodelAccess,
+        elementClassName: "BisCore.GeometricElement3d",
+      }),
+    });
+    await idsProvider.getAllClassifications();
+    const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockResolvedValue([]);
+    const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockResolvedValue([]);
+    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
+    const tree = createClassificationsTree({ imodelAccess, hierarchyConfig, idsProvider });
+    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+
+    const [tableNode] = await collect(provider.getNodes({ parentNode: undefined }));
+    expect(tableNode).toBeDefined();
+    expect(await collect(provider.getNodes({ parentNode: tableNode }))).toEqual([]);
+    expect(hierarchyGetter).toHaveBeenCalledWith([imodel.table.id]);
+    expect(await tree.createSearchTree({ label: "classification" })).toEqual([]);
+    expect(searchGetter).toHaveBeenCalled();
+    expect(queryReader.mock.calls.map(([, options]) => options?.restartToken)).not.toContainEqual(
+      expect.stringMatching(/^(ClassificationsTreeIdsProvider|ElementModelCategoriesProvider)\//),
+    );
   });
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
