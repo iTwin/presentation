@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { firstValueFrom, from, mergeMap, toArray } from "rxjs";
 import { Presentation } from "@itwin/presentation-backend";
 import {
   ContentFlags,
@@ -102,26 +103,29 @@ async function createSelectedInstancesContent({
       { ruleType: RuleTypes.Content, specifications: [{ specType: "SelectedNodeInstances" }] },
     ],
   };
-  return Promise.all(
-    instanceKeys.map(async (instanceKey) => {
-      const content = await Presentation.getManager().getContent({
-        imodel,
-        rulesetOrId: ruleset,
-        descriptor: { displayType: DefaultContentDisplayTypes.Grid },
-        keys: new KeySet([toLegacyKey(instanceKey)]),
-        omitFormattedValues: true,
-        diagnostics: DIAGNOSTICS_OPTIONS,
-      });
-      if (!content) {
-        throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
-      }
-      if (content.contentSet.length !== 1) {
-        throw new Error(
-          `Expected one legacy content item for '${instanceKey.className}:${instanceKey.id}', found ${content.contentSet.length}.`,
-        );
-      }
-      return { descriptor: content.descriptor.toJSON(), item: content.contentSet[0].toJSON() };
-    }),
+  return firstValueFrom(
+    from(instanceKeys).pipe(
+      mergeMap(async (instanceKey) => {
+        const content = await Presentation.getManager().getContent({
+          imodel,
+          rulesetOrId: ruleset,
+          descriptor: { displayType: DefaultContentDisplayTypes.Grid },
+          keys: new KeySet([toLegacyKey(instanceKey)]),
+          omitFormattedValues: true,
+          diagnostics: DIAGNOSTICS_OPTIONS,
+        });
+        if (!content) {
+          throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
+        }
+        if (content.contentSet.length !== 1) {
+          throw new Error(
+            `Expected one legacy content item for '${instanceKey.className}:${instanceKey.id}', found ${content.contentSet.length}.`,
+          );
+        }
+        return { descriptor: content.descriptor.toJSON(), item: content.contentSet[0].toJSON() };
+      }, 4),
+      toArray(),
+    ),
   );
 }
 
