@@ -243,7 +243,7 @@ function createCanonicalDescriptor({
   const { constraints } = context;
   const categories = new Map(descriptor.categories.map((category) => [category.name, category]));
   const classes = descriptor.classesMap;
-  const fields: CanonicalDescriptor["fields"] = [];
+  const fieldsByKey = new Map<string, CanonicalField>();
   const fieldMappings: LegacyFieldMapping[] = [];
   const unsupportedFields: CanonicalDescriptor["unsupportedFields"] = [];
 
@@ -270,10 +270,24 @@ function createCanonicalDescriptor({
       classes,
       constraints,
     });
-    fields.push(canonicalField);
+    // Consolidated legacy descriptors can contain several related-content fields that normalize to the same
+    // canonical identity. While merging related-content paths, native `RelatedClass::Unify` widens the target
+    // selection to polymorphic when two paths differ only by SQL alias. `EndsWithSameRelatedClass` then rejects
+    // later paths whose target is still non-polymorphic, so a field is created per source-class path instead
+    // of one. Merge them here.
+    const existing = fieldsByKey.get(canonicalField.key);
+    if (existing) {
+      existing.propertyClassNames = [
+        ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
+      ].sort();
+      existing.sourcePaths.push(...canonicalField.sourcePaths);
+    } else {
+      fieldsByKey.set(canonicalField.key, canonicalField);
+    }
     fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
   };
   descriptor.fields.forEach((field) => visit(field, [], undefined));
+  const fields = [...fieldsByKey.values()];
   return {
     descriptor: { fields: fields.sort((lhs, rhs) => lhs.key.localeCompare(rhs.key)), unsupportedFields },
     fieldMappings,
