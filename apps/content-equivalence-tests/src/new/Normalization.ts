@@ -46,18 +46,19 @@ function getCategoryPath(
 /** Relationships selected by each related field's declaration, per `pathFromTarget` step, keyed by field id. */
 type DeclaredRelationshipNames = Record<string, EC.FullClassNameDotNotation[]>;
 
-/** Category labels inherited from base properties, keyed by the property's class and name. */
-type InheritedCategoryLabels = Record<string, string>;
+interface InheritedPropertyMetadata {
+  categoryLabel?: string;
+  kindOfQuantity?: string;
+  hidden: boolean;
+}
 
-/** Kind-of-quantity names inherited from base properties, keyed by `getPropertyKey`. */
-type InheritedKindOfQuantities = Record<string, string>;
+/** Metadata resolved through the property's class hierarchy, keyed by `getPropertyKey`. */
+type InheritedPropertiesMetadata = Record<string, InheritedPropertyMetadata | undefined>;
 
 interface NormalizationContext {
   declaredRelationshipNames: DeclaredRelationshipNames;
   constraints: RelationshipConstraints;
-  inheritedCategoryLabels: InheritedCategoryLabels;
-  inheritedKindOfQuantities: InheritedKindOfQuantities;
-  inheritedHiddenProperties: Set<string>;
+  inheritedProperties: InheritedPropertiesMetadata;
 }
 
 /** Only direct fields qualify: related fields are always anchored to a class category. */
@@ -69,10 +70,19 @@ function getPropertyKey(field: ReadonlyPropertyField) {
   return `${field.propertyClassName}#${field.propertyName}`;
 }
 
-async function getInheritedHiddenProperties(
+function hasPrimitiveValueType(type: NewFieldType): boolean {
+  return type.kind === "primitive" || (type.kind === "array" && hasPrimitiveValueType(type.elementType));
+}
+
+/**
+ * Workaround for https://github.com/iTwin/itwinjs-core/issues/9801: `SchemaView` doesn't inherit a property's
+ * category, kind of quantity or hidden flag from its base properties, while native `ECProperty` does.
+ * Remove once that is fixed.
+ */
+async function getInheritedPropertiesMetadata(
   descriptors: ReadonlyContentDescriptor[],
   imodelAccess: ECSchemaProvider,
-): Promise<Set<string>> {
+): Promise<InheritedPropertiesMetadata> {
   const fields = new Map<string, ReadonlyPropertyField>();
   for (const descriptor of descriptors) {
     for (const field of Object.values(descriptor.fields)) {
@@ -87,90 +97,21 @@ async function getInheritedHiddenProperties(
       if (!property) {
         return undefined;
       }
+      const metadata: InheritedPropertyMetadata = { hidden: false };
       for (let ecClass: EC.Class | undefined = property.class; ecClass; ecClass = ecClass.baseClass) {
-        if (ecClass.getProperty(field.propertyName)?.isHidden) {
-          return key;
+        const classProperty = ecClass.getProperty(field.propertyName);
+        if (!classProperty) {
+          continue;
         }
-      }
-      return undefined;
-    }),
-  );
-  return new Set(entries.filter((entry) => entry !== undefined));
-}
-
-/**
- * Workaround for https://github.com/iTwin/itwinjs-core/issues/9801: `SchemaView` doesn't inherit a property's
- * category from its base property, while native `ECProperty::GetCategory` does. Remove once that is fixed.
- */
-async function getInheritedCategoryLabels(
-  descriptors: ReadonlyContentDescriptor[],
-  imodelAccess: ECSchemaProvider,
-): Promise<InheritedCategoryLabels> {
-  const fields = new Map<string, ReadonlyPropertyField>();
-  for (const descriptor of descriptors) {
-    for (const field of Object.values(descriptor.fields)) {
-      if (field.kind === "property" && !field.hidden && needsInheritedCategory(field)) {
-        fields.set(getPropertyKey(field), field);
-      }
-    }
-  }
-  const entries = await Promise.all(
-    [...fields].map(async ([key, field]) => {
-      for (let ecClass = (await getClass(imodelAccess, field.propertyClassName)).baseClass; ecClass;) {
-        const category = ecClass.getProperty(field.propertyName)?.category;
-        if (category) {
-          return [key, category.label ?? category.name] as const;
+        if (classProperty.isHidden) {
+          metadata.hidden = true;
         }
-        ecClass = ecClass.baseClass;
-      }
-      return undefined;
-    }),
-  );
-  return Object.fromEntries(entries.filter((entry) => entry !== undefined));
-}
-
-function hasPrimitiveValueType(type: NewFieldType): boolean {
-  return type.kind === "primitive" || (type.kind === "array" && hasPrimitiveValueType(type.elementType));
-}
-
-function getKindOfQuantity(type: NewFieldType): string | undefined {
-  if (type.kind === "primitive") {
-    return type.kindOfQuantity;
-  }
-  return type.kind === "array" ? getKindOfQuantity(type.elementType) : undefined;
-}
-
-/**
- * Recover kind-of-quantity metadata omitted from the content field type by checking the EC property and its bases.
- */
-async function getInheritedKindOfQuantities(
-  descriptors: ReadonlyContentDescriptor[],
-  imodelAccess: ECSchemaProvider,
-): Promise<InheritedKindOfQuantities> {
-  const fields = new Map<string, ReadonlyPropertyField>();
-  for (const descriptor of descriptors) {
-    for (const field of Object.values(descriptor.fields)) {
-      if (
-        field.kind === "property" &&
-        !field.hidden &&
-        hasPrimitiveValueType(field.type) &&
-        getKindOfQuantity(field.type) === undefined
-      ) {
-        fields.set(getPropertyKey(field), field);
-      }
-    }
-  }
-  const entries = await Promise.all(
-    [...fields].map(async ([key, field]) => {
-      let ecClass: EC.Class | undefined = await getClass(imodelAccess, field.propertyClassName);
-      while (ecClass) {
-        const kindOfQuantity = ecClass.getProperty(field.propertyName)?.kindOfQuantity;
-        if (kindOfQuantity) {
-          return [key, kindOfQuantity.fullName] as const;
+        if (metadata.categoryLabel === undefined && classProperty.category) {
+          metadata.categoryLabel = classProperty.category.label ?? classProperty.category.name;
         }
-        ecClass = ecClass.baseClass;
+        metadata.kindOfQuantity ??= classProperty.kindOfQuantity?.fullName;
       }
-      return undefined;
+      return [key, metadata] as const;
     }),
   );
   return Object.fromEntries(entries.filter((entry) => entry !== undefined));
@@ -240,10 +181,9 @@ function createCanonicalField(
   categories: ReadonlyContentDescriptor["categories"],
   context: NormalizationContext,
 ): CanonicalField {
-  const inheritedCategoryLabel = needsInheritedCategory(field)
-    ? context.inheritedCategoryLabels[getPropertyKey(field)]
-    : undefined;
-  const inheritedKindOfQuantity = context.inheritedKindOfQuantities[getPropertyKey(field)];
+  const inherited = context.inheritedProperties[getPropertyKey(field)];
+  const inheritedCategoryLabel = needsInheritedCategory(field) ? inherited?.categoryLabel : undefined;
+  const inheritedKindOfQuantity = hasPrimitiveValueType(field.type) ? inherited?.kindOfQuantity : undefined;
   const canonicalField = {
     category: field.categoryId
       ? getCategoryPath(categories[field.categoryId], categories)
@@ -279,11 +219,14 @@ function createCanonicalDescriptor(
   const sourceFieldsByKey = new Map<string, ReadonlyPropertyField[]>();
   const unsupportedFields: CanonicalDescriptor["unsupportedFields"] = [];
   for (const [id, field] of Object.entries(descriptor.fields)) {
-    if (field.hidden || context.inheritedHiddenProperties.has(getPropertyKey(field))) {
+    if (field.hidden) {
       continue;
     }
     if (field.kind !== "property") {
       unsupportedFields.push({ sourcePath: [id], reason: `Unsupported new field kind '${String(field.kind)}'.` });
+      continue;
+    }
+    if (context.inheritedProperties[getPropertyKey(field)]?.hidden) {
       continue;
     }
     const normalized = createCanonicalField(id, field, descriptor.categories, context);
@@ -391,16 +334,12 @@ export async function createCanonicalCapture(
     imodelAccess,
     new Set(declaredRelationshipNames.flatMap((namesByField) => Object.values(namesByField).flat())),
   );
-  const inheritedCategoryLabels = await getInheritedCategoryLabels(descriptors, imodelAccess);
-  const inheritedKindOfQuantities = await getInheritedKindOfQuantities(descriptors, imodelAccess);
-  const inheritedHiddenProperties = await getInheritedHiddenProperties(descriptors, imodelAccess);
+  const inheritedProperties = await getInheritedPropertiesMetadata(descriptors, imodelAccess);
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor, {
       declaredRelationshipNames: declaredRelationshipNames[0],
       constraints,
-      inheritedCategoryLabels,
-      inheritedKindOfQuantities,
-      inheritedHiddenProperties,
+      inheritedProperties,
     });
     return { descriptor };
   }
@@ -410,9 +349,7 @@ export async function createCanonicalCapture(
         createCanonicalItem(item, {
           declaredRelationshipNames: declaredRelationshipNames[index],
           constraints,
-          inheritedCategoryLabels,
-          inheritedKindOfQuantities,
-          inheritedHiddenProperties,
+          inheritedProperties,
         }),
       ),
     ),
