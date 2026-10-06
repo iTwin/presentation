@@ -57,6 +57,7 @@ interface NormalizationContext {
   constraints: RelationshipConstraints;
   inheritedCategoryLabels: InheritedCategoryLabels;
   inheritedKindOfQuantities: InheritedKindOfQuantities;
+  inheritedHiddenProperties: Set<string>;
 }
 
 /** Only direct fields qualify: related fields are always anchored to a class category. */
@@ -66,6 +67,35 @@ function needsInheritedCategory(field: ReadonlyPropertyField) {
 
 function getPropertyKey(field: ReadonlyPropertyField) {
   return `${field.propertyClassName}#${field.propertyName}`;
+}
+
+async function getInheritedHiddenProperties(
+  descriptors: ReadonlyContentDescriptor[],
+  imodelAccess: ECSchemaProvider,
+): Promise<Set<string>> {
+  const fields = new Map<string, ReadonlyPropertyField>();
+  for (const descriptor of descriptors) {
+    for (const field of Object.values(descriptor.fields)) {
+      if (field.kind === "property" && !field.hidden) {
+        fields.set(getPropertyKey(field), field);
+      }
+    }
+  }
+  const entries = await Promise.all(
+    [...fields].map(async ([key, field]) => {
+      const property = (await getClass(imodelAccess, field.propertyClassName)).getProperty(field.propertyName);
+      if (!property) {
+        return undefined;
+      }
+      for (let ecClass: EC.Class | undefined = property.class; ecClass; ecClass = ecClass.baseClass) {
+        if (ecClass.getProperty(field.propertyName)?.isHidden) {
+          return key;
+        }
+      }
+      return undefined;
+    }),
+  );
+  return new Set(entries.filter((entry) => entry !== undefined));
 }
 
 /**
@@ -249,7 +279,7 @@ function createCanonicalDescriptor(
   const sourceFieldsByKey = new Map<string, ReadonlyPropertyField[]>();
   const unsupportedFields: CanonicalDescriptor["unsupportedFields"] = [];
   for (const [id, field] of Object.entries(descriptor.fields)) {
-    if (field.hidden) {
+    if (field.hidden || context.inheritedHiddenProperties.has(getPropertyKey(field))) {
       continue;
     }
     if (field.kind !== "property") {
@@ -363,12 +393,14 @@ export async function createCanonicalCapture(
   );
   const inheritedCategoryLabels = await getInheritedCategoryLabels(descriptors, imodelAccess);
   const inheritedKindOfQuantities = await getInheritedKindOfQuantities(descriptors, imodelAccess);
+  const inheritedHiddenProperties = await getInheritedHiddenProperties(descriptors, imodelAccess);
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor, {
       declaredRelationshipNames: declaredRelationshipNames[0],
       constraints,
       inheritedCategoryLabels,
       inheritedKindOfQuantities,
+      inheritedHiddenProperties,
     });
     return { descriptor };
   }
@@ -380,6 +412,7 @@ export async function createCanonicalCapture(
           constraints,
           inheritedCategoryLabels,
           inheritedKindOfQuantities,
+          inheritedHiddenProperties,
         }),
       ),
     ),
