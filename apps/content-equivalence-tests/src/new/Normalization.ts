@@ -129,6 +129,7 @@ function createCanonicalType(type: NewFieldType, isStructMember = false): Canoni
         kind: "primitive",
         name: type.type,
         ...(type.extendedType !== undefined ? { extendedType: type.extendedType } : undefined),
+        ...(type.kindOfQuantity !== undefined ? { kindOfQuantity: type.kindOfQuantity } : undefined),
         ...(type.enumeration !== undefined
           ? { enumeration: createCanonicalEnumeration(type.enumeration.isStrict, type.enumeration.enumerators) }
           : undefined),

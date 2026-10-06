@@ -45,7 +45,7 @@ interface LegacyFieldMapping {
  * Legacy's `PropertyInfoJSON` carries an `extendedType` at runtime (e.g. `"Json"`, `"BeGuid"`) that its
  * type declarations omit.
  */
-type LegacyPropertyInfo = PropertyInfoJSON<string> & { extendedType?: string };
+type LegacyPropertyInfo = PropertyInfoJSON<string> & { extendedType?: string; kindOfQuantity?: { name?: string } };
 
 /**
  * Maps a legacy `TypeDescription.typeName` to the `presentation-shared` primitive vocabulary used
@@ -120,10 +120,13 @@ function createCanonicalPrimitiveFieldType(
   const primitiveTypeName = isSubstitutedByExtendedType
     ? properties.find((property) => property.extendedType === extendedType)!.type
     : typeName;
+  const kindOfQuantity = properties.find((property) => property.kindOfQuantity?.name !== undefined)?.kindOfQuantity
+    ?.name;
   return {
     kind: "primitive",
     name: SHARED_PRIMITIVE_TYPE_NAMES.get(primitiveTypeName) ?? primitiveTypeName,
     ...(extendedType !== undefined ? { extendedType } : undefined),
+    ...(kindOfQuantity !== undefined ? { kindOfQuantity: normalizeFullClassName(kindOfQuantity) } : undefined),
   };
 }
 

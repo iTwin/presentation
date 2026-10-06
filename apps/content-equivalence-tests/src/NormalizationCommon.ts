@@ -21,7 +21,13 @@ export interface CanonicalEnumerationInfo {
 }
 
 export type CanonicalFieldType =
-  | { kind: "primitive"; name: string; extendedType?: string; enumeration?: CanonicalEnumerationInfo }
+  | {
+      kind: "primitive";
+      name: string;
+      extendedType?: string;
+      kindOfQuantity?: string;
+      enumeration?: CanonicalEnumerationInfo;
+    }
   | { kind: "navigation" }
   | { kind: "array"; member: CanonicalFieldType }
   | { kind: "struct"; members: Array<{ name: string; type: CanonicalFieldType }> };
