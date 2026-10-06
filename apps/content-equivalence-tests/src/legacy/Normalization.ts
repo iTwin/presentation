@@ -147,9 +147,21 @@ function createCanonicalFieldType(
         // `TypeDescription`, so it can't be recovered here - members are normalized without `properties` context.
         members: type.members
           .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type, undefined) }))
+          .filter(({ type: memberType }) => isAllowedFieldType(memberType))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
       };
   }
+}
+
+function isAllowedFieldType(type: CanonicalFieldType): boolean {
+  const disallowed = ["Bentley.Geometry.Common.IGeometry", "Binary"] as const;
+  if (type.kind === "primitive" && disallowed.includes(type.name)) {
+    return false;
+  }
+  if (type.kind === "array" && type.member.kind === "primitive" && disallowed.includes(type.member.name)) {
+    return false;
+  }
+  return true;
 }
 
 /**
