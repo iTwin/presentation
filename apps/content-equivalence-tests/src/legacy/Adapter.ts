@@ -4,10 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Presentation } from "@itwin/presentation-backend";
-import { ContentFlags, DefaultContentDisplayTypes, KeySet, RuleTypes } from "@itwin/presentation-common";
+import {
+  ContentFlags,
+  DefaultContentDisplayTypes,
+  DiagnosticsLogEntry,
+  KeySet,
+  RuleTypes,
+} from "@itwin/presentation-common";
 import { CAPTURE_FORMAT_VERSION } from "../Persistence.js";
 
 import type { IModelDb } from "@itwin/core-backend";
+import type { BackendDiagnosticsOptions } from "@itwin/presentation-backend";
 import type {
   DescriptorJSON,
   ItemJSON,
@@ -73,6 +80,7 @@ async function createConsolidatedContentDescriptor({ imodel }: { imodel: IModelD
     displayType: DefaultContentDisplayTypes.PropertyPane,
     contentFlags: ContentFlags.ShowLabels,
     keys: new KeySet(),
+    diagnostics: DIAGNOSTICS_OPTIONS,
   });
   if (!result) {
     throw new Error("Legacy content returned no consolidated descriptor.");
@@ -102,6 +110,7 @@ async function createSelectedInstancesContent({
         descriptor: { displayType: DefaultContentDisplayTypes.Grid },
         keys: new KeySet([toLegacyKey(instanceKey)]),
         omitFormattedValues: true,
+        diagnostics: DIAGNOSTICS_OPTIONS,
       });
       if (!content) {
         throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
@@ -115,6 +124,26 @@ async function createSelectedInstancesContent({
     }),
   );
 }
+
+const DIAGNOSTICS_OPTIONS: BackendDiagnosticsOptions | undefined = process.env.ENABLE_DIAGNOSTICS
+  ? {
+      dev: "trace",
+      handler: ({ logs }) => {
+        function handleLogs(entries: DiagnosticsLogEntry[] | undefined, indent = 0) {
+          entries?.forEach((entry) => {
+            if (DiagnosticsLogEntry.isMessage(entry)) {
+              console.log(`${" ".repeat(indent)}${entry.message}`);
+            }
+            if (DiagnosticsLogEntry.isScope(entry)) {
+              console.log(`${" ".repeat(indent)}Scope: ${entry.scope}`);
+              handleLogs(entry.logs, indent + 2);
+            }
+          });
+        }
+        handleLogs(logs);
+      },
+    }
+  : undefined;
 
 export async function captureLegacy(props: {
   imodel: IModelDb;
