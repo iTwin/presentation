@@ -116,7 +116,7 @@ export function createModelsTreeIdsProvider({
     targetPartitionId?: ModelId;
     hideInHierarchy: boolean;
   }> {
-    return defer(async () => createModelElementsFilter("m")).pipe(
+    return from(createModelElementsFilter("m")).pipe(
       mergeMap((elementsFilter) => {
         const subjectsQuery = `
         SELECT
