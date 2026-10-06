@@ -46,13 +46,17 @@ function getCategoryPath(
 /** Relationships selected by each related field's declaration, per `pathFromTarget` step, keyed by field id. */
 type DeclaredRelationshipNames = Record<string, EC.FullClassNameDotNotation[]>;
 
-/** Category labels inherited from base properties, keyed by `getInheritedCategoryKey`. */
+/** Category labels inherited from base properties, keyed by the property's class and name. */
 type InheritedCategoryLabels = Record<string, string>;
+
+/** Kind-of-quantity names inherited from base properties, keyed by `getPropertyKey`. */
+type InheritedKindOfQuantities = Record<string, string>;
 
 interface NormalizationContext {
   declaredRelationshipNames: DeclaredRelationshipNames;
   constraints: RelationshipConstraints;
   inheritedCategoryLabels: InheritedCategoryLabels;
+  inheritedKindOfQuantities: InheritedKindOfQuantities;
 }
 
 /** Only direct fields qualify: related fields are always anchored to a class category. */
@@ -60,7 +64,7 @@ function needsInheritedCategory(field: ReadonlyPropertyField) {
   return field.categoryId === undefined && field.pathFromTarget.length === 0;
 }
 
-function getInheritedCategoryKey(field: ReadonlyPropertyField) {
+function getPropertyKey(field: ReadonlyPropertyField) {
   return `${field.propertyClassName}#${field.propertyName}`;
 }
 
@@ -76,7 +80,7 @@ async function getInheritedCategoryLabels(
   for (const descriptor of descriptors) {
     for (const field of Object.values(descriptor.fields)) {
       if (field.kind === "property" && !field.hidden && needsInheritedCategory(field)) {
-        fields.set(getInheritedCategoryKey(field), field);
+        fields.set(getPropertyKey(field), field);
       }
     }
   }
@@ -86,6 +90,53 @@ async function getInheritedCategoryLabels(
         const category = ecClass.getProperty(field.propertyName)?.category;
         if (category) {
           return [key, category.label ?? category.name] as const;
+        }
+        ecClass = ecClass.baseClass;
+      }
+      return undefined;
+    }),
+  );
+  return Object.fromEntries(entries.filter((entry) => entry !== undefined));
+}
+
+function hasPrimitiveValueType(type: NewFieldType): boolean {
+  return type.kind === "primitive" || (type.kind === "array" && hasPrimitiveValueType(type.elementType));
+}
+
+function getKindOfQuantity(type: NewFieldType): string | undefined {
+  if (type.kind === "primitive") {
+    return type.kindOfQuantity;
+  }
+  return type.kind === "array" ? getKindOfQuantity(type.elementType) : undefined;
+}
+
+/**
+ * Recover kind-of-quantity metadata omitted from the content field type by checking the EC property and its bases.
+ */
+async function getInheritedKindOfQuantities(
+  descriptors: ReadonlyContentDescriptor[],
+  imodelAccess: ECSchemaProvider,
+): Promise<InheritedKindOfQuantities> {
+  const fields = new Map<string, ReadonlyPropertyField>();
+  for (const descriptor of descriptors) {
+    for (const field of Object.values(descriptor.fields)) {
+      if (
+        field.kind === "property" &&
+        !field.hidden &&
+        hasPrimitiveValueType(field.type) &&
+        getKindOfQuantity(field.type) === undefined
+      ) {
+        fields.set(getPropertyKey(field), field);
+      }
+    }
+  }
+  const entries = await Promise.all(
+    [...fields].map(async ([key, field]) => {
+      let ecClass: EC.Class | undefined = await getClass(imodelAccess, field.propertyClassName);
+      while (ecClass) {
+        const kindOfQuantity = ecClass.getProperty(field.propertyName)?.kindOfQuantity;
+        if (kindOfQuantity) {
+          return [key, kindOfQuantity.fullName] as const;
         }
         ecClass = ecClass.baseClass;
       }
@@ -119,17 +170,22 @@ function createCanonicalPath(
  * property context to recover enumeration and extended type metadata: legacy substitutes the type name
  * with the `"enum"` sentinel or the extended type name instead.
  */
-function createCanonicalType(type: NewFieldType, isStructMember = false): CanonicalFieldType {
+function createCanonicalType(
+  type: NewFieldType,
+  isStructMember = false,
+  inheritedKindOfQuantity?: string,
+): CanonicalFieldType {
   switch (type.kind) {
     case "primitive":
       if (isStructMember) {
         return { kind: "primitive", name: type.enumeration !== undefined ? "enum" : (type.extendedType ?? type.type) };
       }
+      const kindOfQuantity = type.kindOfQuantity ?? inheritedKindOfQuantity;
       return {
         kind: "primitive",
         name: type.type,
         ...(type.extendedType !== undefined ? { extendedType: type.extendedType } : undefined),
-        ...(type.kindOfQuantity !== undefined ? { kindOfQuantity: type.kindOfQuantity } : undefined),
+        ...(kindOfQuantity !== undefined ? { kindOfQuantity } : undefined),
         ...(type.enumeration !== undefined
           ? { enumeration: createCanonicalEnumeration(type.enumeration.isStrict, type.enumeration.enumerators) }
           : undefined),
@@ -137,7 +193,7 @@ function createCanonicalType(type: NewFieldType, isStructMember = false): Canoni
     case "navigation":
       return { kind: "navigation" };
     case "array":
-      return { kind: "array", member: createCanonicalType(type.elementType, isStructMember) };
+      return { kind: "array", member: createCanonicalType(type.elementType, isStructMember, inheritedKindOfQuantity) };
     case "struct":
       return {
         kind: "struct",
@@ -155,8 +211,9 @@ function createCanonicalField(
   context: NormalizationContext,
 ): CanonicalField {
   const inheritedCategoryLabel = needsInheritedCategory(field)
-    ? context.inheritedCategoryLabels[getInheritedCategoryKey(field)]
+    ? context.inheritedCategoryLabels[getPropertyKey(field)]
     : undefined;
+  const inheritedKindOfQuantity = context.inheritedKindOfQuantities[getPropertyKey(field)];
   const canonicalField = {
     category: field.categoryId
       ? getCategoryPath(categories[field.categoryId], categories)
@@ -164,7 +221,7 @@ function createCanonicalField(
         ? [inheritedCategoryLabel]
         : [],
     label: field.label,
-    type: createCanonicalType(field.type),
+    type: createCanonicalType(field.type, false, inheritedKindOfQuantity),
     propertyNames: [field.propertyName],
     propertyClassNames: [field.propertyClassName],
     kind: "property",
@@ -305,11 +362,13 @@ export async function createCanonicalCapture(
     new Set(declaredRelationshipNames.flatMap((namesByField) => Object.values(namesByField).flat())),
   );
   const inheritedCategoryLabels = await getInheritedCategoryLabels(descriptors, imodelAccess);
+  const inheritedKindOfQuantities = await getInheritedKindOfQuantities(descriptors, imodelAccess);
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor, {
       declaredRelationshipNames: declaredRelationshipNames[0],
       constraints,
       inheritedCategoryLabels,
+      inheritedKindOfQuantities,
     });
     return { descriptor };
   }
@@ -320,6 +379,7 @@ export async function createCanonicalCapture(
           declaredRelationshipNames: declaredRelationshipNames[index],
           constraints,
           inheritedCategoryLabels,
+          inheritedKindOfQuantities,
         }),
       ),
     ),
