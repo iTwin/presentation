@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, formatConcatenatedValue, getClass } from "@itwin/presentation-shared";
 import {
   createCanonicalEnumeration,
   createCanonicalRelationshipPath,
@@ -46,9 +46,53 @@ function getCategoryPath(
 /** Relationships selected by each related field's declaration, per `pathFromTarget` step, keyed by field id. */
 type DeclaredRelationshipNames = Record<string, EC.FullClassNameDotNotation[]>;
 
+/** Category labels inherited from base properties, keyed by `getInheritedCategoryKey`. */
+type InheritedCategoryLabels = Record<string, string>;
+
 interface NormalizationContext {
   declaredRelationshipNames: DeclaredRelationshipNames;
   constraints: RelationshipConstraints;
+  inheritedCategoryLabels: InheritedCategoryLabels;
+}
+
+/** Only direct fields qualify: related fields are always anchored to a class category. */
+function needsInheritedCategory(field: ReadonlyPropertyField) {
+  return field.categoryId === undefined && field.pathFromTarget.length === 0;
+}
+
+function getInheritedCategoryKey(field: ReadonlyPropertyField) {
+  return `${field.propertyClassName}#${field.propertyName}`;
+}
+
+/**
+ * Workaround for https://github.com/iTwin/itwinjs-core/issues/9801: `SchemaView` doesn't inherit a property's
+ * category from its base property, while native `ECProperty::GetCategory` does. Remove once that is fixed.
+ */
+async function getInheritedCategoryLabels(
+  descriptors: ReadonlyContentDescriptor[],
+  imodelAccess: ECSchemaProvider,
+): Promise<InheritedCategoryLabels> {
+  const fields = new Map<string, ReadonlyPropertyField>();
+  for (const descriptor of descriptors) {
+    for (const field of Object.values(descriptor.fields)) {
+      if (field.kind === "property" && !field.hidden && needsInheritedCategory(field)) {
+        fields.set(getInheritedCategoryKey(field), field);
+      }
+    }
+  }
+  const entries = await Promise.all(
+    [...fields].map(async ([key, field]) => {
+      for (let ecClass = (await getClass(imodelAccess, field.propertyClassName)).baseClass; ecClass;) {
+        const category = ecClass.getProperty(field.propertyName)?.category;
+        if (category) {
+          return [key, category.label ?? category.name] as const;
+        }
+        ecClass = ecClass.baseClass;
+      }
+      return undefined;
+    }),
+  );
+  return Object.fromEntries(entries.filter((entry) => entry !== undefined));
 }
 
 function createCanonicalPath(
@@ -109,8 +153,15 @@ function createCanonicalField(
   categories: ReadonlyContentDescriptor["categories"],
   context: NormalizationContext,
 ): CanonicalField {
+  const inheritedCategoryLabel = needsInheritedCategory(field)
+    ? context.inheritedCategoryLabels[getInheritedCategoryKey(field)]
+    : undefined;
   const canonicalField = {
-    category: field.categoryId ? getCategoryPath(categories[field.categoryId], categories) : [],
+    category: field.categoryId
+      ? getCategoryPath(categories[field.categoryId], categories)
+      : inheritedCategoryLabel !== undefined
+        ? [inheritedCategoryLabel]
+        : [],
     label: field.label,
     type: createCanonicalType(field.type),
     propertyNames: [field.propertyName],
@@ -252,17 +303,23 @@ export async function createCanonicalCapture(
     imodelAccess,
     new Set(declaredRelationshipNames.flatMap((namesByField) => Object.values(namesByField).flat())),
   );
+  const inheritedCategoryLabels = await getInheritedCategoryLabels(descriptors, imodelAccess);
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor, {
       declaredRelationshipNames: declaredRelationshipNames[0],
       constraints,
+      inheritedCategoryLabels,
     });
     return { descriptor };
   }
   return {
     items: await Promise.all(
       capture.items.map(async (item, index) =>
-        createCanonicalItem(item, { declaredRelationshipNames: declaredRelationshipNames[index], constraints }),
+        createCanonicalItem(item, {
+          declaredRelationshipNames: declaredRelationshipNames[index],
+          constraints,
+          inheritedCategoryLabels,
+        }),
       ),
     ),
   };
