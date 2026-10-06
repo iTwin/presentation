@@ -38,7 +38,7 @@ export type CaptureMetadata<TImplementation extends ImplementationName = Impleme
   "captureFormatVersion" | "implementation" | "implementationFingerprint" | "imodelFingerprint" | "scenario"
 >;
 
-export function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown, space?: number): string {
   return JSON.stringify(
     value,
     (_key, current: unknown) => {
@@ -55,7 +55,7 @@ export function stableStringify(value: unknown): string {
       }
       return current;
     },
-    2,
+    space,
   );
 }
 
@@ -126,6 +126,6 @@ export function readCapture<TCapture extends CaptureEnvelope>(
 export function writeJson(filePath: string, value: unknown): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   const temporaryPath = `${filePath}.${process.pid}.tmp`;
-  fs.writeFileSync(temporaryPath, `${stableStringify(value)}\n`);
+  fs.writeFileSync(temporaryPath, `${stableStringify(value, 2)}\n`);
   fs.renameSync(temporaryPath, filePath);
 }
