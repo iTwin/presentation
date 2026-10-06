@@ -377,7 +377,7 @@ interface UseTreeProps {
 
 // @public (undocumented)
 type UseTreeResult = {
-    isReloading: boolean;
+    isLoading: boolean;
     getNode: (nodeId: string) => TreeNode | undefined;
     setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 } & RendererProps;

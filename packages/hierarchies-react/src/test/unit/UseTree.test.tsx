@@ -172,7 +172,7 @@ describe("useTree", () => {
     });
   });
 
-  it("sets 'isReloading' to false only after root nodes are loaded", async () => {
+  it("sets 'isLoading' to false only after root nodes are loaded", async () => {
     const rootNode1 = createTestHierarchyNode({ id: "root-1" });
     const rootNode2 = createTestHierarchyNode({ id: "root-2" });
     let getNodesCallCount = 0;
@@ -198,12 +198,12 @@ describe("useTree", () => {
     });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(0);
-      expect(result.current.isReloading).toBe(true);
+      expect(result.current.isLoading).toBe(true);
     });
     await waitFor(async () => {
       await promise.resolve([]);
       expect(getNodesCallCount).to.eq(1);
-      expect(result.current.isReloading).toBe(false);
+      expect(result.current.isLoading).toBe(false);
     });
     let treeRenderProps = getTreeRendererProps(result.current);
     expect(treeRenderProps?.rootNodes).toHaveLength(2);
@@ -211,12 +211,12 @@ describe("useTree", () => {
     rerender({ getHierarchyProvider: () => customHierarchyProvider, getSearchPaths: () => promise });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(1);
-      expect(result.current.isReloading).toBe(true);
+      expect(result.current.isLoading).toBe(true);
     });
 
     await waitFor(async () => {
       await promise.resolve([]);
-      expect(result.current.isReloading).toBe(false);
+      expect(result.current.isLoading).toBe(false);
     });
     treeRenderProps = getTreeRendererProps(result.current);
     expect(treeRenderProps?.rootNodes).toHaveLength(1);
@@ -237,7 +237,7 @@ describe("useTree", () => {
     const { result, unmount } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths } });
 
     await waitFor(() => {
-      expect(result.current.isReloading).toBe(true);
+      expect(result.current.isLoading).toBe(true);
     });
     unmount();
     await waitFor(() => {
