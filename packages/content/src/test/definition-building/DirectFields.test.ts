@@ -161,6 +161,61 @@ describe("collectDirectPropertyFields", () => {
     expect(byId.get("TestSchema.Pump.Description")?.valueClassNames).to.deep.equal(["TestSchema.Pump"]);
   });
 
+  it("produces a single candidate per declaration, carrying every concrete that inherits it", async () => {
+    const codeValue = createPrimitiveProperty({ name: "CodeValue", declaringClass: "TestSchema.Element" });
+    const element = createEntityClass({ fullName: "TestSchema.Element", properties: [codeValue] });
+    const pump = createEntityClass({ fullName: "TestSchema.Pump", baseClass: element, properties: [codeValue] });
+    const valve = createEntityClass({ fullName: "TestSchema.Valve", baseClass: element, properties: [codeValue] });
+
+    const candidates = await collectDirectPropertyFields({
+      imodelAccess: createSchemaAccess([element, pump, valve]),
+      source: createSource({ primaryClass: element.fullName, resolvedPrimaryClasses: [pump.fullName, valve.fullName] }),
+    });
+
+    expect(candidates).to.have.lengthOf(1);
+    expect(candidates[0].field.valueClassNames).to.deep.equal(["TestSchema.Pump", "TestSchema.Valve"]);
+  });
+
+  it("produces separate candidates for a redeclared property and its base declaration", async () => {
+    const baseDescription = createPrimitiveProperty({ name: "Description", declaringClass: "TestSchema.Base" });
+    const pumpDescription = createPrimitiveProperty({ name: "Description", declaringClass: "TestSchema.Pump" });
+    const base = createEntityClass({ fullName: "TestSchema.Base", properties: [baseDescription] });
+    const pump = createEntityClass({ fullName: "TestSchema.Pump", baseClass: base, properties: [pumpDescription] });
+    const valve = createEntityClass({ fullName: "TestSchema.Valve", baseClass: base, properties: [baseDescription] });
+    const gauge = createEntityClass({ fullName: "TestSchema.Gauge", baseClass: base, properties: [baseDescription] });
+
+    const candidates = await collectDirectPropertyFields({
+      imodelAccess: createSchemaAccess([base, pump, valve, gauge]),
+      source: createSource({
+        primaryClass: base.fullName,
+        resolvedPrimaryClasses: [pump.fullName, valve.fullName, gauge.fullName],
+      }),
+    });
+
+    expect(candidates.map(({ field }) => [field.id, field.valueClassNames])).to.deep.equal([
+      ["TestSchema.Pump.Description", ["TestSchema.Pump"]],
+      ["TestSchema.Base.Description", ["TestSchema.Valve", "TestSchema.Gauge"]],
+    ]);
+  });
+
+  it("produces a single candidate for a mixin property shared by several concretes", async () => {
+    const mixin = createMixinClass({
+      fullName: "TestSchema.HasCode",
+      properties: [createPrimitiveProperty({ name: "Code", declaringClass: "TestSchema.HasCode" })],
+    });
+    const code = createPrimitiveProperty({ name: "Code", declaringClass: mixin });
+    const pump = createEntityClass({ fullName: "TestSchema.Pump", mixins: [mixin], properties: [code] });
+    const valve = createEntityClass({ fullName: "TestSchema.Valve", mixins: [mixin], properties: [code] });
+
+    const candidates = await collectDirectPropertyFields({
+      imodelAccess: createSchemaAccess([pump, valve, mixin]),
+      source: createSource({ primaryClass: pump.fullName, resolvedPrimaryClasses: [pump.fullName, valve.fullName] }),
+    });
+
+    expect(candidates).to.have.lengthOf(1);
+    expect(candidates[0].field.valueClassNames).to.deep.equal(["TestSchema.Pump", "TestSchema.Valve"]);
+  });
+
   it("enumerates properties from a mixin applied to a leaf class", async () => {
     const mixin = createMixinClass({
       fullName: "TestSchema.HasCode",

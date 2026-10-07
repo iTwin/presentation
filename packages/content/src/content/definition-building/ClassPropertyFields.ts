@@ -44,39 +44,16 @@ export interface CategorizedField {
   categorization: FieldCategorization;
 }
 
-/**
- * Enumerates the properties of an EC class into `PropertyField` candidates.
- *
- * Shared by direct-property enumeration (zero-length `pathFromTarget`) and related-property
- * enumeration (a non-empty path to the class). The `spec` controls which properties are included
- * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`.
- *
- * For each included property whose value type is supported:
- * - `propertyClassName` is the class that *declares* the property in effect on `propertiesClass` (may
- *   be a base class; an overridden base declaration is not enumerated), so an inherited property is
- *   attributed to its declaring class;
- * - `label` resolves to the override label, else the property's label, else its name;
- * - `readOnly`/`hidden` come from the merged overrides when present;
- * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
- *
- * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
- * property category and/or spec override, plus the given `anchor`) — but no `categoryId` is assigned
- * and no category is created here: that is the categorization pass's job.
- *
- * Properties with unsupported value types (e.g. `Binary`/`IGeometry`) are skipped. The returned
- * fields are candidates whose identity is finalized (and same-property variants merged) by
- * `mergePropertyFieldsByIdentity`.
- *
- */
-export function collectClassPropertyFields(props: {
-  /** The class whose properties are enumerated. */
-  propertiesClass: EC.Class;
+/** Props for {@link createPropertyFields}. */
+interface CreatePropertyFieldsProps {
+  /** The properties to convert, as read from the class in effect. */
+  properties: EC.Property[];
   /** Concrete value-supplier classes for the produced fields. */
   valueClassNames: EC.FullClassNameDotNotation[];
   /** Information on how to reach related properties or `undefined` for direct properties. */
   relationshipInfo:
     | {
-        /** Relationship path from the content target to `propertiesClass`. */
+        /** Relationship path from the content target to the properties' class. */
         pathFromTarget: RelationshipPath;
         /**
          * Cardinality of `pathFromTarget` as the contributing declaration sees it. Declarations that
@@ -95,13 +72,37 @@ export function collectClassPropertyFields(props: {
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
   anchor: FieldCategorization["anchor"];
-}): CategorizedField[] {
-  const { propertiesClass, relationshipInfo, valueClassNames, spec, anchor } = props;
+}
+
+/**
+ * Converts EC properties into `PropertyField` candidates.
+ *
+ * Shared by direct-property enumeration (zero-length `pathFromTarget`) and related-property
+ * enumeration (a non-empty path to the class). The `spec` controls which properties are included
+ * (`select`) and applies metadata overrides; direct enumeration passes `{ select: "all" }`.
+ *
+ * For each included property whose value type is supported:
+ * - `propertyClassName` is the class that *declares* the property (may be a base class), so an
+ *   inherited property is attributed to its declaring class;
+ * - `label` resolves to the override label, else the property's label, else its name;
+ * - `readOnly`/`hidden` come from the merged overrides when present;
+ * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
+ *
+ * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
+ * property category and/or spec override, plus the given `anchor`) — but no `categoryId` is assigned
+ * and no category is created here: that is the categorization pass's job.
+ *
+ * Properties with unsupported value types (e.g. `Binary`/`IGeometry`) are skipped. The returned
+ * fields are candidates whose identity is finalized (and same-property variants merged) by
+ * `mergePropertyFieldsByIdentity`.
+ */
+export function createPropertyFields(props: CreatePropertyFieldsProps): CategorizedField[] {
+  const { properties, relationshipInfo, valueClassNames, spec, anchor } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
   const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
   const result: CategorizedField[] = [];
-  for (const property of propertiesClass.getProperties()) {
+  for (const property of properties) {
     if (!isSelected(property.name, spec.select)) {
       continue;
     }
