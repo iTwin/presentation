@@ -17,6 +17,7 @@ import { importSchema } from "../SchemaUtils.js";
 import {
   createContentIModelAccess,
   getCalculatedFieldByLabel,
+  getExternalFields,
   getPropertyFieldByName,
   getPropertyFieldsByName,
 } from "./Utils.js";
@@ -193,12 +194,125 @@ describe("Content", () => {
         expect(item.getValue(getPropertyFieldByName(descriptor, "DoubleProp"))).toBe(3.5);
         expect(item.getValue(getPropertyFieldByName(descriptor, "BoolProp"))).toBe(true);
         expect(item.getValue(getPropertyFieldByName(descriptor, "LongProp"))).toBe(12345);
-        expect(item.getValue(getPropertyFieldByName(descriptor, "DateTimeProp"))).toContain("2021-01-01T00:00:00");
+        expect(item.getValue(getPropertyFieldByName(descriptor, "DateTimeProp"))).toEqual(
+          new Date("2021-01-01T00:00:00.000Z"),
+        );
         expect(item.getValue(getPropertyFieldByName(descriptor, "Point2dProp"))).toEqual({ x: 1, y: 2 });
         expect(item.getValue(getPropertyFieldByName(descriptor, "Point3dProp"))).toEqual({ x: 1, y: 2, z: 3 });
         // Enumerations decode to their raw backing value.
         expect(item.getValue(getPropertyFieldByName(descriptor, "IntEnumProp"))).toBe(2);
         expect(item.getValue(getPropertyFieldByName(descriptor, "StrEnumProp"))).toBe("b");
+      });
+
+      it("decodes DateTime values to `Date` objects as UTC", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECStructClass typeName="Stamp">
+                <ECProperty propertyName="At" typeName="dateTime" />
+              </ECStructClass>
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="DateTimeProp" typeName="dateTime" />
+                <ECProperty propertyName="AbsentDateProp" typeName="dateTime" />
+                <ECArrayProperty propertyName="DateArrayProp" typeName="dateTime" />
+                <ECStructArrayProperty propertyName="Stamps" typeName="Stamp" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="RelatedDateProp" typeName="dateTime" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..1)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const stamps = [{ ["At"]: "2023-03-03T03:03:03.003Z" }];
+          const a = builder.insertInstance(schema.items.A.fullName, {
+            dateTimeProp: "2021-11-08T10:18:23.317Z",
+            dateArrayProp: ["2021-01-01T00:00:00.000Z", "2022-02-02T12:30:00.000Z"],
+            stamps,
+          });
+          const b = builder.insertInstance(schema.items.B.fullName, { relatedDateProp: "2024-04-04T04:04:04.004Z" });
+          builder.insertRelationship(schema.items.AtoB.fullName, a.id, b.id);
+          return { schema };
+        });
+
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const getExternalValues = vi.fn(async ({ items: batch }: { items: Array<unknown> }) =>
+          batch.map(() => ({ stamp: "2025-05-05T05:05:05.005" })),
+        );
+        const provider = await createProvider({
+          imodelAccess: createContentIModelAccess(setup.ecdb),
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: {
+            imodelFieldsProviders: [
+              defineIModelFieldsProvider({
+                id: "provider_v1",
+                async getContribution() {
+                  return {
+                    relatedProperties: [{ path }],
+                    calculatedFields: [
+                      {
+                        id: "when",
+                        label: "Calculated date",
+                        expression: "this.DateTimeProp",
+                        type: { kind: "primitive", type: "DateTime" },
+                      },
+                    ],
+                  };
+                },
+              }),
+            ],
+            externalFieldsProviders: [
+              defineExternalFieldsProvider({
+                id: "ext_v1",
+                fields: [{ id: "stamp", label: "External date", type: { kind: "primitive", type: "DateTime" } }],
+                inputs: { date: { propertyClassName: setup.schema.items.A.fullName, propertyName: "DateTimeProp" } },
+                getValues: getExternalValues,
+              }),
+            ],
+          },
+        });
+
+        const descriptor = await provider.getContentDescriptor();
+        const [item] = await collect(provider.getItems());
+
+        const expectedDateTimeProp = new Date("2021-11-08T10:18:23.317Z");
+        expect(item.getValue(getPropertyFieldByName(descriptor, "DateTimeProp"))).toEqual(expectedDateTimeProp);
+        expect(item.getValue(getPropertyFieldByName(descriptor, "AbsentDateProp"))).toBeUndefined();
+        expect(item.getValue(getPropertyFieldByName(descriptor, "DateArrayProp"))).toEqual([
+          new Date("2021-01-01T00:00:00.000Z"),
+          new Date("2022-02-02T12:30:00.000Z"),
+        ]);
+        expect(item.getValue(getPropertyFieldByName(descriptor, "Stamps"))).toEqual([
+          { ["At"]: new Date("2023-03-03T03:03:03.003Z") },
+        ]);
+
+        const relatedField = getPropertyFieldByName(descriptor, "RelatedDateProp");
+        expect(item.getValue(relatedField)).toEqual(new Date("2024-04-04T04:04:04.004Z"));
+        expect(item.getRelatedInstances(relatedField)[0].getValue(relatedField)).toEqual(
+          new Date("2024-04-04T04:04:04.004Z"),
+        );
+
+        expect(item.getValue(getCalculatedFieldByLabel(descriptor, "Calculated date"))).toEqual(expectedDateTimeProp);
+        expect(item.getValue(getExternalFields(descriptor)[0])).toEqual(new Date("2025-05-05T05:05:05.005Z"));
+
+        // Providers receive the same `Date` objects as item values.
+        expect(getExternalValues).toHaveBeenCalledExactlyOnceWith({
+          items: [{ inputValues: { date: expectedDateTimeProp } }],
+        });
       });
 
       it.each([

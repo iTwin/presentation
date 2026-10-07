@@ -10,7 +10,7 @@ import path from "node:path";
 import type { InstanceKey } from "@itwin/presentation-shared";
 import type { RuntimeConfiguration } from "./Configuration.js";
 
-export const CAPTURE_FORMAT_VERSION = 1;
+export const CAPTURE_FORMAT_VERSION = 2;
 
 export type ImplementationName = "legacy" | "new";
 
@@ -41,9 +41,13 @@ export type CaptureMetadata<TImplementation extends ImplementationName = Impleme
 export function stableStringify(value: unknown, space?: number): string {
   return JSON.stringify(
     value,
-    (_key, current: unknown) => {
+    function (this: Record<string, unknown>, key: string, current: unknown) {
       if (current === undefined) {
         return { $type: "undefined" };
+      }
+      // `JSON.stringify` calls `Date.toJSON` before the replacer, so the original is read from the holder.
+      if (typeof current === "string" && this[key] instanceof Date) {
+        return { $type: "date", value: current };
       }
       if (typeof current === "number" && !Number.isFinite(current)) {
         return { $type: "number", value: String(current) };
@@ -105,6 +109,9 @@ function reviveSerializedValues(value: unknown): unknown {
     }
     if ("$type" in value && value.$type === "number" && "value" in value && typeof value.value === "string") {
       return Number(value.value);
+    }
+    if ("$type" in value && value.$type === "date" && "value" in value && typeof value.value === "string") {
+      return new Date(value.value);
     }
     return Object.fromEntries(Object.entries(value).map(([key, member]) => [key, reviveSerializedValues(member)]));
   }
