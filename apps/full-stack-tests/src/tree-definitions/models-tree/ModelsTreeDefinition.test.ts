@@ -69,13 +69,15 @@ describe("Models tree", () => {
     vi.spyOn(idsProvider, "getChildSubjectModelIds").mockResolvedValue([]);
     const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockResolvedValue([]);
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
+    const getIdsProvider = vi.fn(() => idsProvider);
+    const tree = createModelsTree({ imodelAccess, hierarchyConfig, getIdsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
 
     await validateHierarchy({ provider, expect: [] });
     expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
     expect(await tree.createSearchTree({ targetItems: [imodel.subject] })).toEqual([]);
     expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
+    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
     expect(queryReader).not.toHaveBeenCalled();
   });
 

@@ -85,9 +85,16 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
  * @beta
  */
 interface CategoriesTreeProps {
-  /** Shared provider for hierarchy and search, using matching iModel, view type, and element filters. Created internally when omitted. */
-  idsProvider?: CategoriesTreeIdsProvider;
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /**
+   * Returns the ID provider for `imodelKey`, with matching view type and element filters.
+   * Different iModel versions need separate providers. Created internally from `imodelAccess` when omitted.
+   */
+  getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
+  /**
+   * Access used for schema checks, search, and the default ID provider.
+   * This factory keeps one provider for this access; create a separate factory for each iModel version.
+   */
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   viewType: "2d" | "3d";
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
@@ -234,7 +241,7 @@ export interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "ide
  * Creates a categories hierarchy definition and label search helpers that share data access, hierarchy configuration, and a unique ID.
  * Creates and shares cached ID providers for the specified view type using the resolved hierarchy configuration.
  *
- * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
+ * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
  *
  * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
@@ -245,7 +252,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     overrides: props.hierarchyConfig,
   });
   const idsProvider =
-    props.idsProvider ??
+    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
     createCategoriesTreeIdsProvider({
       imodelAccess: props.imodelAccess,
       type: props.viewType,

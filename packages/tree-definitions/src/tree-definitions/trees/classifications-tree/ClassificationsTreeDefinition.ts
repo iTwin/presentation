@@ -69,8 +69,16 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
  * @beta
  */
 interface ClassificationsTreeProps {
-  /** Shared provider for hierarchy and search, using matching iModel, classification system, and element filters. Created internally when omitted. */
-  idsProvider?: ClassificationsTreeIdsProvider;
+  /**
+   * Returns the ID provider for `imodelKey`, with matching classification system and element filters.
+   * The definition may be called for different iModel versions, each requiring its own provider.
+   * Defaults to a provider for `imodelAccess`; looking up a provider for another key throws when this callback is omitted.
+   */
+  getIdsProvider?: (imodelKey: string) => ClassificationsTreeIdsProvider;
+  /**
+   * Access used for schema checks, search, and the default ID provider.
+   * The hierarchy provider may evaluate the definition against other versions; searches use only this access.
+   */
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -196,14 +204,14 @@ export interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree,
 /**
  * Creates a classifications hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
  *
- * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
+ * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
  *
  * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
 export function createClassificationsTree(props: ClassificationsTreeProps) {
   const idsProvider =
-    props.idsProvider ??
+    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
     createClassificationsTreeIdsProvider({
       queryExecutor: props.imodelAccess,
       hierarchyConfig: props.hierarchyConfig,
@@ -221,7 +229,16 @@ export function createClassificationsTree(props: ClassificationsTreeProps) {
   };
   const definition: HierarchyDefinition = new ClassificationsTreeDefinition({
     ...sharedProps,
-    getIdsProvider: () => idsProvider,
+    getIdsProvider:
+      props.getIdsProvider ??
+      ((imodelKey) => {
+        if (imodelKey !== props.imodelAccess.imodelKey) {
+          throw new Error(
+            `createClassificationsTree requires getIdsProvider when used with multiple iModel versions. Expected "${props.imodelAccess.imodelKey}", received "${imodelKey}".`,
+          );
+        }
+        return idsProvider;
+      }),
   });
   return {
     definition,

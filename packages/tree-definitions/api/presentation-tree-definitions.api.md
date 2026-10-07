@@ -172,10 +172,11 @@ export namespace CategoriesTreeNode {
 
 // @beta
 interface CategoriesTreeProps {
+    getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
     hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
-    idsProvider?: CategoriesTreeIdsProvider;
-    // (undocumented)
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
     // (undocumented)
     viewType: "2d" | "3d";
@@ -265,10 +266,9 @@ export namespace ClassificationsTreeNode {
 
 // @beta
 interface ClassificationsTreeProps {
+    getIdsProvider?: (imodelKey: string) => ClassificationsTreeIdsProvider;
     // (undocumented)
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
-    idsProvider?: ClassificationsTreeIdsProvider;
-    // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
         imodelKey: string;
     };
@@ -460,10 +460,11 @@ export namespace ModelsTreeNode {
 
 // @beta
 interface ModelsTreeProps {
+    getIdsProvider?: (imodelKey: string) => ModelsTreeIdsProvider;
     hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-    idsProvider?: ModelsTreeIdsProvider;
-    // (undocumented)
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
 }
 

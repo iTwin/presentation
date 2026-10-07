@@ -63,13 +63,15 @@ describe("Categories tree", () => {
       .spyOn(idsProvider, "getAllDefinitionContainersAndCategories")
       .mockResolvedValue({ categories: [], definitionContainers: [] });
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createCategoriesTree({ imodelAccess, viewType: "3d", idsProvider });
+    const getIdsProvider = vi.fn(() => idsProvider);
+    const tree = createCategoriesTree({ imodelAccess, viewType: "3d", getIdsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
 
     await validateHierarchy({ provider, expect: [] });
     expect(hierarchyGetter).toHaveBeenCalled();
     expect(await tree.createSearchTree({ label: "category" })).toEqual([]);
     expect(searchGetter).toHaveBeenCalled();
+    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
     expect(queryReader).not.toHaveBeenCalled();
   });
 

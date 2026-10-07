@@ -193,9 +193,16 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
  * @beta
  */
 interface ModelsTreeProps {
-  /** Shared provider for hierarchy and search, using matching iModel, element filters, and hierarchy configuration. Created internally when omitted. */
-  idsProvider?: ModelsTreeIdsProvider;
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /**
+   * Returns the ID provider for `imodelKey`, with matching element filters and hierarchy configuration.
+   * Different iModel versions need separate providers. Created internally from `imodelAccess` when omitted.
+   */
+  getIdsProvider?: (imodelKey: string) => ModelsTreeIdsProvider;
+  /**
+   * Access used for schema checks, search, and the default ID provider.
+   * This factory keeps one provider for this access; create a separate factory for each iModel version.
+   */
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -304,7 +311,7 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions &
  * Creates a models hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
  * Creates and shares cached ID providers using the resolved hierarchy configuration.
  *
- * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
+ * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
  *
  * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
@@ -315,7 +322,7 @@ export function createModelsTree(props: ModelsTreeProps) {
     overrides: props.hierarchyConfig,
   });
   const idsProvider =
-    props.idsProvider ??
+    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
     createModelsTreeIdsProvider({
       queryExecutor: props.imodelAccess,
       hierarchyConfig,

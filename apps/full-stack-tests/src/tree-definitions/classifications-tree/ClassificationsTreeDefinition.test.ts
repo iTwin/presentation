@@ -10,12 +10,13 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   createBaseIdsProvider,
   createClassificationsTree,
   createClassificationsTreeIdsProvider,
 } from "@itwin/presentation-tree-definitions";
+import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -70,7 +71,8 @@ describe("Classifications tree", () => {
     const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockResolvedValue([]);
     const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockResolvedValue([]);
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createClassificationsTree({ imodelAccess, hierarchyConfig, idsProvider });
+    const getIdsProvider = vi.fn(() => idsProvider);
+    const tree = createClassificationsTree({ imodelAccess, hierarchyConfig, getIdsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
 
     const [tableNode] = await collect(provider.getNodes({ parentNode: undefined }));
@@ -79,9 +81,138 @@ describe("Classifications tree", () => {
     expect(hierarchyGetter).toHaveBeenCalledWith([imodel.table.id]);
     expect(await tree.createSearchTree({ label: "classification" })).toEqual([]);
     expect(searchGetter).toHaveBeenCalled();
+    expect(getIdsProvider).toHaveBeenCalledWith(imodelAccess.imodelKey);
     expect(queryReader.mock.calls.map(([, options]) => options?.restartToken)).not.toContainEqual(
       expect.stringMatching(/^(ClassificationsTreeIdsProvider|ElementModelCategoriesProvider)\//),
     );
+  });
+
+  describe("two iModel versions", () => {
+    async function createVersions() {
+      return createChangedIModels(
+        async (db) =>
+          withEditTxn(db, async (txn) => {
+            await importClassificationSchema(db);
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+            const parent = insertClassification({ txn, modelId: table.id, codeValue: "parent" });
+            const child = insertClassification({
+              txn,
+              modelId: table.id,
+              parentId: parent.id,
+              codeValue: "base child",
+            });
+            return { table, parent, child };
+          }),
+        async (db, base) =>
+          withEditTxn(db, (txn) => {
+            txn.deleteElement(base.child.id);
+            const child = insertClassification({
+              txn,
+              modelId: base.table.id,
+              parentId: base.parent.id,
+              codeValue: "new child",
+            });
+            return { table: base.table, parent: base.parent, child };
+          }),
+      );
+    }
+
+    it("uses separate cached providers in a merged classifications hierarchy", async () => {
+      await using versions = await createVersions();
+      const hierarchyConfig = { rootClassificationSystemCode };
+      const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => {
+        const imodelAccess = createIModelAccess(imodelConnection);
+        const idsProvider = createClassificationsTreeIdsProvider({
+          queryExecutor: imodelAccess,
+          hierarchyConfig,
+          baseIdsProvider: createBaseIdsProvider({
+            queryExecutor: imodelAccess,
+            elementClassName: "BisCore.GeometricElement3d",
+          }),
+        });
+        return { imodelAccess, idsProvider };
+      });
+      const [base, changed] = imodels;
+      expect(versions.base.imodelConnection.iModelId).toBe(versions.changeset1.imodelConnection.iModelId);
+      expect(base.imodelAccess.imodelKey).not.toBe(changed.imodelAccess.imodelKey);
+      await Promise.all(imodels.map(async ({ idsProvider }) => idsProvider.getAllClassifications()));
+      const childGetters = imodels.map(({ idsProvider }) => {
+        expect(idsProvider.dataState).toBe("loaded");
+        return vi.spyOn(idsProvider, "getDirectChildClassifications");
+      });
+      const providersByKey = new Map(
+        imodels.map(({ imodelAccess, idsProvider }) => [imodelAccess.imodelKey, idsProvider]),
+      );
+      const getIdsProvider = vi.fn((imodelKey: string) => {
+        const idsProvider = providersByKey.get(imodelKey);
+        if (!idsProvider) {
+          throw new Error(`Unexpected iModel key: ${imodelKey}`);
+        }
+        return idsProvider;
+      });
+      const tree = createClassificationsTree({ imodelAccess: changed.imodelAccess, hierarchyConfig, getIdsProvider });
+      using provider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition: tree.definition });
+      getIdsProvider.mockClear();
+
+      const tables = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(tables).toMatchObject([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: expect.arrayContaining(
+              imodels.map(({ imodelAccess }) => ({ ...versions.base.table, imodelKey: imodelAccess.imodelKey })),
+            ),
+          },
+        },
+      ]);
+      const parents = await collect(provider.getNodes({ parentNode: tables[0] }));
+      expect(parents).toMatchObject([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: expect.arrayContaining(
+              imodels.map(({ imodelAccess }) => ({ ...versions.base.parent, imodelKey: imodelAccess.imodelKey })),
+            ),
+          },
+        },
+      ]);
+      const children = await collect(provider.getNodes({ parentNode: parents[0] }));
+      expect(children).toMatchObject([
+        {
+          label: "base child",
+          key: { instanceKeys: [{ ...versions.base.child, imodelKey: base.imodelAccess.imodelKey }] },
+        },
+        {
+          label: "new child",
+          key: { instanceKeys: [{ ...versions.changeset1.child, imodelKey: changed.imodelAccess.imodelKey }] },
+        },
+      ]);
+      for (const { imodelAccess } of imodels) {
+        expect(getIdsProvider).toHaveBeenCalledWith(imodelAccess.imodelKey);
+      }
+      for (const childGetter of childGetters) {
+        expect(childGetter).toHaveBeenCalledWith([versions.base.table.id]);
+        expect(childGetter).toHaveBeenCalledWith([versions.base.parent.id]);
+      }
+    });
+
+    it("rejects the default provider lookup for another version after loading merged roots", async () => {
+      await using versions = await createVersions();
+      const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => ({
+        imodelAccess: createIModelAccess(imodelConnection),
+      }));
+      const tree = createClassificationsTree({
+        imodelAccess: imodels[1].imodelAccess,
+        hierarchyConfig: { rootClassificationSystemCode },
+      });
+      using provider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition: tree.definition });
+      const tables = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(tables).toHaveLength(1);
+      await expect(collect(provider.getNodes({ parentNode: tables[0] }))).rejects.toThrow(
+        `createClassificationsTree requires getIdsProvider when used with multiple iModel versions. Expected "${imodels[1].imodelAccess.imodelKey}", received "${imodels[0].imodelAccess.imodelKey}".`,
+      );
+    });
   });
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
