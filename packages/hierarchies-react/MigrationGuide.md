@@ -11,7 +11,7 @@ The most notable changes are:
 
 The sections below describe each area of change with before/after examples.
 
-## Package dependencies and entry points
+## Packaging, dependencies, and entry points
 
 In `1.x` the package exposed three entry points, with `@itwin/itwinui-react` as an optional peer dependency:
 
