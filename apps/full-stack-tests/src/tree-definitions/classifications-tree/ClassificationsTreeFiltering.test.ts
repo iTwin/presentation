@@ -16,7 +16,7 @@ import { createClassificationsTree } from "@itwin/presentation-tree-definitions"
 import { CLASS_NAMES, SearchLimitExceededError } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import {
   importClassificationSchema,
   insertClassification,
@@ -45,6 +45,59 @@ describe("Classifications tree", () => {
   });
 
   describe("Hierarchy search", () => {
+    it("excludes private and template model elements from label and target-item searches", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, async (txn) => {
+          await importClassificationSchema(imodel);
+          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+          const classification = insertClassification({ txn, modelId: table.id, codeValue: "classification" });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+          const element = insertPhysicalElement({
+            txn,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "matching element",
+          });
+          insertElementHasClassificationsRelationship({
+            txn,
+            elementId: element.id,
+            classificationId: classification.id,
+          });
+          const hiddenElements = ["isPrivate", "isTemplate"].map((flag) => {
+            const hiddenModel = insertGeometricModelWithPartition({ txn, codeValue: flag, [flag]: true });
+            const hiddenElement = insertPhysicalElement({
+              txn,
+              modelId: hiddenModel.id,
+              categoryId: category.id,
+              userLabel: `matching ${flag}`,
+            });
+            insertElementHasClassificationsRelationship({
+              txn,
+              elementId: hiddenElement.id,
+              classificationId: classification.id,
+            });
+            return hiddenElement;
+          });
+          return { table, classification, element, hiddenElements };
+        }),
+      );
+      const { imodelConnection, ...keys } = buildIModelResult;
+      for (const search of [{ label: "matching", limit: 1 }, { targetItems: [keys.element, ...keys.hiddenElements] }]) {
+        const { createInstanceKeyPaths } = createClassificationsTree({
+          imodelAccess: createIModelAccess(imodelConnection),
+          hierarchyConfig: defaultHierarchyConfiguration,
+        });
+        expect(await collect(createInstanceKeyPaths(search))).toEqual([
+          {
+            path: [keys.table, keys.classification, { id: keys.element.id, className: CLASS_NAMES.GeometricElement3d }],
+            target: keys.element.id,
+          },
+        ]);
+      }
+    });
+
     describe("Label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { table: InstanceKey; classification: InstanceKey; elements: InstanceKey[] };

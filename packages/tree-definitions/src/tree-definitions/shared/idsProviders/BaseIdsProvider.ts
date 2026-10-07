@@ -19,7 +19,7 @@ import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js"
 
 /**
  * Provides model, category, and sub-category IDs for tree hierarchy definitions.
- * Element data is limited to the configured element class and non-private models.
+ * Element data is limited to the configured element class and non-private, non-template models.
  * @internal
  */
 export interface BaseIdsProvider {
@@ -33,9 +33,9 @@ export interface BaseIdsProvider {
   elementModelCategoriesLoaded(): boolean;
   /** Indicates whether modeled element data has finished loading. */
   modeledElementsLoaded(): boolean;
-  /** Returns IDs of non-private models containing elements of the configured class, including excluded classes. */
+  /** Returns IDs of non-private, non-template models containing elements of the configured class, including excluded classes. */
   getAllModels(): Promise<Array<ModelId>>;
-  /** Returns IDs of non-private plan projection models containing elements of the configured class. */
+  /** Returns IDs of non-private, non-template plan projection models containing elements of the configured class. */
   getPlanProjectionModels(): Promise<Id64Set>;
   /** Returns categories containing non-excluded top-level elements in the specified model. */
   getCategories(props: { modelId: Id64String }): Promise<Id64Set>;

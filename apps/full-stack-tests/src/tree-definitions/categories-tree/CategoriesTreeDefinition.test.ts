@@ -13,7 +13,7 @@ import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, TestSchema } from "../IModelUtils.js";
+import { buildIModel, insertGeometricModelWithPartition, TestSchema } from "../IModelUtils.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -57,6 +57,62 @@ describe("Categories tree", () => {
       describe(`${viewType} view`, () => {
         const { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement } =
           getInsertFunctionByViewType(viewType);
+        it("excludes private and template model content", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) =>
+            withEditTxn(imodel, (txn) => {
+              const model = insertElementsModel({ txn, codeValue: "model" });
+              const category = insertCategory({ txn, codeValue: "shared category" });
+              const element = insertElement({ txn, modelId: model.id, categoryId: category.id });
+              for (const flag of ["isPrivate", "isTemplate"] as const) {
+                const hiddenModel = insertGeometricModelWithPartition({ txn, codeValue: flag, viewType, [flag]: true });
+                insertElement({ txn, modelId: hiddenModel.id, categoryId: category.id });
+                const hiddenCategory = insertCategory({ txn, codeValue: flag });
+                insertElement({ txn, modelId: hiddenModel.id, categoryId: hiddenCategory.id });
+                const container = insertDefinitionContainer({ txn, codeValue: flag });
+                const definitionModel = insertSubModel({
+                  txn,
+                  classFullName: CLASS_NAMES.DefinitionModel,
+                  modeledElementId: container.id,
+                });
+                const containedCategory = insertCategory({
+                  txn,
+                  codeValue: "contained category",
+                  modelId: definitionModel.id,
+                });
+                insertElement({ txn, modelId: hiddenModel.id, categoryId: containedCategory.id });
+              }
+              return { category, element };
+            }),
+          );
+          const { imodelConnection, ...keys } = buildIModelResult;
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+            elements: { nodes: "include" },
+            subCategories: { nodes: "exclude" },
+          });
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.category],
+                supportsFiltering: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    className: keys.element.className,
+                    label: viewType === "3d" ? "Physical Object" : "Drawing Graphic",
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.element],
+                        supportsFiltering: true,
+                        children: false,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
         it("does not show private categories", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>
             withEditTxn(imodel, (txn) => {
