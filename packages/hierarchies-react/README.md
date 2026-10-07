@@ -26,7 +26,7 @@ The package provides different flavors of the same hook for creating and managin
 
 All these hooks return a `UseTreeResult` object with top-level properties and two optional renderer prop bags:
 
-- `isReloading` is a boolean that is `true` while the tree is being reloaded (does not apply to the initial load).
+- `isLoading` is a boolean that is `true` while a tree load is in progress, including the initial load. When `treeRendererProps` is also defined, it indicates a background reload.
 
 - `getNode` function to get a tree node by its id.
 
@@ -192,7 +192,7 @@ function MyTreeComponentInternal({
   if (treeProps.rootErrorRendererProps) {
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-  if (!treeProps.treeRendererProps || treeProps.isReloading) {
+  if (!treeProps.treeRendererProps || treeProps.isLoading) {
     return "Loading...";
   }
 
@@ -260,7 +260,7 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
   if (treeProps.rootErrorRendererProps) {
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-  if (!treeProps.treeRendererProps || treeProps.isReloading) {
+  if (!treeProps.treeRendererProps || treeProps.isLoading) {
     return "Loading";
   }
   return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="Localized tree" />;

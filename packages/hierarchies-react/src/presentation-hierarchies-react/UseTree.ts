@@ -99,10 +99,9 @@ export interface UseTreeProps {
 /** @public */
 export type UseTreeResult = {
   /**
-   * Specifies whether tree is reloading or not. It is set to `false` when initial tree load is in progress to check if
-   * or tree is reloading.
+   * Specifies whether a tree load is in progress.
    */
-  isReloading: boolean;
+  isLoading: boolean;
   /**
    * Get a tree node by id
    */
@@ -337,7 +336,7 @@ function useTreeInternal({
 
   return {
     ...renderProps,
-    isReloading: !!state.model.rootNode.isLoading || isSearching,
+    isLoading: !!state.model.rootNode.isLoading || isSearching,
     getTreeModelNode,
     getNode,
     setFormatter,
