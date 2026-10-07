@@ -399,6 +399,19 @@ function createCanonicalItem({
   context: NormalizationContext;
 }): CanonicalItem {
   const { descriptor, fieldMappings } = createCanonicalDescriptor({ descriptor: sourceDescriptor, context });
+  const sourcePathsByCanonicalKey = new Map<string, string[]>();
+  for (const { canonicalKey, sourcePath } of fieldMappings) {
+    const previousSourcePath = sourcePathsByCanonicalKey.get(canonicalKey);
+    if (previousSourcePath) {
+      const itemIdentity = item.primaryKeys
+        .map(({ className, id }) => `${normalizeFullClassName(className)}:${id}`)
+        .join(", ");
+      throw new Error(
+        `Legacy item '${itemIdentity}' has multiple source fields for canonical key '${canonicalKey}': '${previousSourcePath.join(".")}' and '${sourcePath.join(".")}'.`,
+      );
+    }
+    sourcePathsByCanonicalKey.set(canonicalKey, sourcePath);
+  }
   return {
     descriptor,
     primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
