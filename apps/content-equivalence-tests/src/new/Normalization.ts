@@ -101,18 +101,19 @@ async function getInheritedPropertiesMetadata(
         return undefined;
       }
       const metadata: InheritedPropertyMetadata = { hidden: false };
-      for (let ecClass: EC.Class | undefined = property.class; ecClass; ecClass = ecClass.baseClass) {
-        const classProperty = ecClass.getProperty(field.propertyName);
-        if (!classProperty) {
-          continue;
+      let currentClass: EC.Class | undefined = property.class;
+      while (currentClass) {
+        const classProperty = currentClass.getProperty(field.propertyName);
+        if (classProperty) {
+          if (classProperty.isHidden) {
+            metadata.hidden = true;
+          }
+          if (metadata.categoryLabel === undefined && classProperty.category) {
+            metadata.categoryLabel = classProperty.category.label ?? classProperty.category.name;
+          }
+          metadata.kindOfQuantity ??= classProperty.kindOfQuantity?.fullName;
         }
-        if (classProperty.isHidden) {
-          metadata.hidden = true;
-        }
-        if (metadata.categoryLabel === undefined && classProperty.category) {
-          metadata.categoryLabel = classProperty.category.label ?? classProperty.category.name;
-        }
-        metadata.kindOfQuantity ??= classProperty.kindOfQuantity?.fullName;
+        currentClass = currentClass.baseClass;
       }
       return [key, metadata] as const;
     }),
