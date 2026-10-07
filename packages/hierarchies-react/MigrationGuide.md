@@ -6,7 +6,7 @@ The most notable changes are:
 
 - **New design system.** The delivered tree rendering components moved from [iTwinUI](https://itwinui.bentley.com/) to [StrataKit](https://github.com/iTwin/stratakit) and [`@mui/material`](https://mui.com/). The `TreeRenderer` / `TreeNodeRenderer` components are replaced by `StrataKitTreeRenderer` and related components.
 - **Headless-first entry points.** The root entry point now delivers only the headless hooks and utilities. Rendering components live behind a separate `@itwin/presentation-hierarchies-react/stratakit` entry point.
-- **Restructured tree state hook result.** The result of `useTree` (and its variants) no longer exposes `rootNodes` / `isLoading` directly; instead it returns `treeRendererProps` and `rootErrorRendererProps` prop bags.
+- **Restructured tree state hook result.** Instead of always returning a flat set of properties, the result of `useTree` (and its variants) now groups the previously top-level rendering props into `treeRendererProps` and `rootErrorRendererProps` prop bags, populated based on the current state.
 - **`i18next`-based localization.** Localization no longer takes a `localizedStrings` object. The package now delivers a locale JSON file and resolves strings through a `getLocalizedString` function at runtime.
 
 The sections below describe each area of change with before/after examples.
@@ -47,9 +47,23 @@ import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-r
 import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 ```
 
-## Rendering components: iTwinUI → StrataKit
+## Rendering components and tree state hook result
 
 The iTwinUI-based `TreeRenderer` and `TreeNodeRenderer` components have been removed and replaced by `StrataKitTreeRenderer`. The new component is virtualized, handles selection modes, node editing, and error display internally, and requires a `treeLabel` prop for accessibility.
+
+At the same time, the result returned by `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, and `useIModelUnifiedSelectionTree` was reshaped so that all rendering-related props are grouped into prop bags that can be passed directly to the delivered components.
+
+Key changes:
+
+- `rootNodes`, `expandNode`, `isNodeSelected`, `selectNodes`, `getHierarchyLevelDetails`, and `reloadTree` are no longer top-level properties. They now live inside `treeRendererProps`.
+- `treeRendererProps` is `undefined` during the initial load and defined once root nodes load successfully.
+- When loading root nodes fails, `rootErrorRendererProps` is defined (and `treeRendererProps` is `undefined`); pass it to `StrataKitRootErrorRenderer`.
+
+The recommended order of checks when rendering is:
+
+1. If `rootErrorRendererProps` is defined, render the error state.
+2. If `treeRendererProps` is `undefined`, the component is doing the initial load (`treeRendererProps` is `undefined` and `isLoading` is `true`) - render a loading state.
+3. Otherwise, `treeRendererProps` is defined and the tree can be rendered. If `isLoading` is also `true`, the hierarchy is reloading in the background (`treeRendererProps` is defined and `isLoading` is `true`). You can either render a loading overlay over the tree or stop rendering the tree while it reloads.
 
 ```tsx
 // before
@@ -60,7 +74,13 @@ function MyTreeComponent(/* ... */) {
   if (!rootNodes) {
     return "Loading...";
   }
-  return <TreeRenderer {...state} rootNodes={rootNodes} />;
+
+  return (
+    <div style={{ position: "relative" }}>
+      {isLoading ? <MyLoadingOverlay /> : null}
+      <TreeRenderer {...state} rootNodes={rootNodes} />
+    </div>
+  );
 }
 
 // after
@@ -71,57 +91,59 @@ function MyTreeComponent(/* ... */) {
   if (treeProps.rootErrorRendererProps) {
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-  if (!treeProps.treeRendererProps || treeProps.isReloading) {
+
+  if (!treeProps.treeRendererProps) {
     return "Loading...";
   }
-  return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />;
+  return (
+    <div style={{ position: "relative" }}>
+      {treeProps.isLoading ? <MyLoadingOverlay /> : null}
+      <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />
+    </div>
+  );
 }
 ```
 
 The standalone `TreeNodeRenderer` is no longer exported. Node-level customization is now done through props on `StrataKitTreeRenderer` (see [Customizing node rendering](#customizing-node-rendering)). Similarly, `useSelectionHandler` and `createRenderedTreeNodeData` are no longer exported — selection handling is an internal detail of `StrataKitTreeRenderer`.
 
-## Tree state hook result shape
+### Custom tree renderer
 
-The result returned by `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, and `useIModelUnifiedSelectionTree` was reshaped so that all rendering-related props are grouped into prop bags that can be passed directly to the delivered components.
+If `StrataKitTreeRenderer` does not fit your needs, you can build a custom renderer from the headless result. `treeRendererProps.rootNodes` holds the hierarchy, and the package exports two helpers from the root entry point to work with it:
 
-Key changes:
-
-- `rootNodes`, `expandNode`, `isNodeSelected`, `selectNodes`, `getHierarchyLevelDetails`, and `reloadTree` are no longer top-level properties. They now live inside `treeRendererProps`.
-- `treeRendererProps` is `undefined` during the initial load and defined once root nodes load successfully.
-- When loading root nodes fails, `rootErrorRendererProps` is defined (and `treeRendererProps` is `undefined`); pass it to `StrataKitRootErrorRenderer`.
-- `isLoading` was renamed to `isReloading` and applies only to background reloads, not the initial load.
-- `getNode` and `setFormatter` remain top-level properties.
-
-The recommended order of checks when rendering is:
-
-1. If `rootErrorRendererProps` is defined, render the error state.
-2. If `treeRendererProps` is `undefined`, the component is doing the initial load — render a loading state.
-3. Otherwise, render the tree. `isReloading` may also be `true`, indicating a background reload; use it to show a loading overlay on top of the tree rather than replacing the tree with a loading state.
+- `useFlatTreeItems` flattens the hierarchy into a list suitable for virtualized rendering, including placeholder items for nodes whose children are still loading.
+- `useErrorNodes` returns the nodes that carry errors (see [Errors](#errors)), so you can render them separately.
 
 ```tsx
-// before
-const { rootNodes, expandNode, isNodeSelected, selectNodes, isLoading } = useTree({/* ... */});
-if (!rootNodes) {
-  return "Loading...";
-}
-return (
-  <TreeRenderer
-    rootNodes={rootNodes}
-    expandNode={expandNode}
-    isNodeSelected={isNodeSelected}
-    selectNodes={selectNodes}
-  />
-);
+import { useErrorNodes, useFlatTreeItems } from "@itwin/presentation-hierarchies-react";
+import type { TreeRendererProps } from "@itwin/presentation-hierarchies-react";
 
-// after
-const treeProps = useTree({/* ... */});
-if (treeProps.rootErrorRendererProps) {
-  return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+function MyCustomTree(treeRendererProps: TreeRendererProps) {
+  const { rootNodes, expandNode, selectNodes, isNodeSelected } = treeRendererProps;
+  const flatItems = useFlatTreeItems(rootNodes);
+  const errorNodes = useErrorNodes(rootNodes);
+
+  return (
+    <div>
+      {flatItems.map((item) =>
+        "node" in item ? (
+          <MyTreeItem
+            key={item.id}
+            node={item.node}
+            level={item.level}
+            isSelected={isNodeSelected(item.node.id)}
+            onExpandToggle={(isExpanded) => expandNode(item.node.id, isExpanded)}
+            onSelect={() => selectNodes([item.node.id], "replace")}
+          />
+        ) : (
+          <MyLoadingItem key={item.id} level={item.level} />
+        ),
+      )}
+      {errorNodes.map((node) => (
+        <MyErrorItem key={node.id} node={node} />
+      ))}
+    </div>
+  );
 }
-if (!treeProps.treeRendererProps) {
-  return "Loading...";
-}
-return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />;
 ```
 
 ## Node type rename: `PresentationHierarchyNode` → `TreeNode`
@@ -172,6 +194,7 @@ In `2.0`, actions are React components rather than definition objects:
 
 - The package delivers `TreeNodeFilterAction` (for hierarchy-level filtering) and `TreeNodeRenameAction`, and you can build custom actions by rendering the `TreeActionBase` component.
 - `getActions` was replaced by three callbacks, depending on where the action should appear: `getInlineActions`, `getMenuActions`, and `getContextMenuActions`. Each receives `{ targetNode, selectedNodes }` instead of a single node, so actions can operate on the whole selection.
+- `getInlineActions` renders actions directly on the tree row and accepts at most two actions; use `getMenuActions` and `getContextMenuActions` for anything beyond that.
 
 ```tsx
 // before
@@ -201,9 +224,13 @@ import { StrataKitTreeRenderer, TreeNodeFilterAction } from "@itwin/presentation
 
 ### Node renaming
 
-Node renaming is a new capability in `2.0`. It is provided through the `TreeNodeRenameAction` component and configured via the `getEditingProps` callback on `StrataKitTreeRenderer`. `getEditingProps` must return `undefined` for nodes that do not support renaming, and otherwise return an object with a required `onLabelChanged` callback (and optional `validate` / `labelValidationHint`).
+Node renaming is a new capability in `2.0`. It is configured via the `getEditingProps` callback on `StrataKitTreeRenderer`: return `undefined` for nodes that do not support renaming, and otherwise return an object with a required `onLabelChanged` callback (and optional `validate` / `labelValidationHint`).
+
+`getEditingProps` only enables editing — it does not add a way to enter rename mode. To let users start renaming from the UI, provide a `TreeNodeRenameAction` through one of the action callbacks (e.g. `getMenuActions`).
 
 ```tsx
+import { StrataKitTreeRenderer, TreeNodeRenameAction } from "@itwin/presentation-hierarchies-react/stratakit";
+
 <StrataKitTreeRenderer
   {...treeProps.treeRendererProps}
   treeLabel="My Tree"
@@ -219,7 +246,28 @@ Node renaming is a new capability in `2.0`. It is provided through the `TreeNode
       validate: (newLabel) => /^[A-Za-z0-9\-_ ]+$/.test(newLabel),
     };
   }}
-/>
+  getMenuActions={({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />]}
+/>;
+```
+
+Rename mode can also be entered programmatically through the `StrataKitTreeRenderer` ref. `renameNode` takes a predicate, expands and scrolls to the first matching (already loaded) node, and starts editing it, returning `"success"` or `"node-not-found"`.
+
+```tsx
+import { useRef } from "react";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+
+const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+
+// later, e.g. right after creating a new node:
+treeRef.current?.renameNode((node) => node.id === newNodeId);
+
+<StrataKitTreeRenderer
+  ref={treeRef}
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  getEditingProps={/* ... */}
+/>;
 ```
 
 ## Errors
@@ -229,28 +277,63 @@ In `1.x`, error and informational states (e.g. "result set too large", "no filte
 In `2.0` these states are modeled on the nodes and the hook result instead of as separate tree nodes:
 
 - Node-level errors are carried on the node itself through `TreeNode.errors: ErrorInfo[]`, rather than being separate nodes in the tree. The optional `getTreeNodeErrors` callback on the tree state hooks lets you attach custom `ErrorInfo[]` to a node.
-- Root-level load failures (when the root hierarchy level fails to load) are surfaced through the `rootErrorRendererProps` prop bag returned by the tree state hooks; pass it to `StrataKitRootErrorRenderer` (see [Tree state hook result shape](#tree-state-hook-result-shape)).
+- Root-level load failures (when the root hierarchy level fails to load) are surfaced through the `rootErrorRendererProps` prop bag returned by the tree state hooks; pass it to `StrataKitRootErrorRenderer` (see [Rendering components and tree state hook result](#rendering-components-and-tree-state-hook-result)).
 
 ## Hierarchy search
 
 The prop used to display a subset of the hierarchy was renamed and its return type changed to a tree structure.
 
 - `getFilteredPaths` was renamed to `getSearchPaths`.
-- The expected return type changed from `Promise<HierarchySearchPath[] | undefined>` to `Promise<HierarchySearchTree[] | undefined>`. Use `HierarchySearchTree.createFromPathsList` from `@itwin/presentation-hierarchies` to convert an existing list of paths.
+- The expected return type changed from `Promise<HierarchyFilteringPath[] | undefined>` to `Promise<HierarchySearchTree[] | undefined>`.
+- For a small number of paths, use `HierarchySearchTree.createFromPathsList` from `@itwin/presentation-hierarchies` to convert an existing list of paths.
+- For a large number of paths, prefer `HierarchySearchTree.createBuilder`, which builds the tree incrementally and avoids materializing an intermediate array.
 
 ```tsx
 import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
 
 const treeProps = useIModelUnifiedSelectionTree({
   /* ... */
-  getSearchPaths: useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
+  getSearchPaths: useMemo(() => {
     return async () => {
-      // before: return getSearchTargetPaths({ searchText });
-      // after:
+      // before:
+      return getSearchTargetPaths({ searchText });
+
+      // after (small number of paths):
       return HierarchySearchTree.createFromPathsList(await getSearchTargetPaths({ searchText }));
     };
   }, [searchText]),
 });
+```
+
+For a large number of paths, build the tree with the builder instead, accepting one path at a time:
+
+```tsx
+import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
+
+const getSearchPaths = useMemo(() => {
+  return async () => {
+    const builder = HierarchySearchTree.createBuilder();
+    for (const path of await getSearchTargetPaths({ searchText })) {
+      builder.accept({ path });
+    }
+    return builder.getTree();
+  };
+}, [searchText]);
+```
+
+To highlight the matching text in the displayed node labels, use the `useNodeHighlighting` hook from the root entry point. It returns a `getLabel` function that you pass to `StrataKitTreeRenderer` through `getTreeItemProps`:
+
+```tsx
+import { useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+
+const { getLabel } = useNodeHighlighting({ highlightText: searchText });
+
+<StrataKitTreeRenderer
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  getTreeItemProps={(node) => ({ label: getLabel(node) })}
+/>;
 ```
 
 ## Unified selection
