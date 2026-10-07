@@ -43,7 +43,8 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "catalog:itwinjs-core"
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
@@ -54,7 +55,6 @@
     "eslint": "catalog:build-tools",
     "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
-    "rxjs": "catalog:rxjs",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"
   }

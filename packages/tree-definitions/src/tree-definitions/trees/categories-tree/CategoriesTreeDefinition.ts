@@ -10,6 +10,7 @@ import {
   EMPTY,
   filter,
   firstValueFrom,
+  forkJoin,
   from,
   fromEvent,
   identity,
@@ -36,6 +37,7 @@ import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxj
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
+  createHiddenClassesWhereClauseFactory,
   createIdsSelector,
   createWhereClause,
   getClassesByView,
@@ -243,7 +245,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     imodelAccess: props.imodelAccess,
     type: props.viewType,
     baseIdsProvider: createBaseIdsProvider({
-      queryExecutor: props.imodelAccess,
+      imodelAccess: props.imodelAccess,
       elementClassName: getClassesByView(props.viewType).elementClass,
       excludedElementClassNames:
         hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
@@ -484,6 +486,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       return [];
     }
     assert(CategoriesTreeNodeInternal.isElementNode(parentNode), "Expected parent node to be element node");
+    const createElementsHiddenClassesClause = await createHiddenClassesWhereClauseFactory({
+      schemaProvider: this.#iModelAccess,
+      className: this.#categoryElementClass,
+    });
     // note: we do not apply hierarchy level filtering on this hierarchy level, because it's always
     // hidden - the filter will get applied on the child hierarchy levels
     return [
@@ -515,6 +521,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                   ${createWhereClause({
                     conditions: [
                       createExcludedClassesClause({ alias: "c", excludedClassNames: this.#excludedClasses }),
+                      createElementsHiddenClassesClause("c"),
                     ],
                   })}
                 )`,
@@ -607,16 +614,21 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   }: DefineInstanceNodeChildHierarchyLevelProps & {
     modeledElementCategory: CategoryId;
   }): Promise<HierarchyLevelDefinition> {
-    const [categoryInstanceFilterClauses, modeledCategoryElementsDefinition] = await Promise.all([
-      createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
-      this.createModeledCategoryElementsQuery({
-        modelIds,
-        modeledElementCategory,
-        instanceFilter,
-        createSelectClause,
-        createFilterClauses,
-      }),
-    ]);
+    const [categoryInstanceFilterClauses, modeledCategoryElementsDefinition, createElementsHiddenClassesClause] =
+      await Promise.all([
+        createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
+        this.createModeledCategoryElementsQuery({
+          modelIds,
+          modeledElementCategory,
+          instanceFilter,
+          createSelectClause,
+          createFilterClauses,
+        }),
+        createHiddenClassesWhereClauseFactory({
+          schemaProvider: this.#iModelAccess,
+          className: this.#categoryElementClass,
+        }),
+      ]);
     const categoryDefinition: HierarchyNodesDefinition = {
       fullClassName: this.#categoryClass,
       query: {
@@ -632,6 +644,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               categoryInstanceFilterClauses.where,
               "ce.Parent.Id IS NULL",
               createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
+              createElementsHiddenClassesClause("ce"),
               `this.ECInstanceId <> ${modeledElementCategory}`,
               "NOT this.IsPrivate",
             ],
@@ -793,10 +806,16 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
   }): Promise<HierarchyNodesDefinition> {
-    const instanceFilterClauses = await createFilterClauses({
-      filter: instanceFilter,
-      contentClass: { fullName: CLASS_NAMES.DefinitionContainer, alias: "this" },
-    });
+    const [instanceFilterClauses, createElementsHiddenClassesClause] = await Promise.all([
+      createFilterClauses({
+        filter: instanceFilter,
+        contentClass: { fullName: CLASS_NAMES.DefinitionContainer, alias: "this" },
+      }),
+      createHiddenClassesWhereClauseFactory({
+        schemaProvider: this.#iModelAccess,
+        className: this.#categoryElementClass,
+      }),
+    ]);
     const hasCategory =
       this.#hierarchyConfig.categories.withoutElements === "include"
         ? `
@@ -812,7 +831,15 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
             FROM ${this.#categoryClass} cat
             JOIN ${this.#categoryElementClass} ce ON cat.ECInstanceId = ce.Category.Id
             JOIN ${CLASS_NAMES.Model} gm ON ce.Model.Id = gm.ECInstanceId
-            WHERE cat.Model.Id = dc.ECInstanceId AND NOT cat.IsPrivate AND NOT gm.IsPrivate AND NOT gm.IsTemplate
+            ${createWhereClause({
+              conditions: [
+                "cat.Model.Id = dc.ECInstanceId",
+                "NOT cat.IsPrivate",
+                "NOT gm.IsPrivate",
+                "NOT gm.IsTemplate",
+                createElementsHiddenClassesClause("ce"),
+              ],
+            })}
           )
         `;
     return {
@@ -993,10 +1020,13 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
   }): Promise<HierarchyNodesDefinition> {
-    const instanceFilterClauses = await createFilterClauses({
-      filter: instanceFilter,
-      contentClass: { fullName: this.#categoryClass, alias: "this" },
-    });
+    const [instanceFilterClauses, createElementsHiddenClassesClause] = await Promise.all([
+      createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
+      createHiddenClassesWhereClauseFactory({
+        schemaProvider: this.#iModelAccess,
+        className: this.#categoryElementClass,
+      }),
+    ]);
     const hasChildSubCategories = `
       SELECT 1
       FROM
@@ -1011,7 +1041,14 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       SELECT 1
       FROM ${this.#categoryElementClass} ce
       JOIN ${CLASS_NAMES.Model} m ON ce.Model.Id = m.ECInstanceId
-      ${createWhereClause({ conditions: ["ce.Category.Id = this.ECInstanceId", "NOT m.IsPrivate", "NOT m.IsTemplate"] })}
+      ${createWhereClause({
+        conditions: [
+          "ce.Category.Id = this.ECInstanceId",
+          "NOT m.IsPrivate",
+          "NOT m.IsTemplate",
+          createElementsHiddenClassesClause("ce"),
+        ],
+      })}
       LIMIT 1
     `;
     const hasChildElements = `
@@ -1025,6 +1062,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           "NOT m.IsPrivate",
           "NOT m.IsTemplate",
           createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
+          createElementsHiddenClassesClause("ce"),
           `NOT IFNULL((SELECT 1 FROM ${this.#categoryElementClass} me WHERE me.ECInstanceId = ce.Model.Id LIMIT 1), false)`,
         ],
       })}
@@ -1127,6 +1165,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     allSubModels?: Id64String[];
   }): Promise<{ selectClause: string; bindings: ECSqlBinding[] }> {
+    const createElementsHiddenClassesClause = await createHiddenClassesWhereClauseFactory({
+      schemaProvider: this.#iModelAccess,
+      className: this.#categoryElementClass,
+    });
     const selectClause = await createSelectClause({
       ecClassId: { selector: "this.ECClassId" },
       ecInstanceId: { selector: "this.ECInstanceId" },
@@ -1141,6 +1183,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 conditions: [
                   "ce.Parent.Id = this.ECInstanceId",
                   createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
+                  createElementsHiddenClassesClause("ce"),
                 ],
               })}
               LIMIT 1
@@ -1169,6 +1212,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                           "NOT m.IsPrivate",
                           "NOT m.IsTemplate",
                           createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
+                          createElementsHiddenClassesClause("ce"),
                         ],
                       })}
                       LIMIT 1
@@ -1297,7 +1341,12 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     assert(CategoriesTreeNodeInternal.isElementNode(parentNode), "Expected parent node to be element node");
     const parentCategoryId = parentNode.extendedData.categoryId;
 
-    const [elementInstanceFilterClauses, categoryInstanceFilterClauses, allSubModels] = await Promise.all([
+    const [
+      elementInstanceFilterClauses,
+      categoryInstanceFilterClauses,
+      allSubModels,
+      createElementsHiddenClassesClause,
+    ] = await Promise.all([
       createFilterClauses({
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
@@ -1306,6 +1355,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       this.#idsProvider.modeledElementsLoaded()
         ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
+      createHiddenClassesWhereClauseFactory({
+        schemaProvider: this.#iModelAccess,
+        className: this.#categoryElementClass,
+      }),
     ]);
 
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
@@ -1355,6 +1408,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                   ${createWhereClause({
                     conditions: [
                       createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
+                      createElementsHiddenClassesClause("ce"),
                     ],
                   })}
                 )`,
@@ -1485,6 +1539,10 @@ function createInstanceKeyPathsFromInstanceLabel(
           }),
         ),
       );
+      const createElementsHiddenClassesClause =
+        hierarchyConfig.elements.nodes === "include"
+          ? await createHiddenClassesWhereClauseFactory({ schemaProvider: imodelAccess, className: elementClass })
+          : () => "";
       const ctes = [
         `${CATEGORIES_WITH_LABELS_CTE}(ClassName, ECInstanceId, ChildCount, DisplayLabel) AS (
             SELECT
@@ -1493,6 +1551,7 @@ function createInstanceKeyPathsFromInstanceLabel(
               COUNT(sc.ECInstanceId),
               ${categoryLabelSelectClause}
             FROM ${categoryClass} this
+            JOIN IdSet(?) categoryIdSet ON this.ECInstanceId = categoryIdSet.id
             JOIN ${CLASS_NAMES.SubCategory} sc ON sc.Parent.Id = this.ECInstanceId
             GROUP BY this.ECInstanceId
           )`,
@@ -1515,6 +1574,7 @@ function createInstanceKeyPathsFromInstanceLabel(
                         alias: "this",
                         excludedClassNames: hierarchyConfig.elements.excludedClasses,
                       }),
+                      createElementsHiddenClassesClause("this"),
                     ],
                   })}
                 )`,
@@ -1605,6 +1665,7 @@ function createInstanceKeyPathsFromInstanceLabel(
           ${limit === "unbounded" ? "" : `LIMIT ${(limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT) + 1}`}
         `;
       const bindings = [
+        { type: "idset" as const, value: categories },
         ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
         ...(hierarchyConfig.subCategories.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
         ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: definitionContainers }] : []),
@@ -1701,7 +1762,7 @@ function createSearchPathsForDifferentTypes(
             idsProvider.getDefinitionContainersSearchPaths({ definitionContainerIds: ids.definitionContainerIds }),
           ).pipe(map((path) => ({ path, target: path[path.length - 1].id }))),
           createCategoriesSearchPaths({
-            queryExecutor: imodelAccess,
+            imodelAccess,
             targetCategoryIds: ids.categoryIds,
             uniqueId,
             componentName,
@@ -1725,7 +1786,7 @@ function createSearchPathsForDifferentTypes(
                 mergeMap(
                   (block, chunkIndex) =>
                     createGeometricElementInstanceKeyPaths({
-                      queryExecutor: imodelAccess,
+                      imodelAccess,
                       idsProvider,
                       viewType: props.viewType,
                       targetItems: block,
@@ -1748,7 +1809,7 @@ function createSearchPathsForDifferentTypes(
 
 /** @internal */
 export function createGeometricElementInstanceKeyPaths(props: {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: CategoriesTreeIdsProvider;
   viewType: "2d" | "3d";
   targetItems: Id64Array;
@@ -1764,7 +1825,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     uniqueId,
     componentName,
     idsProvider,
-    queryExecutor,
+    imodelAccess,
     viewType,
     excludedElementClassNames,
   } = props;
@@ -1773,8 +1834,14 @@ export function createGeometricElementInstanceKeyPaths(props: {
     return EMPTY;
   }
 
-  return from(props.idsProvider.getAllModeledElements()).pipe(
-    mergeMap((subModelIds) => {
+  return forkJoin({
+    subModelIds: props.idsProvider.getAllModeledElements(),
+    createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
+      schemaProvider: imodelAccess,
+      className: elementClass,
+    }),
+  }).pipe(
+    mergeMap(({ subModelIds, createElementsHiddenClassesClause }) => {
       const ctes = [
         `CategoriesElementsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
           SELECT
@@ -1785,7 +1852,12 @@ export function createGeometricElementInstanceKeyPaths(props: {
             '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([e].[ECInstanceId]) AS TEXT)
           FROM ${elementClass} e
           JOIN IdSet(?) targetItemIdSet ON e.ECInstanceId = targetItemIdSet.id
-          ${createWhereClause({ conditions: [createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames })] })}
+          ${createWhereClause({
+            conditions: [
+              createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames }),
+              createElementsHiddenClassesClause("e"),
+            ],
+          })}
 
           UNION ALL
 
@@ -1810,7 +1882,12 @@ export function createGeometricElementInstanceKeyPaths(props: {
             )
           FROM CategoriesElementsHierarchy ce
           JOIN ${elementClass} pe ON (pe.ECInstanceId = ce.ParentId OR pe.ECInstanceId = ce.ModelId AND ce.ParentId IS NULL)
-          ${createWhereClause({ conditions: [createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames })] })}
+          ${createWhereClause({
+            conditions: [
+              createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames }),
+              createElementsHiddenClassesClause("pe"),
+            ],
+          })}
         )`,
       ];
       const ecsql = `
@@ -1830,7 +1907,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
         })}
       `;
 
-      return queryExecutor.createQueryReader(
+      return imodelAccess.createQueryReader(
         {
           ctes,
           ecsql,
@@ -1870,7 +1947,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
 
 /** @internal */
 export function createCategoriesSearchPaths(props: {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: CategoriesTreeIdsProvider;
   viewType: "2d" | "3d";
   targetCategoryIds: Id64Array;
@@ -1880,15 +1957,8 @@ export function createCategoriesSearchPaths(props: {
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
 }): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
   const separator = ";";
-  const {
-    targetCategoryIds,
-    uniqueId,
-    componentName,
-    idsProvider,
-    queryExecutor,
-    viewType,
-    excludedElementClassNames,
-  } = props;
+  const { targetCategoryIds, uniqueId, componentName, idsProvider, imodelAccess, viewType, excludedElementClassNames } =
+    props;
   const { categoryClass, elementClass, modelClass } = getClassesByView(viewType);
   if (targetCategoryIds.length === 0) {
     return EMPTY;
@@ -1906,8 +1976,14 @@ export function createCategoriesSearchPaths(props: {
 
   return merge(
     rootCategoriesSearchPaths,
-    from(props.idsProvider.getAllModeledElements()).pipe(
-      mergeMap((subModelIds) => {
+    forkJoin({
+      allModeledElements: props.idsProvider.getAllModeledElements(),
+      createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
+        schemaProvider: imodelAccess,
+        className: elementClass,
+      }),
+    }).pipe(
+      mergeMap(({ allModeledElements: subModelIds, createElementsHiddenClassesClause }) => {
         const ctes = [
           `CategoriesParentsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
             SELECT
@@ -1933,6 +2009,8 @@ export function createCategoriesSearchPaths(props: {
                 "pe.Category.Id <> e.Category.Id",
                 createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames }),
                 createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames }),
+                createElementsHiddenClassesClause("e"),
+                createElementsHiddenClassesClause("pe"),
               ],
             })}
 
@@ -1959,7 +2037,12 @@ export function createCategoriesSearchPaths(props: {
               )
             FROM CategoriesParentsHierarchy ce
             JOIN ${elementClass} pe ON (pe.ECInstanceId = ce.ParentId OR (pe.ECInstanceId = ce.ModelId AND ce.ParentId IS NULL))
-            ${createWhereClause({ conditions: [createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames })] })}
+            ${createWhereClause({
+              conditions: [
+                createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames }),
+                createElementsHiddenClassesClause("pe"),
+              ],
+            })}
           )`,
         ];
         const ecsql = `
@@ -1979,7 +2062,7 @@ export function createCategoriesSearchPaths(props: {
           })}
         `;
 
-        return queryExecutor.createQueryReader(
+        return imodelAccess.createQueryReader(
           {
             ctes,
             ecsql,

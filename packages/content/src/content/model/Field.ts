@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { type EC, type ECSqlBinding, type RelationshipPath, type ValueDescriptor } from "@itwin/presentation-shared";
 import { serializeRelationshipPath } from "./Utils.js";
 
+import type { DeepReadonly, EC, ECSqlBinding, RelationshipPath, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../ContentTarget.js";
-import type { DeepReadonly } from "./Utils.js";
 
 /**
  * Base attributes shared by all field kinds.

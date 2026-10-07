@@ -22,7 +22,7 @@ import { CLASS_NAMES, createModelsTree, SearchLimitExceededError } from "@itwin/
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, insertGeometricModelWithPartition } from "../IModelUtils.js";
+import { buildIModel, importHiddenElementClasses, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./Utils.js";
 
 import type { EditTxn } from "@itwin/core-backend";
@@ -388,7 +388,222 @@ describe("Models tree", () => {
       );
     });
 
-    describe("Label search limits", () => {
+    describe("Hidden element classes and schemas", () => {
+      const searchTags = {
+        visible: "[visible]",
+        hidden: "[hidden]",
+        underHidden: "[under-hidden]",
+        elementLimit: "[element-limit]",
+        modelLimit: "[model-limit]",
+        categoryOfHiddenChildren: "[category-of-hidden-children]",
+        categoryUnderHidden: "[category-under-hidden]",
+      };
+
+      async function setupIModel() {
+        return buildIModel(async (imodel) => {
+          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: `model with visible elements ${searchTags.modelLimit}`,
+            });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const hiddenChildCategory = insertSpatialCategory({
+              txn,
+              codeValue: `category of hidden children ${searchTags.categoryOfHiddenChildren}`,
+            });
+            const blockedCategory = insertSpatialCategory({
+              txn,
+              codeValue: `category under hidden parent ${searchTags.categoryUnderHidden}`,
+            });
+            const visibleElement = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: `visible element ${searchTags.visible} ${searchTags.elementLimit}`,
+            });
+            const hiddenOnlyModel = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: `model with only hidden elements ${searchTags.modelLimit}`,
+            });
+            const hiddenElements = Object.entries(hiddenClassNames).map(([variant, classFullName]) => {
+              const root = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                classFullName,
+                userLabel: `hidden root element (${variant}) ${searchTags.hidden} ${searchTags.elementLimit}`,
+              });
+              const child = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: hiddenChildCategory.id,
+                parentId: visibleElement.id,
+                classFullName,
+                userLabel: `hidden child element (${variant}) ${searchTags.hidden} ${searchTags.elementLimit}`,
+              });
+              const rootBlocked = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                parentId: root.id,
+                userLabel: `visible element under hidden root (${variant}) ${searchTags.underHidden}`,
+              });
+              const nestedBlocked = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: blockedCategory.id,
+                parentId: child.id,
+                userLabel: `visible element under hidden child (${variant}) ${searchTags.underHidden}`,
+              });
+              insertPhysicalElement({ txn, modelId: hiddenOnlyModel.id, categoryId: category.id, classFullName });
+              return { root, child, rootBlocked, nestedBlocked };
+            });
+            return { model, category, hiddenChildCategory, blockedCategory, visibleElement, hiddenElements };
+          });
+        });
+      }
+
+      let setup: Awaited<ReturnType<typeof setupIModel>>;
+
+      beforeAll(async () => {
+        setup = await setupIModel();
+      });
+
+      afterAll(async () => {
+        await setup[Symbol.asyncDispose]();
+      });
+
+      async function search(props: Parameters<ReturnType<typeof createModelsTree>["createSearchTree"]>[0]) {
+        return createModelsTree({
+          imodelAccess: createIModelAccess(setup.imodelConnection),
+          hierarchyConfig: { subjects: { root: "exclude" } },
+        }).createSearchTree({ ...props, revealTargets: true });
+      }
+
+      it.each(["targetItems", "label"] as const)("keeps visible matches using %s", async (input) => {
+        const props = input === "targetItems" ? { targetItems: [setup.visibleElement] } : { label: searchTags.visible };
+        expect(await search(props)).toEqual([
+          {
+            identifier: adjustedModelKey(setup.model),
+            options: { autoExpand: true },
+            children: [
+              {
+                identifier: setup.category,
+                options: { autoExpand: true },
+                children: [
+                  {
+                    identifier: adjustedElementKey(setup.visibleElement),
+                    options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
+
+      it.each(["targetItems", "label"] as const)("omits hidden element targets using %s", async (input) => {
+        const props =
+          input === "targetItems"
+            ? { targetItems: setup.hiddenElements.flatMap(({ root, child }) => [root, child]) }
+            : { label: searchTags.hidden };
+        expect(await search(props)).toEqual([]);
+      });
+
+      it.each(["targetItems", "label"] as const)(
+        "omits visible targets behind hidden ancestors using %s",
+        async (input) => {
+          const props =
+            input === "targetItems"
+              ? {
+                  targetItems: setup.hiddenElements.flatMap(({ rootBlocked, nestedBlocked }) => [
+                    rootBlocked,
+                    nestedBlocked,
+                  ]),
+                }
+              : { label: searchTags.underHidden };
+          expect(await search(props)).toEqual([]);
+        },
+      );
+
+      it.each(["category", "element"] as const)(
+        "omits hidden class grouping targets under a %s",
+        async (parentType) => {
+          const category = parentType === "category" ? setup.category : setup.hiddenChildCategory;
+          const targetItems = setup.hiddenElements.map(({ root, child }): ElementsGroupInfo => {
+            const element = parentType === "category" ? root : child;
+            return {
+              parent:
+                parentType === "category"
+                  ? { type: "category", ids: [category.id], modelIds: [setup.model.id] }
+                  : { type: "element", ids: [setup.visibleElement.id] },
+              groupingNode: createClassGroupingHierarchyNode({
+                elements: [element.id],
+                className: element.className,
+                modelId: setup.model.id,
+                categoryId: category.id,
+              }),
+            };
+          });
+          expect(await search({ targetItems })).toEqual([]);
+        },
+      );
+
+      it.each(["targetItems", "label"] as const)(
+        "omits intermediate categories containing only hidden children using %s",
+        async (input) => {
+          const props =
+            input === "targetItems"
+              ? { targetItems: [setup.hiddenChildCategory] }
+              : { label: searchTags.categoryOfHiddenChildren };
+          expect(await search(props)).toEqual([]);
+        },
+      );
+
+      it.each(["targetItems", "label"] as const)(
+        "omits intermediate categories behind hidden ancestors using %s",
+        async (input) => {
+          const props =
+            input === "targetItems"
+              ? { targetItems: [setup.blockedCategory] }
+              : { label: searchTags.categoryUnderHidden };
+          expect(await search(props)).toEqual([]);
+        },
+      );
+
+      it("does not count hidden element label matches toward the search limit", async () => {
+        expect(await search({ label: searchTags.elementLimit, limit: 1 })).toEqual([
+          {
+            identifier: adjustedModelKey(setup.model),
+            options: { autoExpand: true },
+            children: [
+              {
+                identifier: setup.category,
+                options: { autoExpand: true },
+                children: [
+                  {
+                    identifier: adjustedElementKey(setup.visibleElement),
+                    options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("does not count hidden-only model label matches toward the search limit", async () => {
+        expect(await search({ label: searchTags.modelLimit, limit: 1 })).toEqual([
+          {
+            identifier: adjustedModelKey(setup.model),
+            options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
+          },
+        ]);
+      });
+    });
+
+    describe("label search limits", () => {
       let imodelConnection: IModelConnection;
       let keys: { model: InstanceKey; category: InstanceKey; elements: InstanceKey[] };
 

@@ -64,3 +64,15 @@ type PropsFromParameters<TParams> = TParams extends [infer TProps]
  * @public
  */
 export type Props<TFunc extends (...args: any[]) => any> = PropsFromParameters<OverloadParameters<TFunc>>;
+
+/**
+ * Recursively marks all properties as readonly with no depth limit.
+ * @public
+ */
+export type DeepReadonly<T> = T extends (...args: any[]) => any
+  ? T
+  : T extends (infer U)[]
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T;

@@ -5,7 +5,14 @@
 
 import { bufferTime, filter, firstValueFrom, map, mergeMap, share, Subject } from "rxjs";
 import { SchemaViewPrimitiveType, StrengthDirection } from "@itwin/ecschema-metadata";
-import { type EC, type ECSchemaProvider, normalizeFullClassName } from "@itwin/presentation-shared";
+import {
+  createHiddenClassesTree,
+  type DeepReadonly,
+  type EC,
+  type ECSchemaProvider,
+  type HiddenClassesTreeNode,
+  normalizeFullClassName,
+} from "@itwin/presentation-shared";
 
 import type { SchemaView as CoreSchemaView } from "@itwin/ecschema-metadata";
 import type { CoreECSqlReaderFactory } from "./QueryExecutor.js";
@@ -88,6 +95,9 @@ export function createBatchedSchemaViewGetter<TSchemaView>(imodel: {
  * // the created schema provider may be used in `@itwin/presentation-hierarchies` and other Presentation packages
  * ```
  *
+ * The created provider caches the class hierarchy and hidden classes trees for its lifetime. Create one provider
+ * per iModel and share it between consumers. After schema changes, recreate the provider and consumers holding it.
+ *
  * @public
  */
 export function createECSchemaProvider(
@@ -104,10 +114,17 @@ export function createECSchemaProvider(
     if (cachedClassHierarchyResolver) {
       return cachedClassHierarchyResolver;
     }
-    cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel).then((resolver) => {
-      cachedClassHierarchyResolver = resolver;
-      return resolver;
-    });
+    cachedClassHierarchyResolverPromise ??= createECClassHierarchyResolver(imodel).then(
+      (resolver) => {
+        cachedClassHierarchyResolver = resolver;
+        return resolver;
+      },
+      (e) => {
+        // Drop the rejected promise so a later call can retry.
+        cachedClassHierarchyResolverPromise = undefined;
+        throw e;
+      },
+    );
     return cachedClassHierarchyResolverPromise;
   }
 
@@ -149,12 +166,16 @@ export function createECSchemaProvider(
     return entry;
   }
 
+  const hiddenClassesTrees = new Map<EC.FullClassNameDotNotation, Promise<DeepReadonly<HiddenClassesTreeNode[]>>>();
+
+  async function getSchema(name: string) {
+    const cached = schemaCache.get(name);
+    const entry = await (cached ?? fetchSchema(name));
+    return entry.schemaView.isOutdated ? (await fetchSchema(name)).schema : entry.schema;
+  }
+
   return {
-    async getSchema(name) {
-      const cached = schemaCache.get(name);
-      const entry = await (cached ?? fetchSchema(name));
-      return entry.schemaView.isOutdated ? (await fetchSchema(name)).schema : entry.schema;
-    },
+    getSchema,
     classDerivesFrom(
       derivedClassFullName: EC.FullClassNameDotNotation,
       candidateBaseClassFullName: EC.FullClassNameDotNotation,
@@ -167,6 +188,17 @@ export function createECSchemaProvider(
       return resolver instanceof Promise
         ? resolver.then((r) => r.classDerivesFrom(derivedClassFullName, candidateBaseClassFullName))
         : resolver.classDerivesFrom(derivedClassFullName, candidateBaseClassFullName);
+    },
+    async getHiddenClassesTree(selectClassName) {
+      let tree = hiddenClassesTrees.get(selectClassName);
+      if (!tree) {
+        tree = createHiddenClassesTree({ schemaProvider: { getSchema }, selectClassName }).catch((e) => {
+          hiddenClassesTrees.delete(selectClassName);
+          throw e;
+        });
+        hiddenClassesTrees.set(selectClassName, tree);
+      }
+      return tree;
     },
   };
 }

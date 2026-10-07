@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import type { DeepReadonly } from "@itwin/presentation-shared";
 import type { ContentSource } from "../ContentTarget.js";
 import type { CategoryDefinition } from "./Category.js";
 import type { Field } from "./Field.js";
-import type { DeepReadonly } from "./Utils.js";
 
 /**
  * The schema of the content result. Computed before loading any values.

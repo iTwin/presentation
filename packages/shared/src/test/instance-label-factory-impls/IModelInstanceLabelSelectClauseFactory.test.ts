@@ -44,6 +44,7 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
     createQueryReader: createQueryReaderMock,
     classDerivesFrom: classDerivesFromMock,
     getSchema: async (schemaName: string) => schemaProvider.getSchema(schemaName),
+    getHiddenClassesTree: async () => [],
   };
   const defaultClauseFactory: IInstanceLabelSelectClauseFactory = {
     async createSelectClause() {

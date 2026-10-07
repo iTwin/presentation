@@ -34,6 +34,7 @@ function createIModelAccess(props: {
       return version ? ({ name, version } as unknown as EC.Schema) : undefined;
     },
     classDerivesFrom: async () => false,
+    getHiddenClassesTree: async () => [],
   };
 }
 

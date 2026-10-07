@@ -5,7 +5,7 @@
 
 import { EMPTY, filter, firstValueFrom, from, identity, map, mergeMap, of, reduce, shareReplay, tap } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { eachValueFrom, type EC } from "@itwin/presentation-shared";
+import { eachValueFrom, type EC, type ECSchemaProvider } from "@itwin/presentation-shared";
 import { fromWithRelease, toVoidPromise } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
@@ -19,7 +19,8 @@ import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js"
 
 /**
  * Provides model, category, and sub-category IDs for tree hierarchy definitions.
- * Element data is limited to the configured element class and non-private, non-template models.
+ * Element data is limited to visible classes under the configured element class and non-private, non-template models.
+ * Modeled-element identities are retained regardless of their own class visibility for structural traversal.
  * @internal
  */
 export interface BaseIdsProvider {
@@ -27,21 +28,21 @@ export interface BaseIdsProvider {
   preloadModeledElements(): Promise<void>;
   /** Starts loading element model and category data if it has not been requested yet. Loading errors are ignored. */
   preloadElementModelCategories(): Promise<void>;
-  /** Returns IDs of elements modeling non-empty sub-models, optionally omitting sub-models with only excluded elements. */
+  /** Returns IDs of elements modeling sub-models with visible elements, optionally omitting those with only excluded elements. */
   getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<Id64Set>;
   /** Indicates whether element model and category data has finished loading. */
   elementModelCategoriesLoaded(): boolean;
   /** Indicates whether modeled element data has finished loading. */
   modeledElementsLoaded(): boolean;
-  /** Returns IDs of non-private, non-template models containing elements of the configured class, including excluded classes. */
+  /** Returns IDs of non-private, non-template models containing visible elements of the configured class, including excluded classes. */
   getAllModels(): Promise<Array<ModelId>>;
-  /** Returns IDs of non-private, non-template plan projection models containing elements of the configured class. */
+  /** Returns IDs of non-private, non-template plan projection models containing visible elements of the configured class. */
   getPlanProjectionModels(): Promise<Id64Set>;
-  /** Returns categories containing non-excluded top-level elements in the specified model. */
+  /** Returns categories containing visible, non-excluded top-level elements in the specified model. */
   getCategories(props: { modelId: Id64String }): Promise<Id64Set>;
   /** Returns category IDs of non-excluded elements. */
   getCategoriesContainingNonExcludedElements(): Promise<Id64Set>;
-  /** Returns category IDs of all elements of the configured class, including excluded classes. */
+  /** Returns category IDs of visible elements of the configured class, including excluded classes. */
   getAllCategoriesOfElements(): Promise<Id64Set>;
   /** Yields model IDs containing elements in the specified category. Yields no IDs if no models match the filters. */
   getModels(props: {
@@ -50,7 +51,7 @@ export interface BaseIdsProvider {
     excludeSubModels?: boolean;
     /** Requires the category to contain elements without a parent element in the model. */
     includeOnlyTopMostElementCategory?: boolean;
-    /** Requires the category to contain non-excluded top-level elements in the model. */
+    /** Requires the category to contain visible, non-excluded top-level elements in the model. */
     excludeIfOnlyExcludedClasses?: boolean;
   }): AsyncIterableIterator<ModelId>;
   /** Returns a mapping from category IDs to their sub-category IDs. */
@@ -64,25 +65,26 @@ export interface BaseIdsProvider {
  * @internal
  */
 interface BaseIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
 }
 
 /**
- * Creates a cached ID provider for elements of the specified class and optional excluded classes.
+ * Creates a cached ID provider for visible elements of the specified class and optional excluded classes.
+ * Data is a snapshot for the lifetime of this provider; recreate it after element or schema changes.
  * @internal
  */
 export function createBaseIdsProvider({
   elementClassName,
-  queryExecutor,
+  imodelAccess,
   excludedElementClassNames,
 }: BaseIdsProviderProps): BaseIdsProvider {
   const componentId: GuidString = Guid.createValue();
-  const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor, componentId });
+  const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor: imodelAccess, componentId });
   let modeledElementsProvider: Observable<ModeledElementsProvider> | undefined;
   const elementModelCategoriesProvider = new ElementModelCategoriesProvider({
-    queryExecutor,
+    imodelAccess,
     componentId,
     elementClassName,
     excludedElementClassNames,
@@ -104,7 +106,12 @@ export function createBaseIdsProvider({
     modeledElementsProvider ??= getAllModels().pipe(
       map(
         (allModels) =>
-          new ModeledElementsProvider({ queryExecutor, componentId, elementClassName, nonEmptyModelIds: allModels }),
+          new ModeledElementsProvider({
+            queryExecutor: imodelAccess,
+            componentId,
+            elementClassName,
+            nonEmptyModelIds: allModels,
+          }),
       ),
       shareReplay(),
     );
