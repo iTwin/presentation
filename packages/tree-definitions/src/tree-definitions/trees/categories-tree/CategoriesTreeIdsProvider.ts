@@ -91,7 +91,7 @@ interface CategoriesData {
 
 /**
  * Provides category and definition container IDs and search paths for category tree hierarchies.
- * Getters share cached data and reject on failure. Only `loaded` state permits cached hierarchy queries.
+ * Getters load data on demand, reuse cached results, and reject on failure.
  * @beta
  */
 export interface CategoriesTreeIdsProvider extends Pick<

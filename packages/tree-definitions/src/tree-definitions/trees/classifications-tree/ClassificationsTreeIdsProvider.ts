@@ -66,7 +66,7 @@ interface ClassificationsTreeIdsProviderData {
 
 /**
  * Provides classification IDs and search paths within the configured classification system.
- * Getters share cached data and reject on failure. Only `loaded` state permits cached hierarchy queries.
+ * Getters load data on demand, reuse cached results, and reject on failure.
  * @beta
  */
 export interface ClassificationsTreeIdsProvider {

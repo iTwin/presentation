@@ -53,7 +53,7 @@ interface ModelInfo {
 
 /**
  * Provides subject and model IDs and search paths for model tree hierarchies.
- * Getters share cached data and reject on failure. Only `loaded` state permits cached hierarchy queries.
+ * Getters load data on demand, reuse cached results, and reject on failure.
  * @beta
  */
 export interface ModelsTreeIdsProvider extends Pick<
