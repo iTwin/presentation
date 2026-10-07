@@ -11,10 +11,10 @@ import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import type { GuidString } from '@itwin/core-bentley';
 import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
-import type { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import type { Id64Array } from '@itwin/core-bentley';
 import type { Id64String } from '@itwin/core-bentley';
+import type { IModelInstanceKey } from '@itwin/presentation-hierarchies';
 import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
@@ -92,10 +92,27 @@ interface CategoriesTreeProps {
 }
 
 // @beta
+type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+
+// @beta
+type CategoriesTreeSearchPathClasses = "BisCore.DefinitionContainer" | "BisCore.SpatialCategory" | "BisCore.DrawingCategory" | "BisCore.SubCategory" | "BisCore.GeometricModel3d" | "BisCore.GeometricModel2d" | "BisCore.GeometricElement3d" | "BisCore.GeometricElement2d";
+
+// @beta
+type CategoriesTreeSearchPathKey = IModelInstanceKey & {
+    className: CategoriesTreeSearchPathClasses;
+};
+
+// @beta
 interface CategoriesTreeSearchProps {
     abortSignal?: AbortSignal;
     label: string;
     limit?: number | "unbounded";
+}
+
+// @beta
+interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+    children?: CategoriesTreeSearchTree[];
+    identifier: CategoriesTreeSearchPathKey;
 }
 
 // @beta
@@ -148,6 +165,17 @@ interface ClassificationsTreeSearchOptions {
 }
 
 // @beta
+type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+
+// @beta
+type ClassificationsTreeSearchPathClasses = "ClassificationSystems.Classification" | "ClassificationSystems.ClassificationTable" | "BisCore.GeometricElement3d";
+
+// @beta
+type ClassificationsTreeSearchPathKey = IModelInstanceKey & {
+    className: ClassificationsTreeSearchPathClasses;
+};
+
+// @beta
 type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & ({
     label: string;
 } | {
@@ -155,39 +183,45 @@ type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & ({
 });
 
 // @beta
+interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+    children?: ClassificationsTreeSearchTree[];
+    identifier: ClassificationsTreeSearchPathKey;
+}
+
+// @beta
 export function createCategoriesTree(props: CategoriesTreeProps): {
     definition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) => AsyncIterableIterator<{
-        path: HierarchyNodeIdentifiersPath;
+        path: CategoriesTreeSearchPath;
         target: Id64String;
     }>;
     createSearchTree: (searchProps: CategoriesTreeSearchProps & {
         revealTargets?: boolean;
-    }) => Promise<HierarchySearchTree[]>;
+    }) => Promise<CategoriesTreeSearchTree[]>;
 };
 
 // @beta
 export function createClassificationsTree(props: ClassificationsTreeProps): {
     definition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) => AsyncIterableIterator<{
-        path: HierarchyNodeIdentifiersPath;
+        path: ClassificationsTreeSearchPath;
         target: Id64String;
     }>;
     createSearchTree: (searchProps: ClassificationsTreeSearchProps & {
         revealTargets?: boolean;
-    }) => Promise<HierarchySearchTree[]>;
+    }) => Promise<ClassificationsTreeSearchTree[]>;
 };
 
 // @beta
 export function createModelsTree(props: ModelsTreeProps): {
     definition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
-        path: HierarchyNodeIdentifiersPath;
+        path: ModelsTreeSearchPath;
         target: Id64String | ElementsGroupInfo;
     }>;
     createSearchTree: (searchProps: ModelsTreeSearchProps & {
         revealTargets?: boolean;
-    }) => Promise<HierarchySearchTree[]>;
+    }) => Promise<ModelsTreeSearchTree[]>;
 };
 
 // @beta
@@ -271,8 +305,20 @@ interface ModelsTreeProps {
 // @beta
 interface ModelsTreeSearchOptions {
     abortSignal?: AbortSignal;
+    includeOnlyVisibleNodeInstanceKeys?: boolean;
     limit?: number | "unbounded";
 }
+
+// @beta
+type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+
+// @beta
+type ModelsTreeSearchPathClasses = "BisCore.Subject" | "BisCore.GeometricModel3d" | "BisCore.SpatialCategory" | "BisCore.GeometricElement3d";
+
+// @beta
+type ModelsTreeSearchPathKey = IModelInstanceKey & {
+    className: ModelsTreeSearchPathClasses;
+};
 
 // @beta
 type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
@@ -280,6 +326,12 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
 } | {
     label: string;
 });
+
+// @beta
+interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+    children?: ModelsTreeSearchTree[];
+    identifier: ModelsTreeSearchPathKey;
+}
 
 // (No @packageDocumentation comment for this package)
 

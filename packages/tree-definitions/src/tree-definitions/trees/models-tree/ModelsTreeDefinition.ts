@@ -47,7 +47,7 @@ import {
 import { createModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
-import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
+import type { Observable, OperatorFunction } from "rxjs";
 import type { GuidString, Id64Array, Id64String } from "@itwin/core-bentley";
 import type {
   ClassGroupingNodeKey,
@@ -56,8 +56,8 @@ import type {
   GroupingHierarchyNode,
   HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyNodeIdentifiersPath,
   HierarchyNodesDefinition,
+  IModelInstanceKey,
   InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
@@ -201,6 +201,39 @@ interface ModelsTreeProps {
   uniqueId?: GuidString;
 }
 
+/**
+ * Full class names of instances that may appear in a models hierarchy search path.
+ * @beta
+ */
+type ModelsTreeSearchPathClasses =
+  | "BisCore.Subject"
+  | "BisCore.GeometricModel3d"
+  | "BisCore.SpatialCategory"
+  | "BisCore.GeometricElement3d";
+
+/**
+ * Key of a single instance in a models hierarchy search path, with `className` narrowed to `ModelsTreeSearchPathClasses`.
+ * @beta
+ */
+export type ModelsTreeSearchPathKey = IModelInstanceKey & { className: ModelsTreeSearchPathClasses };
+
+/**
+ * A path of instance keys from a root node to a search target in a models hierarchy.
+ * @beta
+ */
+export type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+
+/**
+ * A `HierarchySearchTree` whose entries identify only the instance classes that a models hierarchy search can return.
+ * @beta
+ */
+export interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+  /** Key of the instance this tree entry represents. */
+  identifier: ModelsTreeSearchPathKey;
+  /** Child entries representing the next level(s) in the search paths. */
+  children?: ModelsTreeSearchTree[];
+}
+
 /** @internal */
 interface ModelsTreeDefinitionProps extends ModelsTreeProps {
   idsProvider: ModelsTreeIdsProvider;
@@ -216,12 +249,20 @@ export interface ElementsGroupInfo {
 }
 
 /**
- * Limits and cancellation options for models hierarchy searches.
+ * Visibility, limits, and cancellation options for models hierarchy searches.
  * @beta
  */
 interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
+  /**
+   * Includes only visible hierarchy node instance keys in the returned search paths.
+   * Defaults to `false`.
+   *
+   * Leave disabled when passing results to `createIModelHierarchyProvider`, which requires hidden entries
+   * for traversal.
+   */
+  includeOnlyVisibleNodeInstanceKeys?: boolean;
   /** Stops loading further paths when aborted. */
   abortSignal?: AbortSignal;
 }
@@ -1045,8 +1086,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
    * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
    * @throws An error if the configured search limit is exceeded.
    */
-  public static createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
-    return eachValueFrom<{ path: HierarchyNodeIdentifiersPath; target: Id64String | ElementsGroupInfo }>(
+  public static createInstanceKeyPaths(
+    props: ModelsTreeInstanceKeyPathsProps,
+  ): AsyncIterableIterator<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }> {
+    return eachValueFrom<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }>(
       defer(() => {
         const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
         const hierarchyConfig = mergeWithDefaults({
@@ -1071,7 +1114,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
    * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
    * @throws An error if the configured search limit is exceeded.
    */
-  public static async createSearchTree(props: ModelsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
+  public static async createSearchTree(
+    props: ModelsTreeInstanceKeyPathsProps & { revealTargets?: boolean },
+  ): Promise<ModelsTreeSearchTree[]> {
     const builder = HierarchySearchTree.createBuilder();
     await firstValueFrom(
       defer(() => {
@@ -1112,7 +1157,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ),
       { defaultValue: builder },
     );
-    return builder.getTree();
+    // the builder only receives `ModelsTreeSearchPath` entries, so the tree identifiers are guaranteed to be of those classes
+    return builder.getTree() as ModelsTreeSearchTree[];
   }
 
   private supportsFiltering() {
@@ -1146,7 +1192,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String | ElementsGroupInfo }> {
+}): Observable<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }> {
   const {
     targetItems,
     chunkIndex,
@@ -1281,7 +1327,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     }),
     catchBeSQLiteInterrupts,
     releaseMainThreadOnItemsCount(300),
-    map((row) => parseElementsQueryRow(row, groupInfos, separator, elementClassName)),
+    map((row) => parseElementsQueryRow({ row, groupInfos, separator })),
     mergeMap(({ elementHierarchyPath, groupingInfo }) =>
       from(idsProvider.createUpToModelInstanceKeyPaths(elementHierarchyPath[0].id)).pipe(
         map((modelPath) => {
@@ -1293,13 +1339,16 @@ export function createGeometricElementInstanceKeyPaths(props: {
   );
 }
 
-function parseElementsQueryRow(
-  row: ECSqlQueryRow,
-  groupInfos: ElementsGroupInfo[],
-  separator: string,
-  elementClassName: EC.FullClassNameDotNotation,
-) {
-  const path = parseQueriedPath({ queriedPathRaw: row[0], elementClassName, separator });
+function parseElementsQueryRow({
+  row,
+  groupInfos,
+  separator,
+}: {
+  row: ECSqlQueryRow;
+  groupInfos: ElementsGroupInfo[];
+  separator: string;
+}) {
+  const path = parseQueriedPath({ queriedPathRaw: row[0], separator });
   return { elementHierarchyPath: path, groupingInfo: row[1] === -1 ? undefined : groupInfos[row[1]] };
 }
 
@@ -1312,7 +1361,7 @@ export function createCategoriesSearchPaths(props: {
   componentName: string;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+}): Observable<{ path: ModelsTreeSearchPath; target: Id64String }> {
   const separator = ";";
   const {
     targetCategoryIds,
@@ -1445,9 +1494,7 @@ export function createCategoriesSearchPaths(props: {
       }),
       catchBeSQLiteInterrupts,
       targetCategoryIds.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
-      map((row) => {
-        return parseQueriedPath({ queriedPathRaw: row[0], elementClassName, separator });
-      }),
+      map((row) => parseQueriedPath({ queriedPathRaw: row[0], separator })),
       mergeMap((categoryHierarchyPath) =>
         from(idsProvider.createUpToModelInstanceKeyPaths(categoryHierarchyPath[0].id)).pipe(
           map((pathUpToCategory) => {
@@ -1462,19 +1509,17 @@ export function createCategoriesSearchPaths(props: {
 
 function parseQueriedPath({
   queriedPathRaw,
-  elementClassName,
   separator,
 }: {
   queriedPathRaw: string;
-  elementClassName: EC.FullClassNameDotNotation;
   separator: string;
-}): HierarchyNodeIdentifiersPath {
-  const path = new Array<InstanceKey>();
+}): ModelsTreeSearchPath {
+  const path: ModelsTreeSearchPath = [];
   const queriedPath: string[] = queriedPathRaw.split(separator);
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:
-        path.push({ className: elementClassName, id: queriedPath[i + 1] });
+        path.push({ className: CLASS_NAMES.GeometricElement3d, id: queriedPath[i + 1] });
         break;
       case CATEGORY_CLASS_NAME_QUERY_ALIAS:
         path.push({ className: CLASS_NAMES.SpatialCategory, id: queriedPath[i + 1] });
@@ -1530,10 +1575,10 @@ function createSearchPathsForDifferentTypes(
   },
 ): OperatorFunction<
   { key: Id64String; type: number } | { key: ElementsGroupInfo; type: typeof ELEMENT_TYPE_AS_NUMBER },
-  ObservedValueOf<ReturnType<typeof createGeometricElementInstanceKeyPaths>>
+  { path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }
 > {
-  return (obs) =>
-    obs.pipe(
+  return (obs) => {
+    const paths = obs.pipe(
       reduce(
         (acc, value) => {
           if (value.type === SUBJECT_TYPE_AS_NUMBER) {
@@ -1612,6 +1657,34 @@ function createSearchPathsForDifferentTypes(
         );
       }),
     );
+    if (!props.includeOnlyVisibleNodeInstanceKeys) {
+      return paths;
+    }
+    return defer(async () => props.idsProvider.getHiddenModelIds()).pipe(
+      switchMap((hiddenModelIds) =>
+        paths.pipe(
+          map(({ path, target }) => {
+            const targetEntry = path[path.length - 1];
+            const visiblePath = path.filter((key, index) => {
+              if (key.className !== CLASS_NAMES.GeometricModel3d) {
+                return true;
+              }
+              if (hiddenModelIds.has(key.id)) {
+                return false;
+              }
+              if (path[index - 1]?.className === CLASS_NAMES.GeometricElement3d) {
+                // Sub-models follow their modeled element in the path and are always hidden in the hierarchy.
+                return false;
+              }
+              return true;
+            });
+            return visiblePath[visiblePath.length - 1] === targetEntry ? { path: visiblePath, target } : undefined;
+          }),
+          filter((result) => result !== undefined),
+        ),
+      ),
+    );
+  };
 }
 
 function createInstanceKeyPathsFromInstanceLabelObs(
@@ -1621,7 +1694,7 @@ function createInstanceKeyPathsFromInstanceLabelObs(
     componentName: string;
     hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
   },
-) {
+): Observable<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }> {
   const { labelsFactory, label, imodelAccess, limit, hierarchyConfig } = props;
   return defer(async () => {
     const [elementLabelSelectClause, createElementVisibilityClause] = await Promise.all([

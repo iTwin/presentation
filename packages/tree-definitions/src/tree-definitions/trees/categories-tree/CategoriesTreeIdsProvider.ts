@@ -26,10 +26,11 @@ import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/U
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
-import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
+import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
 interface DefinitionContainerInfo {
   modelId: Id64String;
@@ -89,13 +90,13 @@ export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
     includeEmpty?: boolean;
   }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
   /** Yields root-to-sub-category paths, omitting sub-categories whose parent category has only one sub-category. */
-  getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<CategoriesTreeSearchPath>;
   /** Yields root-to-definition-container paths, including each container itself. Unknown IDs yield empty paths. */
   getDefinitionContainersSearchPaths(props: {
     definitionContainerIds: Id64Arg;
-  }): AsyncIterableIterator<HierarchyNodeIdentifiersPath>;
+  }): AsyncIterableIterator<CategoriesTreeSearchPath>;
   /** Returns the category's ancestor path, excluding the category itself. Returns an empty path for root or unknown categories. */
-  getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Promise<HierarchyNodeIdentifiersPath>;
+  getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Promise<CategoriesTreeSearchPath>;
   /** Returns all category and definition container IDs, excluding empty entries unless requested. */
   getAllDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
@@ -128,7 +129,7 @@ export function createCategoriesTreeIdsProvider({
   } = { definitionContainersData: undefined, categoriesData: undefined, isDefinitionContainerSupported: undefined };
   const definitionContainerInstanceKeyPaths: Map<
     DefinitionContainerId,
-    Observable<HierarchyNodeIdentifiersPath>
+    Observable<CategoriesTreeSearchPath>
   > = new Map();
   const { categoryClass } = getClassesByView(type);
   let defContainersDataLoaded = false;
@@ -376,7 +377,7 @@ export function createCategoriesTreeIdsProvider({
     definitionContainerIds,
   }: {
     definitionContainerIds: Id64Arg;
-  }): Observable<HierarchyNodeIdentifiersPath> {
+  }): Observable<CategoriesTreeSearchPath> {
     return getDefinitionContainersInfo().pipe(
       mergeMap((definitionContainersInfo) =>
         fromWithRelease({ source: definitionContainerIds, releaseOnCount: 200 }).pipe(
@@ -414,7 +415,7 @@ export function createCategoriesTreeIdsProvider({
     categoryId,
   }: {
     categoryId: Id64String;
-  }): Observable<HierarchyNodeIdentifiersPath> {
+  }): Observable<CategoriesTreeSearchPath> {
     return getCategoryData().pipe(
       mergeMap(({ categoriesWithModel, categoriesGroupedByModel }) => {
         if (categoriesGroupedByModel.size === 0) {
@@ -488,7 +489,7 @@ export function createCategoriesTreeIdsProvider({
       subCategoryIds,
     }: {
       subCategoryIds: Id64Arg;
-    }): AsyncIterableIterator<HierarchyNodeIdentifiersPath> {
+    }): AsyncIterableIterator<CategoriesTreeSearchPath> {
       if (Id64.sizeOf(subCategoryIds) === 0) {
         return (async function* () {})();
       }

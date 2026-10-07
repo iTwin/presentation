@@ -17,7 +17,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { createIModelHierarchyProvider, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES, createModelsTree, SearchLimitExceededError } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -28,7 +28,6 @@ import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./
 import type { EditTxn } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import type { InstanceKey } from "@itwin/presentation-shared";
 import type {
   ElementsGroupInfo,
@@ -151,6 +150,168 @@ describe("Models tree", () => {
           })),
         ),
       );
+    });
+
+    it("excludes hidden entries from search paths only when requested", async () => {
+      await using setupResult = await buildIModel(async (imodel, testSchema) =>
+        withEditTxn(imodel, (txn) => {
+          const subject = insertSubject({ txn, codeValue: "child subject", parentId: IModel.rootSubjectId });
+          const physicalPartition = insertPhysicalPartition({
+            txn,
+            codeValue: "hidden physical model",
+            parentId: subject.id,
+            jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+          });
+          const graphicalPartition = insertPhysicalPartition({
+            txn,
+            codeValue: "hidden graphical model",
+            parentId: subject.id,
+            jsonProperties: { GraphicalPartition3d: { Model: { Content: false } } },
+          });
+          const physicalModel = insertPhysicalSubModel({ txn, modeledElementId: physicalPartition.id });
+          const graphicalModel = insertPhysicalSubModel({ txn, modeledElementId: graphicalPartition.id });
+          const visibleModel = insertPhysicalModelWithPartition({
+            txn,
+            codeValue: "visible model",
+            partitionParentId: subject.id,
+          });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const physicalElement = insertPhysicalElement({
+            txn,
+            modelId: physicalModel.id,
+            categoryId: category.id,
+            userLabel: "matching physical element",
+          });
+          const graphicalElement = insertPhysicalElement({
+            txn,
+            modelId: graphicalModel.id,
+            categoryId: category.id,
+            userLabel: "matching graphical element",
+          });
+          const visibleElement = insertPhysicalElement({
+            txn,
+            modelId: visibleModel.id,
+            categoryId: category.id,
+            userLabel: "matching visible element",
+          });
+          const modeledElement = insertPhysicalElement({
+            txn,
+            classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+            modelId: visibleModel.id,
+            categoryId: category.id,
+            userLabel: "matching modeled element",
+          });
+          const subModel = insertPhysicalSubModel({ txn, modeledElementId: modeledElement.id });
+          const subModelElement = insertPhysicalElement({
+            txn,
+            modelId: subModel.id,
+            categoryId: category.id,
+            userLabel: "matching sub-model element",
+          });
+          return {
+            subject,
+            physicalModel,
+            graphicalModel,
+            visibleModel,
+            category,
+            physicalElement,
+            graphicalElement,
+            visibleElement,
+            modeledElement,
+            subModel,
+            subModelElement,
+          };
+        }),
+      );
+      const imodelAccess = createIModelAccess(setupResult.imodelConnection);
+      const { createInstanceKeyPaths, createSearchTree } = createModelsTree({
+        imodelAccess,
+        hierarchyConfig: { subjects: { root: "exclude" } },
+      });
+      for (const includeOnlyVisibleNodeInstanceKeys of [true, false]) {
+        const {
+          subject,
+          physicalModel,
+          graphicalModel,
+          visibleModel,
+          category,
+          physicalElement,
+          graphicalElement,
+          visibleElement,
+          modeledElement,
+          subModel,
+          subModelElement,
+        } = setupResult;
+        const subjectPath = [subject];
+        const visibleModelPath = [...subjectPath, adjustedModelKey(visibleModel), category];
+        const expectedPaths = [
+          {
+            path: [
+              ...subjectPath,
+              ...(!includeOnlyVisibleNodeInstanceKeys ? [adjustedModelKey(physicalModel)] : []),
+              category,
+              adjustedElementKey(physicalElement),
+            ],
+            target: physicalElement.id,
+          },
+          {
+            path: [
+              ...subjectPath,
+              ...(!includeOnlyVisibleNodeInstanceKeys ? [adjustedModelKey(graphicalModel)] : []),
+              category,
+              adjustedElementKey(graphicalElement),
+            ],
+            target: graphicalElement.id,
+          },
+          { path: [...visibleModelPath, adjustedElementKey(visibleElement)], target: visibleElement.id },
+          { path: [...visibleModelPath, adjustedElementKey(modeledElement)], target: modeledElement.id },
+          {
+            path: [
+              ...visibleModelPath,
+              adjustedElementKey(modeledElement),
+              ...(!includeOnlyVisibleNodeInstanceKeys ? [adjustedModelKey(subModel)] : []),
+              adjustedElementKey(subModelElement),
+            ],
+            target: subModelElement.id,
+          },
+        ];
+        const searchProps = { label: "matching", includeOnlyVisibleNodeInstanceKeys };
+        const paths = await collect(createInstanceKeyPaths(searchProps));
+        expect(paths).toHaveLength(5);
+        expect(paths).toEqual(expect.arrayContaining(expectedPaths));
+        const expectedTree = await HierarchySearchTree.createFromPathsList(expectedPaths);
+        expect(await createSearchTree(searchProps)).toEqual(expectedTree);
+
+        const targetSearchProps = {
+          targetItems: [
+            physicalModel,
+            graphicalModel,
+            visibleModel,
+            subModel,
+            physicalElement,
+            graphicalElement,
+            visibleElement,
+            modeledElement,
+            subModelElement,
+          ],
+          includeOnlyVisibleNodeInstanceKeys,
+        };
+        const expectedTargetPaths = [
+          ...expectedPaths,
+          { path: [...subjectPath, adjustedModelKey(visibleModel)], target: visibleModel.id },
+          ...(!includeOnlyVisibleNodeInstanceKeys
+            ? [
+                { path: [...subjectPath, adjustedModelKey(physicalModel)], target: physicalModel.id },
+                { path: [...subjectPath, adjustedModelKey(graphicalModel)], target: graphicalModel.id },
+              ]
+            : []),
+        ];
+        const targetPaths = await collect(createInstanceKeyPaths(targetSearchProps));
+        expect(targetPaths).toHaveLength(expectedTargetPaths.length);
+        expect(targetPaths).toEqual(expect.arrayContaining(expectedTargetPaths));
+        const expectedTargetTree = await HierarchySearchTree.createFromPathsList(expectedTargetPaths);
+        expect(await createSearchTree(targetSearchProps)).toEqual(expectedTargetTree);
+      }
     });
 
     it("honors modeled-element exclusion options", async () => {
@@ -1513,11 +1674,11 @@ describe("Models tree", () => {
                 options: { autoExpand: true },
                 children: [
                   {
-                    identifier: { ...x.rootElement1, className: "TestSchema.SubModelablePhysicalObject" },
+                    identifier: { ...x.rootElement1, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                   {
-                    identifier: { ...x.rootElement3, className: "TestSchema.SubModelablePhysicalObject" },
+                    identifier: { ...x.rootElement3, className: CLASS_NAMES.GeometricElement3d },
                     options: { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } },
                   },
                 ],

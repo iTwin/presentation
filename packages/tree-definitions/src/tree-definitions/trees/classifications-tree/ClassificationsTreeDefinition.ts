@@ -47,8 +47,8 @@ import type {
   DefineRootHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyNodeIdentifiersPath,
   HierarchyNodesDefinition,
+  IModelInstanceKey,
   InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
@@ -159,6 +159,38 @@ type ClassificationsTreeInstanceKeyPathsProps =
  */
 type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions &
   ({ label: string } | { targetItems: Array<InstanceKey> });
+
+/**
+ * Full class names of instances that may appear in a classifications hierarchy search path.
+ * @beta
+ */
+type ClassificationsTreeSearchPathClasses =
+  | "ClassificationSystems.Classification"
+  | "ClassificationSystems.ClassificationTable"
+  | "BisCore.GeometricElement3d";
+
+/**
+ * Key of a single instance in a classifications hierarchy search path, with `className` narrowed to `ClassificationsTreeSearchPathClasses`.
+ * @beta
+ */
+export type ClassificationsTreeSearchPathKey = IModelInstanceKey & { className: ClassificationsTreeSearchPathClasses };
+
+/**
+ * A path of instance keys from a root node to a search target in a classifications hierarchy.
+ * @beta
+ */
+export type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+
+/**
+ * A `HierarchySearchTree` whose entries identify only the instance classes that a classifications hierarchy search can return.
+ * @beta
+ */
+export interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
+  /** Key of the instance this tree entry represents. */
+  identifier: ClassificationsTreeSearchPathKey;
+  /** Child entries representing the next level(s) in the search paths. */
+  children?: ClassificationsTreeSearchTree[];
+}
 
 /**
  * Creates a classifications hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
@@ -629,7 +661,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
    * @throws An error if the configured search limit is exceeded.
    */
   public static createInstanceKeyPaths(props: ClassificationsTreeInstanceKeyPathsProps) {
-    return eachValueFrom<{ path: HierarchyNodeIdentifiersPath; target: Id64String }>(
+    return eachValueFrom<{ path: ClassificationsTreeSearchPath; target: Id64String }>(
       defer(() => {
         const componentInfo = { uniqueId: props.uniqueId ?? Guid.createValue(), componentName: this.#componentName };
         if ("label" in props) {
@@ -645,7 +677,9 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
    * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
    * @throws An error if the configured search limit is exceeded.
    */
-  public static async createSearchTree(props: ClassificationsTreeInstanceKeyPathsProps & { revealTargets?: boolean }) {
+  public static async createSearchTree(
+    props: ClassificationsTreeInstanceKeyPathsProps & { revealTargets?: boolean },
+  ): Promise<ClassificationsTreeSearchTree[]> {
     const builder = HierarchySearchTree.createBuilder();
     await firstValueFrom(
       defer(() => {
@@ -665,7 +699,8 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       ),
       { defaultValue: builder },
     );
-    return builder.getTree();
+    // the builder only receives `ClassificationsTreeSearchPath` entries, so the tree identifiers are guaranteed to be of those classes
+    return builder.getTree() as ClassificationsTreeSearchTree[];
   }
 }
 
@@ -1005,7 +1040,7 @@ function createGeometricElementInstanceKeyPaths(props: {
   componentName: string;
   chunkIndex: number;
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
-}): Observable<{ path: HierarchyNodeIdentifiersPath; target: Id64String }> {
+}): Observable<{ path: ClassificationsTreeSearchPath; target: Id64String }> {
   const { targetItems, imodelAccess, idsProvider, uniqueId, componentName, chunkIndex, excludedElementClassNames } =
     props;
   if (targetItems.length === 0) {
@@ -1074,7 +1109,7 @@ function createGeometricElementInstanceKeyPaths(props: {
     }),
     catchBeSQLiteInterrupts,
     targetItems.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
-    map((row) => parseQueryRow(row, separator)),
+    map((row) => parseQueryRow({ row, separator })),
     mergeMap(({ path, parentClassificationId }) => {
       const target = path[path.length - 1].id;
       if (parentClassificationId) {
@@ -1087,12 +1122,12 @@ function createGeometricElementInstanceKeyPaths(props: {
   );
 }
 
-function parseQueryRow(
-  row: ECSqlQueryRow,
-  separator: string,
-): { path: HierarchyNodeIdentifiersPath; parentClassificationId: Id64String | undefined } {
+function parseQueryRow({ row, separator }: { row: ECSqlQueryRow; separator: string }): {
+  path: ClassificationsTreeSearchPath;
+  parentClassificationId: Id64String | undefined;
+} {
   const rowElements: string[] = row.path.split(separator);
-  const path: HierarchyNodeIdentifiersPath = [];
+  const path: ClassificationsTreeSearchPath = [];
   for (let i = 0; i < rowElements.length; i += 2) {
     switch (rowElements[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:

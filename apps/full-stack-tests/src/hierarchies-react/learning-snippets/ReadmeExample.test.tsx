@@ -126,7 +126,7 @@ describe("Hierarchies React", () => {
           if (treeProps.rootErrorRendererProps) {
             return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
           }
-          if (!treeProps.treeRendererProps || treeProps.isReloading) {
+          if (!treeProps.treeRendererProps || treeProps.isLoading) {
             return "Loading...";
           }
 

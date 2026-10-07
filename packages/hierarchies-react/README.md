@@ -26,7 +26,7 @@ The package provides different flavors of the same hook for creating and managin
 
 All these hooks return a `UseTreeResult` object with top-level properties and two optional renderer prop bags:
 
-- `isReloading` is a boolean that is `true` while the tree is being reloaded (does not apply to the initial load).
+- `isLoading` is a boolean that is `true` while a tree load is in progress, including the initial load. When `treeRendererProps` is also defined, it indicates a background reload.
 
 - `getNode` function to get a tree node by its id.
 
@@ -93,7 +93,9 @@ In addition to [props required by `useIModelTree`](#useimodeltree-props), the ho
 
 ## StrataKit components
 
-While the package provides a headless UI, it also delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
+While the package provides a headless UI, it also delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover the majority of use cases. Consumers using the components below are required to provide compatible `@mui/material`, `@stratakit/foundations`, and `@stratakit/mui` packages, which are optional peer dependencies of this package.
+
+Our components use icons from [`@stratakit/icons`](https://www.npmjs.com/package/@stratakit/icons), which is a direct dependency of this package. Because `@stratakit/icons` loads icons as asset URLs, your bundler must be configured to emit `.svg` files rather than inline them. Follow the [StrataKit icons bundler configuration guide](https://www.npmjs.com/package/@stratakit/icons#bundler-configuration) to set this up for your bundler (Vite, esbuild, etc.). This configuration is only required when importing the components from `@itwin/presentation-hierarchies-react/stratakit`; applications using only the headless APIs from the root entry point do not need it.
 
 ### `StrataKitTreeRenderer`
 
@@ -190,7 +192,7 @@ function MyTreeComponentInternal({
   if (treeProps.rootErrorRendererProps) {
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-  if (!treeProps.treeRendererProps || treeProps.isReloading) {
+  if (!treeProps.treeRendererProps || treeProps.isLoading) {
     return "Loading...";
   }
 
@@ -258,7 +260,7 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
   if (treeProps.rootErrorRendererProps) {
     return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
   }
-  if (!treeProps.treeRendererProps || treeProps.isReloading) {
+  if (!treeProps.treeRendererProps || treeProps.isLoading) {
     return "Loading";
   }
   return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="Localized tree" />;
