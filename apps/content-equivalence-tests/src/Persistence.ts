@@ -94,6 +94,23 @@ export function cachePath(props: {
   );
 }
 
+/** Inverts the markers `stableStringify` writes for values JSON can't represent. */
+function reviveSerializedValues(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry: unknown) => reviveSerializedValues(entry));
+  }
+  if (typeof value === "object" && value !== null) {
+    if ("$type" in value && value.$type === "undefined") {
+      return undefined;
+    }
+    if ("$type" in value && value.$type === "number" && "value" in value && typeof value.value === "string") {
+      return Number(value.value);
+    }
+    return Object.fromEntries(Object.entries(value).map(([key, member]) => [key, reviveSerializedValues(member)]));
+  }
+  return value;
+}
+
 export function readCapture<TCapture extends CaptureEnvelope>(
   filePath: string,
   expected: CaptureMetadata<TCapture["implementation"]>,
@@ -103,7 +120,7 @@ export function readCapture<TCapture extends CaptureEnvelope>(
   }
   let capture: TCapture;
   try {
-    capture = JSON.parse(fs.readFileSync(filePath, "utf8")) as TCapture;
+    capture = reviveSerializedValues(JSON.parse(fs.readFileSync(filePath, "utf8"))) as TCapture;
   } catch (error) {
     throw new Error(`Failed to read cached capture '${filePath}'.`, { cause: error });
   }
