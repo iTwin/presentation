@@ -41,7 +41,7 @@ export async function selectSample(props: {
 }): Promise<Sample> {
   const { imodel, sampling } = props;
   const executor = createECSqlQueryExecutor(imodel);
-  // Out test iModels' suite contains iModels, where elements of certain classes have invalid data - omit those classes from sampling
+  // Our test iModel suite contains iModels where elements of certain classes have invalid data; omit those classes from sampling.
   const omittedClasses = new Set<EC.FullClassNameDotNotation>([
     // `SpatialView` nav prop is NULL, when the relationship says it can't be NULL
     "BisCore.SectionDrawing",
