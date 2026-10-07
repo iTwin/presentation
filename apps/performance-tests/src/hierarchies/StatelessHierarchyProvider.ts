@@ -20,7 +20,7 @@ import type { ECSchemaProvider } from "@itwin/presentation-shared";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(imodelAccess: ECSchemaProvider): HierarchyDefinition;
+  getHierarchyFactory(imodelAccess: IModelAccess): HierarchyDefinition;
   search?: { paths: HierarchySearchTree[] };
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
