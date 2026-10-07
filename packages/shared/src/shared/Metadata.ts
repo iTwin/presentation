@@ -63,13 +63,24 @@ export interface ECSchemaProvider {
  * @see `ECSql.createHiddenClassesWhereClause`
  * @public
  */
-export interface HiddenClassesTreeNode {
+export type HiddenClassesTreeNode = HiddenClassesTreeNodeShown | HiddenClassesTreeNodeHidden;
+/** @public */
+interface HiddenClassesTreeNodeShown {
   /** Full name of the class this node represents. */
   fullName: EC.FullClassNameDotNotation;
   /** Visibility state of the class and its derived classes, unless overridden by `children`. */
-  state: "hide" | "show";
+  state: "show";
   /** Derived classes whose visibility state differs from this node's `state`. */
-  children: HiddenClassesTreeNode[];
+  children: HiddenClassesTreeNodeHidden[];
+}
+/** @public */
+interface HiddenClassesTreeNodeHidden {
+  /** Full name of the class this node represents. */
+  fullName: EC.FullClassNameDotNotation;
+  /** Visibility state of the class and its derived classes, unless overridden by `children`. */
+  state: "hide";
+  /** Derived classes whose visibility state differs from this node's `state`. */
+  children: HiddenClassesTreeNodeShown[];
 }
 
 /**

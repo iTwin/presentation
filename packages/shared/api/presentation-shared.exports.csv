@@ -31,7 +31,7 @@ public;interface;ECSqlQueryRow
 public;type;EventArgs
 public;function;formatConcatenatedValue
 public;function;getClass
-public;interface;HiddenClassesTreeNode
+public;type;HiddenClassesTreeNode
 public;interface;IInstanceLabelSelectClauseFactory
 public;interface;ILogger
 public;interface;InstanceKey

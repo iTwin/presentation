@@ -37,46 +37,45 @@ export function createHiddenClassesWhereClause(props: {
   // Instances of the selected class are visible by default, so root `show` nodes are redundant - only their
   // hidden descendants restrict anything.
   const rootNodes = getRestrictingRootNodes(props.tree);
-  return createClauses(rootNodes, props.classAlias).hideClause ?? "";
+  return createHideClause(rootNodes, props.classAlias) ?? "";
 }
 
-function getRestrictingRootNodes(nodes: DeepReadonly<HiddenClassesTreeNode[]>): DeepReadonly<HiddenClassesTreeNode[]> {
+function getRestrictingRootNodes(
+  nodes: DeepReadonly<HiddenClassesTreeNode[]>,
+): DeepReadonly<Extract<HiddenClassesTreeNode, { state: "hide" }>[]> {
   return nodes.flatMap((node) => (node.state === "show" ? getRestrictingRootNodes(node.children) : [node]));
 }
 
-function createClauses(
-  nodes: DeepReadonly<HiddenClassesTreeNode[]>,
+/** Creates a clause that excludes the given hidden nodes, except for their shown descendants. */
+function createHideClause(
+  nodes: DeepReadonly<Extract<HiddenClassesTreeNode, { state: "hide" }>[]>,
   classAlias: string,
-): { showClause?: string; hideClause?: string } {
-  const result: { showClause?: string; hideClause?: string } = {};
-
-  const shownNodes = nodes.filter(({ state }) => state === "show");
-  if (shownNodes.length > 0) {
-    let showClause = `[${classAlias}].[ECClassId] IS (${createClassesList(shownNodes)})`;
-    const childClauses = createClauses(
-      shownNodes.flatMap(({ children }) => children),
-      classAlias,
-    );
-    if (childClauses.hideClause) {
-      showClause = `(${showClause} AND ${childClauses.hideClause})`;
-    }
-    result.showClause = showClause;
+): string | undefined {
+  if (nodes.length === 0) {
+    return undefined;
   }
+  const hideClause = `[${classAlias}].[ECClassId] IS NOT (${createClassesList(nodes)})`;
+  const showClause = createShowClause(
+    nodes.flatMap(({ children }) => children),
+    classAlias,
+  );
+  return showClause ? `(${hideClause} OR ${showClause})` : hideClause;
+}
 
-  const hiddenNodes = nodes.filter(({ state }) => state === "hide");
-  if (hiddenNodes.length > 0) {
-    let hideClause = `[${classAlias}].[ECClassId] IS NOT (${createClassesList(hiddenNodes)})`;
-    const childClauses = createClauses(
-      hiddenNodes.flatMap(({ children }) => children),
-      classAlias,
-    );
-    if (childClauses.showClause) {
-      hideClause = `(${hideClause} OR ${childClauses.showClause})`;
-    }
-    result.hideClause = hideClause;
+/** Creates a clause that includes the given shown nodes, except for their hidden descendants. */
+function createShowClause(
+  nodes: DeepReadonly<Extract<HiddenClassesTreeNode, { state: "show" }>[]>,
+  classAlias: string,
+): string | undefined {
+  if (nodes.length === 0) {
+    return undefined;
   }
-
-  return result;
+  const showClause = `[${classAlias}].[ECClassId] IS (${createClassesList(nodes)})`;
+  const hideClause = createHideClause(
+    nodes.flatMap(({ children }) => children),
+    classAlias,
+  );
+  return hideClause ? `(${showClause} AND ${hideClause})` : showClause;
 }
 
 function createClassesList(nodes: DeepReadonly<HiddenClassesTreeNode[]>) {

@@ -491,10 +491,20 @@ export function formatConcatenatedValue(props: {
 export function getClass(schemaProvider: Pick<ECSchemaProvider, "getSchema">, fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class>;
 
 // @public
-export interface HiddenClassesTreeNode {
-    children: HiddenClassesTreeNode[];
+export type HiddenClassesTreeNode = HiddenClassesTreeNodeShown | HiddenClassesTreeNodeHidden;
+
+// @public (undocumented)
+interface HiddenClassesTreeNodeHidden {
+    children: HiddenClassesTreeNodeShown[];
     fullName: EC.FullClassNameDotNotation;
-    state: "hide" | "show";
+    state: "hide";
+}
+
+// @public (undocumented)
+interface HiddenClassesTreeNodeShown {
+    children: HiddenClassesTreeNodeHidden[];
+    fullName: EC.FullClassNameDotNotation;
+    state: "show";
 }
 
 // @public

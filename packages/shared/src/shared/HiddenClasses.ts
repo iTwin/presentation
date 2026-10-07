@@ -31,11 +31,16 @@ export async function createHiddenClassesTree(props: {
   return firstValueFrom(collectHiddenClassesTreeNodes(props.schemaProvider, selectClass, "show").pipe(toArray()));
 }
 
-function collectHiddenClassesTreeNodes(
+type HiddenClassesTreeNodeState = HiddenClassesTreeNode["state"];
+type OppositeStateHiddenClassesTreeNode<TState extends HiddenClassesTreeNodeState> = Extract<
+  HiddenClassesTreeNode,
+  { state: TState extends "show" ? "hide" : "show" }
+>;
+function collectHiddenClassesTreeNodes<TParentState extends HiddenClassesTreeNodeState>(
   schemaProvider: Pick<ECSchemaProvider, "getSchema">,
   parentClass: EC.Class,
-  parentState: "show" | "hide",
-): Observable<HiddenClassesTreeNode> {
+  parentState: TParentState,
+): Observable<OppositeStateHiddenClassesTreeNode<TParentState>> {
   return from(parentClass.getDerivedClassNames({ onlyDirect: true })).pipe(
     map(parseFullClassName),
     groupBy(({ schemaName }) => schemaName, {
@@ -62,11 +67,14 @@ function collectHiddenClassesTreeNodes(
               }
               return collectHiddenClassesTreeNodes(schemaProvider, ecClass, effectiveState).pipe(
                 toArray(),
-                map((children): HiddenClassesTreeNode => ({
-                  fullName: ecClass.fullName,
-                  state: effectiveState,
-                  children,
-                })),
+                map(
+                  (children) =>
+                    ({
+                      fullName: ecClass.fullName,
+                      state: effectiveState,
+                      children,
+                    }) as OppositeStateHiddenClassesTreeNode<TParentState>,
+                ),
               );
             }),
           );
