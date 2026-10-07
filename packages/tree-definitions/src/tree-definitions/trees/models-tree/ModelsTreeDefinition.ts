@@ -222,7 +222,7 @@ export type ModelsTreeSearchPathKey = IModelInstanceKey & { className: ModelsTre
  * A path of instance keys from a root node to a search target in a models hierarchy.
  * @beta
  */
-export type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+export type ModelsTreeSearchPath = ReadonlyArray<Readonly<ModelsTreeSearchPathKey>>;
 
 /**
  * A `HierarchySearchTree` whose entries identify only the instance classes that a models hierarchy search can return.
@@ -594,8 +594,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({ conditions: [subjectFilterClauses.where] })}
           `,
           bindings: [
-            { type: "idset", value: await this.#idsProvider.getParentSubjectIds() },
-            { type: "idset", value: childSubjectIds },
+            { type: "idset", value: [...(await this.#idsProvider.getParentSubjectIds())] },
+            { type: "idset", value: [...childSubjectIds] },
           ],
         },
       });
@@ -659,7 +659,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${modelFilterClauses.joins}
             ${createWhereClause({ conditions: [modelFilterClauses.where && `model.IsHidden OR ${modelFilterClauses.where}`] })}
           `,
-          bindings: [{ type: "idset", value: childModelIds }],
+          bindings: [{ type: "idset", value: [...childModelIds] }],
         },
       });
     return defs;
@@ -1107,7 +1107,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         reduce((acc, { path, target }) => {
           acc.accept({
             path: {
-              path,
+              // The builder requires a mutable path type but does not modify the path or its keys.
+              path: path as ModelsTreeSearchPathKey[],
               options: props.revealTargets
                 ? {
                     reveal:
@@ -1452,7 +1453,7 @@ function parseQueriedPath({
   queriedPathRaw: string;
   separator: string;
 }): ModelsTreeSearchPath {
-  const path: ModelsTreeSearchPath = [];
+  const path: ModelsTreeSearchPathKey[] = [];
   const queriedPath: string[] = queriedPathRaw.split(separator);
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {

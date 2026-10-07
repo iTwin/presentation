@@ -14,7 +14,6 @@ import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import type { Id64Arg } from '@itwin/core-bentley';
 import type { Id64Array } from '@itwin/core-bentley';
-import type { Id64Set } from '@itwin/core-bentley';
 import type { Id64String } from '@itwin/core-bentley';
 import type { IModelInstanceKey } from '@itwin/presentation-hierarchies';
 import type { InstanceKey } from '@itwin/presentation-shared';
@@ -25,26 +24,26 @@ import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 // @beta
 export interface BaseIdsProvider {
     readonly elementModelCategoriesState: IdsProviderDataState;
-    getAllCategoriesOfElements(): Promise<Id64Set>;
+    getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
     getAllModeledElements(props?: {
         excludeIfOnlyExcludedClasses?: boolean;
-    }): Promise<Id64Set>;
-    getAllModels(): Promise<Array<ModelId>>;
+    }): Promise<ReadonlySet<Id64String>>;
+    getAllModels(): Promise<ReadonlyArray<ModelId>>;
     getCategories(props: {
         modelId: Id64String;
-    }): Promise<Id64Set>;
-    getCategoriesContainingNonExcludedElements(): Promise<Id64Set>;
-    getCategorySubCategoriesMap(): Promise<Map<CategoryId, SubCategoryId[]>>;
+    }): Promise<ReadonlySet<CategoryId>>;
+    getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
+    getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
     getModels(props: {
         categoryId: Id64String;
         excludeSubModels?: boolean;
         includeOnlyTopMostElementCategory?: boolean;
         excludeIfOnlyExcludedClasses?: boolean;
     }): AsyncIterableIterator<ModelId>;
-    getPlanProjectionModels(): Promise<Id64Set>;
+    getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
     getSubCategoryCategories(props: {
         subCategoryIds: Id64Arg;
-    }): Promise<Map<CategoryId, SubCategoryId[]>>;
+    }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
     readonly modeledElementsState: IdsProviderDataState;
     readonly subCategoriesState: IdsProviderDataState;
 }
@@ -89,8 +88,8 @@ export interface CategoriesTreeIdsProvider extends Pick<BaseIdsProvider, "elemen
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
-        categories: Array<CategoryId>;
-        definitionContainers: Array<DefinitionContainerId>;
+        readonly categories: ReadonlyArray<CategoryId>;
+        readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getDefinitionContainersSearchPaths(props: {
         definitionContainerIds: Id64Arg;
@@ -99,15 +98,15 @@ export interface CategoriesTreeIdsProvider extends Pick<BaseIdsProvider, "elemen
         parentDefinitionContainerIds: Id64Arg;
         includeEmpty?: boolean;
     }): Promise<{
-        categories: CachedCategoryInfo[];
-        definitionContainers: Array<DefinitionContainerId>;
+        readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+        readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getIsDefinitionContainerSupported(): Promise<boolean>;
     getRootDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
-        categories: CachedCategoryInfo[];
-        definitionContainers: Array<DefinitionContainerId>;
+        readonly categories: ReadonlyArray<CachedCategoryInfo>;
+        readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getSearchPathsUpToRootCategory(props: {
         categoryId: Id64String;
@@ -183,7 +182,7 @@ interface CategoriesTreeProps {
 }
 
 // @beta
-type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+type CategoriesTreeSearchPath = ReadonlyArray<Readonly<CategoriesTreeSearchPathKey>>;
 
 // @beta
 type CategoriesTreeSearchPathClasses = "BisCore.DefinitionContainer" | "BisCore.SpatialCategory" | "BisCore.DrawingCategory" | "BisCore.SubCategory" | "BisCore.GeometricModel3d" | "BisCore.GeometricModel2d" | "BisCore.GeometricElement3d" | "BisCore.GeometricElement2d";
@@ -228,9 +227,9 @@ interface ClassificationsTreeHierarchyConfiguration {
 // @beta
 export interface ClassificationsTreeIdsProvider {
     readonly dataState: IdsProviderDataState;
-    getAllClassifications(): Promise<ClassificationId[]>;
+    getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
     getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
-    getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
+    getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<ClassificationId>>;
     hasChildren(classificationId: ClassificationId): Promise<boolean>;
 }
 
@@ -283,7 +282,7 @@ interface ClassificationsTreeSearchOptions {
 }
 
 // @beta
-type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+type ClassificationsTreeSearchPath = ReadonlyArray<Readonly<ClassificationsTreeSearchPathKey>>;
 
 // @beta
 type ClassificationsTreeSearchPathClasses = "ClassificationSystems.Classification" | "ClassificationSystems.ClassificationTable" | "BisCore.GeometricElement3d";
@@ -410,10 +409,10 @@ export interface ModelsTreeIdsProvider extends Pick<BaseIdsProvider, "elementMod
     createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
     createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
     readonly dataState: IdsProviderDataState;
-    getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
-    getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
-    getHiddenModelIds(): Promise<Set<ModelId>>;
-    getParentSubjectIds(): Promise<Id64Array>;
+    getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
+    getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<ModelId>>;
+    getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
+    getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
     getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
 }
 
@@ -476,7 +475,7 @@ interface ModelsTreeSearchOptions {
 }
 
 // @beta
-type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+type ModelsTreeSearchPath = ReadonlyArray<Readonly<ModelsTreeSearchPathKey>>;
 
 // @beta
 type ModelsTreeSearchPathClasses = "BisCore.Subject" | "BisCore.GeometricModel3d" | "BisCore.SpatialCategory" | "BisCore.GeometricElement3d";

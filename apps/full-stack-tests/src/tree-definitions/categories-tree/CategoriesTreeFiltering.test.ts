@@ -28,9 +28,11 @@ import {
 } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
+import type {
+  CategoriesTreeHierarchyConfiguration,
+  CategoriesTreeSearchPath,
+} from "@itwin/presentation-tree-definitions/internal";
 
 // cspell:words egory
 // cspell complains about Cat_egory and Cat%egory
@@ -180,7 +182,7 @@ describe("Categories tree", () => {
           });
           const defaultSubCategoryId = getDefaultSubCategoryId(keys.category.id);
 
-          const paths = new Array<HierarchyNodeIdentifiersPath>();
+          const paths = new Array<CategoriesTreeSearchPath>();
           for await (const path of idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId })) {
             paths.push(path);
           }

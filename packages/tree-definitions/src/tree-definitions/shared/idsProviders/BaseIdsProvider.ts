@@ -48,17 +48,17 @@ export interface BaseIdsProvider {
   /** State of category/sub-category mappings, loaded independently by `getCategorySubCategoriesMap`. */
   readonly subCategoriesState: IdsProviderDataState;
   /** Returns IDs of elements modeling non-empty sub-models, optionally omitting sub-models with only excluded elements. */
-  getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<Id64Set>;
+  getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<ReadonlySet<Id64String>>;
   /** Returns IDs of non-private models containing elements of the configured class, including excluded classes. */
-  getAllModels(): Promise<Array<ModelId>>;
+  getAllModels(): Promise<ReadonlyArray<ModelId>>;
   /** Returns IDs of non-private plan projection models containing elements of the configured class. */
-  getPlanProjectionModels(): Promise<Id64Set>;
+  getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
   /** Returns categories containing non-excluded top-level elements in the specified model. */
-  getCategories(props: { modelId: Id64String }): Promise<Id64Set>;
+  getCategories(props: { modelId: Id64String }): Promise<ReadonlySet<CategoryId>>;
   /** Returns category IDs of non-excluded elements. */
-  getCategoriesContainingNonExcludedElements(): Promise<Id64Set>;
+  getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
   /** Returns category IDs of all elements of the configured class, including excluded classes. */
-  getAllCategoriesOfElements(): Promise<Id64Set>;
+  getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
   /** Yields model IDs containing elements in the specified category. Yields no IDs if no models match the filters. */
   getModels(props: {
     categoryId: Id64String;
@@ -70,9 +70,11 @@ export interface BaseIdsProvider {
     excludeIfOnlyExcludedClasses?: boolean;
   }): AsyncIterableIterator<ModelId>;
   /** Returns a mapping from category IDs to their sub-category IDs. */
-  getCategorySubCategoriesMap(): Promise<Map<CategoryId, SubCategoryId[]>>;
+  getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
   /** Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category. */
-  getSubCategoryCategories(props: { subCategoryIds: Id64Arg }): Promise<Map<CategoryId, SubCategoryId[]>>;
+  getSubCategoryCategories(props: {
+    subCategoryIds: Id64Arg;
+  }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
 }
 
 /**

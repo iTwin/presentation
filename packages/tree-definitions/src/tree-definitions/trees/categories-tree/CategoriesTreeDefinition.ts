@@ -217,7 +217,7 @@ export type CategoriesTreeSearchPathKey = IModelInstanceKey & { className: Categ
  * A path of instance keys from a root node to a search target in a categories hierarchy.
  * @beta
  */
-export type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+export type CategoriesTreeSearchPath = ReadonlyArray<Readonly<CategoriesTreeSearchPathKey>>;
 
 /**
  * A `HierarchySearchTree` whose entries identify only the instance classes that a categories hierarchy search can return.
@@ -762,7 +762,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: {
-    definitionContainerIds: Id64Array;
+    definitionContainerIds: ReadonlyArray<Id64String>;
     instanceFilter?: GenericInstanceFilter;
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
@@ -783,7 +783,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           ${instanceFilterClauses.joins}
           ${createWhereClause({ conditions: [instanceFilterClauses.where] })}
         `,
-        bindings: [{ type: "idset", value: definitionContainerIds }],
+        bindings: [{ type: "idset", value: [...definitionContainerIds] }],
       },
     };
   }
@@ -885,7 +885,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: {
-    categories: Array<CachedCategoryInfo>;
+    categories: ReadonlyArray<CachedCategoryInfo>;
     instanceFilter?: GenericInstanceFilter;
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
@@ -1418,7 +1418,13 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
         releaseMainThreadOnItemsCount(1000),
         reduce((acc, { path }) => {
-          acc.accept({ path: { path, options: props.revealTargets ? { reveal: true } : undefined } });
+          acc.accept({
+            path: {
+              // The builder requires a mutable path type but does not modify the path or its keys.
+              path: path as CategoriesTreeSearchPathKey[],
+              options: props.revealTargets ? { reveal: true } : undefined,
+            },
+          });
           return acc;
         }, builder),
       ),
@@ -1607,9 +1613,11 @@ function createInstanceKeyPathsFromInstanceLabel(
           ${limit === "unbounded" ? "" : `LIMIT ${(limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT) + 1}`}
         `;
       const bindings = [
-        ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
-        ...(hierarchyConfig.subCategories.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
-        ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: definitionContainers }] : []),
+        ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: [...categories] }] : []),
+        ...(hierarchyConfig.subCategories.nodes === "include"
+          ? [{ type: "idset" as const, value: [...categories] }]
+          : []),
+        ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: [...definitionContainers] }] : []),
         { type: "string" as const, value: adjustedLabel },
         ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "string" as const, value: adjustedLabel }] : []),
         ...(hierarchyConfig.subCategories.nodes === "include"
@@ -2030,7 +2038,7 @@ function parseQueryRow({
   modelClassName: typeof CLASS_NAMES.GeometricModel2d | typeof CLASS_NAMES.GeometricModel3d;
 }): CategoriesTreeSearchPath {
   const queriedPath: string[] = row[0].split(separator);
-  const path: CategoriesTreeSearchPath = [];
+  const path: CategoriesTreeSearchPathKey[] = [];
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:

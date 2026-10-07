@@ -180,7 +180,7 @@ export type ClassificationsTreeSearchPathKey = IModelInstanceKey & { className: 
  * A path of instance keys from a root node to a search target in a classifications hierarchy.
  * @beta
  */
-export type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+export type ClassificationsTreeSearchPath = ReadonlyArray<Readonly<ClassificationsTreeSearchPathKey>>;
 
 /**
  * A `HierarchySearchTree` whose entries identify only the instance classes that a classifications hierarchy search can return.
@@ -489,7 +489,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
           ...(childClassificationsWithChildren.length > 0
             ? [{ type: "idset" as const, value: childClassificationsWithChildren }]
             : []),
-          { type: "idset", value: childClassifications },
+          { type: "idset", value: [...childClassifications] },
         ],
       },
     };
@@ -684,7 +684,13 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
         releaseMainThreadOnItemsCount(1000),
         reduce((acc, { path }) => {
-          acc.accept({ path: { path, options: props.revealTargets ? { reveal: true } : undefined } });
+          acc.accept({
+            path: {
+              // The builder requires a mutable path type but does not modify the path or its keys.
+              path: path as ClassificationsTreeSearchPathKey[],
+              options: props.revealTargets ? { reveal: true } : undefined,
+            },
+          });
           return acc;
         }, builder),
       ),
@@ -705,7 +711,7 @@ async function getChildClassifications({
 }: {
   classificationOrTableIds: Id64Array;
   idsProvider: ClassificationsTreeIdsProvider;
-}): Promise<{ childClassifications: Id64Array; childClassificationsWithChildren: Id64Array }> {
+}): Promise<{ childClassifications: ReadonlyArray<Id64String>; childClassificationsWithChildren: Id64Array }> {
   return firstValueFrom(
     from(idsProvider.getDirectChildClassifications(classificationOrTableIds)).pipe(
       mergeMap((classifications) =>
@@ -863,8 +869,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
       { type: "string" as const, value: props.hierarchyConfig.rootClassificationSystemCode },
       ...(classificationIds.length > 0
         ? [
-            { type: "idset" as const, value: classificationIds },
-            { type: "idset" as const, value: classificationIds },
+            { type: "idset" as const, value: [...classificationIds] },
+            { type: "idset" as const, value: [...classificationIds] },
           ]
         : []),
       { type: "string" as const, value: adjustedLabel },
@@ -1077,7 +1083,7 @@ function parseQueryRow({ row, separator }: { row: ECSqlQueryRow; separator: stri
   parentClassificationId: Id64String | undefined;
 } {
   const rowElements: string[] = row.path.split(separator);
-  const path: ClassificationsTreeSearchPath = [];
+  const path: ClassificationsTreeSearchPathKey[] = [];
   for (let i = 0; i < rowElements.length; i += 2) {
     switch (rowElements[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:

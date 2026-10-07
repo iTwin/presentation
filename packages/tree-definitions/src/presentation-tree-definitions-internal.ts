@@ -24,3 +24,4 @@ export type {
   ElementsGroupInfo,
   ModelsTreeHierarchyConfiguration,
 } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+export type { CategoriesTreeSearchPath } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";

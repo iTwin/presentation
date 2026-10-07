@@ -18,7 +18,11 @@ import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentle
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsProvider, IdsProviderDataState } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
-import type { ModelsTreeHierarchyConfiguration, ModelsTreeSearchPath } from "./ModelsTreeDefinition.js";
+import type {
+  ModelsTreeHierarchyConfiguration,
+  ModelsTreeSearchPath,
+  ModelsTreeSearchPathKey,
+} from "./ModelsTreeDefinition.js";
 
 /**
  * Data access and configuration for a models-tree ID provider.
@@ -59,13 +63,13 @@ export interface ModelsTreeIdsProvider extends Pick<
   /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of base data. */
   readonly dataState: IdsProviderDataState;
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
-  getParentSubjectIds(): Promise<Id64Array>;
+  getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
   /** Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants. */
-  getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+  getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
   /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
-  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<ModelId>>;
   /** Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy. */
-  getHiddenModelIds(): Promise<Set<ModelId>>;
+  getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
   /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
   createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
   /**
@@ -295,7 +299,7 @@ export function createModelsTreeIdsProvider({
   function createSubjectInstanceKeysPath(targetSubjectId: Id64String): Observable<ModelsTreeSearchPath> {
     return getSubjectInfos().pipe(
       map((subjectInfos) => {
-        const result: ModelsTreeSearchPath = [];
+        const result: ModelsTreeSearchPathKey[] = [];
         if (
           hierarchyConfig.models.withoutElements === "exclude" &&
           !subjectHasNestedModels({ subjectId: targetSubjectId, subjectInfos })

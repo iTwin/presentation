@@ -20,6 +20,7 @@ import type { CategoryId, ClassificationId, ClassificationTableId } from "../../
 import type {
   ClassificationsTreeHierarchyConfiguration,
   ClassificationsTreeSearchPath,
+  ClassificationsTreeSearchPathKey,
 } from "./ClassificationsTreeDefinition.js";
 
 /**
@@ -77,14 +78,14 @@ export interface ClassificationsTreeIdsProvider {
   /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
   hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
-  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
+  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<ClassificationId>>;
   /**
    * Yields a path from the classification table to each supplied classification, including both endpoints.
    * Empty input yields no paths. Unknown IDs yield a path containing only the supplied classification.
    */
   getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
-  getAllClassifications(): Promise<ClassificationId[]>;
+  getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
 }
 
 /**
@@ -299,7 +300,7 @@ export function createClassificationsTreeIdsProvider({
           mergeMap(({ classificationOrTableInfos }) =>
             fromWithRelease({ source: classificationIds, releaseOnCount: 200 }).pipe(
               map((classificationId) => {
-                const path: ClassificationsTreeSearchPath = [
+                const path: ClassificationsTreeSearchPathKey[] = [
                   { id: classificationId, className: CLASS_NAMES.Classification },
                 ];
                 let parentId = classificationOrTableInfos.get(classificationId)?.parentClassificationOrTableId;
