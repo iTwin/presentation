@@ -380,7 +380,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     }
     const idsProvider = this.#props.getIdsProvider(imodelKey);
     const childClassificationsDefinition =
-      idsProvider.dataState === "loaded"
+      idsProvider.state === "loaded"
         ? await this.#createCachedChildClassificationsQuery({
             parentIds: classificationTableIds,
             idsProvider,
@@ -415,7 +415,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.GeometricElement3d, alias: "this" },
       }),
-      idsProvider.dataState === "loaded"
+      idsProvider.state === "loaded"
         ? this.#createCachedChildClassificationsQuery({
             parentIds: parentClassificationIds,
             idsProvider,

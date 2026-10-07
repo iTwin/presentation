@@ -191,20 +191,20 @@ describe("ID provider data states", () => {
       const access = createAccess(async () => gate.promise);
       const base = createBase(access);
       const { provider, load } = create(access, base);
-      expect(provider.dataState).toBe("not-requested");
+      expect(provider.state).toBe("not-requested");
       expect(access.createQueryReader).not.toHaveBeenCalled();
       const pending = load();
-      expect(provider.dataState).toBe("requested");
+      expect(provider.state).toBe("requested");
       const concurrent = load();
       gate.resolve();
       expect(await pending).toEqual(await concurrent);
-      expect(provider.dataState).toBe("loaded");
+      expect(provider.state).toBe("loaded");
       const tokens = access.createQueryReader.mock.calls.map(([, options]) => options?.restartToken);
       expect(new Set(tokens).size).toBe(tokens.length);
       expect(base.elementModelCategoriesState).toBe(name === "models" ? "not-requested" : "loaded");
       expect(base.subCategoriesState).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.modeledElementsState).toBe("not-requested");
-      expect(create(access, base).provider.dataState).toBe("not-requested");
+      expect(create(access, base).provider.state).toBe("not-requested");
     });
 
     it("reports query failures and allows retry", async () => {
@@ -224,19 +224,19 @@ describe("ID provider data states", () => {
       const { provider, load } = create(access, base);
       const failure = expect(load()).rejects.toThrow("tree query failed");
       await started.promise;
-      expect(provider.dataState).toBe("requested");
+      expect(provider.state).toBe("requested");
       gate.reject(new Error("tree query failed"));
       await failure;
-      expect(provider.dataState).toBe("failed");
+      expect(provider.state).toBe("failed");
       expect(base.elementModelCategoriesState).toBe(name === "models" ? "not-requested" : "loaded");
       expect(base.subCategoriesState).toBe(name === "categories" ? "loaded" : "not-requested");
 
       gate = createGate();
       const retry = load();
-      expect(provider.dataState).toBe("requested");
+      expect(provider.state).toBe("requested");
       gate.resolve();
       await retry;
-      expect(provider.dataState).toBe("loaded");
+      expect(provider.state).toBe("loaded");
     });
   });
 });

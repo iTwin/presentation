@@ -712,7 +712,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const { instanceFilter, createSelectClause, createFilterClauses } = props;
     const parentNodeInstanceIds = "parentNodeInstanceIds" in props ? props.parentNodeInstanceIds : undefined;
     const [values, isDefinitionContainerSupported] = await Promise.all([
-      this.#idsProvider.dataState === "loaded"
+      this.#idsProvider.state === "loaded"
         ? parentNodeInstanceIds === undefined
           ? this.#idsProvider.getRootDefinitionContainersAndCategories({
               includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",

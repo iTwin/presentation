@@ -138,7 +138,7 @@ describe("Classifications tree", () => {
       expect(base.imodelAccess.imodelKey).not.toBe(changed.imodelAccess.imodelKey);
       await Promise.all(imodels.map(async ({ idsProvider }) => idsProvider.getAllClassifications()));
       const childGetters = imodels.map(({ idsProvider }) => {
-        expect(idsProvider.dataState).toBe("loaded");
+        expect(idsProvider.state).toBe("loaded");
         return vi.spyOn(idsProvider, "getDirectChildClassifications");
       });
       const providersByKey = new Map(

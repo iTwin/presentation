@@ -32,7 +32,7 @@ export class SubCategoriesProvider {
   #componentId: GuidString;
   #componentName: string;
   #cachedData: Observable<SubCategoriesProviderData> | undefined;
-  #dataState = new DataStateTracker();
+  #state = new DataStateTracker();
   #rowLimit = 7500;
 
   constructor(props: SubCategoriesProviderProps) {
@@ -78,8 +78,8 @@ export class SubCategoriesProvider {
     );
   }
 
-  public get dataState(): IdsProviderDataState {
-    return this.#dataState.state;
+  public get state(): IdsProviderDataState {
+    return this.#state.state;
   }
 
   public getData(): Observable<SubCategoriesProviderData> {
@@ -102,7 +102,7 @@ export class SubCategoriesProvider {
           },
         ),
       ),
-    ).pipe(this.#dataState.track(), shareReplay());
+    ).pipe(this.#state.track(), shareReplay());
     return this.#cachedData;
   }
 }

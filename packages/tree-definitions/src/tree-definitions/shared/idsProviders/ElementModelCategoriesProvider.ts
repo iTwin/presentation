@@ -46,7 +46,7 @@ export class ElementModelCategoriesProvider {
   #elementClassName: string;
   #excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
   #cachedData: Observable<ElementModelCategoriesProviderData> | undefined;
-  #dataState = new DataStateTracker();
+  #state = new DataStateTracker();
   #subscriberBatches: Array<{ obs: Observable<ElementModelCategoriesProviderData>; subscriberCount: number }> = [];
 
   constructor(props: ElementModelCategoriesProviderProps) {
@@ -112,8 +112,8 @@ export class ElementModelCategoriesProvider {
     );
   }
 
-  public get dataState(): IdsProviderDataState {
-    return this.#dataState.state;
+  public get state(): IdsProviderDataState {
+    return this.#state.state;
   }
 
   public getData(): Observable<ElementModelCategoriesProviderData> {
@@ -173,12 +173,12 @@ export class ElementModelCategoriesProvider {
       tap(() => {
         this.#subscriberBatches = [];
       }),
-      this.#dataState.track(),
+      this.#state.track(),
       shareReplay(),
     );
 
     // Once the data is loaded, every subscriber gets a synchronous replay, so batching is no longer needed.
-    if (this.#dataState.state === "loaded") {
+    if (this.#state.state === "loaded") {
       return this.#cachedData;
     }
 

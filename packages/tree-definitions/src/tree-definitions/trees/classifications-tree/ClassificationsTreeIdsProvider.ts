@@ -74,7 +74,7 @@ export interface ClassificationsTreeIdsProvider {
    * State of classification data. `getAllClassifications` loads this and base model/category data,
    * but not modeled elements or sub-category mappings.
    */
-  readonly dataState: IdsProviderDataState;
+  readonly state: IdsProviderDataState;
   /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
   hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
@@ -103,7 +103,7 @@ export function createClassificationsTreeIdsProvider({
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
   const rowLimit = 7500;
-  const dataState = new DataStateTracker();
+  const state = new DataStateTracker();
 
   function queryClassifications(): Observable<
     { id: Id64String; relatedCategories: CategoryId[] } & (
@@ -254,15 +254,15 @@ export function createClassificationsTreeIdsProvider({
           ),
         ),
       ),
-      dataState.track(),
+      state.track(),
       shareReplay(),
     );
     return cachedData;
   }
 
   return {
-    get dataState(): IdsProviderDataState {
-      return dataState.state;
+    get state(): IdsProviderDataState {
+      return state.state;
     },
     async hasChildren(classificationId: ClassificationId): Promise<boolean> {
       return firstValueFrom(

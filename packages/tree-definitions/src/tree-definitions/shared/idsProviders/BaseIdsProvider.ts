@@ -187,13 +187,13 @@ export function createBaseIdsProvider({
 
   return {
     get elementModelCategoriesState(): IdsProviderDataState {
-      return elementModelCategoriesProvider.dataState;
+      return elementModelCategoriesProvider.state;
     },
     get modeledElementsState(): IdsProviderDataState {
       return modeledElementsState.state;
     },
     get subCategoriesState(): IdsProviderDataState {
-      return subCategoriesProvider.dataState;
+      return subCategoriesProvider.state;
     },
     getAllModeledElements: async (props) => firstValueFrom(getAllModeledElements(props)),
     getAllModels: async () => firstValueFrom(getAllModels()),

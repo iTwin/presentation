@@ -84,7 +84,7 @@ interface CategoriesTreeHierarchyConfiguration {
 
 // @beta
 export interface CategoriesTreeIdsProvider extends Pick<BaseIdsProvider, "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"> {
-    readonly dataState: IdsProviderDataState;
+    readonly state: IdsProviderDataState;
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
@@ -227,7 +227,7 @@ interface ClassificationsTreeHierarchyConfiguration {
 
 // @beta
 export interface ClassificationsTreeIdsProvider {
-    readonly dataState: IdsProviderDataState;
+    readonly state: IdsProviderDataState;
     getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
     getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
     getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<ClassificationId>>;
@@ -408,7 +408,7 @@ interface ModelsTreeHierarchyConfiguration {
 export interface ModelsTreeIdsProvider extends Pick<BaseIdsProvider, "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories"> {
     createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
     createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
-    readonly dataState: IdsProviderDataState;
+    readonly state: IdsProviderDataState;
     getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
     getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<ModelId>>;
     getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;

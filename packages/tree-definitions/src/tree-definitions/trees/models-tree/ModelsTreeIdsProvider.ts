@@ -61,7 +61,7 @@ export interface ModelsTreeIdsProvider extends Pick<
   "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories"
 > {
   /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of base data. */
-  readonly dataState: IdsProviderDataState;
+  readonly state: IdsProviderDataState;
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
   getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
   /** Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants. */
@@ -344,7 +344,7 @@ export function createModelsTreeIdsProvider({
     },
     getAllModeledElements: async (props) => baseIdsProvider.getAllModeledElements(props),
     getCategories: async (props) => baseIdsProvider.getCategories(props),
-    get dataState(): IdsProviderDataState {
+    get state(): IdsProviderDataState {
       return combineDataStates([subjectInfosState.state, modelInfosState.state]);
     },
     async getHiddenModelIds(): Promise<Set<ModelId>> {

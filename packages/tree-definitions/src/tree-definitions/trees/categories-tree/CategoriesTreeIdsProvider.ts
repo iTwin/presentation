@@ -132,7 +132,7 @@ export interface CategoriesTreeIdsProvider extends Pick<
    * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
    * together with base model/category data and sub-category mappings, but not modeled elements.
    */
-  readonly dataState: IdsProviderDataState;
+  readonly state: IdsProviderDataState;
   /** Indicates whether the iModel schema supports definition containers. */
   getIsDefinitionContainerSupported(): Promise<boolean>;
 }
@@ -587,7 +587,7 @@ export function createCategoriesTreeIdsProvider({
         }),
       );
     },
-    get dataState(): IdsProviderDataState {
+    get state(): IdsProviderDataState {
       return combineDataStates([defContainersDataState.state, categoriesDataState.state]);
     },
     getIsDefinitionContainerSupported: async () => firstValueFrom(getIsDefinitionContainerSupported()),
