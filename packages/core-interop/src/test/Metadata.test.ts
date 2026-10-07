@@ -486,26 +486,6 @@ describe("createECSchemaProvider", () => {
       ]);
     });
 
-    it("deeply freezes cached hidden classes trees", async () => {
-      const imodel = createIModel({
-        getSchemaView: () =>
-          createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "A.VisibleChild", "B.Hidden"] }),
-        classHierarchies: [
-          [
-            ["B.Hidden", "A.Base"],
-            ["A.VisibleChild", "B.Hidden"],
-          ],
-        ],
-      });
-      const provider = createECSchemaProvider(imodel);
-
-      const tree = await provider.getHiddenClassesTree("A.Base");
-      expect(Object.isFrozen(tree)).toBe(true);
-      expect(Object.isFrozen(tree[0])).toBe(true);
-      expect(Object.isFrozen(tree[0].children)).toBe(true);
-      expect(Object.isFrozen(tree[0].children[0])).toBe(true);
-    });
-
     it("shares a single computation between concurrent and subsequent calls", async () => {
       const view = createSchemaView({ hiddenSchemas: ["B"], classes: ["A.Base", "B.Hidden"] });
       const imodel = createIModel({ getSchemaView: () => view, classHierarchies: [[["B.Hidden", "A.Base"]]] });

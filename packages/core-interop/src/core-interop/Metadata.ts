@@ -192,25 +192,15 @@ export function createECSchemaProvider(
     async getHiddenClassesTree(selectClassName) {
       let tree = hiddenClassesTrees.get(selectClassName);
       if (!tree) {
-        tree = createHiddenClassesTree({ schemaProvider: { getSchema }, selectClassName })
-          .then(freezeHiddenClassesTree)
-          .catch((e) => {
-            hiddenClassesTrees.delete(selectClassName);
-            throw e;
-          });
+        tree = createHiddenClassesTree({ schemaProvider: { getSchema }, selectClassName }).catch((e) => {
+          hiddenClassesTrees.delete(selectClassName);
+          throw e;
+        });
         hiddenClassesTrees.set(selectClassName, tree);
       }
       return tree;
     },
   };
-}
-
-function freezeHiddenClassesTree(tree: HiddenClassesTreeNode[]): DeepReadonly<HiddenClassesTreeNode[]> {
-  for (const node of tree) {
-    freezeHiddenClassesTree(node.children);
-    Object.freeze(node);
-  }
-  return Object.freeze(tree);
 }
 
 interface SchemaViewProviderContext {
