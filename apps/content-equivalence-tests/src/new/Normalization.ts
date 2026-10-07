@@ -8,7 +8,8 @@ import {
   createCanonicalEnumeration,
   createCanonicalRelationshipPath,
   getRelationshipConstraints,
-  normalizeValueForComparison,
+  isPointValue,
+  roundFloatingPointNoise,
 } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 import { createDeclaredRelationshipsResolver } from "./DeclaredRelationships.js";
@@ -21,10 +22,12 @@ import type {
   CanonicalField,
   CanonicalFieldType,
   CanonicalItem,
+  CanonicalItemValue,
   CanonicalRelationshipStep,
+  CanonicalValue,
   RelationshipConstraints,
 } from "../NormalizationCommon.js";
-import type { CapturedNewItem, NewCapture } from "./Adapter.js";
+import type { CapturedNewItem, CapturedNewValue, NewCapture } from "./Adapter.js";
 
 const valueFormatter = createDefaultValueFormatter();
 
@@ -253,30 +256,79 @@ function createCanonicalDescriptor(
   };
 }
 
-function isNavigationValue(value: unknown, type: CanonicalFieldType): value is NavigationValue {
-  return (
-    type.kind === "navigation" && typeof value === "object" && value !== null && "key" in value && "label" in value
-  );
+function isNavigationValue(value: unknown): value is NavigationValue {
+  return typeof value === "object" && value !== null && "key" in value && "label" in value;
+}
+
+async function toCanonicalValue(value: CapturedNewValue, type: CanonicalFieldType): Promise<CanonicalValue> {
+  if (value === undefined) {
+    return undefined;
+  }
+  switch (type.kind) {
+    case "primitive":
+      switch (type.name) {
+        case "Double":
+          if (typeof value === "number") {
+            return roundFloatingPointNoise(value);
+          }
+          break;
+        case "Point2d":
+        case "Point3d":
+          if (typeof value === "object" && !Array.isArray(value) && isPointValue(value)) {
+            return roundFloatingPointNoise(value);
+          }
+          break;
+        default:
+          if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+            return value;
+          }
+      }
+      throw new Error(`Expected a ${type.name} value.`);
+    case "navigation":
+      if (!isNavigationValue(value)) {
+        throw new Error("Expected a navigation value.");
+      }
+      return { key: value.key, label: await formatConcatenatedValue({ value: value.label, valueFormatter }) };
+    case "array":
+      if (!Array.isArray(value)) {
+        throw new Error("Expected an array value.");
+      }
+      return Promise.all(value.map(async (entry) => toCanonicalValue(entry, type.member)));
+    case "struct":
+      if (typeof value !== "object" || Array.isArray(value)) {
+        throw new Error("Expected a struct value.");
+      }
+      return Object.fromEntries(
+        await Promise.all(
+          Object.entries(value).flatMap(([name, member]) => {
+            const memberType = type.members.find((candidate) => candidate.name === name)?.type;
+            return memberType ? [toCanonicalValue(member, memberType).then((result) => [name, result] as const)] : [];
+          }),
+        ),
+      );
+  }
 }
 
 async function createCanonicalValue(
   item: CapturedNewItem,
   field: ReadonlyPropertyField,
   type: CanonicalFieldType,
-): Promise<unknown> {
+): Promise<CanonicalItemValue> {
   if (field.pathFromTarget.length === 0) {
-    let value = item.values[field.id];
-    if (isNavigationValue(value, type)) {
-      value = { key: value.key, label: await formatConcatenatedValue({ value: value.label, valueFormatter }) };
-    }
-    return normalizeValueForComparison(value, type);
+    return toCanonicalValue(item.values[field.id], type);
   }
   const relatedGroup = item.related.find(
     (group) => stableStringify(group.path) === stableStringify(field.pathFromTarget),
   );
-  return (relatedGroup?.entries ?? [])
-    .map((entry) => ({ primaryKeys: [entry.key], value: normalizeValueForComparison(entry.values[field.id], type) }))
-    .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
+  const relatedValues = await Promise.all(
+    (relatedGroup?.entries ?? []).map(async (entry) => ({
+      primaryKeys: [entry.key],
+      value: await toCanonicalValue(entry.values[field.id], type),
+    })),
+  );
+  return relatedValues.sort((lhs, rhs) =>
+    stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)),
+  );
 }
 
 async function createCanonicalItem(item: CapturedNewItem, context: NormalizationContext): Promise<CanonicalItem> {
@@ -298,7 +350,7 @@ async function createCanonicalItem(item: CapturedNewItem, context: Normalization
           return [
             canonicalKey,
             applicableFields[0] ? await createCanonicalValue(item, applicableFields[0], type) : undefined,
-          ];
+          ] as const;
         }),
       ),
     ),

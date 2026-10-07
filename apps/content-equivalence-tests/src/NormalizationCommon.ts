@@ -6,6 +6,7 @@
 import { getClass } from "@itwin/presentation-shared";
 import { stableStringify } from "./Persistence.js";
 
+import type { Id64String } from "@itwin/core-bentley";
 import type { EC, ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
 
 export type JsonObject = Record<string, unknown>;
@@ -140,10 +141,43 @@ export interface CanonicalDescriptor {
   unsupportedFields: Array<{ sourcePath: string[]; reason: string }>;
 }
 
+/** A point's coordinates with floating-point noise rounded away. */
+export interface CanonicalPointValue {
+  x: number;
+  y: number;
+  z?: number;
+}
+
+/** The instance a navigation property points to, with its label already formatted to a string. */
+export interface CanonicalNavigationValue {
+  key: { className: string; id: Id64String };
+  label: string;
+}
+
+/** A property value, the same shape for both implementations. */
+export type CanonicalValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | CanonicalPointValue
+  | CanonicalNavigationValue
+  | CanonicalValue[]
+  | { [key: string]: CanonicalValue };
+
+/** A property value read from one instance reached over a field's relationship path. */
+export interface CanonicalRelatedValue {
+  primaryKeys: InstanceKey[];
+  value: CanonicalValue;
+}
+
+/** Direct fields hold a `CanonicalValue`, related fields hold one entry per related instance. */
+export type CanonicalItemValue = CanonicalValue | CanonicalRelatedValue[];
+
 export interface CanonicalItem {
   descriptor: CanonicalDescriptor;
   primaryKeys: InstanceKey[];
-  values: Record<string, unknown>;
+  values: Record<string, CanonicalItemValue>;
 }
 
 export type CanonicalCapture =
@@ -164,68 +198,32 @@ export interface ComparisonResult {
 const SIGNIFICANT_DIGITS_FOR_FLOATING_POINT_COMPARISON = 12;
 
 /**
- * Rounds a `Double` value to a fixed number of significant digits, discarding the last few bits of a double's
- * ~15-17 significant decimal digits. The legacy and new-generation pipelines can produce values that differ only
- * in those last bits (e.g. due to differing floating-point computation or serialization paths for the same
- * underlying value).
+ * Rounds a `Double` value, or each coordinate of a point, to a fixed number of significant digits, discarding the
+ * last few bits of a double's ~15-17 significant decimal digits. The legacy and new-generation pipelines can produce
+ * values that differ only in those last bits (e.g. due to differing floating-point computation or serialization paths
+ * for the same underlying value).
  */
-function roundFloatingPointNoise(value: number): number {
-  return Number.isFinite(value) ? Number(value.toPrecision(SIGNIFICANT_DIGITS_FOR_FLOATING_POINT_COMPARISON)) : value;
+export function roundFloatingPointNoise(value: number): number;
+export function roundFloatingPointNoise(value: CanonicalPointValue): CanonicalPointValue;
+export function roundFloatingPointNoise(value: number | CanonicalPointValue): number | CanonicalPointValue {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? Number(value.toPrecision(SIGNIFICANT_DIGITS_FOR_FLOATING_POINT_COMPARISON)) : value;
+  }
+  return {
+    x: roundFloatingPointNoise(value.x),
+    y: roundFloatingPointNoise(value.y),
+    ...(value.z !== undefined ? { z: roundFloatingPointNoise(value.z) } : undefined),
+  };
 }
 
-/**
- * Recursively rounds away floating-point noise (see `roundFloatingPointNoise`) in values of `Double`, `Point2d`,
- * and `Point3d` typed canonical fields, guided by the field's `CanonicalFieldType` so that unrelated numeric
- * values (e.g. `Integer`/`Long` property values, which must compare exactly) are left untouched.
- */
-export function normalizeValueForComparison(value: unknown, type: CanonicalFieldType): unknown {
-  if (value === undefined || value === null) {
-    return value;
-  }
-  switch (type.kind) {
-    case "primitive":
-      if (type.name === "Double") {
-        return typeof value === "number" ? roundFloatingPointNoise(value) : value;
-      }
-      if (type.name === "Point2d" || type.name === "Point3d") {
-        return typeof value === "object" && !Array.isArray(value)
-          ? Object.fromEntries(
-              Object.entries(value as JsonObject).map(([key, coordinate]) => [
-                key,
-                typeof coordinate === "number" ? roundFloatingPointNoise(coordinate) : coordinate,
-              ]),
-            )
-          : value;
-      }
-      return value;
-    case "array":
-      return Array.isArray(value) ? value.map((entry) => normalizeValueForComparison(entry, type.member)) : value;
-    case "struct":
-      return typeof value === "object" && !Array.isArray(value)
-        ? Object.fromEntries(
-            Object.entries(value as JsonObject).map(([key, memberValue]) => {
-              const memberType = type.members.find((member) => member.name === key)?.type;
-              return [key, memberType ? normalizeValueForComparison(memberValue, memberType) : memberValue];
-            }),
-          )
-        : value;
-    case "navigation":
-      return value;
-  }
-}
-
-export function asObject(value: unknown, description: string): JsonObject {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${description} must be an object.`);
-  }
-  return value as JsonObject;
-}
-
-export function asArray(value: unknown, description: string): unknown[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`${description} must be an array.`);
-  }
-  return value;
+export function isPointValue(value: object): value is CanonicalPointValue {
+  return (
+    "x" in value &&
+    typeof value.x === "number" &&
+    "y" in value &&
+    typeof value.y === "number" &&
+    (!("z" in value) || typeof value.z === "number")
+  );
 }
 
 function collectDifferences(legacy: unknown, current: unknown, path: string): Difference[] {

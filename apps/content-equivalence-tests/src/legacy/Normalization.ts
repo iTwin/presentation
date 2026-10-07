@@ -9,7 +9,8 @@ import {
   createCanonicalEnumeration,
   createCanonicalRelationshipPath,
   getRelationshipConstraints,
-  normalizeValueForComparison,
+  isPointValue,
+  roundFloatingPointNoise,
 } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
@@ -30,7 +31,10 @@ import type {
   CanonicalField,
   CanonicalFieldType,
   CanonicalItem,
+  CanonicalItemValue,
+  CanonicalRelatedValue,
   CanonicalRelationshipStep,
+  CanonicalValue,
   RelationshipConstraints,
 } from "../NormalizationCommon.js";
 import type { CapturedLegacyItem, LegacyCapture } from "./Adapter.js";
@@ -157,7 +161,7 @@ function createCanonicalFieldType(
 }
 
 function isAllowedFieldType(type: CanonicalFieldType): boolean {
-  const disallowed = ["Bentley.Geometry.Common.IGeometry", "Binary"] as const;
+  const disallowed = ["Bentley.Geometry.Common.IGeometry", "Binary"];
   if (type.kind === "primitive" && disallowed.includes(type.name)) {
     return false;
   }
@@ -298,33 +302,93 @@ function createCanonicalValues(
   values: ValuesDictionary<Value>,
   sourcePath: string[],
   type: CanonicalFieldType,
-): unknown {
+): CanonicalItemValue {
   if (sourcePath.length === 1) {
-    return normalizeValueForComparison(normalizeLegacyValue(values[sourcePath[0]]), type);
+    return toCanonicalValue(values[sourcePath[0]], type);
   }
-  const [nestedFieldName, ...rest] = sourcePath;
-  const nestedValue = values[nestedFieldName];
-  if (!Value.isNestedContent(nestedValue)) {
-    return nestedValue;
-  }
-  return nestedValue
-    .map((entry) => ({
-      primaryKeys: entry.primaryKeys
-        .map((key) => ({ className: normalizeFullClassName(key.className), id: key.id }))
-        .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
-      value: createCanonicalValues(entry.values, rest, type),
-    }))
-    .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
+  return collectRelatedValues(values, sourcePath, type).sort((lhs, rhs) =>
+    stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)),
+  );
 }
 
-function normalizeLegacyValue(value: Value): unknown {
-  if (Value.isNavigationValue(value)) {
-    return {
-      key: { className: normalizeFullClassName(value.className), id: value.id },
-      label: value.label.displayValue,
-    };
+/**
+ * Legacy nests each relationship hop inside the previous one's content. Walks every hop and keeps
+ * just the terminal instances.
+ */
+function collectRelatedValues(
+  values: ValuesDictionary<Value>,
+  [nestedFieldName, ...rest]: string[],
+  type: CanonicalFieldType,
+): CanonicalRelatedValue[] {
+  const nestedValue = values[nestedFieldName];
+  if (nestedValue === undefined) {
+    return [];
   }
-  return value;
+  if (!Value.isNestedContent(nestedValue)) {
+    throw new Error(`Expected field '${nestedFieldName}' to contain nested content.`);
+  }
+  return nestedValue.flatMap((entry) =>
+    rest.length > 1
+      ? collectRelatedValues(entry.values, rest, type)
+      : [
+          {
+            primaryKeys: entry.primaryKeys
+              .map((key) => ({ className: normalizeFullClassName(key.className), id: key.id }))
+              .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
+            value: toCanonicalValue(entry.values[rest[0]], type),
+          },
+        ],
+  );
+}
+
+function toCanonicalValue(value: Value, type: CanonicalFieldType): CanonicalValue {
+  if (value === undefined) {
+    return undefined;
+  }
+  switch (type.kind) {
+    case "primitive":
+      switch (type.name) {
+        case "Double":
+          if (typeof value === "number") {
+            return roundFloatingPointNoise(value);
+          }
+          break;
+        case "Point2d":
+        case "Point3d":
+          if (Value.isMap(value) && isPointValue(value)) {
+            return roundFloatingPointNoise(value);
+          }
+          break;
+        default:
+          if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+            return value;
+          }
+      }
+      throw new Error(`Expected a ${type.name} value.`);
+    case "navigation":
+      if (!Value.isNavigationValue(value)) {
+        throw new Error("Expected a navigation value.");
+      }
+      return {
+        key: { className: normalizeFullClassName(value.className), id: value.id },
+        label: value.label.displayValue,
+      };
+    case "array":
+      if (!Value.isArray(value)) {
+        throw new Error("Expected an array value.");
+      }
+      return value.map((entry) => toCanonicalValue(entry, type.member));
+    case "struct":
+      if (!Value.isMap(value)) {
+        throw new Error("Expected a struct value.");
+      }
+      return Object.fromEntries(
+        Object.entries(value).flatMap(([name, member]) => {
+          const memberType = type.members.find((candidate) => candidate.name === name)?.type;
+          return memberType ? [[name, toCanonicalValue(member, memberType)]] : [];
+        }),
+      );
+  }
 }
 
 function createCanonicalItem({
@@ -339,10 +403,10 @@ function createCanonicalItem({
     descriptor,
     primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
     values: Object.fromEntries(
-      fieldMappings.map(({ canonicalKey, sourcePath, type }) => [
-        canonicalKey,
-        createCanonicalValues(item.values, sourcePath, type),
-      ]),
+      fieldMappings.map(
+        ({ canonicalKey, sourcePath, type }) =>
+          [canonicalKey, createCanonicalValues(item.values, sourcePath, type)] as const,
+      ),
     ),
   };
 }
