@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { firstValueFrom, from, groupBy, map, mergeMap, ReplaySubject, toArray } from "rxjs";
 import { getClass } from "./Metadata.js";
 import { parseFullClassName } from "./Utils.js";
 
+import type { Observable } from "rxjs";
 import type { EC, ECSchemaProvider, HiddenClassesTreeNode } from "./Metadata.js";
 
 /**
@@ -26,57 +28,50 @@ export async function createHiddenClassesTree(props: {
   selectClassName: EC.FullClassNameDotNotation;
 }): Promise<HiddenClassesTreeNode[]> {
   const selectClass = await getClass(props.schemaProvider, props.selectClassName);
-  return collectHiddenClassesTreeNodes(props.schemaProvider, selectClass, "show");
+  return firstValueFrom(collectHiddenClassesTreeNodes(props.schemaProvider, selectClass, "show").pipe(toArray()));
 }
 
-async function collectHiddenClassesTreeNodes(
+function collectHiddenClassesTreeNodes(
   schemaProvider: Pick<ECSchemaProvider, "getSchema">,
   parentClass: EC.Class,
   parentState: "show" | "hide",
-): Promise<HiddenClassesTreeNode[]> {
-  const derivedClassNamesBySchema = new Map<string, string[]>();
-  for (const fullClassName of parentClass.getDerivedClassNames({ onlyDirect: true })) {
-    const { schemaName, className } = parseFullClassName(fullClassName);
-    let classNames = derivedClassNamesBySchema.get(schemaName);
-    if (!classNames) {
-      classNames = [];
-      derivedClassNamesBySchema.set(schemaName, classNames);
-    }
-    classNames.push(className);
-  }
-  const derivedClasses = (
-    await Promise.all(
-      [...derivedClassNamesBySchema.entries()].map(async ([schemaName, classNames]) => {
-        const schema = await schemaProvider.getSchema(schemaName);
-        if (!schema) {
-          throw new Error(`Schema "${schemaName}" not found.`);
-        }
-        return classNames.map((className) => {
-          const ecClass = schema.getClass(className);
-          if (!ecClass) {
-            throw new Error(`Class "${className}" not found in schema "${schemaName}".`);
-          }
-          return { ecClass, schemaState: schema.isHidden ? ("hide" as const) : undefined };
-        });
-      }),
-    )
-  ).flat();
-
-  const nodes = await Promise.all(
-    derivedClasses.map(async ({ ecClass, schemaState }): Promise<ReadonlyArray<HiddenClassesTreeNode>> => {
-      const classState = ecClass.isHidden === true ? "hide" : ecClass.isHidden === false ? "show" : undefined;
-      const state = classState ?? schemaState;
-      if (!state || state === parentState) {
-        return collectHiddenClassesTreeNodes(schemaProvider, ecClass, parentState);
-      }
-      return [
-        {
-          fullName: ecClass.fullName,
-          state,
-          children: await collectHiddenClassesTreeNodes(schemaProvider, ecClass, state),
-        },
-      ];
+): Observable<HiddenClassesTreeNode> {
+  return from(parentClass.getDerivedClassNames({ onlyDirect: true })).pipe(
+    map(parseFullClassName),
+    groupBy(({ schemaName }) => schemaName, {
+      element: ({ className }) => className,
+      connector: () => new ReplaySubject<string>(),
     }),
+    mergeMap((classNames) =>
+      from(schemaProvider.getSchema(classNames.key)).pipe(
+        mergeMap((schema) => {
+          if (!schema) {
+            throw new Error(`Schema "${classNames.key}" not found.`);
+          }
+          return classNames.pipe(
+            mergeMap((className) => {
+              const ecClass = schema.getClass(className);
+              if (!ecClass) {
+                throw new Error(`Class "${className}" not found in schema "${classNames.key}".`);
+              }
+              const schemaState = schema.isHidden ? ("hide" as const) : undefined;
+              const classState = ecClass.isHidden === true ? "hide" : ecClass.isHidden === false ? "show" : undefined;
+              const effectiveState = classState ?? schemaState;
+              if (!effectiveState || effectiveState === parentState) {
+                return collectHiddenClassesTreeNodes(schemaProvider, ecClass, parentState);
+              }
+              return collectHiddenClassesTreeNodes(schemaProvider, ecClass, effectiveState).pipe(
+                toArray(),
+                map((children): HiddenClassesTreeNode => ({
+                  fullName: ecClass.fullName,
+                  state: effectiveState,
+                  children,
+                })),
+              );
+            }),
+          );
+        }),
+      ),
+    ),
   );
-  return nodes.flat();
 }

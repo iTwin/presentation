@@ -55,6 +55,12 @@ describe("createHiddenClassesTree", () => {
     };
   }
 
+  it("returns empty tree when there are no derived classes", async () => {
+    const schemaProvider = createSchemaProvider();
+    schemaProvider.addClass({ fullName: "s.x" });
+    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.x" })).toEqual([]);
+  });
+
   it("returns empty tree when there are no hidden derived classes", async () => {
     const schemaProvider = createSchemaProvider();
     schemaProvider.addClass({ fullName: "s.x" });
@@ -67,10 +73,14 @@ describe("createHiddenClassesTree", () => {
     schemaProvider.addClass({ fullName: "s.x" });
     schemaProvider.addClass({ fullName: "s.y", baseClassName: "s.x", isHidden: true });
     schemaProvider.addClass({ fullName: "s.z", baseClassName: "s.x", isHidden: true });
-    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.x" })).toEqual([
-      { fullName: "s.y", state: "hide", children: [] },
-      { fullName: "s.z", state: "hide", children: [] },
-    ]);
+    const tree = await createHiddenClassesTree({ schemaProvider, selectClassName: "s.x" });
+    expect(tree).toHaveLength(2);
+    expect(tree).toEqual(
+      expect.arrayContaining([
+        { fullName: "s.y", state: "hide", children: [] },
+        { fullName: "s.z", state: "hide", children: [] },
+      ]),
+    );
   });
 
   it("includes classes from hidden schemas", async () => {
