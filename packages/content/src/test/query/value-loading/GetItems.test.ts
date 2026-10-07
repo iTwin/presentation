@@ -1143,6 +1143,7 @@ describe("getItems", () => {
       ]);
       // One primary query plus one target lookup — the target is not joined into the value query.
       expect(queries).to.have.lengthOf(2);
+
       expect(queries[1].bindings).to.deep.equal({
         [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: new Set(["0x10"]) },
       });
