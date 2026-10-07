@@ -78,7 +78,7 @@ function hasPrimitiveValueType(type: NewFieldType): boolean {
 }
 
 /**
- * Workaround for https://github.com/iTwin/itwinjs-core/issues/9801: `SchemaView` doesn't inherit a property's
+ * TODO: Workaround for https://github.com/iTwin/itwinjs-core/issues/9801: `SchemaView` doesn't inherit a property's
  * category, kind of quantity or hidden flag from its base properties, while native `ECProperty` does.
  * Remove once that is fixed.
  */
