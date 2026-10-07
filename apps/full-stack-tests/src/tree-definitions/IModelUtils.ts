@@ -4,11 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { randomUUID } from "node:crypto";
+import {
+  insertDrawingPartition,
+  insertDrawingSubModel,
+  insertPhysicalPartition,
+  insertPhysicalSubModel,
+} from "presentation-test-utilities";
 import { expect } from "vitest";
+import { IModel } from "@itwin/core-common";
 import { buildTestIModel } from "../IModelUtils.js";
 import { importSchema } from "../SchemaUtils.js";
 
-import type { IModelDb } from "@itwin/core-backend";
+import type { EditTxn, IModelDb } from "@itwin/core-backend";
+import type { Id64String } from "@itwin/core-bentley";
+import type { ModelProps } from "@itwin/core-common";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { EC } from "@itwin/presentation-shared";
 
@@ -26,6 +35,22 @@ export namespace TestSchema {
   export const modeledElement2dClassName = "SubModelableDrawingGraphic";
   export const subModel2dClassName = "DrawingGraphicModel";
   export const modeledElement3dClassName = "SubModelablePhysicalObject";
+}
+
+export function insertGeometricModelWithPartition({
+  txn,
+  codeValue,
+  viewType = "3d",
+  partitionParentId = IModel.rootSubjectId,
+  ...modelFlags
+}: { txn: EditTxn; codeValue: string; viewType?: "2d" | "3d"; partitionParentId?: Id64String } & Pick<
+  ModelProps,
+  "isPrivate" | "isTemplate"
+>) {
+  const insertPartition = viewType === "3d" ? insertPhysicalPartition : insertDrawingPartition;
+  const insertModel = viewType === "3d" ? insertPhysicalSubModel : insertDrawingSubModel;
+  const partition = insertPartition({ txn, codeValue, parentId: partitionParentId });
+  return insertModel({ txn, modeledElementId: partition.id, ...modelFlags });
 }
 
 export async function buildIModel(

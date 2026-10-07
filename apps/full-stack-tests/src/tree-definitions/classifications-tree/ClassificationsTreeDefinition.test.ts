@@ -15,7 +15,7 @@ import { createClassificationsTree } from "@itwin/presentation-tree-definitions"
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import {
   importClassificationSchema,
   insertClassification,
@@ -51,6 +51,75 @@ describe("Classifications tree", () => {
       }
       return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
     }
+
+    it("excludes private and template model elements", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, async (txn) => {
+          await importClassificationSchema(imodel);
+          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+          const excludedClassification = insertClassification({
+            txn,
+            modelId: table.id,
+            codeValue: "excluded classification",
+          });
+          const sharedClassification = insertClassification({
+            txn,
+            modelId: table.id,
+            codeValue: "shared classification",
+          });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const element = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+          insertElementHasClassificationsRelationship({
+            txn,
+            elementId: element.id,
+            classificationId: sharedClassification.id,
+          });
+          for (const flag of ["isPrivate", "isTemplate"] as const) {
+            const hiddenModel = insertGeometricModelWithPartition({ txn, codeValue: flag, [flag]: true });
+            const hiddenElement = insertPhysicalElement({ txn, modelId: hiddenModel.id, categoryId: category.id });
+            for (const classification of [sharedClassification, excludedClassification]) {
+              insertElementHasClassificationsRelationship({
+                txn,
+                elementId: hiddenElement.id,
+                classificationId: classification.id,
+              });
+            }
+          }
+          return { table, excludedClassification, sharedClassification, element };
+        }),
+      );
+      const { imodelConnection, ...keys } = buildIModelResult;
+      using provider = await createClassificationsTreeProvider(imodelConnection, { rootClassificationSystemCode });
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.table],
+            supportsFiltering: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.excludedClassification],
+                supportsFiltering: true,
+                children: false,
+              }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.sharedClassification],
+                supportsFiltering: true,
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.element],
+                    supportsFiltering: true,
+                    children: false,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+    });
 
     it.each([rootClassificationSystemCode, "Owner's Classification"])(
       "loads classifications' hierarchy without elements for system code %s",

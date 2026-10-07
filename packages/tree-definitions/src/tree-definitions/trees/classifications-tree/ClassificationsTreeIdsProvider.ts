@@ -153,12 +153,15 @@ export function createClassificationsTreeIdsProvider({
         categoriesOfClassificationSelector = `
           SELECT group_concat(IdToHex(cat.ECInstanceId))
           FROM ${CLASS_NAMES.GeometricElement3d} e
+          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
           JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = e.Category.Id
           JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
           ${createWhereClause({
             conditions: [
               "e.Parent.Id IS NULL",
               "NOT cat.IsPrivate",
+              "NOT m.IsPrivate",
+              "NOT m.IsTemplate",
               "ehc.TargetECInstanceId = cl.ClassificationId",
               createExcludedClassesClause({
                 alias: "e",
