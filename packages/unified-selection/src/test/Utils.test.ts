@@ -44,7 +44,7 @@ describe("formIdBindings", () => {
     const result = formIdBindings("ECInstanceId", ids, bindings);
     expect(result).toBe("InVirtualSet(?, ECInstanceId)");
     expect(bindings).toHaveLength(1);
-    expect(bindings[0]).toEqual({ type: "idset", value: idsArray });
+    expect(bindings[0]).toEqual({ type: "idset", value: ids });
   });
 
   it("returns FALSE when ids are empty", () => {
