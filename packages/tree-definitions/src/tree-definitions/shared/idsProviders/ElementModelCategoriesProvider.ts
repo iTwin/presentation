@@ -93,7 +93,7 @@ export class ElementModelCategoriesProvider {
             }
           FROM ${this.#elementClassName} this
           JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
-          ${createWhereClause({ conditions: ["m.IsPrivate = false", createHiddenClassesClause("this")] })}
+          ${createWhereClause({ conditions: ["m.IsPrivate = false", "m.IsTemplate = false", createHiddenClassesClause("this")] })}
           GROUP BY modelId, categoryId
         `;
         return this.#imodelAccess.createQueryReader(

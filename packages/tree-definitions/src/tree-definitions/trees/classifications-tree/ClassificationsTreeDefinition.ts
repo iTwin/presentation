@@ -419,12 +419,15 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
           ecsql: `
             SELECT ${await this.#createElementSelectClause({ createSelectClause })}
             FROM ${elementsInstanceFilterClauses.from} this
+            JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
             JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
             JOIN IdSet(?) parentClassificationIdSet ON ehc.TargetECInstanceId = parentClassificationIdSet.id
             ${elementsInstanceFilterClauses.joins}
             ${createWhereClause({
               conditions: [
                 "this.Parent.Id IS NULL",
+                "NOT m.IsPrivate",
+                "NOT m.IsTemplate",
                 createExcludedClassesClause({
                   alias: "this",
                   excludedClassNames: this.#props.hierarchyConfig.elements?.excludedClasses,
@@ -524,11 +527,14 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     const hasElements = `
       SELECT 1
       FROM ${CLASS_NAMES.GeometricElement3d} e
+      JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
       JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
       ${createWhereClause({
         conditions: [
           "ehc.TargetECInstanceId = this.ECInstanceId",
           "e.Parent.Id IS NULL",
+          "NOT m.IsPrivate",
+          "NOT m.IsTemplate",
           createExcludedClassesClause({
             alias: "e",
             excludedClassNames: this.#props.hierarchyConfig.elements?.excludedClasses,
@@ -820,11 +826,14 @@ function createInstanceKeyPathsFromInstanceLabelObs({
                 this.ECInstanceId,
                 ${elementLabelSelectClause}
               FROM ${CLASS_NAMES.GeometricElement3d} this
+              JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
               JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
               JOIN IdSet(?) classificationIdSet ON ehc.TargetECInstanceId = classificationIdSet.id
               ${createWhereClause({
                 conditions: [
                   "this.Parent.Id IS NULL",
+                  "NOT m.IsPrivate",
+                  "NOT m.IsTemplate",
                   createExcludedClassesClause({
                     alias: "this",
                     excludedClassNames: props.hierarchyConfig.elements?.excludedClasses,
@@ -1063,9 +1072,12 @@ function createGeometricElementInstanceKeyPaths(props: {
           e.Parent.Id,
           '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([e].[ECInstanceId]) AS TEXT)
         FROM  ${CLASS_NAMES.Element} e
+        JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
         JOIN IdSet(?) targetItemIdSet ON e.ECInstanceId = targetItemIdSet.id
         ${createWhereClause({
           conditions: [
+            "NOT m.IsPrivate",
+            "NOT m.IsTemplate",
             createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames }),
             createElementsHiddenClassesClause("e"),
           ],

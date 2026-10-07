@@ -514,6 +514,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({
               conditions: [
                 "NOT this.IsPrivate",
+                "NOT this.IsTemplate",
                 `this.ECInstanceId IN (
                   SELECT c.Model.Id
                   FROM ${this.#categoryElementClass} c
@@ -835,6 +836,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 "cat.Model.Id = dc.ECInstanceId",
                 "NOT cat.IsPrivate",
                 "NOT gm.IsPrivate",
+                "NOT gm.IsTemplate",
                 createElementsHiddenClassesClause("ce"),
               ],
             })}
@@ -1040,7 +1042,12 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       FROM ${this.#categoryElementClass} ce
       JOIN ${CLASS_NAMES.Model} m ON ce.Model.Id = m.ECInstanceId
       ${createWhereClause({
-        conditions: ["ce.Category.Id = this.ECInstanceId", "NOT m.IsPrivate", createElementsHiddenClassesClause("ce")],
+        conditions: [
+          "ce.Category.Id = this.ECInstanceId",
+          "NOT m.IsPrivate",
+          "NOT m.IsTemplate",
+          createElementsHiddenClassesClause("ce"),
+        ],
       })}
       LIMIT 1
     `;
@@ -1053,6 +1060,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           "ce.Category.Id = this.ECInstanceId",
           "ce.Parent.Id IS NULL",
           "NOT m.IsPrivate",
+          "NOT m.IsTemplate",
           createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
           createElementsHiddenClassesClause("ce"),
           `NOT IFNULL((SELECT 1 FROM ${this.#categoryElementClass} me WHERE me.ECInstanceId = ce.Model.Id LIMIT 1), false)`,
@@ -1204,6 +1212,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                         conditions: [
                           "m.ECInstanceId = this.ECInstanceId",
                           "NOT m.IsPrivate",
+                          "NOT m.IsTemplate",
                           createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
                           childElementVisibilityClause,
                         ],
@@ -1305,6 +1314,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               conditions: [
                 !parentIds && "this.Parent.Id IS NULL",
                 !modelIds && "NOT m.IsPrivate",
+                !modelIds && "NOT m.IsTemplate",
                 !modelIds &&
                   `NOT IFNULL((SELECT 1 FROM ${this.#categoryElementClass} me WHERE me.ECInstanceId = this.Model.Id LIMIT 1), false)`,
                 createExcludedClassesClause({ alias: "this", excludedClassNames: this.#excludedClasses }),
@@ -1561,6 +1571,7 @@ function createInstanceKeyPathsFromInstanceLabel(
                   ${createWhereClause({
                     conditions: [
                       "NOT m.IsPrivate",
+                      "NOT m.IsTemplate",
                       createExcludedClassesClause({
                         alias: "this",
                         excludedClassNames: hierarchyConfig.elements.excludedClasses,

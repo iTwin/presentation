@@ -144,6 +144,7 @@ export function createModelsTreeIdsProvider({
               conditions: [
                 "m.ECInstanceId = HexToId(json_extract(s.JsonProperties, '$.Subject.Model.TargetPartition'))",
                 "NOT m.IsPrivate",
+                "NOT m.IsTemplate",
                 elementsFilter.clause,
               ],
             })}
@@ -194,7 +195,7 @@ export function createModelsTreeIdsProvider({
             END hideInHierarchy
           FROM ${CLASS_NAMES.InformationPartitionElement} p
           INNER JOIN ${CLASS_NAMES.GeometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
-          ${createWhereClause({ conditions: ["NOT m.IsPrivate", elementsFilter.clause] })}
+          ${createWhereClause({ conditions: ["NOT m.IsPrivate", "NOT m.IsTemplate", elementsFilter.clause] })}
         `;
         return imodelAccess.createQueryReader(
           { ecsql: modelsQuery, bindings: elementsFilter.bindings },

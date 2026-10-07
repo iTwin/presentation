@@ -22,7 +22,7 @@ import { CLASS_NAMES, createModelsTree, SearchLimitExceededError } from "@itwin/
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, importHiddenElementClasses } from "../IModelUtils.js";
+import { buildIModel, importHiddenElementClasses, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./Utils.js";
 
 import type { EditTxn } from "@itwin/core-backend";
@@ -95,6 +95,53 @@ describe("Models tree", () => {
   });
 
   describe("Hierarchy search", () => {
+    it("excludes private and template models and their elements from label searches", async () => {
+      await using setupResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, (txn) => {
+          const category = insertSpatialCategory({ txn, codeValue: "shared category" });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "matching model" });
+          const element = insertPhysicalElement({
+            txn,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "matching element",
+          });
+          for (const flag of ["isPrivate", "isTemplate"] as const) {
+            const hiddenModel = insertGeometricModelWithPartition({
+              txn,
+              codeValue: `matching model ${flag}`,
+              [flag]: true,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: hiddenModel.id,
+              categoryId: category.id,
+              userLabel: `matching element ${flag}`,
+            });
+          }
+          return { category, model, element };
+        }),
+      );
+      const { imodelConnection, ...keys } = setupResult;
+      const { createInstanceKeyPaths } = createModelsTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        hierarchyConfig: { subjects: { root: "exclude" } },
+      });
+
+      expect(await collect(createInstanceKeyPaths({ label: "matching model", limit: 1 }))).toEqual([
+        { path: [adjustedModelKey(keys.model)], target: keys.model.id },
+      ]);
+      expect(await collect(createInstanceKeyPaths({ label: "matching element", limit: "unbounded" }))).toEqual([
+        {
+          path: [adjustedModelKey(keys.model), keys.category, adjustedElementKey(keys.element)],
+          target: keys.element.id,
+        },
+      ]);
+      for (const label of ["isPrivate", "isTemplate"]) {
+        expect(await collect(createInstanceKeyPaths({ label }))).toEqual([]);
+      }
+    });
+
     it.each(["model", "category", "element"] as const)("finds all subject paths to a shared %s", async (target) => {
       await using setupResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
