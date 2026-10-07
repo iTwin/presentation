@@ -62,7 +62,7 @@ function targetRow(id: string, className: string, label: string | undefined): EC
 function boundIds(query: ECSqlQueryDef): string[] {
   const bindings = query.bindings;
   const binding = Array.isArray(bindings) ? undefined : bindings?.[`${ECSQL_PREFIX}nav_ids`];
-  return binding?.type === "idset" ? (binding.value ?? []) : [];
+  return binding?.type === "idset" ? (binding.value ? [...binding.value] : []) : [];
 }
 
 /** Builds the selector definitions a set of selector types implies; these tests only vary the types. */
