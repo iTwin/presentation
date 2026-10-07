@@ -114,7 +114,7 @@ function Tree({
     throw new Error("Unified selection context is not available");
   }
 
-  const { isReloading, ...treeProps } = useUnifiedSelectionTree({
+  const { isLoading, ...treeProps } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     createSelectableForGenericNode: useCallback<
       NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>
@@ -180,7 +180,7 @@ function Tree({
   };
 
   const renderLoadingOverlay = () => {
-    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isReloading) {
+    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isLoading) {
       return <></>;
     }
     return (
