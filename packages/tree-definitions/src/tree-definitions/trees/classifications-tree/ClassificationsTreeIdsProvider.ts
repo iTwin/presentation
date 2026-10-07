@@ -56,7 +56,9 @@ interface ClassificationsTreeIdsProviderProps {
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
   classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
   /** Shared provider with matching element class and exclusions for the target tree. */
-  sharedIdsProvider: Pick<SharedIdsProvider, "getCategoriesContainingNonExcludedElements">;
+  sharedIdsProvider: {
+    categories: Pick<SharedIdsProvider["categories"], "getCategoriesContainingNonExcludedElements">;
+  };
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -71,8 +73,7 @@ interface ClassificationsTreeIdsProviderData {
  */
 export interface ClassificationsTreeIdsProvider {
   /**
-   * State of classification data. `getAllClassifications` loads this and shared model/category data,
-   * but not modeled elements or sub-category mappings.
+   * State of classification data. `getAllClassifications` also loads shared category data.
    */
   readonly state: IdsProviderDataState;
   /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
@@ -216,7 +217,7 @@ export function createClassificationsTreeIdsProvider({
   }
 
   function getData() {
-    cachedData ??= defer(async () => sharedIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
+    cachedData ??= defer(async () => sharedIdsProvider.categories.getCategoriesContainingNonExcludedElements()).pipe(
       mergeMap((categoriesContainingNonExcludedElements) =>
         queryClassifications().pipe(
           reduce(

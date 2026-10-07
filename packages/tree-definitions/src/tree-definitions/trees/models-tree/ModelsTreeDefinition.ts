@@ -741,13 +741,13 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsState === "loaded"
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
-      this.#idsProvider.elementModelCategoriesState === "loaded"
+      this.#idsProvider.categories.state === "loaded"
         ? firstValueFrom(
             from(modelIds).pipe(
-              mergeMap(async (modelId) => this.#idsProvider.getCategories({ modelId })),
+              mergeMap(async (modelId) => this.#idsProvider.categories.getCategories({ modelId })),
               reduce((acc, modelCategories) => {
                 for (const categoryId of modelCategories) {
                   acc.add(categoryId);
@@ -949,8 +949,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsState === "loaded"
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const parentIds = ParentElementsPath.getLastParentIds(parentNode.extendedData.parentElementsPath);
@@ -1003,8 +1003,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.SpatialCategory, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsState === "loaded"
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
 
@@ -1191,7 +1191,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
       bindings.push({ type: "idset", value: parent.modelIds });
     }
   });
-  return from(props.idsProvider.getAllModeledElements()).pipe(
+  return from(props.idsProvider.modeledElements.getAllModeledElements()).pipe(
     mergeMap(() => {
       const targetElementsInfoQuery =
         elementIds.length > 0
@@ -1346,7 +1346,7 @@ export function createCategoriesSearchPaths(props: {
         ),
       ),
     ),
-    from(props.idsProvider.getAllModeledElements()).pipe(
+    from(props.idsProvider.modeledElements.getAllModeledElements()).pipe(
       mergeMap((subModelIds) => {
         const ctes = [
           `CategoriesParentsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (

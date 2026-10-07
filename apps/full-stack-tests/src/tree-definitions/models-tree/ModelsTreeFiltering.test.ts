@@ -381,9 +381,13 @@ describe("Models tree", () => {
         imodelConnection: setupResult.imodelConnection,
         hierarchyConfig: { elements: { excludedClasses: ["Generic.PhysicalObject"] } },
       });
-      expect(await idsProvider.getAllModeledElements()).toEqual(new Set([setupResult.modeledElement.id]));
-      expect(await idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })).toEqual(new Set());
-      expect(await idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: false })).toEqual(
+      expect(await idsProvider.modeledElements.getAllModeledElements()).toEqual(
+        new Set([setupResult.modeledElement.id]),
+      );
+      expect(await idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })).toEqual(
+        new Set(),
+      );
+      expect(await idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: false })).toEqual(
         new Set([setupResult.modeledElement.id]),
       );
     });

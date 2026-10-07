@@ -547,7 +547,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const modeledElementCategory = props.parentNode.extendedData?.modeledElementCategory;
     assert(modeledElementCategory !== undefined, "Expected parent node to have modeledElementCategory extended data");
 
-    return this.#idsProvider.elementModelCategoriesState === "loaded"
+    return this.#idsProvider.categories.state === "loaded"
       ? this.createCachedGeometricModelChildrenQuery({ ...props, modeledElementCategory })
       : this.createUncachedGeometricModelChildrenQuery({ ...props, modeledElementCategory });
   }
@@ -564,7 +564,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const [categoryIds, categoryInstanceFilterClauses, modeledCategoryElementsDefinition] = await Promise.all([
       firstValueFrom(
         from(modelIds).pipe(
-          mergeMap(async (modelId) => this.#idsProvider.getCategories({ modelId })),
+          mergeMap(async (modelId) => this.#idsProvider.categories.getCategories({ modelId })),
           reduce((acc, modelCategories) => {
             for (const categoryId of modelCategories) {
               acc.add(categoryId);
@@ -675,8 +675,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsState === "loaded"
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
@@ -909,7 +909,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               mergeMap(({ id: categoryId }) =>
                 // when category has element models, then it has element children
                 from(
-                  this.#idsProvider.getModels({
+                  this.#idsProvider.models.getModels({
                     categoryId,
                     excludeSubModels: true,
                     includeOnlyTopMostElementCategory: true,
@@ -1241,17 +1241,19 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsState === "loaded"
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const modelIds: Id64Array | undefined =
       parentNode.extendedData.modelIds.length > 0
         ? parseIdsSelectorResult(parentNode.extendedData.modelIds)
-        : this.#idsProvider.elementModelCategoriesState === "loaded"
+        : this.#idsProvider.categories.state === "loaded"
           ? await firstValueFrom(
               from(categoryIds).pipe(
-                mergeMap((categoryId) => from(this.#idsProvider.getModels({ categoryId, excludeSubModels: true }))),
+                mergeMap((categoryId) =>
+                  from(this.#idsProvider.models.getModels({ categoryId, excludeSubModels: true })),
+                ),
                 distinct(),
                 toArray(),
               ),
@@ -1317,8 +1319,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
       createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
-      this.#idsProvider.modeledElementsState === "loaded"
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
 
@@ -1787,7 +1789,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     return EMPTY;
   }
 
-  return from(props.idsProvider.getAllModeledElements()).pipe(
+  return from(props.idsProvider.modeledElements.getAllModeledElements()).pipe(
     mergeMap((subModelIds) => {
       const ctes = [
         `CategoriesElementsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
@@ -1920,7 +1922,7 @@ export function createCategoriesSearchPaths(props: {
 
   return merge(
     rootCategoriesSearchPaths,
-    from(props.idsProvider.getAllModeledElements()).pipe(
+    from(props.idsProvider.modeledElements.getAllModeledElements()).pipe(
       mergeMap((subModelIds) => {
         const ctes = [
           `CategoriesParentsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (

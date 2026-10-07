@@ -67,18 +67,15 @@ export interface CachedCategoryInfo {
 interface CategoriesTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /** Shared provider with matching element class and exclusions for the target tree. */
-  sharedIdsProvider: Pick<
-    SharedIdsProvider,
-    | "elementModelCategoriesState"
-    | "modeledElementsState"
-    | "getAllModeledElements"
-    | "getCategories"
-    | "getModels"
-    | "getCategoriesContainingNonExcludedElements"
-    | "getAllCategoriesOfElements"
-    | "getCategorySubCategoriesMap"
-    | "getSubCategoryCategories"
-  >;
+  sharedIdsProvider: {
+    models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
+    modeledElements: SharedIdsProvider["modeledElements"];
+    categories: Pick<
+      SharedIdsProvider["categories"],
+      "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements"
+    >;
+    subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
+  };
   type: "2d" | "3d";
 }
 
@@ -94,10 +91,13 @@ interface CategoriesData {
  * Getters load data on demand, reuse cached results, and reject on failure.
  * @beta
  */
-export interface CategoriesTreeIdsProvider extends Pick<
-  SharedIdsProvider,
-  "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"
-> {
+export interface CategoriesTreeIdsProvider {
+  /** Shared model lookups and their loading state. */
+  readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
+  /** Shared modeled-element lookups and their loading state. */
+  readonly modeledElements: SharedIdsProvider["modeledElements"];
+  /** Shared category lookups and their loading state. */
+  readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   /** Returns direct child categories and definition container IDs, excluding empty entries unless requested. */
   getDirectChildDefinitionContainersAndCategories(props: {
     parentDefinitionContainerIds: Id64Arg;
@@ -130,7 +130,7 @@ export interface CategoriesTreeIdsProvider extends Pick<
   }>;
   /**
    * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
-   * together with shared model/category data and sub-category mappings, but not modeled elements.
+   * together with shared category and sub-category data, but not modeled elements.
    */
   readonly state: IdsProviderDataState;
   /** Indicates whether the iModel schema supports definition containers. */
@@ -267,9 +267,10 @@ export function createCategoriesTreeIdsProvider({
   function getCategoryData() {
     cachedData.categoriesData ??= defer(() =>
       forkJoin({
-        categoriesContainingNonExcludedElements: sharedIdsProvider.getCategoriesContainingNonExcludedElements(),
-        allCategories: sharedIdsProvider.getAllCategoriesOfElements(),
-        categorySubCategoriesMap: sharedIdsProvider.getCategorySubCategoriesMap(),
+        categoriesContainingNonExcludedElements:
+          sharedIdsProvider.categories.getCategoriesContainingNonExcludedElements(),
+        allCategories: sharedIdsProvider.categories.getAllCategoriesOfElements(),
+        categorySubCategoriesMap: sharedIdsProvider.subCategories.getCategorySubCategoriesMap(),
       }).pipe(
         mergeMap(({ categoriesContainingNonExcludedElements, allCategories, categorySubCategoriesMap }) =>
           queryCategories().pipe(
@@ -460,15 +461,9 @@ export function createCategoriesTreeIdsProvider({
   }
 
   return {
-    get elementModelCategoriesState() {
-      return sharedIdsProvider.elementModelCategoriesState;
-    },
-    get modeledElementsState() {
-      return sharedIdsProvider.modeledElementsState;
-    },
-    getAllModeledElements: async (props) => sharedIdsProvider.getAllModeledElements(props),
-    getCategories: async (props) => sharedIdsProvider.getCategories(props),
-    getModels: (props) => sharedIdsProvider.getModels(props),
+    models: sharedIdsProvider.models,
+    modeledElements: sharedIdsProvider.modeledElements,
+    categories: sharedIdsProvider.categories,
     async getDirectChildDefinitionContainersAndCategories({
       parentDefinitionContainerIds,
       includeEmpty,
@@ -509,7 +504,7 @@ export function createCategoriesTreeIdsProvider({
         return (async function* () {})();
       }
       return eachValueFrom(
-        from(sharedIdsProvider.getSubCategoryCategories({ subCategoryIds })).pipe(
+        from(sharedIdsProvider.subCategories.getSubCategoryCategories({ subCategoryIds })).pipe(
           mergeMap((categorySubCategories) => categorySubCategories.entries()),
           mergeMap(([categoryId, categorySubCategories]) => {
             return getSearchPathsUpToRootCategory({ categoryId }).pipe(

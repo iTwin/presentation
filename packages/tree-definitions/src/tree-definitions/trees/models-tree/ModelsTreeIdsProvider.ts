@@ -33,10 +33,11 @@ interface ModelsTreeIdsProviderProps {
   /** Hierarchy options. Omitted properties use the defaults of `ModelsTreeHierarchyConfiguration`. */
   hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
   /** Shared provider using the same element class and exclusions as `hierarchyConfig`. */
-  sharedIdsProvider: Pick<
-    SharedIdsProvider,
-    "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"
-  >;
+  sharedIdsProvider: {
+    models: Pick<SharedIdsProvider["models"], "getModels">;
+    modeledElements: SharedIdsProvider["modeledElements"];
+    categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+  };
 }
 
 interface SubjectInfo {
@@ -56,10 +57,11 @@ interface ModelInfo {
  * Getters load data on demand, reuse cached results, and reject on failure.
  * @beta
  */
-export interface ModelsTreeIdsProvider extends Pick<
-  SharedIdsProvider,
-  "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories"
-> {
+export interface ModelsTreeIdsProvider {
+  /** Shared modeled-element lookups and their loading state. */
+  readonly modeledElements: SharedIdsProvider["modeledElements"];
+  /** Shared category lookups and their loading state. */
+  readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of shared data. */
   readonly state: IdsProviderDataState;
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
@@ -336,14 +338,8 @@ export function createModelsTreeIdsProvider({
     });
   }
   return {
-    get elementModelCategoriesState() {
-      return sharedIdsProvider.elementModelCategoriesState;
-    },
-    get modeledElementsState() {
-      return sharedIdsProvider.modeledElementsState;
-    },
-    getAllModeledElements: async (props) => sharedIdsProvider.getAllModeledElements(props),
-    getCategories: async (props) => sharedIdsProvider.getCategories(props),
+    modeledElements: sharedIdsProvider.modeledElements,
+    categories: sharedIdsProvider.categories,
     get state(): IdsProviderDataState {
       return combineDataStates([subjectInfosState.state, modelInfosState.state]);
     },
@@ -434,7 +430,7 @@ export function createModelsTreeIdsProvider({
     getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath> {
       return eachValueFrom(
         from(
-          sharedIdsProvider.getModels({
+          sharedIdsProvider.models.getModels({
             categoryId,
             excludeSubModels: true,
             includeOnlyTopMostElementCategory: true,

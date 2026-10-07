@@ -16,6 +16,13 @@ ID providers supply data used by tree hierarchies and searches. Each tree factor
 
 Use `createSharedIdsProvider` to create the `sharedIdsProvider` required by `createModelsTreeIdsProvider`, `createCategoriesTreeIdsProvider`, or `createClassificationsTreeIdsProvider`. Return the resulting tree-specific provider from the corresponding factory's `getIdsProvider` callback. When creating trees for multiple iModel versions, keep separate providers keyed by `imodelKey` and share the resolver across the factories. The provider interfaces also support custom implementations.
 
+`SharedIdsProvider` groups its getters with their loading state:
+
+- `models`: model IDs, plan projection models, and model lookups by category.
+- `modeledElements`: IDs of elements modeled by non-empty sub-models.
+- `categories`: category IDs and category lookups by model.
+- `subCategories`: mappings between categories and sub-categories.
+
 Providers load data on demand and reuse previously loaded data. Their state properties use `IdsProviderDataState`:
 
 - `"not-requested"`: loading has not started.
