@@ -1165,12 +1165,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     allSubModels?: Id64String[];
   }): Promise<{ selectClause: string; bindings: ECSqlBinding[] }> {
-    const childElementVisibilityClause = (
-      await createHiddenClassesWhereClauseFactory({
-        schemaProvider: this.#iModelAccess,
-        className: this.#categoryElementClass,
-      })
-    )("ce");
+    const createElementsHiddenClassesClause = await createHiddenClassesWhereClauseFactory({
+      schemaProvider: this.#iModelAccess,
+      className: this.#categoryElementClass,
+    });
     const selectClause = await createSelectClause({
       ecClassId: { selector: "this.ECClassId" },
       ecInstanceId: { selector: "this.ECInstanceId" },
@@ -1185,7 +1183,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 conditions: [
                   "ce.Parent.Id = this.ECInstanceId",
                   createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
-                  childElementVisibilityClause,
+                  createElementsHiddenClassesClause("ce"),
                 ],
               })}
               LIMIT 1
@@ -1214,7 +1212,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                           "NOT m.IsPrivate",
                           "NOT m.IsTemplate",
                           createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
-                          childElementVisibilityClause,
+                          createElementsHiddenClassesClause("ce"),
                         ],
                       })}
                       LIMIT 1
