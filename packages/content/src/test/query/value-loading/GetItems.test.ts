@@ -1143,7 +1143,9 @@ describe("getItems", () => {
       ]);
       // One primary query plus one target lookup — the target is not joined into the value query.
       expect(queries).to.have.lengthOf(2);
-      expect(queries[1].bindings).to.deep.equal({ [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: ["0x10"] } });
+      expect(queries[1].bindings).to.deep.equal({
+        [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: new Set(["0x10"]) },
+      });
     });
 
     it("loads no targets and runs no lookup when a page references none", async () => {

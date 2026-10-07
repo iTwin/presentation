@@ -167,7 +167,9 @@ describe("createNavigationValuePopulator", () => {
     expect(queries[0].ecsql).to.contain("FROM [Schema].[B]");
     expect(queries[0].ecsql).not.to.contain("ONLY");
     expect(queries[0].ecsql).to.contain("ec_classname");
-    expect(queries[0].bindings).to.deep.equal({ [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: ["0x2"] } });
+    expect(queries[0].bindings).to.deep.equal({
+      [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: new Set(["0x2"]) },
+    });
   });
 
   it("parses a concatenated JSON label", async () => {
@@ -204,7 +206,9 @@ describe("createNavigationValuePopulator", () => {
     const expected = { key: { className: "Schema.B", id: "0x2" }, label: "shared" };
     expect(rows.map((row) => row.get("nav"))).to.deep.equal([[expected], [expected]]);
     expect(queries).to.have.lengthOf(1);
-    expect(queries[0].bindings).to.deep.equal({ [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: ["0x2"] } });
+    expect(queries[0].bindings).to.deep.equal({
+      [`${ECSQL_PREFIX}nav_ids`]: { type: "idset", value: new Set(["0x2"]) },
+    });
   });
 
   it("keeps equal ids in unrelated target classes apart", async () => {
