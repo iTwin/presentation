@@ -28,7 +28,7 @@ import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
-import type { BaseIdsProvider, IdsProviderDataState } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
 import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
@@ -66,9 +66,9 @@ export interface CachedCategoryInfo {
  */
 interface CategoriesTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  /** Base provider with matching element class and exclusions for the target tree. */
-  baseIdsProvider: Pick<
-    BaseIdsProvider,
+  /** Shared provider with matching element class and exclusions for the target tree. */
+  sharedIdsProvider: Pick<
+    SharedIdsProvider,
     | "elementModelCategoriesState"
     | "modeledElementsState"
     | "getAllModeledElements"
@@ -95,7 +95,7 @@ interface CategoriesData {
  * @beta
  */
 export interface CategoriesTreeIdsProvider extends Pick<
-  BaseIdsProvider,
+  SharedIdsProvider,
   "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"
 > {
   /** Returns direct child categories and definition container IDs, excluding empty entries unless requested. */
@@ -130,7 +130,7 @@ export interface CategoriesTreeIdsProvider extends Pick<
   }>;
   /**
    * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
-   * together with base model/category data and sub-category mappings, but not modeled elements.
+   * together with shared model/category data and sub-category mappings, but not modeled elements.
    */
   readonly state: IdsProviderDataState;
   /** Indicates whether the iModel schema supports definition containers. */
@@ -138,14 +138,14 @@ export interface CategoriesTreeIdsProvider extends Pick<
 }
 
 /**
- * Creates a cached category tree ID provider for the specified view type using the supplied base provider.
- * Recreate it together with its base provider after relevant iModel or configuration changes.
+ * Creates a cached category tree ID provider for the specified view type using the supplied shared provider.
+ * Recreate it together with its shared provider after relevant iModel or configuration changes.
  * @beta
  */
 export function createCategoriesTreeIdsProvider({
   imodelAccess,
   type,
-  baseIdsProvider,
+  sharedIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
   const cachedData: {
     definitionContainersData: Observable<DefinitionContainersData> | undefined;
@@ -267,9 +267,9 @@ export function createCategoriesTreeIdsProvider({
   function getCategoryData() {
     cachedData.categoriesData ??= defer(() =>
       forkJoin({
-        categoriesContainingNonExcludedElements: baseIdsProvider.getCategoriesContainingNonExcludedElements(),
-        allCategories: baseIdsProvider.getAllCategoriesOfElements(),
-        categorySubCategoriesMap: baseIdsProvider.getCategorySubCategoriesMap(),
+        categoriesContainingNonExcludedElements: sharedIdsProvider.getCategoriesContainingNonExcludedElements(),
+        allCategories: sharedIdsProvider.getAllCategoriesOfElements(),
+        categorySubCategoriesMap: sharedIdsProvider.getCategorySubCategoriesMap(),
       }).pipe(
         mergeMap(({ categoriesContainingNonExcludedElements, allCategories, categorySubCategoriesMap }) =>
           queryCategories().pipe(
@@ -461,14 +461,14 @@ export function createCategoriesTreeIdsProvider({
 
   return {
     get elementModelCategoriesState() {
-      return baseIdsProvider.elementModelCategoriesState;
+      return sharedIdsProvider.elementModelCategoriesState;
     },
     get modeledElementsState() {
-      return baseIdsProvider.modeledElementsState;
+      return sharedIdsProvider.modeledElementsState;
     },
-    getAllModeledElements: async (props) => baseIdsProvider.getAllModeledElements(props),
-    getCategories: async (props) => baseIdsProvider.getCategories(props),
-    getModels: (props) => baseIdsProvider.getModels(props),
+    getAllModeledElements: async (props) => sharedIdsProvider.getAllModeledElements(props),
+    getCategories: async (props) => sharedIdsProvider.getCategories(props),
+    getModels: (props) => sharedIdsProvider.getModels(props),
     async getDirectChildDefinitionContainersAndCategories({
       parentDefinitionContainerIds,
       includeEmpty,
@@ -509,7 +509,7 @@ export function createCategoriesTreeIdsProvider({
         return (async function* () {})();
       }
       return eachValueFrom(
-        from(baseIdsProvider.getSubCategoryCategories({ subCategoryIds })).pipe(
+        from(sharedIdsProvider.getSubCategoryCategories({ subCategoryIds })).pipe(
           mergeMap((categorySubCategories) => categorySubCategories.entries()),
           mergeMap(([categoryId, categorySubCategories]) => {
             return getSearchPathsUpToRootCategory({ categoryId }).pipe(

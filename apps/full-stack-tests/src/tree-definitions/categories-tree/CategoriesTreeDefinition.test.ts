@@ -9,9 +9,9 @@ import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
-  createBaseIdsProvider,
   createCategoriesTree,
   createCategoriesTreeIdsProvider,
+  createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
 import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -50,7 +50,7 @@ describe("Categories tree", () => {
     const idsProvider = createCategoriesTreeIdsProvider({
       imodelAccess,
       type: "3d",
-      baseIdsProvider: createBaseIdsProvider({
+      sharedIdsProvider: createSharedIdsProvider({
         queryExecutor: imodelAccess,
         elementClassName: "BisCore.GeometricElement3d",
       }),

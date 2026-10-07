@@ -31,7 +31,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -256,7 +256,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     createCategoriesTreeIdsProvider({
       imodelAccess: props.imodelAccess,
       type: props.viewType,
-      baseIdsProvider: createBaseIdsProvider({
+      sharedIdsProvider: createSharedIdsProvider({
         queryExecutor: props.imodelAccess,
         elementClassName: getClassesByView(props.viewType).elementClass,
         excludedElementClassNames:

@@ -26,7 +26,7 @@ import { assert, Guid } from "@itwin/core-bentley";
 import { createPredicateBasedHierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -215,7 +215,7 @@ export function createClassificationsTree(props: ClassificationsTreeProps) {
     createClassificationsTreeIdsProvider({
       queryExecutor: props.imodelAccess,
       hierarchyConfig: props.hierarchyConfig,
-      baseIdsProvider: createBaseIdsProvider({
+      sharedIdsProvider: createSharedIdsProvider({
         queryExecutor: props.imodelAccess,
         elementClassName: CLASS_NAMES.GeometricElement3d,
         excludedElementClassNames: props.hierarchyConfig.elements?.excludedClasses,

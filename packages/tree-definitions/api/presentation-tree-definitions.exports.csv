@@ -1,17 +1,17 @@
 sep=;
 Release Tag;API Item Type;API Item Name
-beta;interface;BaseIdsProvider
 beta;interface;CategoriesTreeIdsProvider
 beta;namespace;CategoriesTreeNode
 beta;interface;ClassificationsTreeIdsProvider
 beta;namespace;ClassificationsTreeNode
-beta;function;createBaseIdsProvider
 beta;function;createCategoriesTree
 beta;function;createCategoriesTreeIdsProvider
 beta;function;createClassificationsTree
 beta;function;createClassificationsTreeIdsProvider
 beta;function;createModelsTree
 beta;function;createModelsTreeIdsProvider
+beta;function;createSharedIdsProvider
 beta;type;IdsProviderDataState
 beta;interface;ModelsTreeIdsProvider
 beta;namespace;ModelsTreeNode
+beta;interface;SharedIdsProvider

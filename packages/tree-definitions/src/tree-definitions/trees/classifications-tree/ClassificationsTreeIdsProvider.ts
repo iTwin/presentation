@@ -15,7 +15,7 @@ import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsProvider, IdsProviderDataState } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
@@ -55,8 +55,8 @@ interface ClassificationsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
   classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
-  /** Base provider with matching element class and exclusions for the target tree. */
-  baseIdsProvider: Pick<BaseIdsProvider, "getCategoriesContainingNonExcludedElements">;
+  /** Shared provider with matching element class and exclusions for the target tree. */
+  sharedIdsProvider: Pick<SharedIdsProvider, "getCategoriesContainingNonExcludedElements">;
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -71,7 +71,7 @@ interface ClassificationsTreeIdsProviderData {
  */
 export interface ClassificationsTreeIdsProvider {
   /**
-   * State of classification data. `getAllClassifications` loads this and base model/category data,
+   * State of classification data. `getAllClassifications` loads this and shared model/category data,
    * but not modeled elements or sub-category mappings.
    */
   readonly state: IdsProviderDataState;
@@ -89,12 +89,12 @@ export interface ClassificationsTreeIdsProvider {
 }
 
 /**
- * Creates a cached classification tree ID provider using the supplied base provider and category relationships.
- * Recreate it together with its base provider after relevant iModel or configuration changes.
+ * Creates a cached classification tree ID provider using the supplied shared provider and category relationships.
+ * Recreate it together with its shared provider after relevant iModel or configuration changes.
  * @beta
  */
 export function createClassificationsTreeIdsProvider({
-  baseIdsProvider,
+  sharedIdsProvider,
   hierarchyConfig,
   queryExecutor,
   classificationToCategoriesRelationshipSpecification,
@@ -216,7 +216,7 @@ export function createClassificationsTreeIdsProvider({
   }
 
   function getData() {
-    cachedData ??= defer(async () => baseIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
+    cachedData ??= defer(async () => sharedIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
       mergeMap((categoriesContainingNonExcludedElements) =>
         queryClassifications().pipe(
           reduce(

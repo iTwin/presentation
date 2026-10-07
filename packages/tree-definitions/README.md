@@ -14,7 +14,7 @@ Use `createClassificationsTree` to create a hierarchy definition with a configur
 
 ID providers supply data used by tree hierarchies and searches. Each tree factory creates its own provider by default, or accepts a `getIdsProvider(imodelKey)` callback that returns the provider for the requested iModel. The factory's `imodelAccess` must include its `imodelKey`.
 
-Use `createBaseIdsProvider` to create the `baseIdsProvider` required by `createModelsTreeIdsProvider`, `createCategoriesTreeIdsProvider`, or `createClassificationsTreeIdsProvider`. Return the resulting tree-specific provider from the corresponding factory's `getIdsProvider` callback. When creating trees for multiple iModel versions, keep separate providers keyed by `imodelKey` and share the resolver across the factories. The provider interfaces also support custom implementations.
+Use `createSharedIdsProvider` to create the `sharedIdsProvider` required by `createModelsTreeIdsProvider`, `createCategoriesTreeIdsProvider`, or `createClassificationsTreeIdsProvider`. Return the resulting tree-specific provider from the corresponding factory's `getIdsProvider` callback. When creating trees for multiple iModel versions, keep separate providers keyed by `imodelKey` and share the resolver across the factories. The provider interfaces also support custom implementations.
 
 Providers load data on demand and reuse previously loaded data. Their state properties use `IdsProviderDataState`:
 

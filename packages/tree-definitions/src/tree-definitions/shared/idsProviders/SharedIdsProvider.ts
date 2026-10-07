@@ -34,13 +34,13 @@ import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js"
 export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "failed";
 
 /**
- * Provides model, category, and sub-category IDs for tree hierarchy definitions.
+ * Provides model, category, and sub-category IDs shared by tree-specific ID providers.
  * Element data is limited to the configured element class and non-private, non-template models.
  * Getters initialize their datasets, share in-flight work, and reject on failure. Subsequent calls can retry.
  * Custom implementations must expose live state and mark data `loaded` only when it is available.
  * @beta
  */
-export interface BaseIdsProvider {
+export interface SharedIdsProvider {
   /** State of model/category data, including plan projection models. Loaded by `getAllModels`. */
   readonly elementModelCategoriesState: IdsProviderDataState;
   /** State of modeled-element data. `getAllModeledElements` loads this and model/category data. */
@@ -81,22 +81,22 @@ export interface BaseIdsProvider {
  * Query access and element class filters shared by tree ID providers.
  * @beta
  */
-interface BaseIdsProviderProps {
+interface SharedIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
 }
 
 /**
- * Creates a cached ID provider for elements of the specified class and optional excluded classes.
+ * Creates a shared, cached ID provider for elements of the specified class and optional excluded classes.
  * Share it only across compatible iModel and filter configurations. Recreate it after relevant data changes.
  * @beta
  */
-export function createBaseIdsProvider({
+export function createSharedIdsProvider({
   elementClassName,
   queryExecutor,
   excludedElementClassNames,
-}: BaseIdsProviderProps): BaseIdsProvider {
+}: SharedIdsProviderProps): SharedIdsProvider {
   const componentId: GuidString = Guid.createValue();
   const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor, componentId });
   let modeledElementsData: ReturnType<ModeledElementsProvider["getData"]> | undefined;

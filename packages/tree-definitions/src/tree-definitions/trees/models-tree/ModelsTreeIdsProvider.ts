@@ -16,7 +16,7 @@ import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsProvider, IdsProviderDataState } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
 import type {
   ModelsTreeHierarchyConfiguration,
@@ -32,9 +32,9 @@ interface ModelsTreeIdsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   /** Hierarchy options. Omitted properties use the defaults of `ModelsTreeHierarchyConfiguration`. */
   hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
-  /** Base provider using the same element class and exclusions as `hierarchyConfig`. */
-  baseIdsProvider: Pick<
-    BaseIdsProvider,
+  /** Shared provider using the same element class and exclusions as `hierarchyConfig`. */
+  sharedIdsProvider: Pick<
+    SharedIdsProvider,
     "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories" | "getModels"
   >;
 }
@@ -57,10 +57,10 @@ interface ModelInfo {
  * @beta
  */
 export interface ModelsTreeIdsProvider extends Pick<
-  BaseIdsProvider,
+  SharedIdsProvider,
   "elementModelCategoriesState" | "modeledElementsState" | "getAllModeledElements" | "getCategories"
 > {
-  /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of base data. */
+  /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of shared data. */
   readonly state: IdsProviderDataState;
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
   getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
@@ -86,13 +86,13 @@ export interface ModelsTreeIdsProvider extends Pick<
 
 /**
  * Creates an ID provider for model tree hierarchies using the supplied hierarchy configuration.
- * Recreate it together with its base provider after relevant iModel or configuration changes.
+ * Recreate it together with its shared provider after relevant iModel or configuration changes.
  * @beta
  */
 export function createModelsTreeIdsProvider({
   queryExecutor,
   hierarchyConfig: configOverrides,
-  baseIdsProvider,
+  sharedIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
   const hierarchyConfig = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const cachedData: {
@@ -337,13 +337,13 @@ export function createModelsTreeIdsProvider({
   }
   return {
     get elementModelCategoriesState() {
-      return baseIdsProvider.elementModelCategoriesState;
+      return sharedIdsProvider.elementModelCategoriesState;
     },
     get modeledElementsState() {
-      return baseIdsProvider.modeledElementsState;
+      return sharedIdsProvider.modeledElementsState;
     },
-    getAllModeledElements: async (props) => baseIdsProvider.getAllModeledElements(props),
-    getCategories: async (props) => baseIdsProvider.getCategories(props),
+    getAllModeledElements: async (props) => sharedIdsProvider.getAllModeledElements(props),
+    getCategories: async (props) => sharedIdsProvider.getCategories(props),
     get state(): IdsProviderDataState {
       return combineDataStates([subjectInfosState.state, modelInfosState.state]);
     },
@@ -434,7 +434,7 @@ export function createModelsTreeIdsProvider({
     getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath> {
       return eachValueFrom(
         from(
-          baseIdsProvider.getModels({
+          sharedIdsProvider.getModels({
             categoryId,
             excludeSubModels: true,
             includeOnlyTopMostElementCategory: true,

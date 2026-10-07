@@ -14,7 +14,7 @@ import type { Observable } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { CategoryId, SubCategoryId } from "../Types.js";
-import type { IdsProviderDataState } from "./BaseIdsProvider.js";
+import type { IdsProviderDataState } from "./SharedIdsProvider.js";
 
 interface SubCategoriesProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;

@@ -3,8 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export { createBaseIdsProvider } from "./tree-definitions/shared/idsProviders/BaseIdsProvider.js";
-export type { BaseIdsProvider, IdsProviderDataState } from "./tree-definitions/shared/idsProviders/BaseIdsProvider.js";
+export { createSharedIdsProvider } from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
+export type {
+  SharedIdsProvider as SharedIdsProvider,
+  IdsProviderDataState,
+} from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 
 export { ModelsTreeNode } from "./tree-definitions/trees/models-tree/ModelsTreeNode.js";
 export { createModelsTree } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";

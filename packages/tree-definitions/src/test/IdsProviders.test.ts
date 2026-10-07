@@ -5,15 +5,15 @@
 
 import { firstValueFrom } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
-import { createBaseIdsProvider } from "../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
 import { ModeledElementsProvider } from "../tree-definitions/shared/idsProviders/ModeledElementsProvider.js";
+import { createSharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 import { createCategoriesTreeIdsProvider } from "../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { createClassificationsTreeIdsProvider } from "../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 import { createModelsTreeIdsProvider } from "../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider, ECSqlQueryRow } from "@itwin/presentation-shared";
-import type { BaseIdsProvider } from "../tree-definitions/shared/idsProviders/BaseIdsProvider.js";
+import type { SharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 
 function createAccess(waitForQuery: (token: string) => Promise<void> = async () => {}) {
   return {
@@ -42,7 +42,7 @@ function createAccess(waitForQuery: (token: string) => Promise<void> = async () 
 }
 
 function createBase(queryExecutor: LimitingECSqlQueryExecutor) {
-  return createBaseIdsProvider({ queryExecutor, elementClassName: "BisCore.GeometricElement3d" });
+  return createSharedIdsProvider({ queryExecutor, elementClassName: "BisCore.GeometricElement3d" });
 }
 
 function createGate() {
@@ -56,9 +56,9 @@ function createGate() {
 }
 
 const baseDatasets = [
-  { state: "elementModelCategoriesState", load: async (base: BaseIdsProvider) => base.getAllModels() },
-  { state: "modeledElementsState", load: async (base: BaseIdsProvider) => base.getAllModeledElements() },
-  { state: "subCategoriesState", load: async (base: BaseIdsProvider) => base.getCategorySubCategoriesMap() },
+  { state: "elementModelCategoriesState", load: async (base: SharedIdsProvider) => base.getAllModels() },
+  { state: "modeledElementsState", load: async (base: SharedIdsProvider) => base.getAllModeledElements() },
+  { state: "subCategoriesState", load: async (base: SharedIdsProvider) => base.getCategorySubCategoriesMap() },
 ] as const;
 
 describe("ID provider data states", () => {
@@ -144,7 +144,7 @@ describe("ID provider data states", () => {
     });
   });
 
-  it("loads independent base datasets only when needed", async () => {
+  it("loads independent shared datasets only when needed", async () => {
     const access = createAccess();
     const base = createBase(access);
     await base.getAllModels();
@@ -160,24 +160,24 @@ describe("ID provider data states", () => {
   const treeFactories = [
     {
       name: "models",
-      create: (access: ReturnType<typeof createAccess>, baseIdsProvider: BaseIdsProvider) => {
-        const provider = createModelsTreeIdsProvider({ queryExecutor: access, baseIdsProvider });
+      create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
+        const provider = createModelsTreeIdsProvider({ queryExecutor: access, sharedIdsProvider });
         return { provider, load: async () => provider.getParentSubjectIds() };
       },
     },
     {
       name: "categories",
-      create: (access: ReturnType<typeof createAccess>, baseIdsProvider: BaseIdsProvider) => {
-        const provider = createCategoriesTreeIdsProvider({ imodelAccess: access, baseIdsProvider, type: "3d" });
+      create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
+        const provider = createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, type: "3d" });
         return { provider, load: async () => provider.getAllDefinitionContainersAndCategories() };
       },
     },
     {
       name: "classifications",
-      create: (access: ReturnType<typeof createAccess>, baseIdsProvider: BaseIdsProvider) => {
+      create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
         const provider = createClassificationsTreeIdsProvider({
           queryExecutor: access,
-          baseIdsProvider,
+          sharedIdsProvider,
           hierarchyConfig: { rootClassificationSystemCode: "test" },
         });
         return { provider, load: async () => provider.getAllClassifications() };

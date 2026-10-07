@@ -12,9 +12,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
-  createBaseIdsProvider,
   createClassificationsTree,
   createClassificationsTreeIdsProvider,
+  createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -62,7 +62,7 @@ describe("Classifications tree", () => {
     const idsProvider = createClassificationsTreeIdsProvider({
       queryExecutor: imodelAccess,
       hierarchyConfig,
-      baseIdsProvider: createBaseIdsProvider({
+      sharedIdsProvider: createSharedIdsProvider({
         queryExecutor: imodelAccess,
         elementClassName: "BisCore.GeometricElement3d",
       }),
@@ -126,7 +126,7 @@ describe("Classifications tree", () => {
         const idsProvider = createClassificationsTreeIdsProvider({
           queryExecutor: imodelAccess,
           hierarchyConfig,
-          baseIdsProvider: createBaseIdsProvider({
+          sharedIdsProvider: createSharedIdsProvider({
             queryExecutor: imodelAccess,
             elementClassName: "BisCore.GeometricElement3d",
           }),

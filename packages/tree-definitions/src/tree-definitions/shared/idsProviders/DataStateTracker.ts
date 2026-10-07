@@ -6,7 +6,7 @@
 import { tap } from "rxjs";
 
 import type { MonoTypeOperatorFunction } from "rxjs";
-import type { IdsProviderDataState } from "./BaseIdsProvider.js";
+import type { IdsProviderDataState } from "./SharedIdsProvider.js";
 
 /**
  * Tracks a dataset's load attempts. Apply after data aggregation and before sharing the observable.

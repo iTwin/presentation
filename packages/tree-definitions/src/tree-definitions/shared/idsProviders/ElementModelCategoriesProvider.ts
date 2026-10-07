@@ -14,7 +14,7 @@ import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
-import type { IdsProviderDataState } from "./BaseIdsProvider.js";
+import type { IdsProviderDataState } from "./SharedIdsProvider.js";
 
 interface ElementModelCategoriesProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;

@@ -11,8 +11,8 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CLASS_NAMES,
-  createBaseIdsProvider,
   createCategoriesTreeIdsProvider,
+  createSharedIdsProvider,
   getClassesByView,
   SearchLimitExceededError,
 } from "@itwin/presentation-tree-definitions/internal";
@@ -213,7 +213,7 @@ describe("Categories tree", () => {
           const idsProvider = createCategoriesTreeIdsProvider({
             imodelAccess,
             type: viewType,
-            baseIdsProvider: createBaseIdsProvider({
+            sharedIdsProvider: createSharedIdsProvider({
               queryExecutor: imodelAccess,
               elementClassName: getClassesByView(viewType).elementClass,
             }),
