@@ -594,8 +594,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({ conditions: [subjectFilterClauses.where] })}
           `,
           bindings: [
-            { type: "idset", value: [...(await this.#idsProvider.getParentSubjectIds())] },
-            { type: "idset", value: [...childSubjectIds] },
+            { type: "idset", value: await this.#idsProvider.getParentSubjectIds() },
+            { type: "idset", value: childSubjectIds },
           ],
         },
       });
@@ -659,7 +659,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${modelFilterClauses.joins}
             ${createWhereClause({ conditions: [modelFilterClauses.where && `model.IsHidden OR ${modelFilterClauses.where}`] })}
           `,
-          bindings: [{ type: "idset", value: [...childModelIds] }],
+          bindings: [{ type: "idset", value: childModelIds }],
         },
       });
     return defs;
@@ -1427,7 +1427,7 @@ export function createCategoriesSearchPaths(props: {
             ecsql,
             bindings: [
               { type: "idset", value: targetCategoryIds },
-              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
+              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: subModelIds }] : []),
             ],
           },
           { rowFormat: "Indexes", limit: "unbounded", restartToken: `${componentName}/${uniqueId}/categories-paths` },

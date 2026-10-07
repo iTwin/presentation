@@ -492,7 +492,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
           ...(childClassificationsWithChildren.length > 0
             ? [{ type: "idset" as const, value: childClassificationsWithChildren }]
             : []),
-          { type: "idset", value: [...childClassifications] },
+          { type: "idset", value: childClassifications },
         ],
       },
     };
@@ -886,8 +886,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
       { type: "string" as const, value: props.hierarchyConfig.rootClassificationSystemCode },
       ...(classificationIds.length > 0
         ? [
-            { type: "idset" as const, value: [...classificationIds] },
-            { type: "idset" as const, value: [...classificationIds] },
+            { type: "idset" as const, value: classificationIds },
+            { type: "idset" as const, value: classificationIds },
           ]
         : []),
       { type: "string" as const, value: adjustedLabel },

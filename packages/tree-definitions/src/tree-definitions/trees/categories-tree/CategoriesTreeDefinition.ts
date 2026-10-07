@@ -784,7 +784,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           ${instanceFilterClauses.joins}
           ${createWhereClause({ conditions: [instanceFilterClauses.where] })}
         `,
-        bindings: [{ type: "idset", value: [...definitionContainerIds] }],
+        bindings: [{ type: "idset", value: definitionContainerIds }],
       },
     };
   }
@@ -1618,11 +1618,9 @@ function createInstanceKeyPathsFromInstanceLabel(
           ${limit === "unbounded" ? "" : `LIMIT ${(limit ?? MAX_SEARCH_INSTANCE_KEY_COUNT) + 1}`}
         `;
       const bindings = [
-        ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: [...categories] }] : []),
-        ...(hierarchyConfig.subCategories.nodes === "include"
-          ? [{ type: "idset" as const, value: [...categories] }]
-          : []),
-        ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: [...definitionContainers] }] : []),
+        ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
+        ...(hierarchyConfig.subCategories.nodes === "include" ? [{ type: "idset" as const, value: categories }] : []),
+        ...(definitionContainers.length > 0 ? [{ type: "idset" as const, value: definitionContainers }] : []),
         { type: "string" as const, value: adjustedLabel },
         ...(hierarchyConfig.elements.nodes === "include" ? [{ type: "string" as const, value: adjustedLabel }] : []),
         ...(hierarchyConfig.subCategories.nodes === "include"
@@ -1851,7 +1849,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
           ecsql,
           bindings: [
             { type: "idset", value: targetItems },
-            ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
+            ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: subModelIds }] : []),
           ],
         },
         {
@@ -2000,7 +1998,7 @@ export function createCategoriesSearchPaths(props: {
             ecsql,
             bindings: [
               { type: "idset", value: targetCategoryIds },
-              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
+              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: subModelIds }] : []),
             ],
           },
           { rowFormat: "Indexes", limit: "unbounded", restartToken: `${componentName}/${uniqueId}/categories-paths` },
