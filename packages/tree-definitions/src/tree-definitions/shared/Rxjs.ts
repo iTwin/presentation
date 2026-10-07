@@ -42,10 +42,12 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
  */
 export function fromWithRelease(props: { source: Id64Arg; releaseOnCount?: number }): Observable<Id64String>;
 export function fromWithRelease<T>(
-  props: ({ source: Set<T> | ReadonlyArray<T> } | { source: Iterable<T>; size: number }) & { releaseOnCount?: number },
+  props: ({ source: ReadonlySet<T> | ReadonlyArray<T> } | { source: Iterable<T>; size: number }) & {
+    releaseOnCount?: number;
+  },
 ): Observable<T>;
 export function fromWithRelease(props: {
-  source: Id64Arg | Set<unknown> | ReadonlyArray<unknown> | Iterable<unknown>;
+  source: Id64Arg | ReadonlySet<unknown> | ReadonlyArray<unknown> | Iterable<unknown>;
   size?: number;
   releaseOnCount?: number;
 }): Observable<unknown> {
