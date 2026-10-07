@@ -35,7 +35,7 @@ export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "f
 
 /**
  * Provides model, category, and sub-category IDs for tree hierarchy definitions.
- * Element data is limited to the configured element class and non-private models.
+ * Element data is limited to the configured element class and non-private, non-template models.
  * Getters initialize their datasets, share in-flight work, and reject on failure. Subsequent calls can retry.
  * Custom implementations must expose live state and mark data `loaded` only when it is available.
  * @beta

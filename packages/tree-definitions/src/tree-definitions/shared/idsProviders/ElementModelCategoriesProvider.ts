@@ -84,7 +84,7 @@ export class ElementModelCategoriesProvider {
             }
           FROM ${this.#elementClassName} this
           JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
-          WHERE m.IsPrivate = false
+          WHERE m.IsPrivate = false AND m.IsTemplate = false
           GROUP BY modelId, categoryId
         `;
       return this.#queryExecutor.createQueryReader(

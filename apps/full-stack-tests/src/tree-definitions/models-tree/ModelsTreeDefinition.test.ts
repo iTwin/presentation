@@ -26,7 +26,7 @@ import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, TestSchema } from "../IModelUtils.js";
+import { buildIModel, insertGeometricModelWithPartition, TestSchema } from "../IModelUtils.js";
 import { createModelsTreeProvider } from "./Utils.js";
 
 import type { InstanceKey } from "@itwin/presentation-shared";
@@ -308,22 +308,30 @@ describe("Models tree", () => {
         await validateHierarchy({ provider, expect: [] });
       });
 
-      it("hides subjects with private models", async () => {
+      it("hides subjects with private or template models", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) =>
           withEditTxn(imodel, (txn) => {
-            const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
-            const childSubject1 = insertSubject({ txn, codeValue: "child subject 1", parentId: rootSubject.id });
-            const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
-            const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id, isPrivate: true });
-            const childSubject2 = insertSubject({
-              txn,
-              codeValue: "child subject 2",
-              parentId: rootSubject.id,
-              jsonProperties: { Subject: { Model: { TargetPartition: model.id } } },
-            });
             const category = insertSpatialCategory({ txn, codeValue: "category" });
-            insertPhysicalElement({ txn, userLabel: `element`, modelId: model.id, categoryId: category.id });
-            return { rootSubject, childSubject1, childSubject2, model };
+            for (const flag of ["isPrivate", "isTemplate"] as const) {
+              const childSubject = insertSubject({
+                txn,
+                codeValue: `child subject ${flag}`,
+                parentId: IModel.rootSubjectId,
+              });
+              const model = insertGeometricModelWithPartition({
+                txn,
+                codeValue: flag,
+                partitionParentId: childSubject.id,
+                [flag]: true,
+              });
+              insertSubject({
+                txn,
+                codeValue: `target partition subject ${flag}`,
+                parentId: IModel.rootSubjectId,
+                jsonProperties: { Subject: { Model: { TargetPartition: model.id } } },
+              });
+              insertPhysicalElement({ txn, userLabel: "element", modelId: model.id, categoryId: category.id });
+            }
           }),
         );
         const { imodelConnection } = buildIModelResult;
@@ -619,20 +627,14 @@ describe("Models tree", () => {
         });
       });
 
-      it("hides private models and their content", async () => {
+      it("hides private and template models and their content", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) =>
           withEditTxn(imodel, (txn) => {
-            const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
-            const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
-            const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id, isPrivate: true });
             const category = insertSpatialCategory({ txn, codeValue: "category" });
-            const element = insertPhysicalElement({
-              txn,
-              userLabel: `element`,
-              modelId: model.id,
-              categoryId: category.id,
-            });
-            return { rootSubject, model, category, element };
+            for (const flag of ["isPrivate", "isTemplate"] as const) {
+              const model = insertGeometricModelWithPartition({ txn, codeValue: flag, [flag]: true });
+              insertPhysicalElement({ txn, userLabel: "element", modelId: model.id, categoryId: category.id });
+            }
           }),
         );
         const { imodelConnection } = buildIModelResult;
@@ -738,7 +740,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of child element is set to false when it's subModel is private", async () => {
+      it("child elements have no children when their subModels are private or template", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -747,21 +749,24 @@ describe("Models tree", () => {
             const category = insertSpatialCategory({ txn, codeValue: "category" });
             const rootElement = insertPhysicalElement({
               txn,
-              userLabel: `root element`,
+              userLabel: "root element",
               modelId: model.id,
               categoryId: category.id,
             });
-            const childElement = insertPhysicalElement({
-              txn,
-              userLabel: `child element`,
-              modelId: model.id,
-              categoryId: category.id,
-              parentId: rootElement.id,
-              classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+            const childElements = (["isPrivate", "isTemplate"] as const).map((flag) => {
+              const childElement = insertPhysicalElement({
+                txn,
+                userLabel: `child element ${flag}`,
+                modelId: model.id,
+                categoryId: category.id,
+                parentId: rootElement.id,
+                classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+              });
+              const subModel = insertPhysicalSubModel({ txn, modeledElementId: childElement.id, [flag]: true });
+              insertPhysicalElement({ txn, userLabel: "element", modelId: subModel.id, categoryId: category.id });
+              return childElement;
             });
-            const subModel = insertPhysicalSubModel({ txn, modeledElementId: childElement.id, isPrivate: true });
-            insertPhysicalElement({ txn, userLabel: `child element2`, modelId: subModel.id, categoryId: category.id });
-            return { rootSubject, model, category, rootElement, childElement };
+            return { rootSubject, model, category, rootElement, childElements };
           }),
         );
         const { imodelConnection, ...keys } = buildIModelResult;
@@ -785,14 +790,14 @@ describe("Models tree", () => {
                           supportsFiltering: true,
                           children: [
                             NodeValidators.createForClassGroupingNode({
-                              className: keys.childElement.className,
-                              children: [
+                              className: keys.childElements[0].className,
+                              children: keys.childElements.map((childElement) =>
                                 NodeValidators.createForInstanceNode({
-                                  instanceKeys: [keys.childElement],
+                                  instanceKeys: [childElement],
                                   supportsFiltering: true,
                                   children: false,
                                 }),
-                              ],
+                              ),
                             }),
                           ],
                         }),
@@ -939,23 +944,26 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of element is set to false when it's subModel is private", async () => {
+      it("elements have no children when their subModels are private or template", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
             const partition = insertPhysicalPartition({ txn, codeValue: "model", parentId: rootSubject.id });
             const model = insertPhysicalSubModel({ txn, modeledElementId: partition.id });
             const category = insertSpatialCategory({ txn, codeValue: "category" });
-            const rootElement = insertPhysicalElement({
-              txn,
-              userLabel: `root element`,
-              modelId: model.id,
-              categoryId: category.id,
-              classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+            const rootElements = (["isPrivate", "isTemplate"] as const).map((flag) => {
+              const rootElement = insertPhysicalElement({
+                txn,
+                userLabel: `root element ${flag}`,
+                modelId: model.id,
+                categoryId: category.id,
+                classFullName: testSchema.items.SubModelablePhysicalObject.fullName,
+              });
+              const subModel = insertPhysicalSubModel({ txn, modeledElementId: rootElement.id, [flag]: true });
+              insertPhysicalElement({ txn, userLabel: "element", modelId: subModel.id, categoryId: category.id });
+              return rootElement;
             });
-            const subModel = insertPhysicalSubModel({ txn, modeledElementId: rootElement.id, isPrivate: true });
-            insertPhysicalElement({ txn, userLabel: `root element`, modelId: subModel.id, categoryId: category.id });
-            return { rootSubject, model, category, rootElement };
+            return { rootSubject, model, category, rootElements };
           }),
         );
         const { imodelConnection, ...keys } = buildIModelResult;
@@ -972,14 +980,14 @@ describe("Models tree", () => {
                   supportsFiltering: true,
                   children: [
                     NodeValidators.createForClassGroupingNode({
-                      className: keys.rootElement.className,
-                      children: [
+                      className: keys.rootElements[0].className,
+                      children: keys.rootElements.map((rootElement) =>
                         NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.rootElement],
+                          instanceKeys: [rootElement],
                           supportsFiltering: true,
                           children: false,
                         }),
-                      ],
+                      ),
                     }),
                   ],
                 }),
