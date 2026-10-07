@@ -17,9 +17,9 @@ import {
   SearchLimitExceededError,
 } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { createIModelAccess } from "../Common.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import {
   getDefaultSubCategoryId,
   getInsertFunctionByViewType,
@@ -158,6 +158,44 @@ describe("Categories tree", () => {
       describe(`${viewType} view`, () => {
         const { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement } =
           getInsertFunctionByViewType(viewType);
+
+        it("excludes private and template model elements from label searches", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) =>
+            withEditTxn(imodel, (txn) => {
+              const category = insertCategory({ txn, codeValue: "shared category" });
+              const model = insertElementsModel({ txn, codeValue: "model" });
+              const element = insertElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                userLabel: "matching element",
+              });
+              for (const flag of ["isPrivate", "isTemplate"] as const) {
+                const hiddenModel = insertGeometricModelWithPartition({ txn, codeValue: flag, viewType, [flag]: true });
+                insertElement({
+                  txn,
+                  modelId: hiddenModel.id,
+                  categoryId: category.id,
+                  userLabel: `matching element ${flag}`,
+                });
+              }
+              return { category, element };
+            }),
+          );
+          const { imodelConnection, ...keys } = buildIModelResult;
+          const { createInstanceKeyPaths } = createCategoriesTree({
+            imodelAccess: createIModelAccess(imodelConnection),
+            viewType,
+            hierarchyConfig: { elements: { nodes: "include" } },
+          });
+
+          expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
+            {
+              path: [keys.category, { id: keys.element.id, className: getClassesByView(viewType).elementClass }],
+              target: keys.element.id,
+            },
+          ]);
+        });
 
         it("does not emit search paths for a hidden default sub-category", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) =>
