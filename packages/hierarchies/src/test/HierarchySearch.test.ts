@@ -156,6 +156,39 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("accept path", () => {
+      it.each(["array", "object"] as const)("accepts a readonly path in %s form without modifying it", (form) => {
+        const root = Object.freeze(createTestGenericNodeKey({ id: "root" }));
+        const target = Object.freeze(createTestInstanceKey({ id: "0x1" }));
+        const path = Object.freeze([root, target]);
+        const builder = HierarchySearchTree.createBuilder();
+
+        builder.accept({ path: form === "array" ? path : { path, options: Object.freeze({ reveal: true }) } });
+
+        expect(builder.getTree()).toEqual([
+          {
+            identifier: root,
+            options: form === "object" ? { autoExpand: true } : undefined,
+            children: [
+              {
+                identifier: target,
+                options: form === "object" ? { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } : undefined,
+              },
+            ],
+          },
+        ]);
+        expect(path).toEqual([root, target]);
+      });
+
+      it("ignores empty readonly paths", () => {
+        const path = Object.freeze([]);
+        const builder = HierarchySearchTree.createBuilder();
+
+        builder.accept({ path });
+        builder.accept({ path: { path, options: { reveal: true } } });
+
+        expect(builder.getTree()).toEqual([]);
+      });
+
       it("adds a single path in array form", () => {
         const builder = HierarchySearchTree.createBuilder();
         builder.accept({ path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })] });

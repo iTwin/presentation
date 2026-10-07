@@ -1109,8 +1109,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         reduce((acc, { path, target }) => {
           acc.accept({
             path: {
-              // The builder requires a mutable path type but does not modify the path or its keys.
-              path: path as ModelsTreeSearchPathKey[],
+              path,
               options: props.revealTargets
                 ? {
                     reveal:

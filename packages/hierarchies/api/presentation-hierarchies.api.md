@@ -449,15 +449,15 @@ export interface HierarchyProvider {
 }
 
 // @public
-export type HierarchySearchPath = HierarchyNodeIdentifiersPath | {
-    path: HierarchyNodeIdentifiersPath;
+export type HierarchySearchPath = Readonly<HierarchyNodeIdentifiersPath> | {
+    path: Readonly<HierarchyNodeIdentifiersPath>;
     options?: HierarchySearchPathOptions;
 };
 
 // @public (undocumented)
 export namespace HierarchySearchPath {
     export function mergeOptions(lhs: HierarchySearchPathOptions | undefined, rhs: HierarchySearchPathOptions | undefined): HierarchySearchPathOptions | undefined;
-    export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath>;
+    export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, Readonly<HierarchyNodeIdentifiersPath>>;
 }
 
 // @public (undocumented)

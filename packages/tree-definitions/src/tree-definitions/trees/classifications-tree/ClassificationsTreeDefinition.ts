@@ -690,13 +690,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
         releaseMainThreadOnItemsCount(1000),
         reduce((acc, { path }) => {
-          acc.accept({
-            path: {
-              // The builder requires a mutable path type but does not modify the path or its keys.
-              path: path as ClassificationsTreeSearchPathKey[],
-              options: props.revealTargets ? { reveal: true } : undefined,
-            },
-          });
+          acc.accept({ path: { path, options: props.revealTargets ? { reveal: true } : undefined } });
           return acc;
         }, builder),
       ),
