@@ -36,7 +36,6 @@ type NewFieldType = ReadonlyContentDescriptor["fields"][string]["type"];
 interface NewFieldMapping {
   canonicalKey: CanonicalField["key"];
   sourceFields: ReadonlyPropertyField[];
-  type: CanonicalFieldType;
 }
 
 function getCategoryPath(
@@ -252,7 +251,6 @@ function createCanonicalDescriptor(
     fieldMappings: fields.map((field) => ({
       canonicalKey: field.key,
       sourceFields: sourceFieldsByKey.get(field.key)!,
-      type: field.type,
     })),
   };
 }
@@ -261,13 +259,13 @@ function isNavigationValue(value: unknown): value is NavigationValue {
   return typeof value === "object" && value !== null && "key" in value && "label" in value;
 }
 
-async function toCanonicalValue(value: CapturedNewValue, type: CanonicalFieldType): Promise<CanonicalValue> {
+async function toCanonicalValue(value: CapturedNewValue, type: NewFieldType): Promise<CanonicalValue> {
   if (value === undefined) {
     return undefined;
   }
   switch (type.kind) {
     case "primitive":
-      switch (type.name) {
+      switch (type.type) {
         case "Double":
           if (typeof value === "number") {
             return roundFloatingPointNoise(value);
@@ -284,7 +282,7 @@ async function toCanonicalValue(value: CapturedNewValue, type: CanonicalFieldTyp
             return value;
           }
       }
-      throw new Error(`Expected a ${type.name} value.`);
+      throw new Error(`Expected a ${type.type} value.`);
     case "navigation":
       if (!isNavigationValue(value)) {
         throw new Error("Expected a navigation value.");
@@ -294,7 +292,7 @@ async function toCanonicalValue(value: CapturedNewValue, type: CanonicalFieldTyp
       if (!Array.isArray(value)) {
         throw new Error("Expected an array value.");
       }
-      return Promise.all(value.map(async (entry) => toCanonicalValue(entry, type.member)));
+      return Promise.all(value.map(async (entry) => toCanonicalValue(entry, type.elementType)));
     case "struct":
       if (typeof value !== "object" || Array.isArray(value)) {
         throw new Error("Expected a struct value.");
@@ -310,13 +308,9 @@ async function toCanonicalValue(value: CapturedNewValue, type: CanonicalFieldTyp
   }
 }
 
-async function createCanonicalValue(
-  item: CapturedNewItem,
-  field: ReadonlyPropertyField,
-  type: CanonicalFieldType,
-): Promise<CanonicalItemValue> {
+async function createCanonicalValue(item: CapturedNewItem, field: ReadonlyPropertyField): Promise<CanonicalItemValue> {
   if (field.pathFromTarget.length === 0) {
-    return toCanonicalValue(item.values[field.id], type);
+    return toCanonicalValue(item.values[field.id], field.type);
   }
   const relatedGroup = item.related.find(
     (group) => stableStringify(group.path) === stableStringify(field.pathFromTarget),
@@ -324,7 +318,7 @@ async function createCanonicalValue(
   const relatedValues = await Promise.all(
     (relatedGroup?.entries ?? []).map(async (entry) => ({
       primaryKeys: [entry.key],
-      value: await toCanonicalValue(entry.values[field.id], type),
+      value: await toCanonicalValue(entry.values[field.id], field.type),
     })),
   );
   return relatedValues.sort((lhs, rhs) =>
@@ -339,7 +333,7 @@ async function createCanonicalItem(item: CapturedNewItem, context: Normalization
     primaryKeys: [item.primaryKey],
     values: Object.fromEntries(
       await Promise.all(
-        fieldMappings.map(async ({ canonicalKey, sourceFields, type }) => {
+        fieldMappings.map(async ({ canonicalKey, sourceFields }) => {
           const applicableFields = sourceFields.filter((field) =>
             field.primaryClassNames.includes(item.primaryKey.className),
           );
@@ -350,7 +344,7 @@ async function createCanonicalItem(item: CapturedNewItem, context: Normalization
           }
           return [
             canonicalKey,
-            applicableFields[0] ? await createCanonicalValue(item, applicableFields[0], type) : undefined,
+            applicableFields[0] ? await createCanonicalValue(item, applicableFields[0]) : undefined,
           ] as const;
         }),
       ),

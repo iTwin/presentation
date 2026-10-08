@@ -341,13 +341,33 @@ function collectRelatedValues(
   );
 }
 
+const SHARED_PRIMITIVE_TYPE_NAME_VALUES = new Set<string>(SHARED_PRIMITIVE_TYPE_NAMES.values());
+
+/**
+ * Struct members keep legacy's substituted extended type (or `"enum"`) name with no record of the underlying
+ * primitive type, so it's inferred from the value's shape instead.
+ */
+function getUnderlyingPrimitiveTypeName(canonicalName: string, value: Value): string {
+  if (SHARED_PRIMITIVE_TYPE_NAME_VALUES.has(canonicalName)) {
+    return canonicalName;
+  }
+  if (Value.isMap(value) && isPointValue(value)) {
+    return "Point3d";
+  }
+  // Integer-valued numbers may be `Integer` or `Long`, which mustn't be rounded.
+  if (typeof value === "number" && !Number.isInteger(value)) {
+    return "Double";
+  }
+  return canonicalName;
+}
+
 function toCanonicalValue(value: Value, type: CanonicalFieldType): CanonicalValue {
   if (value === undefined) {
     return undefined;
   }
   switch (type.kind) {
     case "primitive":
-      switch (type.name) {
+      switch (getUnderlyingPrimitiveTypeName(type.name, value)) {
         case "Double":
           if (typeof value === "number") {
             return roundFloatingPointNoise(value);
