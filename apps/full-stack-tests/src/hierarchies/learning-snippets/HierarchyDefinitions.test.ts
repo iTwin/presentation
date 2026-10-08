@@ -20,10 +20,14 @@ import {
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.HiddenClassesImports
+import { ECSql } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
 
@@ -297,6 +301,109 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({ label: "A" }),
                 NodeValidators.createForInstanceNode({ label: "B" }),
               ],
+            }),
+          ],
+        });
+      });
+
+      it("excludes instances of hidden classes from nodes and `hasChildren` selector", async () => {
+        const { imodelConnection: hiddenClassesIModel, ...keys } = await buildTestIModel(async (imodel, testName) => {
+          const schema = await importSchema(
+            testName,
+            imodel,
+            `
+              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+              <ECEntityClass typeName="HiddenElement">
+                <BaseClass>bis:PhysicalElement</BaseClass>
+                <ECCustomAttributes>
+                  <HiddenClass xmlns="CoreCustomAttributes.01.00.01" />
+                </ECCustomAttributes>
+              </ECEntityClass>
+            `,
+          );
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const elementProps = { txn, modelId: model.id, categoryId: category.id };
+            insertPhysicalElement({
+              ...elementProps,
+              classFullName: schema.items.HiddenElement.fullName,
+              userLabel: "hidden root",
+            });
+            const withHiddenChild = insertPhysicalElement({ ...elementProps, userLabel: "with hidden child" });
+            insertPhysicalElement({
+              ...elementProps,
+              classFullName: schema.items.HiddenElement.fullName,
+              userLabel: "hidden child",
+              parentId: withHiddenChild.id,
+            });
+            const withVisibleChild = insertPhysicalElement({ ...elementProps, userLabel: "with visible child" });
+            const visibleChild = insertPhysicalElement({
+              ...elementProps,
+              userLabel: "visible child",
+              parentId: withVisibleChild.id,
+            });
+            return { withHiddenChild, withVisibleChild, visibleChild };
+          });
+        });
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.HiddenClasses
+        const hierarchyDefinition: HierarchyDefinition = {
+          async defineHierarchyLevel({ imodelAccess, parentNode, createSelectClause }) {
+            const parentIds =
+              parentNode && HierarchyNode.isInstancesNode(parentNode)
+                ? parentNode.key.instanceKeys.map(({ id }) => id)
+                : undefined;
+            // Create a filter that excludes instances of `BisCore.PhysicalElement` sub-classes, hidden through
+            // `HiddenClass` or `HiddenSchema` custom attributes. The tree of hidden classes is requested once and the
+            // filter can be used to create clauses for multiple aliases.
+            const hiddenClassesFilter = await ECSql.createHiddenClassesFilter({
+              schemaProvider: imodelAccess,
+              baseClassName: "BisCore.PhysicalElement",
+            });
+            const hiddenClassesClause = hiddenClassesFilter.createWhereClause("this");
+            // The `hasChildren` selector has to exclude the same children as the child hierarchy level query does
+            const childHiddenClassesClause = hiddenClassesFilter.createWhereClause("child");
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { selector: "this.UserLabel" },
+                      hasChildren: {
+                        selector: `IFNULL((
+                          SELECT 1
+                          FROM BisCore.PhysicalElement child
+                          WHERE child.Parent.Id = this.ECInstanceId ${childHiddenClassesClause ? `AND ${childHiddenClassesClause}` : ""}
+                          LIMIT 1
+                        ), 0)`,
+                      },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    WHERE ${parentIds ? "InVirtualSet(?, this.Parent.Id)" : "this.Parent.Id IS NULL"}
+                      ${hiddenClassesClause ? `AND ${hiddenClassesClause}` : ""}
+                  `,
+                  bindings: parentIds ? [{ type: "idset", value: parentIds }] : [],
+                },
+              },
+            ];
+          },
+        };
+        // __PUBLISH_EXTRACT_END__
+
+        await validateHierarchy({
+          provider: createIModelHierarchyProvider({
+            imodelAccess: createIModelAccess(hiddenClassesIModel),
+            hierarchyDefinition,
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.withHiddenChild], children: false }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.withVisibleChild],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.visibleChild], children: false })],
             }),
           ],
         });

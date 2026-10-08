@@ -58,6 +58,74 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 <!-- END EXTRACTION -->
 
+## Excluding instances of hidden classes
+
+Classes may be hidden from users through `CoreCustomAttributes.HiddenClass` or `CoreCustomAttributes.HiddenSchema` custom attributes. The library doesn't exclude their instances automatically - it's up to hierarchy definitions to do that in their queries. The `ECSql.createHiddenClassesFilter` function from `@itwin/presentation-shared` creates ECSQL conditions for that.
+
+Hiding is relative to the base class the filter is created for - if the base class itself is hidden, its instances are still returned, but instances of its hidden sub-classes are not. Values of `hasChildren`, supplied through `createSelectClause`, are used as-is, so custom selectors should exclude the same children as the child hierarchy level queries do:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyDefinitions.Imports, Presentation.Hierarchies.HierarchyDefinitions.HiddenClassesImports, Presentation.Hierarchies.HierarchyDefinitions.HiddenClasses], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import {
+  createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
+
+import { ECSql } from "@itwin/presentation-shared";
+
+const hierarchyDefinition: HierarchyDefinition = {
+  async defineHierarchyLevel({ imodelAccess, parentNode, createSelectClause }) {
+    const parentIds =
+      parentNode && HierarchyNode.isInstancesNode(parentNode)
+        ? parentNode.key.instanceKeys.map(({ id }) => id)
+        : undefined;
+    // Create a filter that excludes instances of `BisCore.PhysicalElement` sub-classes, hidden through
+    // `HiddenClass` or `HiddenSchema` custom attributes. The tree of hidden classes is requested once and the
+    // filter can be used to create clauses for multiple aliases.
+    const hiddenClassesFilter = await ECSql.createHiddenClassesFilter({
+      schemaProvider: imodelAccess,
+      baseClassName: "BisCore.PhysicalElement",
+    });
+    const hiddenClassesClause = hiddenClassesFilter.createWhereClause("this");
+    // The `hasChildren` selector has to exclude the same children as the child hierarchy level query does
+    const childHiddenClassesClause = hiddenClassesFilter.createWhereClause("child");
+    return [
+      {
+        fullClassName: "BisCore.PhysicalElement",
+        query: {
+          ecsql: `
+            SELECT ${await createSelectClause({
+              ecClassId: { selector: "this.ECClassId" },
+              ecInstanceId: { selector: "this.ECInstanceId" },
+              nodeLabel: { selector: "this.UserLabel" },
+              hasChildren: {
+                selector: `IFNULL((
+                  SELECT 1
+                  FROM BisCore.PhysicalElement child
+                  WHERE child.Parent.Id = this.ECInstanceId ${childHiddenClassesClause ? `AND ${childHiddenClassesClause}` : ""}
+                  LIMIT 1
+                ), 0)`,
+              },
+            })}
+            FROM BisCore.PhysicalElement this
+            WHERE ${parentIds ? "InVirtualSet(?, this.Parent.Id)" : "this.Parent.Id IS NULL"}
+              ${hiddenClassesClause ? `AND ${hiddenClassesClause}` : ""}
+          `,
+          bindings: parentIds ? [{ type: "idset", value: parentIds }] : [],
+        },
+      },
+    ];
+  },
+};
+```
+
+<!-- END EXTRACTION -->
+
 ## Custom parsing
 
 By default, it's expected that the nodes' SELECT clause is created using the `createSelectClause` function (available through `defineHierarchyLevel` props) and then specifying `parseNode` callback in the hierarchy definition is not necessary, as the default parser knows how to parse ECSQL rows.

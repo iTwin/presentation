@@ -81,7 +81,8 @@ interface NodeSelectClauseProps {
    * Specifies whether the node has children. When omitted, children are determined by requesting them, which is
    * expensive, so supplying a value is preferred.
    *
-   * Supplied values are used as-is, so they must account for the same rules as the child hierarchy level queries.
+   * Supplied values are used as-is, so they must apply the same structural restrictions as
+   * the child hierarchy level queries.
    */
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
@@ -244,18 +245,12 @@ export interface NodesQueryClauseFactory {
    * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
    * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
    * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
-   * `filter.filterClassNames` and by properties as described by `filter.rules`. In addition, it excludes instances of
-   * `from` sub-classes that are hidden through `HiddenClass` or `HiddenSchema` custom attributes.
+   * `filter.filterClassNames` and by properties as described by `filter.rules`.
    *
    * Special cases:
-   * - If `filter` is `undefined`, `joins` is set to an empty string, `from` is set to `contentClass.fullName` and `where`
-   * only excludes instances of hidden classes (or is empty, if there are none).
+   * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
    * - If the provided content class doesn't intersect with the property class in provided filter OR referenced schema items (classes/properties)
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
-   *
-   * Custom `hasChildren` selectors, checking for children that are loaded using this function, should exclude hidden
-   * classes' instances as well. Use `ECSql.createHiddenClassesFilter` from `@itwin/presentation-shared` to create
-   * the condition.
    */
   createFilterClauses(props: {
     contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
@@ -265,8 +260,6 @@ export interface NodesQueryClauseFactory {
 
 /**
  * Creates an instance of `NodeSelectQueryFactory`.
- *
- * The created factory relies on `imodelAccess` for caching schema-derived metadata, such as hidden classes trees.
  */
 export function createNodesQueryClauseFactory(props: {
   imodelAccess: ECSchemaProvider;
@@ -321,15 +314,14 @@ class NodeSelectQueryFactory {
     filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }> {
     const { contentClass, filter } = props;
-    const { from, joins, where } = filter
-      ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
-      : { from: contentClass.fullName, joins: [], where: [] };
-
-    const hiddenClassesWhereClause = (
-      await ECSql.createHiddenClassesFilter({ schemaProvider: this._imodelAccess, baseClassName: from })
-    ).createWhereClause(contentClass.alias);
-    hiddenClassesWhereClause && where.push(hiddenClassesWhereClause);
-
+    if (!filter) {
+      return { from: contentClass.fullName, joins: "", where: "" };
+    }
+    const { from, joins, where } = await createInstanceFilterClauses({
+      imodelAccess: this._imodelAccess,
+      contentClass,
+      filter,
+    });
     return { from, joins: joins.join("\n"), where: where.join(" AND ") };
   }
 }
