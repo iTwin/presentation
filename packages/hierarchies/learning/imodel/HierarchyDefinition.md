@@ -12,8 +12,6 @@ Finally, in iTwin.js, the most common way to create hierarchies is based on EC d
 
 ## Defining a hierarchy
 
-Definitions that need iModel data or metadata should capture `imodelAccess` when they are created; `defineHierarchyLevel` does not receive it in its request props. When creating a [merged iModel hierarchy](./MergedIModelHierarchies.md), use `getHierarchyDefinition(imodelAccess)` to create a definition for each iModel version.
-
 In its most simple form, a hierarchy definition may just have one `defineHierarchyLevel` function that defines a child hierarchy level for a given parent node:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyDefinitions.Imports, Presentation.Hierarchies.HierarchyDefinitions.Simple], ts]] -->
