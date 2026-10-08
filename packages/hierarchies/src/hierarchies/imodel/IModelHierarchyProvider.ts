@@ -277,7 +277,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     imodelAccess: IModelAccess;
     imodelChanged?: Event<() => void>;
     nodeSelectClauseFactory: NodesQueryClauseFactory;
-    hierarchyDefinition: RxjsHierarchyDefinition;
+    sourceHierarchyDefinition: RxjsHierarchyDefinition;
   }>;
   private _targetPaths?: HierarchySearchTree[];
   private _hierarchyChanged: BeEvent<(args: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
@@ -302,8 +302,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
     this._imodelProps = props.imodels;
     this._imodelContexts = props.imodels.map((imodelProps) => {
-      const hierarchyDefinition = getRxjsHierarchyDefinition(props.getHierarchyDefinition(imodelProps.imodelAccess));
-      return { ...this.#createIModelState(imodelProps), hierarchyDefinition };
+      const sourceHierarchyDefinition = getRxjsHierarchyDefinition(
+        props.getHierarchyDefinition(imodelProps.imodelAccess),
+      );
+      return { ...this.#createIModelState(imodelProps), sourceHierarchyDefinition };
     });
     this._hierarchyChanged = new BeEvent();
     this._valuesFormatter = props.formatter ?? createDefaultValueFormatter();
@@ -383,18 +385,18 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     return this._imodelContexts[this._imodelContexts.length - 1];
   }
 
-  private getHierarchyDefinition({
+  private getEffectiveHierarchyDefinition({
     imodelAccess,
-    hierarchyDefinition,
+    sourceHierarchyDefinition,
   }: {
     imodelAccess: IModelAccess;
-    hierarchyDefinition: RxjsHierarchyDefinition;
+    sourceHierarchyDefinition: RxjsHierarchyDefinition;
   }): RxjsHierarchyDefinition {
     return this._targetPaths === undefined
-      ? hierarchyDefinition
+      ? sourceHierarchyDefinition
       : new SearchHierarchyDefinition({
           imodelAccess,
-          source: hierarchyDefinition,
+          source: sourceHierarchyDefinition,
           sourceName: this.#sourceName,
           targetPaths: this._targetPaths,
         });
@@ -457,7 +459,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     });
 
     return from(this._imodelContexts).pipe(
-      map((context) => ({ ...context, hierarchyDefinition: this.getHierarchyDefinition(context) })),
+      map((context) => ({ ...context, hierarchyDefinition: this.getEffectiveHierarchyDefinition(context) })),
       mergeMap(({ imodelAccess, nodeSelectClauseFactory, hierarchyDefinition }, imodelAccessIndex) => {
         let parentNode = props.parentNode;
         if (
@@ -597,7 +599,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       mergeMap((node) => applyLabelsFormatting(node, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
       // let consumers step-in
-      preProcessNodes(this.getHierarchyDefinition(this.getPrimaryIModelContext()), props.parentNode),
+      preProcessNodes(this.getEffectiveHierarchyDefinition(this.getPrimaryIModelContext()), props.parentNode),
       // process hiding
       createHideIfNoChildrenOperator(
         (n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes,
@@ -650,7 +652,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       createDetermineChildrenOperator(
         (n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes,
       ),
-      postProcessNodes(this.getHierarchyDefinition(this.getPrimaryIModelContext()), props.parentNode),
+      postProcessNodes(this.getEffectiveHierarchyDefinition(this.getPrimaryIModelContext()), props.parentNode),
       sortNodesByLabelOperator,
       map((n): HierarchyNode => {
         if ("processingParams" in n) {
