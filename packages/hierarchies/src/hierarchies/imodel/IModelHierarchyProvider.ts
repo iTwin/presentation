@@ -524,7 +524,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   ): SourceNodesObservable {
     const createSourceNodesFromDefinition = (
       imodelAccess: IModelAccess,
-      hierarchyDefinition: RxjsHierarchyDefinition,
+      parseNode: RxjsHierarchyDefinition["parseNode"],
       def: GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition,
     ): Observable<SourceHierarchyNode> => {
       if (HierarchyNodesDefinition.isGenericNode(def)) {
@@ -536,9 +536,8 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           queryExecutor: imodelAccess,
           query,
           limit: props.hierarchyLevelSizeLimit,
-          parser: hierarchyDefinition.parseNode
-            ? ({ row }) =>
-                hierarchyDefinition.parseNode!({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
+          parser: parseNode
+            ? ({ row }) => parseNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
             : undefined,
         }).pipe(
           map((node) => ({
@@ -557,13 +556,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     if (this._imodelContexts.length === 1) {
       sourceNodes = definitions.pipe(
         mergeMap(({ imodelAccess, hierarchyDefinition, hierarchyNodesDefinition: def }) =>
-          createSourceNodesFromDefinition(imodelAccess, hierarchyDefinition, def),
+          createSourceNodesFromDefinition(imodelAccess, hierarchyDefinition.parseNode, def),
         ),
       );
     } else {
       sourceNodes = definitions.pipe(
         mergeMap(({ imodelAccess, imodelAccessIndex, hierarchyDefinition, hierarchyNodesDefinition: def }) =>
-          createSourceNodesFromDefinition(imodelAccess, hierarchyDefinition, def).pipe(
+          createSourceNodesFromDefinition(imodelAccess, hierarchyDefinition.parseNode, def).pipe(
             map((node: SourceHierarchyNode) => ({ imodelAccess, imodelAccessIndex, node })),
           ),
         ),
