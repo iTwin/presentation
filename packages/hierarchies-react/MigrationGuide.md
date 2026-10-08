@@ -33,7 +33,7 @@ To migrate:
 - Replace imports of rendering components (`TreeRenderer`, `TreeNodeRenderer`, error renderers, action components) with the StrataKit equivalents imported from `@itwin/presentation-hierarchies-react/stratakit`.
 - Keep importing hooks and utilities (`useTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`, localization helpers, etc.) from the root entry point.
 - Update peer dependencies in your application's `package.json`:
-  - **Removed** `@itwin/itwinui-react` - this package no longer has optional dependency on it. Keep it if other parts of your application still use iTwinUI directly.
+  - **Remove** `@itwin/itwinui-react` - this package no longer has optional dependency on it. Keep it if other parts of your application still use iTwinUI directly.
   - **Add** `@mui/material` (`^9.4.0`), `@stratakit/mui`, and `@stratakit/foundations`. These are optional peer dependencies required only when using the delivered components.
   - **Bump React** to `^18.0.0 || ^19.0.0` if you are still on React `17` — React `17` is no longer supported.
 - **Switch to ESM.** The package no longer ships a CommonJS build and is published as ES modules only. Make sure your application and bundler consume it as ESM; `require("@itwin/presentation-hierarchies-react")` no longer works.
