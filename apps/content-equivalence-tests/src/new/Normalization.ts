@@ -285,6 +285,11 @@ async function toCanonicalValue(value: CapturedNewValue, type: NewFieldType): Pr
             return roundFloatingPointNoise(value);
           }
           break;
+        case "DateTime":
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          break;
         default:
           if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
             return value;
