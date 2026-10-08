@@ -104,28 +104,28 @@ async function getInheritedPropertiesMetadata(
       }
     }
   }
-  const entries = await Promise.all(
-    [...fields].map(async ([key, field]) => {
-      const property = (await getClass(imodelAccess, field.propertyClassName)).getProperty(field.propertyName);
-      if (!property) {
-        return undefined;
-      }
-      const metadata: InheritedPropertyMetadata = { hidden: await isPropertyHidden(schemaContext, field) };
-      let currentClass: EC.Class | undefined = property.class;
-      while (currentClass) {
-        const classProperty = currentClass.getProperty(field.propertyName);
-        if (classProperty) {
-          if (metadata.categoryLabel === undefined && classProperty.category) {
-            metadata.categoryLabel = classProperty.category.label ?? classProperty.category.name;
-          }
-          metadata.kindOfQuantity ??= classProperty.kindOfQuantity?.fullName;
+  // Sequential on purpose: concurrent `SchemaContext` misses each re-serialize the whole schema natively and exhaust the heap.
+  const result: InheritedPropertiesMetadata = {};
+  for (const [key, field] of fields) {
+    const property = (await getClass(imodelAccess, field.propertyClassName)).getProperty(field.propertyName);
+    if (!property) {
+      continue;
+    }
+    const metadata: InheritedPropertyMetadata = { hidden: await isPropertyHidden(schemaContext, field) };
+    let currentClass: EC.Class | undefined = property.class;
+    while (currentClass) {
+      const classProperty = currentClass.getProperty(field.propertyName);
+      if (classProperty) {
+        if (metadata.categoryLabel === undefined && classProperty.category) {
+          metadata.categoryLabel = classProperty.category.label ?? classProperty.category.name;
         }
-        currentClass = currentClass.baseClass;
+        metadata.kindOfQuantity ??= classProperty.kindOfQuantity?.fullName;
       }
-      return [key, metadata] as const;
-    }),
-  );
-  return Object.fromEntries(entries.filter((entry) => entry !== undefined));
+      currentClass = currentClass.baseClass;
+    }
+    result[key] = metadata;
+  }
+  return result;
 }
 
 function createCanonicalPath(
