@@ -246,10 +246,12 @@ describe("Hierarchies", () => {
               filter: instanceFilter,
             });
             // ... so the `hasChildren` selector, which checks for children of the same class, has to exclude them too
-            const childVisibilityClause = ECSql.createHiddenClassesWhereClause({
-              tree: await imodelAccess.getHiddenClassesTree("BisCore.PhysicalElement"),
-              classAlias: "child",
-            });
+            const childVisibilityClause = (
+              await ECSql.createHiddenClassesFilter({
+                schemaProvider: imodelAccess,
+                baseClassName: "BisCore.PhysicalElement",
+              })
+            ).createWhereClause("child");
             return [
               {
                 fullClassName: "BisCore.PhysicalElement",

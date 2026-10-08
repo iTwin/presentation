@@ -118,8 +118,8 @@ export async function createHiddenClassesWhereClauseFactory({
   schemaProvider: Pick<ECSchemaProvider, "getHiddenClassesTree">;
   className: EC.FullClassNameDotNotation;
 }): Promise<(alias: string) => string> {
-  const tree = await schemaProvider.getHiddenClassesTree(className);
-  return (alias) => ECSql.createHiddenClassesWhereClause({ tree, classAlias: alias });
+  const filter = await ECSql.createHiddenClassesFilter({ schemaProvider, baseClassName: className });
+  return (alias) => filter.createWhereClause(alias);
 }
 
 /** @internal */

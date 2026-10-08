@@ -254,8 +254,8 @@ export interface NodesQueryClauseFactory {
    * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    *
    * Custom `hasChildren` selectors, checking for children that are loaded using this function, should exclude hidden
-   * classes' instances as well. Use `ECSchemaProvider.getHiddenClassesTree` of `imodelAccess` together with
-   * `ECSql.createHiddenClassesWhereClause` from `@itwin/presentation-shared` to create the condition.
+   * classes' instances as well. Use `ECSql.createHiddenClassesFilter` from `@itwin/presentation-shared` to create
+   * the condition.
    */
   createFilterClauses(props: {
     contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
@@ -325,10 +325,9 @@ class NodeSelectQueryFactory {
       ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
       : { from: contentClass.fullName, joins: [], where: [] };
 
-    const hiddenClassesWhereClause = ECSql.createHiddenClassesWhereClause({
-      tree: await this._imodelAccess.getHiddenClassesTree(from),
-      classAlias: contentClass.alias,
-    });
+    const hiddenClassesWhereClause = (
+      await ECSql.createHiddenClassesFilter({ schemaProvider: this._imodelAccess, baseClassName: from })
+    ).createWhereClause(contentClass.alias);
     hiddenClassesWhereClause && where.push(hiddenClassesWhereClause);
 
     return { from, joins: joins.join("\n"), where: where.join(" AND ") };
