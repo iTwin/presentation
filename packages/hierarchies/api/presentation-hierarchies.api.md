@@ -657,7 +657,6 @@ interface NodeSelectClauseProps {
     };
     // (undocumented)
     grouping?: ECSqlSelectClauseGroupingParams;
-    // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideIfNoChildren?: boolean | ECSqlValueSelector;

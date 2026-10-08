@@ -142,8 +142,8 @@ interface IModelHierarchyProviderProps {
   imodelChanged?: Event<() => void>;
 
   /**
-   * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
-   * function is called once during the provider's construction.
+   * A definition that describes how to create each level of the hierarchy. Its `defineHierarchyLevel` method is called
+   * as needed to get the definitions for requested parent nodes.
    */
   hierarchyDefinition: HierarchyDefinition;
 

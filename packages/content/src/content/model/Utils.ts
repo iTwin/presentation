@@ -3,19 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-
-/**
- * Recursively marks all properties as readonly with no depth limit.
- * @public
- */
-export type DeepReadonly<T> = T extends (...args: any[]) => any
-  ? T
-  : T extends (infer U)[]
-    ? ReadonlyArray<DeepReadonly<U>>
-    : T extends object
-      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-      : T;
+import type { DeepReadonly, EC, RelationshipPath } from "@itwin/presentation-shared";
 
 /**
  * Serializes a relationship path to a deterministic string. When `omitLastTargetClass` is set, the

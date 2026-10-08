@@ -35,14 +35,15 @@ function createAccess(waitForQuery: (token: string) => Promise<void> = async () 
       yield* rows;
     }),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
+    getHiddenClassesTree: vi.fn<ECSchemaProvider["getHiddenClassesTree"]>().mockResolvedValue([]),
     classDerivesFrom: vi
       .fn<ECSchemaProvider["classDerivesFrom"]>()
       .mockImplementation((derived, base) => derived === base),
   };
 }
 
-function createBase(queryExecutor: LimitingECSqlQueryExecutor) {
-  return createSharedIdsProvider({ queryExecutor, elementClassName: "BisCore.GeometricElement3d" });
+function createBase(imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor) {
+  return createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" });
 }
 
 function createGate() {
@@ -65,7 +66,7 @@ const baseDatasets = [
 describe("ID provider data states", () => {
   it("exposes live state beside grouped methods without eagerly loading unused data", async () => {
     const access = createAccess();
-    const provider = createSharedIdsProvider({ queryExecutor: access, elementClassName: "BisCore.GeometricElement3d" });
+    const provider = createSharedIdsProvider({ imodelAccess: access, elementClassName: "BisCore.GeometricElement3d" });
     expect(provider.models.state).toBe("not-requested");
     expect(provider.modeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("not-requested");
@@ -175,7 +176,11 @@ describe("ID provider data states", () => {
   describe.each(baseDatasets)("$group", ({ group, load }) => {
     it("is lazy, shares pending work, and becomes loaded after success", async () => {
       const gate = createGate();
-      const access = createAccess(async () => gate.promise);
+      const started = createGate();
+      const access = createAccess(async () => {
+        started.resolve();
+        await gate.promise;
+      });
       const base = createBase(access);
       expect(base[group].state).toBe("not-requested");
       expect(access.createQueryReader).not.toHaveBeenCalled();
@@ -183,6 +188,7 @@ describe("ID provider data states", () => {
       const first = load(base);
       expect(base[group].state).toBe("requested");
       const second = load(base);
+      await started.promise;
       expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
       gate.resolve();
@@ -245,7 +251,7 @@ describe("ID provider data states", () => {
     {
       name: "models",
       create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
-        const provider = createModelsTreeIdsProvider({ queryExecutor: access, sharedIdsProvider });
+        const provider = createModelsTreeIdsProvider({ imodelAccess: access, sharedIdsProvider });
         return { provider, load: async () => provider.getParentSubjectIds() };
       },
     },
@@ -260,7 +266,7 @@ describe("ID provider data states", () => {
       name: "classifications",
       create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
         const provider = createClassificationsTreeIdsProvider({
-          queryExecutor: access,
+          imodelAccess: access,
           sharedIdsProvider,
           hierarchyConfig: { rootClassificationSystemCode: "test" },
         });

@@ -6,11 +6,16 @@
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { eachValueFrom } from "@itwin/presentation-shared";
+import { eachValueFrom, type ECSchemaProvider, type ECSqlBinding } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getOrCreate, mergeWithDefaults } from "../../shared/Utils.js";
+import {
+  createHiddenClassesWhereClauseFactory,
+  createWhereClause,
+  getOrCreate,
+  mergeWithDefaults,
+} from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
@@ -29,12 +34,12 @@ import type {
  * @beta
  */
 interface ModelsTreeIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /** Hierarchy options. Omitted properties use the defaults of `ModelsTreeHierarchyConfiguration`. */
   hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
   /** Shared provider using the same element class and exclusions as `hierarchyConfig`. */
   sharedIdsProvider: {
-    models: Pick<SharedIdsProvider["models"], "getModels">;
+    models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
     modeledElements: SharedIdsProvider["modeledElements"];
     categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   };
@@ -92,7 +97,7 @@ export interface ModelsTreeIdsProvider {
  * @beta
  */
 export function createModelsTreeIdsProvider({
-  queryExecutor,
+  imodelAccess,
   hierarchyConfig: configOverrides,
   sharedIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
@@ -115,14 +120,39 @@ export function createModelsTreeIdsProvider({
   const subjectInfosState = new DataStateTracker();
   const modelInfosState = new DataStateTracker();
 
+  async function createModelElementsFilter(
+    modelAlias: string,
+  ): Promise<{ clause?: string; bindings?: ECSqlBinding[] }> {
+    if (hierarchyConfig.models.withoutElements === "include") {
+      return {};
+    }
+    if (sharedIdsProvider.models.state === "loaded") {
+      return {
+        clause: `${modelAlias}.ECInstanceId IN (SELECT id FROM IdSet(?))`,
+        bindings: [{ type: "idset", value: await sharedIdsProvider.models.getAllModels() }],
+      };
+    }
+    const createElementVisibilityClause = await createHiddenClassesWhereClauseFactory({
+      schemaProvider: imodelAccess,
+      className: hierarchyConfig.elements.baseClass,
+    });
+    return {
+      clause: `EXISTS (
+        SELECT 1 FROM ${hierarchyConfig.elements.baseClass} e
+        ${createWhereClause({ conditions: [`e.Model.Id = ${modelAlias}.ECInstanceId`, createElementVisibilityClause("e")] })}
+      )`,
+    };
+  }
+
   function querySubjects(): Observable<{
     id: SubjectId;
     parentId?: SubjectId;
     targetPartitionId?: ModelId;
     hideInHierarchy: boolean;
   }> {
-    return defer(() => {
-      const subjectsQuery = `
+    return from(createModelElementsFilter("m")).pipe(
+      mergeMap((elementsFilter) => {
+        const subjectsQuery = `
         SELECT
           s.ECInstanceId id,
           s.Parent.Id parentId,
@@ -134,8 +164,7 @@ export function createModelsTreeIdsProvider({
                 "m.ECInstanceId = HexToId(json_extract(s.JsonProperties, '$.Subject.Model.TargetPartition'))",
                 "NOT m.IsPrivate",
                 "NOT m.IsTemplate",
-                hierarchyConfig.models.withoutElements === "exclude" &&
-                  `EXISTS (SELECT 1 FROM ${hierarchyConfig.elements.baseClass} WHERE Model.Id = m.ECInstanceId)`,
+                elementsFilter.clause,
               ],
             })}
           ) targetPartitionId,
@@ -148,15 +177,15 @@ export function createModelsTreeIdsProvider({
           END hideInHierarchy
         FROM bis.Subject s
       `;
-      return queryExecutor.createQueryReader(
-        { ecsql: subjectsQuery },
-        {
-          rowFormat: "ECSqlPropertyNames",
-          limit: "unbounded",
-          restartToken: `${componentName}/${componentId}/subjects`,
-        },
-      );
-    }).pipe(
+        return imodelAccess.createQueryReader(
+          { ecsql: subjectsQuery, bindings: elementsFilter.bindings },
+          {
+            rowFormat: "ECSqlPropertyNames",
+            limit: "unbounded",
+            restartToken: `${componentName}/${componentId}/subjects`,
+          },
+        );
+      }),
       catchBeSQLiteInterrupts,
       map((row) => {
         return {
@@ -170,27 +199,32 @@ export function createModelsTreeIdsProvider({
   }
 
   function queryModels(): Observable<{ id: ModelId; parentId: SubjectId; hideInHierarchy: boolean }> {
-    return defer(() => {
-      const modelsQuery = `
-        SELECT
-          p.ECInstanceId id,
-          p.Parent.Id parentId,
-          CASE
-            WHEN (
-              json_extract(p.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-              OR json_extract(p.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
-            ) THEN 1
-            ELSE 0
-          END hideInHierarchy
-        FROM ${CLASS_NAMES.InformationPartitionElement} p
-        INNER JOIN ${CLASS_NAMES.GeometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
-        ${createWhereClause({ conditions: ["NOT m.IsPrivate", "NOT m.IsTemplate", hierarchyConfig.models.withoutElements === "exclude" && `EXISTS (SELECT 1 FROM ${hierarchyConfig.elements.baseClass} WHERE Model.Id = m.ECInstanceId)`] })}
-      `;
-      return queryExecutor.createQueryReader(
-        { ecsql: modelsQuery },
-        { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${componentName}/${componentId}/models` },
-      );
-    }).pipe(
+    return defer(async () => createModelElementsFilter("m")).pipe(
+      mergeMap((elementsFilter) => {
+        const modelsQuery = `
+          SELECT
+            p.ECInstanceId id,
+            p.Parent.Id parentId,
+            CASE
+              WHEN (
+                json_extract(p.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                OR json_extract(p.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+              ) THEN 1
+              ELSE 0
+            END hideInHierarchy
+          FROM ${CLASS_NAMES.InformationPartitionElement} p
+          INNER JOIN ${CLASS_NAMES.GeometricModel3d} m ON m.ModeledElement.Id = p.ECInstanceId
+          ${createWhereClause({ conditions: ["NOT m.IsPrivate", "NOT m.IsTemplate", elementsFilter.clause] })}
+        `;
+        return imodelAccess.createQueryReader(
+          { ecsql: modelsQuery, bindings: elementsFilter.bindings },
+          {
+            rowFormat: "ECSqlPropertyNames",
+            limit: "unbounded",
+            restartToken: `${componentName}/${componentId}/models`,
+          },
+        );
+      }),
       catchBeSQLiteInterrupts,
       map((row) => {
         return { id: row.id, parentId: row.parentId, hideInHierarchy: !!row.hideInHierarchy };

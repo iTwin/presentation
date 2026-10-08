@@ -17,7 +17,12 @@ import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, insertGeometricModelWithPartition, TestSchema } from "../IModelUtils.js";
+import {
+  buildIModel,
+  importHiddenElementClasses,
+  insertGeometricModelWithPartition,
+  TestSchema,
+} from "../IModelUtils.js";
 import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -50,10 +55,7 @@ describe("Categories tree", () => {
     const idsProvider = createCategoriesTreeIdsProvider({
       imodelAccess,
       type: "3d",
-      sharedIdsProvider: createSharedIdsProvider({
-        queryExecutor: imodelAccess,
-        elementClassName: "BisCore.GeometricElement3d",
-      }),
+      sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
     });
     await idsProvider.getAllDefinitionContainersAndCategories();
     const hierarchyGetter = vi
@@ -813,6 +815,266 @@ describe("Categories tree", () => {
                 ],
               }),
             ],
+          });
+        });
+
+        describe("Hidden element classes and schemas", () => {
+          const importHiddenClasses = async (imodel: Parameters<typeof importHiddenElementClasses>[0]) =>
+            importHiddenElementClasses(imodel, viewType === "3d" ? "PhysicalElement" : "GraphicalElement2d");
+
+          it("hides definition containers and categories that only contain hidden elements", async () => {
+            await using buildIModelResult = await buildIModel(async (imodel) => {
+              const hiddenClassNames = await importHiddenClasses(imodel);
+              return withEditTxn(imodel, (txn) => {
+                const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
+
+                const hiddenDefinitionContainer = insertDefinitionContainer({ txn, codeValue: "hidden dc" });
+                const hiddenDefinitionModel = insertSubModel({
+                  txn,
+                  classFullName: CLASS_NAMES.DefinitionModel,
+                  modeledElementId: hiddenDefinitionContainer.id,
+                });
+                const hiddenCategory = insertCategory({
+                  txn,
+                  codeValue: "hidden category",
+                  modelId: hiddenDefinitionModel.id,
+                });
+                for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+                  insertElement({
+                    txn,
+                    classFullName,
+                    modelId: elementsModel.id,
+                    categoryId: hiddenCategory.id,
+                    userLabel: `hidden element (${variant})`,
+                  });
+                }
+
+                const visibleDefinitionContainer = insertDefinitionContainer({ txn, codeValue: "visible dc" });
+                const visibleDefinitionModel = insertSubModel({
+                  txn,
+                  classFullName: CLASS_NAMES.DefinitionModel,
+                  modeledElementId: visibleDefinitionContainer.id,
+                });
+                const visibleCategory = insertCategory({
+                  txn,
+                  codeValue: "visible category",
+                  modelId: visibleDefinitionModel.id,
+                });
+                const visibleElement = insertElement({
+                  txn,
+                  modelId: elementsModel.id,
+                  categoryId: visibleCategory.id,
+                  userLabel: "visible element",
+                });
+
+                return { visibleDefinitionContainer, visibleCategory, visibleElement };
+              });
+            });
+
+            const { imodelConnection, ...keys } = buildIModelResult;
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+              subCategories: { nodes: "exclude" },
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.visibleDefinitionContainer],
+                  supportsFiltering: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.visibleCategory],
+                      children: [
+                        NodeValidators.createForClassGroupingNode({
+                          className: keys.visibleElement.className,
+                          children: [
+                            NodeValidators.createForInstanceNode({
+                              instanceKeys: [keys.visibleElement],
+                              children: false,
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
+          });
+
+          it("hides hidden child elements while preserving visible siblings", async () => {
+            await using buildIModelResult = await buildIModel(async (imodel) => {
+              const hiddenClassNames = await importHiddenClasses(imodel);
+              return withEditTxn(imodel, (txn) => {
+                const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
+                const category = insertCategory({ txn, codeValue: "category" });
+                const parentElement = insertElement({
+                  txn,
+                  modelId: elementsModel.id,
+                  categoryId: category.id,
+                  userLabel: "parent element",
+                });
+                for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+                  insertElement({
+                    txn,
+                    classFullName,
+                    modelId: elementsModel.id,
+                    categoryId: category.id,
+                    parentId: parentElement.id,
+                    userLabel: `hidden child element (${variant})`,
+                  });
+                }
+                const visibleChildElement = insertElement({
+                  txn,
+                  modelId: elementsModel.id,
+                  categoryId: category.id,
+                  parentId: parentElement.id,
+                  userLabel: "visible child element",
+                });
+                return { category, parentElement, visibleChildElement };
+              });
+            });
+
+            const { imodelConnection, ...keys } = buildIModelResult;
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+              subCategories: { nodes: "exclude" },
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.category],
+                  children: [
+                    NodeValidators.createForClassGroupingNode({
+                      className: keys.parentElement.className,
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          instanceKeys: [keys.parentElement],
+                          children: [
+                            NodeValidators.createForClassGroupingNode({
+                              className: keys.visibleChildElement.className,
+                              children: [
+                                NodeValidators.createForInstanceNode({
+                                  instanceKeys: [keys.visibleChildElement],
+                                  children: false,
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
+          });
+
+          it("treats elements with only hidden children as childless", async () => {
+            await using buildIModelResult = await buildIModel(async (imodel) => {
+              const hiddenClassNames = await importHiddenClasses(imodel);
+              return withEditTxn(imodel, (txn) => {
+                const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
+                const category = insertCategory({ txn, codeValue: "category" });
+                const parentElement = insertElement({
+                  txn,
+                  modelId: elementsModel.id,
+                  categoryId: category.id,
+                  userLabel: "parent element",
+                });
+                for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+                  const hiddenChild = insertElement({
+                    txn,
+                    classFullName,
+                    modelId: elementsModel.id,
+                    categoryId: category.id,
+                    parentId: parentElement.id,
+                    userLabel: `hidden child element (${variant})`,
+                  });
+                  insertElement({
+                    txn,
+                    modelId: elementsModel.id,
+                    categoryId: category.id,
+                    parentId: hiddenChild.id,
+                    userLabel: `visible descendant of hidden element (${variant})`,
+                  });
+                }
+                return { category, parentElement };
+              });
+            });
+
+            const { imodelConnection, ...keys } = buildIModelResult;
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+              subCategories: { nodes: "exclude" },
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.category],
+                  children: [
+                    NodeValidators.createForClassGroupingNode({
+                      className: keys.parentElement.className,
+                      children: [
+                        NodeValidators.createForInstanceNode({ instanceKeys: [keys.parentElement], children: false }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
+          });
+
+          it("treats sub-models containing only hidden elements as empty", async () => {
+            await using buildIModelResult = await buildIModel(async (imodel) => {
+              const hiddenClassNames = await importHiddenClasses(imodel);
+              return withEditTxn(imodel, (txn) => {
+                const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
+                const category = insertCategory({ txn, codeValue: "category" });
+                const modeledElement = insertModeledElement({
+                  txn,
+                  modelId: elementsModel.id,
+                  categoryId: category.id,
+                  userLabel: "modeled element",
+                });
+                const subModel = insertElementsSubModel({ txn, modeledElementId: modeledElement.id });
+                for (const [variant, classFullName] of Object.entries(hiddenClassNames)) {
+                  insertElement({
+                    txn,
+                    classFullName,
+                    modelId: subModel.id,
+                    categoryId: category.id,
+                    userLabel: `hidden sub-model element (${variant})`,
+                  });
+                }
+                return { category, modeledElement };
+              });
+            });
+
+            const { imodelConnection, ...keys } = buildIModelResult;
+            using provider = await createCategoryTreeProvider(imodelConnection, viewType, {
+              elements: { nodes: "include" },
+              subCategories: { nodes: "exclude" },
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.category],
+                  children: [
+                    NodeValidators.createForClassGroupingNode({
+                      className: keys.modeledElement.className,
+                      children: [
+                        NodeValidators.createForInstanceNode({ instanceKeys: [keys.modeledElement], children: false }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
           });
         });
 

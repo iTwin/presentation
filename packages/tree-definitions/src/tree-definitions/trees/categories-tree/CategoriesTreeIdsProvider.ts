@@ -54,9 +54,9 @@ export interface CachedCategoryInfo {
   id: Id64String;
   /** Number of non-private sub-categories, including the default sub-category. */
   subCategoryChildCount: number;
-  /** Whether the category contains elements of the configured class, including excluded classes. */
+  /** Whether the category contains elements of the configured class that are not hidden, including explicitly excluded classes. */
   hasElements: boolean;
-  /** Whether the category contains elements whose classes are not excluded. */
+  /** Whether the category contains elements whose classes are neither hidden nor explicitly excluded. */
   hasElementsFromNonExcludedClasses: boolean;
 }
 
@@ -139,6 +139,10 @@ export interface CategoriesTreeIdsProvider {
 
 /**
  * Creates a cached category tree ID provider for the specified view type using the supplied shared provider.
+ *
+ * Element presence comes from the hidden-classes-aware base provider. Category and definition container identities
+ * remain cached even when they have no visible elements, so callers can include empty categories.
+ *
  * Recreate it together with its shared provider after relevant iModel or configuration changes.
  * @beta
  */

@@ -3,14 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay } from "rxjs";
+import { defer, EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, type EC } from "@itwin/presentation-shared";
+import { eachValueFrom, type EC, type ECSchemaProvider } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../../shared/Utils.js";
+import {
+  createExcludedClassesClause,
+  createHiddenClassesWhereClauseFactory,
+  createWhereClause,
+  getOrCreate,
+} from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
@@ -52,7 +57,7 @@ interface ClassificationOrTableInfo {
  * @beta
  */
 interface ClassificationsTreeIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
   classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
   /** Shared provider with matching element class and exclusions for the target tree. */
@@ -76,7 +81,7 @@ export interface ClassificationsTreeIdsProvider {
    * State of classification data. `getAllClassifications` also loads shared category data.
    */
   readonly state: IdsProviderDataState;
-  /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
+  /** Indicates whether a classification has child classifications or visible, non-excluded top-level elements in related categories. */
   hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
   getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<ClassificationId>>;
@@ -97,7 +102,7 @@ export interface ClassificationsTreeIdsProvider {
 export function createClassificationsTreeIdsProvider({
   sharedIdsProvider,
   hierarchyConfig,
-  queryExecutor,
+  imodelAccess,
   classificationToCategoriesRelationshipSpecification,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
@@ -112,7 +117,10 @@ export function createClassificationsTreeIdsProvider({
       | { tableId: undefined; parentId: ClassificationId }
     )
   > {
-    const getQueryReader = (lastClassificationId?: ClassificationId) => {
+    const getQueryReader = (
+      createElementsHiddenClassesClause: (alias: string) => string,
+      lastClassificationId?: ClassificationId,
+    ) => {
       const CLASSIFICATIONS_CTE = "Classifications";
       const ctes = [
         `
@@ -174,6 +182,7 @@ export function createClassificationsTreeIdsProvider({
                 alias: "e",
                 excludedClassNames: hierarchyConfig.elements?.excludedClasses,
               }),
+              createElementsHiddenClassesClause("e"),
             ],
           })}
           GROUP BY ehc.TargetECInstanceId
@@ -190,7 +199,7 @@ export function createClassificationsTreeIdsProvider({
         ORDER BY cl.ClassificationId
         LIMIT ${rowLimit}
       `;
-      return queryExecutor.createQueryReader(
+      return imodelAccess.createQueryReader(
         { ctes, ecsql, bindings: [{ type: "string", value: hierarchyConfig.rootClassificationSystemCode }] },
         {
           rowFormat: "ECSqlPropertyNames",
@@ -199,15 +208,24 @@ export function createClassificationsTreeIdsProvider({
         },
       );
     };
-    return defer(() => getQueryReader()).pipe(
-      // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
-      // 0 rows will be sent. This is acceptable to keep the implementation simple.
-      expand((row, idx) => {
-        if (idx % rowLimit === rowLimit - 1) {
-          return getQueryReader(row.id);
-        }
-        return EMPTY;
+    return forkJoin({
+      createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
+        schemaProvider: imodelAccess,
+        className: CLASS_NAMES.GeometricElement3d,
       }),
+    }).pipe(
+      mergeMap(({ createElementsHiddenClassesClause }) =>
+        from(getQueryReader(createElementsHiddenClassesClause)).pipe(
+          // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
+          // 0 rows will be sent. This is acceptable to keep the implementation simple.
+          expand((row, idx) => {
+            if (idx % rowLimit === rowLimit - 1) {
+              return getQueryReader(createElementsHiddenClassesClause, row.id);
+            }
+            return EMPTY;
+          }),
+        ),
+      ),
       catchBeSQLiteInterrupts,
       map((row) => {
         const relatedCategories = row.relatedCategories ? (row.relatedCategories as string).split(",") : [];
