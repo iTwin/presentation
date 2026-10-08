@@ -8,6 +8,8 @@ import { julianToDateTime } from "@itwin/presentation-shared";
 
 import type { Value, ValueDescriptor } from "@itwin/presentation-shared";
 
+// Matches a trailing Z or signed hour offset, optionally with minutes. Used in `toDateValue` to ensure
+// explicit timezones are preserved.
 const TIMEZONE_DESIGNATOR = /(?:Z|[+-]\d{2}(?::?\d{2})?)$/i;
 
 /**
