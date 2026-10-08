@@ -482,6 +482,59 @@ describe("Classifications tree", () => {
           ],
         });
       });
+
+      it("treats classification tables and classifications with only hidden child classifications as childless", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenClassificationClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const emptyTable = insertClassificationTable({ txn, parentId: system.id, codeValue: "empty table" });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "classification" });
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
+              insertClassification({
+                txn,
+                classFullName,
+                modelId: emptyTable.id,
+                codeValue: `hidden classification (${variant})`,
+              });
+              insertClassification({
+                txn,
+                classFullName,
+                modelId: table.id,
+                parentId: classification.id,
+                codeValue: `hidden child classification (${variant})`,
+              });
+            }
+            return { emptyTable, table, classification };
+          });
+        });
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.emptyTable],
+              supportsFiltering: true,
+              children: false,
+            }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
     });
 
     describe("excludedElementClassNames", () => {

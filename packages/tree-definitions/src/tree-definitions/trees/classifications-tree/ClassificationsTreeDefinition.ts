@@ -303,16 +303,21 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: DefineRootHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const [instanceFilterClauses, classificationTablesHiddenClassesFilter] = await Promise.all([
-      createFilterClauses({
-        filter: instanceFilter,
-        contentClass: { fullName: CLASS_NAMES.ClassificationTable, alias: "this" },
-      }),
-      ECSql.createHiddenClassesFilter({
-        schemaProvider: this.#props.imodelAccess,
-        baseClassName: CLASS_NAMES.ClassificationTable,
-      }),
-    ]);
+    const [instanceFilterClauses, classificationTablesHiddenClassesFilter, classificationsHiddenClassesFilter] =
+      await Promise.all([
+        createFilterClauses({
+          filter: instanceFilter,
+          contentClass: { fullName: CLASS_NAMES.ClassificationTable, alias: "this" },
+        }),
+        ECSql.createHiddenClassesFilter({
+          schemaProvider: this.#props.imodelAccess,
+          baseClassName: CLASS_NAMES.ClassificationTable,
+        }),
+        ECSql.createHiddenClassesFilter({
+          schemaProvider: this.#props.imodelAccess,
+          baseClassName: CLASS_NAMES.Classification,
+        }),
+      ]);
     return [
       {
         fullClassName: CLASS_NAMES.ClassificationTable,
@@ -333,6 +338,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
                           "classification.Model.Id = this.ECInstanceId",
                           "classification.Parent.Id IS NULL",
                           "NOT classification.IsPrivate",
+                          classificationsHiddenClassesFilter.createWhereClause("classification"),
                         ],
                       })}
                       LIMIT 1
@@ -554,7 +560,13 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     const hasChildClassifications = `
       SELECT 1
       FROM ${CLASS_NAMES.Classification} cc
-      ${createWhereClause({ conditions: ["cc.Parent.Id = this.ECInstanceId", "NOT cc.IsPrivate"] })}
+      ${createWhereClause({
+        conditions: [
+          "cc.Parent.Id = this.ECInstanceId",
+          "NOT cc.IsPrivate",
+          classificationsHiddenClassesFilter.createWhereClause("cc"),
+        ],
+      })}
       LIMIT 1
     `;
     const hasElements = `

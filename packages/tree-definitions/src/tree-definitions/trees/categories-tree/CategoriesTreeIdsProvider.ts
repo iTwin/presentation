@@ -16,9 +16,10 @@ import {
   reduce,
   shareReplay,
   tap,
+  toArray,
 } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom } from "@itwin/presentation-shared";
+import { eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
@@ -191,51 +192,58 @@ export function createCategoriesTreeIdsProvider({
   }: {
     categoryIds: Id64Array;
   }): Observable<{ id: DefinitionContainerId; modelId: Id64String }> {
-    return defer(() => {
-      // A definition model shares its ID with the definition container it models.
-      const DEFINITION_CONTAINERS_CTE = "DefinitionContainers";
-      const ctes = [
-        `
-          ${DEFINITION_CONTAINERS_CTE}(ECInstanceId, ModelId) AS (
-            SELECT
-              dc.ECInstanceId,
-              dc.Model.Id
-            FROM ${CLASS_NAMES.DefinitionContainer} dc
-            JOIN ${categoryClass} c ON c.Model.Id = dc.ECInstanceId
-            JOIN IdSet(?) categoryIdSet ON c.ECInstanceId = categoryIdSet.id
-            WHERE NOT dc.IsPrivate
+    return from(
+      ECSql.createHiddenClassesFilter({ schemaProvider: imodelAccess, baseClassName: CLASS_NAMES.DefinitionContainer }),
+    ).pipe(
+      mergeMap((definitionContainersHiddenClassesFilter) => {
+        // A definition model shares its ID with the definition container it models.
+        const DEFINITION_CONTAINERS_CTE = "DefinitionContainers";
+        const ctes = [
+          `
+            ${DEFINITION_CONTAINERS_CTE}(ECInstanceId, ModelId) AS (
+              SELECT
+                dc.ECInstanceId,
+                dc.Model.Id
+              FROM ${CLASS_NAMES.DefinitionContainer} dc
+              JOIN ${categoryClass} c ON c.Model.Id = dc.ECInstanceId
+              JOIN IdSet(?) categoryIdSet ON c.ECInstanceId = categoryIdSet.id
+              WHERE NOT dc.IsPrivate
 
-            UNION ALL
+              UNION ALL
 
-            SELECT
-              pdc.ECInstanceId,
-              pdc.Model.Id
-            FROM
-              ${DEFINITION_CONTAINERS_CTE} cdc
-              JOIN ${CLASS_NAMES.DefinitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
-            WHERE NOT pdc.IsPrivate
-          )
-        `,
-      ];
-      const definitionsQuery = `
-        SELECT
-          dc.ECInstanceId id,
-          dc.ModelId modelId
-          FROM ${DEFINITION_CONTAINERS_CTE} dc
-      `;
-      return imodelAccess.createQueryReader(
-        { ctes, ecsql: definitionsQuery, bindings: [{ type: "idset", value: categoryIds }] },
-        {
-          rowFormat: "ECSqlPropertyNames",
-          limit: "unbounded",
-          restartToken: `${componentName}/${componentId}/definition-containers`,
-        },
-      );
-    }).pipe(
+              SELECT
+                pdc.ECInstanceId,
+                pdc.Model.Id
+              FROM
+                ${DEFINITION_CONTAINERS_CTE} cdc
+                JOIN ${CLASS_NAMES.DefinitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
+              WHERE NOT pdc.IsPrivate
+            )
+          `,
+        ];
+        const hiddenClassesClause = definitionContainersHiddenClassesFilter.createWhereClause("dc");
+        const definitionsQuery = `
+          SELECT
+            cte.ECInstanceId id,
+            cte.ModelId modelId,
+            ${hiddenClassesClause ? `IIF(${hiddenClassesClause}, 0, 1)` : "0"} isHidden
+          FROM ${DEFINITION_CONTAINERS_CTE} cte
+          JOIN ${CLASS_NAMES.DefinitionContainer} dc ON dc.ECInstanceId = cte.ECInstanceId
+        `;
+        return imodelAccess.createQueryReader(
+          { ctes, ecsql: definitionsQuery, bindings: [{ type: "idset", value: categoryIds }] },
+          {
+            rowFormat: "ECSqlPropertyNames",
+            limit: "unbounded",
+            restartToken: `${componentName}/${componentId}/definition-containers`,
+          },
+        );
+      }),
       catchBeSQLiteInterrupts,
       map((row) => {
-        return { id: row.id, modelId: row.modelId };
+        return { id: row.id, modelId: row.modelId, isHidden: !!row.isHidden };
       }),
+      excludeHiddenDefinitionContainers,
     );
   }
 
@@ -520,9 +528,17 @@ export function createCategoriesTreeIdsProvider({
     }): Promise<{ categories: Array<CategoryId>; definitionContainers: Array<DefinitionContainerId> }> {
       return firstValueFrom(
         forkJoin({
-          categories: getCategoryData().pipe(
-            mergeMap(({ categoriesGroupedByModel }) => categoriesGroupedByModel.values()),
-            reduce((acc, modelCategoriesInfo) => {
+          categories: forkJoin({
+            categoryData: getCategoryData(),
+            definitionContainersInfo: getDefinitionContainersInfo(),
+          }).pipe(
+            mergeMap(({ categoryData, definitionContainersInfo }) =>
+              [...categoryData.categoriesGroupedByModel].filter(
+                ([modelId, { parentDefinitionContainerExists }]) =>
+                  !parentDefinitionContainerExists || definitionContainersInfo.has(modelId),
+              ),
+            ),
+            reduce((acc, [, modelCategoriesInfo]) => {
               applyElementsFilter(modelCategoriesInfo.childCategories, props?.includeEmpty).forEach((categoryInfo) =>
                 acc.push(categoryInfo.id),
               );
@@ -581,4 +597,27 @@ export function createCategoriesTreeIdsProvider({
 
 function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], includeEmpty: boolean | undefined): T[] {
   return includeEmpty ? list : list.filter(({ hasElements }) => !!hasElements);
+}
+
+/** Excludes definition containers of hidden classes, together with all definition containers nested in them. */
+function excludeHiddenDefinitionContainers(
+  definitionContainers: Observable<{ id: DefinitionContainerId; modelId: Id64String; isHidden: boolean }>,
+): Observable<{ id: DefinitionContainerId; modelId: Id64String }> {
+  return definitionContainers.pipe(
+    toArray(),
+    mergeMap((containers) => {
+      const containersMap = new Map(containers.map((dc) => [dc.id, dc]));
+      const hasHiddenAncestorOrSelf = (id: DefinitionContainerId): boolean => {
+        for (let current = containersMap.get(id); current !== undefined; current = containersMap.get(current.modelId)) {
+          if (current.isHidden) {
+            return true;
+          }
+        }
+        return false;
+      };
+      return [...containersMap.values()]
+        .filter(({ id }) => !hasHiddenAncestorOrSelf(id))
+        .map(({ id, modelId }) => ({ id, modelId }));
+    }),
+  );
 }

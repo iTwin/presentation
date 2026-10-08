@@ -175,6 +175,54 @@ describe("Models tree", () => {
       ]);
     });
 
+    it("excludes paths through models of hidden classes", async () => {
+      await using setupResult = await buildIModel(async (imodel) => {
+        const hiddenModelClassNames = await importHiddenClassesSchemas({
+          imodel,
+          baseClass: "BisCore.PhysicalModel",
+          schemaNamePrefix: "Model",
+        });
+        return withEditTxn(imodel, (txn) => {
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+          const element = insertPhysicalElement({
+            txn,
+            modelId: model.id,
+            categoryId: category.id,
+            userLabel: "matching element",
+          });
+          const hiddenModelContent = Object.entries(hiddenModelClassNames).flatMap(([variant, classFullName]) => {
+            const partition = insertPhysicalPartition({
+              txn,
+              codeValue: `hidden model (${variant})`,
+              parentId: IModel.rootSubjectId,
+            });
+            const hiddenModel = insertPhysicalSubModel({ txn, classFullName, modeledElementId: partition.id });
+            const hiddenModelElement = insertPhysicalElement({
+              txn,
+              modelId: hiddenModel.id,
+              categoryId: category.id,
+              userLabel: `matching element in hidden model (${variant})`,
+            });
+            return [hiddenModel, hiddenModelElement];
+          });
+          return { category, model, element, hiddenModelContent };
+        });
+      });
+      const { imodelConnection, ...keys } = setupResult;
+      const { createInstanceKeyPaths } = createModelsTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        hierarchyConfig: { subjects: { root: "exclude" } },
+      });
+      expect(await collect(createInstanceKeyPaths({ label: "matching element", limit: "unbounded" }))).toEqual([
+        {
+          path: [adjustedModelKey(keys.model), keys.category, adjustedElementKey(keys.element)],
+          target: keys.element.id,
+        },
+      ]);
+      expect(await collect(createInstanceKeyPaths({ targetItems: keys.hiddenModelContent }))).toEqual([]);
+    });
+
     it.each(["model", "category", "element"] as const)("finds all subject paths to a shared %s", async (target) => {
       await using setupResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom, type EC, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
@@ -107,7 +107,7 @@ export function createClassificationsTreeIdsProvider({
     )
   > {
     const getQueryReader = (
-      elementsHiddenClassesFilter: HiddenClassesFilter,
+      hiddenClassesFilters: Record<"tables" | "classifications" | "elements", HiddenClassesFilter>,
       lastClassificationId?: ClassificationId,
     ) => {
       const CLASSIFICATIONS_CTE = "Classifications";
@@ -122,7 +122,14 @@ export function createClassificationsTreeIdsProvider({
             JOIN ${CLASS_NAMES.ClassificationTable} ct ON ct.ECInstanceId = cl.Model.Id
             JOIN ${CLASS_NAMES.ClassificationSystem} cs ON cs.ECInstanceId = ct.Parent.Id
             ${createWhereClause({
-              conditions: ["cs.CodeValue = ?", "NOT ct.IsPrivate", "NOT cl.IsPrivate", "cl.Parent.Id IS NULL"],
+              conditions: [
+                "cs.CodeValue = ?",
+                "NOT ct.IsPrivate",
+                "NOT cl.IsPrivate",
+                "cl.Parent.Id IS NULL",
+                hiddenClassesFilters.tables.createWhereClause("ct"),
+                hiddenClassesFilters.classifications.createWhereClause("cl"),
+              ],
             })}
 
             UNION ALL
@@ -134,8 +141,9 @@ export function createClassificationsTreeIdsProvider({
             FROM
               ${CLASSIFICATIONS_CTE} cte
               JOIN ${CLASS_NAMES.Classification} cl ON cl.Parent.Id = cte.ClassificationId
-            WHERE
-              NOT cl.IsPrivate
+            ${createWhereClause({
+              conditions: ["NOT cl.IsPrivate", hiddenClassesFilters.classifications.createWhereClause("cl")],
+            })}
           )
         `,
       ];
@@ -171,7 +179,7 @@ export function createClassificationsTreeIdsProvider({
                 alias: "e",
                 excludedClassNames: hierarchyConfig.elements?.excludedClasses,
               }),
-              elementsHiddenClassesFilter.createWhereClause("e"),
+              hiddenClassesFilters.elements.createWhereClause("e"),
             ],
           })}
           GROUP BY ehc.TargetECInstanceId
@@ -197,16 +205,27 @@ export function createClassificationsTreeIdsProvider({
         },
       );
     };
-    return from(
-      ECSql.createHiddenClassesFilter({ schemaProvider: imodelAccess, baseClassName: CLASS_NAMES.GeometricElement3d }),
-    ).pipe(
-      mergeMap((elementsHiddenClassesFilter) =>
-        from(getQueryReader(elementsHiddenClassesFilter)).pipe(
+    return forkJoin({
+      tables: ECSql.createHiddenClassesFilter({
+        schemaProvider: imodelAccess,
+        baseClassName: CLASS_NAMES.ClassificationTable,
+      }),
+      classifications: ECSql.createHiddenClassesFilter({
+        schemaProvider: imodelAccess,
+        baseClassName: CLASS_NAMES.Classification,
+      }),
+      elements: ECSql.createHiddenClassesFilter({
+        schemaProvider: imodelAccess,
+        baseClassName: CLASS_NAMES.GeometricElement3d,
+      }),
+    }).pipe(
+      mergeMap((hiddenClassesFilters) =>
+        from(getQueryReader(hiddenClassesFilters)).pipe(
           // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
           // 0 rows will be sent. This is acceptable to keep the implementation simple.
           expand((row, idx) => {
             if (idx % rowLimit === rowLimit - 1) {
-              return getQueryReader(elementsHiddenClassesFilter, row.id);
+              return getQueryReader(hiddenClassesFilters, row.id);
             }
             return EMPTY;
           }),

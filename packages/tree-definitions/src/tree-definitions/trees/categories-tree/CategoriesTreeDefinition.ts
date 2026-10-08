@@ -868,7 +868,13 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 dc.ECInstanceId AS id,
                 dc.Model.Id AS modelId
               FROM ${CLASS_NAMES.DefinitionContainer} dc
-              WHERE NOT dc.IsPrivate AND ${hasCategory}
+              ${createWhereClause({
+                conditions: [
+                  "NOT dc.IsPrivate",
+                  hasCategory,
+                  definitionContainersHiddenClassesFilter.createWhereClause("dc"),
+                ],
+              })}
 
               UNION ALL
 
@@ -877,7 +883,9 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 pdc.Model.Id AS modelId
               FROM ${CLASS_NAMES.DefinitionContainer} pdc
               JOIN AllContainers dc ON pdc.ECInstanceId = dc.modelId
-              WHERE NOT pdc.IsPrivate
+              ${createWhereClause({
+                conditions: ["NOT pdc.IsPrivate", definitionContainersHiddenClassesFilter.createWhereClause("pdc")],
+              })}
             )
           `,
           `DefContainers(id, modelId) AS (

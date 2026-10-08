@@ -88,6 +88,65 @@ describe("Classifications tree", () => {
       );
     });
 
+    it("excludes content of classification tables and classifications of hidden classes from label searches", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) => {
+        await importClassificationSchema(imodel);
+        const hiddenClassNames = await importHiddenClassificationClasses(imodel);
+        return withEditTxn(imodel, (txn) => {
+          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+          const classification = insertClassification({ txn, modelId: table.id, codeValue: "matching classification" });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const insertClassifiedElement = (classificationId: string, userLabel: string) => {
+            const element = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel });
+            insertElementHasClassificationsRelationship({ txn, elementId: element.id, classificationId });
+          };
+          for (const [variant, classFullName] of Object.entries(hiddenClassNames.tables)) {
+            const hiddenTable = insertClassificationTable({
+              txn,
+              classFullName,
+              parentId: system.id,
+              codeValue: `hidden table (${variant})`,
+            });
+            const classificationInHiddenTable = insertClassification({
+              txn,
+              modelId: hiddenTable.id,
+              codeValue: `matching classification in hidden table (${variant})`,
+            });
+            insertClassifiedElement(classificationInHiddenTable.id, `matching element in hidden table (${variant})`);
+          }
+          for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
+            const hiddenClassification = insertClassification({
+              txn,
+              classFullName,
+              modelId: table.id,
+              codeValue: `hidden classification (${variant})`,
+            });
+            const classificationUnderHiddenClassification = insertClassification({
+              txn,
+              modelId: table.id,
+              parentId: hiddenClassification.id,
+              codeValue: `matching classification under hidden classification (${variant})`,
+            });
+            insertClassifiedElement(
+              classificationUnderHiddenClassification.id,
+              `matching element under hidden classification (${variant})`,
+            );
+          }
+          return { table, classification };
+        });
+      });
+      const { imodelConnection, ...keys } = buildIModelResult;
+      const { createInstanceKeyPaths } = createClassificationsTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        hierarchyConfig: defaultHierarchyConfiguration,
+      });
+      expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
+        { path: [keys.table, keys.classification], target: keys.classification.id },
+      ]);
+    });
+
     describe("Hidden element classes and schemas", () => {
       const searchTags = {
         visibleChild: "[visible-child]",
