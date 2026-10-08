@@ -184,21 +184,21 @@ export async function importCategorySymbolizesClassificationSchema(imodel: IMode
       <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
       <ECSchemaReference name="ClassificationSystems" version="01.00.04" alias="clsf" />
       <ECRelationshipClass typeName="CategorySymbolizesClassification" modifier="None" strength="referencing">
-        <BaseClass>bis.ElementRefersToElements</BaseClass>
+        <BaseClass>bis:ElementRefersToElements</BaseClass>
         <Source multiplicity="(0..*)" roleLabel="symbolizes" polymorphic="true">
-          <Class class="bis.Category" />
+          <Class class="bis:Category" />
         </Source>
         <Target multiplicity="(0..*)" roleLabel="is symbolized by" polymorphic="true">
-          <Class class="clsf.Classification" />
+          <Class class="clsf:Classification" />
         </Target>
       </ECRelationshipClass>
       <ECRelationshipClass typeName="ClassificationIsSymbolizedByCategory" modifier="None" strength="referencing">
-        <BaseClass>bis.ElementRefersToElements</BaseClass>
+        <BaseClass>bis:ElementRefersToElements</BaseClass>
         <Source multiplicity="(0..*)" roleLabel="is symbolized by" polymorphic="true">
-          <Class class="clsf.Classification" />
+          <Class class="clsf:Classification" />
         </Source>
         <Target multiplicity="(0..*)" roleLabel="symbolizes" polymorphic="true">
-          <Class class="bis.Category" />
+          <Class class="bis:Category" />
         </Target>
       </ECRelationshipClass>
     `,
