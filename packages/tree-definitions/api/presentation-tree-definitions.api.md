@@ -122,6 +122,7 @@ type ClassGroupingHierarchyNode = GroupingHierarchyNode & {
 
 // @beta
 interface ClassificationsTreeHierarchyConfiguration {
+    classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
     elements?: {
         excludedClasses?: EC.FullClassNameDotNotation[];
     };
@@ -186,6 +187,12 @@ type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & ({
 interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
     children?: ClassificationsTreeSearchTree[];
     identifier: ClassificationsTreeSearchPathKey;
+}
+
+// @beta
+interface ClassificationToCategoriesRelationshipSpecification {
+    fullClassName: EC.FullClassNameDotNotation;
+    source: "classification" | "category";
 }
 
 // @beta

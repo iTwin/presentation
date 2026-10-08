@@ -5,7 +5,7 @@
 
 import { EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, type EC, type ECSchemaProvider } from "@itwin/presentation-shared";
+import { eachValueFrom, type ECSchemaProvider } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
@@ -26,25 +26,6 @@ import type {
   ClassificationsTreeSearchPath,
 } from "./ClassificationsTreeDefinition.js";
 
-/**
- * Relationship used to determine related categories for classifications.
- *
- * By default, categories are determined using `ClassificationSystems.ElementHasClassifications` and `BisCore.GeometricElement3dIsInCategory` relationships.
- *
- * @internal
- */
-export interface ClassificationToCategoriesRelationshipSpecification {
-  /**
-   * Full class name of the relationship which links classifications to categories. Format: `{SchemaName}.{RelationshipClassName}`.
-   */
-  fullClassName: EC.FullClassNameDotNotation;
-  /**
-   * Describes the relationship direction by specifying its source.
-   * E.g. whether it's a `classification` -> `categories` or `category` -> `classifications` relationship.
-   */
-  source: "classification" | "category";
-}
-
 interface ClassificationOrTableInfo {
   parentClassificationOrTableId: ClassificationId | ClassificationTableId | undefined;
   childClassificationIds: ClassificationId[];
@@ -56,8 +37,7 @@ interface ClassificationOrTableInfo {
  */
 interface ClassificationsTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
-  classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
+  hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   baseIdsProvider: BaseIdsProvider;
 }
 
@@ -96,8 +76,8 @@ export function createClassificationsTreeIdsProvider({
   baseIdsProvider,
   hierarchyConfig,
   imodelAccess,
-  classificationToCategoriesRelationshipSpecification,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
+  const { classificationToCategoriesRelationshipSpecification } = hierarchyConfig;
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
@@ -154,7 +134,22 @@ export function createClassificationsTreeIdsProvider({
           SELECT group_concat(IdToHex(cat.ECInstanceId))
           FROM ${CLASS_NAMES.SpatialCategory} cat
           JOIN ${relationship} rel ON rel.${categoryAccessor} = cat.ECInstanceId
-          ${createWhereClause({ conditions: ["NOT cat.IsPrivate", `rel.${classificationAccessor} = cl.ClassificationId`] })}
+          JOIN ${CLASS_NAMES.GeometricElement3d} e ON e.Category.Id = cat.ECInstanceId
+          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
+          ${createWhereClause({
+            conditions: [
+              "NOT cat.IsPrivate",
+              `rel.${classificationAccessor} = cl.ClassificationId`,
+              "e.Parent.Id IS NULL",
+              "NOT m.IsPrivate",
+              "NOT m.IsTemplate",
+              createExcludedClassesClause({
+                alias: "e",
+                excludedClassNames: hierarchyConfig.elements?.excludedClasses,
+              }),
+              createElementsHiddenClassesClause("e"),
+            ],
+          })}
           GROUP BY rel.${classificationAccessor}
         `;
       } else {

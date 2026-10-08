@@ -82,7 +82,7 @@ interface ClassificationsTreeDefinitionProps extends ClassificationsTreeProps {
 }
 
 /**
- * Selects the root classification system and excluded element classes for `createClassificationsTree`.
+ * Selects the root classification system, category relationships, and excluded element classes for `createClassificationsTree`.
  * @beta
  */
 export interface ClassificationsTreeHierarchyConfiguration {
@@ -91,6 +91,11 @@ export interface ClassificationsTreeHierarchyConfiguration {
    * root `ClassificationSystem`.
    */
   rootClassificationSystemCode: string;
+  /**
+   * A relationship linking classifications directly to categories whose elements appear beneath them.
+   * When omitted, elements are related through `ClassificationSystems.ElementHasClassifications`.
+   */
+  classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
   /**
    * Element node's configuration options.
    *
@@ -107,6 +112,17 @@ export interface ClassificationsTreeHierarchyConfiguration {
      */
     excludedClasses?: EC.FullClassNameDotNotation[];
   };
+}
+
+/**
+ * Describes a relationship linking classifications directly to categories.
+ * @beta
+ */
+interface ClassificationToCategoriesRelationshipSpecification {
+  /** Full relationship class name in `{SchemaName}.{RelationshipClassName}` format. */
+  fullClassName: EC.FullClassNameDotNotation;
+  /** Identifies which relationship endpoint contains the classification or category. */
+  source: "classification" | "category";
 }
 
 /**
@@ -411,6 +427,10 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
             createFilterClauses,
           }),
     ]);
+    const elementsRelationship = createClassificationElementsRelationshipClause({
+      hierarchyConfig: this.#props.hierarchyConfig,
+      elementAlias: "this",
+    });
     return [
       // load classification elements
       {
@@ -420,8 +440,8 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
             SELECT ${await this.#createElementSelectClause({ createSelectClause })}
             FROM ${elementsInstanceFilterClauses.from} this
             JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
-            JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
-            JOIN IdSet(?) parentClassificationIdSet ON ehc.TargetECInstanceId = parentClassificationIdSet.id
+            ${elementsRelationship.joins}
+            JOIN IdSet(?) parentClassificationIdSet ON ${elementsRelationship.classificationIdSelector} = parentClassificationIdSet.id
             ${elementsInstanceFilterClauses.joins}
             ${createWhereClause({
               conditions: [
@@ -524,14 +544,18 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       ${createWhereClause({ conditions: ["cc.Parent.Id = this.ECInstanceId", "NOT cc.IsPrivate"] })}
       LIMIT 1
     `;
+    const elementsRelationship = createClassificationElementsRelationshipClause({
+      hierarchyConfig: this.#props.hierarchyConfig,
+      elementAlias: "e",
+    });
     const hasElements = `
       SELECT 1
       FROM ${CLASS_NAMES.GeometricElement3d} e
       JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
-      JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
+      ${elementsRelationship.joins}
       ${createWhereClause({
         conditions: [
-          "ehc.TargetECInstanceId = this.ECInstanceId",
+          `${elementsRelationship.classificationIdSelector} = this.ECInstanceId`,
           "e.Parent.Id IS NULL",
           "NOT m.IsPrivate",
           "NOT m.IsTemplate",
@@ -743,6 +767,33 @@ async function getChildClassifications({
   );
 }
 
+function createClassificationElementsRelationshipClause({
+  hierarchyConfig,
+  elementAlias,
+}: {
+  hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+  elementAlias: string;
+}) {
+  const relationship = hierarchyConfig.classificationToCategoriesRelationshipSpecification;
+  if (!relationship) {
+    return {
+      joins: `JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = ${elementAlias}.ECInstanceId`,
+      classificationIdSelector: "ehc.TargetECInstanceId",
+    };
+  }
+  const { categoryAccessor, classificationAccessor } =
+    relationship.source === "classification"
+      ? { classificationAccessor: "SourceECInstanceId", categoryAccessor: "TargetECInstanceId" }
+      : { classificationAccessor: "TargetECInstanceId", categoryAccessor: "SourceECInstanceId" };
+  return {
+    joins: `
+      JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = ${elementAlias}.Category.Id AND NOT cat.IsPrivate
+      JOIN ${relationship.fullClassName} rel ON rel.${categoryAccessor} = cat.ECInstanceId
+    `,
+    classificationIdSelector: `rel.${classificationAccessor}`,
+  };
+}
+
 function createClassificationHasChildrenSelector(classificationAlias: string) {
   return `
     IFNULL(
@@ -798,6 +849,10 @@ function createInstanceKeyPathsFromInstanceLabelObs({
       }),
     ]);
     const classificationIds = await props.idsProvider.getAllClassifications();
+    const elementsRelationship = createClassificationElementsRelationshipClause({
+      hierarchyConfig: props.hierarchyConfig,
+      elementAlias: "this",
+    });
     const ctes = [
       `
         ${CLASSIFICATION_TABLES_WITH_LABELS_CTE}(ClassName, ECInstanceId, DisplayLabel) AS (
@@ -827,8 +882,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
                 ${elementLabelSelectClause}
               FROM ${CLASS_NAMES.GeometricElement3d} this
               JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
-              JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = this.ECInstanceId
-              JOIN IdSet(?) classificationIdSet ON ehc.TargetECInstanceId = classificationIdSet.id
+              ${elementsRelationship.joins}
+              JOIN IdSet(?) classificationIdSet ON ${elementsRelationship.classificationIdSelector} = classificationIdSet.id
               ${createWhereClause({
                 conditions: [
                   "this.Parent.Id IS NULL",
@@ -1031,7 +1086,7 @@ function createSearchPathsForDifferentTypes(
                   chunkIndex,
                   uniqueId,
                   componentName,
-                  excludedElementClassNames: props.hierarchyConfig.elements?.excludedClasses,
+                  hierarchyConfig: props.hierarchyConfig,
                 }),
               2,
             ),
@@ -1048,10 +1103,10 @@ function createGeometricElementInstanceKeyPaths(props: {
   uniqueId: GuidString;
   componentName: string;
   chunkIndex: number;
-  excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
+  hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
 }): Observable<{ path: ClassificationsTreeSearchPath; target: Id64String }> {
-  const { targetItems, imodelAccess, idsProvider, uniqueId, componentName, chunkIndex, excludedElementClassNames } =
-    props;
+  const { targetItems, imodelAccess, idsProvider, uniqueId, componentName, chunkIndex, hierarchyConfig } = props;
+  const excludedElementClassNames = hierarchyConfig.elements?.excludedClasses;
   if (targetItems.length === 0) {
     return EMPTY;
   }
@@ -1067,46 +1122,51 @@ function createGeometricElementInstanceKeyPaths(props: {
     mergeMap(({ createElementsHiddenClassesClause }) => {
       const ctes = [
         `ElementsHierarchy(ECInstanceId, ParentId, Path) AS (
-        SELECT
-          e.ECInstanceId,
-          e.Parent.Id,
-          '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([e].[ECInstanceId]) AS TEXT)
-        FROM  ${CLASS_NAMES.Element} e
-        JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
-        JOIN IdSet(?) targetItemIdSet ON e.ECInstanceId = targetItemIdSet.id
-        ${createWhereClause({
-          conditions: [
-            "NOT m.IsPrivate",
-            "NOT m.IsTemplate",
-            createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames }),
-            createElementsHiddenClassesClause("e"),
-          ],
-        })}
+          SELECT
+            e.ECInstanceId,
+            e.Parent.Id,
+            '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([e].[ECInstanceId]) AS TEXT)
+          FROM  ${CLASS_NAMES.Element} e
+          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
+          JOIN IdSet(?) targetItemIdSet ON e.ECInstanceId = targetItemIdSet.id
+          ${createWhereClause({
+            conditions: [
+              "NOT m.IsPrivate",
+              "NOT m.IsTemplate",
+              createExcludedClassesClause({ alias: "e", excludedClassNames: excludedElementClassNames }),
+              createElementsHiddenClassesClause("e"),
+            ],
+          })}
 
-        UNION ALL
+          UNION ALL
 
-        SELECT
-          pe.ECInstanceId,
-          pe.Parent.Id,
-          '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([pe].[ECInstanceId]) AS TEXT) || '${separator}' || ce.Path
-        FROM ElementsHierarchy ce
-        JOIN ${CLASS_NAMES.Element} pe ON pe.ECInstanceId = ce.ParentId
-        ${createWhereClause({
-          conditions: [
-            createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames }),
-            createElementsHiddenClassesClause("pe"),
-          ],
-        })}
-      )`,
+          SELECT
+            pe.ECInstanceId,
+            pe.Parent.Id,
+            '${ELEMENT_CLASS_NAME_QUERY_ALIAS}${separator}' || CAST(IdToHex([pe].[ECInstanceId]) AS TEXT) || '${separator}' || ce.Path
+          FROM ElementsHierarchy ce
+          JOIN ${CLASS_NAMES.Element} pe ON pe.ECInstanceId = ce.ParentId
+          ${createWhereClause({
+            conditions: [
+              createExcludedClassesClause({ alias: "pe", excludedClassNames: excludedElementClassNames }),
+              createElementsHiddenClassesClause("pe"),
+            ],
+          })}
+        )`,
       ];
+      const elementsRelationship = createClassificationElementsRelationshipClause({
+        hierarchyConfig,
+        elementAlias: "element",
+      });
       const ecsql = `
       SELECT
         e.Path path,
         c.ECInstanceId classificationId
       FROM
-        ${CLASS_NAMES.Classification} c
-        JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.TargetECInstanceId = c.ECInstanceId
-        JOIN ElementsHierarchy e ON ehc.SourceECInstanceId = e.ECInstanceId
+        ElementsHierarchy e
+        JOIN ${CLASS_NAMES.GeometricElement3d} element ON element.ECInstanceId = e.ECInstanceId
+        ${elementsRelationship.joins}
+        JOIN ${CLASS_NAMES.Classification} c ON c.ECInstanceId = ${elementsRelationship.classificationIdSelector}
       WHERE e.ParentId IS NULL
     `;
 
