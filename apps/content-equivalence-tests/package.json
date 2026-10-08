@@ -12,6 +12,7 @@
   "dependencies": {
     "@itwin/core-backend": "catalog:itwinjs-core-dev",
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
+    "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-content": "workspace:*",

@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ECClass } from "@itwin/ecschema-metadata";
 import { createDefaultValueFormatter, formatConcatenatedValue, getClass } from "@itwin/presentation-shared";
 import {
   createCanonicalEnumeration,
@@ -14,6 +15,7 @@ import {
 import { stableStringify } from "../Persistence.js";
 import { createDeclaredRelationshipsResolver } from "./DeclaredRelationships.js";
 
+import type { SchemaContext } from "@itwin/ecschema-metadata";
 import type { CategoryDefinition, ReadonlyContentDescriptor, ReadonlyPropertyField } from "@itwin/presentation-content";
 import type { EC, ECSchemaProvider, ECSqlQueryExecutor, NavigationValue } from "@itwin/presentation-shared";
 import type {
@@ -76,6 +78,14 @@ function hasPrimitiveValueType(type: NewFieldType): boolean {
   return type.kind === "primitive" || (type.kind === "array" && hasPrimitiveValueType(type.elementType));
 }
 
+/** Matches native `ECProperty` semantics, where the nearest `HiddenProperty` attribute in the hierarchy wins. */
+async function isPropertyHidden(schemaContext: SchemaContext, field: ReadonlyPropertyField): Promise<boolean> {
+  const ecClass = await schemaContext.getSchemaItem(field.propertyClassName, ECClass);
+  const property = await ecClass?.getProperty(field.propertyName);
+  const attribute = (await property?.getCustomAttributes())?.get("CoreCustomAttributes.HiddenProperty");
+  return attribute !== undefined && attribute.Show !== true;
+}
+
 /**
  * TODO: Workaround for https://github.com/iTwin/itwinjs-core/issues/9801: `SchemaView` doesn't inherit a property's
  * category, kind of quantity or hidden flag from its base properties, while native `ECProperty` does.
@@ -84,6 +94,7 @@ function hasPrimitiveValueType(type: NewFieldType): boolean {
 async function getInheritedPropertiesMetadata(
   descriptors: ReadonlyContentDescriptor[],
   imodelAccess: ECSchemaProvider,
+  schemaContext: SchemaContext,
 ): Promise<InheritedPropertiesMetadata> {
   const fields = new Map<string, ReadonlyPropertyField>();
   for (const descriptor of descriptors) {
@@ -99,14 +110,11 @@ async function getInheritedPropertiesMetadata(
       if (!property) {
         return undefined;
       }
-      const metadata: InheritedPropertyMetadata = { hidden: false };
+      const metadata: InheritedPropertyMetadata = { hidden: await isPropertyHidden(schemaContext, field) };
       let currentClass: EC.Class | undefined = property.class;
       while (currentClass) {
         const classProperty = currentClass.getProperty(field.propertyName);
         if (classProperty) {
-          if (classProperty.isHidden) {
-            metadata.hidden = true;
-          }
           if (metadata.categoryLabel === undefined && classProperty.category) {
             metadata.categoryLabel = classProperty.category.label ?? classProperty.category.name;
           }
@@ -371,6 +379,7 @@ async function getDeclaredRelationshipNames(
 export async function createCanonicalCapture(
   capture: NewCapture,
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor,
+  schemaContext: SchemaContext,
 ): Promise<CanonicalCapture> {
   const resolve = await createDeclaredRelationshipsResolver(imodelAccess);
   const descriptors = "descriptor" in capture ? [capture.descriptor] : capture.items.map((item) => item.descriptor);
@@ -381,7 +390,7 @@ export async function createCanonicalCapture(
     imodelAccess,
     new Set(declaredRelationshipNames.flatMap((namesByField) => Object.values(namesByField).flat())),
   );
-  const inheritedProperties = await getInheritedPropertiesMetadata(descriptors, imodelAccess);
+  const inheritedProperties = await getInheritedPropertiesMetadata(descriptors, imodelAccess, schemaContext);
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor, {
       declaredRelationshipNames: declaredRelationshipNames[0],
