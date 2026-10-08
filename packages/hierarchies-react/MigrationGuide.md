@@ -264,29 +264,41 @@ function MyTreeAction({
 
 In `1.x`, hierarchy-level filtering was built in and triggered through the `onFilterClick` prop. In `2.0` it is opt-in: render the delivered `TreeNodeFilterAction` as one of the node actions and handle the filtering UI yourself.
 
-`TreeNodeFilterAction` shows a filter button on filterable nodes (with a dot indicator when a filter is active). When clicked, it invokes `onFilter` with the node's `HierarchyLevelDetails`, which you use to open your filtering UI and apply the filter through `setInstanceFilter`. To also surface filtering from the error shown when a hierarchy level exceeds its size limit, pass the same handler to the `filterHierarchyLevel` prop of `StrataKitTreeRenderer`.
+`TreeNodeFilterAction` shows a filter button on filterable nodes (with a dot indicator when a filter is active). When clicked, it invokes `onFilter` with the node's `HierarchyLevelDetails`. A common pattern is to store those details in state (which opens a filter dialog), then apply the chosen filter through `HierarchyLevelDetails.setInstanceFilter` when the dialog is confirmed. Pass the same handler to the `filterHierarchyLevel` prop of `StrataKitTreeRenderer` to also surface filtering from the error shown when a hierarchy level exceeds its size limit.
 
 ```tsx
+import { useState } from "react";
 import { StrataKitTreeRenderer, TreeNodeFilterAction } from "@itwin/presentation-hierarchies-react/stratakit";
 import type { HierarchyLevelDetails } from "@itwin/presentation-hierarchies-react";
 
-const filterHierarchyLevel = (hierarchyLevelDetails: HierarchyLevelDetails) => {
-  // open your filter dialog, then apply with `hierarchyLevelDetails.setInstanceFilter(...)`
-};
+// the details of the hierarchy level currently being filtered drive the filter dialog
+const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
 
-<StrataKitTreeRenderer
-  {...treeProps.treeRendererProps}
-  treeLabel="My Tree"
-  filterHierarchyLevel={filterHierarchyLevel}
-  getInlineActions={({ targetNode }) => [
-    <TreeNodeFilterAction
-      key="filter"
-      node={targetNode}
-      onFilter={filterHierarchyLevel}
-      getHierarchyLevelDetails={treeProps.treeRendererProps.getHierarchyLevelDetails}
-    />,
-  ]}
-/>;
+return (
+  <>
+    <StrataKitTreeRenderer
+      {...treeProps.treeRendererProps}
+      treeLabel="My Tree"
+      filterHierarchyLevel={setFilteringOptions}
+      getInlineActions={({ targetNode }) => [
+        <TreeNodeFilterAction
+          key="filter"
+          node={targetNode}
+          onFilter={setFilteringOptions}
+          getHierarchyLevelDetails={treeProps.treeRendererProps.getHierarchyLevelDetails}
+        />,
+      ]}
+    />
+    <MyFilterDialog
+      isOpen={!!filteringOptions}
+      onApply={(filter) => {
+        filteringOptions?.setInstanceFilter(filter);
+        setFilteringOptions(undefined);
+      }}
+      onClose={() => setFilteringOptions(undefined)}
+    />
+  </>
+);
 ```
 
 ### Node renaming
