@@ -227,8 +227,8 @@ describe("Hierarchies", () => {
           });
         });
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesInHasChildren
         const imodelAccess = createIModelAccess(hiddenClassesIModel);
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesInHasChildren
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode, instanceFilter, createSelectClause, createFilterClauses }) {
             const parentIds =

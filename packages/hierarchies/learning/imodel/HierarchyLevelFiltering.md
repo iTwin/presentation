@@ -123,7 +123,7 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 In addition to applying the instance filter, the returned `where` clause excludes instances of classes that are hidden through `CoreCustomAttributes.HiddenClass` or `CoreCustomAttributes.HiddenSchema` custom attributes. Hiding is relative to the content class - if the content class itself is hidden, its instances are still returned, but instances of its hidden sub-classes are not. The hidden classes' information is obtained through `ECSchemaProvider.getHiddenClassesTree` of the provider's `imodelAccess`, which is expected to cache it.
 
-The same rules should be applied when determining whether a node has children. Values of `hasChildren`, supplied through `createSelectClause`, are used as-is, so custom selectors should apply the rules using `ECSchemaProvider.getHiddenClassesTree` and `ECSql.createHiddenClassesWhereClause` from `@itwin/presentation-shared`:
+The same rules should be applied when determining whether a node has children. Values of `hasChildren`, supplied through `createSelectClause`, are used as-is, so custom selectors should apply the rules using `ECSchemaProvider.getHiddenClassesTree` and `ECSql.createHiddenClassesWhereClause` from `@itwin/presentation-shared`. The following example uses the same `imodelAccess` object that is supplied to the hierarchy provider:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyLevelFiltering.Imports, Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesImports, Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesInHasChildren], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -134,7 +134,6 @@ import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 
-const imodelAccess = createIModelAccess(hiddenClassesIModel);
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode, instanceFilter, createSelectClause, createFilterClauses }) {
     const parentIds =
