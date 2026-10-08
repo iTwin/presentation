@@ -13,18 +13,19 @@ import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js
 import { createProvider } from "./Utils.js";
 
 import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(props: {
+  imodelAccess: ECSchemaProvider;
   contentClassName: EC.FullClassNameDotNotation;
   nodeLabel: string | { selector: string };
 }): HierarchyDefinition {
   return {
-    async defineHierarchyLevel({ imodelAccess, instanceFilter, createSelectClause, createFilterClauses }) {
+    async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
       const contentClass = { fullName: props.contentClassName, alias: "this" };
       const filterClauses = await createFilterClauses({ filter: instanceFilter, contentClass });
       const hiddenClassesFilter = await ECSql.createHiddenClassesFilter({
-        schemaProvider: imodelAccess,
+        schemaProvider: props.imodelAccess,
         baseClassName: contentClass.fullName,
       });
       const where = [filterClauses.where, hiddenClassesFilter.createWhereClause(contentClass.alias)]
@@ -82,7 +83,8 @@ describe("Hierarchies", () => {
         const { ecdb, schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({ contentClassName: schema.items.X.fullName, nodeLabel: "x" }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({ imodelAccess, contentClassName: schema.items.X.fullName, nodeLabel: "x" }),
         });
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -113,7 +115,8 @@ describe("Hierarchies", () => {
         const { ecdb, schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({ contentClassName: schema.items.Y.fullName, nodeLabel: "y" }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({ imodelAccess, contentClassName: schema.items.Y.fullName, nodeLabel: "y" }),
         });
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -162,10 +165,12 @@ describe("Hierarchies", () => {
         const { ecdb, schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({
-            contentClassName: schema.items.X.fullName,
-            nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
-          }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({
+              imodelAccess,
+              contentClassName: schema.items.X.fullName,
+              nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
+            }),
         });
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -208,10 +213,12 @@ describe("Hierarchies", () => {
         const { ecdb, schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({
-            contentClassName: schema.items.X.fullName,
-            nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
-          }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({
+              imodelAccess,
+              contentClassName: schema.items.X.fullName,
+              nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
+            }),
         });
         validateHierarchyLevel({
           nodes: await collect(
@@ -248,7 +255,8 @@ describe("Hierarchies", () => {
         const { ecdb, schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({ contentClassName: schema.items.X.fullName, nodeLabel: "x" }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({ imodelAccess, contentClassName: schema.items.X.fullName, nodeLabel: "x" }),
         });
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -285,7 +293,8 @@ describe("Hierarchies", () => {
         const { ecdb, nonHiddenSchema: schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({ contentClassName: schema.items.Y.fullName, nodeLabel: "y" }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({ imodelAccess, contentClassName: schema.items.Y.fullName, nodeLabel: "y" }),
         });
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined })),
@@ -355,10 +364,12 @@ describe("Hierarchies", () => {
         const { ecdb, xSchema: schema, ...keys } = setup;
         const provider = createProvider({
           ecdb,
-          hierarchy: createHierarchyDefinition({
-            contentClassName: schema.items.X.fullName,
-            nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
-          }),
+          hierarchy: (imodelAccess) =>
+            createHierarchyDefinition({
+              imodelAccess,
+              contentClassName: schema.items.X.fullName,
+              nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
+            }),
         });
         validateHierarchyLevel({
           nodes: await collect(provider.getNodes({ parentNode: undefined })),

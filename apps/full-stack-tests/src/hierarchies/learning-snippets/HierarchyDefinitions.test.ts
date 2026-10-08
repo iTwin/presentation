@@ -347,9 +347,10 @@ describe("Hierarchies", () => {
           });
         });
 
+        const imodelAccess = createIModelAccess(hiddenClassesIModel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.HiddenClasses
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ imodelAccess, parentNode, createSelectClause }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             const parentIds =
               parentNode && HierarchyNode.isInstancesNode(parentNode)
                 ? parentNode.key.instanceKeys.map(({ id }) => id)

@@ -14,6 +14,7 @@ Copy `imodels.example.json` to `imodels.json`:
 
 ```json
 {
+  "$schema": "./imodels.schema.json",
   "sampling": {
     "perClass": 5,
     "seed": 1535
@@ -27,11 +28,17 @@ Copy `imodels.example.json` to `imodels.json`:
 }
 ```
 
+The `$schema` reference enables editor completion and validation using
+[`imodels.schema.json`](./imodels.schema.json). The schema rejects unknown
+properties. The runtime loader also checks that files exist and that iModel names
+and resolved paths are unique; JSON Schema cannot enforce these checks.
+
 Relative iModel paths are resolved from the manifest directory. Each iModel may
 also contain an `instanceKeys` array:
 
 ```json
 {
+  "$schema": "./imodels.schema.json",
   "sampling": {
     "perClass": 5,
     "seed": 1535
