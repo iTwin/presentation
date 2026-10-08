@@ -33,7 +33,7 @@ To migrate:
 - Replace imports of rendering components (`TreeRenderer`, `TreeNodeRenderer`, error renderers, action components) with the StrataKit equivalents imported from `@itwin/presentation-hierarchies-react/stratakit`.
 - Keep importing hooks and utilities (`useTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`, localization helpers, etc.) from the root entry point.
 - Update peer dependencies in your application's `package.json`:
-  - **Remove** `@itwin/itwinui-react`.
+  - **Removed** `@itwin/itwinui-react` - this package no longer has optional dependency on it. Keep it if other parts of your application still use iTwinUI directly.
   - **Add** `@mui/material` (`^9.4.0`), `@stratakit/mui`, and `@stratakit/foundations`. These are optional peer dependencies required only when using the delivered components.
   - **Bump React** to `^18.0.0 || ^19.0.0` if you are still on React `17` — React `17` is no longer supported.
 - **Switch to ESM.** The package no longer ships a CommonJS build and is published as ES modules only. Make sure your application and bundler consume it as ESM; `require("@itwin/presentation-hierarchies-react")` no longer works.
@@ -168,6 +168,8 @@ function getDecorations(node: TreeNode) {
 
 In `1.x`, `rootNodes` contained a union of real hierarchy nodes and separate informational nodes (`PresentationInfoNode`, e.g. "result set too large" or "no filter matches"), and the `isPresentationHierarchyNode` type guard was used to tell them apart. In `2.0` these informational states are no longer represented as separate nodes — they are carried on the node itself (see [Errors](#errors)) — so both the node union and the `isPresentationHierarchyNode` guard were removed.
 
+The top-level `extendedData` property that `PresentationHierarchyNode` exposed (a duplicate of `nodeData.extendedData`) was also removed. Access it through `TreeNode.nodeData.extendedData` instead.
+
 ## Customizing node rendering
 
 In `1.x`, node customization was done through props on `TreeNodeRenderer`. In `2.0`, these are provided through callbacks on `StrataKitTreeRenderer`.
@@ -188,13 +190,34 @@ The single `getIcon` prop was removed. Node decorations are now provided through
 />
 ```
 
+### Labels, descriptions, and event handlers
+
+Per-node content and DOM event handlers are customized through the `getTreeItemProps` callback on `StrataKitTreeRenderer`, which returns props for the underlying tree item. The node is captured in the callback closure, so you don't get it as a handler argument.
+
+- `label` sets the primary node label (replaces the `1.x` `getLabel` prop). When omitted, the node's `label` is used.
+- `description` sets a secondary description shown with the node (replaces the `1.x` `getSublabel` prop).
+- `onClick` / `onKeyDown` attach DOM handlers to the row (replace the `1.x` `onNodeClick` / `onNodeKeyDown` props). Selection is handled internally by `StrataKitTreeRenderer`, so these run _in addition_ to selection — you don't need to implement selection yourself.
+
+```tsx
+<StrataKitTreeRenderer
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  getTreeItemProps={(node) => ({
+    label: <CustomLabel node={node} />,
+    description: <CustomSublabel node={node} />,
+    onClick: (event) => handleClick(node, event),
+    onKeyDown: (event) => handleKeyDown(node, event),
+  })}
+/>
+```
+
 ### Actions
 
 In `1.x`, custom row actions were provided through a single `getActions` callback that returned an array of plain action definitions (`{ icon, label, onClick }`), and hierarchy-level filtering was a built-in feature controlled by the `onFilterClick` prop.
 
 In `2.0`, actions are React components rather than definition objects:
 
-- The package delivers `TreeNodeFilterAction` (for hierarchy-level filtering) and `TreeNodeRenameAction`, and you can build custom actions by rendering the `TreeActionBase` component.
+- The package delivers `TreeNodeFilterAction` (for hierarchy-level filtering, see [Hierarchy level filtering](#hierarchy-level-filtering)) and `TreeNodeRenameAction` (for renaming, see [Node renaming](#node-renaming)), and you can build custom actions by rendering the `TreeActionBase` component.
 - `getActions` was replaced by three callbacks, depending on where the action should appear: `getInlineActions`, `getMenuActions`, and `getContextMenuActions`. Each receives `{ targetNode, selectedNodes }` instead of a single node, so actions can operate on the whole selection.
 - `getInlineActions` renders actions directly on the tree row and accepts at most two actions; use `getMenuActions` and `getContextMenuActions` for anything beyond that.
 
@@ -202,22 +225,64 @@ In `2.0`, actions are React components rather than definition objects:
 // before
 import { TreeNodeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 
-<TreeNodeRenderer
-  onFilterClick={(hierarchyLevelDetails) => openFilterDialog(hierarchyLevelDetails)}
-  getActions={(node) => [{ icon: myIcon, label: "My action", onClick: () => runAction(node) }]}
-/>;
+<TreeNodeRenderer getActions={(node) => [{ icon: myIcon, label: "My action", onClick: () => runAction(node) }]} />;
 
 // after
-import { StrataKitTreeRenderer, TreeNodeFilterAction } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitTreeRenderer, TreeActionBase } from "@itwin/presentation-hierarchies-react/stratakit";
+import type { TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+
+function MyTreeAction({
+  node,
+  selectedNodes,
+  ...attributes
+}: TreeActionBaseAttributes & { node: TreeNode; selectedNodes: TreeNode[] }) {
+  return (
+    <TreeActionBase
+      {...attributes}
+      label="My action"
+      icon={myIcon}
+      hide={!canRunAction(node)}
+      onClick={() => runAction(node, selectedNodes)}
+    />
+  );
+}
 
 <StrataKitTreeRenderer
   {...treeProps.treeRendererProps}
   treeLabel="My Tree"
+  getInlineActions={({ targetNode, selectedNodes }) => [
+    <MyTreeAction key="my-action" node={targetNode} selectedNodes={selectedNodes} />,
+  ]}
+  getContextMenuActions={({ targetNode, selectedNodes }) => [
+    <MyTreeAction key="my-action" node={targetNode} selectedNodes={selectedNodes} />,
+  ]}
+/>;
+```
+
+### Hierarchy level filtering
+
+In `1.x`, hierarchy-level filtering was built in and triggered through the `onFilterClick` prop. In `2.0` it is opt-in: render the delivered `TreeNodeFilterAction` as one of the node actions and handle the filtering UI yourself.
+
+`TreeNodeFilterAction` shows a filter button on filterable nodes (with a dot indicator when a filter is active). When clicked, it invokes `onFilter` with the node's `HierarchyLevelDetails`, which you use to open your filtering UI and apply the filter through `setInstanceFilter`. To also surface filtering from the error shown when a hierarchy level exceeds its size limit, pass the same handler to the `filterHierarchyLevel` prop of `StrataKitTreeRenderer`.
+
+```tsx
+import { StrataKitTreeRenderer, TreeNodeFilterAction } from "@itwin/presentation-hierarchies-react/stratakit";
+import type { HierarchyLevelDetails } from "@itwin/presentation-hierarchies-react";
+
+const filterHierarchyLevel = (hierarchyLevelDetails: HierarchyLevelDetails) => {
+  // open your filter dialog, then apply with `hierarchyLevelDetails.setInstanceFilter(...)`
+};
+
+<StrataKitTreeRenderer
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  filterHierarchyLevel={filterHierarchyLevel}
   getInlineActions={({ targetNode }) => [
     <TreeNodeFilterAction
       key="filter"
       node={targetNode}
-      onFilter={onFilter}
+      onFilter={filterHierarchyLevel}
       getHierarchyLevelDetails={treeProps.treeRendererProps.getHierarchyLevelDetails}
     />,
   ]}
@@ -279,6 +344,7 @@ In `1.x`, error and informational states (e.g. "result set too large", "no filte
 In `2.0` these states are modeled on the nodes and the hook result instead of as separate tree nodes:
 
 - Node-level errors are carried on the node itself through `TreeNode.errors: ErrorInfo[]`, rather than being separate nodes in the tree. The optional `getTreeNodeErrors` callback on the tree state hooks lets you attach custom `ErrorInfo[]` to a node.
+- A node can carry multiple errors. A node that has errors is not expandable unless every error is a generic error (`type: "Unknown"`) with `isNodeExpandable: true`; any other error type (e.g. `ResultSetTooLarge`, `NoFilterMatches`, `ChildrenLoad`) makes the node non-expandable.
 - Root-level load failures (when the root hierarchy level fails to load) are surfaced through the `rootErrorRendererProps` prop bag returned by the tree state hooks; pass it to `StrataKitRootErrorRenderer` (see [Rendering components and tree state hook result](#rendering-components-and-tree-state-hook-result)).
 
 ## Hierarchy search
@@ -367,6 +433,8 @@ Localization was reworked to use an [`i18next`](https://www.i18next.com/)-compat
 - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from `@itwin/core-common`).
 - The tree state hooks and rendering components no longer accept a `localizedStrings` prop.
 - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during application initialization.
+- If you don't wrap your tree in `LocalizationContextProvider` (or don't register `LOCALIZATION_NAMESPACES`), nothing throws — localized strings simply fall back to their keys (e.g. `loading` instead of `Loading...`).
+- The package ships its English locale file at `lib/public/locales/en/PresentationHierarchies_1.0.json` (namespace `PresentationHierarchies_1.0`). Configure your bundler to copy this asset to the location from which your `Localization` implementation loads namespaces.
 
 ```tsx
 // before
