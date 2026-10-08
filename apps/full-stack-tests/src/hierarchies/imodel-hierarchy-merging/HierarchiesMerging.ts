@@ -116,9 +116,9 @@ export function createHierarchyDefinitionFactory({
     ];
   };
 
-  return ({ primaryIModelAccess }) =>
+  return ({ imodelAccess }) =>
     createPredicateBasedHierarchyDefinition({
-      imodelAccess: primaryIModelAccess,
+      imodelAccess,
       hierarchy: {
         rootNodes: async (props) => rootNodes(props),
         childNodes: [
@@ -252,17 +252,14 @@ export async function importQSchema(
 
 export function createMergedHierarchyProvider(props: {
   imodels: Array<{ ecdb: ECDb; key: string }>;
-  createHierarchyDefinition: (props: {
-    primaryIModelAccess: ReturnType<typeof createIModelAccess>;
-  }) => HierarchyDefinition;
+  createHierarchyDefinition: (props: { imodelAccess: ReturnType<typeof createIModelAccess> }) => HierarchyDefinition;
 }) {
   const imodels = props.imodels.map(({ ecdb, key }) => ({
     imodelAccess: { ...createIModelAccess(ecdb), imodelKey: key },
   }));
-  const primaryIModelAccess = imodels[imodels.length - 1].imodelAccess;
   return createMergedIModelHierarchyProvider({
     imodels,
-    hierarchyDefinition: props.createHierarchyDefinition({ primaryIModelAccess }),
+    getHierarchyDefinition: (imodelAccess) => props.createHierarchyDefinition({ imodelAccess }),
   });
 }
 
