@@ -302,6 +302,9 @@ importers:
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.13.1
+      '@itwin/ecschema-metadata':
+        specifier: catalog:itwinjs-core-dev
+        version: 5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))
       '@itwin/presentation-backend':
         specifier: catalog:itwinjs-core-dev
         version: 5.13.1(@itwin/core-backend@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-geometry@5.13.1)(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1)))(@itwin/presentation-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-common@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-geometry@5.13.1))(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))(@itwin/ecschema-metadata@5.13.1(@itwin/core-bentley@5.13.1)(@itwin/core-quantity@5.13.1(@itwin/core-bentley@5.13.1))))
@@ -317,6 +320,9 @@ importers:
       '@itwin/presentation-shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      rxjs:
+        specifier: catalog:rxjs
+        version: 7.8.2
     devDependencies:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
