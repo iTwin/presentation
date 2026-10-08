@@ -3,24 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, type EC, type ECSchemaProvider } from "@itwin/presentation-shared";
+import { eachValueFrom, type EC, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import {
-  createExcludedClassesClause,
-  createHiddenClassesWhereClauseFactory,
-  createWhereClause,
-  getOrCreate,
-} from "../../shared/Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
 import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
+import type { HiddenClassesFilter } from "../../shared/Utils.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
   ClassificationsTreeSearchPath,
@@ -111,7 +107,7 @@ export function createClassificationsTreeIdsProvider({
     )
   > {
     const getQueryReader = (
-      createElementsHiddenClassesClause: (alias: string) => string,
+      elementsHiddenClassesFilter: HiddenClassesFilter,
       lastClassificationId?: ClassificationId,
     ) => {
       const CLASSIFICATIONS_CTE = "Classifications";
@@ -175,7 +171,7 @@ export function createClassificationsTreeIdsProvider({
                 alias: "e",
                 excludedClassNames: hierarchyConfig.elements?.excludedClasses,
               }),
-              createElementsHiddenClassesClause("e"),
+              elementsHiddenClassesFilter.createWhereClause("e"),
             ],
           })}
           GROUP BY ehc.TargetECInstanceId
@@ -201,19 +197,16 @@ export function createClassificationsTreeIdsProvider({
         },
       );
     };
-    return forkJoin({
-      createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
-        schemaProvider: imodelAccess,
-        className: CLASS_NAMES.GeometricElement3d,
-      }),
-    }).pipe(
-      mergeMap(({ createElementsHiddenClassesClause }) =>
-        from(getQueryReader(createElementsHiddenClassesClause)).pipe(
+    return from(
+      ECSql.createHiddenClassesFilter({ schemaProvider: imodelAccess, baseClassName: CLASS_NAMES.GeometricElement3d }),
+    ).pipe(
+      mergeMap((elementsHiddenClassesFilter) =>
+        from(getQueryReader(elementsHiddenClassesFilter)).pipe(
           // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
           // 0 rows will be sent. This is acceptable to keep the implementation simple.
           expand((row, idx) => {
             if (idx % rowLimit === rowLimit - 1) {
-              return getQueryReader(createElementsHiddenClassesClause, row.id);
+              return getQueryReader(elementsHiddenClassesFilter, row.id);
             }
             return EMPTY;
           }),

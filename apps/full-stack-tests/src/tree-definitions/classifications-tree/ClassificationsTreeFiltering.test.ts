@@ -16,9 +16,10 @@ import { createClassificationsTree } from "@itwin/presentation-tree-definitions"
 import { CLASS_NAMES, SearchLimitExceededError } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
-import { buildIModel, importHiddenElementClasses, insertGeometricModelWithPartition } from "../IModelUtils.js";
+import { buildIModel, importHiddenClassesSchemas, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import {
   importClassificationSchema,
+  importHiddenClassificationClasses,
   insertClassification,
   insertClassificationSystem,
   insertClassificationTable,
@@ -45,6 +46,48 @@ describe("Classifications tree", () => {
   });
 
   describe("Hierarchy search", () => {
+    it("excludes classification tables and classifications of hidden classes from label searches", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) => {
+        await importClassificationSchema(imodel);
+        const hiddenClassNames = await importHiddenClassificationClasses(imodel);
+        return withEditTxn(imodel, (txn) => {
+          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "matching table" });
+          const classification = insertClassification({ txn, modelId: table.id, codeValue: "matching classification" });
+          for (const [variant, classFullName] of Object.entries(hiddenClassNames.tables)) {
+            insertClassificationTable({
+              txn,
+              classFullName,
+              parentId: system.id,
+              codeValue: `matching hidden table (${variant})`,
+            });
+          }
+          for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
+            insertClassification({
+              txn,
+              classFullName,
+              modelId: table.id,
+              codeValue: `matching hidden classification (${variant})`,
+            });
+          }
+          return { table, classification };
+        });
+      });
+      const { imodelConnection, ...keys } = buildIModelResult;
+      const { createInstanceKeyPaths } = createClassificationsTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        hierarchyConfig: defaultHierarchyConfiguration,
+      });
+      const paths = await collect(createInstanceKeyPaths({ label: "matching", limit: 2 }));
+      expect(paths).toHaveLength(2);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          { path: [keys.table], target: keys.table.id },
+          { path: [keys.table, keys.classification], target: keys.classification.id },
+        ]),
+      );
+    });
+
     describe("Hidden element classes and schemas", () => {
       const searchTags = {
         visibleChild: "[visible-child]",
@@ -57,7 +100,7 @@ describe("Classifications tree", () => {
       async function setupIModel() {
         return buildIModel(async (imodel) => {
           await importClassificationSchema(imodel);
-          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
           return withEditTxn(imodel, (txn) => {
             const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
             const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "Table" });

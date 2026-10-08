@@ -6,15 +6,10 @@
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { eachValueFrom, type ECSchemaProvider, type ECSqlBinding } from "@itwin/presentation-shared";
+import { eachValueFrom, type ECSchemaProvider, ECSql, type ECSqlBinding } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import {
-  createHiddenClassesWhereClauseFactory,
-  createWhereClause,
-  getOrCreate,
-  mergeWithDefaults,
-} from "../../shared/Utils.js";
+import { createWhereClause, getOrCreate, mergeWithDefaults } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
@@ -113,14 +108,14 @@ export function createModelsTreeIdsProvider({
         bindings: [{ type: "idset", value: await baseIdsProvider.getAllModels() }],
       };
     }
-    const createElementVisibilityClause = await createHiddenClassesWhereClauseFactory({
+    const elementsHiddenClassesFilter = await ECSql.createHiddenClassesFilter({
       schemaProvider: imodelAccess,
-      className: hierarchyConfig.elements.baseClass,
+      baseClassName: hierarchyConfig.elements.baseClass,
     });
     return {
       clause: `EXISTS (
         SELECT 1 FROM ${hierarchyConfig.elements.baseClass} e
-        ${createWhereClause({ conditions: [`e.Model.Id = ${modelAlias}.ECInstanceId`, createElementVisibilityClause("e")] })}
+        ${createWhereClause({ conditions: [`e.Model.Id = ${modelAlias}.ECInstanceId`, elementsHiddenClassesFilter.createWhereClause("e")] })}
       )`,
     };
   }

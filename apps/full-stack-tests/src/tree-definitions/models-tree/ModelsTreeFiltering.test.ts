@@ -22,7 +22,7 @@ import { CLASS_NAMES, createModelsTree, SearchLimitExceededError } from "@itwin/
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, importHiddenElementClasses, insertGeometricModelWithPartition } from "../IModelUtils.js";
+import { buildIModel, importHiddenClassesSchemas, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import { createAccessAndIdsProvider, createClassGroupingHierarchyNode } from "./Utils.js";
 
 import type { EditTxn } from "@itwin/core-backend";
@@ -140,6 +140,39 @@ describe("Models tree", () => {
       for (const label of ["isPrivate", "isTemplate"]) {
         expect(await collect(createInstanceKeyPaths({ label }))).toEqual([]);
       }
+    });
+
+    it("excludes models of hidden classes from label searches", async () => {
+      await using setupResult = await buildIModel(async (imodel) => {
+        const hiddenModelClassNames = await importHiddenClassesSchemas({
+          imodel,
+          baseClass: "BisCore.PhysicalModel",
+          schemaNamePrefix: "Model",
+        });
+        return withEditTxn(imodel, (txn) => {
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "matching model" });
+          insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+          for (const [variant, classFullName] of Object.entries(hiddenModelClassNames)) {
+            const partition = insertPhysicalPartition({
+              txn,
+              codeValue: `matching hidden model (${variant})`,
+              parentId: IModel.rootSubjectId,
+            });
+            const hiddenModel = insertPhysicalSubModel({ txn, classFullName, modeledElementId: partition.id });
+            insertPhysicalElement({ txn, modelId: hiddenModel.id, categoryId: category.id });
+          }
+          return { model };
+        });
+      });
+      const { imodelConnection, ...keys } = setupResult;
+      const { createInstanceKeyPaths } = createModelsTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        hierarchyConfig: { subjects: { root: "exclude" } },
+      });
+      expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
+        { path: [adjustedModelKey(keys.model)], target: keys.model.id },
+      ]);
     });
 
     it.each(["model", "category", "element"] as const)("finds all subject paths to a shared %s", async (target) => {
@@ -401,7 +434,7 @@ describe("Models tree", () => {
 
       async function setupIModel() {
         return buildIModel(async (imodel) => {
-          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
           return withEditTxn(imodel, (txn) => {
             const model = insertPhysicalModelWithPartition({
               txn,
