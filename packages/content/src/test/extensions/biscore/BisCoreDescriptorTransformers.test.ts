@@ -65,6 +65,7 @@ function createImodelAccess(bisCoreVersion?: EC.SchemaVersion): ECSchemaProvider
       };
     },
     classDerivesFrom: async (derived, base) => derived === base,
+    getHiddenClassesTree: async () => [],
   };
 }
 

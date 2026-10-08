@@ -101,6 +101,7 @@ describe("classifyPathCardinality", () => {
           },
         }) as unknown as EC.Schema,
       classDerivesFrom: async () => false,
+      getHiddenClassesTree: async () => [],
     };
   }
 

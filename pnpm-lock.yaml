@@ -1389,6 +1389,9 @@ importers:
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 5.13.1
+      rxjs:
+        specifier: catalog:rxjs
+        version: 7.8.2
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
@@ -1414,9 +1417,6 @@ importers:
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
-      rxjs:
-        specifier: catalog:rxjs
-        version: 7.8.2
       typescript:
         specifier: catalog:build-tools
         version: '@typescript/typescript6@6.0.2'

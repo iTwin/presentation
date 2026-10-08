@@ -58,6 +58,8 @@ for await (const row of executor.createQueryReader({ ecsql: MY_QUERY })) {
 
 Maps an instance of `itwinjs-core` iModel (either [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) or [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)) to an instance of `ECSchemaProvider`, used in `@itwin/presentation-hierarchies`, `@itwin/unified-selection` and other packages.
 
+The created provider caches the class hierarchy and hidden classes trees for its lifetime (see `ECSchemaProvider.getHiddenClassesTree`). Concurrent requests share a single computation, and failed computations are retried on the next request. Create one provider per iModel and share it between consumers; after schema changes, recreate the provider and consumers holding it. Individual schema views still refresh on access when marked outdated, but this does not rebuild the cached class hierarchy or hidden classes trees.
+
 Example:
 
 <!-- [[include: [Presentation.CoreInterop.CreateECSchemaProvider.Imports, Presentation.CoreInterop.CreateECSchemaProvider.Example], ts]] -->

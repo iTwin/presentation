@@ -8,7 +8,7 @@ import { createCachingECClassHierarchyInspector, getClass } from "../shared/Meta
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 describe("createCachingECClassHierarchyInspector", () => {
-  const schemaProvider = { getSchema: vi.fn(), classDerivesFrom: vi.fn() };
+  const schemaProvider = { getSchema: vi.fn(), classDerivesFrom: vi.fn(), getHiddenClassesTree: vi.fn() };
 
   beforeEach(() => {
     schemaProvider.getSchema.mockReset();

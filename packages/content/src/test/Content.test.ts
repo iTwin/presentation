@@ -92,6 +92,7 @@ function createMockIModelAccess(props?: {
     }),
     getSchema: createMockGetSchema(derivedClasses),
     classDerivesFrom: vi.fn(async () => false),
+    getHiddenClassesTree: vi.fn(async () => []),
   };
 }
 
@@ -125,6 +126,7 @@ function createRoutedIModelAccess(props: {
     }),
     getSchema: createMockGetSchema(derivedClasses),
     classDerivesFrom: vi.fn(async () => false),
+    getHiddenClassesTree: vi.fn(async () => []),
   };
 }
 
@@ -1147,6 +1149,7 @@ describe("resolveContentSources", () => {
         }),
         getSchema: createMockGetSchema(),
         classDerivesFrom: vi.fn(async () => false),
+        getHiddenClassesTree: vi.fn(async () => []),
       };
 
       const result = await resolveContentSources({
@@ -2426,6 +2429,7 @@ describe("resolveContentSources", () => {
         }),
         getSchema: createMockGetSchema(derivedClasses),
         classDerivesFrom: vi.fn(async () => false),
+        getHiddenClassesTree: vi.fn(async () => []),
       };
     }
 

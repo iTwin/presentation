@@ -13,8 +13,10 @@ deprecated;function;createCachingECClassHierarchyInspector
 public;function;createClassBasedInstanceLabelSelectClauseFactory
 public;function;createDefaultInstanceLabelSelectClauseFactory
 public;function;createDefaultValueFormatter
+public;function;createHiddenClassesTree
 public;function;createIModelInstanceLabelSelectClauseFactory
 public;function;createMainThreadReleaseOnTimePassedHandler
+public;type;DeepReadonly
 public;function;eachValueFrom
 public;namespace;EC
 public;interface;ECClassHierarchyInspector
@@ -29,6 +31,7 @@ public;interface;ECSqlQueryRow
 public;type;EventArgs
 public;function;formatConcatenatedValue
 public;function;getClass
+public;type;HiddenClassesTreeNode
 public;interface;IInstanceLabelSelectClauseFactory
 public;interface;ILogger
 public;interface;InstanceKey

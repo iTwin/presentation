@@ -97,6 +97,7 @@ function createImodelAccess(props?: {
     },
     classDerivesFrom: async (derived: string, base: string) =>
       derived === base || (derivesFrom[derived] ?? []).includes(base),
+    getHiddenClassesTree: async () => [],
   };
 }
 
