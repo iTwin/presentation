@@ -356,7 +356,7 @@ In `1.x`, error and informational states (e.g. "result set too large", "no filte
 In `2.0` these states are modeled on the nodes and the hook result instead of as separate tree nodes:
 
 - Node-level errors are carried on the node itself through `TreeNode.errors: ErrorInfo[]`, rather than being separate nodes in the tree. The optional `getTreeNodeErrors` callback on the tree state hooks lets you attach custom `ErrorInfo[]` to a node.
-- A node can carry multiple errors. A node that has errors is not expandable unless every error is a generic error (`type: "Unknown"`) with `isNodeExpandable: true`; any other error type (e.g. `ResultSetTooLarge`, `NoFilterMatches`, `ChildrenLoad`) makes the node non-expandable.
+- A node can carry multiple errors, and all of them are listed in the tree's error region (the delivered renderer emits one entry per error). The tree row itself is flagged with an error indicator linked to the first error. Errors detected internally are ordered before any custom errors you attach via `getTreeNodeErrors`. The `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` error types are produced internally - custom errors should use `type: "Unknown"` (a `GenericErrorInfo`). A node with errors is not expandable unless every error is a `type: "Unknown"` error with `isNodeExpandable: true`, so any internal error type keeps the node non-expandable.
 - Root-level load failures (when the root hierarchy level fails to load) are surfaced through the `rootErrorRendererProps` prop bag returned by the tree state hooks; pass it to `StrataKitRootErrorRenderer` (see [Rendering components and tree state hook result](#rendering-components-and-tree-state-hook-result)).
 
 ## Hierarchy search
