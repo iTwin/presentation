@@ -161,7 +161,7 @@ function createCanonicalFieldType(
 }
 
 function isAllowedFieldType(type: CanonicalFieldType): boolean {
-  const disallowed = ["Bentley.Geometry.Common.IGeometry", "Binary"];
+  const disallowed = ["Bentley.Geometry.Common.IGeometry", "binary"];
   if (type.kind === "primitive" && disallowed.includes(type.name)) {
     return false;
   }
