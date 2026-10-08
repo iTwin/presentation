@@ -1162,7 +1162,7 @@ describe("getItems", () => {
 
     it("gives an external fields provider loaded navigation values rather than target ids", async () => {
       const getValues = vi.fn(async ({ items: batch }: { items: Array<unknown> }) => batch.map(() => ({ status: "" })));
-      const definition = createTestDefinition(navDescriptor, {
+      const definition = createTestDefinition(externalDescriptor, {
         ...navRequirements,
         externalInputs: [{ propertyClassName: "Schema.A", propertyName: "Nav", cardinality: "one" }],
         externalProviders: [
