@@ -134,8 +134,9 @@ import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 
+const imodelAccess = createIModelAccess(hiddenClassesIModel);
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ imodelAccess, parentNode, instanceFilter, createSelectClause, createFilterClauses }) {
+  async defineHierarchyLevel({ parentNode, instanceFilter, createSelectClause, createFilterClauses }) {
     const parentIds =
       parentNode && HierarchyNode.isInstancesNode(parentNode)
         ? parentNode.key.instanceKeys.map(({ id }) => id)
