@@ -79,7 +79,7 @@ import {
 import { ECSql } from "@itwin/presentation-shared";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ imodelAccess, parentNode, createSelectClause }) {
+  async defineHierarchyLevel({ parentNode, createSelectClause }) {
     const parentIds =
       parentNode && HierarchyNode.isInstancesNode(parentNode)
         ? parentNode.key.instanceKeys.map(({ id }) => id)
