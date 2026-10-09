@@ -4,33 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { collectClassPropertyFields } from "../../content/definition-building/ClassPropertyFields.js";
+import { createPropertyFields } from "../../content/definition-building/ClassPropertyFields.js";
 import { PropertyField } from "../../content/model/Field.js";
-import { createEntityClass, createPrimitiveProperty } from "../MetadataStubs.js";
+import { createPrimitiveProperty } from "../MetadataStubs.js";
 
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
+import type { Props, RelationshipPath } from "@itwin/presentation-shared";
 
 const path: RelationshipPath = [
   { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },
 ];
 
-function createPropertiesClass(fullName: EC.FullClassNameDotNotation, properties: EC.Property[]): EC.Class {
-  return createEntityClass({ fullName, properties });
+/** Calls the function and returns just the produced fields (dropping category facts). */
+function collectFields(props: Omit<Props<typeof createPropertyFields>, "anchor">): PropertyField[] {
+  return createPropertyFields({ ...props, anchor: "none" }).map(({ field }) => field);
 }
 
-/** Calls the collector and returns just the produced fields (dropping category facts). */
-function collectFields(props: Omit<Parameters<typeof collectClassPropertyFields>[0], "anchor">): PropertyField[] {
-  return collectClassPropertyFields({ ...props, anchor: "none" }).map(({ field }) => field);
-}
-
-describe("collectClassPropertyFields", () => {
+describe("createPropertyFields", () => {
   it("enumerates all selected properties with the given path and value classes", () => {
-    const propertiesClass = createPropertiesClass("TestSchema.B", [
-      createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" }),
-    ]);
-
     const fields = collectFields({
-      propertiesClass,
+      properties: [createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" })],
       relationshipInfo: { pathFromTarget: path, pathCardinality: "one", primaryClassNames: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
@@ -53,12 +45,8 @@ describe("collectClassPropertyFields", () => {
   });
 
   it("reports a many-valued path without changing the property's value shape", () => {
-    const propertiesClass = createPropertiesClass("TestSchema.B", [
-      createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" }),
-    ]);
-
     const [field] = collectFields({
-      propertiesClass,
+      properties: [createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" })],
       relationshipInfo: { pathFromTarget: path, pathCardinality: "many", primaryClassNames: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
@@ -72,10 +60,8 @@ describe("collectClassPropertyFields", () => {
     ["targetClass", "target"],
     ["relationshipClass", "relationship"],
   ] as const)("reports the related property's class kind for %s fields", (anchor, propertyClassKind) => {
-    const [field] = collectClassPropertyFields({
-      propertiesClass: createPropertiesClass("TestSchema.B", [
-        createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" }),
-      ]),
+    const [field] = createPropertyFields({
+      properties: [createPrimitiveProperty({ name: "Prop", primitiveType: "String", declaringClass: "TestSchema.B" })],
       relationshipInfo: { pathFromTarget: path, pathCardinality: "one", primaryClassNames: ["TestSchema.A"] },
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
@@ -86,14 +72,12 @@ describe("collectClassPropertyFields", () => {
   });
 
   it("resolves label from override, then property label, then property name", () => {
-    const propertiesClass = createPropertiesClass("TestSchema.C", [
-      createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
-      createPrimitiveProperty({ name: "beta", label: "Prop Beta", declaringClass: "TestSchema.C" }),
-      createPrimitiveProperty({ name: "gamma", label: "Prop Gamma", declaringClass: "TestSchema.C" }),
-    ]);
-
     const fields = collectFields({
-      propertiesClass,
+      properties: [
+        createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "beta", label: "Prop Beta", declaringClass: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "gamma", label: "Prop Gamma", declaringClass: "TestSchema.C" }),
+      ],
       valueClassNames: ["TestSchema.C"],
       relationshipInfo: undefined,
       spec: { select: "all", overrides: { gamma: { label: "Override Gamma" } } },
@@ -103,13 +87,11 @@ describe("collectClassPropertyFields", () => {
   });
 
   it("skips properties whose value type is unsupported", () => {
-    const propertiesClass = createPropertiesClass("TestSchema.C", [
-      createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
-      createPrimitiveProperty({ name: "Geom", primitiveType: "IGeometry", declaringClass: "TestSchema.C" }),
-    ]);
-
     const fields = collectFields({
-      propertiesClass,
+      properties: [
+        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
+        createPrimitiveProperty({ name: "Geom", primitiveType: "IGeometry", declaringClass: "TestSchema.C" }),
+      ],
       valueClassNames: ["TestSchema.C"],
       relationshipInfo: undefined,
       spec: { select: "all" },
@@ -119,12 +101,8 @@ describe("collectClassPropertyFields", () => {
   });
 
   it("attributes a property to its declaring class", () => {
-    const propertiesClass = createPropertiesClass("TestSchema.Derived", [
-      createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" }),
-    ]);
-
     const [field] = collectFields({
-      propertiesClass,
+      properties: [createPrimitiveProperty({ name: "UserLabel", declaringClass: "BisCore.Element" })],
       valueClassNames: ["TestSchema.Derived"],
       relationshipInfo: undefined,
       spec: { select: "all" },
@@ -135,13 +113,13 @@ describe("collectClassPropertyFields", () => {
   });
 
   describe("select", () => {
-    function selectNames(select: NonNullable<Parameters<typeof collectClassPropertyFields>[0]["spec"]>["select"]) {
+    function selectNames(select: Props<typeof createPropertyFields>["spec"]["select"]) {
       const fields = collectFields({
-        propertiesClass: createPropertiesClass("TestSchema.C", [
+        properties: [
           createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
           createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
           createPrimitiveProperty({ name: "C", declaringClass: "TestSchema.C" }),
-        ]),
+        ],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select },
@@ -168,13 +146,11 @@ describe("collectClassPropertyFields", () => {
 
   describe("overrides", () => {
     it("applies default overrides to every selected property", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
-        createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
-      ]);
-
-      const results = collectClassPropertyFields({
-        propertiesClass,
+      const results = createPropertyFields({
+        properties: [
+          createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
+        ],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select: "all", defaultOverrides: { readOnly: true, categoryId: "cat", hidden: true } },
@@ -189,13 +165,11 @@ describe("collectClassPropertyFields", () => {
     });
 
     it("lets per-property overrides take precedence over default overrides", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
-        createPrimitiveProperty({ name: "beta", declaringClass: "TestSchema.C" }),
-      ]);
-
-      const results = collectClassPropertyFields({
-        propertiesClass,
+      const results = createPropertyFields({
+        properties: [
+          createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
+          createPrimitiveProperty({ name: "beta", declaringClass: "TestSchema.C" }),
+        ],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: {
@@ -215,12 +189,8 @@ describe("collectClassPropertyFields", () => {
     });
 
     it("omits categoryId/readOnly/hidden when no override provides them", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
-      ]);
-
       const [field] = collectFields({
-        propertiesClass,
+        properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" })],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select: "all" },
@@ -234,16 +204,14 @@ describe("collectClassPropertyFields", () => {
 
   describe("category facts", () => {
     it("reports the EC schema property category", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({
-          name: "A",
-          declaringClass: "TestSchema.C",
-          category: { fullName: "TestSchema.GeometryClass", label: "Geometry" },
-        }),
-      ]);
-
-      const [{ categorization }] = collectClassPropertyFields({
-        propertiesClass,
+      const [{ categorization }] = createPropertyFields({
+        properties: [
+          createPrimitiveProperty({
+            name: "A",
+            declaringClass: "TestSchema.C",
+            category: { fullName: "TestSchema.GeometryClass", label: "Geometry" },
+          }),
+        ],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select: "all" },
@@ -257,16 +225,14 @@ describe("collectClassPropertyFields", () => {
     });
 
     it("falls back to the schema category's name when it has no label", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({
-          name: "A",
-          declaringClass: "TestSchema.C",
-          category: { fullName: "TestSchema.GeometryClass" },
-        }),
-      ]);
-
-      const [{ categorization }] = collectClassPropertyFields({
-        propertiesClass,
+      const [{ categorization }] = createPropertyFields({
+        properties: [
+          createPrimitiveProperty({
+            name: "A",
+            declaringClass: "TestSchema.C",
+            category: { fullName: "TestSchema.GeometryClass" },
+          }),
+        ],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select: "all" },
@@ -280,16 +246,14 @@ describe("collectClassPropertyFields", () => {
     });
 
     it("reports a spec override in place of the schema property category", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({
-          name: "prop",
-          declaringClass: "TestSchema.C",
-          category: { fullName: "TestSchema.Geometry", label: "Geometry" },
-        }),
-      ]);
-
-      const [{ categorization }] = collectClassPropertyFields({
-        propertiesClass,
+      const [{ categorization }] = createPropertyFields({
+        properties: [
+          createPrimitiveProperty({
+            name: "prop",
+            declaringClass: "TestSchema.C",
+            category: { fullName: "TestSchema.Geometry", label: "Geometry" },
+          }),
+        ],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select: "all", overrides: { prop: { categoryId: "custom" } } },
@@ -300,12 +264,8 @@ describe("collectClassPropertyFields", () => {
     });
 
     it("reports no schema category or override when the property has neither", () => {
-      const propertiesClass = createPropertiesClass("TestSchema.C", [
-        createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
-      ]);
-
-      const [{ categorization }] = collectClassPropertyFields({
-        propertiesClass,
+      const [{ categorization }] = createPropertyFields({
+        properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" })],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
         spec: { select: "all" },
