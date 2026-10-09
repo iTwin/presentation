@@ -349,6 +349,82 @@ describe("Content", () => {
       expect(directFields.filter((field) => field.propertyName === "OwnProp")).toHaveLength(1);
     });
 
+    it("creates a single field for a property redeclared along a class chain", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="Description" typeName="string" displayLabel="A Description" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <BaseClass>A</BaseClass>
+              <ECProperty propertyName="Description" typeName="string" displayLabel="B Description" />
+            </ECEntityClass>
+            <ECEntityClass typeName="C">
+              <BaseClass>B</BaseClass>
+              <ECProperty propertyName="Description" typeName="string" displayLabel="C Description" />
+            </ECEntityClass>
+            <ECEntityClass typeName="D">
+              <BaseClass>C</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.D.fullName, { description: "d" });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+
+      const field = getPropertyFieldByName(descriptor, "Description");
+      expect(field.propertyClassName).toBe(setup.schema.items.C.fullName);
+      expect(field.label).toBe("C Description");
+      expect(field.valueClassNames).toEqual([setup.schema.items.D.fullName]);
+    });
+
+    it("attributes a redeclared property to each concrete class's effective declaration", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="Description" typeName="string" displayLabel="Base Description" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <BaseClass>A</BaseClass>
+              <ECProperty propertyName="Description" typeName="string" displayLabel="B Description" />
+            </ECEntityClass>
+            <ECEntityClass typeName="C">
+              <BaseClass>A</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.B.fullName, { description: "b" });
+        builder.insertInstance(s.items.C.fullName, { description: "c" });
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+
+      const fields = getPropertyFieldsByName(descriptor, "Description");
+      expect(
+        fields
+          .map((field) => ({ propertyClassName: field.propertyClassName, valueClassNames: field.valueClassNames }))
+          .sort((lhs, rhs) => lhs.propertyClassName.localeCompare(rhs.propertyClassName)),
+      ).toEqual([
+        { propertyClassName: setup.schema.items.A.fullName, valueClassNames: [setup.schema.items.C.fullName] },
+        { propertyClassName: setup.schema.items.B.fullName, valueClassNames: [setup.schema.items.B.fullName] },
+      ]);
+    });
+
     it("discovers concrete classes and properties across a multi-level derived chain with instances at multiple levels", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(
