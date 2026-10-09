@@ -1,5 +1,20 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0-alpha.7
+
+### Minor Changes
+
+- [#1606](https://github.com/iTwin/presentation/pull/1606): `createECSchemaProvider`: Implement `ECSchemaProvider.getHiddenClassesTree`.
+
+  Trees are cached per selected class and shared between all callers, including concurrent ones. Failed computations aren't cached, so the next request retries them.
+
+  The class hierarchy and hidden classes trees are cached for the provider's lifetime. Create one provider per iModel and share it between consumers. After schema changes, recreate the provider and consumers holding it.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.16
+
 ## 2.0.0-alpha.6
 
 ### Patch Changes

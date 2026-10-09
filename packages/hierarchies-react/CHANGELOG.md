@@ -1,5 +1,19 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.70
+
+### Major Changes
+
+- [#1620](https://github.com/iTwin/presentation/pull/1620): Renamed the `isReloading` attribute back to `isLoading` in the result of the `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, and `useIModelUnifiedSelectionTree` hooks. The attribute is `true` while root nodes are being loaded or search paths are being resolved, including the initial load.
+
+### Patch Changes
+
+- [#1615](https://github.com/iTwin/presentation/pull/1615): Move stratakit icons package from optional peer dependencies to dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.21
+  - @itwin/presentation-shared@2.0.0-alpha.16
+  - @itwin/unified-selection@2.0.0-alpha.4
+
 ## 2.0.0-alpha.69
 
 ### Patch Changes

@@ -1,5 +1,50 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.21
+
+### Major Changes
+
+- [#1627](https://github.com/iTwin/presentation/pull/1627): Adjust `HierarchyDefinition` and `createMergedIModelHierarchyProvider` APIs for better usability with hierarchy definitions that require iModel access outside of their `defineHierarchyLevel` method.
+
+  - `createMergedIModelHierarchyProvider`: Replaced `hierarchyDefinition` with `getHierarchyDefinition(imodelAccess)`, which creates a hierarchy definition for each iModel version. The latest version's definition handles pre-processing and post-processing of merged nodes.
+  - Removed `imodelAccess` from `DefineHierarchyLevelProps`. Definitions that need iModel access must capture it when they are created instead of reading it from `defineHierarchyLevel` props.
+
+  Before:
+
+  ```ts
+  createMergedIModelHierarchyProvider({
+    imodels,
+    hierarchyDefinition: {
+      async defineHierarchyLevel({ imodelAccess, parentNode }) {
+        return parentNode
+          ? []
+          : [{ node: { key: "imodel", label: imodelAccess.imodelKey } }];
+      },
+    },
+  });
+  ```
+
+  After:
+
+  ```ts
+  createMergedIModelHierarchyProvider({
+    imodels,
+    getHierarchyDefinition: (imodelAccess) => ({
+      async defineHierarchyLevel({ parentNode }) {
+        return parentNode
+          ? []
+          : [{ node: { key: "imodel", label: imodelAccess.imodelKey } }];
+      },
+    }),
+  });
+  ```
+
+### Patch Changes
+
+- [#1606](https://github.com/iTwin/presentation/pull/1606): `createIModelHierarchyProvider`: The `createFilterClauses` function, passed to hierarchy definitions through `DefineHierarchyLevelProps`, now gets hidden classes trees from `imodelAccess` through `ECSchemaProvider.getHiddenClassesTree`, instead of computing and caching them itself. All consumers of the same schema provider now share the cache.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.16
+
 ## 2.0.0-alpha.20
 
 ### Patch Changes
