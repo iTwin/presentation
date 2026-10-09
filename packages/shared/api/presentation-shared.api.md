@@ -91,16 +91,18 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @public
+function createHiddenClassesFilter(props: {
+    schemaProvider: Pick<ECSchemaProvider, "getHiddenClassesTree">;
+    baseClassName: EC.FullClassNameDotNotation;
+}): Promise<{
+    createWhereClause(classAlias: string): string;
+}>;
+
+// @public
 export function createHiddenClassesTree(props: {
     schemaProvider: Pick<ECSchemaProvider, "getSchema">;
     selectClassName: EC.FullClassNameDotNotation;
 }): Promise<HiddenClassesTreeNode[]>;
-
-// @public
-function createHiddenClassesWhereClause(props: {
-    tree: DeepReadonly<HiddenClassesTreeNode[]>;
-    classAlias: string;
-}): string;
 
 // @public
 export function createIModelInstanceLabelSelectClauseFactory(props: IModelInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
@@ -376,7 +378,7 @@ declare namespace ECSql {
         createPrimitivePropertyValueSelectorProps,
         createRelationshipPathJoinClause,
         createRelationshipPathJoinInfo,
-        createHiddenClassesWhereClause
+        createHiddenClassesFilter
     }
 }
 

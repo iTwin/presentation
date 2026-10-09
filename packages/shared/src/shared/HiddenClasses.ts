@@ -12,8 +12,7 @@ import type { EC, ECSchemaProvider, HiddenClassesTreeNode } from "./Metadata.js"
 
 /**
  * Creates a tree of classes, derived from the given class, whose visibility is changed through `HiddenClass`
- * or `HiddenSchema` custom attributes. See `HiddenClassesTreeNode` for details on the tree structure. The
- * returned tree is frozen.
+ * or `HiddenSchema` custom attributes. See `HiddenClassesTreeNode` for details on the tree structure.
  *
  * The function traverses the whole derived classes' hierarchy of the given class, which may be expensive. It's
  * meant to be used by `ECSchemaProvider.getHiddenClassesTree` implementations, which are expected to cache the result.

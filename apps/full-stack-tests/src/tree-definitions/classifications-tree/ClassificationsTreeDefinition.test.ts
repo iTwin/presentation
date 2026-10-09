@@ -15,9 +15,10 @@ import { createClassificationsTree } from "@itwin/presentation-tree-definitions"
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, importHiddenElementClasses, insertGeometricModelWithPartition } from "../IModelUtils.js";
+import { buildIModel, importHiddenClassesSchemas, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import {
   importClassificationSchema,
+  importHiddenClassificationClasses,
   insertClassification,
   insertClassificationSystem,
   insertClassificationTable,
@@ -283,7 +284,7 @@ describe("Classifications tree", () => {
       it("treats classifications with only hidden elements as childless", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) => {
           await importClassificationSchema(imodel);
-          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
           return withEditTxn(imodel, (txn) => {
             const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
             const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
@@ -346,7 +347,7 @@ describe("Classifications tree", () => {
       it("hides hidden classified elements while preserving visible elements", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) => {
           await importClassificationSchema(imodel);
-          const hiddenClassNames = await importHiddenElementClasses(imodel);
+          const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
           return withEditTxn(imodel, (txn) => {
             const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
             const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "TestClassificationTable" });
@@ -410,6 +411,124 @@ describe("Classifications tree", () => {
                       ],
                     }),
                   ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+    });
+
+    describe("Hidden classification classes and schemas", () => {
+      it("hides classification tables and classifications of hidden classes", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenClassificationClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "visible table" });
+            const classification = insertClassification({
+              txn,
+              modelId: table.id,
+              codeValue: "visible classification",
+            });
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames.tables)) {
+              const hiddenTable = insertClassificationTable({
+                txn,
+                classFullName,
+                parentId: system.id,
+                codeValue: `hidden table (${variant})`,
+              });
+              insertClassification({
+                txn,
+                modelId: hiddenTable.id,
+                codeValue: `classification in hidden table (${variant})`,
+              });
+            }
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
+              const hiddenClassification = insertClassification({
+                txn,
+                classFullName,
+                modelId: table.id,
+                codeValue: `hidden classification (${variant})`,
+              });
+              insertClassification({
+                txn,
+                modelId: table.id,
+                parentId: hiddenClassification.id,
+                codeValue: `classification under hidden classification (${variant})`,
+              });
+            }
+            return { table, classification };
+          });
+        });
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("treats classification tables and classifications with only hidden child classifications as childless", async () => {
+        await using buildIModelResult = await buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenClassificationClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const emptyTable = insertClassificationTable({ txn, parentId: system.id, codeValue: "empty table" });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+            const classification = insertClassification({ txn, modelId: table.id, codeValue: "classification" });
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
+              insertClassification({
+                txn,
+                classFullName,
+                modelId: emptyTable.id,
+                codeValue: `hidden classification (${variant})`,
+              });
+              insertClassification({
+                txn,
+                classFullName,
+                modelId: table.id,
+                parentId: classification.id,
+                codeValue: `hidden child classification (${variant})`,
+              });
+            }
+            return { emptyTable, table, classification };
+          });
+        });
+
+        const { imodelConnection, ...keys } = buildIModelResult;
+        using provider = await createProvider(imodelConnection, { rootClassificationSystemCode });
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.emptyTable],
+              supportsFiltering: true,
+              children: false,
+            }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.table],
+              supportsFiltering: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.classification],
+                  supportsFiltering: true,
+                  children: false,
                 }),
               ],
             }),

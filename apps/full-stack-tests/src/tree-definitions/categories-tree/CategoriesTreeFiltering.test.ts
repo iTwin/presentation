@@ -19,7 +19,7 @@ import {
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { buildIModel, importHiddenElementClasses, insertGeometricModelWithPartition } from "../IModelUtils.js";
+import { buildIModel, importHiddenClassesSchemas, insertGeometricModelWithPartition } from "../IModelUtils.js";
 import {
   getDefaultSubCategoryId,
   getInsertFunctionByViewType,
@@ -154,6 +154,102 @@ describe("Categories tree", () => {
       });
     });
 
+    it("excludes definition containers of hidden classes from label searches", async () => {
+      const { insertCategory, insertElement, insertElementsModel } = getInsertFunctionByViewType("3d");
+      await using setupResult = await buildIModel(async (imodel) => {
+        const hiddenContainerClassNames = await importHiddenClassesSchemas({
+          imodel,
+          baseClass: "BisCore.DefinitionContainer",
+          schemaNamePrefix: "DefinitionContainer",
+        });
+        return withEditTxn(imodel, (txn) => {
+          const elementsModel = insertElementsModel({ txn, codeValue: "model" });
+          const insertContainerWithCategory = (codeValue: string, classFullName?: EC.FullClassNameDotNotation) => {
+            const definitionContainer = insertDefinitionContainer({ txn, classFullName, codeValue });
+            const definitionModel = insertSubModel({
+              txn,
+              classFullName: CLASS_NAMES.DefinitionModel,
+              modeledElementId: definitionContainer.id,
+            });
+            const category = insertCategory({ txn, codeValue: "category", modelId: definitionModel.id });
+            insertElement({ txn, modelId: elementsModel.id, categoryId: category.id });
+            return definitionContainer;
+          };
+          for (const [variant, classFullName] of Object.entries(hiddenContainerClassNames)) {
+            insertContainerWithCategory(`matching hidden container (${variant})`, classFullName);
+          }
+          return { definitionContainer: insertContainerWithCategory("matching container") };
+        });
+      });
+      const { imodelConnection, ...keys } = setupResult;
+      const { createInstanceKeyPaths } = createCategoriesTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        viewType: "3d",
+      });
+      expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
+        { path: [keys.definitionContainer], target: keys.definitionContainer.id },
+      ]);
+    });
+
+    it("excludes content of definition containers of hidden classes from label searches", async () => {
+      const { insertCategory, insertElement, insertElementsModel } = getInsertFunctionByViewType("3d");
+      await using setupResult = await buildIModel(async (imodel) => {
+        const hiddenContainerClassNames = await importHiddenClassesSchemas({
+          imodel,
+          baseClass: "BisCore.DefinitionContainer",
+          schemaNamePrefix: "DefinitionContainer",
+        });
+        return withEditTxn(imodel, (txn) => {
+          const elementsModel = insertElementsModel({ txn, codeValue: "model" });
+          const insertContainer = (props: {
+            codeValue: string;
+            classFullName?: EC.FullClassNameDotNotation;
+            modelId?: string;
+          }) => {
+            const definitionContainer = insertDefinitionContainer({ txn, ...props });
+            return insertSubModel({
+              txn,
+              classFullName: CLASS_NAMES.DefinitionModel,
+              modeledElementId: definitionContainer.id,
+            });
+          };
+          for (const [variant, classFullName] of Object.entries(hiddenContainerClassNames)) {
+            const hiddenDefinitionModel = insertContainer({
+              codeValue: `hidden container (${variant})`,
+              classFullName,
+            });
+            const categoryInHiddenContainer = insertCategory({
+              txn,
+              codeValue: `matching category in hidden container (${variant})`,
+              modelId: hiddenDefinitionModel.id,
+            });
+            insertElement({ txn, modelId: elementsModel.id, categoryId: categoryInHiddenContainer.id });
+            const nestedDefinitionModel = insertContainer({
+              codeValue: `matching container in hidden container (${variant})`,
+              modelId: hiddenDefinitionModel.id,
+            });
+            const categoryInNestedContainer = insertCategory({
+              txn,
+              codeValue: "category",
+              modelId: nestedDefinitionModel.id,
+            });
+            insertElement({ txn, modelId: elementsModel.id, categoryId: categoryInNestedContainer.id });
+          }
+          const category = insertCategory({ txn, codeValue: "matching category" });
+          insertElement({ txn, modelId: elementsModel.id, categoryId: category.id });
+          return { category };
+        });
+      });
+      const { imodelConnection, ...keys } = setupResult;
+      const { createInstanceKeyPaths } = createCategoriesTree({
+        imodelAccess: createIModelAccess(imodelConnection),
+        viewType: "3d",
+      });
+      expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
+        { path: [keys.category], target: keys.category.id },
+      ]);
+    });
+
     ["2d" as const, "3d" as const].forEach((viewType) => {
       describe(`${viewType} view`, () => {
         const { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement } =
@@ -174,10 +270,10 @@ describe("Categories tree", () => {
 
           async function setupIModel() {
             return buildIModel(async (imodel) => {
-              const hiddenClassNames = await importHiddenElementClasses(
+              const hiddenClassNames = await importHiddenClassesSchemas({
                 imodel,
-                viewType === "3d" ? "PhysicalElement" : "GraphicalElement2d",
-              );
+                baseClass: viewType === "3d" ? "BisCore.PhysicalElement" : "BisCore.GraphicalElement2d",
+              });
               return withEditTxn(imodel, (txn) => {
                 const model = insertElementsModel({ txn, codeValue: "Model" });
                 const category = insertCategory({

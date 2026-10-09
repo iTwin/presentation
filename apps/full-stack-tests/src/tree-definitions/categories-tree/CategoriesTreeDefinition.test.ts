@@ -15,7 +15,7 @@ import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import {
   buildIModel,
-  importHiddenElementClasses,
+  importHiddenClassesSchemas,
   insertGeometricModelWithPartition,
   TestSchema,
 } from "../IModelUtils.js";
@@ -332,6 +332,124 @@ describe("Categories tree", () => {
           using provider = await createCategoryTreeProvider(imodelConnection, viewType);
 
           await validateHierarchy({ provider, expect: [] });
+        });
+
+        it("does not show definition containers of hidden classes or their categories", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) => {
+            const hiddenContainerClassNames = await importHiddenClassesSchemas({
+              imodel,
+              baseClass: "BisCore.DefinitionContainer",
+              schemaNamePrefix: "DefinitionContainer",
+            });
+            return withEditTxn(imodel, (txn) => {
+              const elementsModel = insertElementsModel({ txn, codeValue: "m" });
+              const insertContainerWithCategory = (codeValue: string, classFullName?: EC.FullClassNameDotNotation) => {
+                const definitionContainer = insertDefinitionContainer({ txn, classFullName, codeValue });
+                const definitionModel = insertSubModel({
+                  txn,
+                  classFullName: CLASS_NAMES.DefinitionModel,
+                  modeledElementId: definitionContainer.id,
+                });
+                const category = insertCategory({
+                  txn,
+                  codeValue: `${codeValue} category`,
+                  modelId: definitionModel.id,
+                });
+                insertElement({ txn, modelId: elementsModel.id, categoryId: category.id });
+                return { definitionContainer, category };
+              };
+              for (const [variant, classFullName] of Object.entries(hiddenContainerClassNames)) {
+                insertContainerWithCategory(`hidden dc (${variant})`, classFullName);
+              }
+              return insertContainerWithCategory("visible dc");
+            });
+          });
+
+          const { imodelConnection, ...keys } = buildIModelResult;
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
+
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.definitionContainer],
+                supportsFiltering: true,
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.category],
+                    supportsFiltering: true,
+                    children: false,
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("does not show definition containers that only contain definition containers of hidden classes", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) => {
+            const hiddenContainerClassNames = await importHiddenClassesSchemas({
+              imodel,
+              baseClass: "BisCore.DefinitionContainer",
+              schemaNamePrefix: "DefinitionContainer",
+            });
+            return withEditTxn(imodel, (txn) => {
+              const elementsModel = insertElementsModel({ txn, codeValue: "m" });
+              const insertContainerWithCategory = (props: {
+                codeValue: string;
+                classFullName?: EC.FullClassNameDotNotation;
+                modelId?: string;
+              }) => {
+                const definitionContainer = insertDefinitionContainer({ txn, ...props });
+                const definitionModel = insertSubModel({
+                  txn,
+                  classFullName: CLASS_NAMES.DefinitionModel,
+                  modeledElementId: definitionContainer.id,
+                });
+                const containerCategory = insertCategory({
+                  txn,
+                  codeValue: `${props.codeValue} category`,
+                  modelId: definitionModel.id,
+                });
+                insertElement({ txn, modelId: elementsModel.id, categoryId: containerCategory.id });
+                return definitionModel;
+              };
+              const parentDefinitionContainer = insertDefinitionContainer({ txn, codeValue: "parent dc" });
+              const parentDefinitionModel = insertSubModel({
+                txn,
+                classFullName: CLASS_NAMES.DefinitionModel,
+                modeledElementId: parentDefinitionContainer.id,
+              });
+              for (const [variant, classFullName] of Object.entries(hiddenContainerClassNames)) {
+                const hiddenDefinitionModel = insertContainerWithCategory({
+                  codeValue: `hidden dc (${variant})`,
+                  classFullName,
+                  modelId: parentDefinitionModel.id,
+                });
+                insertContainerWithCategory({
+                  codeValue: `dc in hidden dc (${variant})`,
+                  modelId: hiddenDefinitionModel.id,
+                });
+              }
+              const category = insertCategory({ txn, codeValue: "visible category" });
+              insertElement({ txn, modelId: elementsModel.id, categoryId: category.id });
+              return { category };
+            });
+          });
+
+          const { imodelConnection, ...keys } = buildIModelResult;
+          using provider = await createCategoryTreeProvider(imodelConnection, viewType);
+
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.category],
+                supportsFiltering: true,
+                children: false,
+              }),
+            ],
+          });
         });
 
         it("does not show definition containers or categories when definition container contains another definition container that is private", async () => {
@@ -780,12 +898,17 @@ describe("Categories tree", () => {
         });
 
         describe("Hidden element classes and schemas", () => {
-          const importHiddenClasses = async (imodel: Parameters<typeof importHiddenElementClasses>[0]) =>
-            importHiddenElementClasses(imodel, viewType === "3d" ? "PhysicalElement" : "GraphicalElement2d");
+          const importHiddenViewElementClasses = async (
+            imodel: Parameters<typeof importHiddenClassesSchemas>[0]["imodel"],
+          ) =>
+            importHiddenClassesSchemas({
+              imodel,
+              baseClass: viewType === "3d" ? "BisCore.PhysicalElement" : "BisCore.GraphicalElement2d",
+            });
 
           it("hides definition containers and categories that only contain hidden elements", async () => {
             await using buildIModelResult = await buildIModel(async (imodel) => {
-              const hiddenClassNames = await importHiddenClasses(imodel);
+              const hiddenClassNames = await importHiddenViewElementClasses(imodel);
               return withEditTxn(imodel, (txn) => {
                 const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
 
@@ -866,7 +989,7 @@ describe("Categories tree", () => {
 
           it("hides hidden child elements while preserving visible siblings", async () => {
             await using buildIModelResult = await buildIModel(async (imodel) => {
-              const hiddenClassNames = await importHiddenClasses(imodel);
+              const hiddenClassNames = await importHiddenViewElementClasses(imodel);
               return withEditTxn(imodel, (txn) => {
                 const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
                 const category = insertCategory({ txn, codeValue: "category" });
@@ -935,7 +1058,7 @@ describe("Categories tree", () => {
 
           it("treats elements with only hidden children as childless", async () => {
             await using buildIModelResult = await buildIModel(async (imodel) => {
-              const hiddenClassNames = await importHiddenClasses(imodel);
+              const hiddenClassNames = await importHiddenViewElementClasses(imodel);
               return withEditTxn(imodel, (txn) => {
                 const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
                 const category = insertCategory({ txn, codeValue: "category" });
@@ -991,7 +1114,7 @@ describe("Categories tree", () => {
 
           it("treats sub-models containing only hidden elements as empty", async () => {
             await using buildIModelResult = await buildIModel(async (imodel) => {
-              const hiddenClassNames = await importHiddenClasses(imodel);
+              const hiddenClassNames = await importHiddenViewElementClasses(imodel);
               return withEditTxn(imodel, (txn) => {
                 const elementsModel = insertElementsModel({ txn, codeValue: "elements model" });
                 const category = insertCategory({ txn, codeValue: "category" });
