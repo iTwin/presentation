@@ -4,9 +4,10 @@
 
 ```ts
 
-import { EC } from '@itwin/presentation-shared';
+import type { DeepReadonly } from '@itwin/presentation-shared';
+import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
-import { ECSqlBinding } from '@itwin/presentation-shared';
+import type { ECSqlBinding } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { Id64String } from '@itwin/core-bentley';
 import type { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
@@ -14,9 +15,9 @@ import type { InstanceKey } from '@itwin/presentation-shared';
 import type { Point2dValue } from '@itwin/presentation-shared';
 import type { Point3dValue } from '@itwin/presentation-shared';
 import type { PrimitiveValue } from '@itwin/presentation-shared';
-import { RelationshipPath } from '@itwin/presentation-shared';
+import type { RelationshipPath } from '@itwin/presentation-shared';
 import type { Value } from '@itwin/presentation-shared';
-import { ValueDescriptor } from '@itwin/presentation-shared';
+import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseField {
@@ -199,11 +200,6 @@ interface CreateIModelContentConfigurationProps {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     localizedStrings?: Partial<BisCoreLocalizedStrings>;
 }
-
-// @public
-type DeepReadonly<T> = T extends (...args: any[]) => any ? T : T extends (infer U)[] ? ReadonlyArray<DeepReadonly<U>> : T extends object ? {
-    readonly [K in keyof T]: DeepReadonly<T[K]>;
-} : T;
 
 // @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;

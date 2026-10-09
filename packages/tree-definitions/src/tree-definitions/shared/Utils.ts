@@ -5,10 +5,11 @@
 
 import { assert, Id64 } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "@itwin/presentation-hierarchies";
+import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "./ClassNameDefinitions.js";
 
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
-import type { EC } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryId, ElementId } from "./Types.js";
 
 /** @internal */
@@ -102,6 +103,23 @@ export function createExcludedClassesClause({
     return "";
   }
   return `${alias}.ECClassId IS NOT (${excludedClassNames.join(", ")})`;
+}
+
+/**
+ * Loads the selected class's visibility tree and returns a synchronous, alias-specific predicate factory.
+ * The factory returns an empty string when no condition is needed. Keep it scoped to query construction so later
+ * queries use the current schema provider's cached tree.
+ * @internal
+ */
+export async function createHiddenClassesWhereClauseFactory({
+  schemaProvider,
+  className,
+}: {
+  schemaProvider: Pick<ECSchemaProvider, "getHiddenClassesTree">;
+  className: EC.FullClassNameDotNotation;
+}): Promise<(alias: string) => string> {
+  const tree = await schemaProvider.getHiddenClassesTree(className);
+  return (alias) => ECSql.createHiddenClassesWhereClause({ tree, classAlias: alias });
 }
 
 /** @internal */

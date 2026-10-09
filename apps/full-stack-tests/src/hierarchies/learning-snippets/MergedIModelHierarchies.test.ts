@@ -17,7 +17,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { EC } from "@itwin/presentation-shared";
+import { EC, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { withEditTxn } from "@itwin/core-backend";
 import { createChangedIModels } from "../../IModelUtils.js";
@@ -130,34 +130,36 @@ describe("Hierarchies", () => {
 
         // Create a simple hierarchy definition that uses `BisCore.PhysicalModel` for root nodes and
         // `BisCore.PhysicalElement` for each model's child nodes.
-        const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-          // Note: we use the latest version of the iModel here - that
-          // ensures we can find all classes even if they were not present in the base iModel
-          imodelAccess: imodels[imodels.length - 1].imodelAccess,
-          hierarchy: {
-            rootNodes: async (props) => [
-              await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),
-            ],
-            childNodes: [
-              {
-                parentInstancesNodePredicate: "BisCore.PhysicalModel",
-                definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) => [
-                  await createInstanceNodesQueryDefinition({
-                    ...props,
-                    fullClassName: "BisCore.PhysicalElement",
-                    whereClauseFactory: async ({ alias }) =>
-                      `${alias}.Model.Id IN (${props.parentNodeInstanceIds.join(", ")})`,
-                  }),
-                ],
-              },
-            ],
-          },
-        });
+        const getHierarchyDefinition = (imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]) =>
+          createPredicateBasedHierarchyDefinition({
+            imodelAccess,
+            hierarchy: {
+              rootNodes: async (props) => [
+                await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),
+              ],
+              childNodes: [
+                {
+                  parentInstancesNodePredicate: "BisCore.PhysicalModel",
+                  definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) => [
+                    await createInstanceNodesQueryDefinition({
+                      ...props,
+                      fullClassName: "BisCore.PhysicalElement",
+                      whereClauseFactory: async ({ alias }) =>
+                        `${alias}.Model.Id IN (${props.parentNodeInstanceIds.join(", ")})`,
+                    }),
+                  ],
+                },
+              ],
+            },
+          });
         // __PUBLISH_EXTRACT_END__
 
         expect(
           await collectHierarchy(
-            createIModelHierarchyProvider({ hierarchyDefinition, imodelAccess: imodels[0].imodelAccess }),
+            createIModelHierarchyProvider({
+              hierarchyDefinition: getHierarchyDefinition(imodels[0].imodelAccess),
+              imodelAccess: imodels[0].imodelAccess,
+            }),
           ),
         ).toMatchObject(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.Version1Hierarchy
@@ -168,7 +170,10 @@ describe("Hierarchies", () => {
 
         expect(
           await collectHierarchy(
-            createIModelHierarchyProvider({ hierarchyDefinition, imodelAccess: imodels[1].imodelAccess }),
+            createIModelHierarchyProvider({
+              hierarchyDefinition: getHierarchyDefinition(imodels[1].imodelAccess),
+              imodelAccess: imodels[1].imodelAccess,
+            }),
           ),
         ).toMatchObject(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.Version2Hierarchy
@@ -190,7 +195,7 @@ describe("Hierarchies", () => {
         );
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.MergedHierarchyProvider
-        const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition });
+        const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, getHierarchyDefinition });
         // __PUBLISH_EXTRACT_END__
         expect(await collectHierarchy(mergedHierarchyProvider)).toMatchObject(
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedIModelHierarchies.Example.MergedHierarchy

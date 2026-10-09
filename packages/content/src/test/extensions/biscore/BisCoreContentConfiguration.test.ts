@@ -28,6 +28,7 @@ describe("createBisCoreContentConfiguration", () => {
     const imodelAccess: ECSchemaProvider = {
       getSchema: async () => undefined,
       classDerivesFrom: async (derived: string, base: string) => derived === base,
+      getHiddenClassesTree: async () => [],
     };
     const target: ContentTarget = { primaryClass: "BisCore.Element" };
 

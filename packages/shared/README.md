@@ -41,6 +41,16 @@ const ecClassFromUtility = await getClass(schemaProvider, "MySchema.MyClass");
 const isGeometricElement = await schemaProvider.classDerivesFrom("MySchema.MyClass", "BisCore.GeometricElement");
 ```
 
+### Hidden classes
+
+Classes may be hidden from users through `CoreCustomAttributes.HiddenClass` and `CoreCustomAttributes.HiddenSchema` custom attributes. Instances of such classes shouldn't be shown in the UI, unless their class is selected explicitly.
+
+- `ECSchemaProvider.getHiddenClassesTree` returns a `HiddenClassesTreeNode` tree of classes, derived from the given class, whose visibility differs from their base class. The tree includes both hidden classes and their explicitly shown descendants. Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected to cache the result. The provider created by `createECSchemaProvider` from `@itwin/presentation-core-interop` caches it for the provider's lifetime. Create one provider per iModel and share it between consumers; after schema changes, recreate the provider and consumers holding it.
+
+- `createHiddenClassesTree` builds the tree for `ECSchemaProvider.getHiddenClassesTree` implementations. It doesn't cache the result.
+
+Use `ECSql.createHiddenClassesWhereClause` to turn the tree into an ECSQL condition.
+
 ### `ECClassHierarchyInspector` & `createCachingECClassHierarchyInspector` (deprecated)
 
 > **Deprecated:** `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` are deprecated. `ECSchemaProvider` now exposes a `classDerivesFrom` method directly, so a separate class hierarchy inspector is no longer needed.
@@ -254,6 +264,21 @@ The ECSql utilities group contains a number of functions to help create complex 
   //   INNER JOIN [MySchema].[MyRelationship] [my_relationship] ON [my_relationship].[SourceECInstanceId] = [my_source].[ECInstanceId]`
   //   INNER JOIN [MySchema].[MyTargetClass] [my_target] ON [my_target].[ECInstanceId] = [my_relationship].[TargetECInstanceId]
   // `
+  ```
+
+- `createHiddenClassesWhereClause` - creates an ECSQL condition that selects only instances visible according to the given hidden classes tree (see `ECSchemaProvider.getHiddenClassesTree`). Returns an empty string when the tree doesn't restrict anything.
+
+  Example usage:
+
+  ```ts
+  import { ECSql } from "@itwin/presentation-shared";
+
+  const condition = ECSql.createHiddenClassesWhereClause({
+    tree: await schemaProvider.getHiddenClassesTree("MySchema.MyClass"),
+    classAlias: "x",
+  });
+  // condition = "[x].[ECClassId] IS NOT ([MySchema].[MyHiddenClass])"
+  const ecsql = `SELECT x.ECInstanceId FROM MySchema.MyClass x ${condition ? `WHERE ${condition}` : ""}`;
   ```
 
 ## Values

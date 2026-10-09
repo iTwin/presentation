@@ -7,7 +7,7 @@ import { vi } from "vitest";
 import { parseFullClassName } from "../shared/Utils.js";
 
 import type { Mock } from "vitest";
-import type { EC } from "../shared/Metadata.js";
+import type { EC, HiddenClassesTreeNode } from "../shared/Metadata.js";
 
 export interface StubClassFuncProps {
   schemaName: string;
@@ -64,6 +64,7 @@ export function createECSchemaProviderStub() {
         return derivedClass.is(baseClass);
       },
     ),
+    getHiddenClassesTree: vi.fn(async (): Promise<HiddenClassesTreeNode[]> => []),
   };
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs.get(schemaName);

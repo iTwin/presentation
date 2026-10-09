@@ -52,8 +52,8 @@ function requireObject(value: unknown, description: string): Record<string, unkn
 
 function parseSampling(value: unknown): SamplingOptions {
   const sampling = requireObject(value, "Manifest 'sampling'");
-  if (!Number.isInteger(sampling.perClass) || Number(sampling.perClass) <= 0) {
-    throw new Error("Manifest 'sampling.perClass' must be a positive integer.");
+  if (!Number.isInteger(sampling.perClass) || Number(sampling.perClass) < 0) {
+    throw new Error("Manifest 'sampling.perClass' must be a non-negative integer.");
   }
   if (!Number.isInteger(sampling.seed)) {
     throw new Error("Manifest 'sampling.seed' must be an integer.");

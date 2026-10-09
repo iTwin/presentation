@@ -20,7 +20,7 @@ import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { buildIModel, TestSchema } from "../IModelUtils.js";
 import { createModelsTreeProvider } from "./Utils.js";
 
-import type { InstanceKey } from "@itwin/presentation-shared";
+import type { InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Models tree", () => {
   beforeAll(async () => {
@@ -31,7 +31,7 @@ describe("Models tree", () => {
     await terminate();
   });
 
-  // Invalid base classes cannot populate valid caches, so these cases are not cache-dependent.
+  // Invalid base classes cannot populate valid caches, so these validation cases are not cache-dependent.
   it.each([
     { label: "does not exist", baseClass: "BisCore.DoesNotExist" as const },
     { label: "is not an entity class", baseClass: "BisCore.ModelModelsElement" as const },
@@ -40,12 +40,13 @@ describe("Models tree", () => {
     using provider = await createModelsTreeProvider({
       imodelConnection: buildIModelResult.imodelConnection,
       hierarchyConfig: { elements: { baseClass } },
+      cacheState: "cold",
     });
     await validateHierarchy({ provider, expect: [] });
   });
 
   describe.each(["cold", "warm"] as const)("Hierarchy customization (%s cache)", (cacheState) => {
-    async function createProvider(props: Omit<Parameters<typeof createModelsTreeProvider>[0], "cacheState">) {
+    async function createProvider(props: Omit<Props<typeof createModelsTreeProvider>, "cacheState">) {
       return createModelsTreeProvider({ ...props, cacheState });
     }
 
@@ -100,7 +101,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using defaultProvider = await createModelsTreeProvider({ imodelConnection });
+      using defaultProvider = await createProvider({ imodelConnection });
       await validateHierarchy({
         provider: defaultProvider,
         expect: [
@@ -123,7 +124,7 @@ describe("Models tree", () => {
         ],
       });
 
-      using provider = await createModelsTreeProvider({
+      using provider = await createProvider({
         imodelConnection,
         hierarchyConfig: { subjects: { root: "exclude", labelMerging: "disable" } },
       });
@@ -181,7 +182,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using defaultProvider = await createModelsTreeProvider({ imodelConnection });
+      using defaultProvider = await createProvider({ imodelConnection });
       await validateHierarchy({
         provider: defaultProvider,
         expect: [
@@ -199,7 +200,7 @@ describe("Models tree", () => {
         ],
       });
 
-      using provider = await createModelsTreeProvider({
+      using provider = await createProvider({
         imodelConnection,
         hierarchyConfig: { models: { labelMerging: "disable" } },
       });
@@ -249,7 +250,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = buildIModelResult;
-      using defaultProvider = await createModelsTreeProvider({ imodelConnection });
+      using defaultProvider = await createProvider({ imodelConnection });
       await validateHierarchy({
         provider: defaultProvider,
         expect: [
@@ -267,7 +268,7 @@ describe("Models tree", () => {
         ],
       });
 
-      using provider = await createModelsTreeProvider({
+      using provider = await createProvider({
         imodelConnection,
         hierarchyConfig: { categories: { labelMerging: "disable" } },
       });

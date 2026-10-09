@@ -86,6 +86,7 @@ function createIModelAccess(props?: {
   return {
     getSchema: async (name: string) => schemas.get(name),
     classDerivesFrom: props?.classDerivesFrom ?? (async () => false),
+    getHiddenClassesTree: async () => [],
   };
 }
 
@@ -101,7 +102,7 @@ function createIModelAccessFromClasses(
         classes.get(`${name}.${className}`) ??
         (options?.synthesizeMissing ? createStubClass({ schemaName: name, className }) : undefined),
     }) as unknown as EC.Schema;
-  return { getSchema, classDerivesFrom: async () => true };
+  return { getSchema, classDerivesFrom: async () => true, getHiddenClassesTree: async () => [] };
 }
 
 function createTarget(primaryClass: EC.FullClassNameDotNotation = "TestSchema.TestElement"): ContentTarget {

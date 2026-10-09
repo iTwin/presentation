@@ -3,11 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { firstValueFrom, from, mergeMap, toArray } from "rxjs";
 import { Presentation } from "@itwin/presentation-backend";
-import { ContentFlags, DefaultContentDisplayTypes, KeySet, RuleTypes } from "@itwin/presentation-common";
+import {
+  ContentFlags,
+  DefaultContentDisplayTypes,
+  DiagnosticsLogEntry,
+  KeySet,
+  RuleTypes,
+} from "@itwin/presentation-common";
 import { CAPTURE_FORMAT_VERSION } from "../Persistence.js";
 
 import type { IModelDb } from "@itwin/core-backend";
+import type { BackendDiagnosticsOptions } from "@itwin/presentation-backend";
 import type {
   DescriptorJSON,
   ItemJSON,
@@ -73,6 +81,7 @@ async function createConsolidatedContentDescriptor({ imodel }: { imodel: IModelD
     displayType: DefaultContentDisplayTypes.PropertyPane,
     contentFlags: ContentFlags.ShowLabels,
     keys: new KeySet(),
+    diagnostics: DIAGNOSTICS_OPTIONS,
   });
   if (!result) {
     throw new Error("Legacy content returned no consolidated descriptor.");
@@ -94,27 +103,51 @@ async function createSelectedInstancesContent({
       { ruleType: RuleTypes.Content, specifications: [{ specType: "SelectedNodeInstances" }] },
     ],
   };
-  return Promise.all(
-    instanceKeys.map(async (instanceKey) => {
-      const content = await Presentation.getManager().getContent({
-        imodel,
-        rulesetOrId: ruleset,
-        descriptor: { displayType: DefaultContentDisplayTypes.Grid },
-        keys: new KeySet([toLegacyKey(instanceKey)]),
-        omitFormattedValues: true,
-      });
-      if (!content) {
-        throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
-      }
-      if (content.contentSet.length !== 1) {
-        throw new Error(
-          `Expected one legacy content item for '${instanceKey.className}:${instanceKey.id}', found ${content.contentSet.length}.`,
-        );
-      }
-      return { descriptor: content.descriptor.toJSON(), item: content.contentSet[0].toJSON() };
-    }),
+  return firstValueFrom(
+    from(instanceKeys).pipe(
+      mergeMap(async (instanceKey) => {
+        const content = await Presentation.getManager().getContent({
+          imodel,
+          rulesetOrId: ruleset,
+          descriptor: { displayType: DefaultContentDisplayTypes.Grid },
+          keys: new KeySet([toLegacyKey(instanceKey)]),
+          omitFormattedValues: true,
+          diagnostics: DIAGNOSTICS_OPTIONS,
+        });
+        if (!content) {
+          throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
+        }
+        if (content.contentSet.length !== 1) {
+          throw new Error(
+            `Expected one legacy content item for '${instanceKey.className}:${instanceKey.id}', found ${content.contentSet.length}.`,
+          );
+        }
+        return { descriptor: content.descriptor.toJSON(), item: content.contentSet[0].toJSON() };
+      }, 4),
+      toArray(),
+    ),
   );
 }
+
+const DIAGNOSTICS_OPTIONS: BackendDiagnosticsOptions | undefined = process.env.ENABLE_DIAGNOSTICS
+  ? {
+      dev: "trace",
+      handler: ({ logs }) => {
+        function handleLogs(entries: DiagnosticsLogEntry[] | undefined, indent = 0) {
+          entries?.forEach((entry) => {
+            if (DiagnosticsLogEntry.isMessage(entry)) {
+              console.log(`${" ".repeat(indent)}${entry.message}`);
+            }
+            if (DiagnosticsLogEntry.isScope(entry)) {
+              console.log(`${" ".repeat(indent)}Scope: ${entry.scope}`);
+              handleLogs(entry.logs, indent + 2);
+            }
+          });
+        }
+        handleLogs(logs);
+      },
+    }
+  : undefined;
 
 export async function captureLegacy(props: {
   imodel: IModelDb;

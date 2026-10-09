@@ -3,13 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, type EC } from "@itwin/presentation-shared";
+import { eachValueFrom, type EC, type ECSchemaProvider } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../../shared/Utils.js";
+import {
+  createExcludedClassesClause,
+  createHiddenClassesWhereClauseFactory,
+  createWhereClause,
+  getOrCreate,
+} from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
@@ -50,7 +55,7 @@ interface ClassificationOrTableInfo {
  * @internal
  */
 interface ClassificationsTreeIdsProviderProps {
-  queryExecutor: LimitingECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
   classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
   baseIdsProvider: BaseIdsProvider;
@@ -70,7 +75,7 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
   preloadClassifications(): Promise<void>;
   /** Indicates whether classification data has finished loading. */
   readonly isDataLoaded: boolean;
-  /** Indicates whether a classification has child classifications or related categories containing non-excluded elements. */
+  /** Indicates whether a classification has child classifications or visible, non-excluded top-level elements in related categories. */
   hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
   getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
@@ -90,7 +95,7 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
 export function createClassificationsTreeIdsProvider({
   baseIdsProvider,
   hierarchyConfig,
-  queryExecutor,
+  imodelAccess,
   classificationToCategoriesRelationshipSpecification,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
@@ -105,7 +110,10 @@ export function createClassificationsTreeIdsProvider({
       | { tableId: undefined; parentId: ClassificationId }
     )
   > {
-    const getQueryReader = (lastClassificationId?: ClassificationId) => {
+    const getQueryReader = (
+      createElementsHiddenClassesClause: (alias: string) => string,
+      lastClassificationId?: ClassificationId,
+    ) => {
       const CLASSIFICATIONS_CTE = "Classifications";
       const ctes = [
         `
@@ -153,17 +161,21 @@ export function createClassificationsTreeIdsProvider({
         categoriesOfClassificationSelector = `
           SELECT group_concat(IdToHex(cat.ECInstanceId))
           FROM ${CLASS_NAMES.GeometricElement3d} e
+          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
           JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = e.Category.Id
           JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
           ${createWhereClause({
             conditions: [
               "e.Parent.Id IS NULL",
               "NOT cat.IsPrivate",
+              "NOT m.IsPrivate",
+              "NOT m.IsTemplate",
               "ehc.TargetECInstanceId = cl.ClassificationId",
               createExcludedClassesClause({
                 alias: "e",
                 excludedClassNames: hierarchyConfig.elements?.excludedClasses,
               }),
+              createElementsHiddenClassesClause("e"),
             ],
           })}
           GROUP BY ehc.TargetECInstanceId
@@ -180,7 +192,7 @@ export function createClassificationsTreeIdsProvider({
         ORDER BY cl.ClassificationId
         LIMIT ${rowLimit}
       `;
-      return queryExecutor.createQueryReader(
+      return imodelAccess.createQueryReader(
         { ctes, ecsql, bindings: [{ type: "string", value: hierarchyConfig.rootClassificationSystemCode }] },
         {
           rowFormat: "ECSqlPropertyNames",
@@ -189,15 +201,24 @@ export function createClassificationsTreeIdsProvider({
         },
       );
     };
-    return defer(() => getQueryReader()).pipe(
-      // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
-      // 0 rows will be sent. This is acceptable to keep the implementation simple.
-      expand((row, idx) => {
-        if (idx % rowLimit === rowLimit - 1) {
-          return getQueryReader(row.id);
-        }
-        return EMPTY;
+    return forkJoin({
+      createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
+        schemaProvider: imodelAccess,
+        className: CLASS_NAMES.GeometricElement3d,
       }),
+    }).pipe(
+      mergeMap(({ createElementsHiddenClassesClause }) =>
+        from(getQueryReader(createElementsHiddenClassesClause)).pipe(
+          // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
+          // 0 rows will be sent. This is acceptable to keep the implementation simple.
+          expand((row, idx) => {
+            if (idx % rowLimit === rowLimit - 1) {
+              return getQueryReader(createElementsHiddenClassesClause, row.id);
+            }
+            return EMPTY;
+          }),
+        ),
+      ),
       catchBeSQLiteInterrupts,
       map((row) => {
         const relatedCategories = row.relatedCategories ? (row.relatedCategories as string).split(",") : [];
