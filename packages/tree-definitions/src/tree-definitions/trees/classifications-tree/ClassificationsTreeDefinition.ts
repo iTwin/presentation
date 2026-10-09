@@ -1098,8 +1098,7 @@ function createGeometricElementInstanceKeyPaths(props: {
         c.ECInstanceId classificationId
       FROM
         ElementsHierarchy e
-        JOIN ${CLASS_NAMES.GeometricElement3d} element ON element.ECInstanceId = e.ECInstanceId
-        JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = element.ECInstanceId
+        JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
         JOIN ${CLASS_NAMES.Classification} c ON c.ECInstanceId = ehc.TargetECInstanceId
       WHERE e.ParentId IS NULL
     `;
