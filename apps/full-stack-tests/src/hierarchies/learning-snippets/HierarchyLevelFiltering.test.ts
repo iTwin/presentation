@@ -227,15 +227,10 @@ describe("Hierarchies", () => {
           });
         });
 
+        const imodelAccess = createIModelAccess(hiddenClassesIModel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.HiddenClassesInHasChildren
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({
-            imodelAccess,
-            parentNode,
-            instanceFilter,
-            createSelectClause,
-            createFilterClauses,
-          }) {
+          async defineHierarchyLevel({ parentNode, instanceFilter, createSelectClause, createFilterClauses }) {
             const parentIds =
               parentNode && HierarchyNode.isInstancesNode(parentNode)
                 ? parentNode.key.instanceKeys.map(({ id }) => id)
@@ -282,10 +277,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         await validateHierarchy({
-          provider: createIModelHierarchyProvider({
-            imodelAccess: createIModelAccess(hiddenClassesIModel),
-            hierarchyDefinition,
-          }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [keys.withHiddenChild], children: false }),
             NodeValidators.createForInstanceNode({

@@ -31,7 +31,7 @@ import {
 import type { GenericInstanceFilter } from "@itwin/core-common";
 import type { EC, ECSqlQueryDef, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
-import type { GroupingNodeKey, InstancesNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
+import type { GroupingNodeKey, IModelInstanceKey, InstancesNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
 import type {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
@@ -668,13 +668,11 @@ describe("createIModelHierarchyProvider", () => {
       ]);
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenCalledTimes(2);
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(1, {
-        imodelAccess,
         parentNode: undefined,
         createSelectClause: expect.any(Function),
         createFilterClauses: expect.any(Function),
       });
       expect(hierarchyDefinition.defineHierarchyLevel).toHaveBeenNthCalledWith(2, {
-        imodelAccess,
         parentNode: rootNodes[0],
         createSelectClause: expect.any(Function),
         createFilterClauses: expect.any(Function),
@@ -818,6 +816,38 @@ describe("createIModelHierarchyProvider", () => {
       // setting to `undefined` should trigger `hierarchyChangedListener`
       provider.setHierarchySearch(undefined);
       expect(hierarchyChangedListener).toHaveBeenCalledWith({ searchChange: { newSearch: undefined } });
+    });
+
+    it("filters hidden search targets before promoting their children", async () => {
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            return parentNode
+              ? [{ node: { key: "child", label: "Child", children: false } }]
+              : [
+                  {
+                    node: {
+                      key: "target",
+                      label: "Target",
+                      children: true,
+                      processingParams: { hideInHierarchy: true },
+                    },
+                  },
+                ];
+          },
+        },
+      });
+
+      expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+        "Child",
+      ]);
+      provider.setHierarchySearch({ paths: [{ identifier: { type: "generic", id: "target" } }] });
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toEqual([]);
+      provider.setHierarchySearch(undefined);
+      expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+        "Child",
+      ]);
     });
 
     it("applies search on query definitions", async () => {
@@ -1014,6 +1044,8 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
             [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
+            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x456",
+            [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
               byLabel: true,
             } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
@@ -1043,7 +1075,9 @@ describe("createIModelHierarchyProvider", () => {
       await waitFor(() => expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce());
 
       // set the search and request searched nodes AFTER the root node query has been executed
-      provider.setHierarchySearch({ paths: [{ identifier: { className: "a.b", id: "0x456" } }] });
+      provider.setHierarchySearch({
+        paths: [{ identifier: { className: "a.b", id: "0x456" }, options: { autoExpand: true } }],
+      });
       const searchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
 
       // all requests are made in correct order, now resolve the responses
@@ -1064,10 +1098,17 @@ describe("createIModelHierarchyProvider", () => {
       const searchedRootNode = (await searchedRootNodeIter).value;
       expect(searchedRootNode).toMatchObject({
         key: { type: "label-grouping", label: "ab" },
+        autoExpand: true,
       } satisfies Partial<HierarchyNode>);
 
       // ensure requesting children for the searched node returns one grouped node
       expect(await collect(provider.getNodes({ parentNode: searchedRootNode }))).toHaveLength(1);
+
+      provider.setHierarchySearch(undefined);
+      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(rootNodes).toHaveLength(1);
+      expect(rootNodes[0].key).toMatchObject({ type: "label-grouping", label: "ab" });
+      expect(rootNodes[0].autoExpand).toBeUndefined();
     });
   });
 
@@ -1875,9 +1916,114 @@ describe("createMergedIModelHierarchyProvider", () => {
     expect(() =>
       createMergedIModelHierarchyProvider({
         imodels: [],
-        hierarchyDefinition: { defineHierarchyLevel: async () => [] },
+        getHierarchyDefinition: () => ({ defineHierarchyLevel: async () => [] }),
       }),
     ).toThrow("requires at least one iModel");
+  });
+
+  it("creates and reuses a hierarchy definition for each iModel", async () => {
+    const imodelAccess1 = { ...createIModelAccessStub(), imodelKey: "imodel 1" };
+    const imodelAccess2 = { ...createIModelAccessStub(), imodelKey: "imodel 2" };
+    const imodelChanged = new BeEvent<() => void>();
+    const getHierarchyDefinition = vi.fn<
+      Parameters<typeof createMergedIModelHierarchyProvider>[0]["getHierarchyDefinition"]
+    >((imodelAccess) => ({
+      async defineHierarchyLevel(props) {
+        const { parentNode } = props;
+        return parentNode
+          ? []
+          : [{ node: { key: imodelAccess.imodelKey, label: imodelAccess.imodelKey, children: false } }];
+      },
+    }));
+    using provider = createMergedIModelHierarchyProvider({
+      imodels: [{ imodelAccess: imodelAccess1, imodelChanged }, { imodelAccess: imodelAccess2 }],
+      getHierarchyDefinition,
+    });
+
+    expect(getHierarchyDefinition).toHaveBeenCalledTimes(2);
+    expect(getHierarchyDefinition).toHaveBeenNthCalledWith(1, imodelAccess1);
+    expect(getHierarchyDefinition).toHaveBeenNthCalledWith(2, imodelAccess2);
+    expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+      "imodel 1",
+      "imodel 2",
+    ]);
+    provider.setHierarchySearch({ paths: [{ identifier: { type: "generic", id: "imodel 1" } }] });
+    expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+      "imodel 1",
+    ]);
+    imodelChanged.raiseEvent();
+    expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+      "imodel 1",
+    ]);
+    provider.setHierarchySearch({ paths: [{ identifier: { type: "generic", id: "imodel 2" } }] });
+    expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+      "imodel 2",
+    ]);
+    provider.setHierarchySearch({ paths: [] });
+    expect(await collect(provider.getNodes({ parentNode: undefined }))).toEqual([]);
+    provider.setHierarchySearch(undefined);
+    expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
+      "imodel 1",
+      "imodel 2",
+    ]);
+    expect(getHierarchyDefinition).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([false, true])("uses each iModel's queries and parser (search: %s)", async (withSearch) => {
+    const imodelAccess1 = { ...createIModelAccessStub(), imodelKey: "imodel 1" };
+    const imodelAccess2 = { ...createIModelAccessStub(), imodelKey: "imodel 2" };
+    const instanceKeys = [
+      { className: "a.b", id: "0x1", imodelKey: imodelAccess1.imodelKey },
+      { className: "a.b", id: "0x2", imodelKey: imodelAccess2.imodelKey },
+    ] satisfies IModelInstanceKey[];
+    [imodelAccess1, imodelAccess2].forEach((imodelAccess, index) => {
+      imodelAccess.createQueryReader.mockImplementation((_query, options) =>
+        options?.rowFormat === "Indexes"
+          ? createAsyncIterator([["a.b", instanceKeys[index].id, false]])
+          : createAsyncIterator([
+              {
+                id: instanceKeys[index].id,
+                [ECSQL_COLUMN_NAME_SearchECInstanceId]: instanceKeys[index].id,
+                [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+              },
+            ]),
+      );
+    });
+    using provider = createMergedIModelHierarchyProvider({
+      imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
+      getHierarchyDefinition: (imodelAccess) => ({
+        async defineHierarchyLevel(props) {
+          return props.parentNode ? [] : [{ fullClassName: "a.b", query: { ecsql: imodelAccess.imodelKey } }];
+        },
+        parseNode: ({ row, imodelKey }) => {
+          expect(imodelKey).toBe(imodelAccess.imodelKey);
+          return {
+            key: { type: "instances", instanceKeys: [{ className: "a.b", id: row.id }] },
+            label: imodelAccess.imodelKey,
+            children: false,
+          };
+        },
+      }),
+      search: withSearch ? { paths: instanceKeys.map((identifier) => ({ identifier })) } : undefined,
+    });
+
+    const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+    expect(nodes).toMatchObject(
+      instanceKeys.map((key) => ({
+        key: { type: "instances", instanceKeys: [key] },
+        label: key.imodelKey,
+        ...(withSearch ? { search: { isSearchTarget: true } } : undefined),
+      })),
+    );
+    expect(await collect(provider.getNodeInstanceKeys({ parentNode: undefined }))).toEqual(instanceKeys);
+    expect(imodelAccess1.createQueryReader).toHaveBeenCalledWith(
+      expect.objectContaining({ ecsql: expect.stringContaining(imodelAccess1.imodelKey) }),
+      expect.anything(),
+    );
+    expect(imodelAccess2.createQueryReader).toHaveBeenCalledWith(
+      expect.objectContaining({ ecsql: expect.stringContaining(imodelAccess2.imodelKey) }),
+      expect.anything(),
+    );
   });
 
   it("merges instance nodes from different providers", async () => {
@@ -1908,10 +2054,15 @@ describe("createMergedIModelHierarchyProvider", () => {
 
     using provider = createMergedIModelHierarchyProvider({
       imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
-      hierarchyDefinition: {
+      getHierarchyDefinition: (imodelAccess) => ({
         defineHierarchyLevel: async ({ parentNode }) =>
           parentNode ? [] : [{ fullClassName: "a.b", query: { ecsql: "" } }],
-      },
+        preProcessNode: async ({ node }) => ({ ...node, extendedData: { preProcessedBy: imodelAccess.imodelKey } }),
+        postProcessNode: async ({ node }) => ({
+          ...node,
+          extendedData: { ...node.extendedData, postProcessedBy: imodelAccess.imodelKey },
+        }),
+      }),
       search: {
         paths: [
           { identifier: { className: "a.b", id: "0x123", imodelKey: "imodel 1" }, options: { autoExpand: true } },
@@ -1936,6 +2087,7 @@ describe("createMergedIModelHierarchyProvider", () => {
         parentKeys: [],
         label: "test label 2",
         children: false,
+        extendedData: { preProcessedBy: imodelAccess2.imodelKey, postProcessedBy: imodelAccess2.imodelKey },
         search: {
           isSearchTarget: true,
           options: { autoExpand: true },
