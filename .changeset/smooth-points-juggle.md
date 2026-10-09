@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-tree-definitions": minor
+"@itwin/presentation-tree-definitions": patch
 ---
 
-Classifications tree: Removed `classificationToCategoriesRelationshipSpecification`. Geometric elements are now related to classifications only through `ClassificationSystems.ElementHasClassifications`.
+Cleaned up classifications tree ids provider to not save unnecessary data.
