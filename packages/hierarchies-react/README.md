@@ -4,6 +4,8 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree.
 
+**Upgrading from `1.x`?** `2.0` contains breaking changes. Read the [`1.x` to `2.0` migration guide](./learning/Migration_v1_v2.md) - or hand it to your AI assistant - before updating to understand what needs to change in your code.
+
 ## Entry points
 
 Because StrataKit packages are optional peer dependencies, the package exposes two entry points:
