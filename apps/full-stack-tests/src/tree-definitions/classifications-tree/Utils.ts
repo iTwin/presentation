@@ -8,7 +8,6 @@ import { createRequire } from "node:module";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
-import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Common.js";
 
 import type { EditTxn, IModelDb } from "@itwin/core-backend";
@@ -145,63 +144,4 @@ export async function importClassificationSchema(imodel: IModelDb) {
   const schemaPath = require.resolve("@bentley/classification-systems-schema/ClassificationSystems.ecschema.xml");
   const schemaXml = fs.readFileSync(fs.realpathSync(schemaPath), { encoding: "utf-8" });
   await imodel.importSchemaStrings([schemaXml]);
-}
-
-export const CATEGORY_SYMBOLIZES_CLASSIFICATION_RELATIONSHIP_SCHEMA = "TestClassificationSchema";
-
-export function insertCategorySymbolizesClassificationRelationship(props: {
-  txn: EditTxn;
-  categoryId: Id64String;
-  classificationId: Id64String;
-}) {
-  const { txn, categoryId, classificationId } = props;
-  return txn.insertRelationship({
-    classFullName: `${CATEGORY_SYMBOLIZES_CLASSIFICATION_RELATIONSHIP_SCHEMA}.CategorySymbolizesClassification`,
-    sourceId: categoryId,
-    targetId: classificationId,
-  });
-}
-
-export function insertClassificationIsSymbolizedByCategoryRelationship(props: {
-  txn: EditTxn;
-  categoryId: Id64String;
-  classificationId: Id64String;
-}) {
-  const { txn, categoryId, classificationId } = props;
-  return txn.insertRelationship({
-    classFullName: `${CATEGORY_SYMBOLIZES_CLASSIFICATION_RELATIONSHIP_SCHEMA}.ClassificationIsSymbolizedByCategory`,
-    sourceId: classificationId,
-    targetId: categoryId,
-  });
-}
-
-export async function importCategorySymbolizesClassificationSchema(imodel: IModelDb) {
-  // cspell:disable
-  await importSchema(
-    { schemaName: CATEGORY_SYMBOLIZES_CLASSIFICATION_RELATIONSHIP_SCHEMA, schemaAlias: "tst" },
-    imodel,
-    `
-      <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-      <ECSchemaReference name="ClassificationSystems" version="01.00.04" alias="clsf" />
-      <ECRelationshipClass typeName="CategorySymbolizesClassification" modifier="None" strength="referencing">
-        <BaseClass>bis:ElementRefersToElements</BaseClass>
-        <Source multiplicity="(0..*)" roleLabel="symbolizes" polymorphic="true">
-          <Class class="bis:Category" />
-        </Source>
-        <Target multiplicity="(0..*)" roleLabel="is symbolized by" polymorphic="true">
-          <Class class="clsf:Classification" />
-        </Target>
-      </ECRelationshipClass>
-      <ECRelationshipClass typeName="ClassificationIsSymbolizedByCategory" modifier="None" strength="referencing">
-        <BaseClass>bis:ElementRefersToElements</BaseClass>
-        <Source multiplicity="(0..*)" roleLabel="is symbolized by" polymorphic="true">
-          <Class class="clsf:Classification" />
-        </Source>
-        <Target multiplicity="(0..*)" roleLabel="symbolizes" polymorphic="true">
-          <Class class="bis:Category" />
-        </Target>
-      </ECRelationshipClass>
-    `,
-  );
-  // cspell:enable
 }

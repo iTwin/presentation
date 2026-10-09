@@ -3,24 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { defer, EMPTY, expand, firstValueFrom, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom, type ECSchemaProvider } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import {
-  createExcludedClassesClause,
-  createHiddenClassesWhereClauseFactory,
-  createWhereClause,
-  getOrCreate,
-} from "../../shared/Utils.js";
+import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
-import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
+import type { ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
   ClassificationsTreeSearchPath,
@@ -43,7 +38,7 @@ interface ClassificationsTreeIdsProviderProps {
 
 interface ClassificationsTreeIdsProviderData {
   classificationOrTableInfos: Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>;
-  classificationsWithNonExcludedChildren: Set<ClassificationId>;
+  parentClassifications: Set<ClassificationId>;
 }
 
 /**
@@ -55,8 +50,8 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
   preloadClassifications(): Promise<void>;
   /** Indicates whether classification data has finished loading. */
   readonly isDataLoaded: boolean;
-  /** Indicates whether a classification has child classifications or visible, non-excluded top-level elements in related categories. */
-  hasChildren(classificationId: ClassificationId): Promise<boolean>;
+  /** Returns all classifications which have child classifications. */
+  getParentClassifications(): Promise<Set<ClassificationId>>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
   getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
   /**
@@ -77,7 +72,6 @@ export function createClassificationsTreeIdsProvider({
   hierarchyConfig,
   imodelAccess,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
-  const { classificationToCategoriesRelationshipSpecification } = hierarchyConfig;
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
@@ -85,15 +79,12 @@ export function createClassificationsTreeIdsProvider({
   let cachedDataLoaded = false;
 
   function queryClassifications(): Observable<
-    { id: Id64String; relatedCategories: CategoryId[] } & (
+    { id: Id64String } & (
       | { tableId: ClassificationTableId; parentId: undefined }
       | { tableId: undefined; parentId: ClassificationId }
     )
   > {
-    const getQueryReader = (
-      createElementsHiddenClassesClause: (alias: string) => string,
-      lastClassificationId?: ClassificationId,
-    ) => {
+    const getQueryReader = (lastClassificationId?: ClassificationId) => {
       const CLASSIFICATIONS_CTE = "Classifications";
       const ctes = [
         `
@@ -123,65 +114,11 @@ export function createClassificationsTreeIdsProvider({
           )
         `,
       ];
-      let categoriesOfClassificationSelector: string;
-      if (classificationToCategoriesRelationshipSpecification) {
-        const relationship = classificationToCategoriesRelationshipSpecification.fullClassName;
-        const { categoryAccessor, classificationAccessor } =
-          classificationToCategoriesRelationshipSpecification.source === "classification"
-            ? { classificationAccessor: "SourceECInstanceId", categoryAccessor: "TargetECInstanceId" }
-            : { classificationAccessor: "TargetECInstanceId", categoryAccessor: "SourceECInstanceId" };
-        categoriesOfClassificationSelector = `
-          SELECT group_concat(IdToHex(cat.ECInstanceId))
-          FROM ${CLASS_NAMES.SpatialCategory} cat
-          JOIN ${relationship} rel ON rel.${categoryAccessor} = cat.ECInstanceId
-          JOIN ${CLASS_NAMES.GeometricElement3d} e ON e.Category.Id = cat.ECInstanceId
-          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
-          ${createWhereClause({
-            conditions: [
-              "NOT cat.IsPrivate",
-              `rel.${classificationAccessor} = cl.ClassificationId`,
-              "e.Parent.Id IS NULL",
-              "NOT m.IsPrivate",
-              "NOT m.IsTemplate",
-              createExcludedClassesClause({
-                alias: "e",
-                excludedClassNames: hierarchyConfig.elements?.excludedClasses,
-              }),
-              createElementsHiddenClassesClause("e"),
-            ],
-          })}
-          GROUP BY rel.${classificationAccessor}
-        `;
-      } else {
-        categoriesOfClassificationSelector = `
-          SELECT group_concat(IdToHex(cat.ECInstanceId))
-          FROM ${CLASS_NAMES.GeometricElement3d} e
-          JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = e.Model.Id
-          JOIN ${CLASS_NAMES.SpatialCategory} cat ON cat.ECInstanceId = e.Category.Id
-          JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.SourceECInstanceId = e.ECInstanceId
-          ${createWhereClause({
-            conditions: [
-              "e.Parent.Id IS NULL",
-              "NOT cat.IsPrivate",
-              "NOT m.IsPrivate",
-              "NOT m.IsTemplate",
-              "ehc.TargetECInstanceId = cl.ClassificationId",
-              createExcludedClassesClause({
-                alias: "e",
-                excludedClassNames: hierarchyConfig.elements?.excludedClasses,
-              }),
-              createElementsHiddenClassesClause("e"),
-            ],
-          })}
-          GROUP BY ehc.TargetECInstanceId
-        `;
-      }
       const ecsql = `
         SELECT
           cl.ClassificationId id,
           cl.ClassificationTableId tableId,
-          cl.ParentClassificationId parentId,
-          (${categoriesOfClassificationSelector}) relatedCategories
+          cl.ParentClassificationId parentId
         FROM ${CLASSIFICATIONS_CTE} cl
         ${createWhereClause({ conditions: [lastClassificationId !== undefined && `cl.ClassificationId > ${lastClassificationId}`] })}
         ORDER BY cl.ClassificationId
@@ -196,71 +133,52 @@ export function createClassificationsTreeIdsProvider({
         },
       );
     };
-    return forkJoin({
-      createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
-        schemaProvider: imodelAccess,
-        className: CLASS_NAMES.GeometricElement3d,
+    return from(getQueryReader()).pipe(
+      // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
+      // 0 rows will be sent. This is acceptable to keep the implementation simple.
+      expand((row, idx) => {
+        if (idx % rowLimit === rowLimit - 1) {
+          return getQueryReader(row.id);
+        }
+        return EMPTY;
       }),
-    }).pipe(
-      mergeMap(({ createElementsHiddenClassesClause }) =>
-        from(getQueryReader(createElementsHiddenClassesClause)).pipe(
-          // Note: if the total row count is an exact multiple of `rowLimit`, an extra request that returns
-          // 0 rows will be sent. This is acceptable to keep the implementation simple.
-          expand((row, idx) => {
-            if (idx % rowLimit === rowLimit - 1) {
-              return getQueryReader(createElementsHiddenClassesClause, row.id);
-            }
-            return EMPTY;
-          }),
-        ),
-      ),
       catchBeSQLiteInterrupts,
       map((row) => {
-        const relatedCategories = row.relatedCategories ? (row.relatedCategories as string).split(",") : [];
-        return { id: row.id, tableId: row.tableId, parentId: row.parentId, relatedCategories };
+        return { id: row.id, tableId: row.tableId, parentId: row.parentId };
       }),
     );
   }
 
   function getData() {
-    cachedData ??= from(baseIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
-      mergeMap((categoriesContainingNonExcludedElements) =>
-        queryClassifications().pipe(
-          reduce(
-            (acc, { id, tableId, parentId, relatedCategories }) => {
-              if (parentId !== undefined) {
-                acc.classificationsWithNonExcludedChildren.add(parentId);
-              }
-              if (relatedCategories.length > 0) {
-                if (relatedCategories.some((categoryId) => categoriesContainingNonExcludedElements.has(categoryId))) {
-                  acc.classificationsWithNonExcludedChildren.add(id);
-                }
-              }
-              const tableOrParentId = tableId ?? parentId;
-              const parentInfo = getOrCreate({
-                map: acc.classificationOrTableInfos,
-                key: tableOrParentId,
-                createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: undefined }),
-              });
-              parentInfo.childClassificationIds.push(id);
-              const classificationEntry = getOrCreate({
-                map: acc.classificationOrTableInfos,
-                key: id,
-                createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: tableOrParentId }),
-              });
-              classificationEntry.parentClassificationOrTableId = tableOrParentId;
-              return acc;
-            },
-            {
-              classificationOrTableInfos: new Map<
-                ClassificationId | ClassificationTableId,
-                ClassificationOrTableInfo
-              >(),
-              classificationsWithNonExcludedChildren: new Set<ClassificationId>(),
-            },
-          ),
+    cachedData ??= defer(() =>
+      queryClassifications().pipe(
+        reduce(
+          (acc, { id, tableId, parentId }) => {
+            if (parentId !== undefined) {
+              acc.parentClassifications.add(parentId);
+            }
+            const tableOrParentId = tableId ?? parentId;
+            const parentInfo = getOrCreate({
+              map: acc.classificationOrTableInfos,
+              key: tableOrParentId,
+              createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: undefined }),
+            });
+            parentInfo.childClassificationIds.push(id);
+            const classificationEntry = getOrCreate({
+              map: acc.classificationOrTableInfos,
+              key: id,
+              createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: tableOrParentId }),
+            });
+            classificationEntry.parentClassificationOrTableId = tableOrParentId;
+            return acc;
+          },
+          {
+            classificationOrTableInfos: new Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>(),
+            parentClassifications: new Set<ClassificationId>(),
+          },
         ),
       ),
+    ).pipe(
       tap(() => {
         cachedDataLoaded = true;
       }),
@@ -282,14 +200,8 @@ export function createClassificationsTreeIdsProvider({
     get isDataLoaded(): boolean {
       return cachedDataLoaded;
     },
-    async hasChildren(classificationId: ClassificationId): Promise<boolean> {
-      return firstValueFrom(
-        getData().pipe(
-          map(({ classificationsWithNonExcludedChildren }) =>
-            classificationsWithNonExcludedChildren.has(classificationId),
-          ),
-        ),
-      );
+    async getParentClassifications(): Promise<Set<ClassificationId>> {
+      return firstValueFrom(getData().pipe(map(({ parentClassifications }) => parentClassifications)));
     },
     async getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]> {
       const result = new Array<ClassificationId>();
