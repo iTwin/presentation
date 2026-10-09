@@ -1126,10 +1126,17 @@ function createGeometricElementInstanceKeyPaths(props: {
 
   const separator = ";";
 
-  return from(
-    ECSql.createHiddenClassesFilter({ schemaProvider: imodelAccess, baseClassName: CLASS_NAMES.GeometricElement3d }),
-  ).pipe(
-    mergeMap((elementsHiddenClassesFilter) => {
+  return forkJoin({
+    elementsHiddenClassesFilter: ECSql.createHiddenClassesFilter({
+      schemaProvider: imodelAccess,
+      baseClassName: CLASS_NAMES.GeometricElement3d,
+    }),
+    classificationIds: idsProvider.getAllClassifications(),
+  }).pipe(
+    mergeMap(({ elementsHiddenClassesFilter, classificationIds }) => {
+      if (classificationIds.length === 0) {
+        return EMPTY;
+      }
       const ctes = [
         `ElementsHierarchy(ECInstanceId, ParentId, Path) AS (
         SELECT
@@ -1170,13 +1177,21 @@ function createGeometricElementInstanceKeyPaths(props: {
         c.ECInstanceId classificationId
       FROM
         ${CLASS_NAMES.Classification} c
+        JOIN IdSet(?) classificationIdSet ON c.ECInstanceId = classificationIdSet.id
         JOIN ${CLASS_NAMES.ElementHasClassifications} ehc ON ehc.TargetECInstanceId = c.ECInstanceId
         JOIN ElementsHierarchy e ON ehc.SourceECInstanceId = e.ECInstanceId
       WHERE e.ParentId IS NULL
     `;
 
       return imodelAccess.createQueryReader(
-        { ctes, ecsql, bindings: [{ type: "idset", value: targetItems }] },
+        {
+          ctes,
+          ecsql,
+          bindings: [
+            { type: "idset", value: targetItems },
+            { type: "idset", value: classificationIds },
+          ],
+        },
         {
           rowFormat: "ECSqlPropertyNames",
           limit: "unbounded",
