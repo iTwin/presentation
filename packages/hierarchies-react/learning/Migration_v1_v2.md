@@ -218,7 +218,7 @@ In `1.x`, custom row actions were provided through a single `getActions` callbac
 In `2.0`, actions are React components rather than definition objects:
 
 - The package delivers `TreeNodeFilterAction` (for hierarchy-level filtering, see [Hierarchy level filtering](#hierarchy-level-filtering)) and `TreeNodeRenameAction` (for renaming, see [Node renaming](#node-renaming)), and you can build custom actions by rendering the `TreeActionBase` component.
-- `getActions` was replaced by three callbacks, depending on where the action should appear: `getInlineActions`, `getMenuActions`, and `getContextMenuActions`. Each receives `{ targetNode, selectedNodes }` instead of a single node, so actions can operate on the whole selection.
+- `getActions` was replaced by three callbacks, depending on where the action should appear: `getInlineActions`, `getMenuActions`, and `getContextMenuActions`. Each receives `{ targetNode, selectedNodes }` instead of a single node, so actions can operate on the visible selection.
 - `getInlineActions` renders actions directly on the tree row and accepts at most two actions; use `getMenuActions` and `getContextMenuActions` for anything beyond that.
 
 ```tsx
@@ -445,7 +445,7 @@ Localization was reworked to use an [`i18next`](https://www.i18next.com/)-compat
 - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from `@itwin/core-common`).
 - The tree state hooks and rendering components no longer accept a `localizedStrings` prop.
 - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during application initialization.
-- If you don't wrap your tree in `LocalizationContextProvider` (or don't register `LOCALIZATION_NAMESPACES`), nothing throws — localized strings simply fall back to their keys (e.g. `loading` instead of `Loading...`).
+- If you don't wrap your tree in `LocalizationContextProvider`, nothing throws — the default context resolves every string to its key (e.g. `loading` instead of `Loading...`). If you do supply a provider but don't register `LOCALIZATION_NAMESPACES`, the behavior for missing namespaces is determined by your `getLocalizedString` implementation and may differ (returning the key, returning an empty string, throwing, etc.).
 - The package ships its English locale file at `lib/public/locales/en/PresentationHierarchies_1.0.json` (namespace `PresentationHierarchies_1.0`). Configure your bundler to copy this asset to the location from which your `Localization` implementation loads namespaces.
 
 ```tsx
@@ -479,7 +479,7 @@ import {
   LocalizationContextProvider,
   useIModelTree,
 } from "@itwin/presentation-hierarchies-react";
-import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 // during application initialization, register the namespaces delivered by the package
 // with your localization provider (e.g. `IModelApp.localization`)
@@ -493,5 +493,16 @@ function LocalizedTree({ imodelAccess }: { imodelAccess: IModelAccess }) {
       <MyTreeComponent imodelAccess={imodelAccess} />
     </LocalizationContextProvider>
   );
+}
+
+function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  const treeProps = useIModelTree({ imodelAccess, getHierarchyDefinition });
+  if (treeProps.rootErrorRendererProps) {
+    return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+  }
+  if (!treeProps.treeRendererProps || treeProps.isLoading) {
+    return "Loading...";
+  }
+  return <StrataKitTreeRenderer {...treeProps.treeRendererProps} treeLabel="My Tree" />;
 }
 ```
