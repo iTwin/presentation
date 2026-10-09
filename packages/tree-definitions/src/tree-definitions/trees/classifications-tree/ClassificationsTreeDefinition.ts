@@ -477,14 +477,15 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
               createSelectClause,
               hasChildren: {
                 selector: `
-                  IFNULL(
+                  COALESCE(
                     (
                       SELECT 1
                       FROM IdSet(?) hasChildrenIdSet
                       WHERE hasChildrenIdSet.id = this.ECInstanceId
                       LIMIT 1
                     ),
-                    IFNULL((${classificationHasElementsClause}), 0)
+                    (${classificationHasElementsClause}),
+                    0
                   )
                 `,
               },
@@ -563,7 +564,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
             ${await this.#createClassificationNodeSelectClause({
               createSelectClause,
               hasChildren: {
-                selector: `IFNULL((${hasChildClassifications}), IFNULL((${classificationHasElementsClause}), 0))`,
+                selector: `COALESCE((${hasChildClassifications}), (${classificationHasElementsClause}), 0)`,
               },
             })}
           FROM ${instanceFilterClauses.from} this

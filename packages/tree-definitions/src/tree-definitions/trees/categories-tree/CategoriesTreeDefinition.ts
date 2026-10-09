@@ -1071,7 +1071,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const hasChildren =
       this.#hierarchyConfig.subCategories.nodes === "include"
         ? this.#hierarchyConfig.elements.nodes === "include"
-          ? { selector: `IFNULL((${hasChildSubCategories}), IFNULL((${hasChildElements}), 0))` }
+          ? { selector: `COALESCE((${hasChildSubCategories}), (${hasChildElements}), 0)` }
           : { selector: `IFNULL((${hasChildSubCategories}), 0)` }
         : this.#hierarchyConfig.elements.nodes === "include"
           ? { selector: `IFNULL((${hasChildElements}), 0)` }
