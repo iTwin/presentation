@@ -131,12 +131,14 @@ describe("Models tree", () => {
       expect(await collect(createInstanceKeyPaths({ label: "matching model", limit: 1 }))).toEqual([
         { path: [adjustedModelKey(keys.model)], target: keys.model.id },
       ]);
-      expect(await collect(createInstanceKeyPaths({ label: "matching element", limit: "unbounded" }))).toEqual([
-        {
-          path: [adjustedModelKey(keys.model), keys.category, adjustedElementKey(keys.element)],
-          target: keys.element.id,
-        },
-      ]);
+      for (const limit of [1, "unbounded"] as const) {
+        expect(await collect(createInstanceKeyPaths({ label: "matching element", limit }))).toEqual([
+          {
+            path: [adjustedModelKey(keys.model), keys.category, adjustedElementKey(keys.element)],
+            target: keys.element.id,
+          },
+        ]);
+      }
       for (const label of ["isPrivate", "isTemplate"]) {
         expect(await collect(createInstanceKeyPaths({ label }))).toEqual([]);
       }
@@ -175,7 +177,7 @@ describe("Models tree", () => {
       ]);
     });
 
-    it("excludes paths through models of hidden classes", async () => {
+    it.each([1, "unbounded"] as const)("excludes hidden-model paths with limit %s", async (limit) => {
       await using setupResult = await buildIModel(async (imodel) => {
         const hiddenModelClassNames = await importHiddenClassesSchemas({
           imodel,
@@ -214,7 +216,7 @@ describe("Models tree", () => {
         imodelAccess: createIModelAccess(imodelConnection),
         hierarchyConfig: { subjects: { root: "exclude" } },
       });
-      expect(await collect(createInstanceKeyPaths({ label: "matching element", limit: "unbounded" }))).toEqual([
+      expect(await collect(createInstanceKeyPaths({ label: "matching element", limit }))).toEqual([
         {
           path: [adjustedModelKey(keys.model), keys.category, adjustedElementKey(keys.element)],
           target: keys.element.id,

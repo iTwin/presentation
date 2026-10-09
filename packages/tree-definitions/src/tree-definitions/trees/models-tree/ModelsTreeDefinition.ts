@@ -1761,7 +1761,21 @@ function createInstanceKeyPathsFromInstanceLabelObs(
           FROM ${CLASS_NAMES.Element} e
           ${createWhereClause({
             conditions: [
-              `e.ECClassId IS (${CLASS_NAMES.Subject}, ${CLASS_NAMES.SpatialCategory}, ${hierarchyConfig.elements.baseClass})`,
+              `(
+                e.ECClassId IS (${CLASS_NAMES.Subject}, ${CLASS_NAMES.SpatialCategory})
+                OR e.ECClassId IS (${hierarchyConfig.elements.baseClass}) AND EXISTS (
+                  SELECT 1
+                  FROM ${CLASS_NAMES.GeometricModel3d} m
+                  ${createWhereClause({
+                    conditions: [
+                      "m.ECInstanceId = e.Model.Id",
+                      "NOT m.IsPrivate",
+                      "NOT m.IsTemplate",
+                      modelsHiddenClassesFilter.createWhereClause("m"),
+                    ],
+                  })}
+                )
+              )`,
               createExcludedClassesClause({ alias: "e", excludedClassNames: hierarchyConfig.elements.excludedClasses }),
               // only restricts instances of `baseClass` sub-classes - subjects and categories are sealed
               elementsHiddenClassesFilter.createWhereClause("e"),
