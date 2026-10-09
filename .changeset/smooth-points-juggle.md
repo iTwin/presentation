@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-tree-definitions": patch
+"@itwin/presentation-tree-definitions": minor
 ---
 
-Classifications tree: Added `hierarchyConfig.classificationToCategoriesRelationshipSpecification` to relate classifications to geometric elements through their categories.
+Classifications tree: Removed `classificationToCategoriesRelationshipSpecification`. Geometric elements are now related to classifications only through `ClassificationSystems.ElementHasClassifications`.
