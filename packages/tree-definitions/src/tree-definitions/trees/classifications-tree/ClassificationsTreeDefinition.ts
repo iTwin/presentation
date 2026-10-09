@@ -1080,10 +1080,7 @@ function createSearchPathsForDifferentTypes(
         }
 
         return merge(
-          from(ids.classificationTableIds).pipe(
-            map((id) => ({ path: [{ id, className: CLASS_NAMES.ClassificationTable }], target: id })),
-          ),
-          from(idsProvider.getClassificationsPath(ids.classificationIds)).pipe(
+          from(idsProvider.getClassificationsPath([...ids.classificationTableIds, ...ids.classificationIds])).pipe(
             filter((path) => path.length > 0),
             map((path) => ({ path, target: path[path.length - 1].id })),
           ),

@@ -46,47 +46,80 @@ describe("Classifications tree", () => {
   });
 
   describe("Hierarchy search", () => {
-    it("excludes classification tables and classifications of hidden classes from label searches", async () => {
-      await using buildIModelResult = await buildIModel(async (imodel) => {
-        await importClassificationSchema(imodel);
-        const hiddenClassNames = await importHiddenClassificationClasses(imodel);
-        return withEditTxn(imodel, (txn) => {
-          const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
-          const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "matching table" });
-          const classification = insertClassification({ txn, modelId: table.id, codeValue: "matching classification" });
-          for (const [variant, classFullName] of Object.entries(hiddenClassNames.tables)) {
-            insertClassificationTable({
+    it.each(["label", "targetItems"] as const)(
+      "excludes classification tables and classifications of hidden classes from %s searches",
+      async (input) => {
+        await using buildIModelResult = await buildIModel(async (imodel) => {
+          await importClassificationSchema(imodel);
+          const hiddenClassNames = await importHiddenClassificationClasses(imodel);
+          return withEditTxn(imodel, (txn) => {
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "matching table" });
+            const classification = insertClassification({
               txn,
-              classFullName,
-              parentId: system.id,
-              codeValue: `matching hidden table (${variant})`,
-            });
-          }
-          for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
-            insertClassification({
-              txn,
-              classFullName,
               modelId: table.id,
-              codeValue: `matching hidden classification (${variant})`,
+              codeValue: "matching classification",
             });
-          }
-          return { table, classification };
+            const emptyTable = insertClassificationTable({
+              txn,
+              parentId: system.id,
+              codeValue: "matching empty table",
+            });
+            const hiddenTargets: InstanceKey[] = [];
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames.tables)) {
+              const hiddenTable = insertClassificationTable({
+                txn,
+                classFullName,
+                parentId: system.id,
+                codeValue: `matching hidden table (${variant})`,
+              });
+              const classificationInHiddenTable = insertClassification({
+                txn,
+                modelId: hiddenTable.id,
+                codeValue: `matching classification in hidden table (${variant})`,
+              });
+              hiddenTargets.push(hiddenTable, classificationInHiddenTable);
+            }
+            for (const [variant, classFullName] of Object.entries(hiddenClassNames.classifications)) {
+              const hiddenClassification = insertClassification({
+                txn,
+                classFullName,
+                modelId: table.id,
+                codeValue: `matching hidden classification (${variant})`,
+              });
+              const classificationUnderHiddenClassification = insertClassification({
+                txn,
+                modelId: table.id,
+                parentId: hiddenClassification.id,
+                codeValue: `matching classification under hidden classification (${variant})`,
+              });
+              hiddenTargets.push(hiddenClassification, classificationUnderHiddenClassification);
+            }
+            return { table, classification, emptyTable, hiddenTargets };
+          });
         });
-      });
-      const { imodelConnection, ...keys } = buildIModelResult;
-      const { createInstanceKeyPaths } = createClassificationsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        hierarchyConfig: defaultHierarchyConfiguration,
-      });
-      const paths = await collect(createInstanceKeyPaths({ label: "matching", limit: 2 }));
-      expect(paths).toHaveLength(2);
-      expect(paths).toEqual(
-        expect.arrayContaining([
-          { path: [keys.table], target: keys.table.id },
-          { path: [keys.table, keys.classification], target: keys.classification.id },
-        ]),
-      );
-    });
+        const { imodelConnection, ...keys } = buildIModelResult;
+        const { createInstanceKeyPaths } = createClassificationsTree({
+          imodelAccess: createIModelAccess(imodelConnection),
+          hierarchyConfig: defaultHierarchyConfiguration,
+        });
+        const paths = await collect(
+          createInstanceKeyPaths(
+            input === "label"
+              ? { label: "matching", limit: 3 }
+              : { targetItems: [keys.table, keys.classification, keys.emptyTable, ...keys.hiddenTargets] },
+          ),
+        );
+        expect(paths).toHaveLength(3);
+        expect(paths).toEqual(
+          expect.arrayContaining([
+            { path: [keys.table], target: keys.table.id },
+            { path: [keys.table, keys.classification], target: keys.classification.id },
+            { path: [keys.emptyTable], target: keys.emptyTable.id },
+          ]),
+        );
+      },
+    );
 
     it("excludes content of classification tables and classifications of hidden classes from searches", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) => {
