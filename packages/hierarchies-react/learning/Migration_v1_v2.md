@@ -458,7 +458,7 @@ const localizedStrings = {
 };
 
 function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
-  const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
+  const { rootNodes, expandNode } = useIModelTree({
     /* ... */
     localizedStrings,
   });
