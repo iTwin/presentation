@@ -476,20 +476,17 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
             ${await this.#createClassificationNodeSelectClause({
               createSelectClause,
               hasChildren: {
-                selector:
-                  childClassifications.directContainingChildClassifications.length > 0
-                    ? `
-                      IFNULL(
-                        (
-                          SELECT 1
-                          FROM IdSet(?) hasChildrenIdSet
-                          WHERE hasChildrenIdSet.id = this.ECInstanceId
-                          LIMIT 1
-                        ),
-                        IFNULL((${classificationHasElementsClause}), 0)
-                      )
-                    `
-                    : `IFNULL((${classificationHasElementsClause}), 0)`,
+                selector: `
+                  IFNULL(
+                    (
+                      SELECT 1
+                      FROM IdSet(?) hasChildrenIdSet
+                      WHERE hasChildrenIdSet.id = this.ECInstanceId
+                      LIMIT 1
+                    ),
+                    IFNULL((${classificationHasElementsClause}), 0)
+                  )
+                `,
               },
             })}
           FROM ${instanceFilterClauses.from} this
@@ -498,9 +495,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
           ${createWhereClause({ conditions: [instanceFilterClauses.where] })}
         `,
         bindings: [
-          ...(childClassifications.directContainingChildClassifications.length > 0
-            ? [{ type: "idset" as const, value: childClassifications.directContainingChildClassifications }]
-            : []),
+          { type: "idset" as const, value: childClassifications.directContainingChildClassifications },
           { type: "idset", value: childClassifications.direct },
         ],
       },
