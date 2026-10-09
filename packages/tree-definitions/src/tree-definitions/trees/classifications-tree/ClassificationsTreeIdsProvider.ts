@@ -38,7 +38,6 @@ interface ClassificationsTreeIdsProviderProps {
 
 interface ClassificationsTreeIdsProviderData {
   classificationOrTableInfos: Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>;
-  parentClassifications: Set<ClassificationId>;
 }
 
 /**
@@ -50,10 +49,10 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
   preloadClassifications(): Promise<void>;
   /** Indicates whether classification data has finished loading. */
   readonly isDataLoaded: boolean;
-  /** Returns all classifications which have child classifications. */
-  getParentClassifications(): Promise<Set<ClassificationId>>;
-  /** Returns direct child classification IDs for the supplied classifications or tables. */
-  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
+  /** Returns direct child classifications and whether each has child classifications. */
+  getDirectChildClassifications(
+    classificationOrTableIds: Id64Arg,
+  ): Promise<Array<{ id: ClassificationId; hasChildClassifications: boolean }>>;
   /**
    * Yields a path from the classification table to each supplied classification, including both endpoints.
    * Empty input yields no paths. Unknown IDs yield a path containing only the supplied classification.
@@ -154,9 +153,6 @@ export function createClassificationsTreeIdsProvider({
       queryClassifications().pipe(
         reduce(
           (acc, { id, tableId, parentId }) => {
-            if (parentId !== undefined) {
-              acc.parentClassifications.add(parentId);
-            }
             const tableOrParentId = tableId ?? parentId;
             const parentInfo = getOrCreate({
               map: acc.classificationOrTableInfos,
@@ -174,7 +170,6 @@ export function createClassificationsTreeIdsProvider({
           },
           {
             classificationOrTableInfos: new Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>(),
-            parentClassifications: new Set<ClassificationId>(),
           },
         ),
       ),
@@ -200,11 +195,10 @@ export function createClassificationsTreeIdsProvider({
     get isDataLoaded(): boolean {
       return cachedDataLoaded;
     },
-    async getParentClassifications(): Promise<Set<ClassificationId>> {
-      return firstValueFrom(getData().pipe(map(({ parentClassifications }) => parentClassifications)));
-    },
-    async getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]> {
-      const result = new Array<ClassificationId>();
+    async getDirectChildClassifications(
+      classificationOrTableIds: Id64Arg,
+    ): Promise<Array<{ id: ClassificationId; hasChildClassifications: boolean }>> {
+      const result = new Array<{ id: ClassificationId; hasChildClassifications: boolean }>();
       if (Id64.sizeOf(classificationOrTableIds) === 0) {
         return result;
       }
@@ -215,7 +209,12 @@ export function createClassificationsTreeIdsProvider({
               reduce((acc, classificationOrTableId) => {
                 const classificationInfo = classificationOrTableInfos.get(classificationOrTableId);
                 if (classificationInfo !== undefined) {
-                  classificationInfo.childClassificationIds.forEach((id) => acc.push(id));
+                  classificationInfo.childClassificationIds.forEach((id) =>
+                    acc.push({
+                      id,
+                      hasChildClassifications: !!classificationOrTableInfos.get(id)?.childClassificationIds.length,
+                    }),
+                  );
                 }
                 return acc;
               }, result),

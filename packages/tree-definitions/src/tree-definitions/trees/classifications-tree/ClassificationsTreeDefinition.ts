@@ -462,10 +462,10 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.Classification, alias: "this" },
       }),
-      getChildClassifications({ classificationOrTableIds: parentIds, idsProvider }),
+      idsProvider.getDirectChildClassifications(parentIds),
       this.#classificationHasElementsClause("this"),
     ]);
-    if (childClassifications.direct.length === 0) {
+    if (childClassifications.length === 0) {
       return undefined;
     }
     return {
@@ -496,8 +496,13 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
           ${createWhereClause({ conditions: [instanceFilterClauses.where] })}
         `,
         bindings: [
-          { type: "idset" as const, value: childClassifications.directContainingChildClassifications },
-          { type: "idset", value: childClassifications.direct },
+          {
+            type: "idset",
+            value: childClassifications
+              .filter(({ hasChildClassifications }) => hasChildClassifications)
+              .map(({ id }) => id),
+          },
+          { type: "idset", value: childClassifications.map(({ id }) => id) },
         ],
       },
     };
@@ -726,28 +731,6 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
 
 function getParentNodeIModelKey(instanceKey: InstancesNodeKey): string | undefined {
   return instanceKey.instanceKeys[0]?.imodelKey;
-}
-
-async function getChildClassifications({
-  classificationOrTableIds,
-  idsProvider,
-}: {
-  classificationOrTableIds: Id64Array;
-  idsProvider: ClassificationsTreeIdsProvider;
-}): Promise<{ direct: Id64Array; directContainingChildClassifications: Id64Array }> {
-  return firstValueFrom(
-    forkJoin({
-      childClassifications: idsProvider.getDirectChildClassifications(classificationOrTableIds),
-      parentClassifications: idsProvider.getParentClassifications(),
-    }).pipe(
-      map(({ childClassifications, parentClassifications }) => {
-        return {
-          direct: childClassifications,
-          directContainingChildClassifications: childClassifications.filter((id) => parentClassifications.has(id)),
-        };
-      }),
-    ),
-  );
 }
 
 const CLASSIFICATION_TABLE_TYPE_AS_NUMBER = 0;
