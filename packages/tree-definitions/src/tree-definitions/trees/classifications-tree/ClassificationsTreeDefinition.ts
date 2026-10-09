@@ -81,7 +81,7 @@ interface ClassificationsTreeDefinitionProps extends ClassificationsTreeProps {
 }
 
 /**
- * Selects the root classification system, and excluded element classes for `createClassificationsTree`.
+ * Selects the root classification system and excluded element classes for `createClassificationsTree`.
  * @beta
  */
 export interface ClassificationsTreeHierarchyConfiguration {
