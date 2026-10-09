@@ -16,7 +16,7 @@ export type ECSqlBinding =
   | { type: "boolean"; value?: boolean }
   | { type: "double" | "int" | "long"; value?: number }
   | { type: "id"; value?: Id64String }
-  | { type: "idset"; value?: Id64String[] }
+  | { type: "idset"; value?: ReadonlyArray<Id64String> | ReadonlySet<Id64String> }
   | { type: "string"; value?: string }
   | { type: "point2d"; value?: { x: number; y: number } }
   | { type: "point3d"; value?: { x: number; y: number; z: number } };

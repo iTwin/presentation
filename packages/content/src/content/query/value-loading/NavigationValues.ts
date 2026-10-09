@@ -181,7 +181,7 @@ function readTargets(props: {
           FROM ${ECSql.createClassSelector(className)} [${TARGET_ALIAS}]
           JOIN IdSet(:${TARGET_IDS}) [${TARGET_IDS}] ON [${TARGET_IDS}].[id] = [${TARGET_ALIAS}].[ECInstanceId]
         `,
-        bindings: { [TARGET_IDS]: { type: "idset", value: [...ids] } },
+        bindings: { [TARGET_IDS]: { type: "idset", value: ids } },
       },
       { rowFormat: "Indexes" },
     );

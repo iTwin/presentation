@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { defer, EMPTY, expand, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom, type EC, type ECSchemaProvider } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
+import { DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
@@ -19,11 +20,12 @@ import {
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { CategoryId, ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
   ClassificationsTreeSearchPath,
+  ClassificationsTreeSearchPathKey,
 } from "./ClassificationsTreeDefinition.js";
 
 /**
@@ -31,7 +33,7 @@ import type {
  *
  * By default, categories are determined using `ClassificationSystems.ElementHasClassifications` and `BisCore.GeometricElement3dIsInCategory` relationships.
  *
- * @internal
+ * @beta
  */
 export interface ClassificationToCategoriesRelationshipSpecification {
   /**
@@ -52,13 +54,16 @@ interface ClassificationOrTableInfo {
 
 /**
  * Query access, root classification system, and category relationships for a classifications-tree ID provider.
- * @internal
+ * @beta
  */
 interface ClassificationsTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
   classificationToCategoriesRelationshipSpecification?: ClassificationToCategoriesRelationshipSpecification;
-  baseIdsProvider: BaseIdsProvider;
+  /** Shared provider with matching element class and exclusions for the target tree. */
+  sharedIdsProvider: {
+    categories: Pick<SharedIdsProvider["categories"], "getCategoriesContainingNonExcludedElements">;
+  };
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -68,32 +73,34 @@ interface ClassificationsTreeIdsProviderData {
 
 /**
  * Provides classification IDs and search paths within the configured classification system.
- * @internal
+ * Getters load data on demand, reuse cached results, and reject on failure.
+ * @beta
  */
-export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
-  /** Starts loading classification data if it has not been requested yet. Loading errors are ignored. */
-  preloadClassifications(): Promise<void>;
-  /** Indicates whether classification data has finished loading. */
-  readonly isDataLoaded: boolean;
+export interface ClassificationsTreeIdsProvider {
+  /**
+   * State of classification data. `getAllClassifications` also loads shared category data.
+   */
+  readonly state: IdsProviderDataState;
   /** Indicates whether a classification has child classifications or visible, non-excluded top-level elements in related categories. */
   hasChildren(classificationId: ClassificationId): Promise<boolean>;
   /** Returns direct child classification IDs for the supplied classifications or tables. */
-  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ClassificationId[]>;
+  getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<ClassificationId>>;
   /**
    * Yields a path from the classification table to each supplied classification, including both endpoints.
    * Empty input yields no paths. Unknown IDs yield a path containing only the supplied classification.
    */
   getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
-  getAllClassifications(): Promise<ClassificationId[]>;
+  getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
 }
 
 /**
- * Creates a cached classification tree ID provider using the supplied base provider and category relationships.
- * @internal
+ * Creates a cached classification tree ID provider using the supplied shared provider and category relationships.
+ * Recreate it together with its shared provider after relevant iModel or configuration changes.
+ * @beta
  */
 export function createClassificationsTreeIdsProvider({
-  baseIdsProvider,
+  sharedIdsProvider,
   hierarchyConfig,
   imodelAccess,
   classificationToCategoriesRelationshipSpecification,
@@ -102,7 +109,7 @@ export function createClassificationsTreeIdsProvider({
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
   const rowLimit = 7500;
-  let cachedDataLoaded = false;
+  const state = new DataStateTracker();
 
   function queryClassifications(): Observable<
     { id: Id64String; relatedCategories: CategoryId[] } & (
@@ -228,7 +235,7 @@ export function createClassificationsTreeIdsProvider({
   }
 
   function getData() {
-    cachedData ??= from(baseIdsProvider.getCategoriesContainingNonExcludedElements()).pipe(
+    cachedData ??= defer(async () => sharedIdsProvider.categories.getCategoriesContainingNonExcludedElements()).pipe(
       mergeMap((categoriesContainingNonExcludedElements) =>
         queryClassifications().pipe(
           reduce(
@@ -266,26 +273,15 @@ export function createClassificationsTreeIdsProvider({
           ),
         ),
       ),
-      tap(() => {
-        cachedDataLoaded = true;
-      }),
+      state.track(),
       shareReplay(),
     );
     return cachedData;
   }
 
   return {
-    ...baseIdsProvider,
-    async preloadClassifications(): Promise<void> {
-      if (cachedData !== undefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(getData());
-      } catch {}
-    },
-    get isDataLoaded(): boolean {
-      return cachedDataLoaded;
+    get state(): IdsProviderDataState {
+      return state.state;
     },
     async hasChildren(classificationId: ClassificationId): Promise<boolean> {
       return firstValueFrom(
@@ -326,7 +322,7 @@ export function createClassificationsTreeIdsProvider({
           mergeMap(({ classificationOrTableInfos }) =>
             fromWithRelease({ source: classificationIds, releaseOnCount: 200 }).pipe(
               map((classificationId) => {
-                const path: ClassificationsTreeSearchPath = [
+                const path: ClassificationsTreeSearchPathKey[] = [
                   { id: classificationId, className: CLASS_NAMES.Classification },
                 ];
                 let parentId = classificationOrTableInfos.get(classificationId)?.parentClassificationOrTableId;

@@ -8,11 +8,13 @@ import { Guid } from "@itwin/core-bentley";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../Utils.js";
+import { DataStateTracker } from "./DataStateTracker.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { CategoryId, SubCategoryId } from "../Types.js";
+import type { IdsProviderDataState } from "./SharedIdsProvider.js";
 
 interface SubCategoriesProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
@@ -30,6 +32,7 @@ export class SubCategoriesProvider {
   #componentId: GuidString;
   #componentName: string;
   #cachedData: Observable<SubCategoriesProviderData> | undefined;
+  #state = new DataStateTracker();
   #rowLimit = 7500;
 
   constructor(props: SubCategoriesProviderProps) {
@@ -75,9 +78,13 @@ export class SubCategoriesProvider {
     );
   }
 
+  public get state(): IdsProviderDataState {
+    return this.#state.state;
+  }
+
   public getData(): Observable<SubCategoriesProviderData> {
-    this.#cachedData ??= this.querySubCategories()
-      .pipe(
+    this.#cachedData ??= defer(() =>
+      this.querySubCategories().pipe(
         reduce(
           (acc, queriedSubCategory) => {
             acc.subCategoryCategories.set(queriedSubCategory.id, queriedSubCategory.parentId);
@@ -94,8 +101,8 @@ export class SubCategoriesProvider {
             categorySubCategories: new Map<CategoryId, Array<SubCategoryId>>(),
           },
         ),
-      )
-      .pipe(shareReplay());
+      ),
+    ).pipe(this.#state.track(), shareReplay());
     return this.#cachedData;
   }
 }

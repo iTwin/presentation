@@ -8,6 +8,7 @@ import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { eachValueFrom, type ECSchemaProvider, type ECSqlBinding } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
+import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import {
   createHiddenClassesWhereClauseFactory,
@@ -20,20 +21,28 @@ import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
-import type { ModelsTreeHierarchyConfiguration, ModelsTreeSearchPath } from "./ModelsTreeDefinition.js";
+import type {
+  ModelsTreeHierarchyConfiguration,
+  ModelsTreeSearchPath,
+  ModelsTreeSearchPathKey,
+} from "./ModelsTreeDefinition.js";
 
 /**
  * Data access and configuration for a models-tree ID provider.
- * @internal
+ * @beta
  */
 interface ModelsTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /** Hierarchy options. Omitted properties use the defaults of `ModelsTreeHierarchyConfiguration`. */
   hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
-  /** Base provider using the same element class and exclusions as `hierarchyConfig`. */
-  baseIdsProvider: BaseIdsProvider;
+  /** Shared provider using the same element class and exclusions as `hierarchyConfig`. */
+  sharedIdsProvider: {
+    models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
+    modeledElements: SharedIdsProvider["modeledElements"];
+    categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+  };
 }
 
 interface SubjectInfo {
@@ -50,17 +59,24 @@ interface ModelInfo {
 
 /**
  * Provides subject and model IDs and search paths for model tree hierarchies.
- * @internal
+ * Getters load data on demand, reuse cached results, and reject on failure.
+ * @beta
  */
-export interface ModelsTreeIdsProvider extends BaseIdsProvider {
+export interface ModelsTreeIdsProvider {
+  /** Shared modeled-element lookups and their loading state. */
+  readonly modeledElements: SharedIdsProvider["modeledElements"];
+  /** Shared category lookups and their loading state. */
+  readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+  /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of shared data. */
+  readonly state: IdsProviderDataState;
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
-  getParentSubjectIds(): Promise<Id64Array>;
+  getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
   /** Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants. */
-  getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+  getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
   /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
-  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array>;
+  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<ModelId>>;
   /** Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy. */
-  getHiddenModelIds(): Promise<Set<ModelId>>;
+  getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
   /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
   createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
   /**
@@ -77,12 +93,13 @@ export interface ModelsTreeIdsProvider extends BaseIdsProvider {
 
 /**
  * Creates an ID provider for model tree hierarchies using the supplied hierarchy configuration.
- * @internal
+ * Recreate it together with its shared provider after relevant iModel or configuration changes.
+ * @beta
  */
 export function createModelsTreeIdsProvider({
   imodelAccess,
   hierarchyConfig: configOverrides,
-  baseIdsProvider,
+  sharedIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
   const hierarchyConfig = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
   const cachedData: {
@@ -100,6 +117,8 @@ export function createModelsTreeIdsProvider({
   };
   const componentId = Guid.createValue();
   const componentName = "ModelsTreeIdsProvider";
+  const subjectInfosState = new DataStateTracker();
+  const modelInfosState = new DataStateTracker();
 
   async function createModelElementsFilter(
     modelAlias: string,
@@ -107,10 +126,10 @@ export function createModelsTreeIdsProvider({
     if (hierarchyConfig.models.withoutElements === "include") {
       return {};
     }
-    if (baseIdsProvider.elementModelCategoriesLoaded()) {
+    if (sharedIdsProvider.models.state === "loaded") {
       return {
         clause: `${modelAlias}.ECInstanceId IN (SELECT id FROM IdSet(?))`,
-        bindings: [{ type: "idset", value: await baseIdsProvider.getAllModels() }],
+        bindings: [{ type: "idset", value: await sharedIdsProvider.models.getAllModels() }],
       };
     }
     const createElementVisibilityClause = await createHiddenClassesWhereClauseFactory({
@@ -214,50 +233,53 @@ export function createModelsTreeIdsProvider({
   }
 
   function getModelInfos() {
-    cachedData.modelInfos ??= queryModels().pipe(
-      reduce((acc, model) => {
-        const entry = getOrCreate({
-          map: acc,
-          key: model.id,
-          createFunc: () => ({ parentSubjectIds: new Set<SubjectId>(), hideInHierarchy: model.hideInHierarchy }),
-        });
-        entry.parentSubjectIds.add(model.parentId);
-        return acc;
-      }, new Map<ModelId, ModelInfo>()),
-      shareReplay(),
-    );
+    cachedData.modelInfos ??= defer(() =>
+      queryModels().pipe(
+        reduce((acc, model) => {
+          const entry = getOrCreate({
+            map: acc,
+            key: model.id,
+            createFunc: () => ({ parentSubjectIds: new Set<SubjectId>(), hideInHierarchy: model.hideInHierarchy }),
+          });
+          entry.parentSubjectIds.add(model.parentId);
+          return acc;
+        }, new Map<ModelId, ModelInfo>()),
+      ),
+    ).pipe(modelInfosState.track(), shareReplay());
     return cachedData.modelInfos;
   }
 
   function getSubjectInfos() {
-    cachedData.subjectInfos ??= forkJoin({
-      subjectInfos: querySubjects().pipe(
-        reduce((acc, subject) => {
-          const subjectInfo: SubjectInfo = {
-            parentSubjectId: subject.parentId,
-            hideInHierarchy: subject.hideInHierarchy,
-            childSubjectIds: new Set(),
-            childModelIds: new Set(),
-          };
-          if (subject.targetPartitionId) {
-            subjectInfo.childModelIds.add(subject.targetPartitionId);
-          }
-          acc.set(subject.id, subjectInfo);
-          return acc;
-        }, new Map<SubjectId, SubjectInfo>()),
-        map((subjectInfos) => {
-          for (const [subjectId, { parentSubjectId: parentSubjectId }] of subjectInfos) {
-            if (parentSubjectId) {
-              const parentSubjectInfo = subjectInfos.get(parentSubjectId);
-              assert(!!parentSubjectInfo);
-              parentSubjectInfo.childSubjectIds.add(subjectId);
+    cachedData.subjectInfos ??= defer(() =>
+      forkJoin({
+        subjectInfos: querySubjects().pipe(
+          reduce((acc, subject) => {
+            const subjectInfo: SubjectInfo = {
+              parentSubjectId: subject.parentId,
+              hideInHierarchy: subject.hideInHierarchy,
+              childSubjectIds: new Set(),
+              childModelIds: new Set(),
+            };
+            if (subject.targetPartitionId) {
+              subjectInfo.childModelIds.add(subject.targetPartitionId);
             }
-          }
-          return subjectInfos;
-        }),
-      ),
-      modelInfos: getModelInfos(),
-    }).pipe(
+            acc.set(subject.id, subjectInfo);
+            return acc;
+          }, new Map<SubjectId, SubjectInfo>()),
+          map((subjectInfos) => {
+            for (const [subjectId, { parentSubjectId: parentSubjectId }] of subjectInfos) {
+              if (parentSubjectId) {
+                const parentSubjectInfo = subjectInfos.get(parentSubjectId);
+                assert(!!parentSubjectInfo);
+                parentSubjectInfo.childSubjectIds.add(subjectId);
+              }
+            }
+            return subjectInfos;
+          }),
+        ),
+        modelInfos: getModelInfos(),
+      }),
+    ).pipe(
       map(({ subjectInfos, modelInfos }) => {
         for (const [modelId, { parentSubjectIds }] of modelInfos) {
           for (const subjectId of parentSubjectIds) {
@@ -268,6 +290,7 @@ export function createModelsTreeIdsProvider({
         }
         return subjectInfos;
       }),
+      subjectInfosState.track(),
       shareReplay(),
     );
     return cachedData.subjectInfos;
@@ -313,7 +336,7 @@ export function createModelsTreeIdsProvider({
   function createSubjectInstanceKeysPath(targetSubjectId: Id64String): Observable<ModelsTreeSearchPath> {
     return getSubjectInfos().pipe(
       map((subjectInfos) => {
-        const result: ModelsTreeSearchPath = [];
+        const result: ModelsTreeSearchPathKey[] = [];
         if (
           hierarchyConfig.models.withoutElements === "exclude" &&
           !subjectHasNestedModels({ subjectId: targetSubjectId, subjectInfos })
@@ -349,7 +372,11 @@ export function createModelsTreeIdsProvider({
     });
   }
   return {
-    ...baseIdsProvider,
+    modeledElements: sharedIdsProvider.modeledElements,
+    categories: sharedIdsProvider.categories,
+    get state(): IdsProviderDataState {
+      return combineDataStates([subjectInfosState.state, modelInfosState.state]);
+    },
     async getHiddenModelIds(): Promise<Set<ModelId>> {
       cachedData.hiddenModelIds ??= getModelInfos().pipe(
         map((modelInfos) => {
@@ -437,7 +464,7 @@ export function createModelsTreeIdsProvider({
     getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath> {
       return eachValueFrom(
         from(
-          baseIdsProvider.getModels({
+          sharedIdsProvider.models.getModels({
             categoryId,
             excludeSubModels: true,
             includeOnlyTopMostElementCategory: true,

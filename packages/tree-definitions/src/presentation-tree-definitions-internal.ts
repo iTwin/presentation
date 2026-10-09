@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { CLASS_NAMES } from "./tree-definitions/shared/ClassNameDefinitions.js";
-export { createBaseIdsProvider } from "./tree-definitions/shared/idsProviders/BaseIdsProvider.js";
+export { createSharedIdsProvider } from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 export { SearchLimitExceededError } from "./tree-definitions/shared/TreeErrors.js";
 export { getClassesByView, mergeWithDefaults } from "./tree-definitions/shared/Utils.js";
 export { defaultHierarchyConfiguration as defaultCategoriesTreeHierarchyConfiguration } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
@@ -24,3 +24,4 @@ export type {
   ElementsGroupInfo,
   ModelsTreeHierarchyConfiguration,
 } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+export type { CategoriesTreeSearchPath } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";

@@ -7,9 +7,9 @@ import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   CLASS_NAMES,
-  createBaseIdsProvider,
   createModelsTree,
   createModelsTreeIdsProvider,
+  createSharedIdsProvider,
   defaultModelsTreeHierarchyConfiguration as defaultHierarchyConfiguration,
   mergeWithDefaults,
 } from "@itwin/presentation-tree-definitions/internal";
@@ -203,11 +203,11 @@ export function createAccessAndIdsProvider({
     defaults: defaultHierarchyConfiguration,
     overrides: hierarchyConfig,
   });
-  const baseIdsProvider = createBaseIdsProvider({
+  const sharedIdsProvider = createSharedIdsProvider({
     imodelAccess,
     elementClassName: requiredHierarchyConfig.elements.baseClass,
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, baseIdsProvider });
+  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, sharedIdsProvider });
   return { imodelAccess, idsProvider, hierarchyConfig: requiredHierarchyConfig };
 }

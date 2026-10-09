@@ -32,7 +32,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
@@ -87,7 +87,16 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
  * @beta
  */
 interface CategoriesTreeProps {
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /**
+   * Returns the ID provider for `imodelKey`, with matching view type and element filters.
+   * Different iModel versions need separate providers. Created internally from `imodelAccess` when omitted.
+   */
+  getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
+  /**
+   * Access used for schema checks, search, and the default ID provider.
+   * This factory keeps one provider for this access; create a separate factory for each iModel version.
+   */
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   viewType: "2d" | "3d";
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
@@ -217,7 +226,7 @@ export type CategoriesTreeSearchPathKey = IModelInstanceKey & { className: Categ
  * A path of instance keys from a root node to a search target in a categories hierarchy.
  * @beta
  */
-export type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+export type CategoriesTreeSearchPath = ReadonlyArray<Readonly<CategoriesTreeSearchPathKey>>;
 
 /**
  * A `HierarchySearchTree` whose entries identify only the instance classes that a categories hierarchy search can return.
@@ -233,6 +242,9 @@ export interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "ide
 /**
  * Creates a categories hierarchy definition and label search helpers that share data access, hierarchy configuration, and a unique ID.
  * Creates and shares cached ID providers for the specified view type using the resolved hierarchy configuration.
+ *
+ * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
+ *
  * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
@@ -241,16 +253,18 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
   });
-  const idsProvider = createCategoriesTreeIdsProvider({
-    imodelAccess: props.imodelAccess,
-    type: props.viewType,
-    baseIdsProvider: createBaseIdsProvider({
+  const idsProvider =
+    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
+    createCategoriesTreeIdsProvider({
       imodelAccess: props.imodelAccess,
-      elementClassName: getClassesByView(props.viewType).elementClass,
-      excludedElementClassNames:
-        hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
-    }),
-  });
+      type: props.viewType,
+      sharedIdsProvider: createSharedIdsProvider({
+        imodelAccess: props.imodelAccess,
+        elementClassName: getClassesByView(props.viewType).elementClass,
+        excludedElementClassNames:
+          hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
+      }),
+    });
   const sharedProps = {
     imodelAccess: props.imodelAccess,
     viewType: props.viewType,
@@ -540,7 +554,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const modeledElementCategory = props.parentNode.extendedData?.modeledElementCategory;
     assert(modeledElementCategory !== undefined, "Expected parent node to have modeledElementCategory extended data");
 
-    return this.#idsProvider.elementModelCategoriesLoaded()
+    return this.#idsProvider.categories.state === "loaded"
       ? this.createCachedGeometricModelChildrenQuery({ ...props, modeledElementCategory })
       : this.createUncachedGeometricModelChildrenQuery({ ...props, modeledElementCategory });
   }
@@ -557,7 +571,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const [categoryIds, categoryInstanceFilterClauses, modeledCategoryElementsDefinition] = await Promise.all([
       firstValueFrom(
         from(modelIds).pipe(
-          mergeMap(async (modelId) => this.#idsProvider.getCategories({ modelId })),
+          mergeMap(async (modelId) => this.#idsProvider.categories.getCategories({ modelId })),
           reduce((acc, modelCategories) => {
             for (const categoryId of modelCategories) {
               acc.add(categoryId);
@@ -674,8 +688,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
@@ -711,7 +725,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const { instanceFilter, createSelectClause, createFilterClauses } = props;
     const parentNodeInstanceIds = "parentNodeInstanceIds" in props ? props.parentNodeInstanceIds : undefined;
     const [values, isDefinitionContainerSupported] = await Promise.all([
-      this.#idsProvider.isDataLoaded
+      this.#idsProvider.state === "loaded"
         ? parentNodeInstanceIds === undefined
           ? this.#idsProvider.getRootDefinitionContainersAndCategories({
               includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
@@ -769,7 +783,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: {
-    definitionContainerIds: Id64Array;
+    definitionContainerIds: ReadonlyArray<Id64String>;
     instanceFilter?: GenericInstanceFilter;
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
@@ -906,7 +920,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: {
-    categories: Array<CachedCategoryInfo>;
+    categories: ReadonlyArray<CachedCategoryInfo>;
     instanceFilter?: GenericInstanceFilter;
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
@@ -922,7 +936,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               mergeMap(({ id: categoryId }) =>
                 // when category has element models, then it has element children
                 from(
-                  this.#idsProvider.getModels({
+                  this.#idsProvider.models.getModels({
                     categoryId,
                     excludeSubModels: true,
                     includeOnlyTopMostElementCategory: true,
@@ -1271,17 +1285,19 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
     ]);
     const modelIds: Id64Array | undefined =
       parentNode.extendedData.modelIds.length > 0
         ? parseIdsSelectorResult(parentNode.extendedData.modelIds)
-        : this.#idsProvider.elementModelCategoriesLoaded()
+        : this.#idsProvider.categories.state === "loaded"
           ? await firstValueFrom(
               from(categoryIds).pipe(
-                mergeMap((categoryId) => from(this.#idsProvider.getModels({ categoryId, excludeSubModels: true }))),
+                mergeMap((categoryId) =>
+                  from(this.#idsProvider.models.getModels({ categoryId, excludeSubModels: true })),
+                ),
                 distinct(),
                 toArray(),
               ),
@@ -1352,8 +1368,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
       createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
-      this.#idsProvider.modeledElementsLoaded()
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.modeledElements.state === "loaded"
+        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
       createHiddenClassesWhereClauseFactory({
         schemaProvider: this.#iModelAccess,
@@ -1835,7 +1851,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   }
 
   return forkJoin({
-    subModelIds: props.idsProvider.getAllModeledElements(),
+    subModelIds: props.idsProvider.modeledElements.getAllModeledElements(),
     createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
       schemaProvider: imodelAccess,
       className: elementClass,
@@ -1913,7 +1929,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
           ecsql,
           bindings: [
             { type: "idset", value: targetItems },
-            ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
+            ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: subModelIds }] : []),
           ],
         },
         {
@@ -1977,7 +1993,7 @@ export function createCategoriesSearchPaths(props: {
   return merge(
     rootCategoriesSearchPaths,
     forkJoin({
-      allModeledElements: props.idsProvider.getAllModeledElements(),
+      allModeledElements: props.idsProvider.modeledElements.getAllModeledElements(),
       createElementsHiddenClassesClause: createHiddenClassesWhereClauseFactory({
         schemaProvider: imodelAccess,
         className: elementClass,
@@ -2068,7 +2084,7 @@ export function createCategoriesSearchPaths(props: {
             ecsql,
             bindings: [
               { type: "idset", value: targetCategoryIds },
-              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
+              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: subModelIds }] : []),
             ],
           },
           { rowFormat: "Indexes", limit: "unbounded", restartToken: `${componentName}/${uniqueId}/categories-paths` },
@@ -2111,7 +2127,7 @@ function parseQueryRow({
   modelClassName: typeof CLASS_NAMES.GeometricModel2d | typeof CLASS_NAMES.GeometricModel3d;
 }): CategoriesTreeSearchPath {
   const queriedPath: string[] = row[0].split(separator);
-  const path: CategoriesTreeSearchPath = [];
+  const path: CategoriesTreeSearchPathKey[] = [];
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {
       case ELEMENT_CLASS_NAME_QUERY_ALIAS:

@@ -1,0 +1,325 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { EMPTY, filter, firstValueFrom, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
+import { Guid } from "@itwin/core-bentley";
+import { eachValueFrom } from "@itwin/presentation-shared";
+import { fromWithRelease } from "../Rxjs.js";
+import { getOrCreate } from "../Utils.js";
+import { DataStateTracker } from "./DataStateTracker.js";
+import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
+import { ModeledElementsProvider } from "./ModeledElementsProvider.js";
+import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
+
+import type { Observable } from "rxjs";
+import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentley";
+import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
+
+/**
+ * The state of a cached ID dataset.
+ * - `not-requested` means no load has started;
+ * - `requested` means loading has started but the full dataset is not yet available;
+ * - `loaded` means cached data is available;
+ * - `failed` means a load or required dependency failed.
+ *
+ * Explicit retries transition from `failed` to `requested`. For datasets with independently loaded parts,
+ * any failed part keeps the dataset `failed` until that part is retried; partial success remains `requested`.
+ * Reading state never initiates work. Errors are delivered through getters, not stored in the state.
+ * Replace the provider to reset its state to `not-requested`.
+ * @beta
+ */
+export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "failed";
+
+/**
+ * Provides model, category, and sub-category IDs shared by tree-specific ID providers.
+ * Element data is limited to the configured element class and non-private, non-template models.
+ * Getters initialize their datasets, share in-flight work, and reject on failure. Subsequent calls can retry.
+ * Custom implementations must expose live state and mark data `loaded` only when it is available.
+ * @beta
+ */
+export interface SharedIdsProvider {
+  /** Model lookups. */
+  readonly models: {
+    /** State of model data. */
+    readonly state: IdsProviderDataState;
+    /** Returns IDs of non-private, non-template models containing visible elements of the configured class, including excluded classes. */
+    getAllModels(): Promise<ReadonlyArray<ModelId>>;
+    /** Returns IDs of non-private, non-template plan projection models containing visible elements of the configured class. */
+    getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
+    /** Yields model IDs containing elements in the specified category. Yields no IDs if no models match the filters. */
+    getModels(props: {
+      categoryId: Id64String;
+      /** Omits models that model elements rather than information partitions. */
+      excludeSubModels?: boolean;
+      /** Requires the category to contain elements without a parent element in the model. */
+      includeOnlyTopMostElementCategory?: boolean;
+      /** Requires the category to contain visible, non-excluded top-level elements in the model. */
+      excludeIfOnlyExcludedClasses?: boolean;
+    }): AsyncIterableIterator<ModelId>;
+  };
+  /** Modeled-element lookups. */
+  readonly modeledElements: {
+    /** State of modeled-element data. */
+    readonly state: IdsProviderDataState;
+    /** Returns IDs of elements modeling sub-models with visible elements, optionally omitting those with only excluded elements. */
+    getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<ReadonlySet<Id64String>>;
+  };
+  /** Category lookups. */
+  readonly categories: {
+    /** State of category data. */
+    readonly state: IdsProviderDataState;
+    /** Returns categories containing visible, non-excluded top-level elements in the specified model. */
+    getCategories(props: { modelId: Id64String }): Promise<ReadonlySet<CategoryId>>;
+    /** Returns category IDs of non-excluded elements. */
+    getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
+    /** Returns category IDs of visible elements of the configured class, including excluded classes. */
+    getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
+  };
+  /** Sub-category lookups. */
+  readonly subCategories: {
+    /** State of sub-category data. */
+    readonly state: IdsProviderDataState;
+    /** Returns a mapping from category IDs to their sub-category IDs. */
+    getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+    /** Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category. */
+    getSubCategoryCategories(props: {
+      subCategoryIds: Id64Arg;
+    }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+  };
+}
+
+/**
+ * Query access and element class filters shared by tree ID providers.
+ * @beta
+ */
+interface SharedIdsProviderProps {
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  elementClassName: EC.FullClassNameDotNotation;
+  excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
+}
+
+/**
+ * Creates a cached ID provider for visible elements of the specified class and optional excluded classes.
+ * Data is a snapshot for the lifetime of this provider; recreate it after element or schema changes.
+ * Share it only across compatible iModel and filter configurations. Recreate it after relevant data changes.
+ * @beta
+ */
+export function createSharedIdsProvider({
+  elementClassName,
+  imodelAccess,
+  excludedElementClassNames,
+}: SharedIdsProviderProps): SharedIdsProvider {
+  const componentId: GuidString = Guid.createValue();
+  const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor: imodelAccess, componentId });
+  let modeledElementsData: ReturnType<ModeledElementsProvider["getData"]> | undefined;
+  const elementModelCategoriesProvider = new ElementModelCategoriesProvider({
+    imodelAccess,
+    componentId,
+    elementClassName,
+    excludedElementClassNames,
+  });
+  const modeledElementsState = new DataStateTracker();
+  let categoryModelsInfoWithoutSubModels:
+    | Observable<
+        Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
+      >
+    | undefined;
+  let subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
+
+  function getAllModels(): Observable<Array<ModelId>> {
+    return elementModelCategoriesProvider
+      .getData()
+      .pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
+  }
+  function getModeledElementsData(): ReturnType<ModeledElementsProvider["getData"]> {
+    modeledElementsData ??= getAllModels().pipe(
+      mergeMap((allModels) =>
+        new ModeledElementsProvider({
+          queryExecutor: imodelAccess,
+          componentId,
+          elementClassName,
+          nonEmptyModelIds: allModels,
+        }).getData(),
+      ),
+      modeledElementsState.track(),
+      shareReplay(),
+    );
+    return modeledElementsData;
+  }
+
+  function getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
+    if (!props?.excludeIfOnlyExcludedClasses) {
+      return getModeledElementsData().pipe(map(({ allSubModels }) => allSubModels));
+    }
+    subModelsWithNonExcludedElements ??= getModeledElementsData().pipe(
+      mergeMap(({ allSubModels }) => {
+        if (allSubModels.size === 0) {
+          return of(allSubModels);
+        }
+        return elementModelCategoriesProvider.getData().pipe(
+          map(({ modelsCategoriesInfo }) => {
+            const result = new Set<ElementId>();
+            for (const subModelId of allSubModels) {
+              const modelInfo = modelsCategoriesInfo.get(subModelId);
+              if (modelInfo?.hasNonExcludedElements) {
+                result.add(subModelId);
+              }
+            }
+            return result;
+          }),
+        );
+      }),
+      shareReplay(),
+    );
+    return subModelsWithNonExcludedElements;
+  }
+
+  function getCategoryModelsInfoWithoutSubModels(): Observable<
+    Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
+  > {
+    categoryModelsInfoWithoutSubModels ??= getAllModeledElements().pipe(
+      mergeMap((allSubModels) =>
+        allSubModels.size === 0
+          ? elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo))
+          : elementModelCategoriesProvider.getData().pipe(
+              mergeMap(({ categoryModelsInfo }) => categoryModelsInfo.entries()),
+              reduce((acc, [key, modelInfos]) => {
+                const newModelInfos = modelInfos.filter(({ id }) => !allSubModels.has(id));
+                if (newModelInfos.length > 0) {
+                  acc.set(key, newModelInfos);
+                }
+                return acc;
+              }, new Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>()),
+            ),
+      ),
+      shareReplay(),
+    );
+    return categoryModelsInfoWithoutSubModels;
+  }
+
+  return {
+    models: {
+      get state(): IdsProviderDataState {
+        return elementModelCategoriesProvider.state;
+      },
+      getAllModels: async () => firstValueFrom(getAllModels()),
+      getPlanProjectionModels: async (): Promise<Id64Set> => {
+        return firstValueFrom(
+          elementModelCategoriesProvider.getData().pipe(map(({ planProjectionModels }) => planProjectionModels)),
+        );
+      },
+      getModels({
+        categoryId,
+        excludeSubModels,
+        includeOnlyTopMostElementCategory,
+        excludeIfOnlyExcludedClasses,
+      }: {
+        categoryId: Id64String;
+        excludeSubModels?: boolean;
+        includeOnlyTopMostElementCategory?: boolean;
+        excludeIfOnlyExcludedClasses?: boolean;
+      }): AsyncIterableIterator<ModelId> {
+        let getCategoryModelsInfo = () =>
+          elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
+
+        if (excludeSubModels) {
+          getCategoryModelsInfo = () => getCategoryModelsInfoWithoutSubModels();
+        }
+        return eachValueFrom(
+          getCategoryModelsInfo().pipe(
+            mergeMap((categoryModelsInfo) => {
+              const categoryModels = categoryModelsInfo.get(categoryId);
+              if (!categoryModels) {
+                return EMPTY;
+              }
+              return from(categoryModels);
+            }),
+            includeOnlyTopMostElementCategory
+              ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement)
+              : identity,
+            excludeIfOnlyExcludedClasses
+              ? filter(({ hasNonExcludedTopMostElements }) => hasNonExcludedTopMostElements)
+              : identity,
+            map(({ id }) => id),
+          ),
+        );
+      },
+    },
+    modeledElements: {
+      get state(): IdsProviderDataState {
+        return modeledElementsState.state;
+      },
+      getAllModeledElements: async (props) => firstValueFrom(getAllModeledElements(props)),
+    },
+    categories: {
+      get state(): IdsProviderDataState {
+        return elementModelCategoriesProvider.state;
+      },
+      getCategories: async ({ modelId }: { modelId: Id64String }): Promise<Id64Set> => {
+        return firstValueFrom(
+          elementModelCategoriesProvider.getData().pipe(
+            map(({ modelsCategoriesInfo }) => {
+              const modelInfo = modelsCategoriesInfo.get(modelId);
+              return modelInfo?.categoriesOfTopMostNonExcludedElements ?? new Set();
+            }),
+          ),
+        );
+      },
+      getCategoriesContainingNonExcludedElements: async (): Promise<Id64Set> => {
+        return firstValueFrom(
+          elementModelCategoriesProvider
+            .getData()
+            .pipe(map(({ categoriesContainingNonExcludedElements }) => categoriesContainingNonExcludedElements)),
+        );
+      },
+      getAllCategoriesOfElements: async (): Promise<Id64Set> => {
+        return firstValueFrom(elementModelCategoriesProvider.getData().pipe(map(({ allCategories }) => allCategories)));
+      },
+    },
+    subCategories: {
+      get state(): IdsProviderDataState {
+        return subCategoriesProvider.state;
+      },
+      getCategorySubCategoriesMap: async (): Promise<Map<CategoryId, SubCategoryId[]>> => {
+        return firstValueFrom(
+          subCategoriesProvider.getData().pipe(map(({ categorySubCategories }) => categorySubCategories)),
+        );
+      },
+      getSubCategoryCategories: async ({
+        subCategoryIds,
+      }: {
+        subCategoryIds: Id64Arg;
+      }): Promise<Map<CategoryId, SubCategoryId[]>> => {
+        return firstValueFrom(
+          subCategoriesProvider.getData().pipe(
+            mergeMap(({ subCategoryCategories, categorySubCategories }) =>
+              fromWithRelease({ source: subCategoryIds, releaseOnCount: 500 }).pipe(
+                reduce((acc, subCategoryId) => {
+                  const categoryId = subCategoryCategories.get(subCategoryId);
+                  if (categoryId === undefined) {
+                    return acc;
+                  }
+                  const subCategories = categorySubCategories.get(categoryId);
+                  if (!subCategories || subCategories.length <= 1) {
+                    return acc;
+                  }
+                  const entry = getOrCreate({
+                    map: acc,
+                    key: categoryId,
+                    createFunc: () => new Array<SubCategoryId>(),
+                  });
+                  entry.push(subCategoryId);
+                  return acc;
+                }, new Map<CategoryId, SubCategoryId[]>()),
+              ),
+            ),
+          ),
+        );
+      },
+    },
+  };
+}

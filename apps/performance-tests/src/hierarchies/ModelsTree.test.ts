@@ -11,12 +11,11 @@ import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
+import type { ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) =>
-    createModelsTree({ imodelAccess }).definition;
+  const getHierarchyFactory = (imodelAccess: IModelAccess) => createModelsTree({ imodelAccess }).definition;
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 

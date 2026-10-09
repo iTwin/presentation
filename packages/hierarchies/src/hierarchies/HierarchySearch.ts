@@ -66,12 +66,12 @@ export interface HierarchySearchPathOptions {
 }
 
 /**
- * A path of hierarchy node identifiers for search the hierarchy with additional options.
+ * A readonly path of hierarchy node identifiers for searching the hierarchy with additional options.
  * @public
  */
 export type HierarchySearchPath =
-  | HierarchyNodeIdentifiersPath
-  | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
+  | Readonly<HierarchyNodeIdentifiersPath>
+  | { path: Readonly<HierarchyNodeIdentifiersPath>; options?: HierarchySearchPathOptions };
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
@@ -79,11 +79,13 @@ export namespace HierarchySearchPath {
    * Normalizes the hierarchy search path to the object form.
    * @public
    */
-  export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath> {
-    if (Array.isArray(source)) {
-      return { path: source };
+  export function normalize(
+    source: HierarchySearchPath,
+  ): Exclude<HierarchySearchPath, Readonly<HierarchyNodeIdentifiersPath>> {
+    if ("path" in source) {
+      return source;
     }
-    return source;
+    return { path: source };
   }
 
   /**

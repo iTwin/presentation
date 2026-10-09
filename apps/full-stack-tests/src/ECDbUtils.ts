@@ -80,7 +80,7 @@ export class ECDbBuilder {
                   stmt.bindId(bindingIndex, value.value);
                   break;
                 case "idset":
-                  stmt.bindIdSet(bindingIndex, OrderedId64Iterable.sortArray(value.value));
+                  stmt.bindIdSet(bindingIndex, OrderedId64Iterable.sortArray([...value.value]));
                   break;
                 case "int":
                 case "long":
