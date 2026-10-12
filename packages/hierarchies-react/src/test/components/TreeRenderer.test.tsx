@@ -106,7 +106,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           createTreeNode({
             id: "node-1",
             label: "Error Node",
-            errors: [{ id: "error-1", type: "Unknown", message: "Something went wrong" }],
+            errors: [{ id: "error-1", type: "Generic", message: "Something went wrong" }],
           }),
         ],
       });

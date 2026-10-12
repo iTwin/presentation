@@ -127,7 +127,7 @@ describe("useTree", () => {
     const customProps: UseTreeProps = {
       getHierarchyProvider: () => customHierarchyProvider,
       getTreeNodeErrors: (node) => {
-        return [{ id: `${node.label}-error`, type: "Unknown", message: "Test error" }];
+        return [{ id: `${node.label}-error`, type: "Generic", message: "Test error" }];
       },
     };
 
@@ -138,7 +138,7 @@ describe("useTree", () => {
       expect(treeRenderProps!.rootNodes).toHaveLength(1);
       expect(treeRenderProps!.rootNodes[0].errors[0]).to.deep.equal({
         id: "root-1-error",
-        type: "Unknown",
+        type: "Generic",
         message: "Test error",
       });
     });
@@ -1019,7 +1019,7 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, {
       initialProps: {
         ...initialProps,
-        getTreeNodeErrors: () => [{ id: "custom-error", type: "Unknown", message: "Custom error" }],
+        getTreeNodeErrors: () => [{ id: "custom-error", type: "Generic", message: "Custom error" }],
       },
     });
 
@@ -1027,7 +1027,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).toHaveLength(1);
-      expect(treeRenderProps!.rootNodes[0].errors[0]?.type).to.eq("Unknown");
+      expect(treeRenderProps!.rootNodes[0].errors[0]?.type).to.eq("Generic");
     });
 
     // Try loading children to trigger error
