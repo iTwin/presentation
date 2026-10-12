@@ -36,7 +36,6 @@ export function createProvider(
     | {
         imodelAccess: ReturnType<typeof createIModelAccess>;
         imodelChanged?: Event<() => void>;
-        hierarchy: HierarchyDefinition;
         localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
         search?: HierarchySearchPaths;
         queryCacheSize?: number;
@@ -57,7 +56,7 @@ export function createProvider(
       }
   ) & {
     imodelChanged?: Event<() => void>;
-    hierarchy: HierarchyDefinition;
+    hierarchy: HierarchyDefinition | ((imodelAccess: ReturnType<typeof createIModelAccess>) => HierarchyDefinition);
     localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
     search?: HierarchySearchPaths;
     queryCacheSize?: number;
@@ -72,11 +71,12 @@ export function createProvider(
           imodel: unifyIModelAPIs("imodel" in props ? props.imodel : props.ecdb),
         })
       : undefined;
+  const imodelAccess =
+    "imodelAccess" in props ? props.imodelAccess : createIModelAccess("imodel" in props ? props.imodel : props.ecdb);
   return createIModelHierarchyProvider({
-    imodelAccess:
-      "imodelAccess" in props ? props.imodelAccess : createIModelAccess("imodel" in props ? props.imodel : props.ecdb),
+    imodelAccess,
     imodelChanged,
-    hierarchyDefinition: hierarchy,
+    hierarchyDefinition: typeof hierarchy === "function" ? hierarchy(imodelAccess) : hierarchy,
     formatter,
     localizedStrings,
     search: search ? { paths: search } : undefined,

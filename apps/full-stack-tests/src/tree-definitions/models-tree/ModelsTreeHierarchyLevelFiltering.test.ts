@@ -30,7 +30,7 @@ import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect } from "../Common.js";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation.js";
-import { buildIModel } from "../IModelUtils.js";
+import { buildIModel, importHiddenClassesSchemas } from "../IModelUtils.js";
 import {
   createCategoryHierarchyNode,
   createElementHierarchyNode,
@@ -238,6 +238,48 @@ describe("Models tree", () => {
           }),
         ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.model] })],
+      });
+    });
+
+    it("excludes hierarchy-hidden models of hidden classes when filtering Subject children level", async () => {
+      await using buildIModelResult = await buildIModel(async (imodel) => {
+        const hiddenModelClassNames = await importHiddenClassesSchemas({
+          imodel,
+          baseClass: "BisCore.PhysicalModel",
+          schemaNamePrefix: "Model",
+        });
+        return withEditTxn(imodel, (txn) => {
+          const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
+          const categories = Object.entries(hiddenModelClassNames).map(([variant, classFullName]) => {
+            const partition = insertPhysicalPartition({
+              txn,
+              codeValue: `content model (${variant})`,
+              parentId: rootSubject.id,
+              jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+            });
+            const model = insertPhysicalSubModel({ txn, classFullName, modeledElementId: partition.id });
+            const category = insertSpatialCategory({ txn, codeValue: `category (${variant})` });
+            insertPhysicalElement({ txn, userLabel: `element`, modelId: model.id, categoryId: category.id });
+            return category;
+          });
+          return { rootSubject, categories };
+        });
+      });
+      const { imodelConnection, ...keys } = buildIModelResult;
+      using provider = await createModelsTreeProvider({ imodelConnection, cacheState: "cold" });
+      validateHierarchyLevel({
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: createSubjectHierarchyNode({ ids: keys.rootSubject.id }),
+            instanceFilter: createInstanceFilter(CLASS_NAMES.SpatialCategory, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
+          }),
+        ),
+        expect: [],
       });
     });
 

@@ -79,6 +79,8 @@ function createHierarchyDefinition(): HierarchyDefinition {
 
 As mentioned in the general [Hierarchy search](../HierarchySearch.md#the-process) learning page, the first step to search a hierarchy is to find the paths to the target nodes. This is the responsibility of the consumer, as only consumer knows how the hierarchy is structured and can determine the paths to the target nodes in the most efficient way possible.
 
+The paths should only target nodes that the hierarchy definition creates. For example, if the definition [excludes instances of hidden classes](./HierarchyDefinition.md#excluding-instances-of-hidden-classes), the queries that find the paths should exclude them as well.
+
 Let's consider two cases - searching by label and by target element ID:
 
 - To search by label, we have to know what property(s) the hierarchy definition uses for the label. In this case, it's the `UserLabel` property:

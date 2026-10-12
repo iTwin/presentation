@@ -9,6 +9,7 @@ import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
 import { createIModelAccess } from "../Common.js";
+import { importHiddenClassesSchemas } from "../IModelUtils.js";
 
 import type { EditTxn, IModelDb } from "@itwin/core-backend";
 import type { Id64String } from "@itwin/core-bentley";
@@ -72,12 +73,16 @@ export function insertClassificationSystem(
 }
 
 export function insertClassificationTable(
-  props: { txn: EditTxn; modelId?: Id64String; parentId?: Id64String; codeValue?: string } & Partial<
-    Omit<DefinitionElementProps, "id" | "parent" | "code" | "model">
-  >,
+  props: {
+    txn: EditTxn;
+    classFullName?: EC.FullClassNameDotNotation;
+    modelId?: Id64String;
+    parentId?: Id64String;
+    codeValue?: string;
+  } & Partial<Omit<DefinitionElementProps, "id" | "parent" | "code" | "model">>,
 ) {
-  const { txn, codeValue, modelId, parentId, ...elementProps } = props;
-  const className: EC.FullClassNameDotNotation = `ClassificationSystems.ClassificationTable`;
+  const { txn, classFullName, codeValue, modelId, parentId, ...elementProps } = props;
+  const className: EC.FullClassNameDotNotation = classFullName ?? `ClassificationSystems.ClassificationTable`;
   const id = txn.insertElement({
     classFullName: className,
     model: modelId ?? IModel.dictionaryId,
@@ -102,12 +107,16 @@ export function insertClassificationTable(
 }
 
 export function insertClassification(
-  props: { txn: EditTxn; modelId: Id64String; parentId?: Id64String; codeValue?: string } & Partial<
-    Omit<DefinitionElementProps, "id" | "parent" | "code" | "model">
-  >,
+  props: {
+    txn: EditTxn;
+    classFullName?: EC.FullClassNameDotNotation;
+    modelId: Id64String;
+    parentId?: Id64String;
+    codeValue?: string;
+  } & Partial<Omit<DefinitionElementProps, "id" | "parent" | "code" | "model">>,
 ) {
-  const { txn, codeValue, modelId, parentId, ...elementProps } = props;
-  const className: EC.FullClassNameDotNotation = `ClassificationSystems.Classification`;
+  const { txn, classFullName, codeValue, modelId, parentId, ...elementProps } = props;
+  const className: EC.FullClassNameDotNotation = classFullName ?? `ClassificationSystems.Classification`;
   const id = txn.insertElement({
     classFullName: className,
     model: modelId,
@@ -144,4 +153,20 @@ export async function importClassificationSchema(imodel: IModelDb) {
   const schemaPath = require.resolve("@bentley/classification-systems-schema/ClassificationSystems.ecschema.xml");
   const schemaXml = fs.readFileSync(fs.realpathSync(schemaPath), { encoding: "utf-8" });
   await imodel.importSchemaStrings([schemaXml]);
+}
+
+/** Imports hidden classes, derived from `ClassificationTable` and `Classification`. Requires `importClassificationSchema`. */
+export async function importHiddenClassificationClasses(imodel: IModelDb) {
+  return {
+    tables: await importHiddenClassesSchemas({
+      imodel,
+      baseClass: "ClassificationSystems.ClassificationTable",
+      schemaNamePrefix: "Table",
+    }),
+    classifications: await importHiddenClassesSchemas({
+      imodel,
+      baseClass: "ClassificationSystems.Classification",
+      schemaNamePrefix: "Classification",
+    }),
+  };
 }
