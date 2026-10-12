@@ -12,7 +12,7 @@ import type { EC, ECSchemaProvider, HiddenClassesTreeNode } from "../Metadata.js
  * Creates a filter that excludes instances of classes hidden through `CoreCustomAttributes.HiddenClass` or
  * `CoreCustomAttributes.HiddenSchema` custom attributes, relative to the given base class:
  * - The base class itself is not excluded, even if it's hidden. Its derived classes are excluded or included
- *   according to the rules described by `HiddenClassesTreeNode`.
+ *   according to the rules described by `HiddenClassesTreeNode`, retaining any hidden state inherited from the base class.
  * - Classes outside the base class' hierarchy are not affected, so the filter may be applied to queries selecting
  *   the base class, its derived class, or a broader class.
  * - The base class should be the class the query is meant to select. When the query's `FROM` class gets specialized,

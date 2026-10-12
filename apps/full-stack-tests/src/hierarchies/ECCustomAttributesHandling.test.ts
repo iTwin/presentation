@@ -64,6 +64,61 @@ describe("Hierarchies", () => {
     });
 
     describe("HiddenClass", () => {
+      it("preserves inherited hiding below explicitly selected hidden class", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECCustomAttributes>
+                  <HiddenClass xmlns="CoreCustomAttributes.01.00.01" />
+                </ECCustomAttributes>
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <BaseClass>A</BaseClass>
+              </ECEntityClass>
+              <ECEntityClass typeName="C">
+                <BaseClass>B</BaseClass>
+              </ECEntityClass>
+              <ECEntityClass typeName="D">
+                <BaseClass>C</BaseClass>
+                <ECCustomAttributes>
+                  <HiddenClass xmlns="CoreCustomAttributes.01.00.01">
+                    <Show>true</Show>
+                  </HiddenClass>
+                </ECCustomAttributes>
+              </ECEntityClass>
+            `,
+          );
+          const a = builder.insertInstance(s.items.A.fullName);
+          const b = builder.insertInstance(s.items.B.fullName);
+          const c = builder.insertInstance(s.items.C.fullName);
+          const d = builder.insertInstance(s.items.D.fullName);
+          return { schema: s, a, b, c, d };
+        });
+        const { ecdb, schema, ...keys } = setup;
+
+        for (const selectedClass of ["A", "B"] as const) {
+          const provider = createProvider({
+            ecdb,
+            hierarchy: (imodelAccess) =>
+              createHierarchyDefinition({
+                imodelAccess,
+                contentClassName: schema.items[selectedClass].fullName,
+                nodeLabel: { selector: `ec_classname(this.ECClassId, 'c')` },
+              }),
+          });
+          validateHierarchyLevel({
+            nodes: await collect(provider.getNodes({ parentNode: undefined })),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [selectedClass === "A" ? keys.a : keys.b] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.d] }),
+            ],
+          });
+        }
+      });
+
       it("loads nodes for instances of hidden class", async function () {
         using setup = await buildTestECDb(async (builder, testName) => {
           const s = await importSchema(

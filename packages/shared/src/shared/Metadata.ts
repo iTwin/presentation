@@ -51,6 +51,8 @@ export interface ECSchemaProvider {
  * custom attributes.
  *
  * The tree is relative to the selected class, which is always considered visible - even if it's hidden itself:
+ * This exception applies only to the selected class; its descendants still inherit its schema-defined hidden state.
+ *
  * - Root nodes are the outermost derived classes that are hidden (`state: "hide"`).
  * - Children of a `"hide"` node are its derived classes that are explicitly shown (`state: "show"`), overriding
  *   the inherited hiding.
