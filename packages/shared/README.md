@@ -394,8 +394,8 @@ Example usage:
 ```ts
 import { Logger as ITwinJsLogger } from "@itwin/core-bentley";
 import { createLogger } from "@itwin/presentation-core-interop";
-import { ILogger } from "@itwin/presentation-shared";
 import { setLogger as setHierarchiesLogger } from "@itwin/presentation-hierarchies";
+import { ILogger } from "@itwin/presentation-shared";
 
 // create an `ILogger` from iTwin.js `Logger`
 const logger: ILogger = createLogger(ITwinJsLogger);

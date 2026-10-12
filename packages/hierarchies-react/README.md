@@ -74,13 +74,13 @@ The hook takes 2 required properties:
   import { IModelConnection } from "@itwin/core-frontend";
   import { SchemaContext } from "@itwin/ecschema-metadata";
   import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
   import {
     createLimitingECSqlQueryExecutor,
     createNodesQueryClauseFactory,
     HierarchyDefinition,
   } from "@itwin/presentation-hierarchies";
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 
   // Not really part of the package, but we need SchemaContext to create the tree state. It's
   // recommended to cache the schema context and reuse it across different application's components to
@@ -167,23 +167,21 @@ The component is based on `TreeNode` component from iTwinUI library and supports
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
+import { useEffect, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
   HierarchyDefinition,
 } from "@itwin/presentation-hierarchies";
-
-import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
-
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 import { createStorage, SelectionStorage } from "@itwin/unified-selection";
-import { useEffect, useState } from "react";
 
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
 // recommended to cache the schema context and reuse it across different application's components to
@@ -308,9 +306,8 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { Props } from "@itwin/presentation-shared";
-
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { Props } from "@itwin/presentation-shared";
 
 type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
@@ -360,8 +357,6 @@ In case the `TreeNodeRenderer` component is used within a custom tree renderer, 
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { Props } from "@itwin/presentation-shared";
-
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 import { LocalizationContextProvider } from "@itwin/presentation-hierarchies-react";
@@ -371,6 +366,7 @@ import {
   TreeNodeRenderer,
   TreeRenderer,
 } from "@itwin/presentation-hierarchies-react/itwinui";
+import { Props } from "@itwin/presentation-shared";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Props<typeof TreeRenderer>;
