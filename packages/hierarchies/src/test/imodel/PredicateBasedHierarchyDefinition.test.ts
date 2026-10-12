@@ -28,11 +28,8 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     imodelAccess = { ...createIModelAccessStub(), imodelKey };
   });
 
-  function constProps(): Pick<
-    DefineHierarchyLevelProps,
-    "imodelAccess" | "createSelectClause" | "createFilterClauses"
-  > {
-    return { imodelAccess, ...nodeSelectClauseFactory };
+  function constProps(): Pick<DefineHierarchyLevelProps, "createSelectClause" | "createFilterClauses"> {
+    return { ...nodeSelectClauseFactory };
   }
 
   it("returns root hierarchy level definition", async () => {

@@ -9,7 +9,8 @@ import {
   createCanonicalEnumeration,
   createCanonicalRelationshipPath,
   getRelationshipConstraints,
-  normalizeValueForComparison,
+  isPointValue,
+  roundFloatingPointNoise,
 } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
 
@@ -30,7 +31,10 @@ import type {
   CanonicalField,
   CanonicalFieldType,
   CanonicalItem,
+  CanonicalItemValue,
+  CanonicalRelatedValue,
   CanonicalRelationshipStep,
+  CanonicalValue,
   RelationshipConstraints,
 } from "../NormalizationCommon.js";
 import type { CapturedLegacyItem, LegacyCapture } from "./Adapter.js";
@@ -45,7 +49,7 @@ interface LegacyFieldMapping {
  * Legacy's `PropertyInfoJSON` carries an `extendedType` at runtime (e.g. `"Json"`, `"BeGuid"`) that its
  * type declarations omit.
  */
-type LegacyPropertyInfo = PropertyInfoJSON<string> & { extendedType?: string };
+type LegacyPropertyInfo = PropertyInfoJSON<string> & { extendedType?: string; kindOfQuantity?: { name?: string } };
 
 /**
  * Maps a legacy `TypeDescription.typeName` to the `presentation-shared` primitive vocabulary used
@@ -120,10 +124,13 @@ function createCanonicalPrimitiveFieldType(
   const primitiveTypeName = isSubstitutedByExtendedType
     ? properties.find((property) => property.extendedType === extendedType)!.type
     : typeName;
+  const kindOfQuantity = properties.find((property) => property.kindOfQuantity?.name !== undefined)?.kindOfQuantity
+    ?.name;
   return {
     kind: "primitive",
     name: SHARED_PRIMITIVE_TYPE_NAMES.get(primitiveTypeName) ?? primitiveTypeName,
     ...(extendedType !== undefined ? { extendedType } : undefined),
+    ...(kindOfQuantity !== undefined ? { kindOfQuantity: normalizeFullClassName(kindOfQuantity) } : undefined),
   };
 }
 
@@ -147,9 +154,21 @@ function createCanonicalFieldType(
         // `TypeDescription`, so it can't be recovered here - members are normalized without `properties` context.
         members: type.members
           .map((member) => ({ name: member.name, type: createCanonicalFieldType(member.type, undefined) }))
+          .filter(({ type: memberType }) => isAllowedFieldType(memberType))
           .sort((lhs, rhs) => lhs.name.localeCompare(rhs.name)),
       };
   }
+}
+
+function isAllowedFieldType(type: CanonicalFieldType): boolean {
+  const disallowed = ["Bentley.Geometry.Common.IGeometry", "binary"];
+  if (type.kind === "primitive" && disallowed.includes(type.name)) {
+    return false;
+  }
+  if (type.kind === "array" && type.member.kind === "primitive" && disallowed.includes(type.member.name)) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -228,7 +247,7 @@ function createCanonicalDescriptor({
   const { constraints } = context;
   const categories = new Map(descriptor.categories.map((category) => [category.name, category]));
   const classes = descriptor.classesMap;
-  const fields: CanonicalDescriptor["fields"] = [];
+  const fieldsByKey = new Map<string, CanonicalField>();
   const fieldMappings: LegacyFieldMapping[] = [];
   const unsupportedFields: CanonicalDescriptor["unsupportedFields"] = [];
 
@@ -255,10 +274,24 @@ function createCanonicalDescriptor({
       classes,
       constraints,
     });
-    fields.push(canonicalField);
+    // Consolidated legacy descriptors can contain several related-content fields that normalize to the same
+    // canonical identity. While merging related-content paths, native `RelatedClass::Unify` widens the target
+    // selection to polymorphic when two paths differ only by SQL alias. `EndsWithSameRelatedClass` then rejects
+    // later paths whose target is still non-polymorphic, so a field is created per source-class path instead
+    // of one. Merge them here.
+    const existing = fieldsByKey.get(canonicalField.key);
+    if (existing) {
+      existing.propertyClassNames = [
+        ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
+      ].sort();
+      existing.sourcePaths.push(...canonicalField.sourcePaths);
+    } else {
+      fieldsByKey.set(canonicalField.key, canonicalField);
+    }
     fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
   };
   descriptor.fields.forEach((field) => visit(field, [], undefined));
+  const fields = [...fieldsByKey.values()];
   return {
     descriptor: { fields: fields.sort((lhs, rhs) => lhs.key.localeCompare(rhs.key)), unsupportedFields },
     fieldMappings,
@@ -269,33 +302,113 @@ function createCanonicalValues(
   values: ValuesDictionary<Value>,
   sourcePath: string[],
   type: CanonicalFieldType,
-): unknown {
+): CanonicalItemValue {
   if (sourcePath.length === 1) {
-    return normalizeValueForComparison(normalizeLegacyValue(values[sourcePath[0]]), type);
+    return toCanonicalValue(values[sourcePath[0]], type);
   }
-  const [nestedFieldName, ...rest] = sourcePath;
-  const nestedValue = values[nestedFieldName];
-  if (!Value.isNestedContent(nestedValue)) {
-    return nestedValue;
-  }
-  return nestedValue
-    .map((entry) => ({
-      primaryKeys: entry.primaryKeys
-        .map((key) => ({ className: normalizeFullClassName(key.className), id: key.id }))
-        .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
-      value: createCanonicalValues(entry.values, rest, type),
-    }))
-    .sort((lhs, rhs) => stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)));
+  return collectRelatedValues(values, sourcePath, type).sort((lhs, rhs) =>
+    stableStringify(lhs.primaryKeys).localeCompare(stableStringify(rhs.primaryKeys)),
+  );
 }
 
-function normalizeLegacyValue(value: Value): unknown {
-  if (Value.isNavigationValue(value)) {
-    return {
-      key: { className: normalizeFullClassName(value.className), id: value.id },
-      label: value.label.displayValue,
-    };
+/**
+ * Legacy nests each relationship hop inside the previous one's content. Walks every hop and keeps
+ * just the terminal instances.
+ */
+function collectRelatedValues(
+  values: ValuesDictionary<Value>,
+  [nestedFieldName, ...rest]: string[],
+  type: CanonicalFieldType,
+): CanonicalRelatedValue[] {
+  const nestedValue = values[nestedFieldName];
+  if (nestedValue === undefined) {
+    return [];
   }
-  return value;
+  if (!Value.isNestedContent(nestedValue)) {
+    throw new Error(`Expected field '${nestedFieldName}' to contain nested content.`);
+  }
+  return nestedValue.flatMap((entry) =>
+    rest.length > 1
+      ? collectRelatedValues(entry.values, rest, type)
+      : [
+          {
+            primaryKeys: entry.primaryKeys
+              .map((key) => ({ className: normalizeFullClassName(key.className), id: key.id }))
+              .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
+            value: toCanonicalValue(entry.values[rest[0]], type),
+          },
+        ],
+  );
+}
+
+const SHARED_PRIMITIVE_TYPE_NAME_VALUES = new Set<string>(SHARED_PRIMITIVE_TYPE_NAMES.values());
+
+/**
+ * Struct members keep legacy's substituted extended type (or `"enum"`) name with no record of the underlying
+ * primitive type, so it's inferred from the value's shape instead.
+ */
+function getUnderlyingPrimitiveTypeName(canonicalName: string, value: Value): string {
+  if (SHARED_PRIMITIVE_TYPE_NAME_VALUES.has(canonicalName)) {
+    return canonicalName;
+  }
+  if (Value.isMap(value) && isPointValue(value)) {
+    return "Point3d";
+  }
+  // Integer-valued numbers may be `Integer` or `Long`, which mustn't be rounded.
+  if (typeof value === "number" && !Number.isInteger(value)) {
+    return "Double";
+  }
+  return canonicalName;
+}
+
+function toCanonicalValue(value: Value, type: CanonicalFieldType): CanonicalValue {
+  if (value === undefined) {
+    return undefined;
+  }
+  switch (type.kind) {
+    case "primitive":
+      switch (getUnderlyingPrimitiveTypeName(type.name, value)) {
+        case "Double":
+          if (typeof value === "number") {
+            return roundFloatingPointNoise(value);
+          }
+          break;
+        case "Point2d":
+        case "Point3d":
+          if (Value.isMap(value) && isPointValue(value)) {
+            return roundFloatingPointNoise(value);
+          }
+          break;
+        default:
+          if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+            return value;
+          }
+      }
+      throw new Error(`Expected a ${type.name} value.`);
+    case "navigation":
+      if (!Value.isNavigationValue(value)) {
+        throw new Error("Expected a navigation value.");
+      }
+      return {
+        key: { className: normalizeFullClassName(value.className), id: value.id },
+        label: value.label.displayValue,
+      };
+    case "array":
+      if (!Value.isArray(value)) {
+        throw new Error("Expected an array value.");
+      }
+      return value.map((entry) => toCanonicalValue(entry, type.member));
+    case "struct":
+      if (!Value.isMap(value)) {
+        throw new Error("Expected a struct value.");
+      }
+      return Object.fromEntries(
+        Object.entries(value).flatMap(([name, member]) => {
+          const memberType = type.members.find((candidate) => candidate.name === name)?.type;
+          return memberType ? [[name, toCanonicalValue(member, memberType)]] : [];
+        }),
+      );
+  }
 }
 
 function createCanonicalItem({
@@ -306,14 +419,27 @@ function createCanonicalItem({
   context: NormalizationContext;
 }): CanonicalItem {
   const { descriptor, fieldMappings } = createCanonicalDescriptor({ descriptor: sourceDescriptor, context });
+  const sourcePathsByCanonicalKey = new Map<string, string[]>();
+  for (const { canonicalKey, sourcePath } of fieldMappings) {
+    const previousSourcePath = sourcePathsByCanonicalKey.get(canonicalKey);
+    if (previousSourcePath) {
+      const itemIdentity = item.primaryKeys
+        .map(({ className, id }) => `${normalizeFullClassName(className)}:${id}`)
+        .join(", ");
+      throw new Error(
+        `Legacy item '${itemIdentity}' has multiple source fields for canonical key '${canonicalKey}': '${previousSourcePath.join(".")}' and '${sourcePath.join(".")}'.`,
+      );
+    }
+    sourcePathsByCanonicalKey.set(canonicalKey, sourcePath);
+  }
   return {
     descriptor,
     primaryKeys: item.primaryKeys.map((key) => ({ className: normalizeFullClassName(key.className), id: key.id })),
     values: Object.fromEntries(
-      fieldMappings.map(({ canonicalKey, sourcePath, type }) => [
-        canonicalKey,
-        createCanonicalValues(item.values, sourcePath, type),
-      ]),
+      fieldMappings.map(
+        ({ canonicalKey, sourcePath, type }) =>
+          [canonicalKey, createCanonicalValues(item.values, sourcePath, type)] as const,
+      ),
     ),
   };
 }

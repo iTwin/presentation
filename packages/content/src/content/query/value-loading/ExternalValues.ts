@@ -5,6 +5,7 @@
 
 import { forkJoin, from, map } from "rxjs";
 import { assert } from "@itwin/core-bentley";
+import { convertDateTimeValues } from "./DateValues.js";
 import { getRelatedSelectorValues } from "./RowDecoder.js";
 
 import type { Observable } from "rxjs";
@@ -41,7 +42,7 @@ export function createExternalValuePopulator(props: {
     return undefined;
   }
   return (rows) =>
-    forkJoin(plans.map((plan) => populateFromProvider({ plan, rows }))).pipe(
+    forkJoin(plans.map((plan) => populateFromProvider({ descriptor, plan, rows }))).pipe(
       map((perProvider) => mergeRows({ rowCount: rows.length, perProvider })),
     );
 }
@@ -63,10 +64,11 @@ function assertEveryExternalFieldIsProvided(props: {
 }
 
 function populateFromProvider(props: {
+  descriptor: ContentDescriptor;
   plan: ExternalProviderPlan;
   rows: ReadonlyArray<GroupValues>;
 }): Observable<Array<Record<string, Value>>> {
-  const { plan, rows } = props;
+  const { descriptor, plan, rows } = props;
   const items = rows.map((row) => ({
     inputValues: Object.fromEntries(
       plan.inputs.map((input) => [input.key, readInputValue({ input, row, providerId: plan.provider.id })]),
@@ -84,7 +86,7 @@ function populateFromProvider(props: {
         for (const { localId, fieldId } of plan.outputs) {
           const value = record[localId];
           if (value !== undefined) {
-            values[fieldId] = value;
+            values[fieldId] = convertDateTimeValues(value, descriptor.fields[fieldId].type);
           }
         }
         return values;

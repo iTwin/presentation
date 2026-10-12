@@ -39,6 +39,8 @@ A `HierarchyNode` data structure in the package represents a single node in a hi
 
 - A provider that builds hierarchies based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). The `createIModelHierarchyProvider` function is used to create such a provider. See [iModel-based hierarchies](./learning/imodel/HierarchyProvider.md) learning page for more information.
 
+- A provider that combines different versions of the same iModel. The `createMergedIModelHierarchyProvider` function accepts `getHierarchyDefinition(imodelAccess)` to create a definition for each version. See [Merged iModel hierarchies](./learning/imodel/MergedIModelHierarchies.md) for an example.
+
 - A merged provider that combines multiple providers into a single one. This is useful when you want to combine multiple hierarchies, possibly built from different data sources, into a single one. See [Merged hierarchies](./learning/MergedHierarchies.md) learning page for more information.
 
 ## Learning

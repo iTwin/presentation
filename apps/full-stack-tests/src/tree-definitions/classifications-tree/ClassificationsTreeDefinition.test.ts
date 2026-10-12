@@ -11,11 +11,7 @@ import {
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import {
-  createClassificationsTree,
-  createClassificationsTreeIdsProvider,
-  createSharedIdsProvider,
-} from "@itwin/presentation-tree-definitions";
+import { createClassificationsTree, createClassificationsTreeIdsProvider } from "@itwin/presentation-tree-definitions";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -59,11 +55,7 @@ describe("Classifications tree", () => {
     );
     const imodelAccess = createIModelAccess(imodel.imodelConnection);
     const hierarchyConfig = { rootClassificationSystemCode };
-    const idsProvider = createClassificationsTreeIdsProvider({
-      imodelAccess,
-      hierarchyConfig,
-      sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
-    });
+    const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
     await idsProvider.getAllClassifications();
     const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockResolvedValue([]);
     const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockResolvedValue([]);
@@ -120,11 +112,7 @@ describe("Classifications tree", () => {
       const hierarchyConfig = { rootClassificationSystemCode };
       const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => {
         const imodelAccess = createIModelAccess(imodelConnection);
-        const idsProvider = createClassificationsTreeIdsProvider({
-          imodelAccess,
-          hierarchyConfig,
-          sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
-        });
+        const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
         return { imodelAccess, idsProvider };
       });
       const [base, changed] = imodels;
@@ -146,7 +134,7 @@ describe("Classifications tree", () => {
         return idsProvider;
       });
       const tree = createClassificationsTree({ imodelAccess: changed.imodelAccess, hierarchyConfig, getIdsProvider });
-      using provider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition: tree.definition });
+      using provider = createMergedIModelHierarchyProvider({ imodels, getHierarchyDefinition: () => tree.definition });
       getIdsProvider.mockClear();
 
       const tables = await collect(provider.getNodes({ parentNode: undefined }));
@@ -200,7 +188,7 @@ describe("Classifications tree", () => {
         imodelAccess: imodels[1].imodelAccess,
         hierarchyConfig: { rootClassificationSystemCode },
       });
-      using provider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition: tree.definition });
+      using provider = createMergedIModelHierarchyProvider({ imodels, getHierarchyDefinition: () => tree.definition });
       const tables = await collect(provider.getNodes({ parentNode: undefined }));
       expect(tables).toHaveLength(1);
       await expect(collect(provider.getNodes({ parentNode: tables[0] }))).rejects.toThrow(

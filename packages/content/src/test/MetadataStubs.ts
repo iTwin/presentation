@@ -131,6 +131,12 @@ export function createRelationshipClass(props: {
 /** Creates a mixin class stub for tests. */
 export function createMixinClass(props: {
   fullName: EC.FullClassNameDotNotation;
+  /** All properties visible on the class (own + inherited), returned by `getProperties`. */
+  properties?: EC.Property[];
+  /**
+   * Properties declared directly on the class, returned by `getOwnProperties`.
+   * Defaults to `properties` when omitted.
+   */
   ownProperties?: EC.Property[];
   baseClass?: EC.Class;
   /** Tri-state class visibility. Leave `undefined` to test a class with no defined visibility. */
@@ -144,9 +150,9 @@ export function createMixinClass(props: {
     baseClass: props.baseClass,
     isHidden: props.isHidden,
     is: () => false,
-    getProperty: (name: string) => props.ownProperties?.find((property) => property.name === name),
-    getProperties: () => props.ownProperties ?? [],
-    getOwnProperties: () => props.ownProperties ?? [],
+    getProperty: (name: string) => props.properties?.find((property) => property.name === name),
+    getProperties: () => props.properties ?? [],
+    getOwnProperties: () => props.ownProperties ?? props.properties ?? [],
     isEntityClass: () => false,
     isRelationshipClass: () => false,
     isStructClass: () => false,

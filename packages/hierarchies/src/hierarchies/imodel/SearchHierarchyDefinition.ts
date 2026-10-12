@@ -34,7 +34,7 @@ import type {
 import type { ProcessedGroupingHierarchyNode } from "./IModelHierarchyNode.js";
 
 interface SearchHierarchyDefinitionProps {
-  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & { imodelKey: string };
   source: RxjsHierarchyDefinition;
   sourceName: string;
   targetPaths: HierarchySearchTree[];
@@ -43,7 +43,7 @@ interface SearchHierarchyDefinitionProps {
 
 /** @internal */
 export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
-  private _imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+  private _imodelAccess: SearchHierarchyDefinitionProps["imodelAccess"];
   private _source: RxjsHierarchyDefinition;
   private _targetPaths: HierarchySearchTree[];
   private _nodesParser: RxjsNodeParser;
@@ -226,7 +226,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
                 continue;
               }
-              if (id.imodelKey && id.imodelKey !== props.imodelAccess.imodelKey) {
+              if (id.imodelKey && id.imodelKey !== imodelAccess.imodelKey) {
                 continue;
               }
               if (

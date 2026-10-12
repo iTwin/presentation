@@ -5,9 +5,9 @@
 
 import { getClass } from "@itwin/presentation-shared";
 import { collectInParallel } from "../InternalUtils.js";
-import { collectClassPropertyFields } from "./ClassPropertyFields.js";
+import { createPropertyFields } from "./ClassPropertyFields.js";
 
-import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
 import type { CardinalityHint, ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
@@ -103,6 +103,14 @@ export async function collectRelatedPropertyFields(props: {
 /** Describes a group's nested-anchor context for error messages, or `""` for a base (non-nested) group. */
 function describeNestedContext(group: ContentSource["resolvedDeclarations"][number]): string {
   return group.nested ? ` (nested anchor "${group.nested.anchorClassName}")` : "";
+}
+
+/** Creates fields for the properties of `propertiesClass` that are in effect on it (own, inherited and mixin). */
+function collectClassPropertyFields(
+  props: Omit<Props<typeof createPropertyFields>, "properties"> & { propertiesClass: EC.Class },
+): CategorizedField[] {
+  const { propertiesClass, ...rest } = props;
+  return createPropertyFields({ ...rest, properties: propertiesClass.getProperties() });
 }
 
 /** Enumerates the property fields of a single concrete relationship path. */

@@ -7,11 +7,13 @@ To support merging iModel hierarchies, the library provides `createMergedIModelH
 - Elements with the same `ECInstanceId` across different iModel versions represent the same logical entity, even if their properties differ.
 - Non-breaking metadata (schema) changes may happen in a newer version, but never an older one. E.g. a new schema may be introduced in a newer version, but an existing schema won't be removed.
 
+The `getHierarchyDefinition(imodelAccess)` callback creates a definition for each iModel version and is called once per iModel when the provider is created. Each definition uses its own iModel's data and metadata to define hierarchy levels and parse query results. The latest iModel's definition handles `preProcessNode` and `postProcessNode` after the nodes are merged.
+
 ## Example
 
 The below example demonstrates how to create a merged iModel hierarchy provider that merges two iModel versions. The hierarchy that's being merged is a simple model-element hierarchy.
 
-First, we define the hierarchy definition:
+First, we define a factory that creates a hierarchy definition for the supplied iModel access:
 
 <!-- [[include: [Presentation.Hierarchies.MergedIModelHierarchies.Imports, Presentation.Hierarchies.MergedIModelHierarchies.Example], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -23,7 +25,7 @@ import {
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
 } from "@itwin/presentation-hierarchies";
-import { EC } from "@itwin/presentation-shared";
+import { EC, Props } from "@itwin/presentation-shared";
 
 // Each version of the iModel already has an open `IModelConnection`. Create iModel access objects for
 // both versions - `base` and `changeset1`. The order is important - we want the changesets to be from oldest to
@@ -61,28 +63,28 @@ async function createInstanceNodesQueryDefinition({
 
 // Create a simple hierarchy definition that uses `BisCore.PhysicalModel` for root nodes and
 // `BisCore.PhysicalElement` for each model's child nodes.
-const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-  // Note: we use the latest version of the iModel here - that
-  // ensures we can find all classes even if they were not present in the base iModel
-  imodelAccess: imodels[imodels.length - 1].imodelAccess,
-  hierarchy: {
-    rootNodes: async (props) => [
-      await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),
-    ],
-    childNodes: [
-      {
-        parentInstancesNodePredicate: "BisCore.PhysicalModel",
-        definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) => [
-          await createInstanceNodesQueryDefinition({
-            ...props,
-            fullClassName: "BisCore.PhysicalElement",
-            whereClauseFactory: async ({ alias }) => `${alias}.Model.Id IN (${props.parentNodeInstanceIds.join(", ")})`,
-          }),
-        ],
-      },
-    ],
-  },
-});
+const getHierarchyDefinition = (imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]) =>
+  createPredicateBasedHierarchyDefinition({
+    imodelAccess,
+    hierarchy: {
+      rootNodes: async (props) => [
+        await createInstanceNodesQueryDefinition({ ...props, fullClassName: "BisCore.PhysicalModel" }),
+      ],
+      childNodes: [
+        {
+          parentInstancesNodePredicate: "BisCore.PhysicalModel",
+          definitions: async (props: DefineInstanceNodeChildHierarchyLevelProps) => [
+            await createInstanceNodesQueryDefinition({
+              ...props,
+              fullClassName: "BisCore.PhysicalElement",
+              whereClauseFactory: async ({ alias }) =>
+                `${alias}.Model.Id IN (${props.parentNodeInstanceIds.join(", ")})`,
+            }),
+          ],
+        },
+      ],
+    },
+  });
 ```
 
 <!-- END EXTRACTION -->
@@ -120,7 +122,7 @@ To merge the hierarchies, we create a hierarchy provider using `createMergedIMod
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, hierarchyDefinition });
+const mergedHierarchyProvider = createMergedIModelHierarchyProvider({ imodels, getHierarchyDefinition });
 ```
 
 <!-- END EXTRACTION -->

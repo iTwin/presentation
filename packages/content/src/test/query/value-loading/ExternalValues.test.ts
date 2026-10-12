@@ -62,7 +62,12 @@ function createRelatedRow(props: { code: Value; names: Value[] }): GroupValues {
 
 function createDescriptor(fieldIds: string[]): ContentDescriptor {
   return {
-    fields: Object.fromEntries(fieldIds.map((id) => [id, { kind: "external", id, providerId: "ext_v1" }])),
+    fields: Object.fromEntries(
+      fieldIds.map((id) => [
+        id,
+        { kind: "external", id, providerId: "ext_v1", type: { kind: "primitive", type: "String" } },
+      ]),
+    ),
   } as unknown as ContentDescriptor;
 }
 
@@ -144,6 +149,31 @@ describe("createExternalValuePopulator", () => {
     await firstValueFrom(populate!([createRow()]));
 
     expect(getValues).toHaveBeenCalledWith({ items: [{ inputValues: { code: undefined, name: undefined } }] });
+  });
+
+  it("converts provider output for DateTime fields to `Date`", async () => {
+    const provider = createProvider({
+      localFieldIds: ["status"],
+      getValues: async () => [{ status: "2021-11-08T10:18:23.317" }, { status: new Date("2022-01-01T00:00:00.000Z") }],
+    });
+    const descriptor = {
+      fields: {
+        "ext_v1:status": {
+          kind: "external",
+          id: "ext_v1:status",
+          providerId: "ext_v1",
+          type: { kind: "primitive", type: "DateTime" },
+        },
+      },
+    } as unknown as ContentDescriptor;
+    const populate = createExternalValuePopulator({ descriptor, plans: [createStatusPlan(provider)] })!;
+
+    const result = await firstValueFrom(populate([createRow(), createRow()]));
+
+    expect(result).toEqual([
+      { "ext_v1:status": new Date("2021-11-08T10:18:23.317Z") },
+      { "ext_v1:status": new Date("2022-01-01T00:00:00.000Z") },
+    ]);
   });
 
   it.each([

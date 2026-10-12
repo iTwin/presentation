@@ -5,6 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { serializeRelationshipPath } from "../../model/Utils.js";
+import { convertDateTimeValues, toDateValue } from "./DateValues.js";
 
 import type { EC, ECSqlQueryRow, InstanceKey, Value, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../../ContentTarget.js";
@@ -216,6 +217,9 @@ function createNonNullPropertyValueDecoder(type: ValueDescriptor): (value: NonNu
           return { x: value.X, y: value.Y };
         };
       }
+      if (type.type === "DateTime") {
+        return toDateValue;
+      }
       return (value) => value;
   }
 }
@@ -355,7 +359,7 @@ export function toContentValues(props: {
     const value =
       field.kind === "property"
         ? projectPropertyFieldValue({ field, primaryKey, selectorId, groupValues })
-        : groupValues.selectorValues.get(selectorId)?.[0];
+        : convertDateTimeValues(groupValues.selectorValues.get(selectorId)?.[0], field.type);
     if (value !== undefined) {
       values[field.id] = value;
     }

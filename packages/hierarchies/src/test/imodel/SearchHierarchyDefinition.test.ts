@@ -51,11 +51,14 @@ describe("SearchHierarchyDefinition", () => {
   function createSearchHierarchyDefinition(props: {
     targetPaths: HierarchySearchTree[];
     source?: Partial<RxjsHierarchyDefinition>;
-    imodelAccess?: Partial<Pick<ECSchemaProvider, "classDerivesFrom">>;
+    imodelAccess?: Partial<Pick<ECSchemaProvider, "classDerivesFrom"> & { imodelKey: string }>;
     sourceName?: string;
   }) {
     return new SearchHierarchyDefinition({
-      imodelAccess: createStubECClassHierarchyInspector(props.imodelAccess),
+      imodelAccess: {
+        ...createStubECClassHierarchyInspector(props.imodelAccess),
+        imodelKey: props.imodelAccess?.imodelKey ?? "test-imodel",
+      },
       source: createStubSourceDefinition(props.source),
       sourceName: props.sourceName ?? "test-source",
       targetPaths: props.targetPaths,
@@ -393,7 +396,7 @@ describe("SearchHierarchyDefinition", () => {
       createSelectClause: vi.fn(),
       createFilterClauses: vi.fn(),
     };
-    const constProps = { imodelAccess: stubIModelAccess, ...nodeSelectClauseFactory };
+    const constProps = { ...nodeSelectClauseFactory };
 
     it("returns source definitions when search identifiers are not applicable to the level", async () => {
       const sourceDefs: HierarchyLevelDefinition = [{ fullClassName: "Schema.Class", query: { ecsql: "SELECT *" } }];

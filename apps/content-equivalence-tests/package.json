@@ -12,11 +12,13 @@
   "dependencies": {
     "@itwin/core-backend": "catalog:itwinjs-core-dev",
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
+    "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-content": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
-    "@itwin/presentation-shared": "workspace:*"
+    "@itwin/presentation-shared": "workspace:*",
+    "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
     "@itwin/eslint-plugin": "catalog:build-tools",

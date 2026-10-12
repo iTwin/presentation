@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { firstValueFrom, from, map, mergeMap, toArray } from "rxjs";
 import {
   createContentProvider,
   createIModelContentConfiguration,
@@ -85,33 +86,36 @@ export async function captureNew(props: {
   const imodelAccess = createIModelAccess(imodel);
   const config = await createIModelContentConfiguration({ imodelAccess });
   if (scenario.id === "sampled-elements") {
-    const results = await Promise.all(
-      scenario.keys.map(async (key) => {
-        const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
-        const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
-        const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
-        const itemDescriptor = await itemProvider.getContentDescriptor();
-        const items: CapturedNewItem[] = [];
-        for await (const item of itemProvider.getItems()) {
-          items.push(captureNewItem(item, itemDescriptor));
-        }
-        if (items.length !== 1) {
-          throw new Error(
-            `Expected one new-generation content item for '${key.className}:${key.id}', found ${items.length}.`,
-          );
-        }
-        return items[0];
-      }),
+    return firstValueFrom(
+      from(scenario.keys).pipe(
+        mergeMap(async (key) => {
+          const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
+          const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
+          const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
+          const itemDescriptor = await itemProvider.getContentDescriptor();
+          const items: CapturedNewItem[] = [];
+          for await (const item of itemProvider.getItems()) {
+            items.push(captureNewItem(item, itemDescriptor));
+          }
+          if (items.length !== 1) {
+            throw new Error(
+              `Expected one new-generation content item for '${key.className}:${key.id}', found ${items.length}.`,
+            );
+          }
+          return items[0];
+        }, 4),
+        toArray(),
+        map((items) => ({
+          captureFormatVersion: CAPTURE_FORMAT_VERSION,
+          implementation: "new",
+          implementationFingerprint: props.implementationFingerprint,
+          imodelFingerprint: props.imodelFingerprint,
+          scenario,
+          createdAt: new Date().toISOString(),
+          items,
+        })),
+      ),
     );
-    return {
-      captureFormatVersion: CAPTURE_FORMAT_VERSION,
-      implementation: "new",
-      implementationFingerprint: props.implementationFingerprint,
-      imodelFingerprint: props.imodelFingerprint,
-      scenario,
-      createdAt: new Date().toISOString(),
-      items: results,
-    };
   }
 
   const allElementTargets: ContentTarget[] = [{ primaryClass: "BisCore.GeometricElement3d" as const }];

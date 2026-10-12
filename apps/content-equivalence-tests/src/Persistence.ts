@@ -10,7 +10,7 @@ import path from "node:path";
 import type { InstanceKey } from "@itwin/presentation-shared";
 import type { RuntimeConfiguration } from "./Configuration.js";
 
-export const CAPTURE_FORMAT_VERSION = 1;
+export const CAPTURE_FORMAT_VERSION = 2;
 
 export type ImplementationName = "legacy" | "new";
 
@@ -38,12 +38,16 @@ export type CaptureMetadata<TImplementation extends ImplementationName = Impleme
   "captureFormatVersion" | "implementation" | "implementationFingerprint" | "imodelFingerprint" | "scenario"
 >;
 
-export function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown, space?: number): string {
   return JSON.stringify(
     value,
-    (_key, current: unknown) => {
+    function (this: Record<string, unknown>, key: string, current: unknown) {
       if (current === undefined) {
         return { $type: "undefined" };
+      }
+      // `JSON.stringify` calls `Date.toJSON` before the replacer, so the original is read from the holder.
+      if (typeof current === "string" && this[key] instanceof Date) {
+        return { $type: "date", value: current };
       }
       if (typeof current === "number" && !Number.isFinite(current)) {
         return { $type: "number", value: String(current) };
@@ -55,7 +59,7 @@ export function stableStringify(value: unknown): string {
       }
       return current;
     },
-    2,
+    space,
   );
 }
 
@@ -94,6 +98,26 @@ export function cachePath(props: {
   );
 }
 
+/** Inverts the markers `stableStringify` writes for values JSON can't represent. */
+function reviveSerializedValues(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry: unknown) => reviveSerializedValues(entry));
+  }
+  if (typeof value === "object" && value !== null) {
+    if ("$type" in value && value.$type === "undefined") {
+      return undefined;
+    }
+    if ("$type" in value && value.$type === "number" && "value" in value && typeof value.value === "string") {
+      return Number(value.value);
+    }
+    if ("$type" in value && value.$type === "date" && "value" in value && typeof value.value === "string") {
+      return new Date(value.value);
+    }
+    return Object.fromEntries(Object.entries(value).map(([key, member]) => [key, reviveSerializedValues(member)]));
+  }
+  return value;
+}
+
 export function readCapture<TCapture extends CaptureEnvelope>(
   filePath: string,
   expected: CaptureMetadata<TCapture["implementation"]>,
@@ -103,7 +127,7 @@ export function readCapture<TCapture extends CaptureEnvelope>(
   }
   let capture: TCapture;
   try {
-    capture = JSON.parse(fs.readFileSync(filePath, "utf8")) as TCapture;
+    capture = reviveSerializedValues(JSON.parse(fs.readFileSync(filePath, "utf8"))) as TCapture;
   } catch (error) {
     throw new Error(`Failed to read cached capture '${filePath}'.`, { cause: error });
   }
@@ -126,6 +150,6 @@ export function readCapture<TCapture extends CaptureEnvelope>(
 export function writeJson(filePath: string, value: unknown): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   const temporaryPath = `${filePath}.${process.pid}.tmp`;
-  fs.writeFileSync(temporaryPath, `${stableStringify(value)}\n`);
+  fs.writeFileSync(temporaryPath, `${stableStringify(value, 2)}\n`);
   fs.renameSync(temporaryPath, filePath);
 }

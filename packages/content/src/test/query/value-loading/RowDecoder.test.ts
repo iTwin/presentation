@@ -89,8 +89,8 @@ const descriptor = {
       pathCardinality: "one",
       valueClassNames: ["Schema.A"],
     },
-    "calc:score": { kind: "calculated", id: "calc:score" },
-    "ext:note": { kind: "external", id: "ext:note", providerId: "ext" },
+    "calc:score": { kind: "calculated", id: "calc:score", type: stringType },
+    "ext:note": { kind: "external", id: "ext:note", providerId: "ext", type: stringType },
   },
 } as unknown as ContentDescriptor;
 
@@ -159,6 +159,35 @@ function decodeGroupRows(props: {
 }
 
 describe("RowDecoder", () => {
+  describe("createPropertyValueDecoder", () => {
+    const dateType = { kind: "primitive", type: "DateTime" } as const;
+
+    it("decodes a DateTime property as UTC", () => {
+      expect(createPropertyValueDecoder(dateType)("2021-11-08T10:18:23.317")).toEqual(
+        new Date("2021-11-08T10:18:23.317Z"),
+      );
+    });
+
+    it("decodes DateTime elements of an array and members of a struct", () => {
+      expect(
+        createPropertyValueDecoder({ kind: "array", elementType: dateType })(["2021-11-08T10:18:23.317", undefined]),
+      ).toEqual([new Date("2021-11-08T10:18:23.317Z"), undefined]);
+      expect(
+        createPropertyValueDecoder({ kind: "struct", members: [{ name: "When", label: "When", type: dateType }] })({
+          ["When"]: "2021-11-08T10:18:23.317Z",
+        }),
+      ).toEqual({ ["When"]: new Date("2021-11-08T10:18:23.317Z") });
+    });
+
+    it("returns undefined for a null DateTime property", () => {
+      expect(createPropertyValueDecoder(dateType)(null)).toBeUndefined();
+    });
+
+    it("throws for an invalid DateTime property", () => {
+      expect(() => createPropertyValueDecoder(dateType)("nope")).toThrow(/valid DateTime/);
+    });
+  });
+
   describe("decodePrimaryKey", () => {
     it("reads the class and instance columns", () => {
       expect(
@@ -759,6 +788,24 @@ describe("RowDecoder", () => {
       expect(contentValues.values).to.deep.equal({ "Schema.A.Code": "A1", "calc:score": 42 });
       expect(contentValues.values["ext:note"]).to.equal(undefined);
       expect(contentValues.relatedInstances).to.deep.equal({});
+    });
+
+    it("converts DateTime values of calculated fields to `Date`", () => {
+      const dateDescriptor = {
+        sources: [],
+        categories: {},
+        fields: { "calc:when": { kind: "calculated", id: "calc:when", type: { kind: "primitive", type: "DateTime" } } },
+      } as unknown as ContentDescriptor;
+      const contentValues = toContentValues({
+        descriptor: dateDescriptor,
+        fieldSelectorIds: { "calc:when": "calc:when" },
+        primaryKey: { className: "Schema.A", id: "0x1" },
+        values: {
+          selectorValues: new Map<string, Value[]>([["calc:when", ["2021-11-08T10:18:23.317"]]]),
+          relatedInstances: new Map(),
+        },
+      });
+      expect(contentValues.values["calc:when"]).toEqual(new Date("2021-11-08T10:18:23.317Z"));
     });
 
     it("passes related-instance entries through verbatim, keyed by the filter-aware join-path key", () => {

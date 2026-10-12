@@ -263,7 +263,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
         try {
           const imodelAccess = { ...createECSchemaProvider(imodelDb), ...createECSqlQueryExecutor(imodelDb) };
           normalizedLegacy = await normalizeLegacyCapture(legacy.capture, imodelAccess);
-          normalizedNew = await normalizeNewCapture(current.capture, imodelAccess);
+          normalizedNew = await normalizeNewCapture(current.capture, imodelAccess, imodelDb.schemaContext);
         } finally {
           imodelDb.close();
         }

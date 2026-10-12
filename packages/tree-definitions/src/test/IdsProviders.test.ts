@@ -264,10 +264,9 @@ describe("ID provider data states", () => {
     },
     {
       name: "classifications",
-      create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
+      create: (access: ReturnType<typeof createAccess>, _sharedIdsProvider: SharedIdsProvider) => {
         const provider = createClassificationsTreeIdsProvider({
           imodelAccess: access,
-          sharedIdsProvider,
           hierarchyConfig: { rootClassificationSystemCode: "test" },
         });
         return { provider, load: async () => provider.getAllClassifications() };

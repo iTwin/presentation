@@ -41,11 +41,19 @@ export async function selectSample(props: {
 }): Promise<Sample> {
   const { imodel, sampling } = props;
   const executor = createECSqlQueryExecutor(imodel);
+  // Our test iModel suite contains iModels where elements of certain classes have invalid data; omit those classes from sampling.
+  const omittedClasses = new Set<EC.FullClassNameDotNotation>([
+    // `SpatialView` nav prop is NULL, when the relationship says it can't be NULL
+    "BisCore.SectionDrawing",
+    // `BaseModel` nav prop points to a non-existing model
+    "BisCore.ViewDefinition2d",
+  ]);
   const classRows = executor.createQueryReader(
     {
       ecsql: `
         SELECT ec_classname(e.ECClassId, 's.c'), e.ECClassId, COUNT(*)
         FROM BisCore.Element e
+        WHERE e.ECClassId IS NOT (${[...omittedClasses].join(", ")})
         GROUP BY e.ECClassId
       `,
     },
