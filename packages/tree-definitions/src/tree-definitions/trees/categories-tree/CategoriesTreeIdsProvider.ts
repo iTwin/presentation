@@ -207,7 +207,6 @@ export function createCategoriesTreeIdsProvider({
               FROM ${CLASS_NAMES.DefinitionContainer} dc
               JOIN ${categoryClass} c ON c.Model.Id = dc.ECInstanceId
               JOIN IdSet(?) categoryIdSet ON c.ECInstanceId = categoryIdSet.id
-              WHERE NOT dc.IsPrivate
 
               UNION ALL
 
@@ -217,7 +216,6 @@ export function createCategoriesTreeIdsProvider({
               FROM
                 ${DEFINITION_CONTAINERS_CTE} cdc
                 JOIN ${CLASS_NAMES.DefinitionContainer} pdc ON pdc.ECInstanceId = cdc.ModelId
-              WHERE NOT pdc.IsPrivate
             )
           `,
         ];
@@ -226,7 +224,7 @@ export function createCategoriesTreeIdsProvider({
           SELECT
             cte.ECInstanceId id,
             cte.ModelId modelId,
-            ${hiddenClassesClause ? `IIF(${hiddenClassesClause}, 0, 1)` : "0"} isHidden
+            IIF(NOT dc.IsPrivate${hiddenClassesClause ? ` AND (${hiddenClassesClause})` : ""}, 0, 1) isExcluded
           FROM ${DEFINITION_CONTAINERS_CTE} cte
           JOIN ${CLASS_NAMES.DefinitionContainer} dc ON dc.ECInstanceId = cte.ECInstanceId
         `;
@@ -241,9 +239,9 @@ export function createCategoriesTreeIdsProvider({
       }),
       catchBeSQLiteInterrupts,
       map((row) => {
-        return { id: row.id, modelId: row.modelId, isHidden: !!row.isHidden };
+        return { id: row.id, modelId: row.modelId, isExcluded: !!row.isExcluded };
       }),
-      excludeHiddenDefinitionContainers,
+      excludeDefinitionContainers,
     );
   }
 
@@ -599,24 +597,24 @@ function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], incl
   return includeEmpty ? list : list.filter(({ hasElements }) => !!hasElements);
 }
 
-/** Excludes definition containers of hidden classes, together with all definition containers nested in them. */
-function excludeHiddenDefinitionContainers(
-  definitionContainers: Observable<{ id: DefinitionContainerId; modelId: Id64String; isHidden: boolean }>,
+/** Excludes private definition containers and those of hidden classes, together with their nested containers. */
+function excludeDefinitionContainers(
+  definitionContainers: Observable<{ id: DefinitionContainerId; modelId: Id64String; isExcluded: boolean }>,
 ): Observable<{ id: DefinitionContainerId; modelId: Id64String }> {
   return definitionContainers.pipe(
     toArray(),
     mergeMap((containers) => {
       const containersMap = new Map(containers.map((dc) => [dc.id, dc]));
-      const hasHiddenAncestorOrSelf = (id: DefinitionContainerId): boolean => {
+      const hasExcludedAncestorOrSelf = (id: DefinitionContainerId): boolean => {
         for (let current = containersMap.get(id); current !== undefined; current = containersMap.get(current.modelId)) {
-          if (current.isHidden) {
+          if (current.isExcluded) {
             return true;
           }
         }
         return false;
       };
       return [...containersMap.values()]
-        .filter(({ id }) => !hasHiddenAncestorOrSelf(id))
+        .filter(({ id }) => !hasExcludedAncestorOrSelf(id))
         .map(({ id, modelId }) => ({ id, modelId }));
     }),
   );
