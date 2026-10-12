@@ -7,24 +7,134 @@ on:
       - stable
       - next
 
+# reset permissions and explicitly specify for each job
+permissions: {}
+
 env:
   NPM_CONFIG_PROVENANCE: true
   HUSKY: 0
+  GIT_AUTHOR_NAME: imodeljs-admin
+  GIT_AUTHOR_EMAIL: imodeljs-admin@users.noreply.github.com
+  GIT_COMMITTER_NAME: imodeljs-admin
+  GIT_COMMITTER_EMAIL: imodeljs-admin@users.noreply.github.com
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+# avoid concurrent runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
-    name: Release
-    permissions:
-      id-token: write
+  select-mode:
     runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.select-mode.outputs.mode }}
+      publish-plan-artifact-id: ${{ steps.select-mode.outputs.publish-plan-artifact-id }}
+    permissions:
+      contents: read # to check out repo (actions/checkout)
     steps:
-      - name: Checkout
+      - name: Check out repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          fetch-depth: 0
+          persist-credentials: false # do not persist git credentials on disk
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false # avoid cache poisoning
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Select Changesets mode
+        id: select-mode
+        uses: changesets/action/select-mode@ae32849d5ba541f9ae29e40e22a623bc13562f51
+
+  version:
+    if: needs.select-mode.outputs.mode == 'version'
+    needs: select-mode
+    runs-on: ubuntu-latest
+    outputs:
+      version-dir-artifact-id: ${{ steps.version.outputs.version-dir-artifact-id }}
+    permissions:
+      contents: write # to check out repo (actions/checkout) and commit version changes (changesets/action/version)
+      pull-requests: write # to create pull request (changesets/action/version)
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
           token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          persist-credentials: false # do not persist git credentials on disk
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false # avoid cache poisoning
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Version packages
+        id: version
+        uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51
+        with:
+          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          commit-message: Release packages [publish docs]
+          pr-title: Release packages [publish docs]
+
+  pack:
+    if: needs.select-mode.outputs.mode == 'publish'
+    needs: select-mode
+    runs-on: ubuntu-latest
+    outputs:
+      pack-dir-artifact-id: ${{ steps.pack.outputs.pack-dir-artifact-id }}
+    permissions:
+      contents: read # to check out repo (actions/checkout)
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false # recommended: do not persist git credentials on disk
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          package-manager-cache: false # avoid cache poisoning
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Pack packages
+        id: pack
+        uses: changesets/action/pack@ae32849d5ba541f9ae29e40e22a623bc13562f51
+        with:
+          publish-plan-artifact-id: ${{ needs.select-mode.outputs.publish-plan-artifact-id }}
+
+  publish:
+    needs: pack
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: write # to check out repo (actions/checkout) and to create releases (changesets/action/publish)
+      id-token: write # for trusted publishing (changesets/action/publish)
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false # do not persist git credentials on disk
 
       - name: Install pnpm
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
@@ -34,21 +144,16 @@ jobs:
         with:
           node-version: 24.15.0
           registry-url: https://registry.npmjs.org/
+          package-manager-cache: false # avoid cache poisoning
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Create release PR or publish to npm
-        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b
+      - name: Publish packages
+        uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51
         with:
-          publish: pnpm release
-          title: Release packages [publish docs]
-          commit: Release packages [publish docs]
-          commitMode: github-api
+          create-github-releases: true
+          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
         env:
-          GITHUB_TOKEN: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
-          GIT_AUTHOR_NAME: imodeljs-admin
-          GIT_AUTHOR_EMAIL: imodeljs-admin@users.noreply.github.com
-          GIT_COMMITTER_NAME: imodeljs-admin
-          GIT_COMMITTER_EMAIL: imodeljs-admin@users.noreply.github.com
