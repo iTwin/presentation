@@ -198,11 +198,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
 
   it("hides a field whose property is declared by a hidden mixin", async () => {
     const mixinProperties: EC.Property[] = [];
-    const mixin = createMixinClass({
-      fullName: "TestSchema.HiddenMixin",
-      isHidden: true,
-      ownProperties: mixinProperties,
-    });
+    const mixin = createMixinClass({ fullName: "TestSchema.HiddenMixin", isHidden: true, properties: mixinProperties });
     mixinProperties.push(createPrimitiveProperty({ name: "MixinProp", declaringClass: mixin }));
     // Widget implements the mixin, but is itself visible — the implementing class's own visibility
     // and the mixins applied to it are not consulted; only the mixin (the property's declaring
