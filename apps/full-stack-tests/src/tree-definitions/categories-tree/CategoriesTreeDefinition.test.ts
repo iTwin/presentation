@@ -7,13 +7,14 @@ import { insertSubCategory } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   createCategoriesTree,
   createCategoriesTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
 import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -66,23 +67,111 @@ describe("Categories tree", () => {
       .mockResolvedValue({ categories: [], definitionContainers: [] });
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
     const getIdsProvider = vi.fn(() => idsProvider);
-    const tree = createCategoriesTree({ imodelAccess, viewType: "3d", getIdsProvider });
-    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+    const tree = createCategoriesTree({ viewType: "3d", getIdsProvider });
+    expect(getIdsProvider).not.toHaveBeenCalled();
+    using provider = createIModelHierarchyProvider({
+      imodelAccess,
+      hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
+    });
 
     await validateHierarchy({ provider, expect: [] });
     expect(hierarchyGetter).toHaveBeenCalled();
-    expect(await tree.createSearchTree({ label: "category" })).toEqual([]);
+    expect(await tree.createSearchTree({ imodelAccess, label: "category" })).toEqual([]);
     expect(searchGetter).toHaveBeenCalled();
     expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
     expect(queryReader).not.toHaveBeenCalled();
   });
 
+  describe.each(["2d", "3d"] as const)("two iModel versions (%s)", (viewType) => {
+    it.each(["default", "custom"] as const)(
+      "isolates hierarchy and search using %s ID providers",
+      async (providerType) => {
+        const { insertCategory, insertElement, insertElementsModel } = getInsertFunctionByViewType(viewType);
+        await using versions = await createChangedIModels(
+          async (db) =>
+            withEditTxn(db, (txn) => {
+              const model = insertElementsModel({ txn, codeValue: "model" });
+              const category = insertCategory({ txn, codeValue: "base category" });
+              const element = insertElement({ txn, modelId: model.id, categoryId: category.id });
+              return { model, category, element };
+            }),
+          async (db, baseKeys) =>
+            withEditTxn(db, (txn) => {
+              txn.deleteElement(baseKeys.element.id);
+              const category = insertCategory({ txn, codeValue: "new category" });
+              const element = insertElement({ txn, modelId: baseKeys.model.id, categoryId: category.id });
+              return { model: baseKeys.model, category, element };
+            }),
+        );
+        const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => ({
+          imodelAccess: createIModelAccess(imodelConnection),
+        }));
+        const [base, changed] = imodels;
+        const getIdsProvider =
+          providerType === "custom"
+            ? vi.fn((imodelKey: string) => {
+                const imodelAccess = imodels.find(
+                  (imodel) => imodel.imodelAccess.imodelKey === imodelKey,
+                )!.imodelAccess;
+                return createCategoriesTreeIdsProvider({
+                  imodelAccess,
+                  type: viewType,
+                  sharedIdsProvider: createSharedIdsProvider({
+                    imodelAccess,
+                    elementClassName:
+                      viewType === "2d" ? CLASS_NAMES.GeometricElement2d : CLASS_NAMES.GeometricElement3d,
+                  }),
+                });
+              })
+            : undefined;
+        const tree = createCategoriesTree({
+          viewType,
+          getIdsProvider,
+          hierarchyConfig: { subCategories: { nodes: "exclude" } },
+        });
+        if (getIdsProvider) {
+          expect(getIdsProvider).not.toHaveBeenCalled();
+        }
+        const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
+        const changedQueryReader = vi.spyOn(changed.imodelAccess, "createQueryReader");
+        expect(await tree.createSearchTree({ imodelAccess: base.imodelAccess, label: "new category" })).toEqual([]);
+        expect(changedQueryReader).not.toHaveBeenCalled();
+        baseQueryReader.mockClear();
+        expect(
+          await collect(tree.createInstanceKeyPaths({ imodelAccess: changed.imodelAccess, label: "new category" })),
+        ).toEqual([{ path: [versions.changeset1.category], target: versions.changeset1.category.id }]);
+        expect(baseQueryReader).not.toHaveBeenCalled();
+
+        using provider = createMergedIModelHierarchyProvider({
+          imodels,
+          getHierarchyDefinition: tree.getHierarchyDefinition,
+        });
+        expect(await collect(provider.getNodes({ parentNode: undefined }))).toMatchObject([
+          {
+            label: "base category",
+            key: { instanceKeys: [{ ...versions.base.category, imodelKey: base.imodelAccess.imodelKey }] },
+          },
+          {
+            label: "new category",
+            key: { instanceKeys: [{ ...versions.changeset1.category, imodelKey: changed.imodelAccess.imodelKey }] },
+          },
+        ]);
+        if (getIdsProvider) {
+          expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess.imodelKey], [changed.imodelAccess.imodelKey]]);
+        }
+      },
+    );
+  });
+
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
-    async function createTree(props: Parameters<typeof createCategoriesTree>[0]) {
+    async function createTree({
+      imodelAccess,
+      ...props
+    }: Parameters<typeof createCategoriesTree>[0] & { imodelAccess: ReturnType<typeof createIModelAccess> }) {
       const tree = createCategoriesTree(props);
       if (cacheState === "warm") {
         // Matching all categories also populates modeled-element paths when elements are included.
-        await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
+        await collect(tree.createInstanceKeyPaths({ imodelAccess, label: "", limit: "unbounded" }));
       }
       return tree;
     }
@@ -94,7 +183,10 @@ describe("Categories tree", () => {
     ) {
       const imodelAccess = createIModelAccess(imodelConnection);
       const tree = await createTree({ imodelAccess, viewType, hierarchyConfig });
-      return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+      return createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
+      });
     }
 
     ["2d" as const, "3d" as const].forEach((viewType) => {
@@ -2003,7 +2095,7 @@ describe("Categories tree", () => {
                   elements: { nodes: "include", excludedClasses: [] },
                 },
               });
-              const iter = createInstanceKeyPaths({ label: "x" });
+              const iter = createInstanceKeyPaths({ imodelAccess, label: "x" });
               let didInterrupt = false;
               const originalQueryReader = imodelConnection.createQueryReader.bind(imodelConnection);
               vi.spyOn(imodelConnection, "createQueryReader").mockImplementation(async function* (...args): any {

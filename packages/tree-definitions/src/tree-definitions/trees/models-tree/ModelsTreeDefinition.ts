@@ -39,6 +39,7 @@ import {
   createIdsSelector,
   createWhereClause,
   getOptimalBatchSize,
+  getOrCreate,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
   ParentElementsPath,
@@ -190,25 +191,26 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
 };
 
 /**
- * Data access and configuration for a models hierarchy.
+ * Provider resolution and configuration for a models hierarchy.
  * @beta
  */
 interface ModelsTreeProps {
   /**
    * Returns the ID provider for `imodelKey`, with matching element filters and hierarchy configuration.
-   * Different iModel versions need separate providers. Created internally from `imodelAccess` when omitted.
+   * Different iModel versions need separate providers. Created internally for each iModel when omitted.
    */
   getIdsProvider?: (imodelKey: string) => ModelsTreeIdsProvider;
-  /**
-   * Access used for schema checks, search, and the default ID provider.
-   * This factory keeps one provider for this access; create a separate factory for each iModel version.
-   */
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
   uniqueId?: GuidString;
 }
+
+/**
+ * Schema and query access for a specific iModel version used by models hierarchy definitions and searches.
+ * @beta
+ */
+type ModelsTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
 
 /**
  * Full class names of instances that may appear in a models hierarchy search path.
@@ -245,6 +247,7 @@ export interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identif
 
 /** @internal */
 interface ModelsTreeDefinitionProps extends ModelsTreeProps {
+  imodelAccess: ModelsTreeIModelAccess;
   idsProvider: ModelsTreeIdsProvider;
 }
 
@@ -302,58 +305,71 @@ type ModelsTreeInstanceKeyPathsProps =
   | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 
 /**
- * Search-specific options for a models tree with shared data access and configuration.
+ * Search-specific data access and options for a models tree.
  * @beta
  */
-type ModelsTreeSearchProps = ModelsTreeSearchOptions &
-  ({ targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string });
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & {
+  /** Access to the iModel version to search. Shares its ID provider with hierarchy definitions using the same key. */
+  imodelAccess: ModelsTreeIModelAccess;
+} & ({ targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string });
 
 /**
- * Creates a models hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Creates a models hierarchy definition factory and search helpers that share hierarchy configuration and a unique ID.
  * Creates and shares cached ID providers using the resolved hierarchy configuration.
  *
  * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
  *
- * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * Pass the returned `getHierarchyDefinition` to `createMergedIModelHierarchyProvider`, or call it with an
+ * iModel's access to obtain a definition for `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
-export function createModelsTree(props: ModelsTreeProps) {
+export function createModelsTree(props: ModelsTreeProps = {}) {
   const hierarchyConfig = mergeWithDefaults({
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
   });
-  const idsProvider =
-    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
-    createModelsTreeIdsProvider({
-      imodelAccess: props.imodelAccess,
-      hierarchyConfig,
-      sharedIdsProvider: createSharedIdsProvider({
-        imodelAccess: props.imodelAccess,
-        elementClassName: hierarchyConfig.elements.baseClass,
-        excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
-      }),
+  const idsProviders = new Map<string, ModelsTreeIdsProvider>();
+  const getIdsProvider = (imodelAccess: ModelsTreeIModelAccess) =>
+    getOrCreate({
+      map: idsProviders,
+      createFunc: () =>
+        props.getIdsProvider?.(imodelAccess.imodelKey) ??
+        createModelsTreeIdsProvider({
+          imodelAccess,
+          hierarchyConfig,
+          sharedIdsProvider: createSharedIdsProvider({
+            imodelAccess,
+            elementClassName: hierarchyConfig.elements.baseClass,
+            excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
+          }),
+        }),
+      key: imodelAccess.imodelKey,
     });
-  const sharedProps = {
-    imodelAccess: props.imodelAccess,
-    idsProvider,
-    hierarchyConfig,
-    uniqueId: props.uniqueId ?? Guid.createValue(),
-  };
-  const definition: HierarchyDefinition = new ModelsTreeDefinition(sharedProps);
+  const sharedProps = { hierarchyConfig, uniqueId: props.uniqueId ?? Guid.createValue() };
   return {
-    definition,
+    /** Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider. */
+    getHierarchyDefinition: (imodelAccess: ModelsTreeIModelAccess): HierarchyDefinition =>
+      new ModelsTreeDefinition({ ...sharedProps, imodelAccess, idsProvider: getIdsProvider(imodelAccess) }),
     /**
      * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
      * @throws An error if the configured search limit is exceeded.
      */
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) =>
-      ModelsTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+      ModelsTreeDefinition.createInstanceKeyPaths({
+        ...searchProps,
+        ...sharedProps,
+        idsProvider: getIdsProvider(searchProps.imodelAccess),
+      }),
     /**
      * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
      * @throws An error if the configured search limit is exceeded.
      */
     createSearchTree: async (searchProps: ModelsTreeSearchProps & { revealTargets?: boolean }) =>
-      ModelsTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+      ModelsTreeDefinition.createSearchTree({
+        ...searchProps,
+        ...sharedProps,
+        idsProvider: getIdsProvider(searchProps.imodelAccess),
+      }),
   };
 }
 

@@ -32,6 +32,7 @@ import {
   createHiddenClassesWhereClauseFactory,
   createWhereClause,
   getOptimalBatchSize,
+  getOrCreate,
   ParentElementsPath,
 } from "../../shared/Utils.js";
 import { createClassificationsTreeIdsProvider } from "./ClassificationsTreeIdsProvider.js";
@@ -47,7 +48,6 @@ import type {
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IModelInstanceKey,
-  InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
 } from "@itwin/presentation-hierarchies";
@@ -64,29 +64,30 @@ import type { ClassificationsTreeIdsProvider } from "./ClassificationsTreeIdsPro
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
- * Data access and classification system configuration for a classifications hierarchy.
+ * Provider resolution and classification system configuration for a classifications hierarchy.
  * @beta
  */
 interface ClassificationsTreeProps {
   /**
    * Returns the ID provider for `imodelKey`, with matching classification system and element filters.
-   * The definition may be called for different iModel versions, each requiring its own provider.
-   * Defaults to a provider for `imodelAccess`; looking up a provider for another key throws when this callback is omitted.
+   * Different iModel versions need separate providers. Created internally for each iModel when omitted.
    */
   getIdsProvider?: (imodelKey: string) => ClassificationsTreeIdsProvider;
-  /**
-   * Access used for schema checks, search, and the default ID provider.
-   * The hierarchy provider may evaluate the definition against other versions; searches use only this access.
-   */
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
   uniqueId?: GuidString;
 }
 
+/**
+ * Schema and query access for a specific iModel version used by classifications hierarchy definitions and searches.
+ * @beta
+ */
+type ClassificationsTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
+
 /** @internal */
 interface ClassificationsTreeDefinitionProps extends ClassificationsTreeProps {
-  getIdsProvider: (imodelKey: string) => ClassificationsTreeIdsProvider;
+  imodelAccess: ClassificationsTreeIModelAccess;
+  idsProvider: ClassificationsTreeIdsProvider;
 }
 
 /**
@@ -162,11 +163,13 @@ type ClassificationsTreeInstanceKeyPathsProps =
   | ClassificationsTreeInstanceKeyPathsFromInstanceKeysProps;
 
 /**
- * Search-specific options for a classifications tree with shared data access and configuration.
+ * Search-specific data access and options for a classifications tree.
  * @beta
  */
-type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions &
-  ({ label: string } | { targetItems: Array<InstanceKey> });
+type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & {
+  /** Access to the iModel version to search. Shares its ID provider with hierarchy definitions using the same key. */
+  imodelAccess: ClassificationsTreeIModelAccess;
+} & ({ label: string } | { targetItems: Array<InstanceKey> });
 
 /**
  * Full class names of instances that may appear in a classifications hierarchy search path.
@@ -201,50 +204,49 @@ export interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree,
 }
 
 /**
- * Creates a classifications hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Creates a classifications hierarchy definition factory and search helpers that share hierarchy configuration and a unique ID.
  *
  * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
  *
- * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * Pass the returned `getHierarchyDefinition` to `createMergedIModelHierarchyProvider`, or call it with an
+ * iModel's access to obtain a definition for `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
 export function createClassificationsTree(props: ClassificationsTreeProps) {
-  const idsProvider =
-    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
-    createClassificationsTreeIdsProvider({ imodelAccess: props.imodelAccess, hierarchyConfig: props.hierarchyConfig });
-  const sharedProps = {
-    imodelAccess: props.imodelAccess,
-    hierarchyConfig: props.hierarchyConfig,
-    idsProvider,
-    uniqueId: props.uniqueId ?? Guid.createValue(),
-  };
-  const definition: HierarchyDefinition = new ClassificationsTreeDefinition({
-    ...sharedProps,
-    getIdsProvider:
-      props.getIdsProvider ??
-      ((imodelKey) => {
-        if (imodelKey !== props.imodelAccess.imodelKey) {
-          throw new Error(
-            `createClassificationsTree requires getIdsProvider when used with multiple iModel versions. Expected "${props.imodelAccess.imodelKey}", received "${imodelKey}".`,
-          );
-        }
-        return idsProvider;
-      }),
-  });
+  const idsProviders = new Map<string, ClassificationsTreeIdsProvider>();
+  const getIdsProvider = (imodelAccess: ClassificationsTreeIModelAccess) =>
+    getOrCreate({
+      map: idsProviders,
+      createFunc: () =>
+        props.getIdsProvider?.(imodelAccess.imodelKey) ??
+        createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig: props.hierarchyConfig }),
+      key: imodelAccess.imodelKey,
+    });
+  const sharedProps = { hierarchyConfig: props.hierarchyConfig, uniqueId: props.uniqueId ?? Guid.createValue() };
   return {
-    definition,
+    /** Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider. */
+    getHierarchyDefinition: (imodelAccess: ClassificationsTreeIModelAccess): HierarchyDefinition =>
+      new ClassificationsTreeDefinition({ ...sharedProps, imodelAccess, idsProvider: getIdsProvider(imodelAccess) }),
     /**
      * Yields hierarchy paths to instances matching the supplied label or instance keys.
      * @throws An error if the configured search limit is exceeded.
      */
     createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) =>
-      ClassificationsTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+      ClassificationsTreeDefinition.createInstanceKeyPaths({
+        ...searchProps,
+        ...sharedProps,
+        idsProvider: getIdsProvider(searchProps.imodelAccess),
+      }),
     /**
      * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
      * @throws An error if the configured search limit is exceeded.
      */
     createSearchTree: async (searchProps: ClassificationsTreeSearchProps & { revealTargets?: boolean }) =>
-      ClassificationsTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+      ClassificationsTreeDefinition.createSearchTree({
+        ...searchProps,
+        ...sharedProps,
+        idsProvider: getIdsProvider(searchProps.imodelAccess),
+      }),
   };
 }
 
@@ -365,15 +367,10 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
   async #createClassificationTableChildrenQuery({
     parentNodeInstanceIds: classificationTableIds,
     instanceFilter,
-    parentNode,
     createSelectClause,
     createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const imodelKey = getParentNodeIModelKey(parentNode.key);
-    if (!imodelKey) {
-      return [];
-    }
-    const idsProvider = this.#props.getIdsProvider(imodelKey);
+    const idsProvider = this.#props.idsProvider;
     const childClassificationsDefinition =
       idsProvider.state === "loaded"
         ? await this.#createCachedChildClassificationsQuery({
@@ -396,15 +393,10 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
   async #createClassificationChildrenQuery({
     parentNodeInstanceIds: parentClassificationIds,
     instanceFilter,
-    parentNode,
     createSelectClause,
     createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const parentImodelKey = getParentNodeIModelKey(parentNode.key);
-    if (!parentImodelKey) {
-      return [];
-    }
-    const idsProvider = this.#props.getIdsProvider(parentImodelKey);
+    const idsProvider = this.#props.idsProvider;
     const [elementsInstanceFilterClauses, childClassificationsDefinition] = await Promise.all([
       createFilterClauses({
         filter: instanceFilter,
@@ -743,10 +735,6 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
     // the builder only receives `ClassificationsTreeSearchPath` entries, so the tree identifiers are guaranteed to be of those classes
     return builder.getTree() as ClassificationsTreeSearchTree[];
   }
-}
-
-function getParentNodeIModelKey(instanceKey: InstancesNodeKey): string | undefined {
-  return instanceKey.instanceKeys[0]?.imodelKey;
 }
 
 const CLASSIFICATION_TABLE_TYPE_AS_NUMBER = 0;

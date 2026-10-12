@@ -123,22 +123,22 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = setupResult;
-      const { createInstanceKeyPaths } = createModelsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        hierarchyConfig: { subjects: { root: "exclude" } },
-      });
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const { createInstanceKeyPaths } = createModelsTree({ hierarchyConfig: { subjects: { root: "exclude" } } });
 
-      expect(await collect(createInstanceKeyPaths({ label: "matching model", limit: 1 }))).toEqual([
+      expect(await collect(createInstanceKeyPaths({ imodelAccess, label: "matching model", limit: 1 }))).toEqual([
         { path: [adjustedModelKey(keys.model)], target: keys.model.id },
       ]);
-      expect(await collect(createInstanceKeyPaths({ label: "matching element", limit: "unbounded" }))).toEqual([
+      expect(
+        await collect(createInstanceKeyPaths({ imodelAccess, label: "matching element", limit: "unbounded" })),
+      ).toEqual([
         {
           path: [adjustedModelKey(keys.model), keys.category, adjustedElementKey(keys.element)],
           target: keys.element.id,
         },
       ]);
       for (const label of ["isPrivate", "isTemplate"]) {
-        expect(await collect(createInstanceKeyPaths({ label }))).toEqual([]);
+        expect(await collect(createInstanceKeyPaths({ imodelAccess, label }))).toEqual([]);
       }
     });
 
@@ -157,11 +157,9 @@ describe("Models tree", () => {
           return { subject, linkedSubject, model, category, element };
         }),
       );
-      const { createSearchTree } = createModelsTree({
-        imodelAccess: createIModelAccess(setupResult.imodelConnection),
-        hierarchyConfig: { subjects: { root: "exclude" } },
-      });
+      const { createSearchTree } = createModelsTree({ hierarchyConfig: { subjects: { root: "exclude" } } });
       const paths = await createSearchTree({
+        imodelAccess: createIModelAccess(setupResult.imodelConnection),
         targetItems: [target === "model" ? adjustedModelKey(setupResult.model) : setupResult[target]],
         revealTargets: true,
         abortSignal: new AbortController().signal,
@@ -272,7 +270,6 @@ describe("Models tree", () => {
       );
       const imodelAccess = createIModelAccess(setupResult.imodelConnection);
       const { createInstanceKeyPaths, createSearchTree } = createModelsTree({
-        imodelAccess,
         hierarchyConfig: { subjects: { root: "exclude" } },
       });
       for (const includeOnlyVisibleNodeInstanceKeys of [true, false]) {
@@ -322,7 +319,7 @@ describe("Models tree", () => {
             target: subModelElement.id,
           },
         ];
-        const searchProps = { label: "matching", includeOnlyVisibleNodeInstanceKeys };
+        const searchProps = { imodelAccess, label: "matching", includeOnlyVisibleNodeInstanceKeys };
         const paths = await collect(createInstanceKeyPaths(searchProps));
         expect(paths).toHaveLength(5);
         expect(paths).toEqual(expect.arrayContaining(expectedPaths));
@@ -330,6 +327,7 @@ describe("Models tree", () => {
         expect(await createSearchTree(searchProps)).toEqual(expectedTree);
 
         const targetSearchProps = {
+          imodelAccess,
           targetItems: [
             physicalModel,
             graphicalModel,
@@ -478,11 +476,14 @@ describe("Models tree", () => {
         await setup[Symbol.asyncDispose]();
       });
 
-      async function search(props: Parameters<ReturnType<typeof createModelsTree>["createSearchTree"]>[0]) {
-        return createModelsTree({
+      async function search(
+        props: { label: string; limit?: number } | { targetItems: Array<InstanceKey | ElementsGroupInfo> },
+      ) {
+        return createModelsTree({ hierarchyConfig: { subjects: { root: "exclude" } } }).createSearchTree({
+          ...props,
           imodelAccess: createIModelAccess(setup.imodelConnection),
-          hierarchyConfig: { subjects: { root: "exclude" } },
-        }).createSearchTree({ ...props, revealTargets: true });
+          revealTargets: true,
+        });
       }
 
       it.each(["targetItems", "label"] as const)("keeps visible matches using %s", async (input) => {
@@ -645,12 +646,14 @@ describe("Models tree", () => {
       ])("shares factory inputs with unique ID $uniqueId", async ({ uniqueId, hierarchyConfig }) => {
         const imodelAccess = createIModelAccess(imodelConnection);
         const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-        const { definition, createInstanceKeyPaths, createSearchTree } = createModelsTree({
-          imodelAccess,
+        const { getHierarchyDefinition, createInstanceKeyPaths, createSearchTree } = createModelsTree({
           hierarchyConfig,
           uniqueId,
         });
-        using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
+        using provider = createIModelHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: getHierarchyDefinition(imodelAccess),
+        });
         const rootSubject = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
         const roots = await collect(provider.getNodes({ parentNode: undefined }));
         expect(roots).toHaveLength(1);
@@ -665,7 +668,7 @@ describe("Models tree", () => {
           { ...keys.elements[0], className: CLASS_NAMES.GeometricElement3d },
         ];
         queryReader.mockClear();
-        expect(await collect(createInstanceKeyPaths({ label: "matching element 0" }))).toEqual([
+        expect(await collect(createInstanceKeyPaths({ imodelAccess, label: "matching element 0" }))).toEqual([
           { path: expectedPath, target: keys.elements[0].id },
         ]);
         const instanceKeyPathsToken = queryReader.mock.calls.find(([, options]) =>
@@ -684,7 +687,7 @@ describe("Models tree", () => {
           (children, identifier) => [{ identifier, ...(children.length ? { children } : {}) }],
           [],
         );
-        expect(await createSearchTree({ label: "matching element 0" })).toEqual(expectedSearchTree);
+        expect(await createSearchTree({ imodelAccess, label: "matching element 0" })).toEqual(expectedSearchTree);
         expect(queryReader).toHaveBeenCalledWith(
           expect.anything(),
           expect.objectContaining({ restartToken: `ModelsTreeDefinition/${resolvedUniqueId}/filter-by-label` }),
@@ -692,10 +695,8 @@ describe("Models tree", () => {
       });
 
       it.each(["createSearchTree", "createInstanceKeyPaths"])("handles an empty search label in %s", async (method) => {
-        const { createSearchTree, createInstanceKeyPaths } = createModelsTree({
-          imodelAccess: createIModelAccess(imodelConnection),
-        });
-        const props = { label: "", limit: 2 };
+        const { createSearchTree, createInstanceKeyPaths } = createModelsTree();
+        const props = { imodelAccess: createIModelAccess(imodelConnection), label: "", limit: 2 };
         const result = method === "createSearchTree" ? createSearchTree(props) : createInstanceKeyPaths(props).next();
         await expect(result).rejects.toThrow(new SearchLimitExceededError(2));
       });
@@ -706,11 +707,9 @@ describe("Models tree", () => {
         { limit: 103, exceedsLimit: false },
         { limit: "unbounded" as const, exceedsLimit: false },
       ])("honors label search limit $limit with 103 matches", async ({ limit, exceedsLimit }) => {
-        const { createSearchTree } = createModelsTree({
-          imodelAccess: createIModelAccess(imodelConnection),
-          hierarchyConfig: { subjects: { root: "exclude" } },
-        });
+        const { createSearchTree } = createModelsTree({ hierarchyConfig: { subjects: { root: "exclude" } } });
         const searchPaths = createSearchTree({
+          imodelAccess: createIModelAccess(imodelConnection),
           label: "matching element",
           limit,
           revealTargets: true,
@@ -3336,11 +3335,9 @@ describe("Models tree", () => {
         });
 
         it("finds instance key paths by target instance key", async () => {
-          const { createSearchTree } = createModelsTree({
-            imodelAccess: createIModelAccess(imodelConnection),
-            hierarchyConfig,
-          });
+          const { createSearchTree } = createModelsTree({ hierarchyConfig });
           const searchPaths = await createSearchTree({
+            imodelAccess: createIModelAccess(imodelConnection),
             targetItems,
             revealTargets: true,
             abortSignal: new AbortController().signal,
@@ -3353,11 +3350,9 @@ describe("Models tree", () => {
             return;
           }
 
-          const { createSearchTree } = createModelsTree({
-            imodelAccess: createIModelAccess(imodelConnection),
-            hierarchyConfig,
-          });
+          const { createSearchTree } = createModelsTree({ hierarchyConfig });
           const searchPaths = await createSearchTree({
+            imodelAccess: createIModelAccess(imodelConnection),
             label: targetInstanceLabel,
             revealTargets: true,
             abortSignal: new AbortController().signal,
@@ -3369,7 +3364,7 @@ describe("Models tree", () => {
           const imodelAccess = createIModelAccess(imodelConnection);
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
-            hierarchyDefinition: createModelsTree({ imodelAccess, hierarchyConfig }).definition,
+            hierarchyDefinition: createModelsTree({ hierarchyConfig }).getHierarchyDefinition(imodelAccess),
             search: { paths: instanceKeyPaths },
           });
           await validateHierarchy({ provider: hierarchyProvider, expect: expectedHierarchy });
@@ -3420,11 +3415,9 @@ describe("Models tree", () => {
       );
       const { imodelConnection, expectedPaths, formattedECInstanceId } = buildIModelResult;
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
-      const { createSearchTree } = createModelsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        hierarchyConfig,
-      });
+      const { createSearchTree } = createModelsTree({ hierarchyConfig });
       const searchPaths = await createSearchTree({
+        imodelAccess: createIModelAccess(imodelConnection),
         label: formattedECInstanceId,
         revealTargets: true,
         abortSignal: new AbortController().signal,
@@ -3448,13 +3441,12 @@ describe("Models tree", () => {
       );
       const { imodelConnection, ...ids } = buildIModelResult;
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
-      const { createSearchTree } = createModelsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        hierarchyConfig,
-      });
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const { createSearchTree } = createModelsTree({ hierarchyConfig });
 
       const abortController1 = new AbortController();
       const pathsPromiseAborted = createSearchTree({
+        imodelAccess,
         label: "Test",
         revealTargets: true,
         abortSignal: abortController1.signal,
@@ -3464,6 +3456,7 @@ describe("Models tree", () => {
 
       const abortController2 = new AbortController();
       const pathsPromise = createSearchTree({
+        imodelAccess,
         label: "Test",
         revealTargets: true,
         abortSignal: abortController2.signal,
@@ -3498,16 +3491,15 @@ describe("Models tree", () => {
       );
       const { imodelConnection, ...ids } = buildIModelResult;
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
-      const { createSearchTree } = createModelsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        hierarchyConfig,
-      });
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const { createSearchTree } = createModelsTree({ hierarchyConfig });
       const targetItems: Array<InstanceKey | ElementsGroupInfo> = [
         { className: "BisCore.SpatialCategory", id: ids.category.id },
       ];
 
       const abortController1 = new AbortController();
       const pathsPromiseAborted = createSearchTree({
+        imodelAccess,
         targetItems,
         revealTargets: true,
         abortSignal: abortController1.signal,
@@ -3516,7 +3508,12 @@ describe("Models tree", () => {
       expect(await pathsPromiseAborted).toEqual([]);
 
       const abortController2 = new AbortController();
-      const pathsPromise = createSearchTree({ targetItems, revealTargets: true, abortSignal: abortController2.signal });
+      const pathsPromise = createSearchTree({
+        imodelAccess,
+        targetItems,
+        revealTargets: true,
+        abortSignal: abortController2.signal,
+      });
       expect(await pathsPromise).toEqual([
         {
           identifier: { className: "BisCore.GeometricModel3d", id: ids.model.id },
@@ -3564,13 +3561,16 @@ describe("Models tree", () => {
       );
       const { imodelConnection, keys } = buildIModelResult;
       const hierarchyConfig = { subjects: { root: "exclude" as const } };
-      const { createSearchTree } = createModelsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        hierarchyConfig,
-      });
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const { createSearchTree } = createModelsTree({ hierarchyConfig });
 
       expect(
-        await createSearchTree({ label: "_", revealTargets: true, abortSignal: new AbortController().signal }),
+        await createSearchTree({
+          imodelAccess,
+          label: "_",
+          revealTargets: true,
+          abortSignal: new AbortController().signal,
+        }),
       ).toEqual([
         {
           identifier: adjustedModelKey(keys.model),
@@ -3591,7 +3591,12 @@ describe("Models tree", () => {
       ]);
 
       expect(
-        await createSearchTree({ label: "%", revealTargets: true, abortSignal: new AbortController().signal }),
+        await createSearchTree({
+          imodelAccess,
+          label: "%",
+          revealTargets: true,
+          abortSignal: new AbortController().signal,
+        }),
       ).toEqual([
         {
           identifier: adjustedModelKey(keys.model),
@@ -3612,7 +3617,12 @@ describe("Models tree", () => {
       ]);
 
       expect(
-        await createSearchTree({ label: "\\", revealTargets: true, abortSignal: new AbortController().signal }),
+        await createSearchTree({
+          imodelAccess,
+          label: "\\",
+          revealTargets: true,
+          abortSignal: new AbortController().signal,
+        }),
       ).toEqual([
         {
           identifier: adjustedModelKey(keys.model),

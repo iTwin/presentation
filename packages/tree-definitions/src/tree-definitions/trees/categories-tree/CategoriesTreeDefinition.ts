@@ -83,20 +83,15 @@ import type { CategoryNodeProps, ElementNodeProps } from "./CategoriesTreeNodeIn
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
 /**
- * Data access, view type, and configuration for a categories hierarchy.
+ * Provider resolution, view type, and configuration for a categories hierarchy.
  * @beta
  */
 interface CategoriesTreeProps {
   /**
    * Returns the ID provider for `imodelKey`, with matching view type and element filters.
-   * Different iModel versions need separate providers. Created internally from `imodelAccess` when omitted.
+   * Different iModel versions need separate providers. Created internally for each iModel when omitted.
    */
   getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
-  /**
-   * Access used for schema checks, search, and the default ID provider.
-   * This factory keeps one provider for this access; create a separate factory for each iModel version.
-   */
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   viewType: "2d" | "3d";
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
@@ -104,16 +99,25 @@ interface CategoriesTreeProps {
   uniqueId?: GuidString;
 }
 
+/**
+ * Schema and query access for a specific iModel version used by categories hierarchy definitions and searches.
+ * @beta
+ */
+type CategoriesTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
+
 /** @internal */
 interface CategoriesTreeDefinitionProps extends CategoriesTreeProps {
+  imodelAccess: CategoriesTreeIModelAccess;
   idsProvider: CategoriesTreeIdsProvider;
 }
 
 /**
- * Search-specific options for a categories tree with shared data access and configuration.
+ * Search-specific data access and options for a categories tree.
  * @beta
  */
 interface CategoriesTreeSearchProps {
+  /** Access to the iModel version to search. Shares its ID provider with hierarchy definitions using the same key. */
+  imodelAccess: CategoriesTreeIModelAccess;
   /** Substring of the instance label to search for. */
   label: string;
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
@@ -240,12 +244,13 @@ export interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "ide
 }
 
 /**
- * Creates a categories hierarchy definition and label search helpers that share data access, hierarchy configuration, and a unique ID.
+ * Creates a categories hierarchy definition factory and label search helpers that share hierarchy configuration and a unique ID.
  * Creates and shares cached ID providers for the specified view type using the resolved hierarchy configuration.
  *
  * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
  *
- * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * Pass the returned `getHierarchyDefinition` to `createMergedIModelHierarchyProvider`, or call it with an
+ * iModel's access to obtain a definition for `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  * @beta
  */
 export function createCategoriesTree(props: CategoriesTreeProps) {
@@ -253,40 +258,49 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
   });
-  const idsProvider =
-    props.getIdsProvider?.(props.imodelAccess.imodelKey) ??
-    createCategoriesTreeIdsProvider({
-      imodelAccess: props.imodelAccess,
-      type: props.viewType,
-      sharedIdsProvider: createSharedIdsProvider({
-        imodelAccess: props.imodelAccess,
-        elementClassName: getClassesByView(props.viewType).elementClass,
-        excludedElementClassNames:
-          hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
-      }),
+  const idsProviders = new Map<string, CategoriesTreeIdsProvider>();
+  const getIdsProvider = (imodelAccess: CategoriesTreeIModelAccess) =>
+    getOrCreate({
+      map: idsProviders,
+      createFunc: () =>
+        props.getIdsProvider?.(imodelAccess.imodelKey) ??
+        createCategoriesTreeIdsProvider({
+          imodelAccess,
+          type: props.viewType,
+          sharedIdsProvider: createSharedIdsProvider({
+            imodelAccess,
+            elementClassName: getClassesByView(props.viewType).elementClass,
+            excludedElementClassNames:
+              hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
+          }),
+        }),
+      key: imodelAccess.imodelKey,
     });
-  const sharedProps = {
-    imodelAccess: props.imodelAccess,
-    viewType: props.viewType,
-    idsProvider,
-    hierarchyConfig,
-    uniqueId: props.uniqueId ?? Guid.createValue(),
-  };
-  const definition: HierarchyDefinition = new CategoriesTreeDefinition(sharedProps);
+  const sharedProps = { viewType: props.viewType, hierarchyConfig, uniqueId: props.uniqueId ?? Guid.createValue() };
   return {
-    definition,
+    /** Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider. */
+    getHierarchyDefinition: (imodelAccess: CategoriesTreeIModelAccess): HierarchyDefinition =>
+      new CategoriesTreeDefinition({ ...sharedProps, imodelAccess, idsProvider: getIdsProvider(imodelAccess) }),
     /**
      * Yields hierarchy paths to instances whose labels contain the supplied text.
      * @throws An error if the configured search limit is exceeded.
      */
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) =>
-      CategoriesTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
+      CategoriesTreeDefinition.createInstanceKeyPaths({
+        ...searchProps,
+        ...sharedProps,
+        idsProvider: getIdsProvider(searchProps.imodelAccess),
+      }),
     /**
      * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
      * @throws An error if the configured search limit is exceeded.
      */
     createSearchTree: async (searchProps: CategoriesTreeSearchProps & { revealTargets?: boolean }) =>
-      CategoriesTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
+      CategoriesTreeDefinition.createSearchTree({
+        ...searchProps,
+        ...sharedProps,
+        idsProvider: getIdsProvider(searchProps.imodelAccess),
+      }),
   };
 }
 

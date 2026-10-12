@@ -16,15 +16,16 @@ import {
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   createModelsTree,
   createModelsTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
 import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { createIModelAccess } from "../Common.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import {
   buildIModel,
@@ -72,16 +73,130 @@ describe("Models tree", () => {
     const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockResolvedValue([]);
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
     const getIdsProvider = vi.fn(() => idsProvider);
-    const tree = createModelsTree({ imodelAccess, hierarchyConfig, getIdsProvider });
-    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+    const tree = createModelsTree({ hierarchyConfig, getIdsProvider });
+    using provider = createIModelHierarchyProvider({
+      imodelAccess,
+      hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
+    });
 
     await validateHierarchy({ provider, expect: [] });
     expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
-    expect(await tree.createSearchTree({ targetItems: [imodel.subject] })).toEqual([]);
+    expect(await tree.createSearchTree({ imodelAccess, targetItems: [imodel.subject] })).toEqual([]);
     expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
     expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
     expect(queryReader).not.toHaveBeenCalled();
   });
+
+  it.each(["default", "custom"] as const)(
+    "uses iModel-specific definitions in a merged hierarchy with %s ID providers",
+    async (providerType) => {
+      await using versions = await createChangedIModels(
+        async (db) =>
+          withEditTxn(db, (txn) => {
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: "base model",
+              partitionParentId: IModel.rootSubjectId,
+            });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const element = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+            return { model, category, element };
+          }),
+        async (db, baseKeys) =>
+          withEditTxn(db, (txn) => {
+            txn.deleteElement(baseKeys.element.id);
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: "new model",
+              partitionParentId: IModel.rootSubjectId,
+            });
+            const element = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: baseKeys.category.id,
+              userLabel: "new element",
+            });
+            return { model, category: baseKeys.category, element };
+          }),
+      );
+      const hierarchyConfig = { subjects: { root: "exclude" as const } };
+      const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => ({
+        imodelAccess: createIModelAccess(imodelConnection),
+      }));
+      const [base, changed] = imodels;
+      const getIdsProvider =
+        providerType === "custom"
+          ? vi.fn((imodelKey: string) => {
+              const imodelAccess = imodels.find((imodel) => imodel.imodelAccess.imodelKey === imodelKey)!.imodelAccess;
+              return createModelsTreeIdsProvider({
+                imodelAccess,
+                hierarchyConfig,
+                sharedIdsProvider: createSharedIdsProvider({
+                  imodelAccess,
+                  elementClassName: "BisCore.GeometricElement3d",
+                }),
+              });
+            })
+          : undefined;
+      const schemaChecks = imodels.map(({ imodelAccess }) => vi.spyOn(imodelAccess, "classDerivesFrom"));
+      const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
+      const changedQueryReader = vi.spyOn(changed.imodelAccess, "createQueryReader");
+      const tree = createModelsTree({ hierarchyConfig, getIdsProvider });
+      using provider = createMergedIModelHierarchyProvider({
+        imodels,
+        getHierarchyDefinition: tree.getHierarchyDefinition,
+      });
+
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toMatchObject([
+        {
+          label: "base model",
+          key: { instanceKeys: [{ ...versions.base.model, imodelKey: base.imodelAccess.imodelKey }] },
+        },
+        {
+          label: "new model",
+          key: { instanceKeys: [{ ...versions.changeset1.model, imodelKey: changed.imodelAccess.imodelKey }] },
+        },
+      ]);
+      for (const schemaCheck of schemaChecks) {
+        expect(schemaCheck).toHaveBeenCalledWith(CLASS_NAMES.GeometricElement3d, CLASS_NAMES.GeometricElement3d);
+      }
+      if (getIdsProvider) {
+        expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess.imodelKey], [changed.imodelAccess.imodelKey]]);
+      }
+
+      baseQueryReader.mockClear();
+      changedQueryReader.mockClear();
+      expect(await tree.createSearchTree({ imodelAccess: changed.imodelAccess, label: "new element" })).toMatchObject([
+        {
+          identifier: { id: versions.changeset1.model.id },
+          children: [
+            {
+              identifier: versions.changeset1.category,
+              children: [{ identifier: { id: versions.changeset1.element.id } }],
+            },
+          ],
+        },
+      ]);
+      expect(baseQueryReader).not.toHaveBeenCalled();
+      expect(changedQueryReader).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
+      );
+
+      changedQueryReader.mockClear();
+      expect(
+        await collect(tree.createInstanceKeyPaths({ imodelAccess: base.imodelAccess, label: "new element" })),
+      ).toEqual([]);
+      expect(changedQueryReader).not.toHaveBeenCalled();
+      expect(baseQueryReader).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
+      );
+      if (getIdsProvider) {
+        expect(getIdsProvider).toHaveBeenCalledTimes(2);
+      }
+    },
+  );
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createProvider(props: Omit<Props<typeof createModelsTreeProvider>, "cacheState">) {
