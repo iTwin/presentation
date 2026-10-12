@@ -79,8 +79,6 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
-
 import {
   createIModelHierarchyProvider,
   createNodesQueryClauseFactory,
@@ -89,6 +87,7 @@ import {
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
+import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
 
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's

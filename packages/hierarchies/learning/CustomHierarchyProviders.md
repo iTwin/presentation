@@ -46,11 +46,10 @@ However, it's possible to write one from scratch. The following example demonstr
 
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
 class IModelHierarchyProvider implements HierarchyProvider {
@@ -179,7 +178,8 @@ First, let's define a sample books service:
 ```ts
 // Define a type for a filter that can be applied to books service queries.
 type BooksServiceFilter<TEntry> =
-  { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
+  | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
@@ -339,7 +339,6 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
-
 import {
   ConcatenatedValue,
   ConcatenatedValuePart,
@@ -441,14 +440,13 @@ Let's start with the first step:
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import {
   createHierarchyFilteringHelper,
   GenericNodeKey,
   HierarchyFilteringPath,
   HierarchyNodeIdentifier,
 } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
 // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
@@ -484,14 +482,13 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import {
   createHierarchyFilteringHelper,
   GenericNodeKey,
   HierarchyFilteringPath,
   HierarchyNodeIdentifier,
 } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 
 let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
 const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
