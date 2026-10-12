@@ -925,10 +925,14 @@ describe("Categories tree", () => {
               });
 
               const category = insertCategory({ txn, codeValue: "cat", modelId: definitionModelChild.id });
+              const secondCategory = insertCategory({ txn, codeValue: "cat2", modelId: definitionModelChild.id });
+              const parentCategory = insertCategory({ txn, codeValue: "parent cat", modelId: definitionModel.id });
 
               insertElement({ txn, modelId: elementsModel.id, categoryId: category.id });
+              insertElement({ txn, modelId: elementsModel.id, categoryId: secondCategory.id });
+              insertElement({ txn, modelId: elementsModel.id, categoryId: parentCategory.id });
 
-              return { definitionContainer, definitionContainerChild, category };
+              return { definitionContainer, definitionContainerChild, category, secondCategory, parentCategory };
             }),
           );
 
@@ -951,7 +955,17 @@ describe("Categories tree", () => {
                         label: "cat",
                         children: false,
                       }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.secondCategory],
+                        label: "cat2",
+                        children: false,
+                      }),
                     ],
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.parentCategory],
+                    label: "parent cat",
+                    children: false,
                   }),
                 ],
               }),

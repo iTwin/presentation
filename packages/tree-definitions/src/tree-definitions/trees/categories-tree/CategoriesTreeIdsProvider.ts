@@ -16,7 +16,6 @@ import {
   reduce,
   shareReplay,
   tap,
-  toArray,
 } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom, ECSql } from "@itwin/presentation-shared";
@@ -208,7 +207,7 @@ export function createCategoriesTreeIdsProvider({
               JOIN ${categoryClass} c ON c.Model.Id = dc.ECInstanceId
               JOIN IdSet(?) categoryIdSet ON c.ECInstanceId = categoryIdSet.id
 
-              UNION ALL
+              UNION
 
               SELECT
                 pdc.ECInstanceId,
@@ -601,21 +600,52 @@ function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], incl
 function excludeDefinitionContainers(
   definitionContainers: Observable<{ id: DefinitionContainerId; modelId: Id64String; isExcluded: boolean }>,
 ): Observable<{ id: DefinitionContainerId; modelId: Id64String }> {
-  return definitionContainers.pipe(
-    toArray(),
-    mergeMap((containers) => {
-      const containersMap = new Map(containers.map((dc) => [dc.id, dc]));
-      const hasExcludedAncestorOrSelf = (id: DefinitionContainerId): boolean => {
-        for (let current = containersMap.get(id); current !== undefined; current = containersMap.get(current.modelId)) {
-          if (current.isExcluded) {
-            return true;
+  return defer(() =>
+    definitionContainers.pipe(
+      reduce(
+        (acc, row) => {
+          acc.containersMap.set(row.id, row);
+          acc.parentContainers.add(row.modelId);
+          let children = acc.parentChildrenMap.get(row.modelId);
+          if (!children) {
+            children = [];
+            acc.parentChildrenMap.set(row.modelId, children);
+          }
+          children.push(row.id);
+          return acc;
+        },
+        {
+          containersMap: new Map<
+            DefinitionContainerId,
+            { id: DefinitionContainerId; modelId: Id64String; isExcluded: boolean }
+          >(),
+          parentChildrenMap: new Map<DefinitionContainerId | ModelId, DefinitionContainerId[]>(),
+          parentContainers: new Set<DefinitionContainerId | ModelId>(),
+        },
+      ),
+      mergeMap(({ containersMap, parentChildrenMap, parentContainers }) => {
+        const nonExcludedContainers: Array<{ id: DefinitionContainerId; modelId: Id64String }> = [];
+        const collectNonExcludedChildren = (id: DefinitionContainerId | ModelId) => {
+          const children = parentChildrenMap.get(id);
+          if (!children?.length) {
+            return;
+          }
+          for (const child of children) {
+            const childEntry = containersMap.get(child);
+            if (!childEntry || childEntry.isExcluded) {
+              continue;
+            }
+            nonExcludedContainers.push({ id: child, modelId: childEntry.modelId });
+            collectNonExcludedChildren(child);
+          }
+        };
+        for (const parentContainer of parentContainers) {
+          if (!containersMap.has(parentContainer)) {
+            collectNonExcludedChildren(parentContainer);
           }
         }
-        return false;
-      };
-      return [...containersMap.values()]
-        .filter(({ id }) => !hasExcludedAncestorOrSelf(id))
-        .map(({ id, modelId }) => ({ id, modelId }));
-    }),
+        return nonExcludedContainers;
+      }),
+    ),
   );
 }
