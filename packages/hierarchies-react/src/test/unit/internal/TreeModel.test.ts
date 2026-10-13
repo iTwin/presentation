@@ -529,7 +529,7 @@ describe("TreeModel", () => {
 describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
     expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).toBe(false);
-    expect(isTreeModelHierarchyNode({ id: "info-node", type: "Unknown", message: "info" })).toBe(false);
+    expect(isTreeModelHierarchyNode({ id: "info-node", type: "Generic", message: "info" })).toBe(false);
     expect(
       isTreeModelHierarchyNode({
         id: "hierarchy-node",

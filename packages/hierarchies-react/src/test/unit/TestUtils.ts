@@ -89,7 +89,7 @@ export function createTestGenericErrorInfo({
   id,
   ...props
 }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
-  return { ...props, id, message: props.message ?? "test-message", type: props.type ?? "Unknown" };
+  return { ...props, id, message: props.message ?? "test-message", type: props.type ?? "Generic" };
 }
 
 export function createTestChildrenLoadErrorInfo({

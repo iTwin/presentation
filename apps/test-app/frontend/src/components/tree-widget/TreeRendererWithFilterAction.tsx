@@ -38,7 +38,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
             ...node,
             errors: [
               ...node.errors,
-              { id: `${node.id}-object-error`, type: "Unknown" as const, message: "Object {{node}} is not available" },
+              { id: `${node.id}-object-error`, type: "Generic" as const, message: "Object {{node}} is not available" },
             ],
           };
         }
@@ -116,7 +116,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
 
 type ErrorItemProps = ComponentProps<typeof ErrorItemRenderer>;
 function CustomErrorItemRenderer({ error, treeNode, ...rest }: ErrorItemProps) {
-  if (error.type === "Unknown") {
+  if (error.type === "Generic") {
     return <ErrorRegion.Item message={error.message.replace("{{node}}", treeNode.label)} messageId={error.id} />;
   }
   return <ErrorItemRenderer error={error} treeNode={treeNode} {...rest} />;

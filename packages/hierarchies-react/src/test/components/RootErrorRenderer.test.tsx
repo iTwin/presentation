@@ -13,7 +13,7 @@ import type { StrataKitRootErrorRendererProps } from "../../presentation-hierarc
 COLOR_SCHEMES.forEach((colorScheme) => {
   describe(`[${colorScheme}] <StrataKitRootErrorRenderer />`, () => {
     const defaultProps: StrataKitRootErrorRendererProps = {
-      error: { id: "test-error", type: "Unknown", message: "Something went wrong" },
+      error: { id: "test-error", type: "Generic", message: "Something went wrong" },
       reloadTree: vi.fn(),
       getHierarchyLevelDetails: vi.fn(),
     };
