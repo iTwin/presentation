@@ -5,7 +5,7 @@
 "use strict";
 
 const { spawn } = require("child_process");
-const fg = require("fast-glob");
+const fs = require("fs");
 
 const [_node, _script, ...targets] = process.argv;
 if (!targets.length) {
@@ -17,7 +17,7 @@ let hasError = false;
 let combinedStdout = "";
 let combinedStderr = "";
 
-const filePaths = targets.flatMap((pattern) => fg.sync(pattern, { dot: true }));
+const filePaths = fs.globSync(targets).filter((filePath) => fs.statSync(filePath).isFile());
 
 Promise.all(
   filePaths.map(

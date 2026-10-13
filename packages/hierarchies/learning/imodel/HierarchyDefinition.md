@@ -75,7 +75,6 @@ import {
   HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
-
 import { ECSql } from "@itwin/presentation-shared";
 
 const hierarchyDefinition: HierarchyDefinition = {

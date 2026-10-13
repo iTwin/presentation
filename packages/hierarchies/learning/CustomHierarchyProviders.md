@@ -40,11 +40,10 @@ However, it's possible to write one from scratch. The following example demonstr
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import { BriefcaseConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
 // The `using` keyword makes sure the provider is disposed when it goes out of scope
@@ -165,7 +164,8 @@ First, let's define a sample books service:
 ```ts
 // Define a type for a filter that can be applied to books service queries.
 type BooksServiceFilter<TEntry> =
-  { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+  | { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" }
+  | Partial<TEntry>;
 
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
@@ -319,7 +319,6 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 ```ts
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
-
 import {
   ConcatenatedValue,
   ConcatenatedValuePart,
@@ -466,14 +465,13 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 
 ```ts
 import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import {
   createHierarchySearchHelper,
   GenericNodeKey,
   HierarchyNodeIdentifier,
   HierarchySearchTree,
 } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 
 let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
 const provider = createHierarchyProvider(({ hierarchyChanged }) => ({

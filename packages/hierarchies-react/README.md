@@ -109,16 +109,14 @@ The component renders a virtualized tree using the `Tree` component from `@strat
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
+import { useEffect, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-
-import { createStorage, SelectionStorage } from "@itwin/unified-selection";
-
-import { useEffect, useState } from "react";
-import { Props } from "@itwin/presentation-shared";
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { Props } from "@itwin/presentation-shared";
+import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(imodel);
@@ -219,7 +217,6 @@ import {
   LocalizationContextProvider,
   useIModelTree,
 } from "@itwin/presentation-hierarchies-react";
-
 import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 ```
 
