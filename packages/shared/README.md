@@ -49,7 +49,7 @@ Classes may be hidden from users through `CoreCustomAttributes.HiddenClass` and 
 
 - `createHiddenClassesTree` builds the tree for `ECSchemaProvider.getHiddenClassesTree` implementations. It doesn't cache the result.
 
-Use `ECSql.createHiddenClassesWhereClause` to turn the tree into an ECSQL condition.
+Use `ECSql.createHiddenClassesFilter` to exclude instances of hidden classes in ECSQL queries.
 
 ### `ECClassHierarchyInspector` & `createCachingECClassHierarchyInspector` (deprecated)
 
@@ -266,17 +266,15 @@ The ECSql utilities group contains a number of functions to help create complex 
   // `
   ```
 
-- `createHiddenClassesWhereClause` - creates an ECSQL condition that selects only instances visible according to the given hidden classes tree (see `ECSchemaProvider.getHiddenClassesTree`). Returns an empty string when the tree doesn't restrict anything.
+- `createHiddenClassesFilter` - creates a filter that excludes instances of classes, derived from the given base class and hidden through `HiddenClass` or `HiddenSchema` custom attributes. The base class itself is never excluded, and classes outside its hierarchy are not affected. The hidden classes tree is requested from the schema provider once (see `ECSchemaProvider.getHiddenClassesTree`), and the filter can create conditions for multiple class aliases. Each condition is an empty string when nothing needs to be excluded.
 
   Example usage:
 
   ```ts
   import { ECSql } from "@itwin/presentation-shared";
 
-  const condition = ECSql.createHiddenClassesWhereClause({
-    tree: await schemaProvider.getHiddenClassesTree("MySchema.MyClass"),
-    classAlias: "x",
-  });
+  const filter = await ECSql.createHiddenClassesFilter({ schemaProvider, baseClassName: "MySchema.MyClass" });
+  const condition = filter.createWhereClause("x");
   // condition = "[x].[ECClassId] IS NOT ([MySchema].[MyHiddenClass])"
   const ecsql = `SELECT x.ECInstanceId FROM MySchema.MyClass x ${condition ? `WHERE ${condition}` : ""}`;
   ```

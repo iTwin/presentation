@@ -37,8 +37,8 @@ export interface ECSchemaProvider {
    * Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected
    * to cache the result per selected class and share it between callers - including concurrent ones.
    *
-   * Use `ECSql.createHiddenClassesWhereClause` to create an ECSQL condition that selects only visible instances
-   * of the class. Implementations may use `createHiddenClassesTree` to build the tree.
+   * Query authors should use `ECSql.createHiddenClassesFilter` to exclude instances of hidden classes from their queries.
+   * Implementations may use `createHiddenClassesTree` to build the tree.
    *
    * @throws Error if the selected class or any of its derived classes' schemas can't be found.
    */
@@ -51,6 +51,8 @@ export interface ECSchemaProvider {
  * custom attributes.
  *
  * The tree is relative to the selected class, which is always considered visible - even if it's hidden itself:
+ * This exception applies only to the selected class; its descendants still inherit its schema-defined hidden state.
+ *
  * - Root nodes are the outermost derived classes that are hidden (`state: "hide"`).
  * - Children of a `"hide"` node are its derived classes that are explicitly shown (`state: "show"`), overriding
  *   the inherited hiding.
@@ -60,7 +62,7 @@ export interface ECSchemaProvider {
  * directly to the closest included ancestor. An empty tree means all instances of the selected class are visible.
  *
  * @see `ECSchemaProvider.getHiddenClassesTree`
- * @see `ECSql.createHiddenClassesWhereClause`
+ * @see `ECSql.createHiddenClassesFilter`
  * @public
  */
 export type HiddenClassesTreeNode = HiddenClassesTreeNodeShown | HiddenClassesTreeNodeHidden;

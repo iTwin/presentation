@@ -3,15 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, delay, forkJoin, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { defer, delay, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import {
-  createExcludedClassesClause,
-  createHiddenClassesWhereClauseFactory,
-  createWhereClause,
-  getOrCreate,
-} from "../Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
 
 import type { Observable } from "rxjs";
@@ -74,13 +70,10 @@ export class ElementModelCategoriesProvider {
       alias: "this",
       excludedClassNames: this.#excludedElementClassNames,
     });
-    return forkJoin({
-      createHiddenClassesClause: createHiddenClassesWhereClauseFactory({
-        schemaProvider: this.#imodelAccess,
-        className: this.#elementClassName,
-      }),
-    }).pipe(
-      mergeMap(({ createHiddenClassesClause }) => {
+    return from(
+      ECSql.createHiddenClassesFilter({ schemaProvider: this.#imodelAccess, baseClassName: this.#elementClassName }),
+    ).pipe(
+      mergeMap((elementsHiddenClassesFilter) => {
         const query = `
           SELECT
             this.Model.Id modelId,
@@ -95,7 +88,7 @@ export class ElementModelCategoriesProvider {
             }
           FROM ${this.#elementClassName} this
           JOIN ${CLASS_NAMES.Model} m ON m.ECInstanceId = this.Model.Id
-          ${createWhereClause({ conditions: ["m.IsPrivate = false", "m.IsTemplate = false", createHiddenClassesClause("this")] })}
+          ${createWhereClause({ conditions: ["m.IsPrivate = false", "m.IsTemplate = false", elementsHiddenClassesFilter.createWhereClause("this")] })}
           GROUP BY modelId, categoryId
         `;
         return this.#imodelAccess.createQueryReader(

@@ -14,4 +14,4 @@ export {
   createPrimitivePropertyValueSelectorProps,
 } from "./ECSqlValueSelectorSnippets.js";
 export { createRelationshipPathJoinClause, createRelationshipPathJoinInfo } from "./ECSqlJoinSnippets.js";
-export { createHiddenClassesWhereClause } from "./ECSqlHiddenClassesSnippets.js";
+export { createHiddenClassesFilter } from "./ECSqlHiddenClassesSnippets.js";
