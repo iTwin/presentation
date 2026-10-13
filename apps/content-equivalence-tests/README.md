@@ -76,6 +76,10 @@ Each iModel runs as a separate, sequential test with no test timeout. The verbos
 reporter shows per-iModel progress and results. A failing iModel does not prevent
 the remaining iModels from running.
 
+Timestamped logs identify the iModel, scenario, and implementation being processed.
+They show whether samples and captures are reused from cache or generated, when
+normalization and comparison begin, difference counts, and report locations.
+
 To run a specific iModel, filter by its name:
 
 ```sh
