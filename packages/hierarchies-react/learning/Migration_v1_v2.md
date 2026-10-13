@@ -42,10 +42,9 @@ To migrate:
 ```tsx
 // before
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
-
 // after
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 ```
 
@@ -117,6 +116,7 @@ If `StrataKitTreeRenderer` does not fit your needs, you can build a custom rende
 
 ```tsx
 import { useErrorNodes, useFlatTreeItems } from "@itwin/presentation-hierarchies-react";
+
 import type { TreeRendererProps } from "@itwin/presentation-hierarchies-react";
 
 function MyCustomTree(treeRendererProps: TreeRendererProps) {
@@ -229,8 +229,9 @@ import { TreeNodeRenderer } from "@itwin/presentation-hierarchies-react/itwinui"
 
 // after
 import { StrataKitTreeRenderer, TreeActionBase } from "@itwin/presentation-hierarchies-react/stratakit";
-import type { TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+
 import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 
 function MyTreeAction({
   node,
@@ -269,6 +270,7 @@ In `1.x`, hierarchy-level filtering was built in and triggered through the `onFi
 ```tsx
 import { useState } from "react";
 import { StrataKitTreeRenderer, TreeNodeFilterAction } from "@itwin/presentation-hierarchies-react/stratakit";
+
 import type { HierarchyLevelDetails } from "@itwin/presentation-hierarchies-react";
 
 // the details of the hierarchy level currently being filtered drive the filter dialog
