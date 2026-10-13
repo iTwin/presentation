@@ -493,10 +493,11 @@ describe("Classifications tree", () => {
         { limit: "unbounded" as const, expectedError: undefined },
       ])("honors label search limit $limit with 103 matches", async ({ limit, expectedError }) => {
         const { createSearchTree } = createClassificationsTree({ hierarchyConfig: defaultHierarchyConfiguration });
+        const imodelAccess = createIModelAccess(imodelConnection);
         if (expectedError) {
           await expect(
             createSearchTree({
-              imodelAccess: createIModelAccess(imodelConnection),
+              imodelAccess,
               label: "matching element",
               limit,
               revealTargets: true,
@@ -1504,8 +1505,9 @@ describe("Classifications tree", () => {
       const { createSearchTree } = createClassificationsTree({ hierarchyConfig: defaultHierarchyConfiguration });
 
       const abortController1 = new AbortController();
+      const imodelAccess = createIModelAccess(imodelConnection);
       const pathsPromiseAborted = createSearchTree({
-        imodelAccess: createIModelAccess(imodelConnection),
+        imodelAccess,
         label: "Test",
         revealTargets: true,
         abortSignal: abortController1.signal,
@@ -1515,7 +1517,7 @@ describe("Classifications tree", () => {
 
       const abortController2 = new AbortController();
       const pathsPromise = createSearchTree({
-        imodelAccess: createIModelAccess(imodelConnection),
+        imodelAccess,
         label: "Test",
         revealTargets: true,
         abortSignal: abortController2.signal,
