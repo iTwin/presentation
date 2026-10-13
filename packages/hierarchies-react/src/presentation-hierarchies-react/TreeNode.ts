@@ -70,7 +70,7 @@ export interface ChildrenLoadErrorInfo {
  */
 export interface GenericErrorInfo {
   id: string;
-  type: "Unknown";
+  type: "Generic";
   message: string;
   /** Allows node expansion even when this error is present. */
   isNodeExpandable?: boolean;

@@ -45,7 +45,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         createTreeNode({
           id: "node-1",
           label: "Node 1",
-          errors: [{ id: "error-1", type: "Unknown", message: "Something went wrong" }],
+          errors: [{ id: "error-1", type: "Generic", message: "Something went wrong" }],
         }),
       ];
       const { locator } = await renderTreeErrorRenderer(
@@ -118,7 +118,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         createTreeNode({
           id: "node-1",
           label: "Node 1",
-          errors: [{ id: "error-1", type: "Unknown", message: "Error on node 1" }],
+          errors: [{ id: "error-1", type: "Generic", message: "Error on node 1" }],
         }),
         createTreeNode({
           id: "node-2",
