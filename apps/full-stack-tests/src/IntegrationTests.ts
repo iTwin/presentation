@@ -6,7 +6,7 @@
 import * as fs from "fs";
 import Backend from "i18next-http-backend";
 import * as path from "path";
-import { IModelHost } from "@itwin/core-backend";
+import { IModelHost, SettingsPriority } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import {
   IModelReadRpcInterface,
@@ -91,6 +91,12 @@ export async function initialize(props?: { backendTimeout?: number }) {
 
   // init backend
   await IModelHost.startup({ cacheDir: path.join(import.meta.dirname, "..", "build", ".cache", `${process.pid}`) });
+  // Tests don't need GCS data. Without this, the first iModel opened in every test worker downloads GCS workspace
+  // databases from the cloud. With many workers doing that in parallel it can take over a minute and time out hooks.
+  IModelHost.appWorkspace.settings.addDictionary(
+    { name: "full-stack-tests", priority: SettingsPriority.application },
+    { "itwin/core/gcs/disableWorkspaces": true },
+  );
   PresentationBackend.initialize(backendInitProps);
 
   // init frontend
