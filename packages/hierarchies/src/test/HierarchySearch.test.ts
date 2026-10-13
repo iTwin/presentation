@@ -11,7 +11,7 @@ import {
 } from "../hierarchies/HierarchySearch.js";
 import { createTestGenericNodeKey, createTestInstanceKey } from "./Utils.js";
 
-import type { Props } from "@itwin/presentation-shared";
+import type { DeepReadonly, Props } from "@itwin/presentation-shared";
 import type { HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
 
 describe("HierarchySearchPath", () => {
@@ -156,13 +156,30 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("accept path", () => {
+      it("accepts mutable paths in array and object forms", () => {
+        const root = createTestGenericNodeKey({ id: "root" });
+        const target = createTestInstanceKey({ id: "0x1" });
+        const arrayPath: HierarchySearchPath = [];
+        const objectPath: HierarchySearchPath = { path: [] };
+        arrayPath.push(root);
+        objectPath.path.push(root, target);
+        const builder = HierarchySearchTree.createBuilder();
+
+        builder.accept({ path: arrayPath });
+        builder.accept({ path: objectPath });
+
+        expect(builder.getTree()).toEqual([{ identifier: root, isTarget: true, children: [{ identifier: target }] }]);
+      });
+
       it.each(["array", "object"] as const)("accepts a readonly path in %s form without modifying it", (form) => {
         const root = Object.freeze(createTestGenericNodeKey({ id: "root" }));
         const target = Object.freeze(createTestInstanceKey({ id: "0x1" }));
         const path = Object.freeze([root, target]);
+        const searchPath: DeepReadonly<HierarchySearchPath> =
+          form === "array" ? path : { path, options: Object.freeze({ reveal: true }) };
         const builder = HierarchySearchTree.createBuilder();
 
-        builder.accept({ path: form === "array" ? path : { path, options: Object.freeze({ reveal: true }) } });
+        builder.accept({ path: searchPath });
 
         expect(builder.getTree()).toEqual([
           {

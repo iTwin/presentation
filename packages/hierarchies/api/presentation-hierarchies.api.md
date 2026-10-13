@@ -5,6 +5,7 @@
 ```ts
 
 import type { ConcatenatedValue } from '@itwin/presentation-shared';
+import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryDef } from '@itwin/presentation-shared';
@@ -446,15 +447,15 @@ export interface HierarchyProvider {
 }
 
 // @public
-export type HierarchySearchPath = Readonly<HierarchyNodeIdentifiersPath> | {
-    path: Readonly<HierarchyNodeIdentifiersPath>;
+export type HierarchySearchPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
     options?: HierarchySearchPathOptions;
 };
 
 // @public (undocumented)
 export namespace HierarchySearchPath {
     export function mergeOptions(lhs: HierarchySearchPathOptions | undefined, rhs: HierarchySearchPathOptions | undefined): HierarchySearchPathOptions | undefined;
-    export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, Readonly<HierarchyNodeIdentifiersPath>>;
+    export function normalize(source: DeepReadonly<HierarchySearchPath>): DeepReadonly<Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath>>;
 }
 
 // @public (undocumented)
@@ -482,7 +483,7 @@ export interface HierarchySearchTree {
 // @public (undocumented)
 export namespace HierarchySearchTree {
     export function createBuilder<TAcceptHandlerExtras extends Record<string, unknown> = Record<string, unknown>>(): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
-    export function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]>;
+    export function createFromPathsList(paths: Iterable<DeepReadonly<HierarchySearchPath>>): Promise<HierarchySearchTree[]>;
     export interface HierarchySearchTreeBuilder<TAcceptHandlerExtras extends Record<string, unknown>> {
         accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
         getTree(props?: HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras>): HierarchySearchTree[];
@@ -508,7 +509,7 @@ export namespace HierarchySearchTree {
         hasChildren: boolean;
     }>;
     export type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = ({
-        path: HierarchySearchPath;
+        path: DeepReadonly<HierarchySearchPath>;
     } | {
         tree: HierarchySearchTree;
     }) & {
