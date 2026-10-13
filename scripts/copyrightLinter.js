@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 const fs = require("fs");
-const fg = require("fast-glob");
 
 let pattern = process.argv.slice(2).flatMap((x) => (x !== "--fix" ? x.replaceAll("\\", "/") : []));
 
@@ -12,10 +11,9 @@ if (pattern.length === 0) {
   pattern = "**/*.{ts,tsx,js,scss,css}";
 }
 
-const filePaths = fg.sync(pattern, {
-  dot: true,
-  ignore: ["**/node_modules/**/*", "**/lib/**/*"],
-});
+const filePaths = fs
+  .globSync(pattern, { exclude: ["**/node_modules/**", "**/lib/**"] })
+  .filter((filePath) => fs.statSync(filePath).isFile());
 
 const copyrightLine1 = `Copyright (c) Bentley Systems, Incorporated. All rights reserved.`;
 const copyrightLine2 = `See LICENSE.md in the project root for license terms and full copyright notice.`;
