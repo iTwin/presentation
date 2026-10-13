@@ -533,7 +533,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                 hasChildren: true,
                 extendedData: {
                   type: "model",
-                  modeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
+                  subModeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
                 },
               })}
             FROM ${this.#categoryModelClass} this
@@ -564,12 +564,15 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   private async createGeometricModelChildrenQuery(
     props: DefineInstanceNodeChildHierarchyLevelProps,
   ): Promise<HierarchyLevelDefinition> {
-    const modeledElementCategory = props.parentNode.extendedData?.modeledElementCategory;
-    assert(modeledElementCategory !== undefined, "Expected parent node to have modeledElementCategory extended data");
+    const subModeledElementCategory = props.parentNode.extendedData?.subModeledElementCategory;
+    assert(
+      subModeledElementCategory !== undefined,
+      "Expected parent node to have subModeledElementCategory extended data",
+    );
 
     return this.#idsProvider.categories.state === "loaded"
-      ? this.createCachedGeometricModelChildrenQuery({ ...props, modeledElementCategory })
-      : this.createUncachedGeometricModelChildrenQuery({ ...props, modeledElementCategory });
+      ? this.createCachedGeometricModelChildrenQuery({ ...props, subModeledElementCategory })
+      : this.createUncachedGeometricModelChildrenQuery({ ...props, subModeledElementCategory });
   }
 
   private async createCachedGeometricModelChildrenQuery({
@@ -577,11 +580,11 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     instanceFilter,
     createSelectClause,
     createFilterClauses,
-    modeledElementCategory,
+    subModeledElementCategory,
   }: DefineInstanceNodeChildHierarchyLevelProps & {
-    modeledElementCategory: CategoryId;
+    subModeledElementCategory: CategoryId;
   }): Promise<HierarchyLevelDefinition> {
-    const [categoryIds, categoryInstanceFilterClauses, modeledCategoryElementsDefinition] = await Promise.all([
+    const [categoryIds, categoryInstanceFilterClauses, subModeledCategoryElementsDefinition] = await Promise.all([
       firstValueFrom(
         from(modelIds).pipe(
           mergeMap(async (modelId) => this.#idsProvider.categories.getCategories({ modelId })),
@@ -595,9 +598,9 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         ),
       ),
       createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
-      this.createModeledCategoryElementsQuery({
+      this.createSubModeledCategoryElementsQuery({
         modelIds,
-        modeledElementCategory,
+        subModeledElementCategory,
         instanceFilter,
         createSelectClause,
         createFilterClauses,
@@ -607,7 +610,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       return [];
     }
 
-    const categoriesToShow = categoryIds.filter((categoryId) => categoryId !== modeledElementCategory);
+    const categoriesToShow = categoryIds.filter((categoryId) => categoryId !== subModeledElementCategory);
     const hasElementsWithTheSameCategory = categoriesToShow.length < categoryIds.length;
     const definitions: HierarchyLevelDefinition = [];
     if (categoriesToShow.length > 0) {
@@ -627,7 +630,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       });
     }
     if (hasElementsWithTheSameCategory) {
-      definitions.push(modeledCategoryElementsDefinition);
+      definitions.push(subModeledCategoryElementsDefinition);
     }
     return definitions;
   }
@@ -636,17 +639,17 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createFilterClauses,
     createSelectClause,
     instanceFilter,
-    modeledElementCategory,
+    subModeledElementCategory,
     parentNodeInstanceIds: modelIds,
   }: DefineInstanceNodeChildHierarchyLevelProps & {
-    modeledElementCategory: CategoryId;
+    subModeledElementCategory: CategoryId;
   }): Promise<HierarchyLevelDefinition> {
-    const [categoryInstanceFilterClauses, modeledCategoryElementsDefinition, elementsHiddenClassesFilter] =
+    const [categoryInstanceFilterClauses, subModeledCategoryElementsDefinition, elementsHiddenClassesFilter] =
       await Promise.all([
         createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
-        this.createModeledCategoryElementsQuery({
+        this.createSubModeledCategoryElementsQuery({
           modelIds,
-          modeledElementCategory,
+          subModeledElementCategory,
           instanceFilter,
           createSelectClause,
           createFilterClauses,
@@ -672,7 +675,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               "ce.Parent.Id IS NULL",
               createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
               elementsHiddenClassesFilter.createWhereClause("ce"),
-              `this.ECInstanceId <> ${modeledElementCategory}`,
+              `this.ECInstanceId <> ${subModeledElementCategory}`,
               "NOT this.IsPrivate",
             ],
           })}
@@ -680,18 +683,18 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         bindings: [{ type: "idset", value: modelIds }],
       },
     };
-    return [categoryDefinition, modeledCategoryElementsDefinition];
+    return [categoryDefinition, subModeledCategoryElementsDefinition];
   }
 
-  private async createModeledCategoryElementsQuery({
+  private async createSubModeledCategoryElementsQuery({
     modelIds,
-    modeledElementCategory,
+    subModeledElementCategory,
     instanceFilter,
     createSelectClause,
     createFilterClauses,
   }: {
     modelIds: Id64Array;
-    modeledElementCategory: CategoryId;
+    subModeledElementCategory: CategoryId;
     instanceFilter?: GenericInstanceFilter;
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
     createFilterClauses: DefineHierarchyLevelProps["createFilterClauses"];
@@ -701,8 +704,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElements.state === "loaded"
-        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.subModeledElements.state === "loaded"
+        ? this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
       ECSql.createHiddenClassesFilter({
         schemaProvider: this.#iModelAccess,
@@ -726,7 +729,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           ${createWhereClause({
             conditions: [
               "this.Parent.Id IS NULL",
-              `this.Category.Id = ${modeledElementCategory}`,
+              `this.Category.Id = ${subModeledElementCategory}`,
               createExcludedClassesClause({ alias: "this", excludedClassNames: this.#excludedClasses }),
               elementsHiddenClassesFilter.createWhereClause("this"),
               elementInstanceFilterClauses.where,
@@ -1321,8 +1324,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElements.state === "loaded"
-        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.subModeledElements.state === "loaded"
+        ? this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
       ECSql.createHiddenClassesFilter({
         schemaProvider: this.#iModelAccess,
@@ -1406,8 +1409,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           contentClass: { fullName: this.#categoryElementClass, alias: "this" },
         }),
         createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
-        this.#idsProvider.modeledElements.state === "loaded"
-          ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+        this.#idsProvider.subModeledElements.state === "loaded"
+          ? this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })
           : undefined,
         ECSql.createHiddenClassesFilter({
           schemaProvider: this.#iModelAccess,
@@ -1903,7 +1906,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
   }
 
   return forkJoin({
-    subModelIds: props.idsProvider.modeledElements.getAllModeledElements(),
+    subModelIds: props.idsProvider.subModeledElements.getAllSubModeledElements(),
     elementsHiddenClassesFilter: ECSql.createHiddenClassesFilter({
       schemaProvider: imodelAccess,
       baseClassName: elementClass,
@@ -2045,13 +2048,13 @@ export function createCategoriesSearchPaths(props: {
   return merge(
     rootCategoriesSearchPaths,
     forkJoin({
-      allModeledElements: props.idsProvider.modeledElements.getAllModeledElements(),
+      allSubModeledElements: props.idsProvider.subModeledElements.getAllSubModeledElements(),
       elementsHiddenClassesFilter: ECSql.createHiddenClassesFilter({
         schemaProvider: imodelAccess,
         baseClassName: elementClass,
       }),
     }).pipe(
-      mergeMap(({ allModeledElements: subModelIds, elementsHiddenClassesFilter }) => {
+      mergeMap(({ allSubModeledElements: subModelIds, elementsHiddenClassesFilter }) => {
         const ctes = [
           `CategoriesParentsHierarchy(ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
             SELECT

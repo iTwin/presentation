@@ -5,8 +5,8 @@
 
 import { firstValueFrom } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
-import { ModeledElementsProvider } from "../tree-definitions/shared/idsProviders/ModeledElementsProvider.js";
 import { createSharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
+import { SubModeledElementsProvider } from "../tree-definitions/shared/idsProviders/SubModeledElementsProvider.js";
 import { createCategoriesTreeIdsProvider } from "../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { createClassificationsTreeIdsProvider } from "../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 import { createModelsTreeIdsProvider } from "../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
@@ -23,8 +23,8 @@ function createAccess(waitForQuery: (token: string) => Promise<void> = async () 
       await waitForQuery(token);
       const rows: ECSqlQueryRow[] = token.endsWith("/element-models-and-categories")
         ? [{ modelId: "0x10", categoryId: "0x20", isTopMostElementCategory: true, isPlanProjectionModel: true }]
-        : token.endsWith("/modeled-elements")
-          ? [{ modeledElementId: "0x10" }]
+        : token.endsWith("/sub-modeled-elements")
+          ? [{ subModeledElementId: "0x10" }]
           : token.includes("/sub-categories/")
             ? [{ id: "0x21", categoryId: "0x20" }]
             : token.endsWith("/categories")
@@ -59,7 +59,10 @@ function createGate() {
 const baseDatasets = [
   { group: "categories", load: async (base: SharedIdsProvider) => base.categories.getAllCategoriesOfElements() },
   { group: "models", load: async (base: SharedIdsProvider) => base.models.getAllModels() },
-  { group: "modeledElements", load: async (base: SharedIdsProvider) => base.modeledElements.getAllModeledElements() },
+  {
+    group: "subModeledElements",
+    load: async (base: SharedIdsProvider) => base.subModeledElements.getAllSubModeledElements(),
+  },
   { group: "subCategories", load: async (base: SharedIdsProvider) => base.subCategories.getCategorySubCategoriesMap() },
 ] as const;
 
@@ -68,21 +71,21 @@ describe("ID provider data states", () => {
     const access = createAccess();
     const provider = createSharedIdsProvider({ imodelAccess: access, elementClassName: "BisCore.GeometricElement3d" });
     expect(provider.models.state).toBe("not-requested");
-    expect(provider.modeledElements.state).toBe("not-requested");
+    expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("not-requested");
     expect(provider.subCategories.state).toBe("not-requested");
     expect(access.createQueryReader).not.toHaveBeenCalled();
 
     expect(await provider.models.getAllModels()).toEqual(["0x10"]);
     expect(provider.models.state).toBe("loaded");
-    expect(provider.modeledElements.state).toBe("not-requested");
+    expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("loaded");
     expect(provider.subCategories.state).toBe("not-requested");
     expect(await provider.categories.getCategories({ modelId: "0x10" })).toEqual(new Set(["0x20"]));
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
-    expect(await provider.modeledElements.getAllModeledElements()).toEqual(new Set(["0x10"]));
-    expect(provider.modeledElements.state).toBe("loaded");
+    expect(await provider.subModeledElements.getAllSubModeledElements()).toEqual(new Set(["0x10"]));
+    expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("loaded");
     expect(access.createQueryReader).toHaveBeenCalledTimes(2);
     expect(provider.subCategories.state).toBe("not-requested");
@@ -90,7 +93,7 @@ describe("ID provider data states", () => {
     expect(provider.subCategories.state).toBe("loaded");
   });
 
-  it("loads modeled elements only when model lookups exclude sub-models", async () => {
+  it("loads sub-modeled elements only when model lookups exclude sub-models", async () => {
     const access = createAccess();
     const provider = createBase(access);
     const allModels = [];
@@ -99,7 +102,7 @@ describe("ID provider data states", () => {
     }
     expect(allModels).toEqual(["0x10"]);
     expect(provider.models.state).toBe("loaded");
-    expect(provider.modeledElements.state).toBe("not-requested");
+    expect(provider.subModeledElements.state).toBe("not-requested");
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
     const modelsWithoutSubModels = [];
@@ -108,45 +111,45 @@ describe("ID provider data states", () => {
     }
     expect(modelsWithoutSubModels).toEqual([]);
     expect(provider.models.state).toBe("loaded");
-    expect(provider.modeledElements.state).toBe("loaded");
+    expect(provider.subModeledElements.state).toBe("loaded");
     expect(access.createQueryReader).toHaveBeenCalledTimes(2);
   });
 
-  it("keeps modeled-element loading and failures separate from loaded model data", async () => {
+  it("keeps sub-modeled element loading and failures separate from loaded model data", async () => {
     const gate = createGate();
-    let failModeledElements = true;
+    let failSubModeledElements = true;
     const access = createAccess(async (token) => {
-      if (token.endsWith("/modeled-elements")) {
+      if (token.endsWith("/sub-modeled-elements")) {
         await gate.promise;
-        if (failModeledElements) {
+        if (failSubModeledElements) {
           throw new Error("modeled elements failed");
         }
       }
     });
     const provider = createBase(access);
     await provider.models.getAllModels();
-    const pending = provider.modeledElements.getAllModeledElements();
+    const pending = provider.subModeledElements.getAllSubModeledElements();
     const failure = expect(pending).rejects.toThrow("modeled elements failed");
-    expect(provider.modeledElements.state).toBe("requested");
+    expect(provider.subModeledElements.state).toBe("requested");
     expect(provider.models.state).toBe("loaded");
     gate.resolve();
     await failure;
-    expect(provider.modeledElements.state).toBe("failed");
+    expect(provider.subModeledElements.state).toBe("failed");
     expect(provider.models.state).toBe("loaded");
     expect(provider.categories.state).toBe("loaded");
     expect(await provider.models.getAllModels()).toEqual(["0x10"]);
-    expect(provider.modeledElements.state).toBe("failed");
+    expect(provider.subModeledElements.state).toBe("failed");
 
-    failModeledElements = false;
-    const retry = provider.modeledElements.getAllModeledElements();
-    expect(provider.modeledElements.state).toBe("requested");
+    failSubModeledElements = false;
+    const retry = provider.subModeledElements.getAllSubModeledElements();
+    expect(provider.subModeledElements.state).toBe("requested");
     expect(provider.models.state).toBe("loaded");
     expect(await retry).toEqual(new Set(["0x10"]));
-    expect(provider.modeledElements.state).toBe("loaded");
+    expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("loaded");
   });
 
-  it("discards failed rows when the same modeled-elements provider is subscribed again", async () => {
+  it("discards failed rows when the same sub-modeled elements provider is subscribed again", async () => {
     let attempts = 0;
     const queryExecutor: LimitingECSqlQueryExecutor = {
       async *createQueryReader() {
@@ -157,7 +160,7 @@ describe("ID provider data states", () => {
         yield { modeledElementId: "0x20" };
       },
     };
-    const provider = new ModeledElementsProvider({
+    const provider = new SubModeledElementsProvider({
       queryExecutor,
       componentId: "00000000-0000-0000-0000-000000000001",
       elementClassName: "BisCore.GeometricElement3d",
@@ -239,7 +242,7 @@ describe("ID provider data states", () => {
     await base.models.getAllModels();
     expect(base.categories.state).toBe("loaded");
     expect(base.models.state).toBe("loaded");
-    expect(base.modeledElements.state).toBe("not-requested");
+    expect(base.subModeledElements.state).toBe("not-requested");
     expect(base.subCategories.state).toBe("not-requested");
     expect(await base.models.getPlanProjectionModels()).toEqual(new Set(["0x10"]));
     expect(await base.categories.getAllCategoriesOfElements()).toEqual(new Set(["0x20"]));
@@ -280,8 +283,8 @@ describe("ID provider data states", () => {
       const access = createAccess(async () => gate.promise);
       const base = createBase(access);
       const { provider, load } = create(access, base);
-      if ("modeledElements" in provider) {
-        expect(provider.modeledElements).toBe(base.modeledElements);
+      if ("subModeledElements" in provider) {
+        expect(provider.subModeledElements).toBe(base.subModeledElements);
         expect(provider.categories).toBe(base.categories);
       }
       expect(provider.state).toBe("not-requested");
@@ -297,7 +300,7 @@ describe("ID provider data states", () => {
       expect(base.categories.state).toBe(name === "models" ? "not-requested" : "loaded");
       expect(base.subCategories.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.models.state).toBe(name === "models" ? "not-requested" : "loaded");
-      expect(base.modeledElements.state).toBe("not-requested");
+      expect(base.subModeledElements.state).toBe("not-requested");
       expect(create(access, base).provider.state).toBe("not-requested");
     });
 

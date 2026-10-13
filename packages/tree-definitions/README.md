@@ -19,7 +19,7 @@ Use `createSharedIdsProvider` to create the `sharedIdsProvider` required by `cre
 `SharedIdsProvider` groups its getters with their loading state:
 
 - `models`: model IDs, plan projection models, and model lookups by category.
-- `modeledElements`: IDs of elements modeled by non-empty sub-models.
+- `subModeledElements`: IDs of elements modeled by non-empty sub-models.
 - `categories`: category IDs and category lookups by model.
 - `subCategories`: mappings between categories and sub-categories.
 

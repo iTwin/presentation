@@ -35,7 +35,7 @@ interface ModelsTreeIdsProviderProps {
   /** Shared provider using the same element class and exclusions as `hierarchyConfig`. */
   sharedIdsProvider: {
     models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
-    modeledElements: SharedIdsProvider["modeledElements"];
+    subModeledElements: SharedIdsProvider["subModeledElements"];
     categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   };
 }
@@ -58,8 +58,8 @@ interface ModelInfo {
  * @beta
  */
 export interface ModelsTreeIdsProvider {
-  /** Shared modeled-element lookups and their loading state. */
-  readonly modeledElements: SharedIdsProvider["modeledElements"];
+  /** Shared sub-modeled element lookups and their loading state. */
+  readonly subModeledElements: SharedIdsProvider["subModeledElements"];
   /** Shared category lookups and their loading state. */
   readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of shared data. */
@@ -373,7 +373,7 @@ export function createModelsTreeIdsProvider({
     });
   }
   return {
-    modeledElements: sharedIdsProvider.modeledElements,
+    subModeledElements: sharedIdsProvider.subModeledElements,
     categories: sharedIdsProvider.categories,
     get state(): IdsProviderDataState {
       return combineDataStates([subjectInfosState.state, modelInfosState.state]);

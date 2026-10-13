@@ -69,7 +69,7 @@ interface CategoriesTreeIdsProviderProps {
   /** Shared provider with matching element class and exclusions for the target tree. */
   sharedIdsProvider: {
     models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
-    modeledElements: SharedIdsProvider["modeledElements"];
+    subModeledElements: SharedIdsProvider["subModeledElements"];
     categories: Pick<
       SharedIdsProvider["categories"],
       "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements"
@@ -94,8 +94,8 @@ interface CategoriesData {
 export interface CategoriesTreeIdsProvider {
   /** Shared model lookups and their loading state. */
   readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
-  /** Shared modeled-element lookups and their loading state. */
-  readonly modeledElements: SharedIdsProvider["modeledElements"];
+  /** Shared sub-modeled element lookups and their loading state. */
+  readonly subModeledElements: SharedIdsProvider["subModeledElements"];
   /** Shared category lookups and their loading state. */
   readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   /** Returns direct child categories and definition container IDs, excluding empty entries unless requested. */
@@ -130,7 +130,7 @@ export interface CategoriesTreeIdsProvider {
   }>;
   /**
    * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
-   * together with shared category and sub-category data, but not modeled elements.
+   * together with shared category and sub-category data, but not sub-modeled elements.
    */
   readonly state: IdsProviderDataState;
   /** Indicates whether the iModel schema supports definition containers. */
@@ -471,7 +471,7 @@ export function createCategoriesTreeIdsProvider({
 
   return {
     models: sharedIdsProvider.models,
-    modeledElements: sharedIdsProvider.modeledElements,
+    subModeledElements: sharedIdsProvider.subModeledElements,
     categories: sharedIdsProvider.categories,
     async getDirectChildDefinitionContainersAndCategories({
       parentDefinitionContainerIds,

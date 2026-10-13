@@ -10,8 +10,8 @@ import { fromWithRelease } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
-import { ModeledElementsProvider } from "./ModeledElementsProvider.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
+import { SubModeledElementsProvider } from "./SubModeledElementsProvider.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentley";
@@ -61,12 +61,12 @@ export interface SharedIdsProvider {
       excludeIfOnlyExcludedClasses?: boolean;
     }): AsyncIterableIterator<ModelId>;
   };
-  /** Modeled-element lookups. */
-  readonly modeledElements: {
-    /** State of modeled-element data. */
+  /** Sub-modeled element lookups. */
+  readonly subModeledElements: {
+    /** State of sub-modeled element data. */
     readonly state: IdsProviderDataState;
     /** Returns IDs of elements modeling sub-models with visible elements, optionally omitting those with only excluded elements. */
-    getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<ReadonlySet<Id64String>>;
+    getAllSubModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<ReadonlySet<Id64String>>;
   };
   /** Category lookups. */
   readonly categories: {
@@ -115,14 +115,14 @@ export function createSharedIdsProvider({
 }: SharedIdsProviderProps): SharedIdsProvider {
   const componentId: GuidString = Guid.createValue();
   const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor: imodelAccess, componentId });
-  let modeledElementsData: ReturnType<ModeledElementsProvider["getData"]> | undefined;
+  let subModeledElementsData: ReturnType<SubModeledElementsProvider["getData"]> | undefined;
   const elementModelCategoriesProvider = new ElementModelCategoriesProvider({
     imodelAccess,
     componentId,
     elementClassName,
     excludedElementClassNames,
   });
-  const modeledElementsState = new DataStateTracker();
+  const subModeledElementsState = new DataStateTracker();
   let categoryModelsInfoWithoutSubModels:
     | Observable<
         Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
@@ -135,27 +135,27 @@ export function createSharedIdsProvider({
       .getData()
       .pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
   }
-  function getModeledElementsData(): ReturnType<ModeledElementsProvider["getData"]> {
-    modeledElementsData ??= getAllModels().pipe(
+  function getSubModeledElementsData(): ReturnType<SubModeledElementsProvider["getData"]> {
+    subModeledElementsData ??= getAllModels().pipe(
       mergeMap((allModels) =>
-        new ModeledElementsProvider({
+        new SubModeledElementsProvider({
           queryExecutor: imodelAccess,
           componentId,
           elementClassName,
           nonEmptyModelIds: allModels,
         }).getData(),
       ),
-      modeledElementsState.track(),
+      subModeledElementsState.track(),
       shareReplay(),
     );
-    return modeledElementsData;
+    return subModeledElementsData;
   }
 
-  function getAllModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
+  function getAllSubModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
     if (!props?.excludeIfOnlyExcludedClasses) {
-      return getModeledElementsData().pipe(map(({ allSubModels }) => allSubModels));
+      return getSubModeledElementsData().pipe(map(({ allSubModels }) => allSubModels));
     }
-    subModelsWithNonExcludedElements ??= getModeledElementsData().pipe(
+    subModelsWithNonExcludedElements ??= getSubModeledElementsData().pipe(
       mergeMap(({ allSubModels }) => {
         if (allSubModels.size === 0) {
           return of(allSubModels);
@@ -181,7 +181,7 @@ export function createSharedIdsProvider({
   function getCategoryModelsInfoWithoutSubModels(): Observable<
     Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
   > {
-    categoryModelsInfoWithoutSubModels ??= getAllModeledElements().pipe(
+    categoryModelsInfoWithoutSubModels ??= getAllSubModeledElements().pipe(
       mergeMap((allSubModels) =>
         allSubModels.size === 0
           ? elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo))
@@ -249,11 +249,11 @@ export function createSharedIdsProvider({
         );
       },
     },
-    modeledElements: {
+    subModeledElements: {
       get state(): IdsProviderDataState {
-        return modeledElementsState.state;
+        return subModeledElementsState.state;
       },
-      getAllModeledElements: async (props) => firstValueFrom(getAllModeledElements(props)),
+      getAllSubModeledElements: async (props) => firstValueFrom(getAllSubModeledElements(props)),
     },
     categories: {
       get state(): IdsProviderDataState {

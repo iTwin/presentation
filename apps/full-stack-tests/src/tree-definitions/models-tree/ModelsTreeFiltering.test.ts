@@ -456,15 +456,15 @@ describe("Models tree", () => {
         imodelConnection: setupResult.imodelConnection,
         hierarchyConfig: { elements: { excludedClasses: ["Generic.PhysicalObject"] } },
       });
-      expect(await idsProvider.modeledElements.getAllModeledElements()).toEqual(
+      expect(await idsProvider.subModeledElements.getAllSubModeledElements()).toEqual(
         new Set([setupResult.modeledElement.id]),
       );
-      expect(await idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })).toEqual(
-        new Set(),
-      );
-      expect(await idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: false })).toEqual(
-        new Set([setupResult.modeledElement.id]),
-      );
+      expect(
+        await idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
+      ).toEqual(new Set());
+      expect(
+        await idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: false }),
+      ).toEqual(new Set([setupResult.modeledElement.id]));
     });
 
     describe("Hidden element classes and schemas", () => {

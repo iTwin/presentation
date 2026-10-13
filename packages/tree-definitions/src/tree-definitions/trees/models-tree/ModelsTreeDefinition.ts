@@ -729,7 +729,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                 hasChildren: true,
                 extendedData: {
                   type: "model",
-                  modeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
+                  subModeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
                 },
               })}
             FROM ${CLASS_NAMES.GeometricModel3d} this
@@ -767,7 +767,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const modeledElementCategory = parentNode.extendedData?.modeledElementCategory;
+    const subModeledElementCategory = parentNode.extendedData?.subModeledElementCategory;
     const [
       categoryInstanceFilterClauses,
       elementInstanceFilterClauses,
@@ -783,8 +783,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElements.state === "loaded"
-        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.subModeledElements.state === "loaded"
+        ? this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
       this.#idsProvider.categories.state === "loaded"
         ? firstValueFrom(
@@ -813,9 +813,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     // that don't match the sub-model element's category as intermediate category nodes - the elements matching
     // that category are shown directly (see below).
     const categoriesToShow =
-      modeledElementCategory === undefined
+      subModeledElementCategory === undefined
         ? categoryIds
-        : categoryIds?.filter((categoryId) => categoryId !== modeledElementCategory);
+        : categoryIds?.filter((categoryId) => categoryId !== subModeledElementCategory);
     const hasElementsWithTheSameCategory = categoriesToShow?.length !== categoryIds?.length;
     const definitions: HierarchyLevelDefinition = [];
     if (!categoriesToShow || categoriesToShow.length > 0) {
@@ -849,8 +849,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   }),
                 !categoriesToShow && elementsHiddenClassesFilter.createWhereClause("ce"),
                 !categoriesToShow &&
-                  modeledElementCategory !== undefined &&
-                  `this.ECInstanceId <> ${modeledElementCategory}`,
+                  subModeledElementCategory !== undefined &&
+                  `this.ECInstanceId <> ${subModeledElementCategory}`,
               ],
             })}
           `,
@@ -859,11 +859,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       });
     }
     // Show elements which match the sub-model element's category directly under the (hidden) sub-model node.
-    if (modeledElementCategory !== undefined && (!cachedDataExists || hasElementsWithTheSameCategory)) {
+    if (subModeledElementCategory !== undefined && (!cachedDataExists || hasElementsWithTheSameCategory)) {
       const { selectClause, bindings } = await this.createElementNodeSelectClause({
         createSelectClause,
         elementsHiddenClassesFilter,
-        // allSubModels are defined when modeledElementCategory is defined
+        // allSubModels are defined when subModeledElementCategory is defined
         allSubModels: allSubModels ? [...allSubModels] : undefined,
       });
       definitions.push({
@@ -878,7 +878,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({
               conditions: [
                 "this.Parent.Id IS NULL",
-                `this.Category.Id = ${modeledElementCategory}`,
+                `this.Category.Id = ${subModeledElementCategory}`,
                 createExcludedClassesClause({
                   alias: "this",
                   excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -1012,8 +1012,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElements.state === "loaded"
-        ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.subModeledElements.state === "loaded"
+        ? this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })
         : undefined,
       ECSql.createHiddenClassesFilter({
         schemaProvider: this.#schemaProvider,
@@ -1082,8 +1082,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           filter: instanceFilter,
           contentClass: { fullName: CLASS_NAMES.SpatialCategory, alias: "this" },
         }),
-        this.#idsProvider.modeledElements.state === "loaded"
-          ? this.#idsProvider.modeledElements.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+        this.#idsProvider.subModeledElements.state === "loaded"
+          ? this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })
           : undefined,
         ECSql.createHiddenClassesFilter({
           schemaProvider: this.#schemaProvider,
@@ -1460,7 +1460,7 @@ export function createCategoriesSearchPaths(props: {
       ),
     ),
     forkJoin({
-      subModelIds: from(props.idsProvider.modeledElements.getAllModeledElements()),
+      subModelIds: from(props.idsProvider.subModeledElements.getAllSubModeledElements()),
       elementsHiddenClassesFilter: from(
         ECSql.createHiddenClassesFilter({ schemaProvider: imodelAccess, baseClassName: elementClassName }),
       ),

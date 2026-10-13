@@ -77,9 +77,9 @@ export interface CategoriesTreeIdsProvider {
     getSubCategoriesSearchPaths(props: {
         subCategoryIds: Id64Arg;
     }): AsyncIterableIterator<CategoriesTreeSearchPath>;
-    readonly modeledElements: SharedIdsProvider["modeledElements"];
     readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
     readonly state: IdsProviderDataState;
+    readonly subModeledElements: SharedIdsProvider["subModeledElements"];
 }
 
 // @beta
@@ -88,7 +88,7 @@ interface CategoriesTreeIdsProviderProps {
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     sharedIdsProvider: {
         models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
-        modeledElements: SharedIdsProvider["modeledElements"];
+        subModeledElements: SharedIdsProvider["subModeledElements"];
         categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements">;
         subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
     };
@@ -202,7 +202,7 @@ interface ClassificationsTreeHierarchyConfiguration {
 // @beta
 export interface ClassificationsTreeIdsProvider {
     getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
-    getClassificationsPath(classificationIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
+    getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
     getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<Array<{
         id: ClassificationId;
         hasChildClassifications: boolean;
@@ -385,8 +385,8 @@ export interface ModelsTreeIdsProvider {
     getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
     getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
     getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
-    readonly modeledElements: SharedIdsProvider["modeledElements"];
     readonly state: IdsProviderDataState;
+    readonly subModeledElements: SharedIdsProvider["subModeledElements"];
 }
 
 // @beta
@@ -396,7 +396,7 @@ interface ModelsTreeIdsProviderProps {
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     sharedIdsProvider: {
         models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
-        modeledElements: SharedIdsProvider["modeledElements"];
+        subModeledElements: SharedIdsProvider["subModeledElements"];
         categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
     };
 }
@@ -490,12 +490,6 @@ export interface SharedIdsProvider {
         getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
         getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
     };
-    readonly modeledElements: {
-        readonly state: IdsProviderDataState;
-        getAllModeledElements(props?: {
-            excludeIfOnlyExcludedClasses?: boolean;
-        }): Promise<ReadonlySet<Id64String>>;
-    };
     readonly models: {
         readonly state: IdsProviderDataState;
         getAllModels(): Promise<ReadonlyArray<ModelId>>;
@@ -513,6 +507,12 @@ export interface SharedIdsProvider {
         getSubCategoryCategories(props: {
             subCategoryIds: Id64Arg;
         }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+    };
+    readonly subModeledElements: {
+        readonly state: IdsProviderDataState;
+        getAllSubModeledElements(props?: {
+            excludeIfOnlyExcludedClasses?: boolean;
+        }): Promise<ReadonlySet<Id64String>>;
     };
 }
 
