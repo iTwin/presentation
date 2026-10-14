@@ -11,6 +11,7 @@ import {
   insertPhysicalSubModel,
 } from "presentation-test-utilities";
 import { expect } from "vitest";
+import { assert } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { buildTestIModel } from "../IModelUtils.js";
 import { importSchema } from "../SchemaUtils.js";
@@ -110,12 +111,20 @@ interface TestSchemaDefinition extends Awaited<ReturnType<typeof importSchema>> 
   };
 }
 
-/** Imports one element class hidden by `HiddenClass` and one hidden by its schema's `HiddenSchema` attribute. */
-export async function importHiddenElementClasses(
-  imodel: IModelDb,
-  baseClassName: "PhysicalElement" | "GraphicalElement2d" = "PhysicalElement",
-): Promise<Record<"hiddenClass" | "hiddenSchema", EC.FullClassNameDotNotation>> {
-  const importHiddenElementClass = async (
+/**
+ * Imports one class, derived from `baseClass`, hidden by `HiddenClass` and one hidden by its schema's `HiddenSchema`
+ * attribute. Use different `schemaNamePrefix` values to import hidden classes of multiple base classes into one iModel.
+ */
+export async function importHiddenClassesSchemas(props: {
+  imodel: IModelDb;
+  baseClass: EC.FullClassNameDotNotation;
+  schemaNamePrefix?: string;
+}): Promise<Record<"hiddenClass" | "hiddenSchema", EC.FullClassNameDotNotation>> {
+  const prefix = props.schemaNamePrefix ?? "";
+  const [baseSchemaName, baseClassName] = props.baseClass.split(".");
+  const baseSchemaVersion = props.imodel.querySchemaVersionNumbers(baseSchemaName)?.toString(true);
+  assert(baseSchemaVersion !== undefined, `Schema "${baseSchemaName}" is not imported into the iModel`);
+  const importHiddenClassSchema = async (
     schemaName: string,
     schemaAlias: string,
     customAttributeName: "HiddenClass" | "HiddenSchema",
@@ -123,12 +132,12 @@ export async function importHiddenElementClasses(
     const customAttributes = `<ECCustomAttributes><${customAttributeName} xmlns="CoreCustomAttributes.01.00.01" /></ECCustomAttributes>`;
     const schema = await importSchema(
       { schemaName, schemaAlias },
-      imodel,
+      props.imodel,
       `
-        <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+        <ECSchemaReference name="${baseSchemaName}" version="${baseSchemaVersion}" alias="base" />
         ${customAttributeName === "HiddenSchema" ? customAttributes : ""}
         <ECEntityClass typeName="HiddenElement">
-          <BaseClass>bis:${baseClassName}</BaseClass>
+          <BaseClass>base:${baseClassName}</BaseClass>
           ${customAttributeName === "HiddenClass" ? customAttributes : ""}
         </ECEntityClass>
       `,
@@ -136,7 +145,7 @@ export async function importHiddenElementClasses(
     return schema.items.HiddenElement.fullName;
   };
   return {
-    hiddenClass: await importHiddenElementClass("HiddenClassTest", "hiddenClass", "HiddenClass"),
-    hiddenSchema: await importHiddenElementClass("HiddenSchemaTest", "hiddenSchema", "HiddenSchema"),
+    hiddenClass: await importHiddenClassSchema(`${prefix}HiddenClassTest`, `${prefix}hiddenClass`, "HiddenClass"),
+    hiddenSchema: await importHiddenClassSchema(`${prefix}HiddenSchemaTest`, `${prefix}hiddenSchema`, "HiddenSchema"),
   };
 }

@@ -21,7 +21,7 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import {
   buildIModel,
-  importHiddenElementClasses,
+  importHiddenClassesSchemas,
   insertGeometricModelWithPartition,
   TestSchema,
 } from "../IModelUtils.js";
@@ -618,7 +618,7 @@ describe("Models tree", () => {
       describe("Hidden element classes and schemas", () => {
         it("hides subjects, models, and categories that only contain hidden elements", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) => {
-            const hiddenClassNames = await importHiddenElementClasses(imodel);
+            const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
             return withEditTxn(imodel, (txn) => {
               const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
               const hiddenSubject = insertSubject({ txn, codeValue: "hidden subject", parentId: rootSubject.id });
@@ -705,7 +705,7 @@ describe("Models tree", () => {
 
         it("hides hidden child elements and their descendants while preserving visible siblings", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) => {
-            const hiddenClassNames = await importHiddenElementClasses(imodel);
+            const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
             return withEditTxn(imodel, (txn) => {
               const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
               const categoryA = insertSpatialCategory({ txn, codeValue: "category A" });
@@ -795,7 +795,7 @@ describe("Models tree", () => {
 
         it("treats elements with only hidden children as childless", async () => {
           await using buildIModelResult = await buildIModel(async (imodel) => {
-            const hiddenClassNames = await importHiddenElementClasses(imodel);
+            const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
             return withEditTxn(imodel, (txn) => {
               const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
               const category = insertSpatialCategory({ txn, codeValue: "category" });
@@ -858,7 +858,7 @@ describe("Models tree", () => {
 
         it("treats sub-models containing only hidden elements as empty", async () => {
           await using buildIModelResult = await buildIModel(async (imodel, testSchema) => {
-            const hiddenClassNames = await importHiddenElementClasses(imodel);
+            const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
             return withEditTxn(imodel, (txn) => {
               const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
               const categoryA = insertSpatialCategory({ txn, codeValue: "category A" });
@@ -918,7 +918,7 @@ describe("Models tree", () => {
 
         it("hides hidden sub-model elements while preserving visible categories", async () => {
           await using buildIModelResult = await buildIModel(async (imodel, testSchema) => {
-            const hiddenClassNames = await importHiddenElementClasses(imodel);
+            const hiddenClassNames = await importHiddenClassesSchemas({ imodel, baseClass: "BisCore.PhysicalElement" });
             return withEditTxn(imodel, (txn) => {
               const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
               const categoryA = insertSpatialCategory({ txn, codeValue: "category A" });
@@ -1026,6 +1026,105 @@ describe("Models tree", () => {
               }),
             ],
           });
+        });
+      });
+
+      describe("Hidden model classes and schemas", () => {
+        it("hides models of hidden classes", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) => {
+            const hiddenModelClassNames = await importHiddenClassesSchemas({
+              imodel,
+              baseClass: "BisCore.PhysicalModel",
+              schemaNamePrefix: "Model",
+            });
+            return withEditTxn(imodel, (txn) => {
+              const category = insertSpatialCategory({ txn, codeValue: "category" });
+              for (const [variant, classFullName] of Object.entries(hiddenModelClassNames)) {
+                const partition = insertPhysicalPartition({
+                  txn,
+                  codeValue: `hidden model (${variant})`,
+                  parentId: IModel.rootSubjectId,
+                });
+                const hiddenModel = insertPhysicalSubModel({ txn, classFullName, modeledElementId: partition.id });
+                insertPhysicalElement({
+                  txn,
+                  userLabel: `element in hidden model (${variant})`,
+                  modelId: hiddenModel.id,
+                  categoryId: category.id,
+                });
+              }
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "visible model" });
+              const element = insertPhysicalElement({
+                txn,
+                userLabel: "element",
+                modelId: model.id,
+                categoryId: category.id,
+              });
+              return { model, category, element };
+            });
+          });
+          const { imodelConnection, ...keys } = buildIModelResult;
+          using provider = await createProvider({ imodelConnection });
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.model],
+                supportsFiltering: true,
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.category],
+                    supportsFiltering: true,
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        className: keys.element.className,
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.element],
+                            supportsFiltering: true,
+                            children: false,
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("excludes content of hierarchy-hidden models of hidden classes", async () => {
+          await using buildIModelResult = await buildIModel(async (imodel) => {
+            const hiddenModelClassNames = await importHiddenClassesSchemas({
+              imodel,
+              baseClass: "BisCore.PhysicalModel",
+              schemaNamePrefix: "Model",
+            });
+            return withEditTxn(imodel, (txn) => {
+              const content = Object.entries(hiddenModelClassNames).map(([variant, classFullName]) => {
+                const partition = insertPhysicalPartition({
+                  txn,
+                  codeValue: `content model (${variant})`,
+                  parentId: IModel.rootSubjectId,
+                  jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+                });
+                const model = insertPhysicalSubModel({ txn, classFullName, modeledElementId: partition.id });
+                const category = insertSpatialCategory({ txn, codeValue: `category (${variant})` });
+                const element = insertPhysicalElement({
+                  txn,
+                  userLabel: `element (${variant})`,
+                  modelId: model.id,
+                  categoryId: category.id,
+                });
+                return { category, element };
+              });
+              return { content };
+            });
+          });
+          const { imodelConnection } = buildIModelResult;
+          using provider = await createProvider({ imodelConnection });
+          await validateHierarchy({ provider, expect: [] });
         });
       });
 

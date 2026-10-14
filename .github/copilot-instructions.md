@@ -20,8 +20,10 @@ When reviewing pull requests in this repository, check the following:
 ### Public API
 
 - Any change to an exported symbol (added, removed, or signature-changed) must update the corresponding `api/*.api.md` report file in the affected package.
-- Breaking changes to public API must be clearly justified and coordinated with the team.
-- Internal symbols intended to stay private must be annotated with `@internal`. They should not be exported through barrel files and should not appear in the `api/*.api.md` report files.
+- Breaking changes to public APIs in public packages must be clearly justified and coordinated with the team.
+- For private packages, prefer breaking public APIs over preserving compatibility when doing so produces a better API design.
+- Do not add `@internal` tags. APIs not reachable through a barrel export are internal. Every API reachable through a barrel export requires an `@public` or `@beta` release tag.
+- `extract-api` must fail when an API reachable through barrel exports lacks a release tag.
 - Run `pnpm build` and `pnpm extract-api` in the affected package, then check the `api/*.api.md` report files and verify no unexpected API diff is introduced.
 
 ### Changelog / Changesets
@@ -58,7 +60,7 @@ When reviewing pull requests in this repository, check the following:
 - All exported public symbols must have TSDoc comments (`/** ... */`).
   - In `@itwin/presentation-hierarchies-react` package, use multiline comments even for short descriptions as single-line ones don't work without package's build system.
 - Comments must accurately describe the symbol's purpose and any notable behavior (e.g. side effects, throws). No need to list individual parameters or return values if they are self-explanatory, but if the API is complex, use `@param` and `@returns` to clarify.
-- Use `@param`, `@returns`, `@throws`, `@deprecated`, `@public`, `@beta`, and `@internal` tags as appropriate.
+- Use `@param`, `@returns`, `@throws`, `@deprecated`, `@public`, and `@beta` tags as appropriate. APIs reachable through barrel exports must have an `@public` or `@beta` tag.
 - Avoid restating the symbol name verbatim — explain *what it does*, not what it *is called*.
 - Link to other symbols within backticks.
 

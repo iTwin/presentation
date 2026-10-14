@@ -79,8 +79,6 @@ Here's a simple example of how to create a hierarchy provider and build a hierar
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-
 import {
   createIModelHierarchyProvider,
   createPredicateBasedHierarchyDefinition,
@@ -88,6 +86,7 @@ import {
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createIModelAccess(imodel: IModelConnection) {

@@ -42,10 +42,9 @@ To migrate:
 ```tsx
 // before
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
-
 // after
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
 import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 ```
 
@@ -117,6 +116,7 @@ If `StrataKitTreeRenderer` does not fit your needs, you can build a custom rende
 
 ```tsx
 import { useErrorNodes, useFlatTreeItems } from "@itwin/presentation-hierarchies-react";
+
 import type { TreeRendererProps } from "@itwin/presentation-hierarchies-react";
 
 function MyCustomTree(treeRendererProps: TreeRendererProps) {
@@ -229,8 +229,9 @@ import { TreeNodeRenderer } from "@itwin/presentation-hierarchies-react/itwinui"
 
 // after
 import { StrataKitTreeRenderer, TreeActionBase } from "@itwin/presentation-hierarchies-react/stratakit";
-import type { TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+
 import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 
 function MyTreeAction({
   node,
@@ -269,6 +270,7 @@ In `1.x`, hierarchy-level filtering was built in and triggered through the `onFi
 ```tsx
 import { useState } from "react";
 import { StrataKitTreeRenderer, TreeNodeFilterAction } from "@itwin/presentation-hierarchies-react/stratakit";
+
 import type { HierarchyLevelDetails } from "@itwin/presentation-hierarchies-react";
 
 // the details of the hierarchy level currently being filtered drive the filter dialog
@@ -356,7 +358,7 @@ In `1.x`, error and informational states (e.g. "result set too large", "no filte
 In `2.0` these states are modeled on the nodes and the hook result instead of as separate tree nodes:
 
 - Node-level errors are carried on the node itself through `TreeNode.errors: ErrorInfo[]`, rather than being separate nodes in the tree. The optional `getTreeNodeErrors` callback on the tree state hooks lets you attach custom `ErrorInfo[]` to a node.
-- A node can carry multiple errors, and all of them are listed in the tree's error region (the delivered renderer emits one entry per error). The tree row itself is flagged with an error indicator linked to the first error. Errors detected internally are ordered before any custom errors you attach via `getTreeNodeErrors`. The `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` error types are produced internally - custom errors should use `type: "Unknown"` (a `GenericErrorInfo`). A node with errors is not expandable unless every error is a `type: "Unknown"` error with `isNodeExpandable: true`, so any internal error type keeps the node non-expandable.
+- A node can carry multiple errors, and all of them are listed in the tree's error region (the delivered renderer emits one entry per error). The tree row itself is flagged with an error indicator linked to the first error. Errors detected internally are ordered before any custom errors you attach via `getTreeNodeErrors`. The `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` error types are produced internally - custom errors should use `type: "Generic"` (a `GenericErrorInfo`). A node with errors is not expandable unless every error is a `type: "Generic"` error with `isNodeExpandable: true`, so any internal error type keeps the node non-expandable.
 - Root-level load failures (when the root hierarchy level fails to load) are surfaced through the `rootErrorRendererProps` prop bag returned by the tree state hooks; pass it to `StrataKitRootErrorRenderer` (see [Rendering components and tree state hook result](#rendering-components-and-tree-state-hook-result)).
 
 ## Hierarchy search

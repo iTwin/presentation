@@ -101,7 +101,7 @@ export interface GenericErrorInfo {
     // (undocumented)
     message: string;
     // (undocumented)
-    type: "Unknown";
+    type: "Generic";
 }
 
 export { GenericInstanceFilter }

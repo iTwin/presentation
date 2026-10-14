@@ -39,8 +39,8 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
    <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createIModelHiliteSetProvider } from "@itwin/unified-selection";
   import { createIModelKey } from "@itwin/presentation-core-interop";
+  import { createIModelHiliteSetProvider } from "@itwin/unified-selection";
 
   // Note the use of `using` keyword here. The caching provider registers a selection change listener and should be disposed, in case
   // its lifetime is shorter than that of `SelectionStorage`, to unregister the listener. The `using` keyword ensures that the provider

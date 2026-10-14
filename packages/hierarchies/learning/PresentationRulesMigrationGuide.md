@@ -117,7 +117,6 @@ Or, for full control over how child nodes are created, a hierarchy definition ma
 
 ```ts
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-
 import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
@@ -325,7 +324,6 @@ Matching `HierarchyNodesDefinition`:
 
 ```ts
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
-
 import {
   DefineHierarchyLevelProps,
   HierarchyLevelDefinition,
@@ -416,7 +414,6 @@ The purpose of a custom query instance nodes specification in Presentation Rules
 
   ```ts
   import { HierarchyNode } from "@itwin/presentation-hierarchies";
-
   import {
     DefineHierarchyLevelProps,
     HierarchyLevelDefinition,
