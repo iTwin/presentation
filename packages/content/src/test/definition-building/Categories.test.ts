@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { collectCategories, pruneUnreferencedCategories } from "../../content/definition-building/Categories.js";
 import { createContributionMemoizer } from "../../content/definition-building/ContributionMemoizer.js";
 import { CategoryDefinition } from "../../content/model/Category.js";
-import { createEntityClass, createRelationshipClass, createSchemaAccess } from "../MetadataStubs.js";
+import { createEntityClass, createSchemaAccess } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentSource } from "../../content/ContentTarget.js";
@@ -85,13 +85,21 @@ function createCategorizedField(props: {
   propertyName?: string;
   pathFromTarget?: RelationshipPath;
   anchor?: FieldCategorization["anchor"];
-  schemaCategory?: { id: string; label: string };
+  propertyCategory?: { id: EC.FullClassNameDotNotation; label: string };
   overrideCategoryId?: string;
+  propertyCategoryScope?: FieldCategorization["propertyCategoryScope"];
+  categoryContext?: FieldCategorization["categoryContext"];
 }): CategorizedField {
   const id = props.id ?? "field";
-  const categorization: FieldCategorization = { anchor: props.anchor ?? "targetClass" };
-  if (props.schemaCategory) {
-    categorization.category = { source: "schema", ...props.schemaCategory };
+  const categorization: FieldCategorization = {
+    anchor: props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none"),
+    categoryContext: props.categoryContext ?? [],
+  };
+  if (props.propertyCategoryScope !== undefined) {
+    categorization.propertyCategoryScope = props.propertyCategoryScope;
+  }
+  if (props.propertyCategory) {
+    categorization.category = { source: "propertyCategory", ...props.propertyCategory };
   }
   if (props.overrideCategoryId !== undefined) {
     categorization.category = { source: "override", id: props.overrideCategoryId };
@@ -327,10 +335,14 @@ describe("collectCategories", () => {
     expect(field.field.categoryId).to.equal(dId);
   });
 
-  it("nests a terminal under the nearest shorter segment terminal, skipping field-less classes", async () => {
-    // Segments [a->b],[b->c->d]: fields at `a->b` and `a->b->c->d` → `b` (top) and `d` (under `b`), no `c`.
+  it("nests a terminal under its explicit ancestor, skipping intermediate classes", async () => {
     const bField = createCategorizedField({ id: "b", propertyName: "PB", pathFromTarget: [aToB] });
-    const dField = createCategorizedField({ id: "d", propertyName: "PD", pathFromTarget: [aToB, bToC, cToD] });
+    const dField = createCategorizedField({
+      id: "d",
+      propertyName: "PD",
+      pathFromTarget: [aToB, bToC, cToD],
+      categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+    });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
         createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
@@ -350,11 +362,23 @@ describe("collectCategories", () => {
     expect(categories[dId]).to.deep.equal({ id: dId, label: "The D", parentId: bId });
   });
 
-  it("nests a full chain of categories when fields attach at every segment terminal", async () => {
-    // Segments [a->b],[b->c],[c->d]: fields at each terminal → `b` -> `c` -> `d`.
+  it("nests a full chain of categories from explicit contexts", async () => {
     const bField = createCategorizedField({ id: "b", propertyName: "PB", pathFromTarget: [aToB] });
-    const cField = createCategorizedField({ id: "c", propertyName: "PC", pathFromTarget: [aToB, bToC] });
-    const dField = createCategorizedField({ id: "d", propertyName: "PD", pathFromTarget: [aToB, bToC, cToD] });
+    const cField = createCategorizedField({
+      id: "c",
+      propertyName: "PC",
+      pathFromTarget: [aToB, bToC],
+      categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+    });
+    const dField = createCategorizedField({
+      id: "d",
+      propertyName: "PD",
+      pathFromTarget: [aToB, bToC, cToD],
+      categoryContext: [
+        { stepIndex: 0, kind: "targetClass" },
+        { stepIndex: 1, kind: "targetClass" },
+      ],
+    });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
         createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
@@ -458,14 +482,14 @@ describe("collectCategories", () => {
     expect(field.field.categoryId).to.equal(id);
   });
 
-  it("nests a related field's schema category under the auto-created path category", async () => {
+  it("nests a related field's property category under the auto-created path category", async () => {
     // A related field carrying a schema property category keeps that (sub-)category, but the path
     // category it nests under must still be auto-created — unlike an override, which suppresses it.
     const parentId = CategoryDefinition.computeId({ path: [aToB] });
-    const schemaCategoryId = `${parentId}/TestSchema.Geometry`;
+    const propertyCategoryId = `${parentId}/TestSchema.Geometry`;
     const field = createCategorizedField({
       pathFromTarget: [aToB],
-      schemaCategory: { id: "TestSchema.Geometry", label: "Geometry" },
+      propertyCategory: { id: "TestSchema.Geometry", label: "Geometry" },
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "B Label" })]),
@@ -476,127 +500,16 @@ describe("collectCategories", () => {
       getAnchorContribution,
       fields: [field],
     });
-    expect(field.field.categoryId).to.equal(schemaCategoryId);
-    expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "Geometry", parentId });
+    expect(field.field.categoryId).to.equal(propertyCategoryId);
+    expect(categories[propertyCategoryId]).to.deep.equal({ id: propertyCategoryId, label: "Geometry", parentId });
     expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
-  });
-
-  it("elides a schema category that shares its auto-created parent's label", async () => {
-    // The path category's label is resolved from the class only after all fields are processed, so a
-    // schema property category sharing that same label (e.g. an ElementAspect class named the same as
-    // its own property category) is detected here and reparented past the now-redundant level.
-    const parentId = CategoryDefinition.computeId({ path: [aToB] });
-    const schemaCategoryId = `${parentId}/TestSchema.Geometry`;
-    const field = createCategorizedField({
-      pathFromTarget: [aToB],
-      schemaCategory: { id: "TestSchema.Geometry", label: "B Label" },
-    });
-    const categories = await collectCategories({
-      imodelAccess: createSchemaAccess([createEntityClass({ fullName: "TestSchema.B", label: "B Label" })]),
-      sources: [createSource()],
-      imodelFieldsProviders: [],
-      externalFieldsProviders: [],
-      getContribution,
-      getAnchorContribution,
-      fields: [field],
-    });
-    expect(field.field.categoryId).to.equal(schemaCategoryId);
-    // No `parentId` — the redundant "B Label" path category is elided from the tree.
-    expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "B Label" });
-    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "B Label" });
-  });
-
-  it("keeps a provider-declared parent/child hierarchy even when their labels coincidentally match", async () => {
-    const parentId = "provider-parent";
-    const childId = "provider-child";
-    const provider = createProvider("p_v1", {
-      [parentId]: { id: parentId, label: "Same Label" },
-      [childId]: { id: childId, label: "Same Label", parentId },
-    });
-    const field = createCategorizedField({ overrideCategoryId: childId });
-    const categories = await collectCategories({
-      imodelAccess: createSchemaAccess([]),
-      sources: [createSource()],
-      imodelFieldsProviders: [provider],
-      externalFieldsProviders: [],
-      getContribution,
-      getAnchorContribution,
-      fields: [field],
-    });
-    expect(categories[childId]).to.deep.equal({ id: childId, label: "Same Label", parentId });
-    expect(categories[parentId]).to.deep.equal({ id: parentId, label: "Same Label" });
-  });
-
-  it("elides a synthesized schema category nesting under a provider-declared anchor with the same label, without touching the provider category", async () => {
-    // The anchor id below is already declared by a provider, so `collectCategories` reuses it instead
-    // of synthesizing its own — only the schema category nesting under it is synthesized.
-    const anchorId = CategoryDefinition.computeId({ path: [aToB] });
-    const provider = createProvider("p_v1", { [anchorId]: { id: anchorId, label: "Same Label" } });
-    const schemaCategoryId = `${anchorId}/TestSchema.Geometry`;
-    const field = createCategorizedField({
-      pathFromTarget: [aToB],
-      schemaCategory: { id: "TestSchema.Geometry", label: "Same Label" },
-    });
-    const categories = await collectCategories({
-      imodelAccess: createSchemaAccess([]),
-      sources: [createSource()],
-      imodelFieldsProviders: [provider],
-      externalFieldsProviders: [],
-      getContribution,
-      getAnchorContribution,
-      fields: [field],
-    });
-    expect(field.field.categoryId).to.equal(schemaCategoryId);
-    // The synthesized schema category is elided past the same-label provider anchor...
-    expect(categories[schemaCategoryId]).to.deep.equal({ id: schemaCategoryId, label: "Same Label" });
-    // ...but the provider's own category is untouched.
-    expect(categories[anchorId]).to.deep.equal({ id: anchorId, label: "Same Label" });
-  });
-
-  it("elides through more than one same-label ancestor when walking up the synthesized chain", async () => {
-    // Path a-[ab]->b-[bc]->c, with "ab" (relationship), "b" (target), and "bc" (relationship) all
-    // sharing "Same Label" — "bc" must walk past both "b" and "ab", not stop after just one hop.
-    const abField = createCategorizedField({
-      id: "ab",
-      propertyName: "AB",
-      pathFromTarget: [aToB],
-      anchor: "relationshipClass",
-    });
-    const bField = createCategorizedField({
-      id: "b",
-      propertyName: "B",
-      pathFromTarget: [aToB],
-      anchor: "targetClass",
-    });
-    const bcField = createCategorizedField({
-      id: "bc",
-      propertyName: "BC",
-      pathFromTarget: [aToB, bToC],
-      anchor: "relationshipClass",
-    });
-    const categories = await collectCategories({
-      imodelAccess: createSchemaAccess([
-        createEntityClass({ fullName: "TestSchema.B", label: "Same Label" }),
-        createRelationshipClass({ fullName: "TestSchema.aToB", label: "Same Label" }),
-        createRelationshipClass({ fullName: "TestSchema.bToC", label: "Same Label" }),
-      ]),
-      sources: [createSource()],
-      imodelFieldsProviders: [],
-      externalFieldsProviders: [],
-      getContribution,
-      getAnchorContribution,
-      fields: [abField, bField, bcField],
-    });
-    const bcId = CategoryDefinition.computeId({ path: [aToB, bToC], omitTargetClass: true });
-    // "bc" ends up top-level — reparented past "b", then past "ab" above it.
-    expect(categories[bcId]).to.deep.equal({ id: bcId, label: "Same Label" });
   });
 
   it("nests the target category and both schema sub-categories under the relationship category", async () => {
     // A step that loads both target- and relationship-class properties (both with the same schema
     // category): the relationship class becomes the top-level group, the target class nests under it,
-    // and the shared schema category yields a distinct sub-category under each owner.
-    const geometry = { id: "TestSchema.Geometry", label: "Geometry" };
+    // and the shared property category yields a distinct sub-category under each owner.
+    const geometry = { id: "TestSchema.Geometry", label: "Geometry" } as const;
     const relUn = createCategorizedField({
       id: "relUn",
       propertyName: "RelUn",
@@ -608,20 +521,22 @@ describe("collectCategories", () => {
       propertyName: "RelCat",
       pathFromTarget: [aToB],
       anchor: "relationshipClass",
-      schemaCategory: geometry,
+      propertyCategory: geometry,
     });
     const targetUn = createCategorizedField({
       id: "targetUn",
       propertyName: "TargetUn",
       pathFromTarget: [aToB],
       anchor: "targetClass",
+      categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }],
     });
     const targetCat = createCategorizedField({
       id: "targetCat",
       propertyName: "TargetCat",
       pathFromTarget: [aToB],
       anchor: "targetClass",
-      schemaCategory: geometry,
+      categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }],
+      propertyCategory: geometry,
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
@@ -646,9 +561,9 @@ describe("collectCategories", () => {
     expect(targetUn.field.categoryId).to.equal(targetId);
     expect(targetCat.field.categoryId).to.equal(targetSchemaId);
     // - relationship category ("A to B", top-level)
-    //   - relationship schema category
+    //   - relationship property category
     //   - target class category ("The B", under the relationship category)
-    //     - target schema category
+    //     - target property category
     expect(categories[relId]).to.deep.equal({ id: relId, label: "A to B" });
     expect(categories[relSchemaId]).to.deep.equal({ id: relSchemaId, label: "Geometry", parentId: relId });
     expect(categories[targetId]).to.deep.equal({ id: targetId, label: "The B", parentId: relId });
@@ -668,6 +583,7 @@ describe("collectCategories", () => {
       propertyName: "BC",
       pathFromTarget: [aToB, bToC],
       anchor: "relationshipClass",
+      categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
@@ -704,6 +620,7 @@ describe("collectCategories", () => {
       propertyName: "BC",
       pathFromTarget: [aToB, bToC],
       anchor: "relationshipClass",
+      categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }],
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
@@ -729,7 +646,7 @@ describe("collectCategories", () => {
     it("registers a direct field's schema property category top-level", async () => {
       const field = createCategorizedField({
         anchor: "none",
-        schemaCategory: { id: "TestSchema.Geometry", label: "Geometry" },
+        propertyCategory: { id: "TestSchema.Geometry", label: "Geometry" },
       });
       const categories = await collectCategories({
         imodelAccess: createSchemaAccess([]),
@@ -750,7 +667,7 @@ describe("collectCategories", () => {
       });
       const field = createCategorizedField({
         anchor: "none",
-        schemaCategory: { id: "TestSchema.Geometry", label: "Schema Geometry" },
+        propertyCategory: { id: "TestSchema.Geometry", label: "Schema Geometry" },
       });
       const categories = await collectCategories({
         imodelAccess: createSchemaAccess([]),
@@ -762,6 +679,305 @@ describe("collectCategories", () => {
         fields: [field],
       });
       expect(categories["TestSchema.Geometry"].label).to.equal("Provider Geometry");
+    });
+  });
+
+  describe("category placement", () => {
+    const geometryCategory = { id: "TestSchema.Geometry", label: "Geometry" } as const;
+    const aToB2: RelationshipPath[number] = { ...aToB, relationshipName: "TestSchema.aToB2" };
+    const schema = () =>
+      createSchemaAccess([
+        createEntityClass({ fullName: "TestSchema.B", label: "The B" }),
+        createEntityClass({ fullName: "TestSchema.C", label: "The C" }),
+      ]);
+    const collect = async (fields: CategorizedField[], source: ContentSource = createSource()) =>
+      collectCategories({
+        imodelAccess: schema(),
+        sources: [source],
+        imodelFieldsProviders: [],
+        externalFieldsProviders: [],
+        getContribution,
+        getAnchorContribution,
+        fields,
+      });
+    const nestedSource = (): ContentSource => ({
+      ...createSource(),
+      resolvedDeclarations: [
+        {
+          providerId: "p_v1",
+          declarationIndex: 0,
+          paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.A"] }],
+          nested: {
+            anchorClassName: "TestSchema.B",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
+        },
+      ],
+    });
+
+    it("places a parent-scoped property category at the top level and keeps the class fallback for uncategorized properties", async () => {
+      const categorized = createCategorizedField({
+        id: "categorized",
+        pathFromTarget: [aToB],
+        propertyCategory: geometryCategory,
+        propertyCategoryScope: "parent",
+      });
+      const uncategorized = createCategorizedField({
+        id: "uncategorized",
+        pathFromTarget: [aToB],
+        propertyCategoryScope: "parent",
+      });
+      const categories = await collect([categorized, uncategorized]);
+      const bId = CategoryDefinition.computeId({ path: [aToB] });
+      expect(categorized.field.categoryId).to.equal(geometryCategory.id);
+      expect(uncategorized.field.categoryId).to.equal(bId);
+      expect(categories).to.deep.equal({
+        [geometryCategory.id]: { id: geometryCategory.id, label: "Geometry" },
+        [bId]: { id: bId, label: "The B" },
+      });
+    });
+
+    it("does not create the related class category when only parent-scoped property categories are used", async () => {
+      const field = createCategorizedField({
+        pathFromTarget: [aToB],
+        propertyCategory: geometryCategory,
+        propertyCategoryScope: "parent",
+      });
+      const categories = await collect([field]);
+      expect(Object.keys(categories)).to.deep.equal([geometryCategory.id]);
+    });
+
+    it("nests a related-class scoped nested declaration's property category under the anchor and nested classes", async () => {
+      const field = createCategorizedField({
+        pathFromTarget: [aToB, bToC],
+        propertyCategory: geometryCategory,
+        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      });
+      const categories = await collect([field], nestedSource());
+      const bId = CategoryDefinition.computeId({ path: [aToB] });
+      const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
+      const geometryId = `${cId}/${geometryCategory.id}`;
+      expect(field.field.categoryId).to.equal(geometryId);
+      expect(categories[geometryId]).to.deep.equal({ id: geometryId, label: "Geometry", parentId: cId });
+      expect(categories[cId]).to.deep.equal({ id: cId, label: "The C", parentId: bId });
+      expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
+    });
+
+    it("attaches a parent-scoped nested declaration's property category to the anchor category", async () => {
+      const categorized = createCategorizedField({
+        id: "categorized",
+        pathFromTarget: [aToB, bToC],
+        propertyCategory: geometryCategory,
+        propertyCategoryScope: "parent",
+        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      });
+      const uncategorized = createCategorizedField({
+        id: "uncategorized",
+        pathFromTarget: [aToB, bToC],
+        propertyCategoryScope: "parent",
+        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      });
+      const categories = await collect([categorized, uncategorized], nestedSource());
+      const bId = CategoryDefinition.computeId({ path: [aToB] });
+      const cId = CategoryDefinition.computeId({ path: [aToB, bToC] });
+      const geometryId = `${bId}/${geometryCategory.id}`;
+      expect(categorized.field.categoryId).to.equal(geometryId);
+      expect(uncategorized.field.categoryId).to.equal(cId);
+      expect(categories[geometryId]).to.deep.equal({ id: geometryId, label: "Geometry", parentId: bId });
+      expect(categories[cId]).to.deep.equal({ id: cId, label: "The C", parentId: bId });
+      // The anchor category exists although no field of the anchor itself is displayed.
+      expect(categories[bId]).to.deep.equal({ id: bId, label: "The B" });
+    });
+
+    it("shares a class category reached over different paths under the same parent", async () => {
+      const viaFirst = createCategorizedField({ id: "first", propertyName: "P1", pathFromTarget: [aToB] });
+      const viaSecond = createCategorizedField({ id: "second", propertyName: "P2", pathFromTarget: [aToB2] });
+      const categories = await collect([viaFirst, viaSecond]);
+      const ids = [
+        CategoryDefinition.computeId({ path: [aToB] }),
+        CategoryDefinition.computeId({ path: [aToB2] }),
+      ].sort();
+      expect(viaFirst.field.categoryId).to.equal(ids[0]);
+      expect(viaSecond.field.categoryId).to.equal(ids[0]);
+      expect(Object.keys(categories)).to.deep.equal([ids[0]]);
+    });
+
+    it("shares a property category by name across paths and keeps it distinct under different parents", async () => {
+      const viaFirst = createCategorizedField({
+        id: "first",
+        propertyName: "P1",
+        pathFromTarget: [aToB],
+        propertyCategory: geometryCategory,
+        propertyCategoryScope: "parent",
+      });
+      const viaSecond = createCategorizedField({
+        id: "second",
+        propertyName: "P2",
+        pathFromTarget: [aToB2],
+        propertyCategory: geometryCategory,
+        propertyCategoryScope: "parent",
+      });
+      const underAnchor = createCategorizedField({
+        id: "third",
+        propertyName: "P3",
+        pathFromTarget: [aToB],
+        propertyCategory: geometryCategory,
+      });
+      await collect([viaFirst, viaSecond, underAnchor]);
+      expect(viaFirst.field.categoryId).to.equal(geometryCategory.id);
+      expect(viaSecond.field.categoryId).to.equal(geometryCategory.id);
+      expect(underAnchor.field.categoryId).to.not.equal(geometryCategory.id);
+    });
+
+    it("does not merge categories with equal labels but different names", async () => {
+      const first = createCategorizedField({
+        id: "first",
+        propertyName: "P1",
+        pathFromTarget: [aToB],
+        propertyCategory: { id: "TestSchema.First", label: "Same" },
+        propertyCategoryScope: "parent",
+      });
+      const second = createCategorizedField({
+        id: "second",
+        propertyName: "P2",
+        pathFromTarget: [aToB],
+        propertyCategory: { id: "TestSchema.Second", label: "Same" },
+        propertyCategoryScope: "parent",
+      });
+      const categories = await collect([first, second]);
+      expect(Object.keys(categories)).to.have.members(["TestSchema.First", "TestSchema.Second"]);
+    });
+
+    it("produces the same category ids regardless of field order", async () => {
+      const create = () => [
+        createCategorizedField({ id: "first", propertyName: "P1", pathFromTarget: [aToB] }),
+        createCategorizedField({ id: "second", propertyName: "P2", pathFromTarget: [aToB2] }),
+      ];
+      const forward = create();
+      const backward = create().reverse();
+      await collect(forward);
+      await collect(backward);
+      expect(forward[0].field.categoryId).to.equal(backward[1].field.categoryId);
+      expect(forward[1].field.categoryId).to.equal(backward[0].field.categoryId);
+    });
+  });
+
+  describe("category sharing and parent relationships", () => {
+    async function collect(fields: CategorizedField[], categories: Record<string, CategoryDefinition> = {}) {
+      return collectCategories({
+        imodelAccess: createSchemaAccess([
+          createEntityClass({ fullName: "TestSchema.B" }),
+          createEntityClass({ fullName: "TestSchema.C" }),
+          createEntityClass({ fullName: "OtherSchema.B" }),
+        ]),
+        sources: [createSource()],
+        imodelFieldsProviders: [createProvider("test_v1", categories)],
+        externalFieldsProviders: [],
+        getContribution,
+        getAnchorContribution,
+        fields,
+      });
+    }
+
+    it("reparents a provider category to the shared class category without changing the provider's definition", async () => {
+      const otherPath = [{ ...aToB, relationshipName: "TestSchema.zToB" as const }];
+      const originalParentId = CategoryDefinition.computeId({ path: otherPath });
+      const sharedParentId = CategoryDefinition.computeId({ path: [aToB] });
+      const child = { id: "child", label: "Child", parentId: originalParentId };
+
+      const viaFirstPath = createCategorizedField({ id: "first", pathFromTarget: [aToB] });
+      const viaOtherPath = createCategorizedField({ id: "second", pathFromTarget: otherPath });
+      const customField = createCategorizedField({ id: "custom", overrideCategoryId: "child" });
+
+      const categories = await collect([viaFirstPath, viaOtherPath, customField], { child });
+      expect(categories).to.deep.equal({
+        [sharedParentId]: { id: sharedParentId, label: "B" },
+        child: { id: "child", label: "Child", parentId: sharedParentId },
+      });
+
+      expect(viaFirstPath.field.categoryId).to.equal(sharedParentId);
+      expect(viaOtherPath.field.categoryId).to.equal(sharedParentId);
+      expect(customField.field.categoryId).to.equal("child");
+      expect(child).to.deep.equal({ id: "child", label: "Child", parentId: originalParentId });
+    });
+
+    it("keeps a parent-scoped class fallback at the root even when a field uses a shorter path", async () => {
+      const prefixField = createCategorizedField({ id: "prefix", pathFromTarget: [aToB] });
+      const terminalField = createCategorizedField({
+        id: "terminal",
+        pathFromTarget: [aToB, bToC],
+        propertyCategoryScope: "parent",
+      });
+      const prefixCategoryId = CategoryDefinition.computeId({ path: [aToB] });
+      const terminalCategoryId = CategoryDefinition.computeId({ path: [aToB, bToC] });
+
+      const categories = await collect([prefixField, terminalField]);
+
+      expect(categories).to.deep.equal({
+        [prefixCategoryId]: { id: prefixCategoryId, label: "B" },
+        [terminalCategoryId]: { id: terminalCategoryId, label: "C" },
+      });
+      expect(prefixField.field.categoryId).to.equal(prefixCategoryId);
+      expect(terminalField.field.categoryId).to.equal(terminalCategoryId);
+    });
+
+    it("keeps root class and property categories with matching unqualified names separate across schemas", async () => {
+      const otherSchemaPath: RelationshipPath = [{ ...aToB, targetClassName: "OtherSchema.B" }];
+      const testClassField = createCategorizedField({ id: "testClass", pathFromTarget: [aToB] });
+      const otherClassField = createCategorizedField({ id: "otherClass", pathFromTarget: otherSchemaPath });
+      const testGeometryField = createCategorizedField({
+        categoryContext: [],
+        id: "testGeometry",
+        anchor: "none",
+        propertyCategory: { id: "TestSchema.Geometry", label: "First" },
+      });
+      const otherGeometryField = createCategorizedField({
+        categoryContext: [],
+        id: "otherGeometry",
+        anchor: "none",
+        propertyCategory: { id: "OtherSchema.Geometry", label: "Second" },
+      });
+      const testClassId = CategoryDefinition.computeId({ path: [aToB] });
+      const otherClassId = CategoryDefinition.computeId({ path: otherSchemaPath });
+
+      const categories = await collect([testClassField, otherClassField, testGeometryField, otherGeometryField]);
+
+      expect(categories).to.deep.equal({
+        [testClassId]: { id: testClassId, label: "B" },
+        [otherClassId]: { id: otherClassId, label: "B" },
+        "TestSchema.Geometry": { id: "TestSchema.Geometry", label: "First" },
+        "OtherSchema.Geometry": { id: "OtherSchema.Geometry", label: "Second" },
+      });
+      expect(testClassField.field.categoryId).to.equal(testClassId);
+      expect(otherClassField.field.categoryId).to.equal(otherClassId);
+      expect(testGeometryField.field.categoryId).to.equal("TestSchema.Geometry");
+      expect(otherGeometryField.field.categoryId).to.equal("OtherSchema.Geometry");
+    });
+
+    it("keeps different category contexts on the same path distinct and order independent", async () => {
+      const createFields = () => [
+        createCategorizedField({ id: "prefix", pathFromTarget: [aToB] }),
+        createCategorizedField({ id: "top", pathFromTarget: [aToB, bToC], propertyCategoryScope: "parent" }),
+        createCategorizedField({
+          id: "nested",
+          pathFromTarget: [aToB, bToC],
+          propertyCategoryScope: "parent",
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        }),
+      ];
+      const forward = createFields();
+      const backward = createFields().reverse();
+      const child = { id: "child", label: "Child", parentId: CategoryDefinition.computeId({ path: [aToB, bToC] }) };
+      const categories = await collect(forward, { child });
+      const reversed = await collect(backward, { child });
+      expect(forward[1].field.categoryId).not.to.equal(forward[2].field.categoryId);
+      expect(categories[forward[1].field.categoryId!].parentId).to.equal(undefined);
+      expect(categories[forward[2].field.categoryId!].parentId).to.equal(forward[0].field.categoryId);
+      expect(categories.child.parentId).to.equal(forward[1].field.categoryId);
+      expect(reversed).to.deep.equal(categories);
+      expect(backward[0].field.categoryId).to.equal(forward[2].field.categoryId);
+      expect(backward[1].field.categoryId).to.equal(forward[1].field.categoryId);
     });
   });
 
@@ -778,7 +994,11 @@ describe("collectCategories", () => {
             providerId: props.providerId,
             declarationIndex: 0,
             paths: [{ path: [aToB], targetClassNames: ["TestSchema.A"] }],
-            nested: { anchorClassName: props.anchorClassName, prefixStepCount: 1 },
+            nested: {
+              anchorClassName: props.anchorClassName,
+              prefixStepCount: 1,
+              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            },
           },
         ],
         resolvedExternalInputs: [],
@@ -861,13 +1081,21 @@ describe("collectCategories", () => {
             providerId: provider.id,
             declarationIndex: 0,
             paths: [{ path: [aToB], targetClassNames: ["TestSchema.A"] }],
-            nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+            nested: {
+              anchorClassName: "TestSchema.B",
+              prefixStepCount: 1,
+              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            },
           },
           {
             providerId: provider.id,
             declarationIndex: 1,
             paths: [{ path: [aToB], targetClassNames: ["TestSchema.A"] }],
-            nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+            nested: {
+              anchorClassName: "TestSchema.B",
+              prefixStepCount: 1,
+              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            },
           },
         ],
         resolvedExternalInputs: [],

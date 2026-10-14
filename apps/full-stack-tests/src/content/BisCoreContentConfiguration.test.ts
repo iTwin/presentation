@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
+  collect,
   insertDrawingCategory,
   insertDrawingGraphic,
   insertDrawingModelWithPartition,
@@ -17,15 +18,19 @@ import {
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Code, IModel } from "@itwin/core-common";
-import { createIModelContentConfiguration } from "@itwin/presentation-content";
+import {
+  createContentProvider,
+  createIModelContentConfiguration,
+  resolveContentSources,
+} from "@itwin/presentation-content";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { PropertyFieldValidator, validateVisibleFieldsAtPath } from "./DescriptorValidation.js";
-import { buildDescriptor, createContentIModelAccess } from "./Utils.js";
+import { buildDescriptor, createContentIModelAccess, getPropertyFieldsByPath } from "./Utils.js";
 
 import type { ElementAspectProps, ExternalSourceProps } from "@itwin/core-common";
 import type { RelationshipPath } from "@itwin/presentation-shared";
@@ -639,6 +644,147 @@ describe("Content", () => {
           }),
         ],
       });
+    });
+
+    it("attaches owned aspect property categories to the owning context and keeps the class fallback otherwise", async () => {
+      const { imodelConnection, elementClassName, uniqueAspectClassName, multiAspectClassName } = await buildTestIModel(
+        "OwnedAspectCategories",
+        async (imodel, testName) => {
+          const schema = await importSchema(
+            testName,
+            imodel,
+            `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <PropertyCategory typeName="PointControl" displayLabel="Point Control Category" priority="10" />
+            <ECEntityClass typeName="MyUniqueAspect" displayLabel="Unique Aspect Class">
+              <BaseClass>bis:ElementUniqueAspect</BaseClass>
+              <ECProperty propertyName="Categorized" typeName="string" category="PointControl" />
+              <ECProperty propertyName="Uncategorized" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="MyMultiAspect" displayLabel="Multi Aspect Class">
+              <BaseClass>bis:ElementMultiAspect</BaseClass>
+              <ECProperty propertyName="Categorized" typeName="string" category="PointControl" />
+              <ECProperty propertyName="Uncategorized" typeName="string" />
+            </ECEntityClass>
+          `,
+          );
+
+          return withEditTxn(imodel, (txn) => {
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "Category" });
+            const partitionKey = insertPhysicalPartition({ txn, codeValue: "Model", parentId: IModel.rootSubjectId });
+            const modelKey = insertPhysicalSubModel({ txn, modeledElementId: partitionKey.id });
+            const typeKey = insertPhysicalType({ txn, userLabel: "Type" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "Typed Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              typeDefinitionId: typeKey.id,
+            });
+            for (const owner of [elementKey, typeKey]) {
+              txn.insertAspect({
+                classFullName: schema.items.MyUniqueAspect.fullName,
+                element: { id: owner.id },
+                categorized: `unique ${owner.className}`,
+                uncategorized: "unique uncategorized",
+              } as ElementAspectProps);
+            }
+            txn.insertAspect({
+              classFullName: schema.items.MyMultiAspect.fullName,
+              element: { id: elementKey.id },
+              categorized: "multi",
+              uncategorized: "multi uncategorized",
+            } as ElementAspectProps);
+
+            return {
+              elementClassName: elementKey.className,
+              uniqueAspectClassName: schema.items.MyUniqueAspect.fullName,
+              multiAspectClassName: schema.items.MyMultiAspect.fullName,
+            };
+          });
+        },
+      );
+
+      const imodelAccess = createContentIModelAccess(imodelConnection);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: elementClassName }],
+        config,
+      });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+      const descriptor = await provider.getContentDescriptor();
+
+      const aspectValidators = (propertyClassName: string, categorizedCategory: string[], fallback: string[]) => [
+        PropertyFieldValidator.create({
+          propertyClassName,
+          propertyName: "Categorized",
+          label: "Categorized",
+          category: categorizedCategory,
+        }),
+        PropertyFieldValidator.create({
+          propertyClassName,
+          propertyName: "Uncategorized",
+          label: "Uncategorized",
+          category: fallback,
+        }),
+      ];
+      const uniquePath: RelationshipPath = [
+        {
+          sourceClassName: elementClassName,
+          targetClassName: uniqueAspectClassName,
+          relationshipName: "BisCore.ElementOwnsUniqueAspect",
+        },
+      ];
+      validateVisibleFieldsAtPath({
+        descriptor,
+        path: uniquePath,
+        expect: aspectValidators(uniqueAspectClassName, ["Point Control Category"], ["Unique Aspect Class"]),
+      });
+      const multiPath: RelationshipPath = [
+        {
+          sourceClassName: elementClassName,
+          targetClassName: multiAspectClassName,
+          relationshipName: "BisCore.ElementOwnsMultiAspects",
+          instanceFilter: { expression: "this.ECClassId IS NOT (BisCore.ExternalSourceAspect)" },
+        },
+      ];
+      validateVisibleFieldsAtPath({
+        descriptor,
+        path: multiPath,
+        expect: aspectValidators(multiAspectClassName, ["Point Control Category"], ["Multi Aspect Class"]),
+      });
+      // On the element's type definition (reached recursively), the owning context is its class category.
+      const nestedPath: RelationshipPath = [
+        {
+          sourceClassName: elementClassName,
+          targetClassName: "Generic.PhysicalType",
+          relationshipName: "BisCore.PhysicalElementIsOfType",
+        },
+        {
+          sourceClassName: "Generic.PhysicalType",
+          targetClassName: uniqueAspectClassName,
+          relationshipName: "BisCore.ElementOwnsUniqueAspect",
+        },
+      ];
+      validateVisibleFieldsAtPath({
+        descriptor,
+        path: nestedPath,
+        expect: aspectValidators(
+          uniqueAspectClassName,
+          ["Physical Type", "Point Control Category"],
+          ["Physical Type", "Unique Aspect Class"],
+        ),
+      });
+
+      // Placement doesn't change which values are loaded.
+      const [item] = await collect(provider.getItems());
+      const valueAt = (path: RelationshipPath, propertyName: string) =>
+        item.getValue(getPropertyFieldsByPath(descriptor, path).find((f) => f.propertyName === propertyName)!);
+      expect(valueAt(uniquePath, "Categorized")).toBe(`unique ${elementClassName}`);
+      expect(valueAt(uniquePath, "Uncategorized")).toBe("unique uncategorized");
+      expect(valueAt(nestedPath, "Categorized")).toBe("unique Generic.PhysicalType");
+      expect(valueAt(nestedPath, "Uncategorized")).toBe("unique uncategorized");
     });
 
     it("adds 2d type-definition and DrawingGraphicRepresentsElement fields for a DrawingGraphic target", async () => {

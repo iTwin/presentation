@@ -483,7 +483,11 @@ describe("Content", () => {
       // The group's own shape is a plain, JSON-serializable object (no functions/classes) — a
       // `ContentSource` produced this way must remain cacheable/reproducible across runs.
       expect(JSON.parse(JSON.stringify(nestedGroup))).toEqual(nestedGroup);
-      expect(nestedGroup.nested).toEqual({ anchorClassName: setup.schema.items.B.fullName, prefixStepCount: 1 });
+      expect(nestedGroup.nested).toEqual({
+        anchorClassName: setup.schema.items.B.fullName,
+        prefixStepCount: 1,
+        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      });
       expect(nestedGroup.paths).toHaveLength(1);
       // The nested group's path is the *full* path from the original target `A` — the concrete A-to-B
       // prefix plus the nested declaration's own B-to-C suffix — never just the suffix from `B` alone.

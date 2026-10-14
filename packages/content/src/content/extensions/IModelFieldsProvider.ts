@@ -123,6 +123,21 @@ export interface RelatedPropertiesDeclaration {
   cardinalityHint?: CardinalityHint;
 
   /**
+   * Where the EC property categories of this declaration's properties are placed.
+   *
+   * - `"relatedClass"` (default): the related class's category is the context, so a property with
+   *   property category `Geometry` of class `B` appears under `B > Geometry`.
+   * - `"parent"`: property categories attach to the category context enclosing this declaration — the
+   *   top level for a declaration applied to the content target, or the inherited context for a
+   *   declaration applied recursively (see `IModelFieldsProvider.applyRecursively`).
+   *
+   * Properties without a property category always appear under the related class's category. A
+   * property's explicit category override takes precedence over both modes. The setting affects only
+   * category placement — not property selection, values or cardinality.
+   */
+  propertyCategoryScope?: "relatedClass" | "parent";
+
+  /**
    * Optional custom resolution callback. When provided, the system delegates
    * path resolution to this callback instead of using default discovery.
    *

@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { collectInParallel } from "../InternalUtils.js";
+import { buildCategoryContext, collectInParallel } from "../InternalUtils.js";
 import { createPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentSource } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext, ContentSource } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { PathCardinalityClassifier } from "../PathCardinality.js";
@@ -92,6 +92,8 @@ export async function collectRelatedPropertyFields(props: {
             properties: declaration.properties,
             primaryClassNames: targetClassNames,
             stepIndexOffset,
+            propertyCategoryScope: declaration.propertyCategoryScope,
+            categoryContext: group.nested ? group.nested.categoryContext : [],
           }),
         ),
       );
@@ -129,8 +131,19 @@ async function createFieldsForPath(props: {
    * `path`. `0` for a base (non-nested) declaration.
    */
   stepIndexOffset: number;
+  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  categoryContext: CategoryContext;
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, classifier, cardinalityHint, path, properties, primaryClassNames, stepIndexOffset } = props;
+  const {
+    imodelAccess,
+    classifier,
+    cardinalityHint,
+    path,
+    properties,
+    primaryClassNames,
+    propertyCategoryScope,
+    stepIndexOffset,
+  } = props;
 
   // Default (no per-step specs): all properties of the final step's target class. `path` is always the
   // full path (prefix + suffix for a nested group), so its last step is already the suffix's last step
@@ -147,6 +160,8 @@ async function createFieldsForPath(props: {
       relationshipInfo: { pathFromTarget: path, pathCardinality, primaryClassNames },
       spec: { select: "all" },
       anchor: "targetClass",
+      propertyCategoryScope,
+      categoryContext: props.categoryContext,
     });
   }
 
@@ -161,10 +176,49 @@ async function createFieldsForPath(props: {
         stepSpec,
         primaryClassNames,
         stepIndexOffset,
+        propertyCategoryScope,
+        categoryContext: props.categoryContext,
       }),
     ),
   );
-  return perStep.flat();
+  const fields = perStep.flat();
+  assignCategoryContexts({ fields, propertyCategoryScope, categoryContext: props.categoryContext });
+  return fields;
+}
+
+function assignCategoryContexts(props: {
+  fields: CategorizedField[];
+  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  categoryContext: CategoryContext;
+}): void {
+  const { fields, propertyCategoryScope } = props;
+  const localAnchors: CategoryContext[number][] = [];
+  for (const { field, categorization } of fields) {
+    if (
+      categorization.anchor === "none" ||
+      categorization.category?.source === "override" ||
+      (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory")
+    ) {
+      continue;
+    }
+    localAnchors.push({ stepIndex: field.pathFromTarget.length - 1, kind: categorization.anchor });
+  }
+  for (const { field, categorization } of fields) {
+    if (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory") {
+      continue;
+    }
+    const stepIndex = field.pathFromTarget.length - 1;
+    categorization.categoryContext = buildCategoryContext({
+      inheritedContext: props.categoryContext,
+      localAnchors: localAnchors.filter(
+        (context) =>
+          (propertyCategoryScope !== "parent" && context.stepIndex < stepIndex) ||
+          (context.stepIndex === stepIndex &&
+            context.kind === "relationshipClass" &&
+            categorization.anchor === "targetClass"),
+      ),
+    });
+  }
 }
 
 /** Enumerates the target-class and relationship-class fields opted in by a single `StepPropertySpec`. */
@@ -178,8 +232,19 @@ async function createFieldsForStep(props: {
   primaryClassNames: EC.FullClassNameDotNotation[];
   /** See {@link createFieldsForPath}. */
   stepIndexOffset: number;
+  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  categoryContext: CategoryContext;
 }): Promise<CategorizedField[]> {
-  const { imodelAccess, classifier, cardinalityHint, path, stepSpec, primaryClassNames, stepIndexOffset } = props;
+  const {
+    imodelAccess,
+    classifier,
+    cardinalityHint,
+    path,
+    stepSpec,
+    primaryClassNames,
+    propertyCategoryScope,
+    stepIndexOffset,
+  } = props;
   const effectiveStepIndex = stepIndexOffset + stepSpec.stepIndex;
   if (effectiveStepIndex < 0 || effectiveStepIndex >= path.length) {
     if (stepIndexOffset > 0) {
@@ -208,6 +273,8 @@ async function createFieldsForStep(props: {
         relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
         spec: stepSpec.target,
         anchor: "targetClass",
+        propertyCategoryScope,
+        categoryContext: props.categoryContext,
       }),
     );
   }
@@ -219,6 +286,8 @@ async function createFieldsForStep(props: {
         relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
         spec: stepSpec.relationship,
         anchor: "relationshipClass",
+        propertyCategoryScope,
+        categoryContext: props.categoryContext,
       }),
     );
   }

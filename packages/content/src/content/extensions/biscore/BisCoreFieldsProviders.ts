@@ -49,6 +49,10 @@ function createDocumentLinkCategory(strings: BisCoreLocalizedStrings): CategoryD
  * Builds `BisCore:Element`'s owned aspects (`ElementOwnsUniqueAspect` and `ElementOwnsMultiAspects`)
  * related properties declarations.
  *
+ * Both declarations use `"parent"` category scope: an aspect property's property category is shown
+ * directly under the owning context rather than nested in an aspect-class category, and properties
+ * without a property category fall back to the aspect class's category.
+ *
  * The generic `ElementOwnsMultiAspects` → `ElementMultiAspect` declaration excludes
  * `BisCore.ExternalSourceAspect` instances (`BisCore` ≥ 1.0.2) — that aspect's `Identifier` property
  * is contributed with its own label/category override by `createExternalSourceContribution`. Without
@@ -83,6 +87,7 @@ async function createAspectRelatedProperties(
         },
       ],
       cardinalityHint: "one",
+      propertyCategoryScope: "parent",
       properties: [{ stepIndex: 0, target: { select: "all" } }],
     },
     {
@@ -97,6 +102,7 @@ async function createAspectRelatedProperties(
         },
       ],
       cardinalityHint: "many",
+      propertyCategoryScope: "parent",
       properties: [{ stepIndex: 0, target: { select: "all" } }],
     },
   ];

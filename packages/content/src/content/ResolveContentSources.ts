@@ -5,7 +5,7 @@
 
 import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, take, toArray } from "rxjs";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX, getOrCreate, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
+import { buildCategoryContext, ECSQL_PREFIX, getOrCreate, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
 import { namespaceBindings } from "./query/NamespaceBindings.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
@@ -24,7 +24,7 @@ import type {
   Props,
   RelationshipPath,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
+import type { CardinalityHint, CategoryContext, ContentSource, ContentTarget, ResolvedPath } from "./ContentTarget.js";
 import type { ExternalFieldsProvider, InputPropertyDeclaration } from "./extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "./extensions/IModelFieldsProvider.js";
 
@@ -434,6 +434,7 @@ function createNestedQueueEntries(props: {
   stepIndexOffset: number;
   appliedPairs: ReadonlySet<string>;
   parentCardinalityHint: CardinalityHint | undefined;
+  categoryContext: CategoryContext;
 }): NestedQueueEntry[] {
   const { declaration, paths, stepIndexOffset, appliedPairs, parentCardinalityHint } = props;
   const specAnchorIndices = declaration.properties
@@ -454,10 +455,44 @@ function createNestedQueueEntries(props: {
         anchorClassName: resolvedPath.path[anchorIdx].targetClassName,
         appliedPairs,
         parentCardinalityHint,
+        categoryContext: createNestedCategoryContext({
+          declaration,
+          stepIndexOffset,
+          anchorStepIndex: anchorIdx,
+          inheritedContext: props.categoryContext,
+        }),
       });
     }
   }
   return entries;
+}
+
+function createNestedCategoryContext(props: {
+  declaration: RelatedPropertiesDeclaration;
+  stepIndexOffset: number;
+  anchorStepIndex: number;
+  inheritedContext: CategoryContext;
+}): CategoryContext {
+  const { declaration, stepIndexOffset, anchorStepIndex, inheritedContext } = props;
+  if (declaration.propertyCategoryScope === "parent") {
+    return inheritedContext;
+  }
+  const selections = declaration.properties ?? [
+    { stepIndex: anchorStepIndex - stepIndexOffset, target: { select: "all" } },
+  ];
+  const localAnchors = selections.flatMap((spec): CategoryContext => {
+    const stepIndex = stepIndexOffset + spec.stepIndex;
+    if (stepIndex > anchorStepIndex) {
+      return [];
+    }
+    return [
+      ...(spec.relationship && spec.relationship.select !== "none"
+        ? [{ stepIndex, kind: "relationshipClass" as const }]
+        : []),
+      ...(spec.target && spec.target.select !== "none" ? [{ stepIndex, kind: "targetClass" as const }] : []),
+    ];
+  });
+  return buildCategoryContext({ inheritedContext, localAnchors });
 }
 
 /** Keys a `(providerId, anchor class)` pair for the nested-expansion cycle guard and contribution memoization. */
@@ -474,6 +509,7 @@ interface NestedQueueEntry {
   appliedPairs: ReadonlySet<string>;
   /** Combined cardinality hint of the path up to and including the anchor's producing declaration. */
   parentCardinalityHint: CardinalityHint | undefined;
+  categoryContext: CategoryContext;
 }
 
 const EMPTY_APPLIED_PAIRS: ReadonlySet<string> = new Set();
@@ -541,11 +577,12 @@ async function resolveNestedGroups({
       stepIndexOffset: 0,
       appliedPairs: EMPTY_APPLIED_PAIRS,
       parentCardinalityHint: group.declaration.cardinalityHint,
+      categoryContext: [],
     }),
   );
 
   // Merged discoveries across all expansion levels, keyed by `(providerId, declarationIndex,
-  // anchorClassName, prefixStepCount)` in deterministic (breadth-first, then provider order, then
+  // anchorClassName, prefixStepCount, categoryContext)` in deterministic (breadth-first, then provider order, then
   // declaration order) first-discovery order. Distinct branches reaching the same anchor class at the
   // same prefix depth merge into one group, de-duplicated by serialized path.
   interface MergedNestedGroup {
@@ -553,6 +590,7 @@ async function resolveNestedGroups({
     declarationIndex: number;
     anchorClassName: EC.FullClassNameDotNotation;
     prefixStepCount: number;
+    categoryContext: CategoryContext;
     effectiveCardinalityHint: CardinalityHint | undefined;
     pathsByKey: Map<string, ResolvedPath>;
   }
@@ -606,7 +644,13 @@ async function resolveNestedGroups({
 
     for (const { provider, declaration, declarationIndex, paths, pairKey, entry } of perEntry.flat()) {
       const effectiveCardinalityHint = combineCardinalityHint(entry.parentCardinalityHint, declaration.cardinalityHint);
-      const groupKey = `${provider.id}#${declarationIndex}#${entry.anchorClassName}#${entry.prefixSteps.length}`;
+      const groupKey = JSON.stringify([
+        provider.id,
+        declarationIndex,
+        entry.anchorClassName,
+        entry.prefixSteps.length,
+        entry.categoryContext,
+      ]);
       let merged = groupsByKey.get(groupKey);
       if (!merged) {
         merged = {
@@ -614,6 +658,7 @@ async function resolveNestedGroups({
           declarationIndex,
           anchorClassName: entry.anchorClassName,
           prefixStepCount: entry.prefixSteps.length,
+          categoryContext: entry.categoryContext,
           effectiveCardinalityHint,
           pathsByKey: new Map(),
         };
@@ -642,6 +687,7 @@ async function resolveNestedGroups({
           stepIndexOffset: entry.prefixSteps.length,
           appliedPairs: nextAppliedPairs,
           parentCardinalityHint: effectiveCardinalityHint,
+          categoryContext: entry.categoryContext,
         }),
       );
     }
@@ -654,6 +700,7 @@ async function resolveNestedGroups({
     nested: {
       anchorClassName: merged.anchorClassName,
       prefixStepCount: merged.prefixStepCount,
+      categoryContext: merged.categoryContext,
       ...(merged.effectiveCardinalityHint !== undefined
         ? { effectiveCardinalityHint: merged.effectiveCardinalityHint }
         : {}),

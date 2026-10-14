@@ -68,6 +68,12 @@ interface CalculatedFieldDeclaration {
 type CardinalityHint = "one" | "many";
 
 // @public
+type CategoryContext = readonly {
+    readonly stepIndex: number;
+    readonly kind: "targetClass" | "relationshipClass";
+}[];
+
+// @public
 export interface CategoryDefinition {
     description?: string;
     id: string;
@@ -389,6 +395,7 @@ interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
     path: RelationshipPath;
     properties?: StepPropertySpec[];
+    propertyCategoryScope?: "relatedClass" | "parent";
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
@@ -411,6 +418,7 @@ interface ResolvedDeclarationGroup {
     nested?: {
         anchorClassName: EC.FullClassNameDotNotation;
         prefixStepCount: number;
+        categoryContext: CategoryContext;
         effectiveCardinalityHint?: CardinalityHint;
     };
     paths: ResolvedPath[];
