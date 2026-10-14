@@ -142,6 +142,24 @@ describe("createECSqlQueryExecutor", () => {
       expect(options.restartToken).toBeTruthy();
     });
 
+    it("sorts ID set bindings without mutating the input array", async () => {
+      const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
+      const ids = ["0x456", "0x123"];
+      const executor = createECSqlQueryExecutor(imodel);
+      const reader = executor.createQueryReader({
+        ecsql: "ecsql",
+        bindings: [{ type: "idset", value: ids }],
+      });
+      for await (const _ of reader) {
+      }
+
+      expect(ids).toEqual(["0x456", "0x123"]);
+      const binder = imodel.createQueryReader.mock.calls[0][1];
+      const expectedBinder = new QueryBinder();
+      expectedBinder.bindIdSet(1, ["0x123", "0x456"]);
+      expect(JSON.stringify(binder.serialize())).toBe(JSON.stringify(expectedBinder.serialize()));
+    });
+
     it("calls IModel's `createQueryReader` with named bindings", async () => {
       const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
 
