@@ -151,7 +151,7 @@ function bind(bindings: ECSqlBinding[] | Record<string, ECSqlBinding>): QueryBin
         binder.bindId(key, b.value);
         break;
       case "idset":
-        binder.bindIdSet(key, OrderedId64Iterable.sortArray(b.value));
+        binder.bindIdSet(key, OrderedId64Iterable.sortArray([...b.value]));
         break;
       case "int":
         binder.bindInt(key, b.value);
