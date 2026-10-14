@@ -15,8 +15,8 @@ The `@itwin/unified-selection` package delivers a `computeSelection` function fo
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { computeSelection } from "@itwin/unified-selection";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { computeSelection } from "@itwin/unified-selection";
 
 const queryExecutor = createECSqlQueryExecutor(imodelConnection);
 const selection = computeSelection({ queryExecutor, elementIds, scope: "element" });
@@ -32,8 +32,8 @@ For the `functional` scope, the `ancestorLevel` property is used as follows: if 
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { computeSelection } from "@itwin/unified-selection";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { computeSelection } from "@itwin/unified-selection";
 
 const queryExecutor = createECSqlQueryExecutor(imodelConnection);
 

@@ -39,22 +39,21 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.31.1",
+    "@changesets/cli": "^3.0.3",
     "@stylistic/eslint-plugin": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
-    "cspell": "^9.8.0",
+    "cspell": "^10.3.6",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-unused-imports": "catalog:build-tools",
-    "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
     "lage": "^2.17.0",
-    "lint-staged": "^15.5.2",
+    "lint-staged": "^17.6.0",
     "markdown-link-check": "^3.15.0",
-    "oxfmt": "^0.63.0",
+    "oxfmt": "^0.72.0",
     "rimraf": "catalog:build-tools",
     "yaml": "^2.9.1",
-    "yargs": "^17.7.3"
+    "yargs": "^18.2.0"
   },
   "lint-staged": {
     "./{apps,packages}/**/*.{tsx,ts,jsx,js,scss,css,html}": [
