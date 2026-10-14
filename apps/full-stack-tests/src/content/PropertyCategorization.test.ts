@@ -4,10 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  CategoryDefinition,
-  defineIModelFieldsProvider,
-} from "@itwin/presentation-content";
+import { CategoryDefinition, defineIModelFieldsProvider } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
