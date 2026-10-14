@@ -5,7 +5,7 @@
 
 import { defer, EMPTY, expand, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
+import { type DeepReadonly, eachValueFrom, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { fromWithRelease } from "../../shared/Rxjs.js";
@@ -30,12 +30,12 @@ interface ClassificationOrTableInfo {
 }
 
 /**
- * Query access, root classification system, and category relationships for a classifications-tree ID provider.
+ * Schema access, query access, and hierarchy configuration for a classifications-tree ID provider.
  * @beta
  */
 interface ClassificationsTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
+  hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -48,8 +48,10 @@ interface ClassificationsTreeIdsProviderData {
  * @beta
  */
 export interface ClassificationsTreeIdsProvider {
+  /** Readonly snapshot of the hierarchy configuration used to create this provider, including resolved defaults. */
+  readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
   /**
-   * State of classification data. `getAllClassifications` also loads shared category data.
+   * State of classification data.
    */
   readonly state: IdsProviderDataState;
   /** Returns direct child classifications and whether each has child classifications. */
@@ -67,14 +69,15 @@ export interface ClassificationsTreeIdsProvider {
 }
 
 /**
- * Creates a cached classification tree ID provider using the supplied shared provider and category relationships.
- * Recreate it together with its shared provider after relevant iModel or configuration changes.
+ * Creates a cached classification tree ID provider bound to the supplied hierarchy configuration.
+ * Recreate it after relevant iModel or configuration changes.
  * @beta
  */
 export function createClassificationsTreeIdsProvider({
-  hierarchyConfig,
+  hierarchyConfig: configOverrides,
   imodelAccess,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
+  const hierarchyConfig = createClassificationsTreeIdsProviderConfig(configOverrides);
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
@@ -240,6 +243,7 @@ export function createClassificationsTreeIdsProvider({
   }
 
   return {
+    config: hierarchyConfig,
     get state(): IdsProviderDataState {
       return state.state;
     },
@@ -310,5 +314,13 @@ export function createClassificationsTreeIdsProvider({
         getData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()])),
       );
     },
+  };
+}
+
+/** @internal */
+export function createClassificationsTreeIdsProviderConfig(config: ClassificationsTreeHierarchyConfiguration) {
+  return {
+    rootClassificationSystemCode: config.rootClassificationSystemCode,
+    elements: { excludedClasses: [...new Set(config.elements?.excludedClasses ?? [])].sort() },
   };
 }

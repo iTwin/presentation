@@ -42,6 +42,8 @@ export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "f
  * @beta
  */
 export interface SharedIdsProvider {
+  /** Readonly snapshot of the element filters used to create this provider, including resolved defaults. */
+  readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
   /** Model lookups. */
   readonly models: {
     /** State of model data. */
@@ -111,8 +113,10 @@ interface SharedIdsProviderProps {
 export function createSharedIdsProvider({
   elementClassName,
   imodelAccess,
-  excludedElementClassNames,
+  excludedElementClassNames: excludedClassOverrides,
 }: SharedIdsProviderProps): SharedIdsProvider {
+  const config = createSharedIdsProviderConfig({ elementClassName, excludedElementClassNames: excludedClassOverrides });
+  const excludedElementClassNames = config.excludedElementClassNames;
   const componentId: GuidString = Guid.createValue();
   const subCategoriesProvider = new SubCategoriesProvider({ queryExecutor: imodelAccess, componentId });
   let subModeledElementsData: ReturnType<SubModeledElementsProvider["getData"]> | undefined;
@@ -202,6 +206,7 @@ export function createSharedIdsProvider({
   }
 
   return {
+    config,
     models: {
       get state(): IdsProviderDataState {
         return elementModelCategoriesProvider.state;
@@ -321,5 +326,13 @@ export function createSharedIdsProvider({
         );
       },
     },
+  };
+}
+
+/** @internal */
+export function createSharedIdsProviderConfig(config: SharedIdsProvider["config"]) {
+  return {
+    elementClassName: config.elementClassName,
+    excludedElementClassNames: [...new Set(config.excludedElementClassNames ?? [])].sort(),
   };
 }

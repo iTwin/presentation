@@ -20,9 +20,10 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/Utils.js";
+import { createWhereClause, getClassesByView, getOrCreate, validateIdsProviderConfig } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -68,6 +69,7 @@ interface CategoriesTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /** Shared provider with matching element class and exclusions for the target tree. */
   sharedIdsProvider: {
+    config: SharedIdsProvider["config"];
     models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
     subModeledElements: SharedIdsProvider["subModeledElements"];
     categories: Pick<
@@ -92,6 +94,8 @@ interface CategoriesData {
  * @beta
  */
 export interface CategoriesTreeIdsProvider {
+  /** Readonly snapshot of the view type and element filters used to create this provider, including resolved defaults. */
+  readonly config: Readonly<SharedIdsProvider["config"] & { type: "2d" | "3d" }>;
   /** Shared model lookups and their loading state. */
   readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
   /** Shared sub-modeled element lookups and their loading state. */
@@ -144,6 +148,7 @@ export interface CategoriesTreeIdsProvider {
  * remain cached even when they have no visible elements, so callers can include empty categories.
  *
  * Recreate it together with its shared provider after relevant iModel or configuration changes.
+ * @throws An error if the shared provider's element class does not match the view type.
  * @beta
  */
 export function createCategoriesTreeIdsProvider({
@@ -151,6 +156,16 @@ export function createCategoriesTreeIdsProvider({
   type,
   sharedIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
+  const config = createCategoriesTreeIdsProviderConfig({
+    type,
+    elementClassName: getClassesByView(type).elementClass,
+    excludedElementClassNames: sharedIdsProvider.config.excludedElementClassNames,
+  });
+  validateIdsProviderConfig(
+    createSharedIdsProviderConfig(sharedIdsProvider.config),
+    createSharedIdsProviderConfig(config),
+    "Categories tree shared",
+  );
   const cachedData: {
     definitionContainersData: Observable<DefinitionContainersData> | undefined;
     categoriesData: Observable<CategoriesData> | undefined;
@@ -470,6 +485,7 @@ export function createCategoriesTreeIdsProvider({
   }
 
   return {
+    config,
     models: sharedIdsProvider.models,
     subModeledElements: sharedIdsProvider.subModeledElements,
     categories: sharedIdsProvider.categories,
@@ -604,6 +620,11 @@ export function createCategoriesTreeIdsProvider({
     },
     getIsDefinitionContainerSupported: async () => firstValueFrom(getIsDefinitionContainerSupported()),
   };
+}
+
+/** @internal */
+export function createCategoriesTreeIdsProviderConfig(config: CategoriesTreeIdsProvider["config"]) {
+  return { type: config.type, ...createSharedIdsProviderConfig(config) };
 }
 
 function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], includeEmpty: boolean | undefined): T[] {

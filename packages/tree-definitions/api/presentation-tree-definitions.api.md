@@ -5,6 +5,7 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
+import { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
@@ -48,6 +49,9 @@ interface CategoriesTreeHierarchyConfiguration {
 // @beta
 export interface CategoriesTreeIdsProvider {
     readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+    readonly config: Readonly<SharedIdsProvider["config"] & {
+        type: "2d" | "3d";
+    }>;
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
@@ -87,6 +91,7 @@ interface CategoriesTreeIdsProviderProps {
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     sharedIdsProvider: {
+        config: SharedIdsProvider["config"];
         models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
         subModeledElements: SharedIdsProvider["subModeledElements"];
         categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements">;
@@ -194,13 +199,14 @@ type ClassificationId = Id64String;
 // @beta
 interface ClassificationsTreeHierarchyConfiguration {
     elements?: {
-        excludedClasses?: EC.FullClassNameDotNotation[];
+        excludedClasses?: ReadonlyArray<EC.FullClassNameDotNotation>;
     };
     rootClassificationSystemCode: string;
 }
 
 // @beta
 export interface ClassificationsTreeIdsProvider {
+    readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
     getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
     getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
     getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<Array<{
@@ -213,7 +219,7 @@ export interface ClassificationsTreeIdsProvider {
 // @beta
 interface ClassificationsTreeIdsProviderProps {
     // (undocumented)
-    hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode" | "elements">;
+    hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
 }
@@ -245,7 +251,6 @@ export namespace ClassificationsTreeNode {
 // @beta
 interface ClassificationsTreeProps {
     getIdsProvider?: (imodelKey: string) => ClassificationsTreeIdsProvider;
-    // (undocumented)
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
     uniqueId?: GuidString;
 }
@@ -378,6 +383,7 @@ interface ModelsTreeHierarchyConfiguration {
 // @beta
 export interface ModelsTreeIdsProvider {
     readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+    readonly config: DeepReadonly<Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">>;
     createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
     createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
     getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
@@ -395,6 +401,7 @@ interface ModelsTreeIdsProviderProps {
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     sharedIdsProvider: {
+        config: SharedIdsProvider["config"];
         models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
         subModeledElements: SharedIdsProvider["subModeledElements"];
         categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
@@ -490,6 +497,7 @@ export interface SharedIdsProvider {
         getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
         getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
     };
+    readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
     readonly models: {
         readonly state: IdsProviderDataState;
         getAllModels(): Promise<ReadonlyArray<ModelId>>;

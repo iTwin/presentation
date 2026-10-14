@@ -46,8 +46,9 @@ import {
   mergeWithDefaults,
   ParentElementsPath,
   parseIdsSelectorResult,
+  validateIdsProviderConfig,
 } from "../../shared/Utils.js";
-import { createCategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
+import { createCategoriesTreeIdsProvider, createCategoriesTreeIdsProviderConfig } from "./CategoriesTreeIdsProvider.js";
 import { CategoriesTreeNodeInternal } from "./CategoriesTreeNodeInternal.js";
 
 import type { Observable, OperatorFunction } from "rxjs";
@@ -89,6 +90,7 @@ interface CategoriesTreeProps {
   /**
    * Returns the ID provider for `imodelKey`, with matching view type and element filters.
    * Different iModel versions need separate providers. Created internally for each iModel when omitted.
+   * Configuration is validated when the provider is first resolved for each iModel.
    */
   getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
   viewType: "2d" | "3d";
@@ -257,32 +259,51 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
   });
+  const idsProviderConfig = createCategoriesTreeIdsProviderConfig({
+    type: props.viewType,
+    elementClassName: getClassesByView(props.viewType).elementClass,
+    excludedElementClassNames:
+      props.hierarchyConfig?.elements?.nodes === "include" ? props.hierarchyConfig.elements.excludedClasses : undefined,
+  });
+  if (hierarchyConfig.elements.nodes === "include") {
+    hierarchyConfig.elements = {
+      ...hierarchyConfig.elements,
+      excludedClasses: [...idsProviderConfig.excludedElementClassNames],
+    };
+  }
   const idsProviders = new Map<string, CategoriesTreeIdsProvider>();
   const getIdsProvider = (imodelAccess: CategoriesTreeIModelAccess) =>
     getOrCreate({
       map: idsProviders,
-      createFunc: () =>
-        props.getIdsProvider?.(imodelAccess.imodelKey) ??
-        createCategoriesTreeIdsProvider({
-          imodelAccess,
-          type: props.viewType,
-          sharedIdsProvider: createSharedIdsProvider({
+      createFunc: () => {
+        const provider =
+          props.getIdsProvider?.(imodelAccess.imodelKey) ??
+          createCategoriesTreeIdsProvider({
             imodelAccess,
-            elementClassName: getClassesByView(props.viewType).elementClass,
-            excludedElementClassNames:
-              hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
-          }),
-        }),
+            type: props.viewType,
+            sharedIdsProvider: createSharedIdsProvider({ imodelAccess, ...idsProviderConfig }),
+          });
+        validateIdsProviderConfig(
+          createCategoriesTreeIdsProviderConfig(provider.config),
+          idsProviderConfig,
+          "Categories tree",
+        );
+        return provider;
+      },
       key: imodelAccess.imodelKey,
     });
   const sharedProps = { viewType: props.viewType, hierarchyConfig, uniqueId: props.uniqueId ?? Guid.createValue() };
   return {
-    /** Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider. */
+    /**
+     * Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider.
+     * @throws An error if the ID provider configuration does not match the tree configuration.
+     */
     getHierarchyDefinition: (imodelAccess: CategoriesTreeIModelAccess): HierarchyDefinition =>
       new CategoriesTreeDefinition({ ...sharedProps, imodelAccess, idsProvider: getIdsProvider(imodelAccess) }),
     /**
      * Yields hierarchy paths to instances whose labels contain the supplied text.
      * @throws An error if the configured search limit is exceeded.
+     * @throws An error if the ID provider configuration does not match the tree configuration.
      */
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) =>
       CategoriesTreeDefinition.createInstanceKeyPaths({
@@ -293,6 +314,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     /**
      * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
      * @throws An error if the configured search limit is exceeded.
+     * @throws An error if the ID provider configuration does not match the tree configuration.
      */
     createSearchTree: async (searchProps: CategoriesTreeSearchProps & { revealTargets?: boolean }) =>
       CategoriesTreeDefinition.createSearchTree({

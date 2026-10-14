@@ -6,11 +6,18 @@
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import { eachValueFrom, type ECSchemaProvider, ECSql, type ECSqlBinding } from "@itwin/presentation-shared";
+import {
+  type DeepReadonly,
+  eachValueFrom,
+  type ECSchemaProvider,
+  ECSql,
+  type ECSqlBinding,
+} from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getOrCreate, mergeWithDefaults } from "../../shared/Utils.js";
+import { createWhereClause, getOrCreate, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
@@ -34,6 +41,7 @@ interface ModelsTreeIdsProviderProps {
   hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
   /** Shared provider using the same element class and exclusions as `hierarchyConfig`. */
   sharedIdsProvider: {
+    config: SharedIdsProvider["config"];
     models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
     subModeledElements: SharedIdsProvider["subModeledElements"];
     categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
@@ -58,6 +66,8 @@ interface ModelInfo {
  * @beta
  */
 export interface ModelsTreeIdsProvider {
+  /** Readonly snapshot of the hierarchy settings used to create this provider, including resolved defaults. */
+  readonly config: DeepReadonly<Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">>;
   /** Shared sub-modeled element lookups and their loading state. */
   readonly subModeledElements: SharedIdsProvider["subModeledElements"];
   /** Shared category lookups and their loading state. */
@@ -89,6 +99,7 @@ export interface ModelsTreeIdsProvider {
 /**
  * Creates an ID provider for model tree hierarchies using the supplied hierarchy configuration.
  * Recreate it together with its shared provider after relevant iModel or configuration changes.
+ * @throws An error if the shared provider's element filters do not match the hierarchy configuration.
  * @beta
  */
 export function createModelsTreeIdsProvider({
@@ -96,7 +107,15 @@ export function createModelsTreeIdsProvider({
   hierarchyConfig: configOverrides,
   sharedIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
-  const hierarchyConfig = mergeWithDefaults({ defaults: defaultHierarchyConfiguration, overrides: configOverrides });
+  const hierarchyConfig = createModelsTreeIdsProviderConfig(configOverrides);
+  validateIdsProviderConfig(
+    createSharedIdsProviderConfig(sharedIdsProvider.config),
+    createSharedIdsProviderConfig({
+      elementClassName: hierarchyConfig.elements.baseClass,
+      excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
+    }),
+    "Models tree shared",
+  );
   const cachedData: {
     subjectInfos: Observable<Map<SubjectId, SubjectInfo>> | undefined;
     modelInfos: Observable<Map<ModelId, ModelInfo>> | undefined;
@@ -373,6 +392,7 @@ export function createModelsTreeIdsProvider({
     });
   }
   return {
+    config: hierarchyConfig,
     subModeledElements: sharedIdsProvider.subModeledElements,
     categories: sharedIdsProvider.categories,
     get state(): IdsProviderDataState {
@@ -479,6 +499,28 @@ export function createModelsTreeIdsProvider({
           ),
         ),
       );
+    },
+  };
+}
+
+/** @internal */
+export function createModelsTreeIdsProviderConfig(overrides?: ModelsTreeIdsProvider["config"]) {
+  const config = mergeWithDefaults<ModelsTreeHierarchyConfiguration>({
+    defaults: defaultHierarchyConfiguration,
+    overrides: {
+      ...overrides,
+      elements: overrides?.elements && {
+        ...overrides.elements,
+        excludedClasses: [...(overrides.elements.excludedClasses ?? [])],
+      },
+    },
+  });
+  return {
+    subjects: { root: config.subjects.root },
+    models: { withoutElements: config.models.withoutElements },
+    elements: {
+      baseClass: config.elements.baseClass,
+      excludedClasses: [...new Set(config.elements.excludedClasses)].sort(),
     },
   };
 }

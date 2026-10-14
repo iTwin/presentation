@@ -43,8 +43,9 @@ import {
   mergeWithDefaults,
   ParentElementsPath,
   parseIdsSelectorResult,
+  validateIdsProviderConfig,
 } from "../../shared/Utils.js";
-import { createModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
+import { createModelsTreeIdsProvider, createModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
 import type { Observable, OperatorFunction } from "rxjs";
@@ -197,6 +198,7 @@ interface ModelsTreeProps {
   /**
    * Returns the ID provider for `imodelKey`, with matching element filters and hierarchy configuration.
    * Different iModel versions need separate providers. Created internally for each iModel when omitted.
+   * Configuration is validated when the provider is first resolved for each iModel.
    */
   getIdsProvider?: (imodelKey: string) => ModelsTreeIdsProvider;
   /** Hierarchy options. Omitted properties use the documented defaults. */
@@ -327,31 +329,44 @@ export function createModelsTree(props: ModelsTreeProps = {}) {
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
   });
+  hierarchyConfig.elements = {
+    ...hierarchyConfig.elements,
+    excludedClasses: [...hierarchyConfig.elements.excludedClasses],
+  };
+  const idsProviderConfig = createModelsTreeIdsProviderConfig(hierarchyConfig);
   const idsProviders = new Map<string, ModelsTreeIdsProvider>();
   const getIdsProvider = (imodelAccess: ModelsTreeIModelAccess) =>
     getOrCreate({
       map: idsProviders,
-      createFunc: () =>
-        props.getIdsProvider?.(imodelAccess.imodelKey) ??
-        createModelsTreeIdsProvider({
-          imodelAccess,
-          hierarchyConfig,
-          sharedIdsProvider: createSharedIdsProvider({
+      createFunc: () => {
+        const provider =
+          props.getIdsProvider?.(imodelAccess.imodelKey) ??
+          createModelsTreeIdsProvider({
             imodelAccess,
-            elementClassName: hierarchyConfig.elements.baseClass,
-            excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
-          }),
-        }),
+            hierarchyConfig,
+            sharedIdsProvider: createSharedIdsProvider({
+              imodelAccess,
+              elementClassName: hierarchyConfig.elements.baseClass,
+              excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
+            }),
+          });
+        validateIdsProviderConfig(createModelsTreeIdsProviderConfig(provider.config), idsProviderConfig, "Models tree");
+        return provider;
+      },
       key: imodelAccess.imodelKey,
     });
   const sharedProps = { hierarchyConfig, uniqueId: props.uniqueId ?? Guid.createValue() };
   return {
-    /** Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider. */
+    /**
+     * Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider.
+     * @throws An error if the ID provider configuration does not match the tree configuration.
+     */
     getHierarchyDefinition: (imodelAccess: ModelsTreeIModelAccess): HierarchyDefinition =>
       new ModelsTreeDefinition({ ...sharedProps, imodelAccess, idsProvider: getIdsProvider(imodelAccess) }),
     /**
      * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
      * @throws An error if the configured search limit is exceeded.
+     * @throws An error if the ID provider configuration does not match the tree configuration.
      */
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) =>
       ModelsTreeDefinition.createInstanceKeyPaths({
@@ -362,6 +377,7 @@ export function createModelsTree(props: ModelsTreeProps = {}) {
     /**
      * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
      * @throws An error if the configured search limit is exceeded.
+     * @throws An error if the ID provider configuration does not match the tree configuration.
      */
     createSearchTree: async (searchProps: ModelsTreeSearchProps & { revealTargets?: boolean }) =>
       ModelsTreeDefinition.createSearchTree({

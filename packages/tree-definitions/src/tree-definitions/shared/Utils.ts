@@ -309,6 +309,13 @@ type DeepOptional<T> = T extends (...args: any[]) => any
       : T;
 
 /** @internal */
+export function validateIdsProviderConfig(actual: unknown, expected: unknown, treeName: string): void {
+  if (stableStringify(actual) !== stableStringify(expected)) {
+    throw new Error(`${treeName} ID provider configuration does not match the tree configuration.`);
+  }
+}
+
+/** @internal */
 export function stableStringify(value: unknown): string {
   if (value === undefined) {
     return "undefined";
