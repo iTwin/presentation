@@ -13,6 +13,7 @@ import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClause, buildValueFilterClauses } from "./ValueFilters.js";
 
 import type {
+  DeepReadonly,
   EC,
   ECSchemaProvider,
   ECSqlBinding,
@@ -22,7 +23,7 @@ import type {
 } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "../ContentTarget.js";
-import type { CalculatedField, PropertyField } from "../model/Field.js";
+import type { CalculatedField, PropertyField, ReadonlyCalculatedField, ReadonlyPropertyField } from "../model/Field.js";
 import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
 
 /**
@@ -33,6 +34,8 @@ import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
  * and do not append this join. Keep in sync with `buildValueQuery`.
  */
 const PAGE_ID_SET_JOIN_TABLES = 1;
+
+type ReadonlyRelationshipPath = DeepReadonly<RelationshipPath>;
 
 /**
  * The `FROM` / `JOIN` / `WHERE` fragments (and their bindings) of a base content query, plus the
@@ -230,7 +233,7 @@ export async function buildBaseQuery(
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the
   // anchor, or the primaries-only group) additionally carries the value-filter clauses.
   const buildGroupParts = async (groupProps: {
-    paths: RelationshipPath[];
+    paths: ReadonlyRelationshipPath[];
     joinType: "inner" | "outer";
     includePrimaryFilters: boolean;
     existentialFilterPathKeys: Set<string>;
@@ -420,7 +423,7 @@ async function splitRelatedPaths(props: {
  * Keys a relationship path for JOIN aliasing / de-duplication. Includes each step's `instanceFilter`
  * so paths that differ only by a filter map to distinct aliases and joins (rather than being merged).
  */
-function serializeJoinPath(path: RelationshipPath): string {
+function serializeJoinPath(path: ReadonlyRelationshipPath): string {
   return serializeRelationshipPath({ path, includeInstanceFilters: true });
 }
 
@@ -508,8 +511,8 @@ function collectSortPaths(fields: PropertyField[]): RelationshipPath[] {
 }
 
 /** De-duplicates related paths by their serialized join key, preserving first-seen order. */
-function unionPaths(paths: RelationshipPath[]): RelationshipPath[] {
-  const byKey = new Map<string, RelationshipPath>();
+function unionPaths(paths: ReadonlyRelationshipPath[]): ReadonlyRelationshipPath[] {
+  const byKey = new Map<string, ReadonlyRelationshipPath>();
   for (const path of paths) {
     const key = serializeJoinPath(path);
     if (!byKey.has(key)) {
@@ -525,8 +528,8 @@ function unionPaths(paths: RelationshipPath[]): RelationshipPath[] {
  * group joins it.
  */
 function assignPrefixAliases(
-  paths: RelationshipPath[],
-  getPrefixKeys: (path: RelationshipPath) => readonly string[],
+  paths: ReadonlyRelationshipPath[],
+  getPrefixKeys: (path: ReadonlyRelationshipPath) => readonly string[],
 ): Map<string, { target: string; relationship: string }> {
   const aliases = new Map<string, { target: string; relationship: string }>();
   const prefixKeys = new Set<string>(paths.flatMap((path) => getPrefixKeys(path)));
@@ -538,9 +541,9 @@ function assignPrefixAliases(
 
 /** Narrows the global prefix-alias map to the prefixes a single group joins. */
 function collectPrefixAliases(
-  paths: RelationshipPath[],
+  paths: ReadonlyRelationshipPath[],
   all: Map<string, { target: string; relationship: string }>,
-  getPrefixKeys: (path: RelationshipPath) => readonly string[],
+  getPrefixKeys: (path: ReadonlyRelationshipPath) => readonly string[],
 ): Map<string, { target: string; relationship: string }> {
   const aliases = new Map<string, { target: string; relationship: string }>();
   for (const path of paths) {
@@ -622,7 +625,7 @@ async function buildExistentialFilterClause(props: {
  * Resolves a field's raw column selector (without navigation `.Id`) and its value type.
  */
 export function resolveSelector(props: {
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
@@ -642,7 +645,7 @@ export function resolveSelector(props: {
  * addressed value is scalar-filterable.
  */
 export function resolveFieldSelector(props: {
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
@@ -679,7 +682,7 @@ export function resolveFieldSelector(props: {
  * otherwise the `target` alias.
  */
 function resolvePropertyAlias(props: {
-  field: PropertyField;
+  field: ReadonlyPropertyField;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
 }): string {
@@ -736,7 +739,7 @@ export async function classifyRelationshipClasses(
  * as `Id`. Array fields are not scalar-filterable and are rejected.
  */
 function getSelectorValueType(
-  type: ValueDescriptor,
+  type: DeepReadonly<ValueDescriptor>,
   member: string | undefined,
 ): Exclude<PrimitiveValueType, "Point2d" | "Point3d"> {
   switch (type.kind) {
@@ -768,8 +771,8 @@ function getSelectorValueType(
 
 /** Narrows a value descriptor to a point primitive. */
 function isPointType(
-  type: ValueDescriptor,
-): type is Extract<ValueDescriptor, { kind: "primitive" }> & { type: "Point2d" | "Point3d" } {
+  type: DeepReadonly<ValueDescriptor>,
+): type is Extract<DeepReadonly<ValueDescriptor>, { kind: "primitive" }> & { type: "Point2d" | "Point3d" } {
   return type.kind === "primitive" && (type.type === "Point2d" || type.type === "Point3d");
 }
 
@@ -807,9 +810,9 @@ function formatOrList(items: readonly string[]): string {
  * Memoizes each path's prefix serializations (one entry per prefix length) so repeated alias lookups
  * for the same path reuse the computed keys instead of re-serializing path slices.
  */
-function createPrefixKeyResolver(): (path: RelationshipPath) => readonly string[] {
-  const prefixKeysByPath = new Map<RelationshipPath, readonly string[]>();
-  return (path: RelationshipPath): readonly string[] => {
+function createPrefixKeyResolver(): (path: ReadonlyRelationshipPath) => readonly string[] {
+  const prefixKeysByPath = new Map<ReadonlyRelationshipPath, readonly string[]>();
+  return (path: ReadonlyRelationshipPath): readonly string[] => {
     let keys = prefixKeysByPath.get(path);
     if (!keys) {
       const computed: string[] = [];
@@ -831,8 +834,8 @@ function createPrefixKeyResolver(): (path: RelationshipPath) => readonly string[
 function createPathInfoResolver(props: {
   schemaProvider: ECSchemaProvider;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
-  getPrefixKeys: (path: RelationshipPath) => readonly string[];
-}): (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo> {
+  getPrefixKeys: (path: ReadonlyRelationshipPath) => readonly string[];
+}): (path: ReadonlyRelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo> {
   const { schemaProvider, relatedClassAliases, getPrefixKeys } = props;
   const infoCache = new Map<string, RelationshipPathJoinInfo>();
   return async (path, joinType) => {
@@ -869,9 +872,9 @@ async function buildQueryParts(props: {
   targetFilter: ReturnType<typeof buildTargetFilter>;
   filters: ContentValueFilter[];
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
-  getPrefixKeys: (path: RelationshipPath) => readonly string[];
-  resolvePathInfo: (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo>;
-  paths: RelationshipPath[];
+  getPrefixKeys: (path: ReadonlyRelationshipPath) => readonly string[];
+  resolvePathInfo: (path: ReadonlyRelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo>;
+  paths: ReadonlyRelationshipPath[];
   joinType: "inner" | "outer";
   includePrimaryFilters: boolean;
   existentialFilterPathKeys: Set<string>;
@@ -1000,7 +1003,7 @@ export async function buildTargetScopedQuery(props: {
    * Related paths to JOIN — e.g. paths referenced by `filters`, plus (for distinct values) the
    * selected field's own related path. De-duplicated internally by serialized join key.
    */
-  paths: RelationshipPath[];
+  paths: ReadonlyRelationshipPath[];
   /** Value filters to translate into WHERE. */
   filters: ContentValueFilter[];
   /** How to keep rows scoped to exactly a set of concrete classes. See the function doc. */

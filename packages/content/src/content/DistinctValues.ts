@@ -29,7 +29,7 @@ import type {
   Value,
 } from "@itwin/presentation-shared";
 import type { ContentTarget, InstanceFilterExpression } from "./ContentTarget.js";
-import type { CalculatedField, PropertyField } from "./model/Field.js";
+import type { ReadonlyCalculatedField, ReadonlyPropertyField } from "./model/Field.js";
 import type { PrimaryClassScope } from "./query/BaseQuery.js";
 
 /**
@@ -65,7 +65,7 @@ interface GetDistinctFieldValuesProps {
    * merged and de-duplicated. There is no separate content-target argument; the field alone
    * determines what gets queried.
    */
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
 
   /**
    * Optional further scoping of which instances contribute values, applied uniformly across every
@@ -99,7 +99,7 @@ interface GetDistinctFieldValuesProps {
 export async function buildDistinctValuesQuery(props: {
   schemaProvider: ECSchemaProvider;
   target: ContentTarget;
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   primaryClassScope: PrimaryClassScope;
 }): Promise<ECSqlQueryDef> {
@@ -180,7 +180,7 @@ async function buildNavigationValuesQuery(props: {
  * shape (its selector is an arbitrary scalar expression), so keying the conversion off a declared
  * point type there would turn a scalar row value into `{ x: undefined, y: undefined }`.
  */
-function rowValueToValue(field: PropertyField | CalculatedField, raw: unknown): Value {
+function rowValueToValue(field: ReadonlyPropertyField | ReadonlyCalculatedField, raw: unknown): Value {
   if (
     raw !== undefined &&
     field.kind === "property" &&
@@ -216,7 +216,7 @@ function rowValueToNavigationValue(props: { row: ECSqlQueryRow }): Value | undef
 function streamTargetDistinctValues(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   primaryClassScope: PrimaryClassScope;
 }): Observable<Value> {
@@ -294,7 +294,7 @@ interface QueryAnchorGroup {
  */
 async function resolveQueryAnchors(props: {
   schemaProvider: ECSchemaProvider;
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
 }): Promise<DistinctValuesQueryAnchor[]> {
   const { schemaProvider, field } = props;
   if (field.kind === "calculated") {
