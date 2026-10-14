@@ -57,7 +57,7 @@ export interface ClassificationsTreeIdsProvider {
   /** Returns direct child classifications and whether each has child classifications. */
   getDirectChildClassifications(
     classificationOrTableIds: Id64Arg,
-  ): Promise<Array<{ id: ClassificationId; hasChildClassifications: boolean }>>;
+  ): Promise<ReadonlyArray<Readonly<{ id: ClassificationId; hasChildClassifications: boolean }>>>;
   /**
    * For each supplied classification, yields a path from its table to the classification, including both endpoints.
    * For each supplied table, yields a path containing only that table.

@@ -129,7 +129,7 @@ export interface CategoriesTreeIdsProvider {
   getRootDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
   }): Promise<{
-    readonly categories: ReadonlyArray<CachedCategoryInfo>;
+    readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
     readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
   }>;
   /**

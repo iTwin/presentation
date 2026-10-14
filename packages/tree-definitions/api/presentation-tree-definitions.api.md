@@ -72,7 +72,7 @@ export interface CategoriesTreeIdsProvider {
     getRootDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
-        readonly categories: ReadonlyArray<CachedCategoryInfo>;
+        readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
         readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getSearchPathsUpToRootCategory(props: {
@@ -209,10 +209,10 @@ export interface ClassificationsTreeIdsProvider {
     readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
     getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
     getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
-    getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<Array<{
+    getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<Readonly<{
         id: ClassificationId;
         hasChildClassifications: boolean;
-    }>>;
+    }>>>;
     readonly state: IdsProviderDataState;
 }
 

@@ -154,10 +154,10 @@ describe("ID provider data states", () => {
     const queryExecutor: LimitingECSqlQueryExecutor = {
       async *createQueryReader() {
         if (++attempts === 1) {
-          yield { modeledElementId: "0x10" };
+          yield { subModeledElementId: "0x10" };
           throw new Error("Query interrupted by a connection failure");
         }
-        yield { modeledElementId: "0x20" };
+        yield { subModeledElementId: "0x20" };
       },
     };
     const provider = new SubModeledElementsProvider({
