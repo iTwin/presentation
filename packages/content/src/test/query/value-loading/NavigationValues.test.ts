@@ -59,7 +59,7 @@ function targetRow(id: string, className: string, label: string | undefined): EC
 }
 
 /** The ids a lookup query binds to its id set parameter. */
-function boundIds(query: ECSqlQueryDef): string[] {
+function boundIds(query: ECSqlQueryDef): readonly string[] {
   const bindings = query.bindings;
   const binding = Array.isArray(bindings) ? undefined : bindings?.[`${ECSQL_PREFIX}nav_ids`];
   return binding?.type === "idset" ? (binding.value ? [...binding.value] : []) : [];

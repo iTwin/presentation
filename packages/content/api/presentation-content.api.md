@@ -283,7 +283,7 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
 
 // @public
 interface GetDistinctFieldValuesProps {
-    field: PropertyField | CalculatedField;
+    field: ReadonlyPropertyField | ReadonlyCalculatedField;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     instanceFiltering?: {
         ids?: Id64String[];
