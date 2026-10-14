@@ -146,10 +146,7 @@ describe("createECSqlQueryExecutor", () => {
       const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
       const ids = ["0x456", "0x123"];
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader({
-        ecsql: "ecsql",
-        bindings: [{ type: "idset", value: ids }],
-      });
+      const reader = executor.createQueryReader({ ecsql: "ecsql", bindings: [{ type: "idset", value: ids }] });
       for await (const _ of reader) {
       }
 
