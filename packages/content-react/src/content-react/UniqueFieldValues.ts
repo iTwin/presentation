@@ -158,5 +158,6 @@ function toTypedPrimitiveValue(type: PrimitiveValueDescriptor, value: Value): Ty
     value as Parameters<typeof TypedPrimitiveValue.create>[0],
     type.type,
     type.kindOfQuantity,
+    type.extendedType,
   );
 }

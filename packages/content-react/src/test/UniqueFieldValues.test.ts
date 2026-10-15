@@ -103,6 +103,24 @@ describe("getUniqueFieldValues", () => {
     expect(result).toEqual({ values: [{ displayValue: "formatted-1.5", groupedRawValues: [1.5] }] });
   });
 
+  it("forwards the extended type to the value formatter", async () => {
+    // Local times on the same day — a `ShortDate` formats date-only, so both group under one display value.
+    const morning = "2024-01-02T08:00:00";
+    const evening = "2024-01-02T17:30:00";
+    stubDistinctValues([morning, evening]);
+    const field = createPropertyField({
+      id: "a",
+      valueClassNames: [classA],
+      type: { kind: "primitive", type: "DateTime", extendedType: "ShortDate" },
+    });
+
+    const result = await getUniqueFieldValues({ imodelAccess, field });
+
+    expect(result).toEqual({
+      values: [{ displayValue: new Date(morning).toLocaleDateString(), groupedRawValues: [morning, evening] }],
+    });
+  });
+
   describe("navigation fields", () => {
     const navigationField = createPropertyField({
       id: "nav",
