@@ -11,7 +11,7 @@ The guidelines below apply both to agents implementing changes and to reviewers 
 
 ### Testing Requirements
 
-- New functionality must be covered by tests (unit and/or integration depending on the feature). Production packages (see [`SKILL.md`](.github/skills/repo-context/SKILL.md)) must keep 100% coverage; when implementing, verify it with `pnpm cover` in the package.
+- New functionality must be covered by tests (unit and/or integration depending on the feature). Production packages (see [`SKILL.md`](skills/repo-context/SKILL.md)) must keep 100% coverage; when implementing, verify it with `pnpm cover` in the package.
 - Tests use Vitest — verify new tests follow the existing patterns in the package.
 - Integration tests live in `apps/full-stack-tests/`; unit tests live alongside source in each package.
 - Verify that edge cases, error paths, and boundary conditions are tested.
