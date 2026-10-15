@@ -20,8 +20,9 @@ import type { FieldsProviderContribution } from "../../../content/extensions/IMo
 
 const BASE_ELEMENT_PATHS = [
   ["BisCore.ElementHasLinks"],
-  ["BisCore.ElementGroupsMembers", "BisCore.ElementHasLinks"],
   ["BisCore.ModelContainsElements", "BisCore.ModelModelsElement", "BisCore.ElementHasLinks"],
+  ["BisCore.ElementGroupsMembers"],
+  ["BisCore.ElementGroupsMembers", "BisCore.ElementHasLinks"],
 ];
 
 /** Builds an `ECSchemaProvider` stub whose `classDerivesFrom` reflects the given class hierarchy. */
@@ -170,7 +171,7 @@ describe("bisCoreFieldsProvider", () => {
     // The `Kind <> 'Relationship'` filter excludes synchronization-only aspects from the identifier
     // declaration — a behavioral detail worth its own assertion, unlike the label/category metadata
     // below, which full-stack tests already verify end-to-end.
-    const identifier = contribution!.relatedProperties![3];
+    const identifier = contribution!.relatedProperties![BASE_ELEMENT_PATHS.length];
     expect(identifier.path[0].instanceFilter).to.deep.equal({ expression: "this.Kind <> 'Relationship'" });
   });
 

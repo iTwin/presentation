@@ -103,8 +103,7 @@ async function createAspectRelatedProperties(
 }
 
 /**
- * Builds `BisCore:Element` links (`ElementHasLinks`), group-member links (`ElementGroupsMembers` →
- * `ElementHasLinks`), and the model-source repository link (`ModelContainsElements` →
+ * Builds `BisCore:Element` links (`ElementHasLinks`) and the model-source repository link (`ModelContainsElements` →
  * `ModelModelsElement` → `ElementHasLinks`, renamed into the "Model Source" category) related
  * properties declarations and their categories.
  */
@@ -121,23 +120,6 @@ function createLinksContribution(
       path: [
         {
           sourceClassName: target.primaryClass,
-          targetClassName: "BisCore.LinkElement",
-          relationshipName: "BisCore.ElementHasLinks",
-        },
-      ],
-      cardinalityHint: "many",
-    },
-    // Links of the information-reference elements that group this element as a member.
-    {
-      path: [
-        {
-          sourceClassName: target.primaryClass,
-          targetClassName: "BisCore.GroupInformationElement",
-          relationshipName: "BisCore.ElementGroupsMembers",
-          relationshipReverse: true,
-        },
-        {
-          sourceClassName: "BisCore.GroupInformationElement",
           targetClassName: "BisCore.LinkElement",
           relationshipName: "BisCore.ElementHasLinks",
         },
@@ -190,6 +172,40 @@ function createLinksContribution(
       [SOURCE_INFORMATION_CATEGORY_ID]: createSourceInformationCategory(strings),
       [MODEL_SOURCE_CATEGORY_ID]: createModelSourceCategory(strings),
     },
+  };
+}
+
+function createGroupsContribution(target: ContentTarget): { relatedProperties: RelatedPropertiesDeclaration[] } {
+  return {
+    relatedProperties: [
+      {
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.GroupInformationElement",
+            relationshipName: "BisCore.ElementGroupsMembers",
+            relationshipReverse: true,
+          },
+        ],
+        cardinalityHint: "many",
+      },
+      {
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.GroupInformationElement",
+            relationshipName: "BisCore.ElementGroupsMembers",
+            relationshipReverse: true,
+          },
+          {
+            sourceClassName: "BisCore.GroupInformationElement",
+            targetClassName: "BisCore.LinkElement",
+            relationshipName: "BisCore.ElementHasLinks",
+          },
+        ],
+        cardinalityHint: "many",
+      },
+    ],
   };
 }
 
@@ -409,7 +425,7 @@ export function createBisCoreAspectsFieldsProvider(): IModelFieldsProvider {
 
 /**
  * Creates the iModel fields provider contributing BisCore-specific fields for any target deriving
- * from `BisCore.Element`: element and group-member links plus the model-source repository link,
+ * from `BisCore.Element`: groups, element and group-member links plus the model-source repository link,
  * external-source information (source identifier and, on newer `BisCore` versions, document links
  * and secondary sources), and 2d/3d type-definition and represented-element fields.
  *
@@ -425,11 +441,13 @@ export function createBisCoreFieldsProvider(strings: BisCoreLocalizedStrings): I
         return undefined;
       }
 
+      const groupsContribution = createGroupsContribution(target);
       const linksContribution = createLinksContribution(target, strings);
       const externalSourceContribution = await createExternalSourceContribution(imodelAccess, target, strings);
 
       const relatedProperties: RelatedPropertiesDeclaration[] = [
         ...linksContribution.relatedProperties,
+        ...groupsContribution.relatedProperties,
         ...externalSourceContribution.relatedProperties,
         ...(await createTypeDefinitionAndRepresentedElementRelatedProperties(imodelAccess, target)),
       ];
