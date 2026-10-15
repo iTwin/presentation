@@ -310,7 +310,7 @@ describe("Content", () => {
       });
     });
 
-    it("adds group-member link fields for elements referenced via ElementGroupsMembers", async () => {
+    it.each([true, false])("adds group fields with group link present: %s", async (hasLink) => {
       const { imodelConnection, elementClassName } = await buildTestIModel(async (imodel) => {
         return withEditTxn(imodel, (txn) => {
           const categoryKey = insertSpatialCategory({ txn, codeValue: "Category" });
@@ -331,27 +331,32 @@ describe("Content", () => {
             targetId: elementKey.id,
           });
 
-          const groupLinkKey = insertRepositoryLink({
-            txn,
-            repositoryUrl: "https://example.com/group-link",
-            repositoryLabel: "Group Link",
-          });
-          txn.insertRelationship({
-            classFullName: "BisCore.ElementHasLinks",
-            sourceId: groupKey.id,
-            targetId: groupLinkKey.id,
-          });
+          if (hasLink) {
+            const groupLinkKey = insertRepositoryLink({
+              txn,
+              repositoryUrl: "https://example.com/group-link",
+              repositoryLabel: "Group Link",
+            });
+            txn.insertRelationship({
+              classFullName: "BisCore.ElementHasLinks",
+              sourceId: groupKey.id,
+              targetId: groupLinkKey.id,
+            });
+          }
 
           return { elementClassName: elementKey.className };
         });
       });
 
       const imodelAccess = createContentIModelAccess(imodelConnection);
-      const descriptor = await buildDescriptor({
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const sources = await resolveContentSources({
         imodelAccess,
         targets: [{ primaryClass: elementClassName }],
-        config: await createIModelContentConfiguration({ imodelAccess }),
+        config,
       });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+      const descriptor = await provider.getContentDescriptor();
 
       const groupLinkPath: RelationshipPath = [
         {
@@ -368,9 +373,42 @@ describe("Content", () => {
       ];
       validateVisibleFieldsAtPath({
         descriptor,
-        path: groupLinkPath,
-        expect: repositoryLinkFieldValidators({ category: ["Repository Link"] }),
+        path: groupLinkPath.slice(0, 1),
+        expect: [
+          PropertyFieldValidator.create({
+            propertyClassName: "BisCore.Element",
+            propertyName: "CodeValue",
+            label: "Code",
+            category: ["Group"],
+          }),
+          PropertyFieldValidator.create({
+            propertyClassName: "BisCore.Element",
+            propertyName: "Model",
+            label: "Model",
+            category: ["Group"],
+          }),
+          PropertyFieldValidator.create({
+            propertyClassName: "BisCore.Element",
+            propertyName: "UserLabel",
+            label: "User Label",
+            category: ["Group"],
+          }),
+        ],
       });
+      validateVisibleFieldsAtPath({
+        descriptor,
+        path: groupLinkPath,
+        expect: hasLink ? repositoryLinkFieldValidators({ category: ["Group", "Repository Link"] }) : [],
+      });
+
+      const [item] = await collect(provider.getItems());
+      const groupPath = groupLinkPath.slice(0, 1);
+      const groupLabelField = getPropertyFieldsByPath(descriptor, groupPath).find(
+        (field) => field.propertyName === "UserLabel",
+      )!;
+      const groups = item.getRelatedInstances({ pathFromTarget: groupPath });
+      expect(groups).toHaveLength(1);
+      expect(groups[0].getValue(groupLabelField)).toBe("Group");
     });
 
     it("adds external-source identifier, document-link, and secondary-source fields under Source Information", async () => {
