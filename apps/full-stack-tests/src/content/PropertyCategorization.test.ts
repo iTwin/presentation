@@ -599,8 +599,9 @@ describe("Content", () => {
         };
       }
 
-      for (const scope of [undefined, "relatedClass"] as const) {
-        it(`nests property categories under the related class category when scope is ${scope ?? "omitted"}`, async () => {
+      it.each([undefined, "relatedClass" as const])(
+        `nests property categories under the related class category when scope is %s`,
+        async (scope) => {
           using setup = await buildScopeSetup();
           const descriptor = await buildScopeDescriptor(
             setup,
@@ -610,8 +611,8 @@ describe("Content", () => {
           const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
           validateCategoryChain(descriptor, categorized, ["Class B", "Geometry"]);
           validateCategoryChain(descriptor, uncategorized, ["Class B"]);
-        });
-      }
+        },
+      );
 
       it("attaches property categories to the enclosing context when scope is parent", async () => {
         using setup = await buildScopeSetup();
@@ -628,9 +629,10 @@ describe("Content", () => {
         expect(descriptor.categories[uncategorized.categoryId!].parentId).toBeUndefined();
       });
 
-      it("prefers an explicit category override over either scope", async () => {
-        using setup = await buildScopeSetup();
-        for (const scope of ["relatedClass", "parent"] as const) {
+      it.each(["relatedClass", "parent"] as const)(
+        "prefers an explicit category override over scope %s",
+        async (scope) => {
+          using setup = await buildScopeSetup();
           const descriptor = await buildScopeDescriptor(
             setup,
             createScopeProvider(setup, [{ relationship: "AtoB", scope, defaultOverrides: { categoryId: "custom" } }], {
@@ -642,8 +644,8 @@ describe("Content", () => {
           expect(categorized.categoryId).toBe("custom");
           validateCategoryChain(descriptor, categorized, ["Custom"]);
           validateCategoryChain(descriptor, uncategorized, ["Custom"]);
-        }
-      });
+        },
+      );
 
       it("shares a class category reached over different relationships under the same parent", async () => {
         using setup = await buildScopeSetup();
