@@ -278,7 +278,7 @@ async function enforceDeclaredSource({
     }
     return enforced;
   };
-  return Promise.all(
+  const enforcedPaths = await Promise.all(
     paths.map(async (resolved) => {
       const [first, ...rest] = resolved.path;
       const enforced = await getOrCreate({
@@ -286,11 +286,23 @@ async function enforceDeclaredSource({
         key: first.sourceClassName,
         createFunc: async () => enforce(first.sourceClassName),
       });
-      return enforced === first.sourceClassName
-        ? resolved
-        : { ...resolved, path: [{ ...first, sourceClassName: enforced }, ...rest] };
+      const applicableClasses = await Promise.all(
+        resolved.targetClassNames.map(
+          async (className) => className === enforced || (await imodelAccess.classDerivesFrom(className, enforced)),
+        ),
+      );
+      const targetClassNames = resolved.targetClassNames.filter((_, index) => applicableClasses[index]);
+      if (targetClassNames.length === 0) {
+        return undefined;
+      }
+      return {
+        ...resolved,
+        path: enforced === first.sourceClassName ? resolved.path : [{ ...first, sourceClassName: enforced }, ...rest],
+        targetClassNames,
+      };
     }),
   );
+  return enforcedPaths.filter((resolved) => resolved !== undefined);
 }
 
 async function resolveDeclarationPaths({

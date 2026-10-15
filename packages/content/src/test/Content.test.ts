@@ -1178,6 +1178,78 @@ describe("resolveContentSources", () => {
       expect(getPathQueries(imodelAccess)).to.deep.equal([]);
     });
 
+    it.each([
+      {
+        returnedSource: "TestSchema.Base",
+        enforcedSource: "TestSchema.Pump",
+        classes: ["TestSchema.Pump", "TestSchema.SpecialPump"],
+      },
+      {
+        returnedSource: "TestSchema.Pump",
+        enforcedSource: "TestSchema.Pump",
+        classes: ["TestSchema.Pump", "TestSchema.SpecialPump"],
+      },
+      {
+        returnedSource: "TestSchema.SpecialPump",
+        enforcedSource: "TestSchema.SpecialPump",
+        classes: ["TestSchema.SpecialPump"],
+      },
+    ] as const)(
+      "filters custom resolver classes against the enforced source for $returnedSource",
+      async ({ returnedSource, enforcedSource, classes }) => {
+        const imodelAccess = createAccess({
+          "TestSchema.Pump": ["TestSchema.Base"],
+          "TestSchema.SpecialPump": ["TestSchema.Base", "TestSchema.Pump"],
+          "TestSchema.Wall": ["TestSchema.Base"],
+        });
+        const provider = createMockIModelFieldsProvider("test_v1", {
+          relatedProperties: [
+            {
+              path: createPath("TestSchema.Pump"),
+              resolve: async () => [
+                {
+                  path: createPath(returnedSource),
+                  targetClassNames: ["TestSchema.Pump", "TestSchema.SpecialPump", "TestSchema.Wall"],
+                },
+              ],
+            },
+          ],
+        });
+        const [source] = await resolveContentSources({
+          imodelAccess,
+          targets: [target],
+          config: { imodelFieldsProviders: [provider] },
+        });
+        expect(source).to.deep.equal(
+          createExpectedSource({ path: createPath(enforcedSource), targetClassNames: [...classes] }),
+        );
+      },
+    );
+
+    it.each([{ classes: [] }, { classes: ["TestSchema.Wall"] }] as const)(
+      "discards custom resolver paths with no applicable classes ($classes)",
+      async ({ classes }) => {
+        const imodelAccess = createAccess({
+          "TestSchema.Pump": ["TestSchema.Base"],
+          "TestSchema.Wall": ["TestSchema.Base"],
+        });
+        const provider = createMockIModelFieldsProvider("test_v1", {
+          relatedProperties: [
+            {
+              path: createPath("TestSchema.Pump"),
+              resolve: async () => [{ path: createPath("TestSchema.Base"), targetClassNames: [...classes] }],
+            },
+          ],
+        });
+        const [source] = await resolveContentSources({
+          imodelAccess,
+          targets: [target],
+          config: { imodelFieldsProviders: [provider] },
+        });
+        expect(source).to.deep.equal(createExpectedSource({}));
+      },
+    );
+
     it("rejects a custom resolver path starting at a class unrelated to the declared source", async () => {
       const imodelAccess = createAccess({ "TestSchema.Pump": ["TestSchema.Base"] });
       const provider = createMockIModelFieldsProvider("test_v1", {
