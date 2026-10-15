@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type { ContentDescriptor, ContentSource, Field, PropertyField } from "@itwin/presentation-content";
-import type { EC, RelationshipPath } from "@itwin/presentation-shared";
+import type { EC, RelationshipPath, Value } from "@itwin/presentation-shared";
 
 export const classA = "TestSchema.A" as const;
 export const classB = "TestSchema.B" as const;
@@ -40,12 +40,13 @@ export function createPropertyField(props: {
   propertyClassName?: EC.FullClassNameDotNotation;
   pathFromTarget?: RelationshipPath;
   hidden?: boolean;
+  type?: PropertyField["type"];
 }): PropertyField {
   return {
     kind: "property",
     id: props.id,
     label: props.id,
-    type: { kind: "primitive", type: "String" },
+    type: props.type ?? { kind: "primitive", type: "String" },
     propertyClassName: props.propertyClassName ?? classA,
     propertyName: props.id,
     pathFromTarget: props.pathFromTarget ?? [],
@@ -53,5 +54,36 @@ export function createPropertyField(props: {
     valueClassNames: props.valueClassNames,
     primaryClassNames: props.primaryClassNames ?? props.valueClassNames,
     ...(props.hidden ? { hidden: true } : undefined),
+  };
+}
+
+/**
+ * Creates an async iterable over `values` that records whether the consumer stopped iterating early.
+ * `getDistinctFieldValues` cancels the backend query when its iterator is returned, so tests assert
+ * that early exits (abort, unmount, formatting errors) propagate that cancellation.
+ */
+export function createDistinctValuesStream(values: Value[]): {
+  iterable: AsyncIterable<Value>;
+  isReturned: () => boolean;
+} {
+  let returned = false;
+  return {
+    isReturned: () => returned,
+    iterable: {
+      [Symbol.asyncIterator]: (): AsyncIterableIterator<Value> => {
+        let index = 0;
+        return {
+          [Symbol.asyncIterator]() {
+            return this;
+          },
+          next: async () =>
+            index < values.length ? { value: values[index++], done: false } : { value: undefined, done: true },
+          return: async () => {
+            returned = true;
+            return { value: undefined, done: true };
+          },
+        };
+      },
+    },
   };
 }

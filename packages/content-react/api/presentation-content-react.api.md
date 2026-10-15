@@ -5,8 +5,13 @@
 ```ts
 
 import type { EC } from '@itwin/presentation-shared';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
+import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import type { ReadonlyCalculatedField } from '@itwin/presentation-content';
 import type { ReadonlyContentDescriptor } from '@itwin/presentation-content';
 import type { ReadonlyPropertyField } from '@itwin/presentation-content';
+import type { Value } from '@itwin/presentation-shared';
 
 // @public
 export function createInstanceFilterProperties(input: CreateInstanceFilterPropertiesProps): InstanceFilterProperties;
@@ -14,6 +19,18 @@ export function createInstanceFilterProperties(input: CreateInstanceFilterProper
 // @public
 interface CreateInstanceFilterPropertiesProps {
     descriptor: ReadonlyContentDescriptor;
+}
+
+// @public
+export function getUniqueFieldValues(props: GetUniqueFieldValuesProps & {
+    abortSignal?: AbortSignal;
+}): Promise<UniqueFieldValuesResult>;
+
+// @public
+interface GetUniqueFieldValuesProps {
+    field: ReadonlyPropertyField | ReadonlyCalculatedField;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    valueFormatter?: IPrimitiveValueFormatter;
 }
 
 // @public
@@ -36,11 +53,34 @@ export interface InstanceFilterPropertiesInfo extends InstanceFilterProperties {
 }
 
 // @public
+export interface UniqueFieldValue {
+    displayValue: string;
+    groupedRawValues: Value[];
+}
+
+// @public
+interface UniqueFieldValuesResult {
+    values: UniqueFieldValue[];
+}
+
+// @public
 export function useInstanceFilterPropertiesInfo(input: UseInstanceFilterPropertiesInfoProps): InstanceFilterPropertiesInfo;
 
 // @public
 interface UseInstanceFilterPropertiesInfoProps extends CreateInstanceFilterPropertiesProps {
     initialSelectedClasses?: EC.FullClassNameDotNotation[];
+}
+
+// @public
+export function useUniqueFieldValues(input: UseUniqueFieldValuesProps): UseUniqueFieldValuesResult;
+
+// @public
+type UseUniqueFieldValuesProps = GetUniqueFieldValuesProps;
+
+// @public
+interface UseUniqueFieldValuesResult {
+    isLoading: boolean;
+    values: UniqueFieldValue[];
 }
 
 // (No @packageDocumentation comment for this package)
