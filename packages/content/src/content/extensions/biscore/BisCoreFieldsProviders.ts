@@ -210,6 +210,11 @@ function createGroupsContribution(target: ContentTarget): { relatedProperties: R
           },
         ],
         cardinalityHint: "many",
+        // Selecting both steps nests the link's category under the group's.
+        properties: [
+          { stepIndex: 0, target: { select: "all" } },
+          { stepIndex: 1, target: { select: "all" } },
+        ],
       },
     ],
   };
