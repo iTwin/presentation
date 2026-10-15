@@ -12,6 +12,7 @@ import {
   isSchemaVersionAtLeast,
   isSchemaVersionBelow,
   mergeBindings,
+  resolveEffectiveSourceClass,
   stableStringify,
   substituteExpressionAlias,
 } from "../content/InternalUtils.js";
@@ -147,6 +148,32 @@ describe("substituteExpressionAlias", () => {
     expect(
       substituteExpressionAlias({ expression: "this.Code || [this].Label", fromAlias: "this", toAlias: "this" }),
     ).to.equal("[this].Code || [this].Label");
+  });
+});
+
+describe("resolveEffectiveSourceClass", () => {
+  const base = createEntityClass({ fullName: "TestSchema.Base" });
+  const derived = createEntityClass({ fullName: "TestSchema.Derived", baseClass: base });
+  const sibling = createEntityClass({ fullName: "TestSchema.Sibling", baseClass: base });
+  const imodelAccess = createSchemaAccess([base, derived, sibling]);
+
+  it("returns the requested class when it is the declared class or derives from it", async () => {
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Base", "TestSchema.Base")).to.equal(
+      "TestSchema.Base",
+    );
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Derived", "TestSchema.Base")).to.equal(
+      "TestSchema.Derived",
+    );
+  });
+
+  it("returns the declared class when it derives from the requested class", async () => {
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Base", "TestSchema.Derived")).to.equal(
+      "TestSchema.Derived",
+    );
+  });
+
+  it("returns undefined when neither class derives from the other", async () => {
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Derived", "TestSchema.Sibling")).to.be.undefined;
   });
 });
 

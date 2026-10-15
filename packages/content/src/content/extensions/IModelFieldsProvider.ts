@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type {
+  EC,
   ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryExecutor,
@@ -100,6 +101,12 @@ export interface RelatedPropertiesDeclaration {
   /**
    * The relationship path to navigate (possibly generic — e.g., targeting a base class).
    * Will be resolved to concrete paths by querying the data.
+   *
+   * The first step's `sourceClassName` scopes the declaration: it applies to instances of that class and
+   * its subclasses within the content target, and not to other instances of the target. It may be
+   * narrower than the target's class (e.g. `MySchema.Pump` under a `BisCore.Element` target), in which
+   * case only pumps get the related properties; a base class of the target's class applies to the whole
+   * target. A class neither deriving from nor being a base of the target's class applies to nothing.
    */
   path: RelationshipPath;
 
@@ -144,6 +151,10 @@ export interface RelatedPropertiesDeclaration {
    * The callback receives the iModel accessor and target, and returns concrete paths, each
    * paired with the concrete content-target classes it applies to. The declaration's
    * `properties` and `cardinalityHint` still apply to each resolved path.
+   *
+   * The callback receives the original target, including its instance IDs and filter. It must honor
+   * the first step's `sourceClassName` (see `path`): a returned path starting at a base of it is
+   * narrowed to it, and one starting at an unrelated class is rejected with an error.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
@@ -165,6 +176,19 @@ interface CalculatedFieldDeclaration {
   id: string;
   /** Display label. */
   label: string;
+  /**
+   * The class `expression` is evaluated against, and the class the field applies to: an instance of
+   * this class or any of its subclasses has the field's value. Content for other classes in the
+   * requested target has no value for it, but is still returned.
+   *
+   * The expression must be valid for this class: it may reference its properties. Declare the
+   * class that defines the properties used rather than the requested target, e.g. `MySchema.Pump`
+   * for `this.FlowRate * 15850.3`, even when the target is `BisCore.Element`. A declaration whose
+   * class neither derives from nor is a base of the target's class does not apply to it.
+   *
+   * Declarations sharing an `id` across targets must declare the same class.
+   */
+  sourceClassName: EC.FullClassNameDotNotation;
   /**
    * ECSQL expression that computes this field's value.
    *

@@ -81,6 +81,22 @@ export function getOrCreate<TKey, TValue>({
 }
 
 /**
+ * Resolves the class a declaration scoped to `declaredClass` starts from within a request for
+ * `requestedClass`: the more derived of the two classes, or `undefined` when neither derives from
+ * the other (the declaration cannot apply to any requested instance).
+ */
+export async function resolveEffectiveSourceClass(
+  schemaProvider: Pick<ECSchemaProvider, "classDerivesFrom">,
+  requestedClass: EC.FullClassNameDotNotation,
+  declaredClass: EC.FullClassNameDotNotation,
+): Promise<EC.FullClassNameDotNotation | undefined> {
+  if (requestedClass === declaredClass || (await schemaProvider.classDerivesFrom(requestedClass, declaredClass))) {
+    return requestedClass;
+  }
+  return (await schemaProvider.classDerivesFrom(declaredClass, requestedClass)) ? declaredClass : undefined;
+}
+
+/**
  * Returns whether a schema version is at or above a `read.write.minor` version (inclusive).
  * Comparison order is write, then read, then minor.
  *

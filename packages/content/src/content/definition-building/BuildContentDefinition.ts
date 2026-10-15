@@ -47,8 +47,6 @@ export interface ContentDefinition {
   fieldSelectorIds: Partial<Record<Field["id"], string>>;
   externalInputs: ExternalInput[];
   externalProviders: ExternalProviderPlan[];
-  /** Calculated fields contributed to each source, keyed by the original source object. */
-  calculatedFieldIdsBySource: Map<ContentSource, Set<Field["id"]>>;
 }
 
 /**
@@ -112,7 +110,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
   // turns those facts into category ids and assigns `categoryId` (mutating the merged field objects).
   const mergedPropertyFields = mergePropertyFieldsByIdentity(candidates);
 
-  const [categories, { fields: calculatedFields, fieldIdsBySource: calculatedFieldIdsBySource }] = await Promise.all([
+  const [categories, calculatedFields] = await Promise.all([
     collectCategories({
       imodelAccess,
       sources,
@@ -122,7 +120,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
       getAnchorContribution,
       fields: mergedPropertyFields,
     }),
-    collectCalculatedFields({ sources, imodelFieldsProviders, getContribution }),
+    collectCalculatedFields({ imodelAccess, sources, imodelFieldsProviders, getContribution }),
   ]);
   const propertyFields: Record<Field["id"], PropertyField> = Object.fromEntries(
     mergedPropertyFields.map(({ field }) => [field.id, field]),
@@ -166,7 +164,7 @@ export async function buildContentDefinition(props: BuildContentDefinitionProps)
     fields: descriptor.fields,
   });
 
-  return { descriptor, selectors, fieldSelectorIds, externalInputs, externalProviders, calculatedFieldIdsBySource };
+  return { descriptor, selectors, fieldSelectorIds, externalInputs, externalProviders };
 }
 
 /**
