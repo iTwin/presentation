@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
+import { collectCalculatedFields } from "../../../content/definition-building/CalculatedFields.js";
 import { createFieldsProviderFromContentModifierRule } from "../../../content/extensions/presentation-rules/FieldsProviderFactory.js";
 
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
-import type { ContentTarget } from "../../../content/ContentTarget.js";
+import type { ContentSource, ContentTarget } from "../../../content/ContentTarget.js";
 import type * as PresentationRules from "../../../content/extensions/presentation-rules/PresentationRules.js";
 
 function createStubSchema(name: string, version: EC.SchemaVersion = { read: 1, write: 0, minor: 0 }): EC.Schema {
@@ -336,6 +337,36 @@ describe("createFieldsProviderFromContentModifierRule", () => {
   });
 
   describe("class matching", () => {
+    it.each(["1", "this.Code"])("collects classless calculated fields across target classes for %s", async (value) => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        rule: { calculatedProperties: [{ label: "X", value }] },
+      });
+      const imodelAccess = createIModelAccess();
+      const sources: ContentSource[] = (["TestSchema.Pump", "TestSchema.Wall", "TestSchema.Pump"] as const).map(
+        (primaryClass) => ({
+          target: createTarget(primaryClass),
+          resolvedPrimaryClasses: [primaryClass],
+          resolvedDeclarations: [],
+          resolvedExternalInputs: [],
+        }),
+      );
+      const fields = Object.values(
+        await collectCalculatedFields({
+          imodelAccess,
+          sources,
+          imodelFieldsProviders: [provider],
+          getContribution: async ({ provider: fieldsProvider, target }) =>
+            fieldsProvider.getContribution({ imodelAccess, target }),
+        }),
+      );
+      expect(fields).toHaveLength(2);
+      expect(fields.map(({ sourceClassName, primaryClassNames }) => ({ sourceClassName, primaryClassNames }))).toEqual([
+        { sourceClassName: "TestSchema.Pump", primaryClassNames: ["TestSchema.Pump"] },
+        { sourceClassName: "TestSchema.Wall", primaryClassNames: ["TestSchema.Wall"] },
+      ]);
+      expect(new Set(fields.map(({ id }) => id)).size).toBe(2);
+    });
+
     it("matches all classes when rule.class is undefined", async () => {
       const provider = createFieldsProviderFromContentModifierRule({
         rule: { calculatedProperties: [{ label: "X", value: "1" }] },
@@ -422,6 +453,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const pump = await provider.getContribution({ imodelAccess, target: createTarget("TestSchema.Pump") });
       const wall = await provider.getContribution({ imodelAccess, target: createTarget("TestSchema.Wall") });
       expect(pump?.calculatedFields).toHaveLength(1);
+      expect(pump?.calculatedFields?.[0].id).toBe("calc_0");
       expect(pump?.calculatedFields).toEqual(wall?.calculatedFields);
     });
   });
@@ -434,7 +466,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields).toEqual([
         {
-          id: "calc_0",
+          id: "calc_0:TestSchema.TestElement",
           label: "Full Name",
           sourceClassName: "TestSchema.TestElement",
           expression: "[this].[FirstName] || :pres_expr0 || [this].[LastName]",

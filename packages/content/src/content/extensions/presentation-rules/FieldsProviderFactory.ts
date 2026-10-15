@@ -50,6 +50,8 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
  *   properties start at `spec.class`, so they apply only to its instances.
  * - Maps `relatedProperties`, `calculatedProperties`, and `propertyCategories` into a
  *   `FieldsProviderContribution`.
+ * - Without `rule.class`, gives calculated fields class-scoped identities, producing separate fields
+ *   for different target classes while deduplicating repeated targets of the same class.
  * - Maps `rule.applyOnNestedContent` onto the provider's `applyRecursively` — mirroring native
  *   `ContentModifier.applyOnNestedContent`, this lets the rule's `relatedProperties` (only)
  *   additionally apply on nested-content anchors reached by any resolved related-properties path, not
@@ -98,6 +100,11 @@ export function createFieldsProviderFromContentModifierRule(
           rule.calculatedProperties,
           rule.class ? `${rule.class.schemaName}.${rule.class.className}` : target.primaryClass,
         );
+        if (!rule.class) {
+          for (const field of calculatedFields) {
+            field.id = `${field.id}:${field.sourceClassName}`;
+          }
+        }
       }
 
       if (rule.propertyCategories && rule.propertyCategories.length > 0) {
