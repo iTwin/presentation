@@ -175,38 +175,38 @@ function createLinksContribution(
   };
 }
 
-function createGroupsContribution(target: ContentTarget): {
-  relatedProperties: RelatedPropertiesDeclaration[];
-} {
-  return { relatedProperties: [
-    {
-      path: [
-        {
-          sourceClassName: target.primaryClass,
-          targetClassName: "BisCore.GroupInformationElement",
-          relationshipName: "BisCore.ElementGroupsMembers",
-          relationshipReverse: true,
-        },
-      ],
-      cardinalityHint: "many",
-    },
-    {
-      path: [
-        {
-          sourceClassName: target.primaryClass,
-          targetClassName: "BisCore.GroupInformationElement",
-          relationshipName: "BisCore.ElementGroupsMembers",
-          relationshipReverse: true,
-        },
-        {
-          sourceClassName: "BisCore.GroupInformationElement",
-          targetClassName: "BisCore.LinkElement",
-          relationshipName: "BisCore.ElementHasLinks",
-        },
-      ],
-      cardinalityHint: "many",
-    },
-  ] };
+function createGroupsContribution(target: ContentTarget): { relatedProperties: RelatedPropertiesDeclaration[] } {
+  return {
+    relatedProperties: [
+      {
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.GroupInformationElement",
+            relationshipName: "BisCore.ElementGroupsMembers",
+            relationshipReverse: true,
+          },
+        ],
+        cardinalityHint: "many",
+      },
+      {
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.GroupInformationElement",
+            relationshipName: "BisCore.ElementGroupsMembers",
+            relationshipReverse: true,
+          },
+          {
+            sourceClassName: "BisCore.GroupInformationElement",
+            targetClassName: "BisCore.LinkElement",
+            relationshipName: "BisCore.ElementHasLinks",
+          },
+        ],
+        cardinalityHint: "many",
+      },
+    ],
+  };
 }
 
 /**
