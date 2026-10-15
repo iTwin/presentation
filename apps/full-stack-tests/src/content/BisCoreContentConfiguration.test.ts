@@ -398,7 +398,7 @@ describe("Content", () => {
       validateVisibleFieldsAtPath({
         descriptor,
         path: groupLinkPath,
-        expect: hasLink ? repositoryLinkFieldValidators({ category: ["Repository Link"] }) : [],
+        expect: hasLink ? repositoryLinkFieldValidators({ category: ["Group", "Repository Link"] }) : [],
       });
 
       const [item] = await collect(provider.getItems());
