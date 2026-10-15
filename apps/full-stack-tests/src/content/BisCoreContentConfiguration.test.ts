@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
+  collect,
   insertDrawingCategory,
   insertDrawingGraphic,
   insertDrawingModelWithPartition,
@@ -17,15 +18,19 @@ import {
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Code, IModel } from "@itwin/core-common";
-import { createIModelContentConfiguration } from "@itwin/presentation-content";
+import {
+  createContentProvider,
+  createIModelContentConfiguration,
+  resolveContentSources,
+} from "@itwin/presentation-content";
 import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
 import { PropertyFieldValidator, validateVisibleFieldsAtPath } from "./DescriptorValidation.js";
-import { buildDescriptor, createContentIModelAccess } from "./Utils.js";
+import { buildDescriptor, createContentIModelAccess, getPropertyFieldsByPath } from "./Utils.js";
 
 import type { ElementAspectProps, ExternalSourceProps } from "@itwin/core-common";
 import type { RelationshipPath } from "@itwin/presentation-shared";
