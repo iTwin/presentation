@@ -919,5 +919,89 @@ describe("Content", () => {
         ],
       });
     });
+
+    it("adds represented-element fields and values when the target is a broader 3d geometric class", async () => {
+      const { imodelConnection, graphicKey, representedKey, siblingKey } = await buildTestIModel(
+        "BroadRepresentedElement",
+        async (imodel, testName) => {
+          const schema = await importSchema(
+            testName,
+            imodel,
+            `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECEntityClass typeName="MyGraphic">
+              <BaseClass>bis:GraphicalElement3d</BaseClass>
+            </ECEntityClass>
+          `,
+          );
+          return withEditTxn(imodel, (txn) => {
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "Category" });
+            const partitionKey = insertPhysicalPartition({ txn, codeValue: "Model", parentId: IModel.rootSubjectId });
+            const modelKey = insertPhysicalSubModel({ txn, modeledElementId: partitionKey.id });
+            const representedElementKey = insertPhysicalElement({
+              txn,
+              userLabel: "Represented",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            // A 3d geometric element that is not graphical, so the declaration must not apply to it.
+            const nonGraphicalKey = insertPhysicalElement({
+              txn,
+              userLabel: "Sibling",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const graphicalKey = insertPhysicalElement({
+              txn,
+              classFullName: schema.items.MyGraphic.fullName,
+              userLabel: "Graphic",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            txn.insertRelationship({
+              classFullName: "BisCore.GraphicalElement3dRepresentsElement",
+              sourceId: graphicalKey.id,
+              targetId: representedElementKey.id,
+            });
+            return { graphicKey: graphicalKey, representedKey: representedElementKey, siblingKey: nonGraphicalKey };
+          });
+        },
+      );
+
+      const imodelAccess = createContentIModelAccess(imodelConnection);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: "BisCore.GeometricElement3d" }],
+        config,
+      });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+      const descriptor = await provider.getContentDescriptor();
+
+      // A request for every 3d element reaches the declaration that only applies to graphical elements,
+      // and the resolved path starts at the class it applies to.
+      const representedElementPath: RelationshipPath = [
+        {
+          sourceClassName: "BisCore.GraphicalElement3d",
+          targetClassName: representedKey.className,
+          relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
+        },
+      ];
+      const userLabelField = getPropertyFieldsByPath(descriptor, representedElementPath).find(
+        (field) => field.propertyName === "UserLabel",
+      )!;
+      expect(userLabelField.primaryClassNames).toEqual([graphicKey.className]);
+
+      const items = await collect(provider.getItems());
+      expect(items.map((item) => item.primaryKey.id).sort()).toEqual(
+        [graphicKey.id, representedKey.id, siblingKey.id].sort(),
+      );
+      for (const item of items) {
+        const related = item.getRelatedInstances({ pathFromTarget: representedElementPath });
+        expect(related.map((instance) => instance.getValue(userLabelField))).toEqual(
+          item.primaryKey.id === graphicKey.id ? ["Represented"] : [],
+        );
+      }
+    });
   });
 });

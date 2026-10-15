@@ -5,7 +5,13 @@
 
 import { EMPTY, filter, finalize, forkJoin, from, lastValueFrom, map, mergeMap, of, race, take, toArray } from "rxjs";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { buildCategoryContext, ECSQL_PREFIX, getOrCreate, PRIMARY_CLASS_ALIAS } from "./InternalUtils.js";
+import {
+  buildCategoryContext,
+  ECSQL_PREFIX,
+  getOrCreate,
+  PRIMARY_CLASS_ALIAS,
+  resolveEffectiveSourceClass,
+} from "./InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "./model/Utils.js";
 import { namespaceBindings } from "./query/NamespaceBindings.js";
 import { QUERY_CONCURRENCY } from "./query/QueryConcurrency.js";
@@ -37,6 +43,11 @@ type JoinRelationshipPath = Extract<
 
 interface ResolutionQueryContext {
   target: ContentTarget;
+  /**
+   * The class the query selects primaries from: the target's class, or the declared source class when
+   * it is narrower, so only instances of that class are scanned.
+   */
+  primaryClassName: EC.FullClassNameDotNotation;
   joinPath: JoinRelationshipPath;
   schemaProvider: ECSchemaProvider;
 }
@@ -109,7 +120,7 @@ const originalStrategy: ResolutionQueryStrategy = {
     return true;
   },
   async buildQuery(ctx) {
-    const { target, joinPath, schemaProvider } = ctx;
+    const { target, primaryClassName, joinPath, schemaProvider } = ctx;
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
     const targetFilter = buildTargetFilter(target);
@@ -117,7 +128,7 @@ const originalStrategy: ResolutionQueryStrategy = {
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
+      FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
       ${joins} ${targetFilter.joins?.join("\n") ?? ""}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
@@ -136,7 +147,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
     return ctx.joinPath.length >= 2;
   },
   async buildQuery(ctx) {
-    const { target, joinPath, schemaProvider } = ctx;
+    const { target, primaryClassName, joinPath, schemaProvider } = ctx;
     const targetFilter = buildTargetFilter(target);
 
     const [
@@ -171,7 +182,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
       ${remainingJoins}
       INNER JOIN (
         SELECT [${firstHopAlias}].[ECInstanceId] [FirstHopInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId] [NearEndClassId], ${firstStepRelSelector} [FirstStepRelClassId]
-        FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
+        FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
         ${firstStepJoins} ${targetFilter.joins?.join("\n") ?? ""}
         ${instanceFilterClauses}
         GROUP BY [${firstHopAlias}].[ECInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
@@ -193,7 +204,7 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     return ctx.joinPath.length >= 3;
   },
   async buildQuery(ctx) {
-    const { target, joinPath, schemaProvider } = ctx;
+    const { target, primaryClassName, joinPath, schemaProvider } = ctx;
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
     const crossJoins = joins.replaceAll(/\bINNER\s+JOIN\b/gi, "CROSS JOIN");
@@ -202,7 +213,7 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
-      FROM ${ECSql.createClassSelector(target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]
+      FROM ${ECSql.createClassSelector(primaryClassName)} [${PRIMARY_CLASS_ALIAS}]
       ${crossJoins} ${targetFilter.joins?.join("\n") ?? ""}
       ${whereClause}
       GROUP BY ${buildClassIdColumns(classSelectors)}
@@ -232,6 +243,56 @@ function raceQueryExecution({
 
 // --- Declaration resolution ---
 
+type FieldsContribution = Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>;
+
+// Validated on intake, so resolution below may assume every declaration's path has at least one step.
+function validateContribution(provider: IModelFieldsProvider, contribution: FieldsContribution): FieldsContribution {
+  contribution?.relatedProperties?.forEach((declaration, index) => {
+    if (declaration.path.length === 0) {
+      throw new Error(
+        `Provider "${provider.id}" contributed related properties declaration ${index} without path steps.`,
+      );
+    }
+  });
+  return contribution;
+}
+
+// Makes a custom resolver's paths honor the declared source class: a broader first-step source is
+// narrowed to it, while a source unrelated to it contradicts the declaration.
+async function enforceDeclaredSource({
+  imodelAccess,
+  paths,
+  sourceClassName,
+}: {
+  imodelAccess: ECSchemaProvider;
+  paths: ResolvedPath[];
+  sourceClassName: EC.FullClassNameDotNotation;
+}): Promise<ResolvedPath[]> {
+  const enforcedByReturnedSource = new Map<EC.FullClassNameDotNotation, Promise<EC.FullClassNameDotNotation>>();
+  const enforce = async (returnedSource: EC.FullClassNameDotNotation) => {
+    const enforced = await resolveEffectiveSourceClass(imodelAccess, returnedSource, sourceClassName);
+    if (!enforced) {
+      throw new Error(
+        `Resolved path starts at "${returnedSource}", which is unrelated to the declared source class "${sourceClassName}".`,
+      );
+    }
+    return enforced;
+  };
+  return Promise.all(
+    paths.map(async (resolved) => {
+      const [first, ...rest] = resolved.path;
+      const enforced = await getOrCreate({
+        map: enforcedByReturnedSource,
+        key: first.sourceClassName,
+        createFunc: async () => enforce(first.sourceClassName),
+      });
+      return enforced === first.sourceClassName
+        ? resolved
+        : { ...resolved, path: [{ ...first, sourceClassName: enforced }, ...rest] };
+    }),
+  );
+}
+
 async function resolveDeclarationPaths({
   imodelAccess,
   target,
@@ -241,18 +302,39 @@ async function resolveDeclarationPaths({
   target: ContentTarget;
   declaration: Pick<RelatedPropertiesDeclaration, "path" | "resolve">;
 }): Promise<ResolvedPath[]> {
+  // The declared first-step source restricts which primary instances the path applies to.
+  const sourceClassName = await resolveEffectiveSourceClass(
+    imodelAccess,
+    target.primaryClass,
+    declaration.path[0].sourceClassName,
+  );
+  if (!sourceClassName) {
+    return [];
+  }
+
   if (declaration.resolve) {
-    return declaration.resolve({ imodelAccess, target });
+    const resolved = await declaration.resolve({ imodelAccess, target });
+    if (resolved.some((entry) => entry.path.length === 0)) {
+      throw new Error("A custom resolver returned a path without steps.");
+    }
+    return enforceDeclaredSource({ imodelAccess, paths: resolved, sourceClassName });
   }
 
   const joinPath: JoinRelationshipPath = declaration.path.map((step: RelationshipPath[number], i: number) => ({
     ...step,
+    // Queried from the effective source class, so a navigation property declared on it is reachable.
+    ...(i === 0 ? { sourceClassName } : undefined),
     sourceAlias: i === 0 ? PRIMARY_CLASS_ALIAS : `s${i - 1}`,
     targetAlias: `s${i}`,
     relationshipAlias: `r${i}`,
     joinType: "inner" as const,
   }));
-  const ctx: ResolutionQueryContext = { target, joinPath, schemaProvider: imodelAccess };
+  const ctx: ResolutionQueryContext = {
+    target,
+    primaryClassName: sourceClassName,
+    joinPath,
+    schemaProvider: imodelAccess,
+  };
   const strategies = ALL_STRATEGIES.filter((s) => s.isApplicable(ctx));
   const queries = await Promise.all(strategies.map(async (s) => s.buildQuery(ctx)));
   const rows = raceQueryExecution({ executor: imodelAccess, queries });
@@ -268,7 +350,7 @@ async function resolveDeclarationPaths({
         for (const step of declaration.path) {
           path.push({
             ...step,
-            sourceClassName: (colIdx === 0 ? target.primaryClass : row[colIdx]) as EC.FullClassNameDotNotation,
+            sourceClassName: (colIdx === 0 ? sourceClassName : row[colIdx]) as EC.FullClassNameDotNotation,
             relationshipName: row[++colIdx] as EC.FullClassNameDotNotation,
             targetClassName: row[++colIdx] as EC.FullClassNameDotNotation,
           });
@@ -377,7 +459,7 @@ function resolveBaseGroups({
     mergeMap(async (provider, providerIdx) => ({
       provider,
       providerIdx,
-      contribution: await provider.getContribution({ imodelAccess, target }),
+      contribution: validateContribution(provider, await provider.getContribution({ imodelAccess, target })),
     })),
     mergeMap(({ provider, providerIdx, contribution }) => {
       if (!contribution?.relatedProperties) {
@@ -538,7 +620,7 @@ async function resolveNestedGroups({
 
   // Memoized per (providerId, anchor class) — many parent paths, even across expansion levels, share
   // the same anchor class.
-  const contributionCache = new Map<string, ReturnType<IModelFieldsProvider["getContribution"]>>();
+  const contributionCache = new Map<string, Promise<FieldsContribution>>();
   const getNestedContribution = async (
     provider: IModelFieldsProvider,
     anchorClassName: EC.FullClassNameDotNotation,
@@ -548,7 +630,9 @@ async function resolveNestedGroups({
     if (!cached) {
       // The synthesized target identifies the anchor class only. Resolving the full path against the
       // original target below preserves its instance IDs and filter.
-      cached = provider.getContribution({ imodelAccess, target: { primaryClass: anchorClassName } });
+      cached = provider
+        .getContribution({ imodelAccess, target: { primaryClass: anchorClassName } })
+        .then((contribution) => validateContribution(provider, contribution));
       contributionCache.set(key, cached);
     }
     return cached;
@@ -627,7 +711,23 @@ async function resolveNestedGroups({
                 if (declaration.resolve) {
                   return undefined;
                 }
-                const fullPath = [...entry.prefixSteps, ...declaration.path];
+                const effectiveSource = await resolveEffectiveSourceClass(
+                  imodelAccess,
+                  entry.anchorClassName,
+                  declaration.path[0].sourceClassName,
+                );
+                if (!effectiveSource) {
+                  return undefined;
+                }
+                // Typing the anchor step at a narrower declared source restricts the join to it and makes
+                // that class's navigation properties reachable.
+                const lastPrefixIndex = entry.prefixSteps.length - 1;
+                const fullPath = [
+                  ...entry.prefixSteps.map((step, i) =>
+                    i === lastPrefixIndex ? { ...step, targetClassName: effectiveSource } : step,
+                  ),
+                  ...declaration.path,
+                ];
                 const paths = await resolveFullPath(fullPath);
                 if (paths.length === 0) {
                   return undefined;

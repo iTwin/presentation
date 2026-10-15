@@ -87,59 +87,48 @@ function loadItems(props: {
   const sorting = props.sorting ?? [];
   const hasSort = sorting.length > 0;
   return from(getContentDefinition()).pipe(
-    mergeMap(
-      ({ descriptor, selectors, calculatedFieldIdsBySource, fieldSelectorIds, externalInputs, externalProviders }) => {
-        const populateExternalValues = createExternalValuePopulator({ descriptor, plans: externalProviders });
-        const populateNavigationValues = createNavigationValuePopulator({ imodelAccess, selectors, labelsFactory });
-        return from(sources).pipe(
-          mergeMap(async (source) =>
-            createSourcePlan({
-              imodelAccess,
-              descriptor,
-              selectors,
-              applicableCalculatedFieldIds: calculatedFieldIdsBySource.get(source) ?? new Set(),
-              source,
-              sorting,
-              filters,
-              externalInputs,
-            }),
-          ),
-          toArray(),
-          mergeMap((plans) => {
-            if (plans.length <= 1 || !hasSort) {
-              // Zero or one source (sorted or not) and multi-source unsorted both page each source's anchor directly and
-              // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
-              return from(plans).pipe(
-                mergeMap(
-                  (plan) =>
-                    pageAnchor({
-                      imodelAccess,
-                      descriptor,
-                      fieldSelectorIds,
-                      plan,
-                      sorting,
-                      populateNavigationValues,
-                      populateExternalValues,
-                    }),
-                  QUERY_CONCURRENCY,
-                ),
-              );
-            }
+    mergeMap(({ descriptor, selectors, fieldSelectorIds, externalInputs, externalProviders }) => {
+      const populateExternalValues = createExternalValuePopulator({ descriptor, plans: externalProviders });
+      const populateNavigationValues = createNavigationValuePopulator({ imodelAccess, selectors, labelsFactory });
+      return from(sources).pipe(
+        mergeMap(async (source) =>
+          createSourcePlan({ imodelAccess, descriptor, selectors, source, sorting, filters, externalInputs }),
+        ),
+        toArray(),
+        mergeMap((plans) => {
+          if (plans.length <= 1 || !hasSort) {
+            // Zero or one source (sorted or not) and multi-source unsorted both page each source's anchor directly and
+            // stitch its additional groups; multi-source unsorted pages the sources concurrently (up to QUERY_CONCURRENCY).
+            return from(plans).pipe(
+              mergeMap(
+                (plan) =>
+                  pageAnchor({
+                    imodelAccess,
+                    descriptor,
+                    fieldSelectorIds,
+                    plan,
+                    sorting,
+                    populateNavigationValues,
+                    populateExternalValues,
+                  }),
+                QUERY_CONCURRENCY,
+              ),
+            );
+          }
 
-            // Multiple sources sorted by a shared key: order and page globally with the two-phase key stream.
-            return pageMultiSourceSorted({
-              imodelAccess,
-              descriptor,
-              fieldSelectorIds,
-              plans,
-              sorting,
-              populateNavigationValues,
-              populateExternalValues,
-            });
-          }),
-        );
-      },
-    ),
+          // Multiple sources sorted by a shared key: order and page globally with the two-phase key stream.
+          return pageMultiSourceSorted({
+            imodelAccess,
+            descriptor,
+            fieldSelectorIds,
+            plans,
+            sorting,
+            populateNavigationValues,
+            populateExternalValues,
+          });
+        }),
+      );
+    }),
   );
 }
 
@@ -147,22 +136,12 @@ async function createSourcePlan(props: {
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   descriptor: ContentDescriptor;
   selectors: ContentDefinition["selectors"];
-  applicableCalculatedFieldIds: ReadonlySet<string>;
   source: ContentSource;
   sorting: ContentQuerySort[];
   filters?: ContentValueFilter[];
   externalInputs: ExternalInput[];
 }): Promise<SourcePlan> {
-  const {
-    imodelAccess,
-    descriptor,
-    selectors,
-    applicableCalculatedFieldIds,
-    source,
-    sorting,
-    filters,
-    externalInputs,
-  } = props;
+  const { imodelAccess, descriptor, selectors, source, sorting, filters, externalInputs } = props;
   const propertySelectorPaths = Object.values(selectors)
     .filter((selector): selector is PropertySelectorDefinition => selector.kind === "property")
     .map((selector) => selector.pathFromTarget)
@@ -172,6 +151,7 @@ async function createSourcePlan(props: {
     source,
     filters,
     sortFields: sorting.map((sort) => sort.field),
+    calculatedFields: Object.values(descriptor.fields).filter((field) => field.kind === "calculated"),
     includeRelatedJoins: true,
     cardinalityHints: collectPathCardinalities(descriptor, externalInputs),
     propertySelectorPaths,
@@ -183,7 +163,6 @@ async function createSourcePlan(props: {
     buildSelectProjection({
       schemaProvider: imodelAccess,
       selectors,
-      applicableCalculatedFieldIds,
       group: anchor,
       sorting,
       ownedPathKeys: ownedPathKeys.anchor,
@@ -191,7 +170,6 @@ async function createSourcePlan(props: {
     buildSelectProjection({
       schemaProvider: imodelAccess,
       selectors: {},
-      applicableCalculatedFieldIds,
       group: anchor,
       sorting,
       ownedPathKeys: ownedPathKeys.anchor,
@@ -201,7 +179,6 @@ async function createSourcePlan(props: {
         buildSelectProjection({
           schemaProvider: imodelAccess,
           selectors,
-          applicableCalculatedFieldIds,
           group,
           ownedPathKeys: ownedPathKeys.additional[index],
         }),

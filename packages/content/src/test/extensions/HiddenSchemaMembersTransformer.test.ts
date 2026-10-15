@@ -46,6 +46,7 @@ function propertyField(props: {
 function calculatedField(id: string): CalculatedField {
   return {
     kind: "calculated",
+    sourceClassName: "TestSchema.Thing",
     id,
     label: "Calc",
     type: { kind: "primitive", type: "String" },

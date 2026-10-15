@@ -72,7 +72,6 @@ function createTestDefinition(
     selectors: {
       "Schema.A.Code": propertySelector({ id: "Schema.A.Code", propertyClassName: "Schema.A", propertyName: "Code" }),
     },
-    calculatedFieldIdsBySource: new Map(),
     fieldSelectorIds: { "Schema.A.Code": "Schema.A.Code" },
     externalInputs: [],
     externalProviders: [],

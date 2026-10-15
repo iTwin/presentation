@@ -50,6 +50,7 @@ export interface CalculatedField extends BaseField {
     // (undocumented)
     kind: "calculated";
     primaryClassNames: EC.FullClassNameDotNotation[];
+    sourceClassName: EC.FullClassNameDotNotation;
     targetAlias?: string;
 }
 
@@ -60,6 +61,7 @@ interface CalculatedFieldDeclaration {
     expression: string;
     id: string;
     label: string;
+    sourceClassName: EC.FullClassNameDotNotation;
     targetAlias?: string;
     type: ValueDescriptor;
 }

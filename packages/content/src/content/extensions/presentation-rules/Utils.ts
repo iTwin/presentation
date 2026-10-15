@@ -5,7 +5,7 @@
 
 import { isSchemaVersionAtLeast, isSchemaVersionBelow } from "../../InternalUtils.js";
 
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryDefinition } from "../../model/Category.js";
 import type * as PresentationRules from "./PresentationRules.js";
 
@@ -34,23 +34,6 @@ export async function checkRequiredSchemas(
     }
   }
   return true;
-}
-
-/**
- * Returns `true` if `className` is or derives from the given class spec.
- * When `classSpec` is `undefined` the rule applies to all classes.
- *
- * @internal
- */
-export async function classMatchesSpec(
-  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">,
-  className: EC.FullClassNameDotNotation,
-  classSpec: PresentationRules.SingleSchemaClassSpecification | undefined,
-): Promise<boolean> {
-  if (!classSpec) {
-    return true;
-  }
-  return imodelAccess.classDerivesFrom(className, `${classSpec.schemaName}.${classSpec.className}`);
 }
 
 /**
