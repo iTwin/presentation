@@ -6,6 +6,25 @@
 import { getClass } from "@itwin/presentation-shared";
 
 import type { EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
+import type { CategoryContext } from "./ContentTarget.js";
+
+/**
+ * Appends selected local class anchors to inherited ancestry, ordered by path step with relationship
+ * classes before target classes at the same step. Local anchors are deduplicated by step and class
+ * kind. Neither input is modified.
+ */
+export function buildCategoryContext(props: {
+  inheritedContext: CategoryContext;
+  localAnchors: CategoryContext;
+}): CategoryContext {
+  const orderedAnchors = [...props.localAnchors].sort(
+    (first, second) =>
+      first.stepIndex - second.stepIndex ||
+      (first.kind === second.kind ? 0 : first.kind === "relationshipClass" ? -1 : 1),
+  );
+  const uniqueAnchors = new Map(orderedAnchors.map((anchor) => [`${anchor.stepIndex}:${anchor.kind}`, anchor]));
+  return [...props.inheritedContext, ...uniqueAnchors.values()];
+}
 
 /**
  * Prefix applied to internally generated ECSQL binding names

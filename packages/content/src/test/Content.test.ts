@@ -1404,10 +1404,81 @@ describe("resolveContentSources", () => {
           providerId: "providerB_v1",
           declarationIndex: 0,
           paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+          nested: {
+            anchorClassName: "TestSchema.ClassB",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
         },
       ]);
     });
+
+    it.each([{ selection: "all" }, { selection: "none" }] as const)(
+      "inherits unique category anchors with relationship selection=$selection",
+      async ({ selection }) => {
+        const properties: NonNullable<RelatedPropertiesDeclaration["properties"]> = [
+          { stepIndex: 0, relationship: { select: selection }, target: { select: "none" } },
+          { stepIndex: 1, target: { select: { exclude: ["Name"] } } },
+          { stepIndex: 0, relationship: { select: selection }, target: { select: "none" } },
+          { stepIndex: 1, target: { select: { include: ["Name"] } } },
+        ];
+        const providerA = createMockIModelFieldsProvider("providerA_v1", {
+          relatedProperties: [{ path: [aToB, bToC], properties }],
+        });
+        const providerC: IModelFieldsProvider = {
+          id: "providerC_v1",
+          applyRecursively: true,
+          async getContribution({ target }) {
+            return target.primaryClass === "TestSchema.ClassC" ? { relatedProperties: [{ path: [cToD] }] } : undefined;
+          },
+        };
+        const imodelAccess = createRoutedIModelAccess({
+          routeRows: routeByStepCount({
+            2: [
+              [
+                row(
+                  "TestSchema.ClassA",
+                  "TestSchema.RelAB",
+                  "TestSchema.ClassB",
+                  "TestSchema.RelBC",
+                  "TestSchema.ClassC",
+                ),
+              ],
+            ],
+            3: [
+              [
+                row(
+                  "TestSchema.ClassA",
+                  "TestSchema.RelAB",
+                  "TestSchema.ClassB",
+                  "TestSchema.RelBC",
+                  "TestSchema.ClassC",
+                  "TestSchema.RelCD",
+                  "TestSchema.ClassD",
+                ),
+              ],
+            ],
+          }),
+        });
+
+        const [result] = await resolveContentSources({
+          imodelAccess,
+          targets: [targetA],
+          config: { imodelFieldsProviders: [providerA, providerC] },
+        });
+
+        expect(result.resolvedDeclarations.filter((group) => group.nested).map((group) => group.nested)).to.deep.equal([
+          {
+            anchorClassName: "TestSchema.ClassC",
+            prefixStepCount: 2,
+            categoryContext: [
+              ...(selection === "all" ? [{ stepIndex: 0, kind: "relationshipClass" }] : []),
+              { stepIndex: 1, kind: "targetClass" },
+            ],
+          },
+        ]);
+      },
+    );
 
     it("does not apply an opted-out provider's contribution on a resolved anchor", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [{ path: [aToB] }] });
@@ -1611,13 +1682,24 @@ describe("resolveContentSources", () => {
           providerId: "providerB_v1",
           declarationIndex: 0,
           paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+          nested: {
+            anchorClassName: "TestSchema.ClassB",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
         },
         {
           providerId: "providerC_v1",
           declarationIndex: 0,
           paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+          nested: {
+            anchorClassName: "TestSchema.ClassC",
+            prefixStepCount: 2,
+            categoryContext: [
+              { stepIndex: 0, kind: "targetClass" },
+              { stepIndex: 1, kind: "targetClass" },
+            ],
+          },
         },
       ]);
     });
@@ -1664,7 +1746,11 @@ describe("resolveContentSources", () => {
           providerId: "providerX_v1",
           declarationIndex: 0,
           paths: [{ path: [xToX, xToX], targetClassNames: ["TestSchema.ClassX"] }],
-          nested: { anchorClassName: "TestSchema.ClassX", prefixStepCount: 1 },
+          nested: {
+            anchorClassName: "TestSchema.ClassX",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
         },
       ]);
     });
@@ -1711,7 +1797,11 @@ describe("resolveContentSources", () => {
         providerId: "providerB_v1",
         declarationIndex: 0,
         paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
-        nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.ClassB",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       });
     });
 
@@ -1780,13 +1870,21 @@ describe("resolveContentSources", () => {
           providerId: "providerC_v1",
           declarationIndex: 0,
           paths: [{ path: [aToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 1 },
+          nested: {
+            anchorClassName: "TestSchema.ClassC",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
         },
         {
           providerId: "providerC_v1",
           declarationIndex: 0,
           paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+          nested: {
+            anchorClassName: "TestSchema.ClassC",
+            prefixStepCount: 2,
+            categoryContext: [{ stepIndex: 1, kind: "targetClass" }],
+          },
         },
       ]);
     });
@@ -1838,7 +1936,11 @@ describe("resolveContentSources", () => {
           providerId: "providerB_v1",
           declarationIndex: 1,
           paths: [{ path: [aToB, bToD], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+          nested: {
+            anchorClassName: "TestSchema.ClassB",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
         },
       ]);
     });
@@ -1892,10 +1994,64 @@ describe("resolveContentSources", () => {
           providerId: "providerB_v1",
           declarationIndex: 0,
           paths: [{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }],
-          nested: { anchorClassName: "TestSchema.ClassB", prefixStepCount: 1 },
+          nested: {
+            anchorClassName: "TestSchema.ClassB",
+            prefixStepCount: 1,
+            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          },
         },
       ]);
     });
+
+    it.each([
+      { scopes: ["relatedClass", "parent"], expectedContexts: [[{ stepIndex: 0, kind: "targetClass" }], []] },
+      { scopes: ["parent", "relatedClass"], expectedContexts: [[], [{ stepIndex: 0, kind: "targetClass" }]] },
+    ] as const)(
+      "preserves nested groups with different ancestor scopes in $scopes order",
+      async ({ scopes, expectedContexts }) => {
+        const providerA = createMockIModelFieldsProvider("providerA_v1", {
+          relatedProperties: scopes.map((propertyCategoryScope) => ({ path: [aToB], propertyCategoryScope })),
+        });
+        const providerB: IModelFieldsProvider = {
+          id: "providerB_v1",
+          applyRecursively: true,
+          async getContribution({ target }) {
+            return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToC] }] } : undefined;
+          },
+        };
+        const imodelAccess = createRoutedIModelAccess({
+          routeRows: routeByStepCount({
+            1: [
+              [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+              [row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")],
+            ],
+            2: [
+              [
+                row(
+                  "TestSchema.ClassA",
+                  "TestSchema.RelAB",
+                  "TestSchema.ClassB",
+                  "TestSchema.RelBC",
+                  "TestSchema.ClassC",
+                ),
+              ],
+            ],
+          }),
+        });
+
+        const [result] = await resolveContentSources({
+          imodelAccess,
+          targets: [targetA],
+          config: { imodelFieldsProviders: [providerA, providerB] },
+        });
+
+        const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
+        expect(nestedGroups.map((group) => group.nested?.categoryContext)).to.deep.equal(expectedContexts);
+        for (const group of nestedGroups) {
+          expect(group.paths).to.deep.equal([{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }]);
+        }
+      },
+    );
 
     it("computes the nested group's effective cardinality hint by combining the parent and nested hints", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", {
@@ -2045,7 +2201,11 @@ describe("resolveContentSources", () => {
         providerId: "providerB_v1",
         declarationIndex: 0,
         paths: [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
-        nested: { anchorClassName: "TestSchema.ClassC", prefixStepCount: 2 },
+        nested: {
+          anchorClassName: "TestSchema.ClassC",
+          prefixStepCount: 2,
+          categoryContext: [{ stepIndex: 1, kind: "targetClass" }],
+        },
       });
     });
   });
