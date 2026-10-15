@@ -9,7 +9,13 @@ import { getUniqueFieldValues } from "../content-react/UniqueFieldValues.js";
 import { classA, createDistinctValuesStream, createPropertyField } from "./Helpers.js";
 
 import type * as PresentationContent from "@itwin/presentation-content";
-import type { ECSchemaProvider, ECSqlQueryExecutor, TypedPrimitiveValue, Value } from "@itwin/presentation-shared";
+import type {
+  ECSchemaProvider,
+  ECSqlQueryExecutor,
+  NavigationValue,
+  TypedPrimitiveValue,
+  Value,
+} from "@itwin/presentation-shared";
 
 vi.mock("@itwin/presentation-content", async (importOriginal) => ({
   ...(await importOriginal<typeof PresentationContent>()),
@@ -128,53 +134,41 @@ describe("getUniqueFieldValues", () => {
       type: { kind: "navigation", targetClassName: "TestSchema.Target" },
     });
 
-    it("uses the target instance's label as display value and its key as the raw value", async () => {
-      stubDistinctValues([
-        { key: { className: "TestSchema.Target", id: "0x1" }, label: "Element A" },
-        { key: { className: "TestSchema.Target", id: "0x2" }, label: "Element B" },
-      ]);
+    it("uses the target instance's label as display value and the navigation value as the raw value", async () => {
+      const a: NavigationValue = { key: { className: "TestSchema.Target", id: "0x1" }, label: "Element A" };
+      const b: NavigationValue = { key: { className: "TestSchema.Target", id: "0x2" }, label: "Element B" };
+      stubDistinctValues([a, b]);
 
       const result = await getUniqueFieldValues({ imodelAccess, field: navigationField });
 
       expect(result).toEqual({
         values: [
-          { displayValue: "Element A", groupedRawValues: [{ className: "TestSchema.Target", id: "0x1" }] },
-          { displayValue: "Element B", groupedRawValues: [{ className: "TestSchema.Target", id: "0x2" }] },
+          { displayValue: "Element A", groupedRawValues: [a] },
+          { displayValue: "Element B", groupedRawValues: [b] },
         ],
       });
     });
 
     it("groups distinct target instances that share a label", async () => {
-      stubDistinctValues([
-        { key: { className: "TestSchema.Target", id: "0x1" }, label: "Shared" },
-        { key: { className: "TestSchema.Target", id: "0x2" }, label: "Shared" },
-      ]);
+      const a: NavigationValue = { key: { className: "TestSchema.Target", id: "0x1" }, label: "Shared" };
+      const b: NavigationValue = { key: { className: "TestSchema.Target", id: "0x2" }, label: "Shared" };
+      stubDistinctValues([a, b]);
 
       const result = await getUniqueFieldValues({ imodelAccess, field: navigationField });
 
-      expect(result).toEqual({
-        values: [
-          {
-            displayValue: "Shared",
-            groupedRawValues: [
-              { className: "TestSchema.Target", id: "0x1" },
-              { className: "TestSchema.Target", id: "0x2" },
-            ],
-          },
-        ],
-      });
+      expect(result).toEqual({ values: [{ displayValue: "Shared", groupedRawValues: [a, b] }] });
     });
 
     it("formats a concatenated label", async () => {
-      stubDistinctValues([
-        { key: { className: "TestSchema.Target", id: "0x1" }, label: [{ type: "String", value: "A" }, " - ", "B"] },
-      ]);
+      const value: NavigationValue = {
+        key: { className: "TestSchema.Target", id: "0x1" },
+        label: [{ type: "String", value: "A" }, " - ", "B"],
+      };
+      stubDistinctValues([value]);
 
       const result = await getUniqueFieldValues({ imodelAccess, field: navigationField });
 
-      expect(result).toEqual({
-        values: [{ displayValue: "A - B", groupedRawValues: [{ className: "TestSchema.Target", id: "0x1" }] }],
-      });
+      expect(result).toEqual({ values: [{ displayValue: "A - B", groupedRawValues: [value] }] });
     });
   });
 

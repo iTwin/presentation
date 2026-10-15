@@ -93,17 +93,12 @@ export async function getUniqueFieldValues(
   const groups = new Map<string, Value[]>();
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for await (const value of abortable(getDistinctFieldValues({ imodelAccess, field }), abortSignal)) {
-    const { displayValue, rawValue } = await formatDistinctValue({
-      value,
-      type: field.type,
-      isNavigation,
-      valueFormatter,
-    });
+    const displayValue = await formatDistinctValue({ value, type: field.type, isNavigation, valueFormatter });
     const group = groups.get(displayValue);
     if (group) {
-      group.push(rawValue);
+      group.push(value);
     } else {
-      groups.set(displayValue, [rawValue]);
+      groups.set(displayValue, [value]);
     }
 
     // Formatting is async per value and runs on the main thread — yield periodically so a long
@@ -115,29 +110,27 @@ export async function getUniqueFieldValues(
 }
 
 /**
- * Formats one streamed distinct value and determines the raw value to remember for it.
+ * Formats one streamed distinct value for display.
  *
- * A navigation field's value carries the referenced instance's key and label; its filterable raw value
- * is the instance key. Every other field's value is formatted from its own type descriptor. A SQL-NULL
- * arrives as `undefined` for both, and formats to an empty string — labelling it (e.g. as "(empty)") is
- * left to the consumer rendering the UI.
+ * A navigation field's value carries the referenced instance's key and label, and is displayed by its
+ * label. Every other field's value is formatted from its own type descriptor. A SQL-NULL arrives as
+ * `undefined` for both, and formats to an empty string — labelling it (e.g. as "(empty)") is left to the
+ * consumer rendering the UI.
  */
 async function formatDistinctValue(props: {
   value: Value;
   type: ReadonlyPropertyField["type"] | ReadonlyCalculatedField["type"];
   isNavigation: boolean;
   valueFormatter: IPrimitiveValueFormatter;
-}): Promise<{ displayValue: string; rawValue: Value }> {
+}): Promise<string> {
   const { value, type, isNavigation, valueFormatter } = props;
   if (value === undefined) {
-    return { displayValue: "", rawValue: undefined };
+    return "";
   }
   if (isNavigation) {
-    const { key, label } = value as NavigationValue;
-    return { displayValue: await formatConcatenatedValue({ value: label, valueFormatter }), rawValue: key };
+    return formatConcatenatedValue({ value: (value as NavigationValue).label, valueFormatter });
   }
-  const typedValue = toTypedPrimitiveValue(type as PrimitiveValueDescriptor, value);
-  return { displayValue: await valueFormatter(typedValue), rawValue: value };
+  return valueFormatter(toTypedPrimitiveValue(type as PrimitiveValueDescriptor, value));
 }
 
 /**
