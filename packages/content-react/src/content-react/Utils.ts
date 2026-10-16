@@ -47,7 +47,12 @@ async function withAbort<T>(promise: Promise<T>, signal: AbortSignal | undefined
     return await Promise.race([
       promise,
       new Promise<never>((_resolve, reject) => {
-        onAbort = () => reject(signal.reason instanceof Error ? signal.reason : new Error("Operation was aborted."));
+        onAbort = () =>
+          reject(
+            signal.reason instanceof Error
+              ? signal.reason
+              : new Error(`Operation was aborted: ${String(signal.reason)}`, { cause: signal.reason }),
+          );
         signal.addEventListener("abort", onAbort, { once: true });
       }),
     ]);

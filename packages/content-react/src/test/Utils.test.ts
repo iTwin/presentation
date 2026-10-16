@@ -78,7 +78,9 @@ describe("abortable", () => {
     };
     const promise = consume();
     controller.abort("reason");
-    await expect(promise).rejects.toThrow("Operation was aborted.");
+    await expect(promise).rejects.toThrow(
+      expect.objectContaining({ message: "Operation was aborted: reason", cause: "reason" }),
+    );
   });
 
   it("releases the source without waiting for it when the loop exits early", async () => {
