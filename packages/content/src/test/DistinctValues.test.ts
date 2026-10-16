@@ -177,6 +177,7 @@ describe("getDistinctFieldValues", () => {
       id: "calc",
       label: "Calc",
       type: { kind: "primitive", type: "Point2d" },
+      sourceClassName: "TestSchema.ClassA",
       expression: "this.X + this.Y",
       primaryClassNames: ["TestSchema.ClassA"],
     };
@@ -505,52 +506,78 @@ describe("getDistinctFieldValues", () => {
       expect(executedQuery(imodelAccess)).to.not.include("ONLY [TestSchema].[Derived]");
     });
 
-    it("gives a calculated field one query per resolved class, without any schema lookups", async () => {
-      // A calculated field has no declaring class: it is resolved for `primaryClassNames` as a set,
-      // and those *are* its anchors (`getFieldAnchors`). So there is nothing to look up and nothing
-      // to collapse — anchor resolution short-circuits without touching the schema provider, and each
-      // resolved class gets its own exactly-scoped query.
+    it("serves a calculated field with a single query anchored at its source class and scoped to its resolved classes", async () => {
+      // The expression is written against the field's source class, which every resolved class
+      // derives from, so one query anchored there covers them all.
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
-      const classDerivesFrom = vi.spyOn(imodelAccess, "classDerivesFrom");
-      const getSchema = vi.spyOn(imodelAccess, "getSchema");
       const field: CalculatedField = {
         kind: "calculated",
         id: "calc",
         label: "Calc",
         type: { kind: "primitive", type: "String" },
+        sourceClassName: "TestSchema.Base",
         expression: "1",
         primaryClassNames: [a1.fullName, a2.fullName],
       };
-
       await collect(getDistinctFieldValues({ imodelAccess, field }));
-
-      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
-      expect(executedQuery(imodelAccess, 0)).to.include(`FROM ONLY [TestSchema].[A1] [this]`);
-      expect(executedQuery(imodelAccess, 1)).to.include(`FROM ONLY [TestSchema].[A2] [this]`);
-      expect(classDerivesFrom).not.toHaveBeenCalled();
-      expect(getSchema).not.toHaveBeenCalled();
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
+      expect(executedQuery(imodelAccess)).to.include(`FROM [TestSchema].[Base] [this]`);
+      expect(executedQuery(imodelAccess)).to.include(
+        `[this].[ECClassId] IS (ONLY [TestSchema].[A1], ONLY [TestSchema].[A2])`,
+      );
     });
 
-    it("never collapses a calculated field, even when one resolved class derives from another", async () => {
-      // `A1` derives from `Derived`, so a *property* field would collapse the two onto `Derived`. A
-      // calculated field does not: its expression is only known to be valid against the exact classes
-      // it was resolved for, so each keeps its own exactly-scoped query.
+    it("queries a calculated field's single resolved class exactly", async () => {
       const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
       const field: CalculatedField = {
         kind: "calculated",
         id: "calc",
         label: "Calc",
         type: { kind: "primitive", type: "String" },
+        sourceClassName: "TestSchema.Base",
+        expression: "1",
+        primaryClassNames: [a1.fullName],
+      };
+      await collect(getDistinctFieldValues({ imodelAccess, field }));
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
+      expect(executedQuery(imodelAccess)).to.include(`FROM ONLY [TestSchema].[A1] [this]`);
+    });
+
+    it("queries nothing for a calculated field resolved for no classes", async () => {
+      const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
+      const field: CalculatedField = {
+        kind: "calculated",
+        id: "calc",
+        label: "Calc",
+        type: { kind: "primitive", type: "String" },
+        sourceClassName: "TestSchema.Base",
+        expression: "1",
+        primaryClassNames: [],
+      };
+      expect(await collect(getDistinctFieldValues({ imodelAccess, field }))).to.deep.equal([]);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+    });
+
+    it("lists every resolved class of a calculated field, even when one derives from another", async () => {
+      // `A1` derives from `Derived`, so a *property* field would collapse the two onto `Derived`. A
+      // calculated field keeps both in the restriction: `ONLY` excludes unlisted subclasses of `Derived`.
+      const imodelAccess = createHierarchyIModelAccess({ classes, rows: [{ 0: "a" }] });
+      const field: CalculatedField = {
+        kind: "calculated",
+        id: "calc",
+        label: "Calc",
+        type: { kind: "primitive", type: "String" },
+        sourceClassName: "TestSchema.Base",
         expression: "1",
         primaryClassNames: [derived.fullName, a1.fullName],
       };
 
       await collect(getDistinctFieldValues({ imodelAccess, field }));
 
-      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
-      expect(executedQuery(imodelAccess, 0)).to.include(`FROM ONLY [TestSchema].[Derived] [this]`);
-      expect(executedQuery(imodelAccess, 1)).to.include(`FROM ONLY [TestSchema].[A1] [this]`);
-      expect(executedQuery(imodelAccess, 0)).to.not.include("[ECClassId] IS");
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
+      expect(executedQuery(imodelAccess)).to.include(
+        `[this].[ECClassId] IS (ONLY [TestSchema].[Derived], ONLY [TestSchema].[A1])`,
+      );
     });
 
     it("throws when the field is not resolvable from one of its resolved classes", async () => {
@@ -771,6 +798,7 @@ describe("buildDistinctValuesQuery", () => {
       id: "calc",
       label: "Calc",
       type: { kind: "primitive", type: "String" },
+      sourceClassName: "TestSchema.Primary",
       expression: "this.CodeValue || :scale",
       bindings: { scale: { type: "double", value: 2 } },
       primaryClassNames: ["TestSchema.Primary"],

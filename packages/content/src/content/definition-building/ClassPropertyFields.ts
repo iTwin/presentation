@@ -7,7 +7,8 @@ import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext } from "../ContentTarget.js";
+import type { RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
 
@@ -22,7 +23,7 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
 export interface FieldCategorization {
   /**
    * Which class the field's value comes from, for class-based category anchoring:
-   * - `"none"` — a direct field (no class-based category; a schema category, if any, is top-level);
+   * - `"none"` — a direct field (no class-based category; a property category, if any, is top-level);
    * - `"targetClass"` — a related field from its step's target class;
    * - `"relationshipClass"` — a related field from its step's relationship class.
    */
@@ -31,11 +32,15 @@ export interface FieldCategorization {
    * The property's category source, if any — the two sources are mutually exclusive (an explicit
    * spec override takes precedence over the EC schema property category):
    * - `{ source: "override" }` — the category id set by the property's spec override;
-   * - `{ source: "schema" }` — the EC schema property category assigned to the property (unscoped).
+   * - `{ source: "propertyCategory" }` — the EC property category assigned to the property (unscoped).
    */
   category?:
     | { source: "override"; id: CategoryDefinition["id"] }
-    | { source: "schema"; id: CategoryDefinition["id"]; label: string };
+    | { source: "propertyCategory"; id: EC.FullClassNameDotNotation; label: string };
+  /** The declaration's `propertyCategoryScope`; omitted means `"relatedClass"`. */
+  propertyCategoryScope?: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  /** Ordered enclosing class categories; an empty context places the field's category at the root. */
+  categoryContext: CategoryContext;
 }
 
 /** A property field paired with the category facts the categorization pass needs. */
@@ -72,6 +77,10 @@ interface CreatePropertyFieldsProps {
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
   anchor: FieldCategorization["anchor"];
+  /** See {@link FieldCategorization.propertyCategoryScope}. */
+  propertyCategoryScope?: FieldCategorization["propertyCategoryScope"];
+  /** See {@link FieldCategorization.categoryContext}. */
+  categoryContext: CategoryContext;
 }
 
 /**
@@ -97,7 +106,7 @@ interface CreatePropertyFieldsProps {
  * `mergePropertyFieldsByIdentity`.
  */
 export function createPropertyFields(props: CreatePropertyFieldsProps): CategorizedField[] {
-  const { properties, relationshipInfo, valueClassNames, spec, anchor } = props;
+  const { properties, relationshipInfo, valueClassNames, spec, anchor, propertyCategoryScope, categoryContext } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
   const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
@@ -137,16 +146,19 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       field.hidden = overrides.hidden;
     }
     // Report the raw category facts: an explicit spec override, else the EC schema property category.
-    const categorization: FieldCategorization = { anchor };
+    const categorization: FieldCategorization = { anchor, categoryContext };
+    if (propertyCategoryScope !== undefined) {
+      categorization.propertyCategoryScope = propertyCategoryScope;
+    }
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
     } else {
-      const schemaCategory = property.category;
-      if (schemaCategory) {
+      const propertyCategory = property.category;
+      if (propertyCategory) {
         categorization.category = {
-          source: "schema",
-          id: schemaCategory.fullName,
-          label: schemaCategory.label ?? schemaCategory.name,
+          source: "propertyCategory",
+          id: propertyCategory.fullName,
+          label: propertyCategory.label ?? propertyCategory.name,
         };
       }
     }

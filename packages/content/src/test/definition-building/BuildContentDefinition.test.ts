@@ -27,6 +27,7 @@ import type { ContentDefinition } from "../../content/definition-building/BuildC
 import type { DescriptorTransformer } from "../../content/extensions/DescriptorTransformer.js";
 import type { ExternalFieldsProvider } from "../../content/extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../../content/extensions/IModelFieldsProvider.js";
+import type { CalculatedField } from "../../content/model/Field.js";
 
 function readerOf(selectors: ContentDefinition["selectors"], id: string) {
   const selector = selectors[id];
@@ -565,7 +566,13 @@ describe("buildContentDefinition", () => {
       async getContribution() {
         return {
           calculatedFields: [
-            { id: "sum", label: "Sum", expression: "this.Prop", type: { kind: "primitive", type: "Double" } },
+            {
+              id: "sum",
+              label: "Sum",
+              sourceClassName: "TestSchema.A",
+              expression: "this.Prop",
+              type: { kind: "primitive", type: "Double" },
+            },
           ],
         };
       },
@@ -582,7 +589,7 @@ describe("buildContentDefinition", () => {
     expect(descriptor.fields["calc_v1:sum"].kind).to.equal("calculated");
     expect(Object.keys(definition.selectors).sort()).to.deep.equal(["TestSchema.A.Prop", "calc_v1:sum"]);
     expect(definition.selectors["calc_v1:sum"].kind).to.equal("calculated");
-    expect(definition.calculatedFieldIdsBySource.get(descriptor.sources[0])).to.deep.equal(new Set(["calc_v1:sum"]));
+    expect((descriptor.fields["calc_v1:sum"] as CalculatedField).primaryClassNames).to.deep.equal(["TestSchema.A"]);
   });
 
   it("appends external fields without selectors and keeps external input columns", async () => {

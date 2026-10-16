@@ -194,6 +194,18 @@ export interface ResolvedPath {
 }
 
 /**
+ * Ordered class categories enclosing a related-properties declaration, from root to leaf.
+ * Each entry identifies a class at a zero-based step of the resolved relationship path.
+ * An empty context places categories at the root.
+ *
+ * @public
+ */
+export type CategoryContext = readonly {
+  readonly stepIndex: number;
+  readonly kind: "targetClass" | "relationshipClass";
+}[];
+
+/**
  * A group of concrete relationship paths resolved from a single provider declaration.
  *
  * During source resolution (Stage 1), each provider's `RelatedPropertiesDeclaration`
@@ -246,6 +258,9 @@ interface ResolvedDeclarationGroup {
      * relative to the suffix; add `prefixStepCount` to translate into an index of the full path.
      */
     prefixStepCount: number;
+
+    /** Resolved category ancestry inherited from the enclosing declaration. */
+    categoryContext: CategoryContext;
 
     /**
      * The effective cardinality of the full path — `"many"` if either the parent path's producing

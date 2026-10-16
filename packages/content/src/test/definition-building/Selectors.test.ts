@@ -53,6 +53,7 @@ function calculatedField(props: {
     id: props.id,
     label: "Calc",
     type: { kind: "primitive", type: "String" },
+    sourceClassName: "TestSchema.Primary",
     expression: props.expression,
     targetAlias: props.targetAlias,
     bindings: props.bindings,
@@ -92,6 +93,7 @@ describe("ValueSelector", () => {
         kind: "calculated",
         id: calc.id,
         expression: "this.A * :factor",
+        sourceClassName: "TestSchema.Primary",
         targetAlias: "this",
         bindings: { factor: { type: "double", value: 2 } },
       });

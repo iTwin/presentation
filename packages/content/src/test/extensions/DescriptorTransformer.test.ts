@@ -217,6 +217,7 @@ describe("createTransformableDescriptor", () => {
     it("throws when the field is not a property field", () => {
       const calculated: CalculatedField = {
         kind: "calculated",
+        sourceClassName: "Stuff.Thing",
         id: "calc",
         label: "Calc",
         type: { kind: "primitive", type: "String" },

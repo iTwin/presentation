@@ -54,7 +54,7 @@ const selectors: Record<ValueSelector["id"], ValueSelector> = {
     propertyName: "Label",
     pathFromTarget: [],
   },
-  "calc:score": { kind: "calculated", id: "calc:score", expression: "1" },
+  "calc:score": { kind: "calculated", id: "calc:score", expression: "1", sourceClassName: "Schema.A" },
   "Schema.B.Name": {
     kind: "property",
     id: "Schema.B.Name",
@@ -205,7 +205,9 @@ describe("RowDecoder", () => {
       expect(() =>
         createRowDecoder({
           columnNames,
-          selectors: { "Schema.A.Code": { kind: "calculated", id: "Schema.A.Code", expression: "1" } },
+          selectors: {
+            "Schema.A.Code": { kind: "calculated", id: "Schema.A.Code", expression: "1", sourceClassName: "Schema.A" },
+          },
         }),
       ).toThrow('Selector "Schema.A.Code" is not a property selector.');
     });

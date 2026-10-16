@@ -5,9 +5,14 @@
 
 import { assert } from "@itwin/core-bentley";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS, substituteExpressionAlias } from "../InternalUtils.js";
+import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS } from "../InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "../model/Utils.js";
 import { classifyPathCardinality } from "../PathCardinality.js";
+import {
+  renderCalculatedExpression,
+  renderSourceClassJoin,
+  resolveCalculatedFieldSources,
+} from "./CalculatedFieldSources.js";
 import { createJoinBudget, mergeJoinInfos, packPathsWithinBudget, partitionPathsByJoinBudget } from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClause, buildValueFilterClauses } from "./ValueFilters.js";
@@ -24,6 +29,7 @@ import type {
 import type { ContentValueFilter } from "../Content.js";
 import type { CardinalityHint, ContentSource, ContentTarget, ResolvedPath } from "../ContentTarget.js";
 import type { CalculatedField, PropertyField, ReadonlyCalculatedField, ReadonlyPropertyField } from "../model/Field.js";
+import type { CalculatedFieldSources } from "./CalculatedFieldSources.js";
 import type { JoinBudget, RelationshipPathJoinInfo } from "./QueryLimits.js";
 
 /**
@@ -61,6 +67,13 @@ export interface BaseQueryParts {
    * properties (empty `pathFromTarget`) use `primaryClassAlias`, not this map.
    */
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
+  /**
+   * Calculated field id -> the alias its expression is evaluated against: `primaryClassAlias`, or the
+   * alias of a class narrower than the primary class that the query joins for the field (see
+   * `CalculatedFieldSources`). A field missing from the map has no value in this query. Empty for queries
+   * that don't project, sort or filter by calculated fields.
+   */
+  calculatedFieldAliases: ReadonlyMap<string, string>;
 }
 
 /**
@@ -90,6 +103,11 @@ interface BuildBaseQueryProps {
   filters?: ContentValueFilter[];
   /** Fields whose related paths must be joined by the anchor to support sorting. */
   sortFields?: (PropertyField | CalculatedField)[];
+  /**
+   * Calculated fields whose values the caller projects. Together with the filtered and sorted calculated
+   * fields, they determine the source-class joins the anchor carries.
+   */
+  calculatedFields?: CalculatedField[];
 }
 
 /**
@@ -161,6 +179,17 @@ export async function buildBaseQuery(
 
   const from = `FROM ${ECSql.createClassSelector(source.target.primaryClass)} [${PRIMARY_CLASS_ALIAS}]`;
   const targetFilter = buildTargetFilter(source.target);
+  // A calculated field not applying to this source has no value, and a field declared on a class narrower
+  // than the primary class is evaluated against one shared, typed join of that class.
+  const calculatedFieldSources = await resolveCalculatedFieldSources({
+    schemaProvider,
+    source,
+    fields: [
+      ...filters.map(({ field }) => field),
+      ...(props.sortFields ?? []),
+      ...(props.calculatedFields ?? []),
+    ].filter((field): field is CalculatedField => field.kind === "calculated"),
+  });
 
   // Related-columns mode joins every resolved path; primaries-only mode joins only the paths a value
   // filter references (to evaluate it). Value-filter paths are collected in both modes: primaries-only
@@ -227,7 +256,12 @@ export async function buildBaseQuery(
   // Memoized per-(path, join type) join-info resolver. `createRelationshipPathJoinInfo` reads the schema
   // once; the result is reused for the budget count and rendered via the sync `createRelationshipPathJoinClause`
   // overload (which reads no schema).
-  const resolvePathInfo = createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys });
+  const resolvePathInfo = createPathInfoResolver({
+    schemaProvider,
+    primaryClassName: source.target.primaryClass,
+    relatedClassAliases,
+    getPrefixKeys,
+  });
 
   // Assembles one group's parts: every group shares FROM + target filter and renders its own subset of
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the
@@ -246,13 +280,18 @@ export async function buildBaseQuery(
       relatedClassAliases,
       getPrefixKeys,
       resolvePathInfo,
+      calculatedFieldSources,
       ...groupProps,
     });
 
   // Primary FROM, target-filter join and sort paths cannot spill. Sort paths
   // must stay on the anchor for ORDER BY, so reserve their complete cost before packing optional 1:1
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
-  const fixedReserves = 1 + (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) + (targetFilter.joins?.length ?? 0);
+  const fixedReserves =
+    1 +
+    (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) +
+    (targetFilter.joins?.length ?? 0) +
+    calculatedFieldSources.joins.length;
   // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
   // filter paths, then (below, related-columns mode only) selected 1:1 paths — so a path sharing a
   // prefix with one already added costs only its own unshared suffix, not its full cost again.
@@ -316,6 +355,7 @@ export async function buildBaseQuery(
     budget: anchorBudget,
     // An overflow partition is its own outer-joined group sharing only FROM + the target filter — no
     // sort paths — so it gets a fresh, more modestly reserved budget of its own.
+    // The source-class joins stay on the anchor, so an overflow group doesn't reserve them.
     overflowReservedTables: 1 + PAGE_ID_SET_JOIN_TABLES + (targetFilter.joins?.length ?? 0),
   });
   const anchorPaths = [...preSeededPaths, ...packedAnchorPaths];
@@ -629,6 +669,7 @@ export function resolveSelector(props: {
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
+  calculatedFieldAliases: ReadonlyMap<string, string>;
 }): {
   selector: string;
   type: Exclude<PrimitiveValueType, "Point2d" | "Point3d">;
@@ -643,26 +684,30 @@ export function resolveSelector(props: {
 /**
  * Resolves a field's raw column selector (without navigation `.Id`) without validating that the
  * addressed value is scalar-filterable.
+ *
+ * `calculatedFieldAliases` (see `BaseQueryParts`) describes the source being queried: a calculated
+ * field missing from it doesn't apply to the source and selects `NULL`.
  */
 export function resolveFieldSelector(props: {
   field: ReadonlyPropertyField | ReadonlyCalculatedField;
   member?: string;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   isRelationshipClass: (className: EC.FullClassNameDotNotation) => boolean;
+  calculatedFieldAliases: ReadonlyMap<string, string>;
 }): { selector: string; bindings?: Record<string, ECSqlBinding> } {
-  const { field, member, relatedClassAliases, isRelationshipClass } = props;
+  const { field, member, relatedClassAliases, isRelationshipClass, calculatedFieldAliases } = props;
   switch (field.kind) {
     case "calculated": {
       // A calculated field is an arbitrary scalar ECSQL expression; `ContentValueFilter` disallows a
       // `member` on it at the type level, so there is nothing composite to address here. Wrap it in
       // parentheses so the filter operator binds to the whole expression (e.g. `(A OR B) = :vf`, not
       // `A OR B = :vf`), and carry its own bindings so the expression's parameters are supplied.
-      const expression = substituteExpressionAlias({
-        expression: field.expression,
-        fromAlias: field.targetAlias ?? PRIMARY_CLASS_ALIAS,
-        toAlias: PRIMARY_CLASS_ALIAS,
-      });
-      return { selector: `(${expression})`, ...(field.bindings ? { bindings: field.bindings } : undefined) };
+      const alias = calculatedFieldAliases.get(field.id);
+      if (!alias) {
+        return { selector: "NULL" };
+      }
+      const expression = renderCalculatedExpression({ field, alias, primaryAlias: PRIMARY_CLASS_ALIAS });
+      return { selector: expression, ...(field.bindings ? { bindings: field.bindings } : undefined) };
     }
     case "property": {
       // Composite access (e.g. a struct member or point `x`) addresses a member of the property column.
@@ -833,10 +878,12 @@ function createPrefixKeyResolver(): (path: ReadonlyRelationshipPath) => readonly
  */
 function createPathInfoResolver(props: {
   schemaProvider: ECSchemaProvider;
+  /** The class the query selects primaries from. */
+  primaryClassName: EC.FullClassNameDotNotation;
   relatedClassAliases: Map<string, { target: string; relationship: string }>;
   getPrefixKeys: (path: ReadonlyRelationshipPath) => readonly string[];
 }): (path: ReadonlyRelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo> {
-  const { schemaProvider, relatedClassAliases, getPrefixKeys } = props;
+  const { schemaProvider, primaryClassName, relatedClassAliases, getPrefixKeys } = props;
   const infoCache = new Map<string, RelationshipPathJoinInfo>();
   return async (path, joinType) => {
     const prefixKeys = getPrefixKeys(path);
@@ -847,16 +894,42 @@ function createPathInfoResolver(props: {
         schemaProvider,
         path: path.map((step, index) => ({
           ...step,
+          // Joins are typed against the queried primary class, which exposes every property the path needs.
+          ...(index === 0 ? { sourceClassName: primaryClassName } : undefined),
           sourceAlias: index === 0 ? PRIMARY_CLASS_ALIAS : relatedClassAliases.get(prefixKeys[index - 1])!.target,
           targetAlias: relatedClassAliases.get(prefixKeys[index])!.target,
           relationshipAlias: relatedClassAliases.get(prefixKeys[index])!.relationship,
           joinType,
         })),
       });
+      // A path starting at a class narrower than the queried one only applies to that class's instances.
+      const declaredSource = path.length > 0 ? path[0].sourceClassName : undefined;
+      if (
+        declaredSource &&
+        declaredSource !== primaryClassName &&
+        (await schemaProvider.classDerivesFrom(declaredSource, primaryClassName))
+      ) {
+        info = restrictJoinInfoToSourceClass(info, declaredSource);
+      }
       infoCache.set(cacheKey, info);
     }
     return info;
   };
+}
+
+/**
+ * Limits the first join of a resolved path to primaries of `sourceClassName`, so primaries outside the
+ * class keep their row but join nothing (and, for an inner-joined group, drop out of that group).
+ */
+function restrictJoinInfoToSourceClass(
+  info: RelationshipPathJoinInfo,
+  sourceClassName: EC.FullClassNameDotNotation,
+): RelationshipPathJoinInfo {
+  const restriction = `[${PRIMARY_CLASS_ALIAS}].[ECClassId] IS (${ECSql.createClassSelector(sourceClassName)})`;
+  const [firstStep, ...otherSteps] = info.steps;
+  const [firstJoin, ...otherJoins] = firstStep.joins;
+  const restrictedJoin = { ...firstJoin, joinCondition: `${firstJoin.joinCondition} AND ${restriction}` };
+  return { ...info, steps: [{ ...firstStep, joins: [restrictedJoin, ...otherJoins] }, ...otherSteps] };
 }
 
 /**
@@ -879,6 +952,11 @@ async function buildQueryParts(props: {
   includePrimaryFilters: boolean;
   existentialFilterPathKeys: Set<string>;
   where?: string[];
+  /**
+   * The source's calculated field aliases and the joins they need. The joins are rendered only by the
+   * query owning the primary-restricting clauses, since only it projects, sorts and filters by them.
+   */
+  calculatedFieldSources: CalculatedFieldSources;
 }): Promise<BaseQueryParts> {
   const { schemaProvider, from, targetFilter, filters, relatedClassAliases, getPrefixKeys, resolvePathInfo } = props;
   const infos = await Promise.all(props.paths.map(async (path) => resolvePathInfo(path, props.joinType)));
@@ -891,6 +969,10 @@ async function buildQueryParts(props: {
 
   if (targetFilter.joins) {
     joinFragments.push(...targetFilter.joins);
+  }
+  const calculatedFieldSources = props.includePrimaryFilters ? props.calculatedFieldSources : undefined;
+  if (calculatedFieldSources) {
+    joinFragments.push(...calculatedFieldSources.joins.map((join) => renderSourceClassJoin(join)));
   }
   if (rendered.joins) {
     joinFragments.push(rendered.joins);
@@ -913,11 +995,18 @@ async function buildQueryParts(props: {
         member,
         relatedClassAliases: groupAliases,
         isRelationshipClass: isPropertyFieldRelationshipClass,
+        calculatedFieldAliases: props.calculatedFieldSources.aliases,
       });
     // An existential filter's path isn't part of this group's join set, so resolve its selector
     // against the query-wide alias map.
     const resolveExistentialFilterSelector = (field: PropertyField | CalculatedField, member?: string) =>
-      resolveSelector({ field, member, relatedClassAliases, isRelationshipClass: isPropertyFieldRelationshipClass });
+      resolveSelector({
+        field,
+        member,
+        relatedClassAliases,
+        isRelationshipClass: isPropertyFieldRelationshipClass,
+        calculatedFieldAliases: props.calculatedFieldSources.aliases,
+      });
 
     // Direct/calculated and budget-fitting 1:1 filters use join-and-compare evaluation. The
     // precomputed existential set (1:many plus overflow 1:1) uses independent subqueries.
@@ -965,6 +1054,7 @@ async function buildQueryParts(props: {
     ...(Object.keys(bindings).length > 0 ? { bindings } : undefined),
     primaryClassAlias: PRIMARY_CLASS_ALIAS,
     relatedClassAliases: groupAliases,
+    calculatedFieldAliases: calculatedFieldSources?.aliases ?? new Map(),
   };
 }
 
@@ -977,10 +1067,10 @@ async function buildQueryParts(props: {
  *   classes, so `FROM` stays polymorphic to reach the whole subtree and an `ECClassId IS (ONLY ...)`
  *   predicate narrows rows back to exactly `classNames`. Each entry is wrapped in `ONLY` so an
  *   unlisted *subclass* of a listed class cannot slip through.
- *
- * @internal
  */
-export type PrimaryClassScope = { kind: "exact" } | { kind: "restricted"; classNames: EC.FullClassNameDotNotation[] };
+export type PrimaryClassScope =
+  | { kind: "exact" }
+  | { kind: "restricted"; classNames: ReadonlyArray<EC.FullClassNameDotNotation> };
 
 /**
  * Builds a target-scoped, non-grouped query scaffold: outer-joins exactly the given related paths
@@ -1006,6 +1096,12 @@ export async function buildTargetScopedQuery(props: {
   paths: ReadonlyRelationshipPath[];
   /** Value filters to translate into WHERE. */
   filters: ContentValueFilter[];
+  /**
+   * Calculated fields the caller evaluates against the query. Together with the calculated fields of
+   * `filters`, they are resolved against the target's classes like a content source's (see
+   * `CalculatedFieldSources`).
+   */
+  calculatedFields?: ReadonlyArray<ReadonlyCalculatedField>;
   /** How to keep rows scoped to exactly a set of concrete classes. See the function doc. */
   primaryClassScope?: PrimaryClassScope;
 }): Promise<BaseQueryParts> {
@@ -1013,6 +1109,16 @@ export async function buildTargetScopedQuery(props: {
   const paths = unionPaths([...props.paths, ...collectFilterPaths(filters)]);
   const getPrefixKeys = createPrefixKeyResolver();
   const relatedClassAliases = assignPrefixAliases(paths, getPrefixKeys);
+  const calculatedFieldSources = await resolveCalculatedFieldSources({
+    schemaProvider,
+    source: {
+      target,
+      resolvedPrimaryClasses: primaryClassScope?.kind === "restricted" ? primaryClassScope.classNames : [],
+    },
+    fields: [...filters.map(({ field }) => field), ...(props.calculatedFields ?? [])].filter(
+      (field): field is ReadonlyCalculatedField => field.kind === "calculated",
+    ),
+  });
   const classSelector = ECSql.createClassSelector(target.primaryClass);
   const classRestriction =
     primaryClassScope?.kind === "restricted" && primaryClassScope.classNames.length > 0
@@ -1029,7 +1135,13 @@ export async function buildTargetScopedQuery(props: {
     filters,
     relatedClassAliases,
     getPrefixKeys,
-    resolvePathInfo: createPathInfoResolver({ schemaProvider, relatedClassAliases, getPrefixKeys }),
+    calculatedFieldSources,
+    resolvePathInfo: createPathInfoResolver({
+      schemaProvider,
+      primaryClassName: target.primaryClass,
+      relatedClassAliases,
+      getPrefixKeys,
+    }),
     // Join all paths (the selected field's own path plus filter-referenced ones) with outer joins, and
     // evaluate every filter with join-and-compare — no grouping, budgets, or existential subqueries.
     paths,

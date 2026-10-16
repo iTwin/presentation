@@ -267,6 +267,7 @@ describe("Content", () => {
                       {
                         id: "when",
                         label: "Calculated date",
+                        sourceClassName: setup.schema.items.A.fullName,
                         expression: "this.DateTimeProp",
                         type: { kind: "primitive", type: "DateTime" },
                       },
@@ -741,10 +742,13 @@ describe("Content", () => {
               testName,
               builder,
               `
+                <ECEntityClass typeName="Base" modifier="Abstract" />
                 <ECEntityClass typeName="A">
+                  <BaseClass>Base</BaseClass>
                   <ECProperty propertyName="Score" typeName="int" />
                 </ECEntityClass>
                 <ECEntityClass typeName="B">
+                  <BaseClass>Base</BaseClass>
                   <ECProperty propertyName="Name" typeName="string" />
                 </ECEntityClass>
               `,
@@ -773,6 +777,7 @@ describe("Content", () => {
                         {
                           id: "score",
                           label: "Scaled",
+                          sourceClassName: setup.schema.items.A.fullName,
                           expression: "e.Score * 2",
                           targetAlias: "e",
                           type: { kind: "primitive", type: "Integer" },
@@ -789,6 +794,7 @@ describe("Content", () => {
                         {
                           id: "constant",
                           label: "Shared",
+                          sourceClassName: setup.schema.items.Base.fullName,
                           expression: "7",
                           type: { kind: "primitive", type: "Integer" },
                         },
@@ -845,6 +851,7 @@ describe("Content", () => {
                 {
                   id: "calc1",
                   label: "Exclaimed",
+                  sourceClassName: setup.schema.items.A.fullName,
                   expression: `this.Prop || '!'`,
                   type: { kind: "primitive", type: "String" },
                 },
@@ -888,6 +895,7 @@ describe("Content", () => {
                 {
                   id: "flow",
                   label: "Scaled",
+                  sourceClassName: setup.schema.items.A.fullName,
                   expression: "e.FlowRate * :factor",
                   targetAlias: "e",
                   bindings: { factor: { type: "double", value: 10 } },
@@ -1052,6 +1060,7 @@ describe("Content", () => {
                 {
                   id: "neg",
                   label: "Negated",
+                  sourceClassName: setup.schema.items.A.fullName,
                   expression: "this.Score * -1",
                   type: { kind: "primitive", type: "Integer" },
                 },

@@ -116,6 +116,7 @@ export async function buildDistinctValuesQuery(props: {
     target,
     paths: fieldPath ? [fieldPath] : [],
     filters: [],
+    calculatedFields: field.kind === "calculated" ? [field] : [],
     primaryClassScope,
   });
 
@@ -127,6 +128,7 @@ export async function buildDistinctValuesQuery(props: {
   const resolved = resolveFieldSelector({
     field,
     relatedClassAliases: parts.relatedClassAliases,
+    calculatedFieldAliases: parts.calculatedFieldAliases,
     isRelationshipClass: (className) => relationshipPropertyClasses.has(className),
   });
 
@@ -272,10 +274,9 @@ interface QueryAnchorGroup {
  * Splits `field.primaryClassNames` into the fewest groups that can each be served by a single query,
  * and picks the `FROM` class for each.
  *
- * A **calculated field** short-circuits all of this: it has no declaring class, so it is resolved for
- * `primaryClassNames` as a set and its expression is only known to be valid against those exact
- * classes. There is nothing to look up and nothing to collapse — each resolved class simply gets its
- * own exactly-scoped query, without touching the schema provider at all.
+ * A **calculated field** is served by a single query: its expression is written against its source
+ * class, which every class in `primaryClassNames` derives from, so the query is anchored there and
+ * scoped to exactly those classes (a lone resolved class is simply queried exactly).
  *
  * Otherwise, builds each resolved class's accessible ancestor path (see `buildAccessiblePath`), then
  * folds the paths together: a class joins the first existing group whose path its own path meets, and
@@ -298,7 +299,16 @@ async function resolveQueryAnchors(props: {
 }): Promise<DistinctValuesQueryAnchor[]> {
   const { schemaProvider, field } = props;
   if (field.kind === "calculated") {
-    return field.primaryClassNames.map((anchorClassName) => ({ anchorClassName, scope: { kind: "exact" } }));
+    return field.primaryClassNames.length > 0
+      ? [
+          field.primaryClassNames.length === 1
+            ? { anchorClassName: field.primaryClassNames[0], scope: { kind: "exact" } }
+            : {
+                anchorClassName: field.sourceClassName,
+                scope: { kind: "restricted", classNames: field.primaryClassNames },
+              },
+        ]
+      : [];
   }
 
   const anchors = [field.pathFromTarget.length > 0 ? field.pathFromTarget[0].sourceClassName : field.propertyClassName];

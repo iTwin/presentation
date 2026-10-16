@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX, mergeBindings, substituteExpressionAlias } from "../InternalUtils.js";
+import { ECSQL_PREFIX, mergeBindings } from "../InternalUtils.js";
 import { serializeRelationshipPath } from "../model/Utils.js";
+import { renderCalculatedExpression } from "./CalculatedFieldSources.js";
 
 import type { EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
 import type {
@@ -77,11 +78,6 @@ export async function buildSelectProjection(props: {
   group: BaseQueryGroup;
   sorting?: ContentQuerySort[];
   /**
-   * Calculated fields contributed to this source. When supplied, other calculated values are omitted
-   * and their sort columns select NULL to preserve the shared UNION/keyset column layout.
-   */
-  applicableCalculatedFieldIds?: ReadonlySet<string>;
-  /**
    * Join-path keys (`serializeRelationshipPath(path, { includeInstanceFilters: true })`) this group owns
    * for `SELECT` projection — a selector whose path is not in this set is skipped even if `group`'s alias
    * map can resolve it (e.g. a path that overflowed into another group). Direct properties and calculated
@@ -89,7 +85,7 @@ export async function buildSelectProjection(props: {
    */
   ownedPathKeys: Set<string>;
 }): Promise<SelectProjection> {
-  const { schemaProvider, selectors, group, sorting = [], applicableCalculatedFieldIds, ownedPathKeys } = props;
+  const { schemaProvider, selectors, group, sorting = [], ownedPathKeys } = props;
   const primaryKey = { className: `${ECSQL_PREFIX}primary_class`, id: `${ECSQL_PREFIX}primary_id` };
   const select = [
     `ec_classname([${group.parts.primaryClassAlias}].[ECClassId], 's.c') AS [${primaryKey.className}]`,
@@ -151,23 +147,25 @@ export async function buildSelectProjection(props: {
 
   const bindings: Record<string, ECSqlBinding> = {};
   const calculatedValues: Record<string, string> = {};
+  // A calculated field the group has no alias for doesn't apply to its source: its value is omitted and
+  // its sort column selects NULL, preserving the shared UNION/keyset column layout.
+  const { calculatedFieldAliases } = group.parts;
   const calculatedSelectors = ownedPathKeys.has("")
     ? Object.values(selectors).filter(
         (selector): selector is CalculatedValueSelector =>
-          selector.kind === "calculated" &&
-          (!applicableCalculatedFieldIds || applicableCalculatedFieldIds.has(selector.id)),
+          selector.kind === "calculated" && calculatedFieldAliases.has(selector.id),
       )
     : [];
   for (const [index, selector] of calculatedSelectors.entries()) {
     // Alias by a controlled name rather than the raw selector id so ids with special characters (e.g. `:`)
     // stay addressable under the name-based row format.
     const column = `${ECSQL_PREFIX}calc_${index}`;
-    const expression = substituteExpressionAlias({
-      expression: selector.expression,
-      fromAlias: selector.targetAlias ?? group.parts.primaryClassAlias,
-      toAlias: group.parts.primaryClassAlias,
+    const expression = renderCalculatedExpression({
+      field: selector,
+      alias: calculatedFieldAliases.get(selector.id)!,
+      primaryAlias: group.parts.primaryClassAlias,
     });
-    select.push(`(${expression}) AS [${column}]`);
+    select.push(`${expression} AS [${column}]`);
     calculatedValues[selector.id] = column;
     mergeBindings(bindings, selector.bindings);
   }
@@ -180,9 +178,7 @@ export async function buildSelectProjection(props: {
   for (const [index, entry] of sorting.entries()) {
     const column = `${ECSQL_PREFIX}sort_${index}`;
     const selector =
-      entry.field.kind === "calculated" &&
-      applicableCalculatedFieldIds &&
-      !applicableCalculatedFieldIds.has(entry.field.id)
+      entry.field.kind === "calculated" && !calculatedFieldAliases.has(entry.field.id)
         ? { selector: "NULL" }
         : resolveSortSelector({ field: entry.field, group, relationshipClassNames: sortingRelationshipClasses });
     // Emit the sort key as a private column so the loader can read its value into the keyset cursor.
@@ -256,10 +252,10 @@ function resolveSortSelector(props: {
     }
     return { selector: `[${alias}].$->[${props.field.propertyName}]` };
   }
-  const expression = substituteExpressionAlias({
-    expression: props.field.expression,
-    fromAlias: props.field.targetAlias ?? props.group.parts.primaryClassAlias,
-    toAlias: props.group.parts.primaryClassAlias,
+  const expression = renderCalculatedExpression({
+    field: props.field,
+    alias: props.group.parts.calculatedFieldAliases.get(props.field.id)!,
+    primaryAlias: props.group.parts.primaryClassAlias,
   });
-  return { selector: `(${expression})`, bindings: props.field.bindings };
+  return { selector: expression, bindings: props.field.bindings };
 }

@@ -6,6 +6,25 @@
 import { getClass } from "@itwin/presentation-shared";
 
 import type { EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
+import type { CategoryContext } from "./ContentTarget.js";
+
+/**
+ * Appends selected local class anchors to inherited ancestry, ordered by path step with relationship
+ * classes before target classes at the same step. Local anchors are deduplicated by step and class
+ * kind. Neither input is modified.
+ */
+export function buildCategoryContext(props: {
+  inheritedContext: CategoryContext;
+  localAnchors: CategoryContext;
+}): CategoryContext {
+  const orderedAnchors = [...props.localAnchors].sort(
+    (first, second) =>
+      first.stepIndex - second.stepIndex ||
+      (first.kind === second.kind ? 0 : first.kind === "relationshipClass" ? -1 : 1),
+  );
+  const uniqueAnchors = new Map(orderedAnchors.map((anchor) => [`${anchor.stepIndex}:${anchor.kind}`, anchor]));
+  return [...props.inheritedContext, ...uniqueAnchors.values()];
+}
 
 /**
  * Prefix applied to internally generated ECSQL binding names
@@ -59,6 +78,22 @@ export function getOrCreate<TKey, TValue>({
     map.set(key, entry);
   }
   return entry;
+}
+
+/**
+ * Resolves the class a declaration scoped to `declaredClass` starts from within a request for
+ * `requestedClass`: the more derived of the two classes, or `undefined` when neither derives from
+ * the other (the declaration cannot apply to any requested instance).
+ */
+export async function resolveEffectiveSourceClass(
+  schemaProvider: Pick<ECSchemaProvider, "classDerivesFrom">,
+  requestedClass: EC.FullClassNameDotNotation,
+  declaredClass: EC.FullClassNameDotNotation,
+): Promise<EC.FullClassNameDotNotation | undefined> {
+  if (requestedClass === declaredClass || (await schemaProvider.classDerivesFrom(requestedClass, declaredClass))) {
+    return requestedClass;
+  }
+  return (await schemaProvider.classDerivesFrom(declaredClass, requestedClass)) ? declaredClass : undefined;
 }
 
 /**

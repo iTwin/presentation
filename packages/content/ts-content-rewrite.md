@@ -460,13 +460,14 @@ interface FieldsProviderContribution {
 interface CalculatedFieldDeclaration {
   id: string; // stable ID
   label: string;
+  sourceClassName: string; // class the expression is evaluated against; the field applies to it and its subclasses
   expression: string; // ECSQL expression
   type: FieldType;
   categoryId?: string; // references a CategoryDefinition.id
 }
 
 interface RelatedPropertiesDeclaration {
-  path: RelationshipPath;
+  path: RelationshipPath; // path[0].sourceClassName scopes the declaration to that class and its subclasses
   properties?: StepPropertySpec[]; // sparse — only steps needing customization
   cardinalityHint?: "one" | "many";
 }

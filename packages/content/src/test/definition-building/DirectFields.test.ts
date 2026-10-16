@@ -295,8 +295,9 @@ describe("collectDirectPropertyFields", () => {
     });
 
     expect(categorization).to.deep.equal({
+      categoryContext: [],
       anchor: "none",
-      category: { source: "schema", id: "TestSchema.Identity", label: "Identity" },
+      category: { source: "propertyCategory", id: "TestSchema.Identity", label: "Identity" },
     });
   });
 });

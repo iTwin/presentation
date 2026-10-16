@@ -8,6 +8,7 @@ import { ECSql, trimWhitespace } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
 import { buildBaseQuery, buildTargetScopedQuery } from "../../content/query/BaseQuery.js";
+import { SOURCE_CLASS_ALIAS_PREFIX } from "../../content/query/CalculatedFieldSources.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentValueFilter } from "../../content/Content.js";
@@ -805,6 +806,7 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "String" },
         expression: "this.CodeValue || this.UserLabel",
+        sourceClassName: primaryClass,
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
@@ -824,6 +826,7 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "String" },
         expression: "e.CodeValue",
         targetAlias: "e",
+        sourceClassName: primaryClass,
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "like", value: "A%" }];
@@ -840,6 +843,7 @@ describe("buildBaseQuery", () => {
         label: "Calc",
         type: { kind: "primitive", type: "Boolean" },
         expression: "this.FlagA OR this.FlagB",
+        sourceClassName: primaryClass,
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "is-equal", value: true }];
@@ -857,6 +861,7 @@ describe("buildBaseQuery", () => {
         type: { kind: "primitive", type: "Double" },
         expression: "this.Length * :scale",
         bindings: { scale: { type: "double", value: 2 } },
+        sourceClassName: primaryClass,
         primaryClassNames: [primaryClass],
       };
       const filters: ContentValueFilter[] = [{ field, operator: "greater-than", value: 10 }];
@@ -868,6 +873,160 @@ describe("buildBaseQuery", () => {
         scale: { type: "double", value: 2 },
         [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 },
       });
+    });
+
+    describe("class-scoped calculated fields", () => {
+      const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
+      const pumpField: CalculatedField = {
+        kind: "calculated",
+        id: "calc",
+        label: "Calc",
+        type: { kind: "primitive", type: "Double" },
+        expression: "this.FlowRate * :scale",
+        bindings: { scale: { type: "double", value: 60 } },
+        sourceClassName: pump,
+        primaryClassNames: [pump],
+      };
+      const filters: ContentValueFilter[] = [{ field: pumpField, operator: "greater-than", value: 10 }];
+      const scopedSchemaProvider = {
+        ...schemaProvider,
+        classDerivesFrom: async (derived: string, base: string) => derived === pump && base === primaryClass,
+      } as ECSchemaProvider;
+
+      const pumpSource = { ...makeSource([]), resolvedPrimaryClasses: [pump] };
+      const sourceAlias = `${SOURCE_CLASS_ALIAS_PREFIX}0`;
+      const pumpJoin = `LEFT OUTER JOIN [TestSchema].[Pump] [${sourceAlias}] ON [${sourceAlias}].[ECInstanceId] = [this].[ECInstanceId]`;
+      const guardedExpression = `IIF([${sourceAlias}].[ECInstanceId] IS NOT NULL, ([${sourceAlias}].FlowRate * :scale), NULL)`;
+
+      it("filters a narrower-class field against a joined, typed alias of its source class", async () => {
+        const result = await buildBaseQuery({ schemaProvider: scopedSchemaProvider, source: pumpSource, filters });
+
+        expect(result.anchor.parts.joins).to.equal(pumpJoin);
+        expect(result.anchor.parts.where).to.equal(`WHERE ${guardedExpression} > :${ECSQL_PREFIX}vf0`);
+        expect(result.anchor.parts.calculatedFieldAliases).to.deep.equal(new Map([[pumpField.id, sourceAlias]]));
+      });
+
+      it("joins the source class once for filtered, sorted and projected fields, and only on the anchor", async () => {
+        const otherField: CalculatedField = { ...pumpField, id: "other", expression: "this.Head" };
+        const manyPath = makeOneToManyPath();
+
+        const result = await buildBaseQuery({
+          schemaProvider: scopedSchemaProvider,
+          source: { ...makeSource([manyPath]), resolvedPrimaryClasses: [pump] },
+          filters,
+          sortFields: [otherField],
+          calculatedFields: [pumpField, otherField],
+          includeRelatedJoins: true,
+          propertySelectorPaths: [manyPath],
+        });
+
+        expect(result.anchor.parts.joins).to.equal(pumpJoin);
+        expect(result.anchor.parts.calculatedFieldAliases).to.deep.equal(
+          new Map([
+            [pumpField.id, sourceAlias],
+            [otherField.id, sourceAlias],
+          ]),
+        );
+        // The 1:many path is loaded by an additional group, which carries neither the join nor the aliases.
+        expect(result.additional).to.have.length(1);
+        expect(result.additional![0].parts.joins).not.to.contain(pumpJoin);
+        expect(result.additional![0].parts.calculatedFieldAliases.size).to.equal(0);
+      });
+
+      it("joins nothing for a field evaluated against the primary alias", async () => {
+        const result = await buildBaseQuery({
+          schemaProvider,
+          source: makeSource([]),
+          calculatedFields: [{ ...pumpField, sourceClassName: primaryClass, primaryClassNames: [primaryClass] }],
+        });
+
+        expect(result.anchor.parts.joins).to.equal("");
+        expect(result.anchor.parts.calculatedFieldAliases).to.deep.equal(new Map([[pumpField.id, "this"]]));
+      });
+
+      it("filters on NULL when the field applies to none of the source's classes", async () => {
+        const result = await buildBaseQuery({ schemaProvider: scopedSchemaProvider, source: makeSource([]), filters });
+
+        expect(result.anchor.parts.where).to.equal(`WHERE NULL > :${ECSQL_PREFIX}vf0`);
+        expect(result.anchor.parts.bindings).to.deep.equal({ [`${ECSQL_PREFIX}vf0`]: { type: "double", value: 10 } });
+      });
+
+      it("evaluates the field directly when the source's class derives from its source class", async () => {
+        const baseField: CalculatedField = {
+          ...pumpField,
+          sourceClassName: "TestSchema.Root",
+          primaryClassNames: [primaryClass],
+        };
+        const provider = {
+          ...schemaProvider,
+          classDerivesFrom: async (derived: string, base: string) =>
+            derived === primaryClass && base === "TestSchema.Root",
+        } as ECSchemaProvider;
+
+        const result = await buildBaseQuery({
+          schemaProvider: provider,
+          source: makeSource([]),
+          filters: [{ field: baseField, operator: "greater-than", value: 10 }],
+        });
+
+        expect(result.anchor.parts.where).to.equal(`WHERE ([this].FlowRate * :scale) > :${ECSQL_PREFIX}vf0`);
+      });
+    });
+  });
+
+  describe("paths starting at a narrower class", () => {
+    const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
+    const scopedSchemaProvider = {
+      ...schemaProvider,
+      classDerivesFrom: async (derived: string, base: string) => derived === pump && base === primaryClass,
+    } as ECSchemaProvider;
+    const restriction = `[this].[ECClassId] IS ([TestSchema].[Pump])`;
+
+    it("limits the first join to primaries of that class", async () => {
+      const path = [makeStep(pump, "TestSchema.Rel", "TestSchema.Target")];
+      const result = await buildBaseQuery({
+        schemaProvider: scopedSchemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
+
+      expect(trimWhitespace(result.anchor.parts.joins)).to.equal(
+        trimWhitespace(`
+          LEFT OUTER JOIN (
+            SELECT [${ECSQL_PREFIX}r0].*
+            FROM [TestSchema].[Rel] [${ECSQL_PREFIX}r0]
+            INNER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+          ) [${ECSQL_PREFIX}r0] ON [${ECSQL_PREFIX}r0].[SourceECInstanceId] = [this].[ECInstanceId] AND ${restriction}
+          LEFT OUTER JOIN [TestSchema].[Target] [${ECSQL_PREFIX}t0] ON [${ECSQL_PREFIX}t0].[ECInstanceId] = [${ECSQL_PREFIX}r0].[TargetECInstanceId]
+        `),
+      );
+      // The primaries themselves are not narrowed: only their related values are.
+      expect(result.anchor.parts.where).to.be.undefined;
+    });
+
+    it("limits an existential filter's correlation to primaries of that class", async () => {
+      const path = [makeStep(pump, "TestSchema.RelMany", "TestSchema.Many")];
+      const field = makeOneToManyNameField(path);
+
+      const result = await buildBaseQuery({
+        schemaProvider: scopedSchemaProvider,
+        source: makeSource([path]),
+        filters: [{ field, operator: "is-equal", value: "A" }],
+      });
+
+      expect(result.anchor.parts.where).to.include(`AND ${restriction}`);
+    });
+
+    it("does not limit a path starting at the queried class or a base of it", async () => {
+      const path = [makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target")];
+      const result = await buildBaseQuery({
+        schemaProvider: scopedSchemaProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
+      expect(result.anchor.parts.joins).to.not.include("[ECClassId] IS");
     });
   });
 
@@ -1810,6 +1969,82 @@ describe("buildBaseQuery", () => {
 });
 
 describe("buildTargetScopedQuery", () => {
+  it("evaluates the given and filtered calculated fields on the primary alias", async () => {
+    const createField = (id: string): CalculatedField => ({
+      kind: "calculated",
+      id,
+      label: id,
+      type: { kind: "primitive", type: "Double" },
+      expression: "this.Length",
+      sourceClassName: primaryClass,
+      primaryClassNames: [primaryClass],
+    });
+    const requested = createField("requested");
+    const filtered = createField("filtered");
+
+    const parts = await buildTargetScopedQuery({
+      schemaProvider,
+      target: { primaryClass },
+      paths: [],
+      filters: [{ field: filtered, operator: "greater-than", value: 1 }],
+      calculatedFields: [requested],
+    });
+
+    expect(parts.calculatedFieldAliases).to.deep.equal(
+      new Map([
+        ["filtered", "this"],
+        ["requested", "this"],
+      ]),
+    );
+  });
+
+  describe("calculated fields declared on a class narrower than the target's", () => {
+    const pump: EC.FullClassNameDotNotation = "TestSchema.Pump";
+    const wall: EC.FullClassNameDotNotation = "TestSchema.Wall";
+    const pumpField: CalculatedField = {
+      kind: "calculated",
+      id: "flow",
+      label: "Flow",
+      type: { kind: "primitive", type: "Double" },
+      expression: "this.FlowRate",
+      sourceClassName: pump,
+      primaryClassNames: [pump],
+    };
+    const narrowingSchemaProvider = {
+      ...schemaProvider,
+      classDerivesFrom: async (derived: string, base: string) =>
+        base === primaryClass && [pump, wall].some((className) => className === derived),
+    } as ECSchemaProvider;
+
+    it("joins the declared class and evaluates the field against it", async () => {
+      const parts = await buildTargetScopedQuery({
+        schemaProvider: narrowingSchemaProvider,
+        target: { primaryClass },
+        paths: [],
+        filters: [],
+        calculatedFields: [pumpField],
+        primaryClassScope: { kind: "restricted", classNames: [pump, wall] },
+      });
+      expect(parts.calculatedFieldAliases).to.deep.equal(new Map([["flow", `${SOURCE_CLASS_ALIAS_PREFIX}0`]]));
+      expect(parts.joins).to.equal(
+        `LEFT OUTER JOIN [TestSchema].[Pump] [${SOURCE_CLASS_ALIAS_PREFIX}0] ON [${SOURCE_CLASS_ALIAS_PREFIX}0].[ECInstanceId] = [this].[ECInstanceId]`,
+      );
+    });
+
+    it("has no value for a field applying to none of the scoped classes", async () => {
+      const parts = await buildTargetScopedQuery({
+        schemaProvider: narrowingSchemaProvider,
+        target: { primaryClass },
+        paths: [],
+        filters: [],
+        calculatedFields: [pumpField],
+        primaryClassScope: { kind: "restricted", classNames: [wall] },
+      });
+      expect(parts.calculatedFieldAliases.size).to.equal(0);
+      expect(parts.joins).to.equal("");
+    });
+  });
+
   it("uses a plain (polymorphic) FROM class selector by default", async () => {
     const parts = await buildTargetScopedQuery({ schemaProvider, target: { primaryClass }, paths: [], filters: [] });
 
