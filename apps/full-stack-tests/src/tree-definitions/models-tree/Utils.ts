@@ -7,9 +7,9 @@ import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   CLASS_NAMES,
-  createBaseIdsProvider,
   createModelsTree,
   createModelsTreeIdsProvider,
+  createSharedIdsProvider,
   defaultModelsTreeHierarchyConfiguration as defaultHierarchyConfiguration,
   mergeWithDefaults,
 } from "@itwin/presentation-tree-definitions/internal";
@@ -29,23 +29,22 @@ import type {
 } from "@itwin/presentation-tree-definitions/internal";
 
 export async function createModelsTreeProvider(
-  props: Omit<Props<typeof createModelsTree>, "imodelAccess"> & {
-    imodelConnection: IModelConnection;
-    cacheState: "cold" | "warm";
-  },
+  props: Props<typeof createModelsTree> & { imodelConnection: IModelConnection; cacheState: "cold" | "warm" },
 ) {
   const { cacheState, imodelConnection, ...restProps } = props;
   const imodelAccess = createIModelAccess(imodelConnection);
   const tree = createModelsTree({
     ...restProps,
-    imodelAccess,
     hierarchyConfig: { subjects: { root: "exclude" }, ...restProps.hierarchyConfig },
   });
   if (cacheState === "warm") {
     // Label search populates the same ID cache used by the hierarchy definition.
-    await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
+    await collect(tree.createInstanceKeyPaths({ imodelAccess, label: "", limit: "unbounded" }));
   }
-  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+  return createIModelHierarchyProvider({
+    imodelAccess,
+    hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
+  });
 }
 
 export function createSubjectHierarchyNode(props?: {
@@ -203,11 +202,11 @@ export function createAccessAndIdsProvider({
     defaults: defaultHierarchyConfiguration,
     overrides: hierarchyConfig,
   });
-  const baseIdsProvider = createBaseIdsProvider({
+  const sharedIdsProvider = createSharedIdsProvider({
     imodelAccess,
     elementClassName: requiredHierarchyConfig.elements.baseClass,
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, baseIdsProvider });
+  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, sharedIdsProvider });
   return { imodelAccess, idsProvider, hierarchyConfig: requiredHierarchyConfig };
 }

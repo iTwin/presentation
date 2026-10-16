@@ -11,12 +11,11 @@ import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
-import type { ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
+import type { ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) =>
-    createModelsTree({ imodelAccess }).definition;
+  const getHierarchyFactory = (imodelAccess: IModelAccess) => createModelsTree().getHierarchyDefinition(imodelAccess);
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
@@ -59,8 +58,10 @@ describe("models tree", () => {
     cleanup: (props) => props.iModel.close(),
     test: async ({ imodelAccess, targetItems }) => {
       const abortSignal = new AbortController().signal;
-      const modelsTree = createModelsTree({ imodelAccess });
-      const search = { paths: await modelsTree.createSearchTree({ limit: "unbounded", targetItems, abortSignal }) };
+      const modelsTree = createModelsTree();
+      const search = {
+        paths: await modelsTree.createSearchTree({ imodelAccess, limit: "unbounded", targetItems, abortSignal }),
+      };
       const countTargets = (nodes: typeof search.paths): number =>
         nodes.reduce(
           (acc, node) =>
@@ -70,7 +71,7 @@ describe("models tree", () => {
       expect(countTargets(search.paths)).toBe(50000);
       const provider = await StatelessHierarchyProvider.create({
         imodelAccess,
-        getHierarchyFactory: () => modelsTree.definition,
+        getHierarchyFactory: modelsTree.getHierarchyDefinition,
         search,
       });
       const result = await provider.loadHierarchy({ depth: 2 });

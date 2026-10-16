@@ -83,7 +83,7 @@ describe("Hierarchies", () => {
 
     beforeEach(async (ctx) => {
       const fileName = createFileNameFromString(`${ctx.task.suite!.fullTestName!}`);
-      const filePath = setupOutputFileLocation(fileName);
+      const filePath = setupOutputFileLocation(`${fileName}.bim`);
 
       if (fs.existsSync(filePath)) {
         fs.rmSync(filePath);

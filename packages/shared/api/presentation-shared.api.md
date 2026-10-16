@@ -394,7 +394,7 @@ export type ECSqlBinding = {
     value?: Id64String;
 } | {
     type: "idset";
-    value?: readonly Id64String[];
+    value?: ReadonlyArray<Id64String> | ReadonlySet<Id64String>;
 } | {
     type: "string";
     value?: string;

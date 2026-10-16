@@ -8,10 +8,11 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
-import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { createClassificationsTree } from "@itwin/presentation-tree-definitions";
+import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createClassificationsTree, createClassificationsTreeIdsProvider } from "@itwin/presentation-tree-definitions";
+import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -31,6 +32,10 @@ import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentat
 const rootClassificationSystemCode = "TestClassificationSystem";
 
 describe("Classifications tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     await initialize();
   });
@@ -39,18 +44,209 @@ describe("Classifications tree", () => {
     await terminate();
   });
 
+  it("uses the supplied classifications provider for hierarchy and search", async () => {
+    await using imodel = await buildIModel(async (db) =>
+      withEditTxn(db, async (txn) => {
+        await importClassificationSchema(db);
+        const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+        const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+        insertClassification({ txn, modelId: table.id, codeValue: "classification" });
+        return { table };
+      }),
+    );
+    const imodelAccess = createIModelAccess(imodel.imodelConnection);
+    const hierarchyConfig = { rootClassificationSystemCode };
+    const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
+    await idsProvider.getAllClassifications();
+    const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockResolvedValue([]);
+    const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockResolvedValue([]);
+    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
+    const getIdsProvider = vi.fn(() => idsProvider);
+    const tree = createClassificationsTree({ hierarchyConfig, getIdsProvider });
+    expect(getIdsProvider).not.toHaveBeenCalled();
+    using provider = createIModelHierarchyProvider({
+      imodelAccess,
+      hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
+    });
+
+    const [tableNode] = await collect(provider.getNodes({ parentNode: undefined }));
+    expect(tableNode).toBeDefined();
+    expect(await collect(provider.getNodes({ parentNode: tableNode }))).toEqual([]);
+    expect(hierarchyGetter).toHaveBeenCalledWith([imodel.table.id]);
+    expect(await tree.createSearchTree({ imodelAccess, label: "classification" })).toEqual([]);
+    expect(searchGetter).toHaveBeenCalled();
+    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
+    expect(queryReader.mock.calls.map(([, options]) => options?.restartToken)).not.toContainEqual(
+      expect.stringMatching(/^(ClassificationsTreeIdsProvider|ElementModelCategoriesProvider)\//),
+    );
+  });
+
+  describe("two iModel versions", () => {
+    async function createVersions() {
+      return createChangedIModels(
+        async (db) =>
+          withEditTxn(db, async (txn) => {
+            await importClassificationSchema(db);
+            const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
+            const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
+            const parent = insertClassification({ txn, modelId: table.id, codeValue: "parent" });
+            const child = insertClassification({
+              txn,
+              modelId: table.id,
+              parentId: parent.id,
+              codeValue: "base child",
+            });
+            return { table, parent, child };
+          }),
+        async (db, base) =>
+          withEditTxn(db, (txn) => {
+            txn.deleteElement(base.child.id);
+            const child = insertClassification({
+              txn,
+              modelId: base.table.id,
+              parentId: base.parent.id,
+              codeValue: "new child",
+            });
+            return { table: base.table, parent: base.parent, child };
+          }),
+      );
+    }
+
+    it("uses separate cached providers in a merged classifications hierarchy", async () => {
+      await using versions = await createVersions();
+      const hierarchyConfig = { rootClassificationSystemCode };
+      const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => {
+        const imodelAccess = createIModelAccess(imodelConnection);
+        const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
+        return { imodelAccess, idsProvider };
+      });
+      const [base, changed] = imodels;
+      expect(versions.base.imodelConnection.iModelId).toBe(versions.changeset1.imodelConnection.iModelId);
+      expect(base.imodelAccess.imodelKey).not.toBe(changed.imodelAccess.imodelKey);
+      await Promise.all(imodels.map(async ({ idsProvider }) => idsProvider.getAllClassifications()));
+      const childGetters = imodels.map(({ idsProvider }) => {
+        expect(idsProvider.state).toBe("loaded");
+        return vi.spyOn(idsProvider, "getDirectChildClassifications");
+      });
+      const providersByKey = new Map(
+        imodels.map(({ imodelAccess, idsProvider }) => [imodelAccess.imodelKey, idsProvider]),
+      );
+      const getIdsProvider = vi.fn((imodelKey: string) => {
+        const idsProvider = providersByKey.get(imodelKey);
+        if (!idsProvider) {
+          throw new Error(`Unexpected iModel key: ${imodelKey}`);
+        }
+        return idsProvider;
+      });
+      const tree = createClassificationsTree({ hierarchyConfig, getIdsProvider });
+      expect(getIdsProvider).not.toHaveBeenCalled();
+      using provider = createMergedIModelHierarchyProvider({
+        imodels,
+        getHierarchyDefinition: tree.getHierarchyDefinition,
+      });
+
+      const tables = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(tables).toMatchObject([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: expect.arrayContaining(
+              imodels.map(({ imodelAccess }) => ({ ...versions.base.table, imodelKey: imodelAccess.imodelKey })),
+            ),
+          },
+        },
+      ]);
+      const parents = await collect(provider.getNodes({ parentNode: tables[0] }));
+      expect(parents).toMatchObject([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: expect.arrayContaining(
+              imodels.map(({ imodelAccess }) => ({ ...versions.base.parent, imodelKey: imodelAccess.imodelKey })),
+            ),
+          },
+        },
+      ]);
+      const children = await collect(provider.getNodes({ parentNode: parents[0] }));
+      expect(children).toMatchObject([
+        {
+          label: "base child",
+          key: { instanceKeys: [{ ...versions.base.child, imodelKey: base.imodelAccess.imodelKey }] },
+        },
+        {
+          label: "new child",
+          key: { instanceKeys: [{ ...versions.changeset1.child, imodelKey: changed.imodelAccess.imodelKey }] },
+        },
+      ]);
+      for (const { imodelAccess } of imodels) {
+        expect(getIdsProvider).toHaveBeenCalledWith(imodelAccess.imodelKey);
+      }
+      expect(getIdsProvider).toHaveBeenCalledTimes(2);
+      for (const childGetter of childGetters) {
+        expect(childGetter).toHaveBeenCalledWith([versions.base.table.id]);
+        expect(childGetter).toHaveBeenCalledWith([versions.base.parent.id]);
+      }
+    });
+
+    it.each(["cold", "warm"] as const)(
+      "uses default providers for multiple versions with %s caches",
+      async (cacheState) => {
+        await using versions = await createVersions();
+        const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => ({
+          imodelAccess: createIModelAccess(imodelConnection),
+        }));
+        const tree = createClassificationsTree({ hierarchyConfig: { rootClassificationSystemCode } });
+        if (cacheState === "warm") {
+          for (const { imodelAccess } of imodels) {
+            await collect(tree.createInstanceKeyPaths({ imodelAccess, label: "", limit: "unbounded" }));
+          }
+        }
+        using provider = createMergedIModelHierarchyProvider({
+          imodels,
+          getHierarchyDefinition: tree.getHierarchyDefinition,
+        });
+        const tables = await collect(provider.getNodes({ parentNode: undefined }));
+        expect(tables).toHaveLength(1);
+        const parents = await collect(provider.getNodes({ parentNode: tables[0] }));
+        expect(parents).toHaveLength(1);
+        expect(await collect(provider.getNodes({ parentNode: parents[0] }))).toMatchObject([
+          {
+            label: "base child",
+            key: { instanceKeys: [{ ...versions.base.child, imodelKey: imodels[0].imodelAccess.imodelKey }] },
+          },
+          {
+            label: "new child",
+            key: { instanceKeys: [{ ...versions.changeset1.child, imodelKey: imodels[1].imodelAccess.imodelKey }] },
+          },
+        ]);
+        expect(await tree.createSearchTree({ imodelAccess: imodels[0].imodelAccess, label: "new child" })).toEqual([]);
+        expect(
+          await collect(tree.createInstanceKeyPaths({ imodelAccess: imodels[1].imodelAccess, label: "new child" })),
+        ).toEqual([
+          {
+            path: [versions.changeset1.table, versions.changeset1.parent, versions.changeset1.child],
+            target: versions.changeset1.child.id,
+          },
+        ]);
+      },
+    );
+  });
+
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createProvider(
       imodel: IModelConnection,
       hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
     ) {
       const imodelAccess = createIModelAccess(imodel);
-      const tree = createClassificationsTree({ imodelAccess, hierarchyConfig });
+      const tree = createClassificationsTree({ hierarchyConfig });
       if (cacheState === "warm") {
         // Label search populates the same ID cache used by the hierarchy definition.
-        await collect(tree.createInstanceKeyPaths({ label: "no matching labels", limit: "unbounded" }));
+        await collect(tree.createInstanceKeyPaths({ imodelAccess, label: "no matching labels", limit: "unbounded" }));
       }
-      return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+      return createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
+      });
     }
 
     it("excludes private and template model elements", async () => {

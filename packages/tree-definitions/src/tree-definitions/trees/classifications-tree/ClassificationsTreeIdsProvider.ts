@@ -3,36 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  defer,
-  EMPTY,
-  expand,
-  filter,
-  firstValueFrom,
-  forkJoin,
-  from,
-  map,
-  mergeMap,
-  reduce,
-  shareReplay,
-  tap,
-} from "rxjs";
+import { defer, EMPTY, expand, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
+import { type DeepReadonly, eachValueFrom, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
+import { DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { fromWithRelease } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64Arg } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
+import type { IdsProviderDataState } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { ClassificationId, ClassificationTableId } from "../../shared/Types.js";
 import type { HiddenClassesFilter } from "../../shared/Utils.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
   ClassificationsTreeSearchPath,
+  ClassificationsTreeSearchPathKey,
 } from "./ClassificationsTreeDefinition.js";
 
 interface ClassificationOrTableInfo {
@@ -41,13 +30,12 @@ interface ClassificationOrTableInfo {
 }
 
 /**
- * Query access, root classification system, and category relationships for a classifications-tree ID provider.
- * @internal
+ * Schema access, query access, and hierarchy configuration for a classifications-tree ID provider.
+ * @beta
  */
 interface ClassificationsTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
-  baseIdsProvider: BaseIdsProvider;
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -56,17 +44,20 @@ interface ClassificationsTreeIdsProviderData {
 
 /**
  * Provides classification IDs and search paths within the configured classification system.
- * @internal
+ * Getters load data on demand, reuse cached results, and reject on failure.
+ * @beta
  */
-export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
-  /** Starts loading classification data if it has not been requested yet. Loading errors are ignored. */
-  preloadClassifications(): Promise<void>;
-  /** Indicates whether classification data has finished loading. */
-  readonly isDataLoaded: boolean;
+export interface ClassificationsTreeIdsProvider {
+  /** Readonly snapshot of the hierarchy configuration used to create this provider, including resolved defaults. */
+  readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
+  /**
+   * State of classification data.
+   */
+  readonly state: IdsProviderDataState;
   /** Returns direct child classifications and whether each has child classifications. */
   getDirectChildClassifications(
     classificationOrTableIds: Id64Arg,
-  ): Promise<Array<{ id: ClassificationId; hasChildClassifications: boolean }>>;
+  ): Promise<ReadonlyArray<Readonly<{ id: ClassificationId; hasChildClassifications: boolean }>>>;
   /**
    * For each supplied classification, yields a path from its table to the classification, including both endpoints.
    * For each supplied table, yields a path containing only that table.
@@ -74,23 +65,24 @@ export interface ClassificationsTreeIdsProvider extends BaseIdsProvider {
    */
   getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
-  getAllClassifications(): Promise<ClassificationId[]>;
+  getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
 }
 
 /**
- * Creates a cached classification tree ID provider using the supplied base provider and category relationships.
- * @internal
+ * Creates a cached classification tree ID provider bound to the supplied hierarchy configuration.
+ * Recreate it after relevant iModel or configuration changes.
+ * @beta
  */
 export function createClassificationsTreeIdsProvider({
-  baseIdsProvider,
-  hierarchyConfig,
+  hierarchyConfig: configOverrides,
   imodelAccess,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
+  const hierarchyConfig = createClassificationsTreeIdsProviderConfig(configOverrides);
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
   const rowLimit = 7500;
-  let cachedDataLoaded = false;
+  const state = new DataStateTracker();
 
   function queryClassificationsAndTables(): Observable<
     | { type: "table"; id: ClassificationTableId }
@@ -244,26 +236,16 @@ export function createClassificationsTreeIdsProvider({
         },
         { classificationOrTableInfos: new Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>() },
       ),
-      tap(() => {
-        cachedDataLoaded = true;
-      }),
+      state.track(),
       shareReplay(),
     );
     return cachedData;
   }
 
   return {
-    ...baseIdsProvider,
-    async preloadClassifications(): Promise<void> {
-      if (cachedData !== undefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(getData());
-      } catch {}
-    },
-    get isDataLoaded(): boolean {
-      return cachedDataLoaded;
+    config: hierarchyConfig,
+    get state(): IdsProviderDataState {
+      return state.state;
     },
     async getDirectChildClassifications(
       classificationOrTableIds: Id64Arg,
@@ -303,7 +285,7 @@ export function createClassificationsTreeIdsProvider({
             fromWithRelease({ source: classificationOrTableIds, releaseOnCount: 200 }).pipe(
               filter((classificationOrTableId) => classificationOrTableInfos.has(classificationOrTableId)),
               map((classificationOrTableId) => {
-                const path: ClassificationsTreeSearchPath = [];
+                const path: ClassificationsTreeSearchPathKey[] = [];
                 let parentId = classificationOrTableInfos.get(classificationOrTableId)?.parentClassificationOrTableId;
                 path.push(
                   // getting a parent id means we have a classification
@@ -332,5 +314,13 @@ export function createClassificationsTreeIdsProvider({
         getData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()])),
       );
     },
+  };
+}
+
+/** @internal */
+export function createClassificationsTreeIdsProviderConfig(config: ClassificationsTreeHierarchyConfiguration) {
+  return {
+    rootClassificationSystemCode: config.rootClassificationSystemCode,
+    elements: { excludedClasses: [...new Set(config.elements?.excludedClasses ?? [])].sort() },
   };
 }
