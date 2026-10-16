@@ -207,15 +207,14 @@ describe("getUniqueFieldValues", () => {
     expect(returned).toBe(true);
   });
 
-  it("cancels the stream when formatting throws", async () => {
-    const stream = stubDistinctValues(["a", "b"]);
+  it("rejects when formatting throws", async () => {
+    stubDistinctValues(["a", "b"]);
     const field = createPropertyField({ id: "a", valueClassNames: [classA] });
     const valueFormatter = vi.fn(async () => {
       throw new Error("formatting failed");
     });
 
     await expect(getUniqueFieldValues({ imodelAccess, field, valueFormatter })).rejects.toThrow("formatting failed");
-    expect(stream.isReturned()).toBe(true);
   });
 
   it("throws for array and struct fields without querying", async () => {

@@ -82,17 +82,53 @@ export async function getUniqueFieldValues(
     abortSignal?: AbortSignal;
   },
 ): Promise<UniqueFieldValuesResult> {
-  const { imodelAccess, field, abortSignal } = props;
-  const valueFormatter = props.valueFormatter ?? createDefaultValueFormatter();
+  const { imodelAccess, field, valueFormatter, abortSignal } = props;
+  const rawValues = await loadUniqueFieldRawValues({ imodelAccess, field, abortSignal });
+  return { values: await groupUniqueFieldValues({ field, rawValues, valueFormatter, abortSignal }) };
+}
 
+/**
+ * Loads every distinct raw value of a single field, without formatting them.
+ *
+ * Kept separate from {@link groupUniqueFieldValues} so that a consumer can reformat and regroup already
+ * loaded values (e.g. when the value formatter changes) without querying the iModel again.
+ *
+ * @throws Error if `field` is an array or struct field.
+ */
+export async function loadUniqueFieldRawValues(props: {
+  imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
+  abortSignal?: AbortSignal;
+}): Promise<Value[]> {
+  const { imodelAccess, field, abortSignal } = props;
   if (field.type.kind === "array" || field.type.kind === "struct") {
     throw new Error(`Getting unique values for ${field.type.kind} fields is not supported.`);
   }
+  const values: Value[] = [];
+  for await (const value of abortable(getDistinctFieldValues({ imodelAccess, field }), abortSignal)) {
+    values.push(value);
+  }
+  return values;
+}
+
+/**
+ * Formats raw values of a field for display and groups raw values that share a display value.
+ * Returned values are in the order their display value was first encountered.
+ */
+export async function groupUniqueFieldValues(props: {
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
+  rawValues: Value[];
+  valueFormatter?: IPrimitiveValueFormatter;
+  abortSignal?: AbortSignal;
+}): Promise<UniqueFieldValue[]> {
+  const { field, rawValues, abortSignal } = props;
+  const valueFormatter = props.valueFormatter ?? createDefaultValueFormatter();
   const isNavigation = field.type.kind === "navigation";
 
   const groups = new Map<string, Value[]>();
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  for await (const value of abortable(getDistinctFieldValues({ imodelAccess, field }), abortSignal)) {
+  for (const value of rawValues) {
+    abortSignal?.throwIfAborted();
     const displayValue = await formatDistinctValue({ value, type: field.type, isNavigation, valueFormatter });
     const group = groups.get(displayValue);
     if (group) {
@@ -102,11 +138,12 @@ export async function getUniqueFieldValues(
     }
 
     // Formatting is async per value and runs on the main thread — yield periodically so a long
-    // stream doesn't block rendering.
+    // list doesn't block rendering.
     await releaseMainThread();
   }
+  abortSignal?.throwIfAborted();
 
-  return { values: [...groups].map(([displayValue, groupedRawValues]) => ({ displayValue, groupedRawValues })) };
+  return [...groups].map(([displayValue, groupedRawValues]) => ({ displayValue, groupedRawValues }));
 }
 
 /**
