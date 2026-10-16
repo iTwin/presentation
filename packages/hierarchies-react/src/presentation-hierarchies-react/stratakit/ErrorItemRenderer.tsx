@@ -31,7 +31,7 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  * - `ResultSetTooLarge` - renders `resultLimitExceeded` message with actions to increase limit or apply filtering
  * - `NoFilterMatches` - renders `noFilteredChildren` message with action to change filter
  * - `ChildrenLoad` - renders `failedToCreateHierarchy` message with action to retry loading
- * - `Unknown` - renders message set on error object.
+ * - `Generic` - renders message set on error object.
  *
  * @alpha
  */
