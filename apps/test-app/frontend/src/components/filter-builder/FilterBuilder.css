@@ -24,3 +24,7 @@
   display: flex;
   gap: 0.25rem;
 }
+
+.filter-builder-value-selector {
+  min-width: 14rem;
+}
