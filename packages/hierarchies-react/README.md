@@ -442,7 +442,10 @@ function TreeWithCustomErrors() {
         type: "Generic",
         message: "This resource is not supported",
         isNodeExpandable: true,
-        additionalData: { type: "resource-not-supported", object: { displayName: node.label } } satisfies MyError,
+        additionalData: {
+          type: "resource-not-supported",
+          object: { displayName: node.label },
+        } satisfies MyError,
       },
     ],
   });
