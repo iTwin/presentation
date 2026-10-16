@@ -315,7 +315,9 @@ function TreeWithActions() {
         />,
       ]}
       // Rendered in the overflow (ellipsis) menu on the row.
-      getMenuActions={({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />]}
+      getMenuActions={({ targetNode, selectedNodes }) => [
+        <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
+      ]}
       // Rendered in the context menu opened by right-clicking the row.
       getContextMenuActions={({ targetNode, selectedNodes }) => [
         <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,

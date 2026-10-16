@@ -42,56 +42,57 @@ import { stubVirtualization } from "../../Utils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
+import { Root } from "@stratakit/mui";
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Feature examples", () => {
       stubVirtualization();
 
+      // iModel access and hierarchy definition are described in the "Full example" section of the README.
+      let imodelAccess: Props<typeof useIModelTree>["imodelAccess"];
+      const getHierarchyDefinition: Props<typeof useIModelTree>["getHierarchyDefinition"] = () => ({
+        defineHierarchyLevel: async ({ createSelectClause }) => [
+          {
+            fullClassName: "BisCore.PhysicalModel",
+            query: {
+              ecsql: `
+                SELECT
+                  ${await createSelectClause({
+                    ecClassId: { selector: "this.ECClassId" },
+                    ecInstanceId: { selector: "this.ECInstanceId" },
+                    nodeLabel: { of: { classAlias: "this", className: "BisCore.PhysicalModel" } },
+                    hasChildren: false,
+                    supportsFiltering: true,
+                  })}
+                FROM BisCore.PhysicalModel this
+              `,
+            },
+          },
+        ],
+      });
+
       beforeEach(async function () {
         await initialize();
-      });
-
-      afterEach(async () => {
-        await terminate();
-      });
-
-      it("renders trees using the 2.0 customization features", async function () {
         const { imodelConnection } = await buildTestIModel(async (imodel) => {
           withEditTxn(imodel, (txn) => {
             insertPhysicalModelWithPartition({ txn, codeValue: "My Model A" });
             insertPhysicalModelWithPartition({ txn, codeValue: "My Model B" });
           });
         });
-
-        // iModel access and hierarchy definition are described in the "Full example" section of the README.
         const schemaProvider = createECSchemaProvider(imodelConnection);
-        const imodelAccess = {
+        imodelAccess = {
           imodelKey: createIModelKey(imodelConnection),
           ...schemaProvider,
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 1000),
         };
-        const getHierarchyDefinition: Props<typeof useIModelTree>["getHierarchyDefinition"] = () => ({
-          defineHierarchyLevel: async ({ createSelectClause }) => [
-            {
-              fullClassName: "BisCore.PhysicalModel",
-              query: {
-                ecsql: `
-                  SELECT
-                    ${await createSelectClause({
-                      ecClassId: { selector: "this.ECClassId" },
-                      ecInstanceId: { selector: "this.ECInstanceId" },
-                      nodeLabel: { of: { classAlias: "this", className: "BisCore.PhysicalModel" } },
-                      hasChildren: false,
-                      supportsFiltering: true,
-                    })}
-                  FROM BisCore.PhysicalModel this
-                `,
-              },
-            },
-          ],
-        });
+      });
 
+      afterEach(async () => {
+        await terminate();
+      });
+
+      it("renders a tree with custom node decorations", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.CustomNodeRendering
         // Customize per-node rendering through the `getTreeItemProps` callback. `decorations` accepts any
         // `ReactNode`, so you can render multiple elements before the label (an icon, a text tag, etc.), and
@@ -124,6 +125,15 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
+        const { getByText } = render(
+          <Root colorScheme="light">
+            <TreeWithDecorations />
+          </Root>,
+        );
+        await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
+      });
+
+      it("renders a tree with custom row actions", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.CustomAction
         // Build a custom action by rendering `TreeActionBase`. Forward `TreeActionBaseAttributes` so the action
         // renders correctly in every context (inline, overflow menu, context menu). The `icon` is only shown when
@@ -172,7 +182,9 @@ describe("Hierarchies React", () => {
                 />,
               ]}
               // Rendered in the overflow (ellipsis) menu on the row.
-              getMenuActions={({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />]}
+              getMenuActions={({ targetNode, selectedNodes }) => [
+                <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
+              ]}
               // Rendered in the context menu opened by right-clicking the row.
               getContextMenuActions={({ targetNode, selectedNodes }) => [
                 <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
@@ -182,6 +194,15 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
+        const { getByText } = render(
+          <Root colorScheme="light">
+            <TreeWithActions />
+          </Root>,
+        );
+        await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
+      });
+
+      it("renders a tree with node renaming", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.Renaming
         // Enable node renaming through the `getEditingProps` callback. Return `undefined` for nodes that cannot be
         // renamed. Users enter rename mode through `TreeNodeRenameAction`; you can also start it programmatically
@@ -211,6 +232,15 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
+        const { getByText } = render(
+          <Root colorScheme="light">
+            <TreeWithRenaming />
+          </Root>,
+        );
+        await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
+      });
+
+      it("renders a tree with custom errors", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.ErrorRendering
         // The payload your application attaches to a node's error through `additionalData`. Carry whatever the
         // renderer needs to recognize the error and build its UI - here a discriminating `type` and the affected object.
@@ -302,11 +332,12 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        for (const Component of [TreeWithDecorations, TreeWithActions, TreeWithRenaming, TreeWithCustomErrors]) {
-          const { getByText, unmount } = render(<Component />);
-          await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
-          unmount();
-        }
+        const { getByRole } = render(
+          <Root colorScheme="light">
+            <TreeWithCustomErrors />
+          </Root>,
+        );
+        await waitFor(() => expect(getByRole("treeitem", { name: /My Model A/ })).to.not.be.null);
       });
     });
   });
