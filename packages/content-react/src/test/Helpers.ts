@@ -58,14 +58,10 @@ export function createPropertyField(props: {
 }
 
 /**
- * Creates an async iterable over `values` that records whether the consumer stopped iterating early.
- * `getDistinctFieldValues` cancels the backend query when its iterator is returned, so tests assert
- * that early exits (abort, unmount, formatting errors) propagate that cancellation.
+ * Creates an async iterable over `values` that records whether the consumer stopped iterating early,
+ * which lets tests assert that early exits (e.g. abort or unmount) cancel the underlying stream.
  */
-export function createDistinctValuesStream(values: Value[]): {
-  iterable: AsyncIterable<Value>;
-  isReturned: () => boolean;
-} {
+export function createValuesStream(values: Value[]): { iterable: AsyncIterable<Value>; isReturned: () => boolean } {
   let returned = false;
   return {
     isReturned: () => returned,

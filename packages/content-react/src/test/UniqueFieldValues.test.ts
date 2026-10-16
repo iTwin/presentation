@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getDistinctFieldValues } from "@itwin/presentation-content";
 import { getUniqueFieldValues } from "../content-react/UniqueFieldValues.js";
-import { classA, createDistinctValuesStream, createPropertyField } from "./Helpers.js";
+import { classA, createPropertyField, createValuesStream } from "./Helpers.js";
 
 import type * as PresentationContent from "@itwin/presentation-content";
 import type {
@@ -25,7 +25,7 @@ vi.mock("@itwin/presentation-content", async (importOriginal) => ({
 const imodelAccess = {} as ECSqlQueryExecutor & ECSchemaProvider;
 
 function stubDistinctValues(values: Value[]) {
-  const stream = createDistinctValuesStream(values);
+  const stream = createValuesStream(values);
   vi.mocked(getDistinctFieldValues).mockReturnValue(stream.iterable);
   return stream;
 }
