@@ -13,7 +13,6 @@ Migration example for custom `EC.Schema` implementations:
 const schema: EC.Schema = {
   name: "MySchema",
   getClass: async () => undefined,
-  getCustomAttributes: async () => new Map(),
 };
 
 // After
@@ -21,6 +20,5 @@ const schema: EC.Schema = {
   name: "MySchema",
   version: { read: 1, write: 0, minor: 0 },
   getClass: async () => undefined,
-  getCustomAttributes: async () => new Map(),
 };
 ```
