@@ -54,6 +54,7 @@ export interface SharedIdsProvider {
     getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
     /** Yields model IDs containing elements in the specified category. Yields no IDs if no models match the filters. */
     getModels(props: {
+      /** The ID of the category for which to retrieve models. */
       categoryId: Id64String;
       /** Omits models that model elements rather than information partitions. */
       excludeSubModels?: boolean;
