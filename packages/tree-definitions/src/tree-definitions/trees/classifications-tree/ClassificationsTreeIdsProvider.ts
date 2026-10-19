@@ -35,7 +35,7 @@ interface ClassificationOrTableInfo {
  */
 interface ClassificationsTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+  hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">;
 }
 
 interface ClassificationsTreeIdsProviderData {
@@ -49,7 +49,7 @@ interface ClassificationsTreeIdsProviderData {
  */
 export interface ClassificationsTreeIdsProvider {
   /** Readonly snapshot of the hierarchy configuration used to create this provider, including resolved defaults. */
-  readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
+  readonly config: DeepReadonly<Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">>;
   /**
    * State of classification data.
    */
@@ -94,7 +94,7 @@ export function createClassificationsTreeIdsProvider({
       ))
   > {
     const getQueryReader = (
-      hiddenClassesFilters: Record<"tables" | "classifications" | "elements", HiddenClassesFilter>,
+      hiddenClassesFilters: Record<"tables" | "classifications", HiddenClassesFilter>,
       lastClassificationId?: ClassificationId,
     ) => {
       const CLASSIFICATIONS_CTE = "Classifications";
@@ -180,10 +180,6 @@ export function createClassificationsTreeIdsProvider({
       classifications: ECSql.createHiddenClassesFilter({
         schemaProvider: imodelAccess,
         baseClassName: CLASS_NAMES.Classification,
-      }),
-      elements: ECSql.createHiddenClassesFilter({
-        schemaProvider: imodelAccess,
-        baseClassName: CLASS_NAMES.GeometricElement3d,
       }),
     }).pipe(
       mergeMap((hiddenClassesFilters) =>
@@ -323,8 +319,5 @@ export function createClassificationsTreeIdsProvider({
 
 /** @internal */
 export function createClassificationsTreeIdsProviderConfig(config: ClassificationsTreeHierarchyConfiguration) {
-  return {
-    rootClassificationSystemCode: config.rootClassificationSystemCode,
-    elements: { excludedClasses: [...new Set(config.elements?.excludedClasses ?? [])].sort() },
-  };
+  return { rootClassificationSystemCode: config.rootClassificationSystemCode };
 }

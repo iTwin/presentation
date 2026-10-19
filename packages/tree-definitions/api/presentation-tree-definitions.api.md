@@ -209,7 +209,7 @@ interface ClassificationsTreeHierarchyConfiguration {
 
 // @beta
 export interface ClassificationsTreeIdsProvider {
-    readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
+    readonly config: DeepReadonly<Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">>;
     getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
     getClassificationsPath(classificationOrTableIds: ReadonlyId64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
     getDirectChildClassifications(classificationOrTableIds: ReadonlyId64Arg): Promise<ReadonlyArray<Readonly<{
@@ -222,7 +222,7 @@ export interface ClassificationsTreeIdsProvider {
 // @beta
 interface ClassificationsTreeIdsProviderProps {
     // (undocumented)
-    hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+    hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
 }
