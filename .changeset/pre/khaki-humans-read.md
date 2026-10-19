@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies-react": major
 ---
 
-Updated tree node rename UI to show input in popover instead of inline. Additionally added ability to show hint for supported characters and validate new label.
+Tree node rename UI shows the label editor in a popover, with support for a hint describing allowed characters and validation of the new label.
 
 Example:
 ```tsx

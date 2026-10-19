@@ -1,4 +1,5 @@
 ---
 "@itwin/presentation-hierarchies-react": major
 ---
-Moving tree rendering components to a new design systems.
+
+Tree rendering components now build on the StrataKit design system (with MUI) instead of iTwinUI.

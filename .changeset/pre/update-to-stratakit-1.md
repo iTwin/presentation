@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": major
 ---
 
-Updated StrataKit dependencies to newer versions, including `@stratakit/mui@1.0.0` and `@stratakit/structures@0.6.0`. `@stratakit/foundations` is now a peer dependency and should be installed by the application, along with `@mui/material@^9.4.0`.
+The StrataKit-based tree components now rely on `@stratakit/foundations@^1.0.0`, `@stratakit/mui@^1.0.0` and `@mui/material@^9.4.0`, which are declared as optional peer dependencies. Applications that use these components must add the three packages to their own `dependencies`; libraries that re-export the components should forward them as peer dependencies.

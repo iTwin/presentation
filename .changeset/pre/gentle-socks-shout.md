@@ -2,7 +2,4 @@
 "@itwin/presentation-hierarchies-react": major
 ---
 
-**Breaking change:** Rename tree node action components for clarity.
-
-- `FilterAction` -> `TreeNodeFilterAction`
-- `RenameAction` -> `TreeNodeRenameAction`
+Added `TreeNodeFilterAction` and `TreeNodeRenameAction` components for rendering hierarchy level filtering and node renaming actions.
