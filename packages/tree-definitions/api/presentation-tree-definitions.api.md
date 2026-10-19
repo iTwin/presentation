@@ -55,8 +55,8 @@ export interface CategoriesTreeIdsProvider {
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
-        readonly categories: ReadonlyArray<CategoryId>;
-        readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
+        categories: ReadonlyArray<CategoryId>;
+        definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getDefinitionContainersSearchPaths(props: {
         definitionContainerIds: Id64Arg;
@@ -65,15 +65,15 @@ export interface CategoriesTreeIdsProvider {
         parentDefinitionContainerIds: Id64Arg;
         includeEmpty?: boolean;
     }): Promise<{
-        readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
-        readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
+        categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+        definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getIsDefinitionContainerSupported(): Promise<boolean>;
     getRootDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Promise<{
-        readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
-        readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
+        categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+        definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getSearchPathsUpToRootCategory(props: {
         categoryId: Id64String;

@@ -107,8 +107,8 @@ export interface CategoriesTreeIdsProvider {
     parentDefinitionContainerIds: Id64Arg;
     includeEmpty?: boolean;
   }): Promise<{
-    readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
-    readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
+    categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+    definitionContainers: ReadonlyArray<DefinitionContainerId>;
   }>;
   /** Yields root-to-sub-category paths, omitting sub-categories whose parent category has only one sub-category. */
   getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<CategoriesTreeSearchPath>;
@@ -121,16 +121,13 @@ export interface CategoriesTreeIdsProvider {
   /** Returns all category and definition container IDs, excluding empty entries unless requested. */
   getAllDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
-  }): Promise<{
-    readonly categories: ReadonlyArray<CategoryId>;
-    readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
-  }>;
+  }): Promise<{ categories: ReadonlyArray<CategoryId>; definitionContainers: ReadonlyArray<DefinitionContainerId> }>;
   /** Returns root categories and definition container IDs, excluding empty entries unless requested. */
   getRootDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
   }): Promise<{
-    readonly categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
-    readonly definitionContainers: ReadonlyArray<DefinitionContainerId>;
+    categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+    definitionContainers: ReadonlyArray<DefinitionContainerId>;
   }>;
   /**
    * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
