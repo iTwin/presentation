@@ -43,3 +43,18 @@ export type ClassificationId = Id64String;
 
 /** @internal */
 export type ClassificationTableId = Id64String;
+
+/**
+ * Represents a read-only argument that can be an Id64String, an array of Id64Strings, or a set of Id64Strings.
+ * @beta
+ */
+export type ReadonlyId64Arg = Id64String | ReadonlyArray<Id64String> | ReadonlySet<Id64String>;
+
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace ReadonlyId64Arg {
+  /** Same as Id64.iterable just accepts ReadonlyId64Arg */
+  export function iterable(ids: ReadonlyId64Arg): Iterable<Id64String> {
+    return typeof ids === "string" ? [ids] : ids;
+  }
+}

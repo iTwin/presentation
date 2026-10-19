@@ -7,7 +7,8 @@ import { bufferCount, concatAll, concatMap, delay, from, of } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 
 import type { Observable } from "rxjs";
-import type { Id64Arg, Id64String } from "@itwin/core-bentley";
+import type { Id64String } from "@itwin/core-bentley";
+import type { ReadonlyId64Arg } from "./Types.js";
 
 /**
  * Same as `firstValueFrom` except it won't throw if the observable emits no values.
@@ -40,14 +41,14 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
  * Creates an Observable from provided props. If `releaseOnCount` is provided, main thread will be released after processing specified number of items.
  * @internal
  */
-export function fromWithRelease(props: { source: Id64Arg; releaseOnCount?: number }): Observable<Id64String>;
+export function fromWithRelease(props: { source: ReadonlyId64Arg; releaseOnCount?: number }): Observable<Id64String>;
 export function fromWithRelease<T>(
   props: ({ source: ReadonlySet<T> | ReadonlyArray<T> } | { source: Iterable<T>; size: number }) & {
     releaseOnCount?: number;
   },
 ): Observable<T>;
 export function fromWithRelease(props: {
-  source: Id64Arg | ReadonlySet<unknown> | ReadonlyArray<unknown> | Iterable<unknown>;
+  source: ReadonlyId64Arg | ReadonlySet<unknown> | ReadonlyArray<unknown> | Iterable<unknown>;
   size?: number;
   releaseOnCount?: number;
 }): Observable<unknown> {

@@ -14,10 +14,10 @@ import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
 import { SubModeledElementsProvider } from "./SubModeledElementsProvider.js";
 
 import type { Observable } from "rxjs";
-import type { GuidString, Id64Arg, Id64Set, Id64String } from "@itwin/core-bentley";
+import type { GuidString, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
-import type { CategoryId, ElementId, ModelId, SubCategoryId } from "../Types.js";
+import type { CategoryId, ElementId, ModelId, ReadonlyId64Arg, SubCategoryId } from "../Types.js";
 
 /**
  * The state of a cached ID dataset.
@@ -95,7 +95,7 @@ export interface SharedIdsProvider {
     getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
     /** Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category. */
     getSubCategoryCategories(props: {
-      subCategoryIds: Id64Arg;
+      subCategoryIds: ReadonlyId64Arg;
     }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
   };
 }
@@ -303,7 +303,7 @@ export function createSharedIdsProvider({
       getSubCategoryCategories: async ({
         subCategoryIds,
       }: {
-        subCategoryIds: Id64Arg;
+        subCategoryIds: ReadonlyId64Arg;
       }): Promise<Map<CategoryId, SubCategoryId[]>> => {
         return firstValueFrom(
           subCategoriesProvider.getData().pipe(

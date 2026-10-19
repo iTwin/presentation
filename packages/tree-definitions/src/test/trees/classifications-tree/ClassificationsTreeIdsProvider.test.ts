@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createClassificationsTree } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
+import { createClassificationsTree } from "../../../tree-definitions/trees/classifications-tree/CreateClassificationsTree.js";
 import { createClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";

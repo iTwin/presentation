@@ -10,10 +10,8 @@ export { getClassesByView, mergeWithDefaults } from "./tree-definitions/shared/U
 export { defaultHierarchyConfiguration as defaultCategoriesTreeHierarchyConfiguration } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 export { createCategoriesTreeIdsProvider } from "./tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 export { createClassificationsTreeIdsProvider } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
-export {
-  createModelsTree,
-  defaultHierarchyConfiguration as defaultModelsTreeHierarchyConfiguration,
-} from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+export { createModelsTree } from "./tree-definitions/trees/models-tree/CreateModelsTree.js";
+export { defaultHierarchyConfiguration as defaultModelsTreeHierarchyConfiguration } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 export { createModelsTreeIdsProvider } from "./tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 export type { ElementId } from "./tree-definitions/shared/Types.js";

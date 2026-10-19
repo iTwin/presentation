@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
-import { assert, Guid, Id64 } from "@itwin/core-bentley";
+import { assert, Guid } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import {
   type DeepReadonly,
@@ -17,11 +17,12 @@ import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
+import { ReadonlyId64Arg } from "../../shared/Types.js";
 import { createWhereClause, getOrCreate, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
 import type { Observable } from "rxjs";
-import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
+import type { Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { ModelId, SubjectId } from "../../shared/Types.js";
@@ -77,9 +78,9 @@ export interface ModelsTreeIdsProvider {
   /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
   getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
   /** Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants. */
-  getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
+  getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<Id64String>>;
   /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
-  getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<ModelId>>;
+  getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<ModelId>>;
   /** Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy. */
   getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
   /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
@@ -413,7 +414,7 @@ export function createModelsTreeIdsProvider({
       );
       return firstValueFrom(cachedData.hiddenModelIds);
     },
-    async getParentSubjectIds(): Promise<Id64Array> {
+    async getParentSubjectIds(): Promise<ReadonlyArray<SubjectId>> {
       cachedData.parentSubjectIds ??= getSubjectInfos().pipe(
         map((subjectInfos) => {
           const parentSubjectIds = new Set<SubjectId>();
@@ -433,12 +434,12 @@ export function createModelsTreeIdsProvider({
       );
       return firstValueFrom(cachedData.parentSubjectIds);
     },
-    async getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<Id64Array> {
+    async getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<SubjectId>> {
       return firstValueFrom(
         getSubjectInfos().pipe(
           map((subjectInfos) => {
             const childSubjectIds = new Array<SubjectId>();
-            for (const subjectId of Id64.iterable(parentSubjectIds)) {
+            for (const subjectId of ReadonlyId64Arg.iterable(parentSubjectIds)) {
               forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
                 if (!childSubjectInfo.hideInHierarchy) {
                   childSubjectIds.push(childSubjectId);
@@ -452,12 +453,12 @@ export function createModelsTreeIdsProvider({
         ),
       );
     },
-    async getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<Id64Array> {
+    async getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<ModelId>> {
       return firstValueFrom(
         getSubjectInfos().pipe(
           map((subjectInfos) => {
             const hiddenSubjectIds = new Array<SubjectId>();
-            for (const subjectId of Id64.iterable(parentSubjectIds)) {
+            for (const subjectId of ReadonlyId64Arg.iterable(parentSubjectIds)) {
               forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
                 if (childSubjectInfo.hideInHierarchy) {
                   hiddenSubjectIds.push(childSubjectId);
@@ -468,7 +469,7 @@ export function createModelsTreeIdsProvider({
             }
             const modelIds = new Array<ModelId>();
 
-            for (const subjectId of Id64.iterable(parentSubjectIds)) {
+            for (const subjectId of ReadonlyId64Arg.iterable(parentSubjectIds)) {
               addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
             }
 

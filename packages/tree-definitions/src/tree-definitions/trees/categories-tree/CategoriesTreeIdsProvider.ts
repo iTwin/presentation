@@ -30,7 +30,7 @@ import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-ben
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
-import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
+import type { CategoryId, DefinitionContainerId, ModelId, ReadonlyId64Arg } from "../../shared/Types.js";
 import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
 interface DefinitionContainerInfo {
@@ -104,17 +104,19 @@ export interface CategoriesTreeIdsProvider {
   readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   /** Returns direct child categories and definition container IDs, excluding empty entries unless requested. */
   getDirectChildDefinitionContainersAndCategories(props: {
-    parentDefinitionContainerIds: Id64Arg;
+    parentDefinitionContainerIds: ReadonlyId64Arg;
     includeEmpty?: boolean;
   }): Promise<{
     categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
     definitionContainers: ReadonlyArray<DefinitionContainerId>;
   }>;
   /** Yields root-to-sub-category paths, omitting sub-categories whose parent category has only one sub-category. */
-  getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<CategoriesTreeSearchPath>;
+  getSubCategoriesSearchPaths(props: {
+    subCategoryIds: ReadonlyId64Arg;
+  }): AsyncIterableIterator<CategoriesTreeSearchPath>;
   /** Yields root-to-definition-container paths, including each container itself. Unknown IDs yield empty paths. */
   getDefinitionContainersSearchPaths(props: {
-    definitionContainerIds: Id64Arg;
+    definitionContainerIds: ReadonlyId64Arg;
   }): AsyncIterableIterator<CategoriesTreeSearchPath>;
   /** Returns the category's ancestor path, excluding the category itself. Returns an empty path for root or unknown categories. */
   getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Promise<CategoriesTreeSearchPath>;
@@ -413,7 +415,7 @@ export function createCategoriesTreeIdsProvider({
   function getDefinitionContainersSearchPaths({
     definitionContainerIds,
   }: {
-    definitionContainerIds: Id64Arg;
+    definitionContainerIds: ReadonlyId64Arg;
   }): Observable<CategoriesTreeSearchPath> {
     return getDefinitionContainersInfo().pipe(
       mergeMap((definitionContainersInfo) =>

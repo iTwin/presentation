@@ -5,7 +5,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { createSharedIdsProvider } from "../../../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
-import { createModelsTree } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+import { createModelsTree } from "../../../tree-definitions/trees/models-tree/CreateModelsTree.js";
 import { createModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";

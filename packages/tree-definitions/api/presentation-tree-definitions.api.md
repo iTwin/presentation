@@ -13,9 +13,8 @@ import type { GuidString } from '@itwin/core-bentley';
 import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
-import type { Id64Arg } from '@itwin/core-bentley';
 import type { Id64Array } from '@itwin/core-bentley';
-import type { Id64String } from '@itwin/core-bentley';
+import { Id64String } from '@itwin/core-bentley';
 import type { IModelInstanceKey } from '@itwin/presentation-hierarchies';
 import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
@@ -59,10 +58,10 @@ export interface CategoriesTreeIdsProvider {
         definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getDefinitionContainersSearchPaths(props: {
-        definitionContainerIds: Id64Arg;
+        definitionContainerIds: ReadonlyId64Arg;
     }): AsyncIterableIterator<CategoriesTreeSearchPath>;
     getDirectChildDefinitionContainersAndCategories(props: {
-        parentDefinitionContainerIds: Id64Arg;
+        parentDefinitionContainerIds: ReadonlyId64Arg;
         includeEmpty?: boolean;
     }): Promise<{
         categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
@@ -79,7 +78,7 @@ export interface CategoriesTreeIdsProvider {
         categoryId: Id64String;
     }): Promise<CategoriesTreeSearchPath>;
     getSubCategoriesSearchPaths(props: {
-        subCategoryIds: Id64Arg;
+        subCategoryIds: ReadonlyId64Arg;
     }): AsyncIterableIterator<CategoriesTreeSearchPath>;
     readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
     readonly state: IdsProviderDataState;
@@ -161,6 +160,12 @@ interface CategoriesTreeProps {
 }
 
 // @beta
+interface CategoriesTreeSearchOptions {
+    abortSignal?: AbortSignal;
+    limit?: number | "unbounded";
+}
+
+// @beta
 type CategoriesTreeSearchPath = ReadonlyArray<Readonly<CategoriesTreeSearchPathKey>>;
 
 // @beta
@@ -172,11 +177,9 @@ type CategoriesTreeSearchPathKey = IModelInstanceKey & {
 };
 
 // @beta
-interface CategoriesTreeSearchProps {
-    abortSignal?: AbortSignal;
+interface CategoriesTreeSearchProps extends CategoriesTreeSearchOptions {
     imodelAccess: CategoriesTreeIModelAccess;
     label: string;
-    limit?: number | "unbounded";
 }
 
 // @beta
@@ -208,8 +211,8 @@ interface ClassificationsTreeHierarchyConfiguration {
 export interface ClassificationsTreeIdsProvider {
     readonly config: DeepReadonly<ClassificationsTreeHierarchyConfiguration>;
     getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
-    getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
-    getDirectChildClassifications(classificationOrTableIds: Id64Arg): Promise<ReadonlyArray<Readonly<{
+    getClassificationsPath(classificationOrTableIds: ReadonlyId64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
+    getDirectChildClassifications(classificationOrTableIds: ReadonlyId64Arg): Promise<ReadonlyArray<Readonly<{
         id: ClassificationId;
         hasChildClassifications: boolean;
     }>>>;
@@ -386,8 +389,8 @@ export interface ModelsTreeIdsProvider {
     readonly config: DeepReadonly<Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">>;
     createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
     createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
-    getChildSubjectIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<Id64String>>;
-    getChildSubjectModelIds(parentSubjectIds: Id64Arg): Promise<ReadonlyArray<ModelId>>;
+    getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<Id64String>>;
+    getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<ModelId>>;
     getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
     getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
     getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
@@ -488,6 +491,14 @@ interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | 
 }
 
 // @beta
+type ReadonlyId64Arg = Id64String | ReadonlyArray<Id64String> | ReadonlySet<Id64String>;
+
+// @beta (undocumented)
+namespace ReadonlyId64Arg {
+    function iterable(ids: ReadonlyId64Arg): Iterable<Id64String>;
+}
+
+// @beta
 export interface SharedIdsProvider {
     readonly categories: {
         readonly state: IdsProviderDataState;
@@ -513,7 +524,7 @@ export interface SharedIdsProvider {
         readonly state: IdsProviderDataState;
         getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
         getSubCategoryCategories(props: {
-            subCategoryIds: Id64Arg;
+            subCategoryIds: ReadonlyId64Arg;
         }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
     };
     readonly subModeledElements: {

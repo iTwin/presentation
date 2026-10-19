@@ -16,7 +16,7 @@ import type { Observable } from "rxjs";
 import type { Id64Arg } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { IdsProviderDataState } from "../../shared/idsProviders/SharedIdsProvider.js";
-import type { ClassificationId, ClassificationTableId } from "../../shared/Types.js";
+import type { ClassificationId, ClassificationTableId, ReadonlyId64Arg } from "../../shared/Types.js";
 import type { HiddenClassesFilter } from "../../shared/Utils.js";
 import type {
   ClassificationsTreeHierarchyConfiguration,
@@ -56,14 +56,16 @@ export interface ClassificationsTreeIdsProvider {
   readonly state: IdsProviderDataState;
   /** Returns direct child classifications and whether each has child classifications. */
   getDirectChildClassifications(
-    classificationOrTableIds: Id64Arg,
+    classificationOrTableIds: ReadonlyId64Arg,
   ): Promise<ReadonlyArray<Readonly<{ id: ClassificationId; hasChildClassifications: boolean }>>>;
   /**
    * For each supplied classification, yields a path from its table to the classification, including both endpoints.
    * For each supplied table, yields a path containing only that table.
    * Empty input and IDs outside the visible hierarchy yield no paths.
    */
-  getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
+  getClassificationsPath(
+    classificationOrTableIds: ReadonlyId64Arg,
+  ): AsyncIterableIterator<ClassificationsTreeSearchPath>;
   /** Returns non-private classifications and their classification table IDs from the configured classification system. */
   getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
 }
