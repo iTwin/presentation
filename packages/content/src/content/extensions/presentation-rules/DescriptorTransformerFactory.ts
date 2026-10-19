@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { checkRequiredSchemas, classMatchesSpec, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
+import { checkRequiredSchemas, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
 
 import type { EC, ECSchemaProvider, Props } from "@itwin/presentation-shared";
 import type { DescriptorTransformer } from "../DescriptorTransformer.js";
@@ -146,6 +146,15 @@ async function computeMatchedValueClasses(
     }
   }
   return matched;
+}
+
+/** Returns `true` if `className` is or derives from the given class spec. */
+async function classMatchesSpec(
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">,
+  className: EC.FullClassNameDotNotation,
+  classSpec: PresentationRules.SingleSchemaClassSpecification,
+): Promise<boolean> {
+  return imodelAccess.classDerivesFrom(className, `${classSpec.schemaName}.${classSpec.className}`);
 }
 
 /** The constrained descriptor view handed to a transformer. */

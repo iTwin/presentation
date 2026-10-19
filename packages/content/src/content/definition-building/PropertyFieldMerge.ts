@@ -111,19 +111,25 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
   );
 }
 
-/** Structural equality for the raw category facts (anchor + category source). */
+/** Compares category facts and their resolved ancestry. */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
   return (
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
-    schemaCategoryLabelOf(a) === schemaCategoryLabelOf(b)
+    (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass") &&
+    a.categoryContext.length === b.categoryContext.length &&
+    a.categoryContext.every(
+      (context, index) =>
+        context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
+    ) &&
+    propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
 }
 
-/** The label of a schema-sourced category, or `undefined` for an override / no category. */
-function schemaCategoryLabelOf(categorization: FieldCategorization): string | undefined {
-  return categorization.category?.source === "schema" ? categorization.category.label : undefined;
+/** The property category's label, or `undefined` for an override / no category. */
+function propertyCategoryLabelOf(categorization: FieldCategorization): string | undefined {
+  return categorization.category?.source === "propertyCategory" ? categorization.category.label : undefined;
 }
 
 /**

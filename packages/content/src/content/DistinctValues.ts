@@ -29,7 +29,7 @@ import type {
   Value,
 } from "@itwin/presentation-shared";
 import type { ContentTarget, InstanceFilterExpression } from "./ContentTarget.js";
-import type { CalculatedField, PropertyField } from "./model/Field.js";
+import type { ReadonlyCalculatedField, ReadonlyPropertyField } from "./model/Field.js";
 import type { PrimaryClassScope } from "./query/BaseQuery.js";
 
 /**
@@ -65,7 +65,7 @@ interface GetDistinctFieldValuesProps {
    * merged and de-duplicated. There is no separate content-target argument; the field alone
    * determines what gets queried.
    */
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
 
   /**
    * Optional further scoping of which instances contribute values, applied uniformly across every
@@ -99,7 +99,7 @@ interface GetDistinctFieldValuesProps {
 export async function buildDistinctValuesQuery(props: {
   schemaProvider: ECSchemaProvider;
   target: ContentTarget;
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   primaryClassScope: PrimaryClassScope;
 }): Promise<ECSqlQueryDef> {
@@ -116,6 +116,7 @@ export async function buildDistinctValuesQuery(props: {
     target,
     paths: fieldPath ? [fieldPath] : [],
     filters: [],
+    calculatedFields: field.kind === "calculated" ? [field] : [],
     primaryClassScope,
   });
 
@@ -127,6 +128,7 @@ export async function buildDistinctValuesQuery(props: {
   const resolved = resolveFieldSelector({
     field,
     relatedClassAliases: parts.relatedClassAliases,
+    calculatedFieldAliases: parts.calculatedFieldAliases,
     isRelationshipClass: (className) => relationshipPropertyClasses.has(className),
   });
 
@@ -180,7 +182,7 @@ async function buildNavigationValuesQuery(props: {
  * shape (its selector is an arbitrary scalar expression), so keying the conversion off a declared
  * point type there would turn a scalar row value into `{ x: undefined, y: undefined }`.
  */
-function rowValueToValue(field: PropertyField | CalculatedField, raw: unknown): Value {
+function rowValueToValue(field: ReadonlyPropertyField | ReadonlyCalculatedField, raw: unknown): Value {
   if (
     raw !== undefined &&
     field.kind === "property" &&
@@ -216,7 +218,7 @@ function rowValueToNavigationValue(props: { row: ECSqlQueryRow }): Value | undef
 function streamTargetDistinctValues(props: {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   target: ContentTarget;
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   primaryClassScope: PrimaryClassScope;
 }): Observable<Value> {
@@ -272,10 +274,9 @@ interface QueryAnchorGroup {
  * Splits `field.primaryClassNames` into the fewest groups that can each be served by a single query,
  * and picks the `FROM` class for each.
  *
- * A **calculated field** short-circuits all of this: it has no declaring class, so it is resolved for
- * `primaryClassNames` as a set and its expression is only known to be valid against those exact
- * classes. There is nothing to look up and nothing to collapse — each resolved class simply gets its
- * own exactly-scoped query, without touching the schema provider at all.
+ * A **calculated field** is served by a single query: its expression is written against its source
+ * class, which every class in `primaryClassNames` derives from, so the query is anchored there and
+ * scoped to exactly those classes (a lone resolved class is simply queried exactly).
  *
  * Otherwise, builds each resolved class's accessible ancestor path (see `buildAccessiblePath`), then
  * folds the paths together: a class joins the first existing group whose path its own path meets, and
@@ -294,11 +295,20 @@ interface QueryAnchorGroup {
  */
 async function resolveQueryAnchors(props: {
   schemaProvider: ECSchemaProvider;
-  field: PropertyField | CalculatedField;
+  field: ReadonlyPropertyField | ReadonlyCalculatedField;
 }): Promise<DistinctValuesQueryAnchor[]> {
   const { schemaProvider, field } = props;
   if (field.kind === "calculated") {
-    return field.primaryClassNames.map((anchorClassName) => ({ anchorClassName, scope: { kind: "exact" } }));
+    return field.primaryClassNames.length > 0
+      ? [
+          field.primaryClassNames.length === 1
+            ? { anchorClassName: field.primaryClassNames[0], scope: { kind: "exact" } }
+            : {
+                anchorClassName: field.sourceClassName,
+                scope: { kind: "restricted", classNames: field.primaryClassNames },
+              },
+        ]
+      : [];
   }
 
   const anchors = [field.pathFromTarget.length > 0 ? field.pathFromTarget[0].sourceClassName : field.propertyClassName];

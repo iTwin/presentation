@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { getClassLabel, stableStringify } from "../../InternalUtils.js";
+import { getClassLabel, resolveEffectiveSourceClass, stableStringify } from "../../InternalUtils.js";
 import { CategoryDefinition } from "../../model/Category.js";
 import { hashString } from "../../model/Utils.js";
 import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
-import { checkRequiredSchemas, classMatchesSpec, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
+import { checkRequiredSchemas, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
 
 import type {
   EC,
@@ -44,9 +44,14 @@ interface CreateFieldsProviderFromContentModifierRuleProps {
  *
  * The returned provider:
  * - Checks `requiredSchemas` (with full version comparison) on every `getContribution` call.
- * - Matches the target class **polymorphically** against `spec.class`.
+ * - Matches the target class **polymorphically** against `spec.class`: the rule applies when the target
+ *   class derives from `spec.class`, and also when `spec.class` derives from the target class (e.g. a
+ *   rule for `MySchema.Pump` under a `BisCore.Element` target), in which case its related and calculated
+ *   properties start at `spec.class`, so they apply only to its instances.
  * - Maps `relatedProperties`, `calculatedProperties`, and `propertyCategories` into a
  *   `FieldsProviderContribution`.
+ * - Without `rule.class`, gives calculated fields class-scoped identities, producing separate fields
+ *   for different target classes while deduplicating repeated targets of the same class.
  * - Maps `rule.applyOnNestedContent` onto the provider's `applyRecursively` — mirroring native
  *   `ContentModifier.applyOnNestedContent`, this lets the rule's `relatedProperties` (only)
  *   additionally apply on nested-content anchors reached by any resolved related-properties path, not
@@ -65,7 +70,14 @@ export function createFieldsProviderFromContentModifierRule(
       if (!(await checkRequiredSchemas(imodelAccess, rule.requiredSchemas))) {
         return undefined;
       }
-      if (!(await classMatchesSpec(imodelAccess, target.primaryClass, rule.class))) {
+      const sourceClassName = rule.class
+        ? await resolveEffectiveSourceClass(
+            imodelAccess,
+            target.primaryClass,
+            `${rule.class.schemaName}.${rule.class.className}`,
+          )
+        : target.primaryClass;
+      if (!sourceClassName) {
         return undefined;
       }
 
@@ -76,7 +88,7 @@ export function createFieldsProviderFromContentModifierRule(
         const result = await flattenRelatedPropertiesSpecs({
           imodelAccess,
           specs: rule.relatedProperties,
-          sourceClassName: target.primaryClass,
+          sourceClassName,
         });
         relatedProperties = result.declarations;
         Object.assign(categories, result.categories);
@@ -84,7 +96,15 @@ export function createFieldsProviderFromContentModifierRule(
 
       let calculatedFields: CalculatedFieldDeclaration[] | undefined;
       if (rule.calculatedProperties && rule.calculatedProperties.length > 0) {
-        calculatedFields = await mapCalculatedProperties(rule.calculatedProperties);
+        calculatedFields = await mapCalculatedProperties(
+          rule.calculatedProperties,
+          rule.class ? `${rule.class.schemaName}.${rule.class.className}` : target.primaryClass,
+        );
+        if (!rule.class) {
+          for (const field of calculatedFields) {
+            field.id = `${field.id}:${field.sourceClassName}`;
+          }
+        }
       }
 
       if (rule.propertyCategories && rule.propertyCategories.length > 0) {
@@ -509,6 +529,7 @@ const CALC_TYPE_MAP: Record<
  */
 async function mapCalculatedProperties(
   specs: PresentationRules.CalculatedPropertiesSpecification[],
+  sourceClassName: EC.FullClassNameDotNotation,
 ): Promise<CalculatedFieldDeclaration[]> {
   return Promise.all(
     specs.map(async (spec, i) => {
@@ -516,6 +537,7 @@ async function mapCalculatedProperties(
       return {
         id: `calc_${i}`,
         label: spec.label,
+        sourceClassName,
         expression: ecsql,
         ...(bindings ? { bindings } : undefined),
         type: { kind: "primitive", type: CALC_TYPE_MAP[spec.type ?? "string"] } satisfies ValueDescriptor,

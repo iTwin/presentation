@@ -7,3 +7,6 @@ export { createInstanceFilterProperties } from "./content-react/InstanceFilterPr
 export type { InstanceFilterClass } from "./content-react/InstanceFilterProperties.js";
 export { useInstanceFilterPropertiesInfo } from "./content-react/UseInstanceFilterPropertiesInfo.js";
 export type { InstanceFilterPropertiesInfo } from "./content-react/UseInstanceFilterPropertiesInfo.js";
+export { getUniqueFieldValues } from "./content-react/UniqueFieldValues.js";
+export type { UniqueFieldValue } from "./content-react/UniqueFieldValues.js";
+export { useUniqueFieldValues } from "./content-react/UseUniqueFieldValues.js";

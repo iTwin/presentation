@@ -49,6 +49,7 @@ describe("Content", () => {
               {
                 id: "calc1",
                 label: "My Calculated",
+                sourceClassName: setup.schema.items.A.fullName,
                 expression: `this.Prop || '!'`,
                 type: { kind: "primitive", type: "String" },
               },
@@ -93,6 +94,7 @@ describe("Content", () => {
               {
                 id: "calc1",
                 label: "My Calculated",
+                sourceClassName: setup.schema.items.A.fullName,
                 expression: `this.Prop`,
                 type: { kind: "primitive", type: "String" },
                 categoryId: "myCat",
@@ -135,6 +137,7 @@ describe("Content", () => {
               {
                 id: "flow",
                 label: "Flow (GPM)",
+                sourceClassName: setup.schema.items.A.fullName,
                 expression: "e.FlowRate * :factor",
                 targetAlias: "e",
                 bindings: { factor: { type: "double", value: 15850.3 } },

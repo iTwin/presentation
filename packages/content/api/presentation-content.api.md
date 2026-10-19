@@ -50,6 +50,7 @@ export interface CalculatedField extends BaseField {
     // (undocumented)
     kind: "calculated";
     primaryClassNames: EC.FullClassNameDotNotation[];
+    sourceClassName: EC.FullClassNameDotNotation;
     targetAlias?: string;
 }
 
@@ -60,12 +61,19 @@ interface CalculatedFieldDeclaration {
     expression: string;
     id: string;
     label: string;
+    sourceClassName: EC.FullClassNameDotNotation;
     targetAlias?: string;
     type: ValueDescriptor;
 }
 
 // @public
 type CardinalityHint = "one" | "many";
+
+// @public
+type CategoryContext = readonly {
+    readonly stepIndex: number;
+    readonly kind: "targetClass" | "relationshipClass";
+}[];
 
 // @public
 export interface CategoryDefinition {
@@ -283,7 +291,7 @@ export function getDistinctFieldValues(props: GetDistinctFieldValuesProps): Asyn
 
 // @public
 interface GetDistinctFieldValuesProps {
-    field: PropertyField | CalculatedField;
+    field: ReadonlyPropertyField | ReadonlyCalculatedField;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     instanceFiltering?: {
         ids?: Id64String[];
@@ -389,6 +397,7 @@ interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
     path: RelationshipPath;
     properties?: StepPropertySpec[];
+    propertyCategoryScope?: "relatedClass" | "parent";
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
@@ -411,6 +420,7 @@ interface ResolvedDeclarationGroup {
     nested?: {
         anchorClassName: EC.FullClassNameDotNotation;
         prefixStepCount: number;
+        categoryContext: CategoryContext;
         effectiveCardinalityHint?: CardinalityHint;
     };
     paths: ResolvedPath[];

@@ -61,6 +61,7 @@ export async function collectDirectPropertyFields(props: {
       valueClassNames,
       spec: { select: "all" },
       anchor: "none",
+      categoryContext: [],
     }),
   );
 }

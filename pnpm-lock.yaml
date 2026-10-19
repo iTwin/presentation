@@ -1067,6 +1067,9 @@ importers:
 
   packages/content-react:
     dependencies:
+      '@itwin/core-bentley':
+        specifier: catalog:itwinjs-core
+        version: 5.14.2
       '@itwin/presentation-content':
         specifier: workspace:*
         version: link:../content
