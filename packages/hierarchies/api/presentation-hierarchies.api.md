@@ -511,7 +511,7 @@ export namespace HierarchySearchTree {
     export type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = ({
         path: DeepReadonly<HierarchySearchPath>;
     } | {
-        tree: HierarchySearchTree;
+        tree: DeepReadonly<HierarchySearchTree>;
     }) & {
         handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
     };

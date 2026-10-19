@@ -241,7 +241,7 @@ export namespace HierarchySearchTree {
    */
   type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = (
     | { path: DeepReadonly<HierarchySearchPath> }
-    | { tree: HierarchySearchTree }
+    | { tree: DeepReadonly<HierarchySearchTree> }
   ) & {
     /** An optional handler for customizing the behavior of the builder when accepting new entries. */
     handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
