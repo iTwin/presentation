@@ -9,6 +9,7 @@ import { HierarchyNodeIdentifier } from "./HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "./HierarchyNodeKey.js";
 import { releaseMainThreadOnItemsCount } from "./internal/operators/ReleaseMainThread.js";
 
+import type { DeepReadonly } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import type { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
 import type { GenericNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
@@ -76,14 +77,16 @@ export type HierarchySearchPath =
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
   /**
-   * Normalizes the hierarchy search path to the object form.
+   * Normalizes a readonly hierarchy search path to the object form without copying or modifying it.
    * @public
    */
-  export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath> {
-    if (Array.isArray(source)) {
-      return { path: source };
+  export function normalize(
+    source: DeepReadonly<HierarchySearchPath>,
+  ): DeepReadonly<Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath>> {
+    if ("path" in source) {
+      return source;
     }
-    return source;
+    return { path: source };
   }
 
   /**
@@ -237,8 +240,8 @@ export namespace HierarchySearchTree {
    * @public
    */
   type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = (
-    | { path: HierarchySearchPath }
-    | { tree: HierarchySearchTree }
+    | { path: DeepReadonly<HierarchySearchPath> }
+    | { tree: DeepReadonly<HierarchySearchTree> }
   ) & {
     /** An optional handler for customizing the behavior of the builder when accepting new entries. */
     handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
@@ -432,7 +435,7 @@ export namespace HierarchySearchTree {
         return entry;
       }
 
-      #acceptPath({ path, handler }: { path: HierarchySearchPath; handler?: AcceptHandler }) {
+      #acceptPath({ path, handler }: { path: DeepReadonly<HierarchySearchPath>; handler?: AcceptHandler }) {
         const normalized = HierarchySearchPath.normalize(path);
         const treePath: Array<HierarchySearchTreeDictionaryEntry> = [];
         let currentLevel: HierarchySearchTreeDictionary = this.#rootsDictionary;
@@ -468,12 +471,12 @@ export namespace HierarchySearchTree {
         Impl.#assignAutoExpandOptionsBasedOnReveal(treePath, normalized.options?.reveal);
       }
 
-      #acceptTree({ tree, handler }: { tree: HierarchySearchTree; handler?: AcceptHandler }) {
+      #acceptTree({ tree, handler }: { tree: DeepReadonly<HierarchySearchTree>; handler?: AcceptHandler }) {
         const acceptTreeNode = (
           parentEntries: HierarchySearchTreeDictionaryEntry[],
-          parentInputs: HierarchySearchTree[],
+          parentInputs: Array<DeepReadonly<HierarchySearchTree>>,
           level: HierarchySearchTreeDictionary,
-          node: HierarchySearchTree,
+          node: DeepReadonly<HierarchySearchTree>,
         ) => {
           const acceptedNode = this.#acceptNode({
             parentEntries,
@@ -504,7 +507,7 @@ export namespace HierarchySearchTree {
       }
 
       public accept(
-        props: ({ path: HierarchySearchPath } | { tree: HierarchySearchTree }) & { handler?: AcceptHandler },
+        props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>,
       ): HierarchySearchTreeBuilder<TAcceptHandlerExtras> {
         if ("path" in props) {
           this.#acceptPath(props);
@@ -528,7 +531,9 @@ export namespace HierarchySearchTree {
    *
    * @public
    */
-  export async function createFromPathsList(paths: Iterable<HierarchySearchPath>): Promise<HierarchySearchTree[]> {
+  export async function createFromPathsList(
+    paths: Iterable<DeepReadonly<HierarchySearchPath>>,
+  ): Promise<HierarchySearchTree[]> {
     return firstValueFrom(
       from(paths).pipe(
         releaseMainThreadOnItemsCount(1000),
