@@ -39,11 +39,23 @@ export class DataStateTracker {
  * @internal
  */
 export function combineDataStates(states: IdsProviderDataState[]): IdsProviderDataState {
-  if (states.includes("failed")) {
-    return "failed";
+  let combinedState: IdsProviderDataState = "loaded";
+  for (const state of states) {
+    switch (state) {
+      // Failed has the highest priority, immediately return "failed"
+      case "failed":
+        return "failed";
+      // "not-requested" has the next highest priority, update combinedState accordingly
+      case "not-requested":
+        combinedState = "not-requested";
+        break;
+      // "requested" takes precedence over "loaded", only update combinedState if it's currently "loaded"
+      case "requested":
+        if (combinedState === "loaded") {
+          combinedState = "requested";
+        }
+        break;
+    }
   }
-  if (states.every((state) => state === "loaded")) {
-    return "loaded";
-  }
-  return states.every((state) => state === "not-requested") ? "not-requested" : "requested";
+  return combinedState;
 }
