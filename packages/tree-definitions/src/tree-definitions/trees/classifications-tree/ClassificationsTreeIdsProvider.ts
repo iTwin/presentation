@@ -208,39 +208,41 @@ export function createClassificationsTreeIdsProvider({
   }
 
   function getData() {
-    cachedData ??= defer(() => queryClassificationsAndTables()).pipe(
-      reduce(
-        (acc, entry) => {
-          if (entry.type === "table") {
-            getOrCreate({
+    cachedData ??= defer(() =>
+      queryClassificationsAndTables().pipe(
+        reduce(
+          (acc, entry) => {
+            if (entry.type === "table") {
+              getOrCreate({
+                map: acc.classificationOrTableInfos,
+                key: entry.id,
+                createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: undefined }),
+              });
+              return acc;
+            }
+
+            const { id, tableId, parentId } = entry;
+            const tableOrParentId = tableId ?? parentId;
+            const parentInfo = getOrCreate({
               map: acc.classificationOrTableInfos,
-              key: entry.id,
+              key: tableOrParentId,
               createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: undefined }),
             });
+            parentInfo.childClassificationIds.push(id);
+            const classificationEntry = getOrCreate({
+              map: acc.classificationOrTableInfos,
+              key: id,
+              createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: tableOrParentId }),
+            });
+            classificationEntry.parentClassificationOrTableId = tableOrParentId;
             return acc;
-          }
-
-          const { id, tableId, parentId } = entry;
-          const tableOrParentId = tableId ?? parentId;
-          const parentInfo = getOrCreate({
-            map: acc.classificationOrTableInfos,
-            key: tableOrParentId,
-            createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: undefined }),
-          });
-          parentInfo.childClassificationIds.push(id);
-          const classificationEntry = getOrCreate({
-            map: acc.classificationOrTableInfos,
-            key: id,
-            createFunc: () => ({ childClassificationIds: [], parentClassificationOrTableId: tableOrParentId }),
-          });
-          classificationEntry.parentClassificationOrTableId = tableOrParentId;
-          return acc;
-        },
-        { classificationOrTableInfos: new Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>() },
+          },
+          {
+            classificationOrTableInfos: new Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>(),
+          },
+        ),
       ),
-      state.track(),
-      shareReplay(),
-    );
+    ).pipe(state.track(), shareReplay());
     return cachedData;
   }
 
