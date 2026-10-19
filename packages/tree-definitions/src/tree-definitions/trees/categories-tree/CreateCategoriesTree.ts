@@ -69,7 +69,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     type: props.viewType,
     elementClassName: getClassesByView(props.viewType).elementClass,
     excludedElementClassNames:
-      props.hierarchyConfig?.elements?.nodes === "include" ? props.hierarchyConfig.elements.excludedClasses : undefined,
+      hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
   });
   if (hierarchyConfig.elements.nodes === "include") {
     hierarchyConfig.elements = {
