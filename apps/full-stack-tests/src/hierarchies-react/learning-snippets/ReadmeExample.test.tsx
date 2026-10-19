@@ -26,6 +26,7 @@ import { stubVirtualization } from "../../Utils.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { Root } from "@stratakit/mui";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 function createIModelAccess(imodel: IModelConnection) {
@@ -134,7 +135,11 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getByRole, getByText } = render(<MyTreeComponent imodel={imodelConnection} />);
+        const { getByRole, getByText } = render(
+          <Root colorScheme="light">
+            <MyTreeComponent imodel={imodelConnection} />
+          </Root>,
+        );
         await waitFor(() => getByRole("tree"));
 
         expect(getByText("My Model A")).to.not.be.null;
