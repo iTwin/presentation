@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-hierarchies-react": minor
+"@itwin/presentation-hierarchies-react": major
 ---
 
 `TreeNode` now supports multiple errors via `errors: ErrorInfo[]`, allowing both internal errors and custom errors provided through `getTreeNodeErrors` to be combined and displayed.

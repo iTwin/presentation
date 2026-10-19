@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-hierarchies": minor
+"@itwin/presentation-hierarchies": major
 ---
 
 Rename full‑hierarchy "filtering" to "search" across the package.

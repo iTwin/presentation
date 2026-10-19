@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies": major
 ---
 
-**Breaking:** `createInstanceKeysFilteredQuery` now correctly appends `IdSet` bindings in both positional and named binding formats, using the `IdSet` virtual table instead of `InVirtualSet`.
+`createInstanceKeysFilteredQuery` now correctly appends `IdSet` bindings in both positional and named binding formats, using the `IdSet` virtual table instead of `InVirtualSet`.
 
 Consumers that provide their own `LimitingECSqlQueryExecutor` or `imodelAccess` may now receive named bindings (`Record<string, ECSqlBinding>`) through the public `createQueryReader` path.
 
