@@ -9,8 +9,8 @@
 When rendering tree state, the recommended order of checks is:
 1. If `rootErrorRendererProps` is defined, there was an error - render error state.
 2. If `treeRendererProps` is not defined, the component is doing the initial load - render loading state.
-3. If `treeRendererProps` is defined, the hierarchy is loaded - render the tree component. 
-   
+3. If `treeRendererProps` is defined, the hierarchy is loaded - render the tree component.
+
    The `isLoading` attribute may also be set at the same time, indicating that the hierarchy is being reloaded in the background. Consumers may want to render an overlay in this case, or not render the tree at all.
 
 Example:
@@ -32,3 +32,4 @@ function MyComponent () {
     // handle loaded hierarchy
     return <StrataKitTreeRenderer {...useTreeResult.treeRendererProps} />;
 }
+```
