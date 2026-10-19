@@ -1,5 +1,229 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0
+
+### Major Changes
+
+- 3696e4e01a67c41216adaf4fd0469dbcf87ab232: Tree rendering components now build on the StrataKit design system (with MUI) instead of iTwinUI.
+  
+  As a result, the package now declares `@stratakit/foundations@^1.0.0`, `@stratakit/mui@^1.0.0` and `@mui/material@^9.4.0` as optional peer dependencies. Applications that use these components must add the three packages to their own `dependencies`; libraries that re-export the components should forward them as peer dependencies.
+- de7d3b9556a438d64e4457e780b0f1eda3b0d8d4: The `getInlineActions`, `getMenuActions` and `getContextMenuActions` callbacks of `StrataKitTreeRenderer` receive `{ targetNode: TreeNode; selectedNodes: TreeNode[] }` props, allowing actions to be applied to all selected nodes.
+  
+  ```tsx
+  return <StrataKitTreeRenderer
+    getInlineActions={({ targetNode }) => [
+      <InlineAction node={targetNode} />
+    ]}
+    getMenuActions={({ targetNode }) => [
+      <MenuAction node={targetNode} />
+    ]}
+  />
+  ```
+- 009368e05bf0696a39b1edc3c1573fa808fcadb1: Added ability to enter node rename mode programmatically through `StrataKitTreeRenderer` ref. The `renameNode` method accepts a predicate function to identify the target node. If the node is not visible (because its parent is collapsed), all parents will be expanded automatically to make it visible and the node will be scrolled into view.
+  
+  Example:
+  ```tsx
+  import { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react";
+  
+  function MyTree() {
+    const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+  
+    return (
+      <>
+        <div className="tree-header">
+          <button
+            onClick={() => {
+              treeRef.current?.renameNode((node) => node.label === "Node to rename");
+            }}
+          >
+            Rename node
+          </button>
+        </div>
+        <StrataKitTreeRenderer ref={treeRef} />
+      </>
+    );
+  }
+  ```
+- 2763fe9d437088c6906207a85eb73b66f0e5639c: **Breaking change:** Rename `PresentationHierarchyNode` to `TreeNode` for clarity.
+  
+  We already have a `HierarchyNode` type in `@itwin/presentation-hierarchies`, so having a `PresentationHierarchyNode` in `@itwin/presentation-hierarchies-react` was causing confusion. Additionally, this change aligns with the naming convention that we try to keep, where "hierarchy" refers to data and "tree" refers to UI components.
+- a40d5a3a1192853a2c5af3e9608842e06105139e: Reworked `localization` to use `i18next`-compatible approach. Instead of passing a `localizedStrings` object into `LocalizationContextProvider`, the package now delivers an English locale JSON file and resolves strings through a `getLocalizedString` function at runtime.
+  
+  **Breaking changes**
+  
+  - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from @itwin/core-common).
+  - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during app initialization to make localized strings available.
+- 47a5be7aeb216636fcf4377296afb417dc29132b: Added `TreeNodeFilterAction` and `TreeNodeRenameAction` components for rendering hierarchy level filtering and node renaming actions.
+- 6aef711266d26ef3587736150c3b0ccc5e82c68a: Introduce separate import path for StrataKit based components. StrataKit based components have to be imported through `@itwin/presentation-hierarchies-react/stratakit`. This allows to use this package with or without StrataKit dependencies.
+- 8436f7e40f108d7546e08191062792ddb2c2d53a: Tree node rename UI shows the label editor in a popover, with support for a hint describing allowed characters and validation of the new label.
+  
+  Example:
+  ```tsx
+  type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
+  
+  const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
+    return {
+      onLabelChanged: (newLabel: string) => {
+        // Handle label change
+      },
+      labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
+      validate: (newLabel: string) => /^[A-Za-z0-9\- ]+$/.test(newLabel),
+    };
+  }, []);
+  
+  return <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />;
+  ```
+  
+  **Breaking changes**
+  
+  - `getEditingProps` callback was changed to require `onLabelChanged`. If node does not support renaming `getEditingProps` should return `undefined`.
+- e7ed0fe883be8177954ef0861458d7242dc4460f: Improve custom errors rendering API:
+  
+  - Separated the `ChildrenLoad` error from the `Generic` error. All expected tree errors have a dedicated type, and the `Generic` error can be used to handle custom errors encountered outside of the tree.
+  - Exposed `ErrorItemRenderer` that renders all error types supported by the tree.
+  - Updated `TreeErrorRenderer` to pass all props necessary to render `ErrorItemRenderer` into the `renderError` callback.
+  
+  These changes make it easier to customize only some types of errors and leave default handling for others.
+  
+  Example:
+  ```tsx
+  <StrataKitTreeRenderer
+    {...treeProps}
+    errorRenderer={(errorProps) => {
+      return (
+        <TreeErrorRenderer
+          {...errorProps}
+          renderError={(errorItemProps) => {
+            if (errorItemProps.error.type === "Generic") {
+              return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.treeNode.id} />;
+            }
+            return <ErrorItemRenderer {...errorItemProps} />;
+          }}
+        />
+      );
+    }}
+  />
+  ```
+- 7d413f16022c328a90d3612041c1142672b4048b: Unified selection API cleanup.
+  
+  - Remove deprecated `UnifiedSelectionProvider`.
+  - Make `selectionStorage` prop required for unified selection - enabled tree state hooks (`useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree`).
+  
+  Previously, the `selectionStorage` prop was optional, and if not provided, the hooks used unified selection React context (provided by `UnifiedSelectionProvider`) as fallback. Finally, if the context was not provided either, the hooks acted as regular non-unified selection hooks.
+  
+  This didn't make much sense, as the hooks were designed to work with unified selection, as their name suggests. So it makes sense to require the selection storage to be provided to them, and at that point the context becomes redundant.
+- a3d12518b05b062c9bc08203100d13388a21cc91: Start using tree structure for defining hierarchy search paths.
+  
+  The `getFilteredPaths` callback prop of tree hooks (`useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`) has been renamed to `getSearchPaths`, and its return type changed from `Promise<HierarchyFilteringPath[] | undefined>` to `Promise<HierarchySearchTree[] | undefined>`. The newly added `HierarchySearchTree.createFromPathsList` from `@itwin/presentation-hierarchies` can be used to do the conversion:
+  
+  ```tsx
+  import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
+  
+  function MyTree() {
+    const [searchText, setSearchText] = useState("");
+    const treeProps = useIModelUnifiedSelectionTree({
+      // ...
+      getSearchPaths: useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
+        return async () => {
+          // before: `getFilteredPaths` returned the paths directly:
+          //   return getSearchTargetPaths({ searchText });
+          // after: convert the paths into a `HierarchySearchTree`:
+          return HierarchySearchTree.createFromPathsList(await getSearchTargetPaths({ searchText }));
+        };
+      }, [searchText]),
+    });
+  
+    // ...
+  
+    return (
+      <StrataKitTreeRenderer
+        {...treeProps.treeRendererProps}
+        // ...
+      />
+    );
+  }
+  ```
+- 8e87d3452a6af627efe201623ebc0d2812824639: **Breaking changes** to tree state hooks `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`:
+  - All tree rendering props have been moved under `treeRendererProps`. The value can be passed to `<StrataKitTreeRenderer />` component.
+  - In case an error occurs while loading the root hierarchy level, instead of `treeRendererProps`, the `rootErrorRendererProps` are set, which can be passed to `<StrataKitRootErrorRenderer />` component to render the error state.
+  
+  When rendering tree state, the recommended order of checks is:
+  1. If `rootErrorRendererProps` is defined, there was an error - render error state.
+  2. If `treeRendererProps` is not defined, the component is doing the initial load - render loading state.
+  3. If `treeRendererProps` is defined, the hierarchy is loaded - render the tree component.
+  
+     The `isLoading` attribute may also be set at the same time, indicating that the hierarchy is being reloaded in the background. Consumers may want to render an overlay in this case, or not render the tree at all.
+  
+  Example:
+  
+  ```ts
+  function MyComponent () {
+      const useTreeResult = useIModelUnifiedSelectionTree({...});
+  
+      // handle possible root errors with our provided component or your own custom implementation
+      if (useTreeResult.rootErrorRendererProps) {
+        return <StrataKitRootErrorRenderer {...useTreeResult.rootErrorRendererProps} />;
+      }
+  
+      // handle loading state
+      if (!useTreeResult.treeRendererProps) {
+        return <MyLoadingComponent />;
+      }
+  
+      // handle loaded hierarchy
+      return <StrataKitTreeRenderer {...useTreeResult.treeRendererProps} />;
+  }
+  ```
+- 1577715f1501b20139c0e28c656f642ca73d3100: Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
+  
+  - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
+  - `EC.Class` now additionally has these members:
+    - `baseClass: Promise<Class | undefined>`
+    - `getDerivedClasses(): Promise<Class[]>`
+  
+  While this is an addition, it's considered a breaking change, because objects of the updated types are expected to be supplied to us by consumers.
+  
+  In reality, consumers will likely use `@itwin/presentation-core-interop` package for creating them, and the package has been updated to handle the change, so reacting to the breaking change is as simple as bumping the version of `@itwin/presentation-core-interop` package in the consumer's `package.json`.
+- 1652c3a964684db82502a6c32f4d7b64ef0e996b: Unified tree actions handling to make it easier to define actions that can be reused in different contexts: inline, context menu and actions dropdown. Custom tree actions are rendered with the newly introduced `TreeActionBase` component (instead of `Tree.ItemAction`), which automatically infers the context it's used in.
+
+### Minor Changes
+
+- 1652c3a964684db82502a6c32f4d7b64ef0e996b: Added `getContextMenuActions` callback for rendering tree actions in context menu.
+- a607dea48cba687ca9449b5669909703e6f42b7a: Added `isNodeExpandable` property to `GenericErrorInfo`, allowing nodes with generic errors to remain expandable.
+- 43b242db1bdc43f3e6c0e39f6d9ca7c5ce2c5bd8: Tree nodes expose their errors through a `TreeNode.errors: ErrorInfo[]` attribute instead of separate info child nodes. Both internal errors and custom errors provided through the `getTreeNodeErrors` callback of `useTree` (and its variants) are combined in this attribute.
+- 843dc841bbe228eca7323ed458e2d36ea7d5c893: Re-export `getLogger` and `setLogger` functions from `@itwin/presentation-hierarchies` to allow setting a logger.
+
+### Patch Changes
+
+- 7b2a618172ad2d3a02dc8923f3454ccda6e75807: Change `HierarchyProvider.hierarchyChanged` argument to be required.
+  
+  This simplifies the API for users of `HierarchyProvider`, as they no longer need to check for `undefined` when handling hierarchy changes.
+  
+  For implementors of custom `HierarchyProvider`, this change means that they must always provide an even argument when raising the `hierarchyChanged` event. Since all members of the argument type are optional, it's okay to raise the even with an empty object, e.g.: `this.hierarchyChanged.raiseEvent({})`.
+- 40d5bb27afeb6f6379b69da82b0c2f2595e724f0: Process package output with [React Compiler](https://react.dev/reference/react-compiler/compiling-libraries).
+- 734c6b312ca3c11cd4794db4e3af3b9575b9d1e5: Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.
+  
+  Example usage:
+  
+  ```ts
+  import { StrataKitTreeRenderer, useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+  
+  type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
+  
+  function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
+    // Create highlight based on searchText
+    const highlightText = props.searchText !== "" ? props.searchText : undefined;
+    const { getLabel } = useNodeHighlighting({ highlightText });
+  
+    // Provide getLabel function to tree renderer
+    return <StrataKitTreeRenderer {...props} getLabel={getLabel} />;
+  }
+  ```
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0
+  - @itwin/presentation-shared@2.0.0
+  - @itwin/unified-selection@2.0.0
+
 ## 2.0.0-alpha.69
 
 ### Patch Changes
