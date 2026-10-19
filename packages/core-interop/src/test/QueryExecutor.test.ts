@@ -146,6 +146,7 @@ describe("createECSqlQueryExecutor", () => {
       { name: "mutable array", value: ["0x10", "0x2", "0x2"], expectedIds: ["0x2", "0x10"] },
       { name: "readonly array", value: Object.freeze(["0x10", "0x2", "0x2"]), expectedIds: ["0x2", "0x10"] },
       { name: "mutable set", value: new Set(["0x10", "0x2"]), expectedIds: ["0x2", "0x10"] },
+      { name: "readonly set", value: createReadonlySet(["0x10", "0x2"]), expectedIds: ["0x2", "0x10"] },
       { name: "empty array", value: Object.freeze([]), expectedIds: [] },
       { name: "empty set", value: new Set(), expectedIds: [] },
       { name: "undefined", value: undefined },
@@ -339,3 +340,14 @@ describe("createECSqlQueryExecutor", () => {
     });
   });
 });
+
+function createReadonlySet<T>(values: T[]): ReadonlySet<T> {
+  const set = new Set(values);
+  const throwOnMutation = () => {
+    throw new Error("Attempted to mutate a readonly set");
+  };
+  set.add = throwOnMutation;
+  set.delete = throwOnMutation;
+  set.clear = throwOnMutation;
+  return set;
+}
