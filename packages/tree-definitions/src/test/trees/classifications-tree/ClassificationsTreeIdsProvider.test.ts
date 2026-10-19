@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createClassificationsTree } from "../../../tree-definitions/trees/classifications-tree/CreateClassificationsTree.js";
 import { createClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
+import { createClassificationsTree } from "../../../tree-definitions/trees/classifications-tree/CreateClassificationsTree.js";
 
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
@@ -26,7 +26,7 @@ function createAccess() {
 describe("classifications provider configuration", () => {
   it.each<{
     name: string;
-    providerConfig?: ClassificationsTreeHierarchyConfiguration;
+    providerConfig?: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">;
     treeConfig: ClassificationsTreeHierarchyConfiguration;
     shouldThrow: boolean;
   }>([
@@ -41,48 +41,23 @@ describe("classifications provider configuration", () => {
       shouldThrow: true,
     },
     {
-      name: "rejects exclusions present only in the tree",
+      name: "accepts tree element exclusions",
       treeConfig: {
         rootClassificationSystemCode: "SystemA",
         elements: { excludedClasses: ["BisCore.PhysicalElement"] },
       },
-      shouldThrow: true,
+      shouldThrow: false,
     },
     {
-      name: "rejects exclusions present only in the provider",
-      providerConfig: {
-        rootClassificationSystemCode: "SystemA",
-        elements: { excludedClasses: ["BisCore.PhysicalElement"] },
-      },
-      treeConfig: { rootClassificationSystemCode: "SystemA" },
-      shouldThrow: true,
-    },
-    {
-      name: "rejects different excluded classes",
-      providerConfig: {
-        rootClassificationSystemCode: "SystemA",
-        elements: { excludedClasses: ["BisCore.PhysicalElement"] },
-      },
-      treeConfig: {
-        rootClassificationSystemCode: "SystemA",
-        elements: { excludedClasses: ["BisCore.SpatialLocationElement"] },
-      },
-      shouldThrow: true,
-    },
-    {
-      name: "accepts omitted and empty exclusions",
+      name: "accepts empty tree element exclusions",
       treeConfig: { rootClassificationSystemCode: "SystemA", elements: { excludedClasses: [] } },
       shouldThrow: false,
     },
     {
-      name: "accepts reordered and duplicated exclusions",
-      providerConfig: {
-        rootClassificationSystemCode: "SystemA",
-        elements: { excludedClasses: ["Generic.PhysicalObject", "BisCore.PhysicalElement", "Generic.PhysicalObject"] },
-      },
+      name: "accepts duplicated tree element exclusions",
       treeConfig: {
         rootClassificationSystemCode: "SystemA",
-        elements: { excludedClasses: ["BisCore.PhysicalElement", "Generic.PhysicalObject"] },
+        elements: { excludedClasses: ["Generic.PhysicalObject", "BisCore.PhysicalElement", "Generic.PhysicalObject"] },
       },
       shouldThrow: false,
     },

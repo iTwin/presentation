@@ -30,7 +30,10 @@ function createAccess(waitForQuery: (token: string) => Promise<void> = async () 
             : token.endsWith("/categories")
               ? [{ id: "0x20", modelId: "0x1", parentDefinitionContainerExists: false }]
               : token.includes("/classifications/")
-                ? [{ id: "0x30", tableId: "0x31", relatedCategories: "0x20" }]
+                ? [
+                    { type: "cl", id: "0x30", tableId: "0x31" },
+                    { type: "ct", id: "0x31" },
+                  ]
                 : [];
       yield* rows;
     }),
@@ -297,9 +300,9 @@ describe("ID provider data states", () => {
       expect(provider.state).toBe("loaded");
       const tokens = access.createQueryReader.mock.calls.map(([, options]) => options?.restartToken);
       expect(new Set(tokens).size).toBe(tokens.length);
-      expect(base.categories.state).toBe(name === "models" ? "not-requested" : "loaded");
+      expect(base.categories.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.subCategories.state).toBe(name === "categories" ? "loaded" : "not-requested");
-      expect(base.models.state).toBe(name === "models" ? "not-requested" : "loaded");
+      expect(base.models.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.subModeledElements.state).toBe("not-requested");
       expect(create(access, base).provider.state).toBe("not-requested");
     });
@@ -325,8 +328,10 @@ describe("ID provider data states", () => {
       gate.reject(new Error("tree query failed"));
       await failure;
       expect(provider.state).toBe("failed");
-      expect(base.categories.state).toBe(name === "models" ? "not-requested" : "loaded");
+      expect(base.categories.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.subCategories.state).toBe(name === "categories" ? "loaded" : "not-requested");
+      expect(base.models.state).toBe(name === "categories" ? "loaded" : "not-requested");
+      expect(base.subModeledElements.state).toBe("not-requested");
 
       gate = createGate();
       const retry = load();
