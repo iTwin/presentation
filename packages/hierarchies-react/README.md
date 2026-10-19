@@ -244,7 +244,7 @@ import folderSvg from "@stratakit/icons/folder.svg";
 
 ### Node actions
 
-Row actions are React components provided through three callbacks, depending on where they should appear: `getInlineActions` (rendered directly on the row, at most two), `getMenuActions` (the overflow menu), and `getContextMenuActions` (the right-click menu). Each callback receives the `targetNode` and the current `selectedNodes`. Build custom actions by rendering `TreeActionBase`, and use the delivered `TreeNodeRenameAction` for the built-in node renaming feature:
+Node actions are React components provided through three callbacks, depending on where they should appear: `getInlineActions` (rendered directly on the node, at most two), `getMenuActions` (the overflow menu), and `getContextMenuActions` (the right-click menu). Each callback receives the `targetNode` and the current `selectedNodes`. Build custom actions by rendering `TreeActionBase`, and use the delivered `TreeNodeRenameAction` for the built-in node renaming feature:
 
 <!-- [[include: [Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.ActionImports, Presentation.HierarchiesReact.Features.CustomAction, Presentation.HierarchiesReact.Features.Actions], tsx]] -->
 <!-- BEGIN EXTRACTION -->
