@@ -174,8 +174,10 @@ export class ElementModelCategoriesProvider {
         ),
       ),
     ).pipe(
-      tap(() => {
-        this.#subscriberBatches = [];
+      tap({
+        finalize: () => {
+          this.#subscriberBatches = [];
+        },
       }),
       this.#state.track(),
       shareReplay(),
