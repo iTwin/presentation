@@ -26,6 +26,7 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
+import { Root } from "@stratakit/mui";
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
@@ -110,7 +111,11 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getByText } = render(<LocalizedTree imodelAccess={access} />);
+        const { getByText } = render(
+          <Root colorScheme="light">
+            <LocalizedTree imodelAccess={access} />
+          </Root>,
+        );
         await waitFor(() => expect(getByText("My Model A")).to.not.be.null);
       });
     });
