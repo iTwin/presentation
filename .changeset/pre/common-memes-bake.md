@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies-react": major
 ---
 
-The `getInlineActions`, `getMenuActions` and `getContextMenuActions` callbacks of `StrataKitTreeRenderer` receive `{ targetNode: TreeNode; selectedNodes: TreeNode[] }` props, allowing actions to be applied to all selected nodes.
+`StrataKitTreeRenderer` exposes per-node action callbacks `getInlineActions`, `getMenuActions` and `getContextMenuActions`. Each receives `{ targetNode: TreeNode; selectedNodes: TreeNode[] }`, so actions can be applied to the target node or to all selected nodes.
 
 ```tsx
 return <StrataKitTreeRenderer

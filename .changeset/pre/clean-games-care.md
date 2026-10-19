@@ -1,6 +1,5 @@
 ---
 "@itwin/presentation-hierarchies": major
-"@itwin/presentation-hierarchies-react": patch
 ---
 
 Change `HierarchyProvider.hierarchyChanged` argument to be required.
