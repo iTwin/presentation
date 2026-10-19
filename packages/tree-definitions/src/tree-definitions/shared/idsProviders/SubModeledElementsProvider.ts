@@ -15,7 +15,7 @@ interface SubModeledElementsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: string;
-  nonEmptyModelIds: Array<ModelId>;
+  nonEmptyModelIds: ReadonlySet<ModelId>;
 }
 
 interface SubModeledElementsProviderData {
@@ -28,7 +28,7 @@ export class SubModeledElementsProvider {
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: string;
-  #nonEmptyModelIds: Array<ModelId>;
+  #nonEmptyModelIds: ReadonlySet<ModelId>;
   // ElementId here is also a ModelId, since those elements are sub models.
   #cachedData: Observable<SubModeledElementsProviderData> | undefined;
 
@@ -41,7 +41,7 @@ export class SubModeledElementsProvider {
   }
 
   private querySubModeledElements(): Observable<ElementId> {
-    if (this.#nonEmptyModelIds.length === 0) {
+    if (this.#nonEmptyModelIds.size === 0) {
       return EMPTY;
     }
     return defer(() => {

@@ -49,7 +49,7 @@ export interface SharedIdsProvider {
     /** State of model data. */
     readonly state: IdsProviderDataState;
     /** Returns IDs of non-private, non-template models containing visible elements of the configured class, including excluded classes. */
-    getAllModels(): Promise<ReadonlyArray<ModelId>>;
+    getAllModels(): Promise<ReadonlySet<ModelId>>;
     /** Returns IDs of non-private, non-template plan projection models containing visible elements of the configured class. */
     getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
     /** Yields model IDs containing elements in the specified category. Yields no IDs if no models match the filters. */
@@ -135,10 +135,10 @@ export function createSharedIdsProvider({
     | undefined;
   let subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
 
-  function getAllModels(): Observable<Array<ModelId>> {
+  function getAllModels(): Observable<ReadonlySet<ModelId>> {
     return elementModelCategoriesProvider
       .getData()
-      .pipe(map(({ modelsCategoriesInfo }) => [...modelsCategoriesInfo.keys()]));
+      .pipe(map(({ modelsCategoriesInfo }) => new Set([...modelsCategoriesInfo.keys()])));
   }
   function getSubModeledElementsData(): ReturnType<SubModeledElementsProvider["getData"]> {
     subModeledElementsData ??= getAllModels().pipe(

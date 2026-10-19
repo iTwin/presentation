@@ -500,7 +500,7 @@ export interface SharedIdsProvider {
     readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
     readonly models: {
         readonly state: IdsProviderDataState;
-        getAllModels(): Promise<ReadonlyArray<ModelId>>;
+        getAllModels(): Promise<ReadonlySet<ModelId>>;
         getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
         getModels(props: {
             categoryId: Id64String;

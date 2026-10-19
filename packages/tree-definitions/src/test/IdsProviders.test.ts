@@ -76,7 +76,7 @@ describe("ID provider data states", () => {
     expect(provider.subCategories.state).toBe("not-requested");
     expect(access.createQueryReader).not.toHaveBeenCalled();
 
-    expect(await provider.models.getAllModels()).toEqual(["0x10"]);
+    expect(await provider.models.getAllModels()).toEqual(new Set(["0x10"]));
     expect(provider.models.state).toBe("loaded");
     expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("loaded");
@@ -137,7 +137,7 @@ describe("ID provider data states", () => {
     expect(provider.subModeledElements.state).toBe("failed");
     expect(provider.models.state).toBe("loaded");
     expect(provider.categories.state).toBe("loaded");
-    expect(await provider.models.getAllModels()).toEqual(["0x10"]);
+    expect(await provider.models.getAllModels()).toEqual(new Set(["0x10"]));
     expect(provider.subModeledElements.state).toBe("failed");
 
     failSubModeledElements = false;
@@ -164,7 +164,7 @@ describe("ID provider data states", () => {
       queryExecutor,
       componentId: "00000000-0000-0000-0000-000000000001",
       elementClassName: "BisCore.GeometricElement3d",
-      nonEmptyModelIds: ["0x10", "0x20"],
+      nonEmptyModelIds: new Set(["0x10", "0x20"]),
     });
     const cached = provider.getData();
 
