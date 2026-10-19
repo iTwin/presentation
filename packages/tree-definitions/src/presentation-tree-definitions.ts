@@ -5,7 +5,7 @@
 
 export { createSharedIdsProvider } from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 export type {
-  SharedIdsProvider as SharedIdsProvider,
+  SharedIdsProvider,
   IdsProviderDataState,
 } from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 
