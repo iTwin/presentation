@@ -204,18 +204,17 @@ function MyTreeComponentInternal({
 
 ## Customizing the tree
 
-`StrataKitTreeRenderer` exposes a set of callbacks for customizing how nodes are rendered and interacted with. The examples below reuse the `imodelAccess` and `getHierarchyDefinition` from the [full example](#full-example); each snippet lists the imports it needs.
+`StrataKitTreeRenderer` exposes a set of callbacks for customizing how nodes are rendered and interacted with. The examples below focus on the customization-specific parts - plug them into the tree setup from the [full example](#full-example) (the `treeProps` come from the tree state hook). Each snippet lists the imports it needs.
 
 ### Custom node rendering
 
 The `getTreeItemProps` callback returns per-node rendering props. Use `decorations` to render one or more elements before the label (icons, badges, etc.), and `label` / `description` to override the node's text:
 
-<!-- [[include: [Presentation.HierarchiesReact.Features.Imports, Presentation.HierarchiesReact.Features.DecorationImports, Presentation.HierarchiesReact.Features.CustomNodeRendering], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.DecorationImports, Presentation.HierarchiesReact.Features.CustomNodeRendering], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { useIModelTree } from "@itwin/presentation-hierarchies-react";
-import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { Badge } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 
@@ -224,48 +223,35 @@ import folderSvg from "@stratakit/icons/folder.svg";
 // Customize per-node rendering through the `getTreeItemProps` callback. `decorations` accepts any
 // `ReactNode`, so you can render multiple elements before the label (an icon, a text tag, etc.), and
 // `label`/`description` override the node's text.
-function TreeWithDecorations() {
-  const treeProps = useIModelTree({ imodelAccess, getHierarchyDefinition });
-  if (treeProps.rootErrorRendererProps) {
-    return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
-  }
-  if (!treeProps.treeRendererProps || treeProps.isLoading) {
-    return "Loading...";
-  }
-  return (
-    <StrataKitTreeRenderer
-      {...treeProps.treeRendererProps}
-      treeLabel="My Tree"
-      getTreeItemProps={(node) => ({
-        // Render several decorations before the label by returning multiple elements - here an icon
-        // and a badge with a text label.
-        decorations: (
-          <>
-            <Icon href={folderSvg} />
-            <Badge color="primary" badgeContent="Model" />
-          </>
-        ),
-        label: node.label,
-      })}
-    />
-  );
-}
+<StrataKitTreeRenderer
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  getTreeItemProps={(node) => ({
+    // Render several decorations before the label by returning multiple elements - here an icon
+    // and a badge with a text label.
+    decorations: (
+      <>
+        <Icon href={folderSvg} />
+        <Badge color="primary" badgeContent="Model" />
+      </>
+    ),
+    label: node.label,
+  })}
+/>;
 ```
 
 <!-- END EXTRACTION -->
 
 ### Node actions
 
-Row actions are React components provided through three callbacks, depending on where they should appear: `getInlineActions` (rendered directly on the row, at most two), `getMenuActions` (the overflow menu), and `getContextMenuActions` (the right-click menu). Each callback receives the `targetNode` and the current `selectedNodes`. Build custom actions by rendering `TreeActionBase`, and use the delivered `TreeNodeFilterAction` / `TreeNodeRenameAction` for the built-in hierarchy level filtering and node renaming features:
+Row actions are React components provided through three callbacks, depending on where they should appear: `getInlineActions` (rendered directly on the row, at most two), `getMenuActions` (the overflow menu), and `getContextMenuActions` (the right-click menu). Each callback receives the `targetNode` and the current `selectedNodes`. Build custom actions by rendering `TreeActionBase`, and use the delivered `TreeNodeRenameAction` for the built-in node renaming feature:
 
-<!-- [[include: [Presentation.HierarchiesReact.Features.Imports, Presentation.HierarchiesReact.Features.ActionImports, Presentation.HierarchiesReact.Features.RenameActionImport, Presentation.HierarchiesReact.Features.CustomAction, Presentation.HierarchiesReact.Features.Actions], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.ActionImports, Presentation.HierarchiesReact.Features.CustomAction, Presentation.HierarchiesReact.Features.Actions], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { useIModelTree } from "@itwin/presentation-hierarchies-react";
-import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import { TreeActionBase, TreeNodeFilterAction } from "@itwin/presentation-hierarchies-react/stratakit";
-import { TreeNodeRenameAction } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { TreeActionBase } from "@itwin/presentation-hierarchies-react/stratakit";
 
 import type { TreeNode } from "@itwin/presentation-hierarchies-react";
 import type { TreeActionBaseAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
@@ -289,87 +275,84 @@ function MyLogAction({
 }
 
 // Row actions are provided through three callbacks, depending on where they should appear. Each receives
-// the `targetNode` and the current `selectedNodes`. The package also delivers `TreeNodeFilterAction` and
-// `TreeNodeRenameAction` for the built-in hierarchy level filtering and node renaming features.
-function TreeWithActions() {
-  const treeProps = useIModelTree({ imodelAccess, getHierarchyDefinition });
-  if (treeProps.rootErrorRendererProps) {
-    return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
-  }
-  if (!treeProps.treeRendererProps || treeProps.isLoading) {
-    return "Loading...";
-  }
-  const { getHierarchyLevelDetails } = treeProps.treeRendererProps;
-  return (
-    <StrataKitTreeRenderer
-      {...treeProps.treeRendererProps}
-      treeLabel="My Tree"
-      // Rendered directly on the row (at most two).
-      getInlineActions={({ targetNode, selectedNodes }) => [
-        <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
-        <TreeNodeFilterAction
-          key="filter"
-          node={targetNode}
-          onFilter={(details) => console.log("Filter hierarchy level:", details)}
-          getHierarchyLevelDetails={getHierarchyLevelDetails}
-        />,
-      ]}
-      // Rendered in the overflow (ellipsis) menu on the row.
-      getMenuActions={({ targetNode, selectedNodes }) => [
-        <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
-      ]}
-      // Rendered in the context menu opened by right-clicking the row.
-      getContextMenuActions={({ targetNode, selectedNodes }) => [
-        <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
-      ]}
-    />
-  );
-}
+// the `targetNode` and the current `selectedNodes`.
+<StrataKitTreeRenderer
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  // Rendered directly on the row (at most two).
+  getInlineActions={({ targetNode, selectedNodes }) => [
+    <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
+  ]}
+  // Rendered in the overflow (ellipsis) menu on the row.
+  getMenuActions={({ targetNode, selectedNodes }) => [
+    <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
+  ]}
+  // Rendered in the context menu opened by right-clicking the row.
+  getContextMenuActions={({ targetNode, selectedNodes }) => [
+    <MyLogAction key="log" node={targetNode} selectedNodes={selectedNodes} />,
+  ]}
+/>;
 ```
 
 <!-- END EXTRACTION -->
 
 ### Node renaming
 
-Node renaming is enabled per node through the `getEditingProps` callback (return `undefined` for nodes that cannot be renamed). Users enter rename mode through the delivered `TreeNodeRenameAction`; renaming can also be started programmatically through the renderer ref's `renameNode` method:
+Node renaming is enabled per node through the `getEditingProps` callback (return `undefined` for nodes that cannot be renamed). Users enter rename mode through the delivered `TreeNodeRenameAction`:
 
-<!-- [[include: [Presentation.HierarchiesReact.Features.Imports, Presentation.HierarchiesReact.Features.RenameActionImport, Presentation.HierarchiesReact.Features.RenamingImports, Presentation.HierarchiesReact.Features.Renaming], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.RenameActionImport, Presentation.HierarchiesReact.Features.Renaming], tsx]] -->
+<!-- BEGIN EXTRACTION -->
+
+```tsx
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { TreeNodeRenameAction } from "@itwin/presentation-hierarchies-react/stratakit";
+
+// Enable node renaming through the `getEditingProps` callback. Return `undefined` for nodes that cannot be
+// renamed. Users enter rename mode through `TreeNodeRenameAction`.
+<StrataKitTreeRenderer
+  {...treeProps.treeRendererProps}
+  treeLabel="My Tree"
+  getEditingProps={(node) => ({
+    onLabelChanged: (newLabel) => console.log(`Renamed "${node.label}" to "${newLabel}"`),
+    validate: (newLabel) => newLabel.trim().length > 0,
+    labelValidationHint: "Label must not be empty",
+  })}
+  getMenuActions={({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />]}
+/>;
+```
+
+<!-- END EXTRACTION -->
+
+Renaming can also be started programmatically through the renderer ref's `renameNode` method, which enters rename mode for the first node matching a predicate:
+
+<!-- [[include: [Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.RenamingImports, Presentation.HierarchiesReact.Features.ProgrammaticRenaming, Presentation.HierarchiesReact.Features.ProgrammaticRenamingRenderer], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
 import { useRef } from "react";
-import { useIModelTree } from "@itwin/presentation-hierarchies-react";
-import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import { TreeNodeRenameAction } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 
-// Enable node renaming through the `getEditingProps` callback. Return `undefined` for nodes that cannot be
-// renamed. Users enter rename mode through `TreeNodeRenameAction`; you can also start it programmatically
-// through the renderer ref using `renameNode`.
-function TreeWithRenaming() {
-  const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
-  const treeProps = useIModelTree({ imodelAccess, getHierarchyDefinition });
-  if (treeProps.rootErrorRendererProps) {
-    return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
-  }
-  if (!treeProps.treeRendererProps || treeProps.isLoading) {
-    return "Loading...";
-  }
-  return (
-    <StrataKitTreeRenderer
-      {...treeProps.treeRendererProps}
-      ref={treeRef}
-      treeLabel="My Tree"
-      getEditingProps={(node) => ({
-        onLabelChanged: (newLabel) => console.log(`Renamed "${node.label}" to "${newLabel}"`),
-        validate: (newLabel) => newLabel.trim().length > 0,
-        labelValidationHint: "Label must not be empty",
-      })}
-      getMenuActions={({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />]}
-    />
-  );
-}
+// Hold a ref to the renderer and call `renameNode` to enter rename mode for the first node matching the
+// predicate. The node must already be loaded; collapsed parents are expanded and the node is scrolled
+// into view.
+const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+const renameMyModel = () => treeRef.current?.renameNode((node) => node.label === "My Model A");
+
+// Wire the ref to the renderer and trigger `renameMyModel` from your own UI. `getEditingProps` must
+// enable editing for the node you want to rename.
+<>
+  <button onClick={renameMyModel}>Rename model</button>
+  <StrataKitTreeRenderer
+    {...treeProps.treeRendererProps}
+    ref={treeRef}
+    treeLabel="My Tree"
+    getEditingProps={(node) => ({
+      onLabelChanged: (newLabel) => console.log(`Renamed "${node.label}" to "${newLabel}"`),
+    })}
+  />
+</>;
 ```
 
 <!-- END EXTRACTION -->
@@ -378,12 +361,13 @@ function TreeWithRenaming() {
 
 Custom errors are attached to nodes through the `getTreeNodeErrors` callback on the tree state hook, using the `"Generic"` type (the `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` types are produced internally). A generic error only needs a `message` (and optionally `isNodeExpandable`), and the delivered renderer displays it with a link to the node - the same way it renders the internally produced types. Attach an `additionalData` payload to carry structured context, then customize rendering through the `errorRenderer` prop: delegate to `TreeErrorRenderer` and provide a `renderError` callback that renders your own `unstable_ErrorRegion.Item` for your errors and falls back to the delivered `ErrorItemRenderer` for everything else (keeping the default message and node link):
 
-<!-- [[include: [Presentation.HierarchiesReact.Features.Imports, Presentation.HierarchiesReact.Features.ErrorImports, Presentation.HierarchiesReact.Features.ErrorRendering], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Features.HookImports, Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.ErrorImports, Presentation.HierarchiesReact.Features.ErrorRendering], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { useIModelTree } from "@itwin/presentation-hierarchies-react";
-import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { useTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { ErrorItemRenderer, TreeErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { Link, Typography } from "@mui/material";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
@@ -435,9 +419,8 @@ function MyErrorItemRenderer(props: ComponentProps<typeof ErrorItemRenderer>) {
 // Attach the error through `getTreeNodeErrors` and plug the custom renderer in through `errorRenderer`,
 // delegating to `TreeErrorRenderer` with a `renderError` callback.
 function TreeWithCustomErrors() {
-  const treeProps = useIModelTree({
-    imodelAccess,
-    getHierarchyDefinition,
+  const treeProps = useTree({
+    getHierarchyProvider,
     getTreeNodeErrors: (node) => [
       {
         id: `${node.label}-error`,
