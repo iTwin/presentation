@@ -39,6 +39,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/presentation-content": "workspace:*",
     "@itwin/presentation-shared": "workspace:*"
   },

@@ -6,7 +6,11 @@
 import "./FilterBuilder.css";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PropertyFilterBuilderRenderer, usePropertyFilterBuilder } from "@itwin/components-react";
+import {
+  PropertyFilterBuilderRenderer,
+  PropertyFilterBuilderRuleValue,
+  usePropertyFilterBuilder,
+} from "@itwin/components-react";
 import { Badge, ComboBox } from "@itwin/itwinui-react";
 import {
   createContentProvider,
@@ -16,12 +20,16 @@ import {
 import { useInstanceFilterPropertiesInfo } from "@itwin/presentation-content-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { CircularProgress, Stack, Typography } from "@mui/material";
-import { bisCoreContentCustomization } from "./BisCoreContentCustomization";
+import { UniqueValuesSelector } from "./UniqueValuesSelector";
 
 import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { ReadonlyContentDescriptor, ReadonlyPropertyField } from "@itwin/presentation-content";
 import type { InstanceFilterClass } from "@itwin/presentation-content-react";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+
+type IModelAccess = ECSqlQueryExecutor & ECSchemaProvider;
 
 /**
  * Displays a presentation-content-backed filter builder.
@@ -36,13 +44,17 @@ export function FilterBuilder({ imodel }: { imodel: IModelConnection }) {
   );
 }
 
-const target = { primaryClass: "BisCore.Element" } as const;
+const target = { primaryClass: "BisCore.GeometricElement3d" } as const;
 
 /**
  * Loads and renders the presentation-content-backed filter builder.
  */
 function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
-  const [state, setState] = useState<{ descriptor?: ReadonlyContentDescriptor; error?: unknown }>({});
+  const [state, setState] = useState<{
+    descriptor?: ReadonlyContentDescriptor;
+    imodelAccess?: IModelAccess;
+    error?: unknown;
+  }>({});
 
   useEffect(() => {
     let disposed = false;
@@ -75,28 +87,34 @@ function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
           <CircularProgress size={24} />
         </Stack>
       ) : null}
-      {state.descriptor ? <LoadedContentFilterBuilder descriptor={state.descriptor} /> : null}
+      {state.descriptor && state.imodelAccess ? (
+        <LoadedContentFilterBuilder descriptor={state.descriptor} imodelAccess={state.imodelAccess} />
+      ) : null}
     </>
   );
 }
 
-async function loadContent(imodel: IModelConnection): Promise<{ descriptor: ReadonlyContentDescriptor }> {
+async function loadContent(
+  imodel: IModelConnection,
+): Promise<{ descriptor: ReadonlyContentDescriptor; imodelAccess: IModelAccess }> {
   const imodelAccess = { ...createECSqlQueryExecutor(imodel), ...createECSchemaProvider(imodel) };
-  const embeddedConfiguration = await createIModelContentConfiguration({ imodelAccess });
-  const configuration = {
-    ...embeddedConfiguration,
-    imodelFieldsProviders: [...(embeddedConfiguration.imodelFieldsProviders ?? []), bisCoreContentCustomization],
-  };
-  const sources = await resolveContentSources({ imodelAccess, targets: [target], config: configuration });
+  const imodelContentConfig = await createIModelContentConfiguration({ imodelAccess });
+  const sources = await resolveContentSources({ imodelAccess, targets: [target], config: imodelContentConfig });
   const descriptor = await createContentProvider({
     imodelAccess,
     sources,
-    config: configuration,
+    config: imodelContentConfig,
   }).getContentDescriptor();
-  return { descriptor };
+  return { descriptor, imodelAccess };
 }
 
-function LoadedContentFilterBuilder({ descriptor }: { descriptor: ReadonlyContentDescriptor }) {
+function LoadedContentFilterBuilder({
+  descriptor,
+  imodelAccess,
+}: {
+  descriptor: ReadonlyContentDescriptor;
+  imodelAccess: IModelAccess;
+}) {
   const { classes, visibleProperties, selectedClasses, onSelectedClassesChanged } = useInstanceFilterPropertiesInfo({
     descriptor,
   });
@@ -122,6 +140,26 @@ function LoadedContentFilterBuilder({ descriptor }: { descriptor: ReadonlyConten
     [descriptor, visibleProperties],
   );
 
+  const ruleValueRenderer = useCallback(
+    (props: PropertyFilterBuilderRuleValueRendererProps) => {
+      const field = visibleProperties.find((item) => item.id === props.property.name);
+      if (!field || !supportsUniqueValues(field, props.operator)) {
+        return <PropertyFilterBuilderRuleValue {...props} />;
+      }
+      return (
+        <UniqueValuesSelector
+          // Reload from scratch when the rule switches to a different field.
+          key={field.id}
+          imodelAccess={imodelAccess}
+          field={field}
+          value={props.value}
+          onChange={props.onChange}
+        />
+      );
+    },
+    [imodelAccess, visibleProperties],
+  );
+
   return (
     <>
       <ComboBox
@@ -140,9 +178,24 @@ function LoadedContentFilterBuilder({ descriptor }: { descriptor: ReadonlyConten
         actions={actions}
         properties={filterBuilderProperties}
         propertyRenderer={propertyRenderer}
+        ruleValueRenderer={ruleValueRenderer}
       />
     </>
   );
+}
+
+/**
+ * Unique values populate the editor for equality rules only — those are the operators that compare
+ * against a specific value the user should be able to pick from a list.
+ *
+ * Array and struct fields have no single scalar to take distinct values of, so they keep the default
+ * editor rather than surfacing the error `useUniqueFieldValues` would raise for them.
+ */
+function supportsUniqueValues(field: ReadonlyPropertyField, operator: string): boolean {
+  if (operator !== "is-equal" && operator !== "is-not-equal") {
+    return false;
+  }
+  return field.type.kind !== "array" && field.type.kind !== "struct";
 }
 
 function getSelectedClassNames(selectedNames: string[], classes: InstanceFilterClass[]): InstanceFilterClass["name"][] {

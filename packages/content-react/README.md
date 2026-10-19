@@ -14,4 +14,6 @@ The `@itwin/presentation-content-react` package provides React hooks and UI-neut
 
 - `useInstanceFilterPropertiesInfo` — React hook that derives `classes` and `properties` lists from a `ContentDescriptor` for an instance filter builder.
 - `createInstanceFilterProperties` — UI-neutral helper that derives `classes` and `properties` lists for an instance filter builder.
-- Types: `InstanceFilterClass`, `InstanceFilterPropertiesInfo`.
+- `useUniqueFieldValues` — React hook that loads a field's unique values, formatted for display, for populating a filter builder's value selector.
+- `getUniqueFieldValues` — UI-neutral helper backing `useUniqueFieldValues`.
+- Types: `InstanceFilterClass`, `InstanceFilterPropertiesInfo`, `UniqueFieldValue`.
