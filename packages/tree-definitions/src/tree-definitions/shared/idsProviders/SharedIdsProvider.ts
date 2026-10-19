@@ -56,7 +56,12 @@ export interface SharedIdsProvider {
     getModels(props: {
       /** The ID of the category for which to retrieve models. */
       categoryId: Id64String;
-      /** Omits models that model elements rather than information partitions. */
+      /**
+       * Omits models that model elements rather than information partitions.
+       *
+       * **NOTE:** Depends on `subModeledElements` data, which is loaded first if it isn't loaded yet; in-flight loading is shared.
+       * Failures to load it reject this iterator and are reflected in `subModeledElements.state`.
+       */
       excludeSubModels?: boolean;
       /** Requires the category to contain elements without a parent element in the model. */
       includeOnlyTopMostElementCategory?: boolean;
