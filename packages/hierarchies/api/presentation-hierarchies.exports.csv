@@ -5,7 +5,7 @@ public;function;createHierarchyProvider
 public;function;createHierarchySearchHelper
 public;function;createIModelHierarchyProvider
 public;function;createLimitingECSqlQueryExecutor
-alpha;function;createMergedIModelHierarchyProvider
+public;function;createMergedIModelHierarchyProvider
 public;function;createPredicateBasedHierarchyDefinition
 public;type;DefineGenericNodeChildHierarchyLevelProps
 public;interface;DefineHierarchyLevelProps
