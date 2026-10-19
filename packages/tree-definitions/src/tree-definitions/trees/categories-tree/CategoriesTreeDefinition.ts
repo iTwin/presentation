@@ -1248,7 +1248,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const modelIds: Id64Array | undefined =
       parentNode.extendedData.modelIds.length > 0
         ? parseIdsSelectorResult(parentNode.extendedData.modelIds)
-        : this.#idsProvider.categories.state === "loaded"
+        : this.#idsProvider.models.state === "loaded" && this.#idsProvider.subModeledElements.state === "loaded"
           ? await firstValueFrom(
               from(categoryIds).pipe(
                 mergeMap((categoryId) =>
