@@ -205,7 +205,7 @@ export function createIModelHierarchyProvider(props: IModelHierarchyProviderProp
 
 /**
  * Props for `createMergedIModelHierarchyProvider`.
- * @alpha
+ * @public
  */
 interface MergedIModelHierarchyProviderProps extends Omit<
   IModelHierarchyProviderProps,
@@ -254,10 +254,7 @@ interface MergedIModelHierarchyProviderProps extends Omit<
 /**
  * Creates an instance of `HierarchyProvider` that creates a hierarchy based on multiple version of **the same** iModel
  * and a hierarchy definition, which defines each hierarchy level through ECSQL queries.
- *
- * **Warning:** This is an experimental API that **should not be used in production**.
- *
- * @alpha
+ * @public
  */
 export function createMergedIModelHierarchyProvider(
   props: MergedIModelHierarchyProviderProps,

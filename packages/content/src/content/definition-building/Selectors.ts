@@ -81,10 +81,16 @@ function createPropertySelector(props: {
 function createCalculatedSelector(props: {
   id: string;
   expression: string;
+  sourceClassName: EC.FullClassNameDotNotation;
   targetAlias?: string;
   bindings?: Record<string, ECSqlBinding>;
 }): CalculatedValueSelector {
-  const selector: CalculatedValueSelector = { kind: "calculated", id: props.id, expression: props.expression };
+  const selector: CalculatedValueSelector = {
+    kind: "calculated",
+    id: props.id,
+    expression: props.expression,
+    sourceClassName: props.sourceClassName,
+  };
   if (props.targetAlias !== undefined) {
     selector.targetAlias = props.targetAlias;
   }

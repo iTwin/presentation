@@ -15,8 +15,8 @@ const path: RelationshipPath = [
 ];
 
 /** Calls the function and returns just the produced fields (dropping category facts). */
-function collectFields(props: Omit<Props<typeof createPropertyFields>, "anchor">): PropertyField[] {
-  return createPropertyFields({ ...props, anchor: "none" }).map(({ field }) => field);
+function collectFields(props: Omit<Props<typeof createPropertyFields>, "anchor" | "categoryContext">): PropertyField[] {
+  return createPropertyFields({ categoryContext: [], ...props, anchor: "none" }).map(({ field }) => field);
 }
 
 describe("createPropertyFields", () => {
@@ -66,6 +66,7 @@ describe("createPropertyFields", () => {
       valueClassNames: ["TestSchema.B"],
       spec: { select: "all" },
       anchor,
+      categoryContext: [],
     }).map(({ field: result }) => result);
 
     expect(field.propertyClassKind).to.equal(propertyClassKind);
@@ -147,6 +148,7 @@ describe("createPropertyFields", () => {
   describe("overrides", () => {
     it("applies default overrides to every selected property", () => {
       const results = createPropertyFields({
+        categoryContext: [],
         properties: [
           createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" }),
           createPrimitiveProperty({ name: "B", declaringClass: "TestSchema.C" }),
@@ -166,6 +168,7 @@ describe("createPropertyFields", () => {
 
     it("lets per-property overrides take precedence over default overrides", () => {
       const results = createPropertyFields({
+        categoryContext: [],
         properties: [
           createPrimitiveProperty({ name: "alpha", declaringClass: "TestSchema.C" }),
           createPrimitiveProperty({ name: "beta", declaringClass: "TestSchema.C" }),
@@ -205,6 +208,7 @@ describe("createPropertyFields", () => {
   describe("category facts", () => {
     it("reports the EC schema property category", () => {
       const [{ categorization }] = createPropertyFields({
+        categoryContext: [],
         properties: [
           createPrimitiveProperty({
             name: "A",
@@ -219,13 +223,15 @@ describe("createPropertyFields", () => {
       });
 
       expect(categorization).to.deep.equal({
+        categoryContext: [],
         anchor: "none",
-        category: { source: "schema", id: "TestSchema.GeometryClass", label: "Geometry" },
+        category: { source: "propertyCategory", id: "TestSchema.GeometryClass", label: "Geometry" },
       });
     });
 
-    it("falls back to the schema category's name when it has no label", () => {
+    it("falls back to the property category's name when it has no label", () => {
       const [{ categorization }] = createPropertyFields({
+        categoryContext: [],
         properties: [
           createPrimitiveProperty({
             name: "A",
@@ -240,13 +246,15 @@ describe("createPropertyFields", () => {
       });
 
       expect(categorization).to.deep.equal({
+        categoryContext: [],
         anchor: "targetClass",
-        category: { source: "schema", id: "TestSchema.GeometryClass", label: "GeometryClass" },
+        category: { source: "propertyCategory", id: "TestSchema.GeometryClass", label: "GeometryClass" },
       });
     });
 
     it("reports a spec override in place of the schema property category", () => {
       const [{ categorization }] = createPropertyFields({
+        categoryContext: [],
         properties: [
           createPrimitiveProperty({
             name: "prop",
@@ -260,11 +268,16 @@ describe("createPropertyFields", () => {
         anchor: "none",
       });
 
-      expect(categorization).to.deep.equal({ anchor: "none", category: { source: "override", id: "custom" } });
+      expect(categorization).to.deep.equal({
+        categoryContext: [],
+        anchor: "none",
+        category: { source: "override", id: "custom" },
+      });
     });
 
-    it("reports no schema category or override when the property has neither", () => {
+    it("reports no property category or override when the property has neither", () => {
       const [{ categorization }] = createPropertyFields({
+        categoryContext: [],
         properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" })],
         valueClassNames: ["TestSchema.C"],
         relationshipInfo: undefined,
@@ -272,7 +285,7 @@ describe("createPropertyFields", () => {
         anchor: "relationshipClass",
       });
 
-      expect(categorization).to.deep.equal({ anchor: "relationshipClass" });
+      expect(categorization).to.deep.equal({ categoryContext: [], anchor: "relationshipClass" });
     });
   });
 });

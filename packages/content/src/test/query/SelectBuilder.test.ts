@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { type EC, type ECSchemaProvider, type RelationshipPath, trimWhitespace } from "@itwin/presentation-shared";
 import { ECSQL_PREFIX } from "../../content/InternalUtils.js";
 import { serializeRelationshipPath } from "../../content/model/Utils.js";
+import { SOURCE_CLASS_ALIAS_PREFIX } from "../../content/query/CalculatedFieldSources.js";
 import { buildSelectProjection } from "../../content/query/SelectBuilder.js";
 import { createPrimitiveProperty } from "../MetadataStubs.js";
 
@@ -38,7 +39,10 @@ const schemaProvider = {
   }),
 } as unknown as ECSchemaProvider;
 
-function createBaseQueryGroup(includeRelatedPath: boolean = true): BaseQueryGroup {
+function createBaseQueryGroup(
+  includeRelatedPath: boolean = true,
+  calculatedFieldAliases: ReadonlyMap<string, string> = new Map(),
+): BaseQueryGroup {
   return {
     paths: [],
     cardinality: "one",
@@ -46,6 +50,7 @@ function createBaseQueryGroup(includeRelatedPath: boolean = true): BaseQueryGrou
       from: "",
       joins: "",
       primaryClassAlias: "this",
+      calculatedFieldAliases,
       relatedClassAliases: includeRelatedPath
         ? new Map([[relatedPathKey, { target: targetAlias, relationship: relationshipAlias }]])
         : new Map(),
@@ -66,6 +71,7 @@ describe("buildSelectProjection", () => {
         id: "calc:missing",
         label: "Missing",
         expression: "this.Missing * :factor",
+        sourceClassName: primaryClass,
         bindings: { factor: { type: "int", value: 2 } },
         type: { kind: "primitive", type: "Integer" },
         primaryClassNames: [primaryClass],
@@ -75,6 +81,7 @@ describe("buildSelectProjection", () => {
         id: "calc:shared",
         label: "Shared",
         expression: ":shared",
+        sourceClassName: primaryClass,
         bindings: { shared: { type: "int", value: 7 } },
         type: { kind: "primitive", type: "Integer" },
         primaryClassNames: [primaryClass],
@@ -82,12 +89,11 @@ describe("buildSelectProjection", () => {
       const projection = await buildSelectProjection({
         schemaProvider,
         selectors: keyOnly ? {} : createSelectors([missingField, sharedField]),
-        applicableCalculatedFieldIds: new Set([sharedField.id]),
         sorting: [
           { field: missingField, direction: "asc" },
           { field: sharedField, direction: "desc" },
         ],
-        group: createBaseQueryGroup(false),
+        group: createBaseQueryGroup(false, new Map([[sharedField.id, "this"]])),
         ownedPathKeys: ownsDirect,
       });
       expect(trimWhitespace(projection.clauses.select)).to.equal(
@@ -139,11 +145,23 @@ describe("buildSelectProjection", () => {
           kind: "calculated",
           id: "calculations_v1:score",
           expression: "this.Code * :factor",
+          sourceClassName: primaryClass,
           bindings: { factor: { type: "int", value: 2 } },
         },
-        { kind: "calculated", id: "calculations_v1:label", expression: "[this].[Code] || '-x'" },
+        {
+          kind: "calculated",
+          id: "calculations_v1:label",
+          expression: "[this].[Code] || '-x'",
+          sourceClassName: primaryClass,
+        },
       ]),
-      group: createBaseQueryGroup(),
+      group: createBaseQueryGroup(
+        true,
+        new Map([
+          ["calculations_v1:score", "this"],
+          ["calculations_v1:label", "this"],
+        ]),
+      ),
       ownedPathKeys: ownsDirectAndRelated,
     });
 
@@ -229,6 +247,7 @@ describe("buildSelectProjection", () => {
         from: "",
         joins: "",
         primaryClassAlias: "this",
+        calculatedFieldAliases: new Map(),
         relatedClassAliases: new Map([
           [
             serializeRelationshipPath({ path: filteredPath, includeInstanceFilters: true }),
@@ -357,6 +376,7 @@ describe("buildSelectProjection", () => {
       id: "calculations_v1:score",
       label: "Score",
       type: { kind: "primitive", type: "Integer" },
+      sourceClassName: primaryClass,
       expression: "this.Code * :factor",
       bindings: { factor: { type: "int", value: 2 } },
       primaryClassNames: [primaryClass],
@@ -364,7 +384,7 @@ describe("buildSelectProjection", () => {
     const projection = await buildSelectProjection({
       schemaProvider,
       selectors: createSelectors([]),
-      group: createBaseQueryGroup(),
+      group: createBaseQueryGroup(true, new Map([[scoreField.id, "this"]])),
       ownedPathKeys: new Set(),
       sorting: [
         { field: codeField, direction: "asc" },
@@ -419,8 +439,10 @@ describe("buildSelectProjection", () => {
   it("aliases calculated selectors with generated column names", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      selectors: createSelectors([{ kind: "calculated", id: "provider:score", expression: "1" }]),
-      group: createBaseQueryGroup(),
+      selectors: createSelectors([
+        { kind: "calculated", id: "provider:score", expression: "1", sourceClassName: primaryClass },
+      ]),
+      group: createBaseQueryGroup(true, new Map([["provider:score", "this"]])),
       ownedPathKeys: ownsDirect,
     });
 
@@ -428,10 +450,43 @@ describe("buildSelectProjection", () => {
     expect(projection.columnNames.calculatedValues).to.deep.equal({ "provider:score": `${ECSQL_PREFIX}calc_0` });
   });
 
+  it("evaluates a narrower-class calculated field against the joined source class's alias", async () => {
+    const sourceAlias = `${SOURCE_CLASS_ALIAS_PREFIX}0`;
+    const pumpField: CalculatedField = {
+      kind: "calculated",
+      id: "provider:flow",
+      label: "Flow",
+      type: { kind: "primitive", type: "Double" },
+      sourceClassName: "TestSchema.Pump",
+      expression: "this.FlowRate * 60",
+      primaryClassNames: ["TestSchema.Pump"],
+    };
+    const projection = await buildSelectProjection({
+      schemaProvider,
+      selectors: createSelectors([
+        {
+          kind: "calculated",
+          id: pumpField.id,
+          expression: pumpField.expression,
+          sourceClassName: pumpField.sourceClassName,
+        },
+      ]),
+      sorting: [{ field: pumpField, direction: "asc" }],
+      group: createBaseQueryGroup(false, new Map([[pumpField.id, sourceAlias]])),
+      ownedPathKeys: ownsDirect,
+    });
+
+    const guardedExpression = `IIF([${sourceAlias}].[ECInstanceId] IS NOT NULL, ([${sourceAlias}].FlowRate * 60), NULL)`;
+    expect(projection.clauses.select).to.contain(`${guardedExpression} AS [${ECSQL_PREFIX}calc_0]`);
+    expect(projection.clauses.select).to.contain(`${guardedExpression} AS [${ECSQL_PREFIX}sort_0]`);
+  });
+
   it("skips calculated selectors when the direct-property key is not owned by this group", async () => {
     const projection = await buildSelectProjection({
       schemaProvider,
-      selectors: createSelectors([{ kind: "calculated", id: "provider:score", expression: "1" }]),
+      selectors: createSelectors([
+        { kind: "calculated", id: "provider:score", expression: "1", sourceClassName: primaryClass },
+      ]),
       group: createBaseQueryGroup(),
       ownedPathKeys: ownsRelated,
     });

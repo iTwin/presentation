@@ -6,15 +6,53 @@
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it } from "vitest";
 import {
+  buildCategoryContext,
   collectInParallel,
   getClassLabel,
   isSchemaVersionAtLeast,
   isSchemaVersionBelow,
   mergeBindings,
+  resolveEffectiveSourceClass,
   stableStringify,
   substituteExpressionAlias,
 } from "../content/InternalUtils.js";
 import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
+
+describe("buildCategoryContext", () => {
+  it("orders local anchors after inherited ancestry without mutating either input", () => {
+    const inheritedContext = Object.freeze([{ stepIndex: 0, kind: "targetClass" }] as const);
+    const localAnchors = Object.freeze([
+      { stepIndex: 2, kind: "targetClass" },
+      { stepIndex: 1, kind: "targetClass" },
+      { stepIndex: 1, kind: "relationshipClass" },
+    ] as const);
+
+    expect(buildCategoryContext({ inheritedContext, localAnchors })).to.deep.equal([
+      { stepIndex: 0, kind: "targetClass" },
+      { stepIndex: 1, kind: "relationshipClass" },
+      { stepIndex: 1, kind: "targetClass" },
+      { stepIndex: 2, kind: "targetClass" },
+    ]);
+  });
+
+  it.each([
+    { name: "root", inheritedContext: [] },
+    { name: "inherited", inheritedContext: [{ stepIndex: 0, kind: "targetClass" }] },
+  ] as const)("preserves the $name context when no local anchors are selected", ({ inheritedContext }) => {
+    expect(buildCategoryContext({ inheritedContext, localAnchors: [] })).to.deep.equal(inheritedContext);
+  });
+
+  it.each([false, true])("deduplicates anchors by step and class kind with reversed input: %s", (reverse) => {
+    const expected = [
+      { stepIndex: 0, kind: "relationshipClass" },
+      { stepIndex: 0, kind: "targetClass" },
+    ] as const;
+    const repeated = [...expected, ...expected];
+    const localAnchors = Object.freeze(reverse ? repeated.reverse() : repeated);
+
+    expect(buildCategoryContext({ inheritedContext: [], localAnchors })).to.deep.equal(expected);
+  });
+});
 
 describe("collectInParallel", () => {
   it("returns an empty array for no items", async () => {
@@ -110,6 +148,32 @@ describe("substituteExpressionAlias", () => {
     expect(
       substituteExpressionAlias({ expression: "this.Code || [this].Label", fromAlias: "this", toAlias: "this" }),
     ).to.equal("[this].Code || [this].Label");
+  });
+});
+
+describe("resolveEffectiveSourceClass", () => {
+  const base = createEntityClass({ fullName: "TestSchema.Base" });
+  const derived = createEntityClass({ fullName: "TestSchema.Derived", baseClass: base });
+  const sibling = createEntityClass({ fullName: "TestSchema.Sibling", baseClass: base });
+  const imodelAccess = createSchemaAccess([base, derived, sibling]);
+
+  it("returns the requested class when it is the declared class or derives from it", async () => {
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Base", "TestSchema.Base")).to.equal(
+      "TestSchema.Base",
+    );
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Derived", "TestSchema.Base")).to.equal(
+      "TestSchema.Derived",
+    );
+  });
+
+  it("returns the declared class when it derives from the requested class", async () => {
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Base", "TestSchema.Derived")).to.equal(
+      "TestSchema.Derived",
+    );
+  });
+
+  it("returns undefined when neither class derives from the other", async () => {
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Derived", "TestSchema.Sibling")).to.be.undefined;
   });
 });
 

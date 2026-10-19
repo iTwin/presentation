@@ -154,6 +154,11 @@ export namespace PropertyField {
 export interface CalculatedField extends BaseField {
   kind: "calculated";
   /**
+   * The class `expression` is evaluated against, as declared by the contributing provider. The field
+   * applies to this class and its subclasses; `primaryClassNames` lists the selected ones.
+   */
+  sourceClassName: EC.FullClassNameDotNotation;
+  /**
    * The ECSQL expression that computes this field's value.
    *
    * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties

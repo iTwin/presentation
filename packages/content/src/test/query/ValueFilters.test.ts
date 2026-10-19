@@ -27,6 +27,7 @@ describe("buildValueFilterClauses", () => {
 
   const calculatedField: CalculatedField = {
     kind: "calculated",
+    sourceClassName: "TestSchema.TestClass",
     id: "calculated-id",
     label: "Calculated",
     type: { kind: "primitive", type: "String" },

@@ -1,6 +1,9 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;function;createInstanceFilterProperties
+public;function;getUniqueFieldValues
 public;interface;InstanceFilterClass
 public;interface;InstanceFilterPropertiesInfo
+public;interface;UniqueFieldValue
 public;function;useInstanceFilterPropertiesInfo
+public;function;useUniqueFieldValues

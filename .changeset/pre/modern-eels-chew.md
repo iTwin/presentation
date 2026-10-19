@@ -4,4 +4,4 @@
 "@itwin/presentation-shared": patch
 ---
 
-Add support for `itwinjs-core@5`
+Bump iTwin.js Core dependencies to `5.14.2`.

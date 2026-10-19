@@ -46,7 +46,10 @@ export interface PropertyValueSelector extends Pick<
  * (`expression`, `targetAlias`, `bindings`) via `Pick`, so the field stays the single source of
  * truth. Unlike a field, a selector is deduplicated.
  */
-export interface CalculatedValueSelector extends Pick<CalculatedField, "expression" | "targetAlias" | "bindings"> {
+export interface CalculatedValueSelector extends Pick<
+  CalculatedField,
+  "expression" | "targetAlias" | "bindings" | "sourceClassName"
+> {
   kind: "calculated";
   /** Stable column identity — equals the calculated field id (`${providerId}:${localId}`). */
   id: string;

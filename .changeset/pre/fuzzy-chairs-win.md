@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-hierarchies": minor
+"@itwin/presentation-hierarchies": major
 ---
 
 Fix hierarchy search only handling a single (latest) iModel results when searching multi-iModel hierarchies.

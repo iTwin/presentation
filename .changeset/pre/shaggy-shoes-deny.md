@@ -31,7 +31,6 @@ The full class names used in this package were defined as `string`, although we 
 - Changed `InstanceKey.className` to be of type `EC.FullClassNameDotNotation` instead of `string`. The value is now always in dot notation, so consumers no longer need to call `normalizeFullClassName` on it.
 - Changed `RelationshipPathStep` class-name properties (`sourceClassName`, `targetClassName` and `relationshipName`) to be of type `EC.FullClassNameDotNotation` instead of `string`.
 - Changed `NavigationValueDescriptor.targetClassName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
-- Removed `compareFullClassNames`. With `EC.FullClassNameDotNotation` being used across the package, this function is no longer needed. Use `===` operator to compare full class names instead.
 
 In many cases migration will be seamless, as long as the input string matches the expected format. In some cases (e.g. when assigning a string variable to one of the affected properties), you may need to use `normalizeFullClassName` to ensure the value is of the correct type:
 

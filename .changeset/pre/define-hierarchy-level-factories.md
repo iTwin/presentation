@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies": major
 ---
 
-**Breaking:** `createNodesQueryClauseFactory` and `NodeSelectClauseColumnNames` are no longer part of the public API.
+Removed `createNodesQueryClauseFactory` and `NodeSelectClauseColumnNames` from the public API.
 
 The `NodesQueryClauseFactory` is now created internally by `createIModelHierarchyProvider` and its methods (`createSelectClause`, `createFilterClauses`) are passed directly as props to `HierarchyDefinition.defineHierarchyLevel`.
 

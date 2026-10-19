@@ -123,7 +123,7 @@ describe("createNavigationValuePopulator", () => {
       imodelAccess,
       selectors: {
         ...selectorsOf({ nav: navigationType }),
-        score: { kind: "calculated", id: "score", expression: "42" },
+        score: { kind: "calculated", id: "score", expression: "42", sourceClassName: "Schema.A" },
       },
       labelsFactory,
     })!;

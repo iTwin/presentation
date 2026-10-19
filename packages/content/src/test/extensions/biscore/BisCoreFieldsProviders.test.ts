@@ -20,8 +20,9 @@ import type { FieldsProviderContribution } from "../../../content/extensions/IMo
 
 const BASE_ELEMENT_PATHS = [
   ["BisCore.ElementHasLinks"],
-  ["BisCore.ElementGroupsMembers", "BisCore.ElementHasLinks"],
   ["BisCore.ModelContainsElements", "BisCore.ModelModelsElement", "BisCore.ElementHasLinks"],
+  ["BisCore.ElementGroupsMembers"],
+  ["BisCore.ElementGroupsMembers", "BisCore.ElementHasLinks"],
 ];
 
 /** Builds an `ECSchemaProvider` stub whose `classDerivesFrom` reflects the given class hierarchy. */
@@ -156,6 +157,67 @@ describe("bisCoreFieldsProvider", () => {
     ]);
   });
 
+  it("starts represented-element paths at the narrower class under a broader geometric target", async () => {
+    // A request for every 3d element must still reach the declaration that only applies to graphical
+    // elements, which then starts at `GraphicalElement3d` so it applies to those elements only.
+    const imodelAccess = createImodelAccess({
+      derivesFrom: {
+        "BisCore.GeometricElement3d": ["BisCore.Element"],
+        "BisCore.GraphicalElement3d": ["BisCore.Element", "BisCore.GeometricElement3d"],
+      },
+    });
+    const contribution = await getContribution(imodelAccess, "BisCore.GeometricElement3d");
+
+    expect(getRelationshipPaths(contribution!)).to.deep.equal([
+      ...BASE_ELEMENT_PATHS,
+      ["BisCore.GeometricElement3dHasTypeDefinition"],
+      ["BisCore.GraphicalElement3dRepresentsElement"],
+    ]);
+    const [typeDefinition, represented] = contribution!.relatedProperties!.slice(BASE_ELEMENT_PATHS.length);
+    expect(typeDefinition.path[0].sourceClassName).to.eq("BisCore.GeometricElement3d");
+    expect(represented.path[0].sourceClassName).to.eq("BisCore.GraphicalElement3d");
+  });
+
+  it("starts type-definition and represented-element paths at their declared classes under BisCore.Element", async () => {
+    const imodelAccess = createImodelAccess({
+      derivesFrom: {
+        "BisCore.GeometricElement3d": ["BisCore.Element"],
+        "BisCore.GraphicalElement3d": ["BisCore.Element", "BisCore.GeometricElement3d"],
+        "BisCore.GeometricElement2d": ["BisCore.Element"],
+        "BisCore.DrawingGraphic": ["BisCore.Element", "BisCore.GeometricElement2d"],
+      },
+    });
+    const contribution = await getContribution(imodelAccess, "BisCore.Element");
+
+    const typeAndRepresented = contribution!.relatedProperties!.slice(BASE_ELEMENT_PATHS.length);
+    expect(
+      typeAndRepresented.map((declaration) => [
+        declaration.path[0].relationshipName,
+        declaration.path[0].sourceClassName,
+      ]),
+    ).to.deep.equal([
+      ["BisCore.GeometricElement3dHasTypeDefinition", "BisCore.GeometricElement3d"],
+      ["BisCore.GraphicalElement3dRepresentsElement", "BisCore.GraphicalElement3d"],
+      ["BisCore.GeometricElement2dHasTypeDefinition", "BisCore.GeometricElement2d"],
+      ["BisCore.DrawingGraphicRepresentsElement", "BisCore.DrawingGraphic"],
+    ]);
+  });
+
+  it("does not contribute represented-element paths for a sibling of the graphical class", async () => {
+    const imodelAccess = createImodelAccess({
+      derivesFrom: {
+        "TestSchema.Sibling": ["BisCore.Element", "BisCore.GeometricElement3d"],
+        "BisCore.GraphicalElement3d": ["BisCore.Element", "BisCore.GeometricElement3d"],
+      },
+    });
+    const contribution = await getContribution(imodelAccess, "TestSchema.Sibling");
+
+    expect(getRelationshipPaths(contribution!)).to.deep.equal([
+      ...BASE_ELEMENT_PATHS,
+      ["BisCore.GeometricElement3dHasTypeDefinition"],
+    ]);
+  });
+
   it("adds source identifier fields at BisCore 1.0.2", async () => {
     const contribution = await getContribution(
       createImodelAccess({ bisCoreVersion: { read: 1, write: 0, minor: 2 } }),
@@ -170,7 +232,7 @@ describe("bisCoreFieldsProvider", () => {
     // The `Kind <> 'Relationship'` filter excludes synchronization-only aspects from the identifier
     // declaration — a behavioral detail worth its own assertion, unlike the label/category metadata
     // below, which full-stack tests already verify end-to-end.
-    const identifier = contribution!.relatedProperties![3];
+    const identifier = contribution!.relatedProperties![BASE_ELEMENT_PATHS.length];
     expect(identifier.path[0].instanceFilter).to.deep.equal({ expression: "this.Kind <> 'Relationship'" });
   });
 

@@ -245,8 +245,12 @@ describe("collectRelatedPropertyFields", () => {
     const candidates = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
 
     expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
-      { anchor: "targetClass", category: { source: "schema", id: "TestSchema.Geometry", label: "Geometry" } },
-      { anchor: "targetClass" },
+      {
+        anchor: "targetClass",
+        category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
+        categoryContext: [],
+      },
+      { anchor: "targetClass", categoryContext: [] },
     ]);
   });
 
@@ -298,8 +302,66 @@ describe("collectRelatedPropertyFields", () => {
     expect(candidate?.categorization).to.deep.equal({
       anchor: "relationshipClass",
       category: { source: "override", id: "custom" },
+      categoryContext: [],
     });
   });
+
+  it.each([false, true])(
+    "reports inherited category scope with explicit property selections: %s",
+    async (explicitSelection) => {
+      const imodelAccess = createSchemaAccess([
+        createEntityClass({
+          fullName: "TestSchema.C",
+          properties: [
+            createPrimitiveProperty({ name: "Prop", declaringClass: "TestSchema.C" }),
+            createPrimitiveProperty({
+              name: "Categorized",
+              declaringClass: "TestSchema.C",
+              category: { fullName: "TestSchema.Geometry", label: "Geometry" },
+            }),
+          ],
+        }),
+      ]);
+      const nestedProvider: IModelFieldsProvider = {
+        id: "nested_v1",
+        async getContribution() {
+          return {
+            relatedProperties: [
+              {
+                path: [bToC],
+                propertyCategoryScope: "parent",
+                properties: explicitSelection ? [{ stepIndex: 0, target: { select: "all" } }] : undefined,
+              },
+            ],
+          };
+        },
+      };
+      const source = createSource([
+        {
+          providerId: nestedProvider.id,
+          declarationIndex: 0,
+          paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+          nested: { categoryContext: [], anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        },
+      ]);
+
+      const candidates = await collectRelatedPropertyFields({
+        imodelAccess,
+        source,
+        ...wireProviders([nestedProvider]),
+      });
+
+      expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
+        { anchor: "targetClass", propertyCategoryScope: "parent", categoryContext: [] },
+        {
+          anchor: "targetClass",
+          propertyCategoryScope: "parent",
+          categoryContext: [],
+          category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
+        },
+      ]);
+    },
+  );
 
   it("enumerates every resolved path of a declaration", async () => {
     const bDoor: RelationshipPath[number] = { ...aToB, targetClassName: "TestSchema.BDoor" };
@@ -449,7 +511,11 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -476,7 +542,12 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1, effectiveCardinalityHint: "many" },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          effectiveCardinalityHint: "many",
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -505,7 +576,11 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -530,7 +605,11 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A1", "TestSchema.A2"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -551,7 +630,11 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -567,7 +650,11 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: "missing_v1",
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -584,7 +671,11 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 
@@ -618,13 +709,21 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         providerId: provider.id,
         declarationIndex: 0,
         paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
       {
         providerId: provider.id,
         declarationIndex: 1,
         paths: [resolvedPath([aToB, bToC1], ["TestSchema.A"])],
-        nested: { anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
       },
     ]);
 

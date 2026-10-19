@@ -40,6 +40,7 @@ function createBaseQueryGroup(overrides?: Partial<BaseQueryGroup["parts"]>): Bas
       joins: "",
       primaryClassAlias: "this",
       relatedClassAliases: new Map(),
+      calculatedFieldAliases: new Map(),
       ...overrides,
     },
   };

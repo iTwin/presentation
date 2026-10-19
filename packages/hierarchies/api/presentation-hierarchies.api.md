@@ -72,7 +72,7 @@ export function createIModelHierarchyProvider(props: IModelHierarchyProviderProp
 // @public
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
-// @alpha
+// @public
 export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
@@ -601,7 +601,7 @@ export interface LimitingECSqlQueryExecutor {
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
 
-// @alpha
+// @public
 interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged" | "instanceLabelSelectClauseFactory" | "hierarchyDefinition"> {
     getHierarchyDefinition: (imodelAccess: IModelAccess) => HierarchyDefinition;
     imodels: Array<{
