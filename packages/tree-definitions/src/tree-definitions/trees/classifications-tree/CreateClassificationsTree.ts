@@ -26,11 +26,11 @@ import type { ClassificationsTreeIdsProvider } from "./ClassificationsTreeIdsPro
  */
 interface ClassificationsTreeProps {
   /**
-   * Returns the ID provider for `imodelKey`, with matching classification system and element filters.
-   * Different iModel versions need separate providers. Created internally for each iModel when omitted.
-   * Configuration is validated when the provider is first resolved for each iModel.
+   * Returns the ID provider for the supplied iModel access, with matching classification system and element filters.
+   * Called once per `imodelKey` with the first access supplied for that key; different iModel versions need separate providers.
+   * Created internally for each iModel when omitted. Configuration is validated when the provider is first resolved for each iModel.
    */
-  getIdsProvider?: (imodelKey: string) => ClassificationsTreeIdsProvider;
+  getIdsProvider?: (imodelAccess: ClassificationsTreeIModelAccess) => ClassificationsTreeIdsProvider;
   /** Configuration shared by hierarchy definitions and searches. */
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -69,7 +69,7 @@ export function createClassificationsTree(props: ClassificationsTreeProps) {
       map: idsProviders,
       createFunc: () => {
         const provider =
-          props.getIdsProvider?.(imodelAccess.imodelKey) ??
+          props.getIdsProvider?.(imodelAccess) ??
           createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
         validateIdsProviderConfig(
           createClassificationsTreeIdsProviderConfig(provider.config),

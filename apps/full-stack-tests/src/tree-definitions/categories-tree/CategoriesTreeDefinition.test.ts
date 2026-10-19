@@ -29,6 +29,7 @@ import { getInsertFunctionByViewType, insertDefinitionContainer, insertSubModel 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { EC } from "@itwin/presentation-shared";
 import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
+import type { IModelAccess } from "../Common.js";
 
 describe("Categories tree", () => {
   afterEach(() => {
@@ -78,7 +79,7 @@ describe("Categories tree", () => {
     expect(hierarchyGetter).toHaveBeenCalled();
     expect(await tree.createSearchTree({ imodelAccess, label: "category" })).toEqual([]);
     expect(searchGetter).toHaveBeenCalled();
-    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
+    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess);
     expect(queryReader).not.toHaveBeenCalled();
   });
 
@@ -109,11 +110,8 @@ describe("Categories tree", () => {
         const [base, changed] = imodels;
         const getIdsProvider =
           providerType === "custom"
-            ? vi.fn((imodelKey: string) => {
-                const imodelAccess = imodels.find(
-                  (imodel) => imodel.imodelAccess.imodelKey === imodelKey,
-                )!.imodelAccess;
-                return createCategoriesTreeIdsProvider({
+            ? vi.fn((imodelAccess: IModelAccess) =>
+                createCategoriesTreeIdsProvider({
                   imodelAccess,
                   type: viewType,
                   sharedIdsProvider: createSharedIdsProvider({
@@ -121,8 +119,8 @@ describe("Categories tree", () => {
                     elementClassName:
                       viewType === "2d" ? CLASS_NAMES.GeometricElement2d : CLASS_NAMES.GeometricElement3d,
                   }),
-                });
-              })
+                }),
+              )
             : undefined;
         const tree = createCategoriesTree({
           viewType,
@@ -157,7 +155,7 @@ describe("Categories tree", () => {
           },
         ]);
         if (getIdsProvider) {
-          expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess.imodelKey], [changed.imodelAccess.imodelKey]]);
+          expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess], [changed.imodelAccess]]);
         }
       },
     );

@@ -152,7 +152,7 @@ export namespace CategoriesTreeNode {
 
 // @beta
 interface CategoriesTreeProps {
-    getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
+    getIdsProvider?: (imodelAccess: CategoriesTreeIModelAccess) => CategoriesTreeIdsProvider;
     hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
     uniqueId?: GuidString;
     // (undocumented)
@@ -253,7 +253,7 @@ export namespace ClassificationsTreeNode {
 
 // @beta
 interface ClassificationsTreeProps {
-    getIdsProvider?: (imodelKey: string) => ClassificationsTreeIdsProvider;
+    getIdsProvider?: (imodelAccess: ClassificationsTreeIModelAccess) => ClassificationsTreeIdsProvider;
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
     uniqueId?: GuidString;
 }
@@ -452,7 +452,7 @@ export namespace ModelsTreeNode {
 
 // @beta
 interface ModelsTreeProps {
-    getIdsProvider?: (imodelKey: string) => ModelsTreeIdsProvider;
+    getIdsProvider?: (imodelAccess: ModelsTreeIModelAccess) => ModelsTreeIdsProvider;
     hierarchyConfig?: ModelsTreeHierarchyConfiguration;
     uniqueId?: GuidString;
 }

@@ -21,11 +21,11 @@ import type { CategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
  */
 interface CategoriesTreeProps {
   /**
-   * Returns the ID provider for `imodelKey`, with matching view type and element filters.
-   * Different iModel versions need separate providers. Created internally for each iModel when omitted.
-   * Configuration is validated when the provider is first resolved for each iModel.
+   * Returns the ID provider for the supplied iModel access, with matching view type and element filters.
+   * Called once per `imodelKey` with the first access supplied for that key; different iModel versions need separate providers.
+   * Created internally for each iModel when omitted. Configuration is validated when the provider is first resolved for each iModel.
    */
-  getIdsProvider?: (imodelKey: string) => CategoriesTreeIdsProvider;
+  getIdsProvider?: (imodelAccess: CategoriesTreeIModelAccess) => CategoriesTreeIdsProvider;
   viewType: "2d" | "3d";
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
@@ -83,7 +83,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
       map: idsProviders,
       createFunc: () => {
         const provider =
-          props.getIdsProvider?.(imodelAccess.imodelKey) ??
+          props.getIdsProvider?.(imodelAccess) ??
           createCategoriesTreeIdsProvider({
             imodelAccess,
             type: props.viewType,

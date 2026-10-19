@@ -25,11 +25,11 @@ import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
  */
 interface ModelsTreeProps {
   /**
-   * Returns the ID provider for `imodelKey`, with matching element filters and hierarchy configuration.
-   * Different iModel versions need separate providers. Created internally for each iModel when omitted.
-   * Configuration is validated when the provider is first resolved for each iModel.
+   * Returns the ID provider for the supplied iModel access, with matching element filters and hierarchy configuration.
+   * Called once per `imodelKey` with the first access supplied for that key; different iModel versions need separate providers.
+   * Created internally for each iModel when omitted. Configuration is validated when the provider is first resolved for each iModel.
    */
-  getIdsProvider?: (imodelKey: string) => ModelsTreeIdsProvider;
+  getIdsProvider?: (imodelAccess: ModelsTreeIModelAccess) => ModelsTreeIdsProvider;
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -77,7 +77,7 @@ export function createModelsTree(props: ModelsTreeProps = {}) {
       map: idsProviders,
       createFunc: () => {
         const provider =
-          props.getIdsProvider?.(imodelAccess.imodelKey) ??
+          props.getIdsProvider?.(imodelAccess) ??
           createModelsTreeIdsProvider({
             imodelAccess,
             hierarchyConfig,

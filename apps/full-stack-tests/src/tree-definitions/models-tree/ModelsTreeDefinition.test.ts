@@ -36,6 +36,7 @@ import {
 import { createModelsTreeProvider } from "./Utils.js";
 
 import type { InstanceKey, Props } from "@itwin/presentation-shared";
+import type { IModelAccess } from "../Common.js";
 
 describe("Models tree", () => {
   afterEach(() => {
@@ -83,7 +84,7 @@ describe("Models tree", () => {
     expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
     expect(await tree.createSearchTree({ imodelAccess, targetItems: [imodel.subject] })).toEqual([]);
     expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
-    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
+    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess);
     expect(queryReader).not.toHaveBeenCalled();
   });
 
@@ -126,17 +127,16 @@ describe("Models tree", () => {
       const [base, changed] = imodels;
       const getIdsProvider =
         providerType === "custom"
-          ? vi.fn((imodelKey: string) => {
-              const imodelAccess = imodels.find((imodel) => imodel.imodelAccess.imodelKey === imodelKey)!.imodelAccess;
-              return createModelsTreeIdsProvider({
+          ? vi.fn((imodelAccess: IModelAccess) =>
+              createModelsTreeIdsProvider({
                 imodelAccess,
                 hierarchyConfig,
                 sharedIdsProvider: createSharedIdsProvider({
                   imodelAccess,
                   elementClassName: "BisCore.GeometricElement3d",
                 }),
-              });
-            })
+              }),
+            )
           : undefined;
       const schemaChecks = imodels.map(({ imodelAccess }) => vi.spyOn(imodelAccess, "classDerivesFrom"));
       const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
@@ -161,7 +161,7 @@ describe("Models tree", () => {
         expect(schemaCheck).toHaveBeenCalledWith(CLASS_NAMES.GeometricElement3d, CLASS_NAMES.GeometricElement3d);
       }
       if (getIdsProvider) {
-        expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess.imodelKey], [changed.imodelAccess.imodelKey]]);
+        expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess], [changed.imodelAccess]]);
       }
 
       baseQueryReader.mockClear();

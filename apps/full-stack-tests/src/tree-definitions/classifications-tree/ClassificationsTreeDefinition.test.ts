@@ -28,6 +28,7 @@ import {
 
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
+import type { IModelAccess } from "../Common.js";
 
 const rootClassificationSystemCode = "TestClassificationSystem";
 
@@ -75,7 +76,7 @@ describe("Classifications tree", () => {
     expect(hierarchyGetter).toHaveBeenCalledWith([imodel.table.id]);
     expect(await tree.createSearchTree({ imodelAccess, label: "classification" })).toEqual([]);
     expect(searchGetter).toHaveBeenCalled();
-    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess.imodelKey);
+    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess);
     expect(queryReader.mock.calls.map(([, options]) => options?.restartToken)).not.toContainEqual(
       expect.stringMatching(/^(ClassificationsTreeIdsProvider|ElementModelCategoriesProvider)\//),
     );
@@ -128,13 +129,10 @@ describe("Classifications tree", () => {
         expect(idsProvider.state).toBe("loaded");
         return vi.spyOn(idsProvider, "getDirectChildClassifications");
       });
-      const providersByKey = new Map(
-        imodels.map(({ imodelAccess, idsProvider }) => [imodelAccess.imodelKey, idsProvider]),
-      );
-      const getIdsProvider = vi.fn((imodelKey: string) => {
-        const idsProvider = providersByKey.get(imodelKey);
+      const getIdsProvider = vi.fn((imodelAccess: IModelAccess) => {
+        const idsProvider = imodels.find((imodel) => imodel.imodelAccess === imodelAccess)?.idsProvider;
         if (!idsProvider) {
-          throw new Error(`Unexpected iModel key: ${imodelKey}`);
+          throw new Error(`Unexpected iModel access: ${imodelAccess.imodelKey}`);
         }
         return idsProvider;
       });
@@ -179,7 +177,7 @@ describe("Classifications tree", () => {
         },
       ]);
       for (const { imodelAccess } of imodels) {
-        expect(getIdsProvider).toHaveBeenCalledWith(imodelAccess.imodelKey);
+        expect(getIdsProvider).toHaveBeenCalledWith(imodelAccess);
       }
       expect(getIdsProvider).toHaveBeenCalledTimes(2);
       for (const childGetter of childGetters) {
