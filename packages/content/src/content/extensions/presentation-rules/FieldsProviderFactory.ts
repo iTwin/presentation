@@ -24,7 +24,9 @@ import type * as PresentationRules from "./PresentationRules.js";
 /** Local alias for the contribution type (not exported from IModelFieldsProvider). */
 type Contribution = NonNullable<Awaited<ReturnType<IModelFieldsProvider["getContribution"]>>>;
 /** Local alias for a single related-properties declaration. */
-type RelatedPropertiesDeclaration = NonNullable<Contribution["relatedProperties"]>[number];
+type RelatedPropertiesDeclaration = NonNullable<Contribution["relatedProperties"]>[number] & {
+  properties: StepPropertySpec[];
+};
 /** Local alias for a single calculated-field declaration. */
 type CalculatedFieldDeclaration = NonNullable<Contribution["calculatedFields"]>[number];
 
@@ -399,7 +401,14 @@ async function flattenRelatedPropertiesSpecs(props: {
 
         // Prepend the parent's path to each nested declaration.
         for (const nestedDecl of nested.declarations) {
-          declarations.push({ ...nestedDecl, path: [...result.declaration.path, ...nestedDecl.path] });
+          declarations.push({
+            ...nestedDecl,
+            path: [...result.declaration.path, ...nestedDecl.path],
+            properties: nestedDecl.properties.map((step) => ({
+              ...step,
+              stepIndex: result.declaration.path.length + step.stepIndex,
+            })),
+          });
         }
       }
     }
