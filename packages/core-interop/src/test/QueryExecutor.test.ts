@@ -142,19 +142,33 @@ describe("createECSqlQueryExecutor", () => {
       expect(options.restartToken).toBeTruthy();
     });
 
-    it("sorts ID set bindings without mutating the input array", async () => {
+    it.each<{ name: string; value: Extract<ECSqlBinding, { type: "idset" }>["value"]; expectedIds?: string[] }>([
+      { name: "mutable array", value: ["0x10", "0x2", "0x2"], expectedIds: ["0x2", "0x10"] },
+      { name: "readonly array", value: Object.freeze(["0x10", "0x2", "0x2"]), expectedIds: ["0x2", "0x10"] },
+      { name: "mutable set", value: new Set(["0x10", "0x2"]), expectedIds: ["0x2", "0x10"] },
+      { name: "readonly set", value: createReadonlySet(["0x10", "0x2"]), expectedIds: ["0x2", "0x10"] },
+      { name: "empty array", value: Object.freeze([]), expectedIds: [] },
+      { name: "empty set", value: new Set(), expectedIds: [] },
+      { name: "undefined", value: undefined },
+    ])("binds an idset from $name without mutating it", async ({ value, expectedIds }) => {
       const imodel = { createQueryReader: vi.fn().mockReturnValue(createCoreECSqlReaderStub([])) };
-      const ids = ["0x456", "0x123"];
+      const originalIds = value ? [...value] : undefined;
+      const expectedBinder = new QueryBinder();
+      if (expectedIds) {
+        expectedBinder.bindIdSet(1, expectedIds);
+      } else {
+        expectedBinder.bindNull(1);
+      }
+
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader({ ecsql: "ecsql", bindings: [{ type: "idset", value: ids }] });
+      const reader = executor.createQueryReader({ ecsql: "ecsql", bindings: [{ type: "idset", value }] });
       for await (const _ of reader) {
       }
 
-      expect(ids).toEqual(["0x456", "0x123"]);
+      expect(imodel.createQueryReader).toHaveBeenCalledOnce();
       const binder = imodel.createQueryReader.mock.calls[0][1];
-      const expectedBinder = new QueryBinder();
-      expectedBinder.bindIdSet(1, ["0x123", "0x456"]);
-      expect(JSON.stringify(binder.serialize())).toBe(JSON.stringify(expectedBinder.serialize()));
+      expect(binder.serialize()).toEqual(expectedBinder.serialize());
+      expect(value ? [...value] : undefined).toEqual(originalIds);
     });
 
     it("calls IModel's `createQueryReader` with named bindings", async () => {
@@ -326,3 +340,14 @@ describe("createECSqlQueryExecutor", () => {
     });
   });
 });
+
+function createReadonlySet<T>(values: T[]): ReadonlySet<T> {
+  const set = new Set(values);
+  const throwOnMutation = () => {
+    throw new Error("Attempted to mutate a readonly set");
+  };
+  set.add = throwOnMutation;
+  set.delete = throwOnMutation;
+  set.clear = throwOnMutation;
+  return set;
+}
