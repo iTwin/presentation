@@ -16,7 +16,7 @@ function MyTree() {
     getSearchPaths: useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
       return async () => {
         // before: `getFilteredPaths` returned the paths directly:
-        //   return getSearchTargetPaths({ searchText });
+        return getSearchTargetPaths({ searchText });
         // after: convert the paths into a `HierarchySearchTree`:
         return HierarchySearchTree.createFromPathsList(await getSearchTargetPaths({ searchText }));
       };
