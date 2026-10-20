@@ -5,9 +5,9 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
-import { DeepReadonly } from '@itwin/presentation-shared';
+import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
-import { ECSchemaProvider } from '@itwin/presentation-shared';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import type { GuidString } from '@itwin/core-bentley';
 import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
@@ -20,6 +20,7 @@ import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { Subscribable } from '@itwin/presentation-shared';
 
 // @beta
 interface CachedCategoryInfo {
@@ -53,33 +54,33 @@ export interface CategoriesTreeIdsProvider {
     }>;
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
-    }): Promise<{
+    }): Subscribable<{
         categories: ReadonlyArray<CategoryId>;
         definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getDefinitionContainersSearchPaths(props: {
         definitionContainerIds: ReadonlyId64Arg;
-    }): AsyncIterableIterator<CategoriesTreeSearchPath>;
+    }): Subscribable<CategoriesTreeSearchPath>;
     getDirectChildDefinitionContainersAndCategories(props: {
         parentDefinitionContainerIds: ReadonlyId64Arg;
         includeEmpty?: boolean;
-    }): Promise<{
+    }): Subscribable<{
         categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
         definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
-    getIsDefinitionContainerSupported(): Promise<boolean>;
+    getIsDefinitionContainerSupported(): Subscribable<boolean>;
     getRootDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
-    }): Promise<{
+    }): Subscribable<{
         categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
         definitionContainers: ReadonlyArray<DefinitionContainerId>;
     }>;
     getSearchPathsUpToRootCategory(props: {
         categoryId: Id64String;
-    }): Promise<CategoriesTreeSearchPath>;
+    }): Subscribable<CategoriesTreeSearchPath>;
     getSubCategoriesSearchPaths(props: {
         subCategoryIds: ReadonlyId64Arg;
-    }): AsyncIterableIterator<CategoriesTreeSearchPath>;
+    }): Subscribable<CategoriesTreeSearchPath>;
     readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
     readonly state: IdsProviderDataState;
     readonly subModeledElements: SharedIdsProvider["subModeledElements"];
@@ -207,9 +208,9 @@ interface ClassificationsTreeHierarchyConfiguration {
 // @beta
 export interface ClassificationsTreeIdsProvider {
     readonly config: DeepReadonly<Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">>;
-    getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
-    getClassificationsPath(classificationOrTableIds: ReadonlyId64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath>;
-    getDirectChildClassifications(classificationOrTableIds: ReadonlyId64Arg): Promise<ReadonlyArray<Readonly<{
+    getAllClassifications(): Subscribable<ReadonlyArray<ClassificationId>>;
+    getClassificationsPath(classificationOrTableIds: ReadonlyId64Arg): Subscribable<ClassificationsTreeSearchPath>;
+    getDirectChildClassifications(classificationOrTableIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<Readonly<{
         id: ClassificationId;
         hasChildClassifications: boolean;
     }>>>;
@@ -380,13 +381,13 @@ interface ModelsTreeHierarchyConfiguration {
 export interface ModelsTreeIdsProvider {
     readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
     readonly config: DeepReadonly<Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">>;
-    createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
-    createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
-    getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<Id64String>>;
-    getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<ModelId>>;
-    getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
-    getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
-    getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
+    createSubjectInstanceKeysPath(targetSubjectId: Id64String): Subscribable<ModelsTreeSearchPath>;
+    createUpToModelInstanceKeyPaths(modelId: Id64String): Subscribable<ModelsTreeSearchPath>;
+    getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<Id64String>>;
+    getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<ModelId>>;
+    getHiddenModelIds(): Subscribable<ReadonlySet<ModelId>>;
+    getParentSubjectIds(): Subscribable<ReadonlyArray<Id64String>>;
+    getSearchPathsUpToRootCategory(categoryId: Id64String): Subscribable<ModelsTreeSearchPath>;
     readonly state: IdsProviderDataState;
     readonly subModeledElements: SharedIdsProvider["subModeledElements"];
 }
@@ -488,34 +489,34 @@ export interface SharedIdsProvider {
         readonly state: IdsProviderDataState;
         getCategories(props: {
             modelId: Id64String;
-        }): Promise<ReadonlySet<CategoryId>>;
-        getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
-        getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
+        }): Subscribable<ReadonlySet<CategoryId>>;
+        getCategoriesContainingNonExcludedElements(): Subscribable<ReadonlySet<CategoryId>>;
+        getAllCategoriesOfElements(): Subscribable<ReadonlySet<CategoryId>>;
     };
     readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
     readonly models: {
         readonly state: IdsProviderDataState;
-        getAllModels(): Promise<ReadonlySet<ModelId>>;
-        getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
+        getAllModels(): Subscribable<ReadonlySet<ModelId>>;
+        getPlanProjectionModels(): Subscribable<ReadonlySet<ModelId>>;
         getModels(props: {
             categoryId: Id64String;
             excludeSubModels?: boolean;
             includeOnlyTopMostElementCategory?: boolean;
             excludeIfOnlyExcludedClasses?: boolean;
-        }): AsyncIterableIterator<ModelId>;
+        }): Subscribable<ModelId>;
     };
     readonly subCategories: {
         readonly state: IdsProviderDataState;
-        getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+        getCategorySubCategoriesMap(): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
         getSubCategoryCategories(props: {
             subCategoryIds: ReadonlyId64Arg;
-        }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+        }): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
     };
     readonly subModeledElements: {
         readonly state: IdsProviderDataState;
         getAllSubModeledElements(props?: {
             excludeIfOnlyExcludedClasses?: boolean;
-        }): Promise<ReadonlySet<Id64String>>;
+        }): Subscribable<ReadonlySet<Id64String>>;
     };
 }
 

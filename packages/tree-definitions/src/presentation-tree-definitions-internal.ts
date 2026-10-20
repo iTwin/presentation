@@ -13,6 +13,7 @@ export { createClassificationsTreeIdsProvider } from "./tree-definitions/trees/c
 export { createModelsTree } from "./tree-definitions/trees/models-tree/CreateModelsTree.js";
 export { defaultHierarchyConfiguration as defaultModelsTreeHierarchyConfiguration } from "./tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 export { createModelsTreeIdsProvider } from "./tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
+export { toObservable } from "./tree-definitions/shared/Rxjs.js";
 
 export type { ElementId } from "./tree-definitions/shared/Types.js";
 export type { ParentElementsPath } from "./tree-definitions/shared/Utils.js";

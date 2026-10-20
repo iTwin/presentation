@@ -8,6 +8,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CLASS_NAMES,
@@ -502,7 +503,9 @@ describe("Categories tree", () => {
           const defaultSubCategoryId = getDefaultSubCategoryId(keys.category.id);
 
           const paths = new Array<CategoriesTreeSearchPath>();
-          for await (const path of idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId })) {
+          for await (const path of eachValueFrom(
+            idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId }),
+          )) {
             paths.push(path);
           }
           expect(paths).toEqual([]);

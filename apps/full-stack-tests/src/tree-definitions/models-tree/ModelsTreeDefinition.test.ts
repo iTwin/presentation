@@ -13,6 +13,7 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
+import { firstValueFrom, of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
@@ -22,7 +23,7 @@ import {
   createModelsTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
-import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { CLASS_NAMES, toObservable } from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -67,10 +68,10 @@ describe("Models tree", () => {
       hierarchyConfig,
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
     });
-    await idsProvider.getParentSubjectIds();
-    const hierarchyGetter = vi.spyOn(idsProvider, "getChildSubjectIds").mockResolvedValue([]);
-    vi.spyOn(idsProvider, "getChildSubjectModelIds").mockResolvedValue([]);
-    const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockResolvedValue([]);
+    await firstValueFrom(toObservable(idsProvider.getParentSubjectIds()));
+    const hierarchyGetter = vi.spyOn(idsProvider, "getChildSubjectIds").mockReturnValue(of([]));
+    vi.spyOn(idsProvider, "getChildSubjectModelIds").mockReturnValue(of([]));
+    const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockReturnValue(of([]));
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
     const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });

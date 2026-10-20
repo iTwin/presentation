@@ -13,12 +13,18 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
+import { firstValueFrom } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { createIModelHierarchyProvider, HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
-import { CLASS_NAMES, createModelsTree, SearchLimitExceededError } from "@itwin/presentation-tree-definitions/internal";
+import {
+  CLASS_NAMES,
+  createModelsTree,
+  SearchLimitExceededError,
+  toObservable,
+} from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -468,14 +474,20 @@ describe("Models tree", () => {
         imodelConnection: setupResult.imodelConnection,
         hierarchyConfig: { elements: { excludedClasses: ["Generic.PhysicalObject"] } },
       });
-      expect(await idsProvider.subModeledElements.getAllSubModeledElements()).toEqual(
+      expect(await firstValueFrom(toObservable(idsProvider.subModeledElements.getAllSubModeledElements()))).toEqual(
         new Set([setupResult.modeledElement.id]),
       );
       expect(
-        await idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
+        await firstValueFrom(
+          toObservable(idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })),
+        ),
       ).toEqual(new Set());
       expect(
-        await idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: false }),
+        await firstValueFrom(
+          toObservable(
+            idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: false }),
+          ),
+        ),
       ).toEqual(new Set([setupResult.modeledElement.id]));
     });
 

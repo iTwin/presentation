@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EMPTY, filter, firstValueFrom, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
+import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { eachValueFrom } from "@itwin/presentation-shared";
 import { fromWithRelease } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
@@ -16,7 +15,7 @@ import { SubModeledElementsProvider } from "./SubModeledElementsProvider.js";
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
 import type { CategoryId, ElementId, ModelId, ReadonlyId64Arg, SubCategoryId } from "../Types.js";
 
 /**
@@ -48,11 +47,19 @@ export interface SharedIdsProvider {
   readonly models: {
     /** State of model data. */
     readonly state: IdsProviderDataState;
-    /** Returns IDs of non-private, non-template models containing visible elements of the configured class, including excluded classes. */
-    getAllModels(): Promise<ReadonlySet<ModelId>>;
-    /** Returns IDs of non-private, non-template plan projection models containing visible elements of the configured class. */
-    getPlanProjectionModels(): Promise<ReadonlySet<ModelId>>;
-    /** Yields model IDs containing elements in the specified category. Yields no IDs if no models match the filters. */
+    /**
+     * Returns IDs of non-private, non-template models containing visible elements of the configured class, including excluded classes.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getAllModels(): Subscribable<ReadonlySet<ModelId>>;
+    /**
+     * Returns IDs of non-private, non-template plan projection models containing visible elements of the configured class.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getPlanProjectionModels(): Subscribable<ReadonlySet<ModelId>>;
+    /** Emits a stream of model IDs containing elements in the specified category, one value per model. Emits nothing if no models match the filters. */
     getModels(props: {
       /** The ID of the category for which to retrieve models. */
       categoryId: Id64String;
@@ -60,43 +67,67 @@ export interface SharedIdsProvider {
        * Omits models that model elements rather than information partitions.
        *
        * **NOTE:** Depends on `subModeledElements` data, which is loaded first if it isn't loaded yet; in-flight loading is shared.
-       * Failures to load it reject this iterator and are reflected in `subModeledElements.state`.
+       * Failures to load it error this stream and are reflected in `subModeledElements.state`.
        */
       excludeSubModels?: boolean;
       /** Requires the category to contain elements without a parent element in the model. */
       includeOnlyTopMostElementCategory?: boolean;
       /** Requires the category to contain visible, non-excluded top-level elements in the model. */
       excludeIfOnlyExcludedClasses?: boolean;
-    }): AsyncIterableIterator<ModelId>;
+    }): Subscribable<ModelId>;
   };
   /** Sub-modeled element lookups. */
   readonly subModeledElements: {
     /** State of sub-modeled element data. */
     readonly state: IdsProviderDataState;
-    /** Returns IDs of elements modeling sub-models with visible elements, optionally omitting those with only excluded elements. */
-    getAllSubModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Promise<ReadonlySet<Id64String>>;
+    /**
+     * Returns IDs of elements modeling sub-models with visible elements, optionally omitting those with only excluded elements.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getAllSubModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Subscribable<ReadonlySet<Id64String>>;
   };
   /** Category lookups. */
   readonly categories: {
     /** State of category data. */
     readonly state: IdsProviderDataState;
-    /** Returns categories containing visible, non-excluded top-level elements in the specified model. */
-    getCategories(props: { modelId: Id64String }): Promise<ReadonlySet<CategoryId>>;
-    /** Returns category IDs of non-excluded elements. */
-    getCategoriesContainingNonExcludedElements(): Promise<ReadonlySet<CategoryId>>;
-    /** Returns category IDs of visible elements of the configured class, including excluded classes. */
-    getAllCategoriesOfElements(): Promise<ReadonlySet<CategoryId>>;
+    /**
+     * Returns categories containing visible, non-excluded top-level elements in the specified model.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getCategories(props: { modelId: Id64String }): Subscribable<ReadonlySet<CategoryId>>;
+    /**
+     * Returns category IDs of non-excluded elements.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getCategoriesContainingNonExcludedElements(): Subscribable<ReadonlySet<CategoryId>>;
+    /**
+     * Returns category IDs of visible elements of the configured class, including excluded classes.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getAllCategoriesOfElements(): Subscribable<ReadonlySet<CategoryId>>;
   };
   /** Sub-category lookups. */
   readonly subCategories: {
     /** State of sub-category data. */
     readonly state: IdsProviderDataState;
-    /** Returns a mapping from category IDs to their sub-category IDs. */
-    getCategorySubCategoriesMap(): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
-    /** Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category. */
+    /**
+     * Returns a mapping from category IDs to their sub-category IDs.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getCategorySubCategoriesMap(): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+    /**
+     * Groups the supplied sub-category IDs by parent category, omitting categories with only one sub-category.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
     getSubCategoryCategories(props: {
       subCategoryIds: ReadonlyId64Arg;
-    }): Promise<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+    }): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
   };
 }
 
@@ -217,11 +248,11 @@ export function createSharedIdsProvider({
       get state(): IdsProviderDataState {
         return elementModelCategoriesProvider.state;
       },
-      getAllModels: async () => firstValueFrom(getAllModels()),
-      getPlanProjectionModels: async (): Promise<Id64Set> => {
-        return firstValueFrom(
-          elementModelCategoriesProvider.getData().pipe(map(({ planProjectionModels }) => planProjectionModels)),
-        );
+      getAllModels: (): Subscribable<ReadonlySet<ModelId>> => {
+        return getAllModels();
+      },
+      getPlanProjectionModels: (): Subscribable<ReadonlySet<ModelId>> => {
+        return elementModelCategoriesProvider.getData().pipe(map(({ planProjectionModels }) => planProjectionModels));
       },
       getModels({
         categoryId,
@@ -233,30 +264,28 @@ export function createSharedIdsProvider({
         excludeSubModels?: boolean;
         includeOnlyTopMostElementCategory?: boolean;
         excludeIfOnlyExcludedClasses?: boolean;
-      }): AsyncIterableIterator<ModelId> {
+      }): Subscribable<ModelId> {
         let getCategoryModelsInfo = () =>
           elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
 
         if (excludeSubModels) {
           getCategoryModelsInfo = () => getCategoryModelsInfoWithoutSubModels();
         }
-        return eachValueFrom(
-          getCategoryModelsInfo().pipe(
-            mergeMap((categoryModelsInfo) => {
-              const categoryModels = categoryModelsInfo.get(categoryId);
-              if (!categoryModels) {
-                return EMPTY;
-              }
-              return from(categoryModels);
-            }),
-            includeOnlyTopMostElementCategory
-              ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement)
-              : identity,
-            excludeIfOnlyExcludedClasses
-              ? filter(({ hasNonExcludedTopMostElements }) => hasNonExcludedTopMostElements)
-              : identity,
-            map(({ id }) => id),
-          ),
+        return getCategoryModelsInfo().pipe(
+          mergeMap((categoryModelsInfo) => {
+            const categoryModels = categoryModelsInfo.get(categoryId);
+            if (!categoryModels) {
+              return EMPTY;
+            }
+            return from(categoryModels);
+          }),
+          includeOnlyTopMostElementCategory
+            ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement)
+            : identity,
+          excludeIfOnlyExcludedClasses
+            ? filter(({ hasNonExcludedTopMostElements }) => hasNonExcludedTopMostElements)
+            : identity,
+          map(({ id }) => id),
         );
       },
     },
@@ -264,69 +293,58 @@ export function createSharedIdsProvider({
       get state(): IdsProviderDataState {
         return subModeledElementsState.state;
       },
-      getAllSubModeledElements: async (props) => firstValueFrom(getAllSubModeledElements(props)),
+      getAllSubModeledElements: (props?: { excludeIfOnlyExcludedClasses?: boolean }): Subscribable<Set<ElementId>> => {
+        return getAllSubModeledElements(props);
+      },
     },
     categories: {
       get state(): IdsProviderDataState {
         return elementModelCategoriesProvider.state;
       },
-      getCategories: async ({ modelId }: { modelId: Id64String }): Promise<Id64Set> => {
-        return firstValueFrom(
-          elementModelCategoriesProvider.getData().pipe(
-            map(({ modelsCategoriesInfo }) => {
-              const modelInfo = modelsCategoriesInfo.get(modelId);
-              return modelInfo?.categoriesOfTopMostNonExcludedElements ?? new Set();
-            }),
-          ),
-        );
+      getCategories: ({ modelId }: { modelId: Id64String }): Subscribable<Set<CategoryId>> =>
+        elementModelCategoriesProvider.getData().pipe(
+          map(({ modelsCategoriesInfo }) => {
+            const modelInfo = modelsCategoriesInfo.get(modelId);
+            return modelInfo?.categoriesOfTopMostNonExcludedElements ?? new Set();
+          }),
+        ),
+      getCategoriesContainingNonExcludedElements: (): Subscribable<Set<CategoryId>> => {
+        return elementModelCategoriesProvider
+          .getData()
+          .pipe(map(({ categoriesContainingNonExcludedElements }) => categoriesContainingNonExcludedElements));
       },
-      getCategoriesContainingNonExcludedElements: async (): Promise<Id64Set> => {
-        return firstValueFrom(
-          elementModelCategoriesProvider
-            .getData()
-            .pipe(map(({ categoriesContainingNonExcludedElements }) => categoriesContainingNonExcludedElements)),
-        );
-      },
-      getAllCategoriesOfElements: async (): Promise<Id64Set> => {
-        return firstValueFrom(elementModelCategoriesProvider.getData().pipe(map(({ allCategories }) => allCategories)));
+      getAllCategoriesOfElements: (): Subscribable<Set<CategoryId>> => {
+        return elementModelCategoriesProvider.getData().pipe(map(({ allCategories }) => allCategories));
       },
     },
     subCategories: {
       get state(): IdsProviderDataState {
         return subCategoriesProvider.state;
       },
-      getCategorySubCategoriesMap: async (): Promise<Map<CategoryId, SubCategoryId[]>> => {
-        return firstValueFrom(
-          subCategoriesProvider.getData().pipe(map(({ categorySubCategories }) => categorySubCategories)),
-        );
+      getCategorySubCategoriesMap: (): Subscribable<Map<CategoryId, SubCategoryId[]>> => {
+        return subCategoriesProvider.getData().pipe(map(({ categorySubCategories }) => categorySubCategories));
       },
-      getSubCategoryCategories: async ({
+      getSubCategoryCategories: ({
         subCategoryIds,
       }: {
         subCategoryIds: ReadonlyId64Arg;
-      }): Promise<Map<CategoryId, SubCategoryId[]>> => {
-        return firstValueFrom(
-          subCategoriesProvider.getData().pipe(
-            mergeMap(({ subCategoryCategories, categorySubCategories }) =>
-              fromWithRelease({ source: subCategoryIds, releaseOnCount: 500 }).pipe(
-                reduce((acc, subCategoryId) => {
-                  const categoryId = subCategoryCategories.get(subCategoryId);
-                  if (categoryId === undefined) {
-                    return acc;
-                  }
-                  const subCategories = categorySubCategories.get(categoryId);
-                  if (!subCategories || subCategories.length <= 1) {
-                    return acc;
-                  }
-                  const entry = getOrCreate({
-                    map: acc,
-                    key: categoryId,
-                    createFunc: () => new Array<SubCategoryId>(),
-                  });
-                  entry.push(subCategoryId);
+      }): Subscribable<Map<CategoryId, SubCategoryId[]>> => {
+        return subCategoriesProvider.getData().pipe(
+          mergeMap(({ subCategoryCategories, categorySubCategories }) =>
+            fromWithRelease({ source: subCategoryIds, releaseOnCount: 500 }).pipe(
+              reduce((acc, subCategoryId) => {
+                const categoryId = subCategoryCategories.get(subCategoryId);
+                if (categoryId === undefined) {
                   return acc;
-                }, new Map<CategoryId, SubCategoryId[]>()),
-              ),
+                }
+                const subCategories = categorySubCategories.get(categoryId);
+                if (!subCategories || subCategories.length <= 1) {
+                  return acc;
+                }
+                const entry = getOrCreate({ map: acc, key: categoryId, createFunc: () => new Array<SubCategoryId>() });
+                entry.push(subCategoryId);
+                return acc;
+              }, new Map<CategoryId, SubCategoryId[]>()),
             ),
           ),
         );

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubCategory } from "presentation-test-utilities";
+import { firstValueFrom, of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
@@ -13,7 +14,7 @@ import {
   createCategoriesTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
-import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { CLASS_NAMES, toObservable } from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -58,13 +59,13 @@ describe("Categories tree", () => {
       type: "3d",
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
     });
-    await idsProvider.getAllDefinitionContainersAndCategories();
+    await firstValueFrom(toObservable(idsProvider.getAllDefinitionContainersAndCategories()));
     const hierarchyGetter = vi
       .spyOn(idsProvider, "getRootDefinitionContainersAndCategories")
-      .mockResolvedValue({ categories: [], definitionContainers: [] });
+      .mockReturnValue(of({ categories: [], definitionContainers: [] }));
     const searchGetter = vi
       .spyOn(idsProvider, "getAllDefinitionContainersAndCategories")
-      .mockResolvedValue({ categories: [], definitionContainers: [] });
+      .mockReturnValue(of({ categories: [], definitionContainers: [] }));
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
     const tree = createCategoriesTree({ imodelAccess, viewType: "3d", idsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });

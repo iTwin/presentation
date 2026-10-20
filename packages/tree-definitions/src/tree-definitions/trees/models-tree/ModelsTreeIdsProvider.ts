@@ -6,16 +6,11 @@
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
-import {
-  type DeepReadonly,
-  eachValueFrom,
-  type ECSchemaProvider,
-  ECSql,
-  type ECSqlBinding,
-} from "@itwin/presentation-shared";
+import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
+import { toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
@@ -23,6 +18,7 @@ import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 import type { Observable } from "rxjs";
 import type { Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { DeepReadonly, ECSchemaProvider, ECSqlBinding, Subscribable } from "@itwin/presentation-shared";
 import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { ModelId, ReadonlyId64Arg, SubjectId } from "../../shared/Types.js";
 import type {
@@ -74,26 +70,46 @@ export interface ModelsTreeIdsProvider {
   readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
   /** State of subject/model ownership data. Loaded by `getParentSubjectIds`, independently of shared data. */
   readonly state: IdsProviderDataState;
-  /** Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy. */
-  getParentSubjectIds(): Promise<ReadonlyArray<Id64String>>;
-  /** Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants. */
-  getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<Id64String>>;
-  /** Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects. */
-  getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<ModelId>>;
-  /** Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy. */
-  getHiddenModelIds(): Promise<ReadonlySet<ModelId>>;
-  /** Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters. */
-  createSubjectInstanceKeysPath(targetSubjectId: Id64String): Promise<ModelsTreeSearchPath>;
   /**
-   * Yields each subject path leading to the specified model, excluding the model itself.
-   * Yields no paths if the model is excluded or is not associated with a subject.
+   * Returns subjects containing eligible models and their ancestors, including subjects hidden in the hierarchy.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
    */
-  createUpToModelInstanceKeyPaths(modelId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
+  getParentSubjectIds(): Subscribable<ReadonlyArray<Id64String>>;
   /**
-   * Yields paths to models containing top-level, non-excluded elements in the specified category, excluding sub-models.
-   * Paths include the model but not the category. Yields no paths if no eligible models exist.
+   * Returns child subject IDs for the supplied parents, skipping hidden subjects to find their visible descendants.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
    */
-  getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath>;
+  getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<Id64String>>;
+  /**
+   * Returns model IDs belonging to the supplied subjects and their hidden descendants, stopping at visible subjects.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
+  getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<ModelId>>;
+  /**
+   * Returns IDs of models that are queried by tree definition, but should be hidden from the final hierarchy.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
+  getHiddenModelIds(): Subscribable<ReadonlySet<ModelId>>;
+  /**
+   * Returns the root-to-subject path, omitting hidden subjects and applying the configured root and empty-model filters.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
+  createSubjectInstanceKeysPath(targetSubjectId: Id64String): Subscribable<ModelsTreeSearchPath>;
+  /**
+   * Emits a stream of subject paths leading to the specified model, one value per path, excluding the model itself.
+   * Emits nothing if the model is excluded or is not associated with a subject.
+   */
+  createUpToModelInstanceKeyPaths(modelId: Id64String): Subscribable<ModelsTreeSearchPath>;
+  /**
+   * Emits a stream of paths to models containing top-level, non-excluded elements in the specified category, one value
+   * per path, excluding sub-models. Paths include the model but not the category. Emits nothing if no eligible models exist.
+   */
+  getSearchPathsUpToRootCategory(categoryId: Id64String): Subscribable<ModelsTreeSearchPath>;
 }
 
 /**
@@ -148,7 +164,12 @@ export function createModelsTreeIdsProvider({
 
     if (sharedIdsProvider.models.state === "loaded") {
       conditions.push(`${modelAlias}.ECInstanceId IN (SELECT id FROM IdSet(?))`);
-      return { conditions, bindings: [{ type: "idset", value: await sharedIdsProvider.models.getAllModels() }] };
+      return {
+        conditions,
+        bindings: [
+          { type: "idset", value: await firstValueFrom(toObservable(sharedIdsProvider.models.getAllModels())) },
+        ],
+      };
     }
 
     const elementsHiddenClassesFilter = await ECSql.createHiddenClassesFilter({
@@ -398,7 +419,7 @@ export function createModelsTreeIdsProvider({
     get state(): IdsProviderDataState {
       return combineDataStates([subjectInfosState.state, modelInfosState.state]);
     },
-    async getHiddenModelIds(): Promise<Set<ModelId>> {
+    getHiddenModelIds(): Subscribable<Set<ModelId>> {
       cachedData.hiddenModelIds ??= getModelInfos().pipe(
         map((modelInfos) => {
           const ids = new Set<ModelId>();
@@ -411,9 +432,9 @@ export function createModelsTreeIdsProvider({
         }),
         shareReplay(),
       );
-      return firstValueFrom(cachedData.hiddenModelIds);
+      return cachedData.hiddenModelIds;
     },
-    async getParentSubjectIds(): Promise<ReadonlyArray<SubjectId>> {
+    getParentSubjectIds(): Subscribable<ReadonlyArray<SubjectId>> {
       cachedData.parentSubjectIds ??= getSubjectInfos().pipe(
         map((subjectInfos) => {
           const parentSubjectIds = new Set<SubjectId>();
@@ -431,71 +452,69 @@ export function createModelsTreeIdsProvider({
         }),
         shareReplay(),
       );
-      return firstValueFrom(cachedData.parentSubjectIds);
+      return cachedData.parentSubjectIds;
     },
-    async getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<SubjectId>> {
-      return firstValueFrom(
-        getSubjectInfos().pipe(
-          map((subjectInfos) => {
-            const childSubjectIds = new Array<SubjectId>();
-            for (const subjectId of Id64.iterable(parentSubjectIds)) {
-              forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
-                if (!childSubjectInfo.hideInHierarchy) {
-                  childSubjectIds.push(childSubjectId);
-                  return "break";
-                }
-                return "continue";
-              });
-            }
-            return childSubjectIds;
-          }),
-        ),
-      );
-    },
-    async getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Promise<ReadonlyArray<ModelId>> {
-      return firstValueFrom(
-        getSubjectInfos().pipe(
-          map((subjectInfos) => {
-            const hiddenSubjectIds = new Array<SubjectId>();
-            for (const subjectId of Id64.iterable(parentSubjectIds)) {
-              forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
-                if (childSubjectInfo.hideInHierarchy) {
-                  hiddenSubjectIds.push(childSubjectId);
-                  return "continue";
-                }
+    getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<SubjectId>> {
+      return getSubjectInfos().pipe(
+        map((subjectInfos) => {
+          const childSubjectIds = new Array<SubjectId>();
+          for (const subjectId of Id64.iterable(parentSubjectIds)) {
+            forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
+              if (!childSubjectInfo.hideInHierarchy) {
+                childSubjectIds.push(childSubjectId);
                 return "break";
-              });
-            }
-            const modelIds = new Array<ModelId>();
-
-            for (const subjectId of Id64.iterable(parentSubjectIds)) {
-              addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
-            }
-
-            for (const subjectId of hiddenSubjectIds) {
-              addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
-            }
-            return modelIds;
-          }),
-        ),
+              }
+              return "continue";
+            });
+          }
+          return childSubjectIds;
+        }),
       );
     },
-    createSubjectInstanceKeysPath: async (props) => firstValueFrom(createSubjectInstanceKeysPath(props)),
-    createUpToModelInstanceKeyPaths: (modelId) => eachValueFrom(createUpToModelInstanceKeyPaths(modelId)),
-    getSearchPathsUpToRootCategory(categoryId: Id64String): AsyncIterableIterator<ModelsTreeSearchPath> {
-      return eachValueFrom(
-        from(
-          sharedIdsProvider.models.getModels({
-            categoryId,
-            excludeSubModels: true,
-            includeOnlyTopMostElementCategory: true,
-            excludeIfOnlyExcludedClasses: true,
-          }),
-        ).pipe(
-          mergeMap((categoryModelId) =>
-            createUpToModelInstanceKeyPaths(categoryModelId).pipe(
-              map((modelPath) => [...modelPath, { className: CLASS_NAMES.GeometricModel3d, id: categoryModelId }]),
-            ),
+    getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<ModelId>> {
+      return getSubjectInfos().pipe(
+        map((subjectInfos) => {
+          const hiddenSubjectIds = new Array<SubjectId>();
+          for (const subjectId of Id64.iterable(parentSubjectIds)) {
+            forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
+              if (childSubjectInfo.hideInHierarchy) {
+                hiddenSubjectIds.push(childSubjectId);
+                return "continue";
+              }
+              return "break";
+            });
+          }
+          const modelIds = new Array<ModelId>();
+
+          for (const subjectId of Id64.iterable(parentSubjectIds)) {
+            addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
+          }
+
+          for (const subjectId of hiddenSubjectIds) {
+            addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
+          }
+          return modelIds;
+        }),
+      );
+    },
+    createSubjectInstanceKeysPath: (props): Subscribable<ModelsTreeSearchPath> => {
+      return createSubjectInstanceKeysPath(props);
+    },
+    createUpToModelInstanceKeyPaths: (modelId): Subscribable<ModelsTreeSearchPath> => {
+      return createUpToModelInstanceKeyPaths(modelId);
+    },
+    getSearchPathsUpToRootCategory(categoryId: Id64String): Subscribable<ModelsTreeSearchPath> {
+      return toObservable(
+        sharedIdsProvider.models.getModels({
+          categoryId,
+          excludeSubModels: true,
+          includeOnlyTopMostElementCategory: true,
+          excludeIfOnlyExcludedClasses: true,
+        }),
+      ).pipe(
+        mergeMap((categoryModelId) =>
+          createUpToModelInstanceKeyPaths(categoryModelId).pipe(
+            map((modelPath) => [...modelPath, { className: CLASS_NAMES.GeometricModel3d, id: categoryModelId }]),
           ),
         ),
       );

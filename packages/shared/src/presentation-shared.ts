@@ -51,3 +51,4 @@ export {
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values.js";
 export type { ArrayValue, StructValue, NavigationValue, Value, Point2dValue, Point3dValue } from "./shared/Values.js";
 export type { Event, RaisableEvent, EventArgs, EventListener } from "./shared/Event.js";
+export type { Subscribable } from "./shared/EachValueFrom.js";

@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, expand, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
+import { defer, EMPTY, expand, filter, forkJoin, from, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { type DeepReadonly, eachValueFrom, type ECSchemaProvider, ECSql } from "@itwin/presentation-shared";
+import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { fromWithRelease } from "../../shared/Rxjs.js";
@@ -15,6 +15,7 @@ import { createWhereClause, getOrCreate } from "../../shared/Utils.js";
 import type { Observable } from "rxjs";
 import type { Id64Arg } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { DeepReadonly, ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
 import type { IdsProviderDataState } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { ClassificationId, ClassificationTableId, ReadonlyId64Arg } from "../../shared/Types.js";
 import type { HiddenClassesFilter } from "../../shared/Utils.js";
@@ -54,20 +55,28 @@ export interface ClassificationsTreeIdsProvider {
    * State of classification data.
    */
   readonly state: IdsProviderDataState;
-  /** Returns direct child classifications and whether each has child classifications. */
+  /**
+   * Returns direct child classifications and whether each has child classifications.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
   getDirectChildClassifications(
     classificationOrTableIds: ReadonlyId64Arg,
-  ): Promise<ReadonlyArray<Readonly<{ id: ClassificationId; hasChildClassifications: boolean }>>>;
+  ): Subscribable<ReadonlyArray<Readonly<{ id: ClassificationId; hasChildClassifications: boolean }>>>;
   /**
-   * For each supplied classification, yields a path from its table to the classification, including both endpoints.
-   * For each supplied table, yields a path containing only that table.
-   * Empty input and IDs outside the visible hierarchy yield no paths.
+   * Emits a stream of paths, one value per supplied ID:
+   * - for a classification, a path from its table to the classification, including both endpoints,
+   * - for a table, a path containing only that table.
+   *
+   * Empty input and IDs outside the visible hierarchy emit no paths.
    */
-  getClassificationsPath(
-    classificationOrTableIds: ReadonlyId64Arg,
-  ): AsyncIterableIterator<ClassificationsTreeSearchPath>;
-  /** Returns non-private classifications and their classification table IDs from the configured classification system. */
-  getAllClassifications(): Promise<ReadonlyArray<ClassificationId>>;
+  getClassificationsPath(classificationOrTableIds: ReadonlyId64Arg): Subscribable<ClassificationsTreeSearchPath>;
+  /**
+   * Returns non-private classifications and their classification table IDs from the configured classification system.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
+  getAllClassifications(): Subscribable<ReadonlyArray<ClassificationId>>;
 }
 
 /**
@@ -247,72 +256,67 @@ export function createClassificationsTreeIdsProvider({
     get state(): IdsProviderDataState {
       return state.state;
     },
-    async getDirectChildClassifications(
+    getDirectChildClassifications(
       classificationOrTableIds: Id64Arg,
-    ): Promise<Array<{ id: ClassificationId; hasChildClassifications: boolean }>> {
+    ): Subscribable<Array<{ id: ClassificationId; hasChildClassifications: boolean }>> {
       const result = new Array<{ id: ClassificationId; hasChildClassifications: boolean }>();
       if (Id64.sizeOf(classificationOrTableIds) === 0) {
-        return result;
+        return of(result);
       }
-      return firstValueFrom(
-        getData().pipe(
-          mergeMap(({ classificationOrTableInfos }) =>
-            from(Id64.iterable(classificationOrTableIds)).pipe(
-              reduce((acc, classificationOrTableId) => {
-                const classificationInfo = classificationOrTableInfos.get(classificationOrTableId);
-                if (classificationInfo !== undefined) {
-                  classificationInfo.childClassificationIds.forEach((id) =>
-                    acc.push({
-                      id,
-                      hasChildClassifications: !!classificationOrTableInfos.get(id)?.childClassificationIds.length,
-                    }),
-                  );
-                }
-                return acc;
-              }, result),
-            ),
-          ),
-        ),
-      );
-    },
-    getClassificationsPath(classificationOrTableIds: Id64Arg): AsyncIterableIterator<ClassificationsTreeSearchPath> {
-      if (Id64.sizeOf(classificationOrTableIds) === 0) {
-        return (async function* () {})();
-      }
-      return eachValueFrom(
-        getData().pipe(
-          mergeMap(({ classificationOrTableInfos }) =>
-            fromWithRelease({ source: classificationOrTableIds, releaseOnCount: 200 }).pipe(
-              filter((classificationOrTableId) => classificationOrTableInfos.has(classificationOrTableId)),
-              map((classificationOrTableId) => {
-                const path: ClassificationsTreeSearchPathKey[] = [];
-                let parentId = classificationOrTableInfos.get(classificationOrTableId)?.parentClassificationOrTableId;
-                path.push(
-                  // getting a parent id means we have a classification
-                  parentId
-                    ? { id: classificationOrTableId, className: CLASS_NAMES.Classification }
-                    : { id: classificationOrTableId, className: CLASS_NAMES.ClassificationTable },
+      return getData().pipe(
+        mergeMap(({ classificationOrTableInfos }) =>
+          from(Id64.iterable(classificationOrTableIds)).pipe(
+            reduce((acc, classificationOrTableId) => {
+              const classificationInfo = classificationOrTableInfos.get(classificationOrTableId);
+              if (classificationInfo !== undefined) {
+                classificationInfo.childClassificationIds.forEach((id) =>
+                  acc.push({
+                    id,
+                    hasChildClassifications: !!classificationOrTableInfos.get(id)?.childClassificationIds.length,
+                  }),
                 );
-                while (parentId !== undefined) {
-                  const parentIdOfParent = classificationOrTableInfos.get(parentId)?.parentClassificationOrTableId;
-                  if (parentIdOfParent) {
-                    path.push({ className: CLASS_NAMES.Classification, id: parentId });
-                  } else {
-                    path.push({ className: CLASS_NAMES.ClassificationTable, id: parentId });
-                  }
-                  parentId = parentIdOfParent;
-                }
-                return path.reverse();
-              }),
-            ),
+              }
+              return acc;
+            }, result),
           ),
         ),
       );
     },
-    async getAllClassifications(): Promise<ClassificationId[]> {
-      return firstValueFrom(
-        getData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()])),
+    getClassificationsPath(classificationOrTableIds: Id64Arg): Subscribable<ClassificationsTreeSearchPath> {
+      if (Id64.sizeOf(classificationOrTableIds) === 0) {
+        return of();
+      }
+      return getData().pipe(
+        mergeMap(({ classificationOrTableInfos }) =>
+          fromWithRelease({ source: classificationOrTableIds, releaseOnCount: 200 }).pipe(
+            filter((classificationOrTableId) => classificationOrTableInfos.has(classificationOrTableId)),
+            map((classificationOrTableId) => {
+              const path: ClassificationsTreeSearchPathKey[] = [];
+              let parentId = classificationOrTableInfos.get(classificationOrTableId)?.parentClassificationOrTableId;
+              path.push(
+                // getting a parent id means we have a classification
+                parentId
+                  ? { id: classificationOrTableId, className: CLASS_NAMES.Classification }
+                  : { id: classificationOrTableId, className: CLASS_NAMES.ClassificationTable },
+              );
+              while (parentId !== undefined) {
+                const parentIdOfParent = classificationOrTableInfos.get(parentId)?.parentClassificationOrTableId;
+                if (parentIdOfParent) {
+                  path.push({ className: CLASS_NAMES.Classification, id: parentId });
+                } else {
+                  path.push({ className: CLASS_NAMES.ClassificationTable, id: parentId });
+                }
+                parentId = parentIdOfParent;
+              }
+              return path.reverse();
+            }),
+          ),
+        ),
       );
+    },
+
+    getAllClassifications(): Subscribable<ClassificationId[]> {
+      return getData().pipe(map(({ classificationOrTableInfos }) => [...classificationOrTableInfos.keys()]));
     },
   };
 }

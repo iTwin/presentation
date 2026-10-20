@@ -8,10 +8,15 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { firstValueFrom, of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createClassificationsTree, createClassificationsTreeIdsProvider } from "@itwin/presentation-tree-definitions";
+import {
+  type ClassificationsTreeHierarchyConfiguration,
+  toObservable,
+} from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -27,7 +32,6 @@ import {
 } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { ClassificationsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 const rootClassificationSystemCode = "TestClassificationSystem";
 
@@ -57,9 +61,9 @@ describe("Classifications tree", () => {
     const imodelAccess = createIModelAccess(imodel.imodelConnection);
     const hierarchyConfig = { rootClassificationSystemCode };
     const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
-    await idsProvider.getAllClassifications();
-    const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockResolvedValue([]);
-    const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockResolvedValue([]);
+    await firstValueFrom(toObservable(idsProvider.getAllClassifications()));
+    const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockReturnValue(of([]));
+    const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockReturnValue(of([]));
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
     const tree = createClassificationsTree({ imodelAccess, hierarchyConfig, idsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
@@ -117,7 +121,9 @@ describe("Classifications tree", () => {
       const [base, changed] = imodels;
       expect(versions.base.imodelConnection.iModelId).toBe(versions.changeset1.imodelConnection.iModelId);
       expect(base.imodelAccess.imodelKey).not.toBe(changed.imodelAccess.imodelKey);
-      await Promise.all(imodels.map(async ({ idsProvider }) => idsProvider.getAllClassifications()));
+      await Promise.all(
+        imodels.map(async ({ idsProvider }) => firstValueFrom(toObservable(idsProvider.getAllClassifications()))),
+      );
       const childGetters = imodels.map(({ idsProvider }) => {
         expect(idsProvider.state).toBe("loaded");
         return vi.spyOn(idsProvider, "getDirectChildClassifications");

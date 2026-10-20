@@ -25,7 +25,7 @@ import { assert, Guid } from "@itwin/core-bentley";
 import { createPredicateBasedHierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
+import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
@@ -423,7 +423,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.Classification, alias: "this" },
       }),
-      idsProvider.getDirectChildClassifications(parentIds),
+      firstValueFrom(toObservable(idsProvider.getDirectChildClassifications(parentIds))),
       this.#classificationHasElementsClause("this"),
       ECSql.createHiddenClassesFilter({
         schemaProvider: this.#props.imodelAccess,
@@ -739,6 +739,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
       classificationTablesHiddenClassesFilter,
       classificationsHiddenClassesFilter,
       elementsHiddenClassesFilter,
+      classificationIds,
     ] = await Promise.all([
       Promise.all(
         [CLASS_NAMES.ClassificationTable, CLASS_NAMES.Classification, CLASS_NAMES.GeometricElement3d].map(
@@ -762,8 +763,8 @@ function createInstanceKeyPathsFromInstanceLabelObs({
         schemaProvider: props.imodelAccess,
         baseClassName: CLASS_NAMES.GeometricElement3d,
       }),
+      firstValueFrom(toObservable(props.idsProvider.getAllClassifications())),
     ]);
-    const classificationIds = await props.idsProvider.getAllClassifications();
     const ctes = [
       `
         ${CLASSIFICATION_TABLES_WITH_LABELS_CTE}(ClassName, ECInstanceId, DisplayLabel) AS (
@@ -985,7 +986,9 @@ function createSearchPathsForDifferentTypes(
         }
 
         return merge(
-          from(idsProvider.getClassificationsPath([...ids.classificationTableIds, ...ids.classificationIds])).pipe(
+          toObservable(
+            idsProvider.getClassificationsPath([...ids.classificationTableIds, ...ids.classificationIds]),
+          ).pipe(
             filter((path) => path.length > 0),
             map((path) => ({ path, target: path[path.length - 1].id })),
           ),
@@ -1033,7 +1036,7 @@ function createGeometricElementInstanceKeyPaths(props: {
       schemaProvider: imodelAccess,
       baseClassName: CLASS_NAMES.GeometricElement3d,
     }),
-    classificationIds: idsProvider.getAllClassifications(),
+    classificationIds: toObservable(idsProvider.getAllClassifications()),
   }).pipe(
     mergeMap(({ elementsHiddenClassesFilter, classificationIds }) => {
       if (classificationIds.length === 0) {
@@ -1107,7 +1110,7 @@ function createGeometricElementInstanceKeyPaths(props: {
     mergeMap(({ path, parentClassificationId }) => {
       const target = path[path.length - 1].id;
       if (parentClassificationId) {
-        return from(idsProvider.getClassificationsPath(parentClassificationId)).pipe(
+        return toObservable(idsProvider.getClassificationsPath(parentClassificationId)).pipe(
           map((parentClassificationPath) => ({ path: parentClassificationPath.concat(path), target })),
         );
       }

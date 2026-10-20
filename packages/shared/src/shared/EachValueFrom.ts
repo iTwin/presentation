@@ -5,13 +5,14 @@
 // cspell:words deferreds
 
 /**
- * The subscription operations required by `eachValueFrom`.
+ * A lazy stream of values that starts producing them when subscribed to.
  *
  * @public
  */
 export interface Subscribable<T> {
   /**
-   * Subscribes to stream notifications.
+   * Starts the stream and registers the observer to receive its values, error, or completion notification.
+   * Returns a handle that stops the stream and releases its resources when unsubscribed.
    */
   subscribe(observer: { next: (value: T) => void; error: (reason: unknown) => void; complete: () => void }): {
     unsubscribe: () => void;
@@ -19,7 +20,8 @@ export interface Subscribable<T> {
 }
 
 /**
- * Converts a subscribable stream into an async iterator.
+ * Converts a `Subscribable` into an async iterator, yielding each emitted value. Subscribes on the first iteration
+ * and unsubscribes once the iterator completes, throws, or is closed early.
  *
  * This is pretty much a combination of:
  * - https://github.com/benlesh/rxjs-for-await/blob/94f9cf9cb015ac3700dfd1850eb81d36962eb70f/src/index.ts#L33,

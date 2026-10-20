@@ -3,12 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, concatAll, concatMap, delay, from, of } from "rxjs";
+import { bufferCount, concatAll, concatMap, delay, from, Observable, of } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 
-import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
+import type { Subscribable } from "@itwin/presentation-shared";
 import type { ReadonlyId64Arg } from "./Types.js";
+
+/**
+ * Wraps a `Subscribable` into an rxjs `Observable` so that rxjs operators can be applied to it.
+ */
+export function toObservable<T>(source: Subscribable<T>): Observable<T> {
+  return source instanceof Observable ? source : new Observable<T>((subscriber) => source.subscribe(subscriber));
+}
 
 /**
  * Same as `firstValueFrom` except it won't throw if the observable emits no values.
