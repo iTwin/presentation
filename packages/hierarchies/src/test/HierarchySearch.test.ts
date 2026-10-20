@@ -156,6 +156,24 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("accept path", () => {
+      it.each(["mutable", "frozen"])("does not mutate %s tree options when auto-expanding a path", (inputType) => {
+        const identifier = createTestGenericNodeKey({ id: "root" });
+        const tree = { identifier, options: { autoExpand: { groupingLevel: 2 } } };
+        if (inputType === "frozen") {
+          Object.freeze(tree.options.autoExpand);
+          Object.freeze(tree.options);
+          Object.freeze(tree);
+        }
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({ tree });
+
+        builder.accept({ path: { path: [identifier], options: { autoExpand: true } } });
+
+        expect(builder.getTree()).toEqual([{ identifier, options: { autoExpand: true } }]);
+        expect(tree).toEqual({ identifier, options: { autoExpand: { groupingLevel: 2 } } });
+        expect(builder.getTree()[0].options).not.toBe(tree.options);
+      });
+
       it("accepts mutable paths in array and object forms", () => {
         const root = createTestGenericNodeKey({ id: "root" });
         const target = createTestInstanceKey({ id: "0x1" });

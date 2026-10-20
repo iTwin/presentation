@@ -464,7 +464,7 @@ export namespace HierarchySearchTree {
         // handle auto-expand
         const lastNode = treePath[treePath.length - 1];
         if (normalized.options?.autoExpand) {
-          (lastNode.options ??= {}).autoExpand = true;
+          lastNode.options = { ...lastNode.options, autoExpand: true };
         }
 
         // handle auto-reveal
