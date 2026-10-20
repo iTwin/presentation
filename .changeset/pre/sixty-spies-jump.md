@@ -2,7 +2,8 @@
 "@itwin/presentation-hierarchies-react": major
 ---
 
-**Breaking changes** to tree state hooks `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`:
+Improved API of `useTree`, `useUnifiedSelectionTree`, `useIModelTree` and `useIModelUnifiedSelectionTree` tree state hooks.
+
 - All tree rendering props have been moved under `treeRendererProps`. The value can be passed to `<StrataKitTreeRenderer />` component.
 - In case an error occurs while loading the root hierarchy level, instead of `treeRendererProps`, the `rootErrorRendererProps` are set, which can be passed to `<StrataKitRootErrorRenderer />` component to render the error state.
 

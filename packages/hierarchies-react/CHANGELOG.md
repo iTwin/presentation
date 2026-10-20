@@ -44,20 +44,14 @@
     );
   }
   ```
-- 2763fe9d437088c6906207a85eb73b66f0e5639c: **Breaking change:** Rename `PresentationHierarchyNode` to `TreeNode` for clarity.
+- 2763fe9d437088c6906207a85eb73b66f0e5639c: Rename `PresentationHierarchyNode` to `TreeNode` for clarity.
 
   We already have a `HierarchyNode` type in `@itwin/presentation-hierarchies`, so having a `PresentationHierarchyNode` in `@itwin/presentation-hierarchies-react` was causing confusion. Additionally, this change aligns with the naming convention that we try to keep, where "hierarchy" refers to data and "tree" refers to UI components.
 - a40d5a3a1192853a2c5af3e9608842e06105139e: Reworked `localization` to use `i18next`-compatible approach. Instead of passing a `localizedStrings` object into `LocalizationContextProvider`, the package now delivers an English locale JSON file and resolves strings through a `getLocalizedString` function at runtime.
 
-  **Breaking changes**
-
   - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from @itwin/core-common).
   - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during app initialization to make localized strings available.
-- 47a5be7aeb216636fcf4377296afb417dc29132b: Added `TreeNodeFilterAction` and `TreeNodeRenameAction` components for rendering hierarchy level filtering and node renaming actions.
 - 6aef711266d26ef3587736150c3b0ccc5e82c68a: Introduce separate import path for StrataKit based components. StrataKit based components have to be imported through `@itwin/presentation-hierarchies-react/stratakit`. This allows to use this package with or without StrataKit dependencies.
-- b51bef11e4de3bd7665e55d3f6cb5b4ffd2aa2d4: Additional requirements were added to the `EC` metadata types returned by `ECSchemaProvider`, which is part of the `imodelAccess` prop passed to the iModel tree hooks (`useIModelTree`, `useIModelUnifiedSelectionTree`).
-
-  Consumers that build `imodelAccess` using `@itwin/presentation-core-interop` only need to bump that package. Consumers that implement these `EC` metadata objects themselves must add the new members: `getCustomAttributes()` on `EC.Schema`, `EC.Class` and `EC.Property`, and `baseClass` / `getDerivedClasses()` on `EC.Class`.
 - 8436f7e40f108d7546e08191062792ddb2c2d53a: Tree node rename UI shows the label editor in a popover, with support for a hint describing allowed characters and validation of the new label.
 
   Example:
@@ -76,10 +70,6 @@
 
   return <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />;
   ```
-
-  **Breaking changes**
-
-  - `getEditingProps` callback was changed to require `onLabelChanged`. If node does not support renaming `getEditingProps` should return `undefined`.
 - e7ed0fe883be8177954ef0861458d7242dc4460f: Improve custom errors rendering API:
 
   - Separated the `ChildrenLoad` error from the `Generic` error. All expected tree errors have a dedicated type, and the `Generic` error can be used to handle custom errors encountered outside of the tree.
@@ -146,7 +136,8 @@
     );
   }
   ```
-- 8e87d3452a6af627efe201623ebc0d2812824639: **Breaking changes** to tree state hooks `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`:
+- 8e87d3452a6af627efe201623ebc0d2812824639: Improved API of `useTree`, `useUnifiedSelectionTree`, `useIModelTree` and `useIModelUnifiedSelectionTree` tree state hooks.
+
   - All tree rendering props have been moved under `treeRendererProps`. The value can be passed to `<StrataKitTreeRenderer />` component.
   - In case an error occurs while loading the root hierarchy level, instead of `treeRendererProps`, the `rootErrorRendererProps` are set, which can be passed to `<StrataKitRootErrorRenderer />` component to render the error state.
 
@@ -182,6 +173,7 @@
 
 ### Minor Changes
 
+- 47a5be7aeb216636fcf4377296afb417dc29132b: Added `TreeNodeFilterAction` and `TreeNodeRenameAction` components for rendering hierarchy level filtering and node renaming actions.
 - 734c6b312ca3c11cd4794db4e3af3b9575b9d1e5: Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.
 
   Example usage:
@@ -210,7 +202,6 @@
   - @itwin/presentation-hierarchies@2.0.0
   - @itwin/presentation-shared@2.0.0
   - @itwin/unified-selection@2.0.0
-
 
 ## 2.0.0-alpha.69
 

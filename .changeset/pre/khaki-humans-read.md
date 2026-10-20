@@ -20,7 +20,3 @@ const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps
 
 return <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />;
 ```
-
-**Breaking changes**
-
-- `getEditingProps` callback was changed to require `onLabelChanged`. If node does not support renaming `getEditingProps` should return `undefined`.
