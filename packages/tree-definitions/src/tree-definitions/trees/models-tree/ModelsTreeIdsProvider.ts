@@ -504,14 +504,17 @@ export function createModelsTreeIdsProvider({
       return createUpToModelInstanceKeyPaths(modelId);
     },
     getSearchPathsUpToRootCategory(categoryId: Id64String): Subscribable<ModelsTreeSearchPath> {
-      return toObservable(
-        sharedIdsProvider.models.getModels({
-          categoryId,
-          excludeSubModels: true,
-          includeOnlyTopMostElementCategory: true,
-          excludeIfOnlyExcludedClasses: true,
-        }),
-      ).pipe(
+      return toObservable(sharedIdsProvider.subModeledElements.getAllSubModeledElements()).pipe(
+        mergeMap((excludedSubModels) =>
+          toObservable(
+            sharedIdsProvider.models.getModels({
+              categoryId,
+              excludedSubModels,
+              includeOnlyTopMostElementCategory: true,
+              excludeIfOnlyExcludedClasses: true,
+            }),
+          ),
+        ),
         mergeMap((categoryModelId) =>
           createUpToModelInstanceKeyPaths(categoryModelId).pipe(
             map((modelPath) => [...modelPath, { className: CLASS_NAMES.GeometricModel3d, id: categoryModelId }]),

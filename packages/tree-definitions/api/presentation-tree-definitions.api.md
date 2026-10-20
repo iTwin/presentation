@@ -523,7 +523,7 @@ export interface SharedIdsProvider {
         getPlanProjectionModels(): Subscribable<ReadonlySet<ModelId>>;
         getModels(props: {
             categoryId: Id64String;
-            excludeSubModels?: boolean;
+            excludedSubModels?: ReadonlySet<ModelId>;
             includeOnlyTopMostElementCategory?: boolean;
             excludeIfOnlyExcludedClasses?: boolean;
         }): Subscribable<ModelId>;

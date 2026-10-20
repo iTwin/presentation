@@ -74,12 +74,10 @@ export interface SharedIdsProvider {
       /** The ID of the category for which to retrieve models. */
       categoryId: Id64String;
       /**
-       * Omits models that model elements rather than information partitions.
-       *
-       * **NOTE:** Depends on `subModeledElements` data, which is loaded first if it isn't loaded yet; in-flight loading is shared.
-       * Failures to load it error this stream and are reflected in `subModeledElements.state`.
+       * IDs of sub-models to omit, e.g. ones returned by `subModeledElements.getAllSubModeledElements()` to get only
+       * models that model information partitions rather than elements.
        */
-      excludeSubModels?: boolean;
+      excludedSubModels?: ReadonlySet<ModelId>;
       /** Requires the category to contain elements without a parent element in the model. */
       includeOnlyTopMostElementCategory?: boolean;
       /** Requires the category to contain visible, non-excluded top-level elements in the model. */
@@ -206,11 +204,6 @@ export function createSharedIdsProvider({
     loadDataOverride: loadDataOverrides?.elementModelCategories,
   });
   const subModeledElementsState = new DataStateTracker();
-  let categoryModelsInfoWithoutSubModels:
-    | Observable<
-        Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
-      >
-    | undefined;
   let subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
 
   function getAllModels(): Observable<ReadonlySet<ModelId>> {
@@ -267,29 +260,6 @@ export function createSharedIdsProvider({
     return subModelsWithNonExcludedElements;
   }
 
-  function getCategoryModelsInfoWithoutSubModels(): Observable<
-    Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>
-  > {
-    categoryModelsInfoWithoutSubModels ??= getAllSubModeledElements().pipe(
-      mergeMap((allSubModels) =>
-        allSubModels.size === 0
-          ? elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo))
-          : elementModelCategoriesProvider.getData().pipe(
-              mergeMap(({ categoryModelsInfo }) => categoryModelsInfo.entries()),
-              reduce((acc, [key, modelInfos]) => {
-                const newModelInfos = modelInfos.filter(({ id }) => !allSubModels.has(id));
-                if (newModelInfos.length > 0) {
-                  acc.set(key, newModelInfos);
-                }
-                return acc;
-              }, new Map<CategoryId, { id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }[]>()),
-            ),
-      ),
-      shareReplay(),
-    );
-    return categoryModelsInfoWithoutSubModels;
-  }
-
   return {
     config,
     models: {
@@ -307,29 +277,26 @@ export function createSharedIdsProvider({
       },
       getModels({
         categoryId,
-        excludeSubModels,
+        excludedSubModels,
         includeOnlyTopMostElementCategory,
         excludeIfOnlyExcludedClasses,
       }: {
         categoryId: Id64String;
-        excludeSubModels?: boolean;
+        excludedSubModels?: ReadonlySet<ModelId>;
         includeOnlyTopMostElementCategory?: boolean;
         excludeIfOnlyExcludedClasses?: boolean;
       }): Subscribable<ModelId> {
-        let getCategoryModelsInfo = () =>
-          elementModelCategoriesProvider.getData().pipe(map(({ categoryModelsInfo }) => categoryModelsInfo));
-
-        if (excludeSubModels) {
-          getCategoryModelsInfo = () => getCategoryModelsInfoWithoutSubModels();
-        }
-        return getCategoryModelsInfo().pipe(
-          mergeMap((categoryModelsInfo) => {
+        return elementModelCategoriesProvider.getData().pipe(
+          mergeMap(({ categoryModelsInfo }) => {
             const categoryModels = categoryModelsInfo.get(categoryId);
             if (!categoryModels) {
               return EMPTY;
             }
             return from(categoryModels);
           }),
+          excludedSubModels && excludedSubModels.size > 0
+            ? filter(({ id }) => !excludedSubModels.has(id))
+            : identity,
           includeOnlyTopMostElementCategory
             ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement)
             : identity,

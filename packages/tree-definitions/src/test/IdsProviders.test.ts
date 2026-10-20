@@ -114,7 +114,7 @@ describe("ID provider data states", () => {
     expect(provider.subCategories.state).toBe("loaded");
   });
 
-  it("loads sub-modeled elements only when model lookups exclude sub-models", async () => {
+  it("omits supplied sub-models from model lookups without loading sub-modeled elements", async () => {
     const access = createAccess();
     const provider = createBase(access);
     const allModels = [];
@@ -123,19 +123,25 @@ describe("ID provider data states", () => {
     }
     expect(allModels).toEqual(["0x10"]);
     expect(provider.models.state).toBe("loaded");
-    expect(provider.subModeledElements.state).toBe("not-requested");
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
     const modelsWithoutSubModels = [];
     for await (const modelId of eachValueFrom(
-      provider.models.getModels({ categoryId: "0x20", excludeSubModels: true }),
+      provider.models.getModels({ categoryId: "0x20", excludedSubModels: new Set(["0x10"]) }),
     )) {
       modelsWithoutSubModels.push(modelId);
     }
     expect(modelsWithoutSubModels).toEqual([]);
-    expect(provider.models.state).toBe("loaded");
-    expect(provider.subModeledElements.state).toBe("loaded");
-    expect(access.createQueryReader).toHaveBeenCalledTimes(2);
+
+    const modelsWithoutOtherSubModels = [];
+    for await (const modelId of eachValueFrom(
+      provider.models.getModels({ categoryId: "0x20", excludedSubModels: new Set(["0x99"]) }),
+    )) {
+      modelsWithoutOtherSubModels.push(modelId);
+    }
+    expect(modelsWithoutOtherSubModels).toEqual(["0x10"]);
+    expect(provider.subModeledElements.state).toBe("not-requested");
+    expect(access.createQueryReader).toHaveBeenCalledTimes(1);
   });
 
   it("keeps sub-modeled element loading and failures separate from loaded model data", async () => {

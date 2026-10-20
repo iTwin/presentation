@@ -891,26 +891,32 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
       this.#hierarchyConfig.elements.nodes === "include"
         ? firstValueFrom(
-            // Iterate over categories which will be returned by the query
-            from(categories).pipe(
-              // only categories that have at least one non-excluded element can have element children
-              mergeMap((categoryInfo) => (categoryInfo.hasElementsFromNonExcludedClasses ? of(categoryInfo) : EMPTY)),
-              mergeMap(({ id: categoryId }) =>
-                // when category has element models, then it has element children
-                toObservable(
-                  this.#idsProvider.models.getModels({
-                    categoryId,
-                    excludeSubModels: true,
-                    includeOnlyTopMostElementCategory: true,
-                    excludeIfOnlyExcludedClasses: true,
-                  }),
-                ).pipe(
-                  take(1),
-                  defaultIfEmpty(undefined),
-                  mergeMap((modelId) => (modelId ? of(categoryId) : EMPTY)),
+            toObservable(this.#idsProvider.subModeledElements.getAllSubModeledElements()).pipe(
+              mergeMap((excludedSubModels) =>
+                // Iterate over categories which will be returned by the query
+                from(categories).pipe(
+                  // only categories that have at least one non-excluded element can have element children
+                  mergeMap((categoryInfo) =>
+                    categoryInfo.hasElementsFromNonExcludedClasses ? of(categoryInfo) : EMPTY,
+                  ),
+                  mergeMap(({ id: categoryId }) =>
+                    // when category has element models, then it has element children
+                    toObservable(
+                      this.#idsProvider.models.getModels({
+                        categoryId,
+                        excludedSubModels,
+                        includeOnlyTopMostElementCategory: true,
+                        excludeIfOnlyExcludedClasses: true,
+                      }),
+                    ).pipe(
+                      take(1),
+                      defaultIfEmpty(undefined),
+                      mergeMap((modelId) => (modelId ? of(categoryId) : EMPTY)),
+                    ),
+                  ),
+                  toArray(),
                 ),
               ),
-              toArray(),
             ),
           )
         : new Array<CategoryId>(),
@@ -1262,9 +1268,13 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         ? parseIdsSelectorResult(parentNode.extendedData.modelIds)
         : this.#idsProvider.models.state === "loaded" && this.#idsProvider.subModeledElements.state === "loaded"
           ? await firstValueFrom(
-              from(categoryIds).pipe(
-                mergeMap((categoryId) =>
-                  toObservable(this.#idsProvider.models.getModels({ categoryId, excludeSubModels: true })),
+              toObservable(this.#idsProvider.subModeledElements.getAllSubModeledElements()).pipe(
+                mergeMap((excludedSubModels) =>
+                  from(categoryIds).pipe(
+                    mergeMap((categoryId) =>
+                      toObservable(this.#idsProvider.models.getModels({ categoryId, excludedSubModels })),
+                    ),
+                  ),
                 ),
                 distinct(),
                 toArray(),
