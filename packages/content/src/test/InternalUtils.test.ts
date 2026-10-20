@@ -18,6 +18,8 @@ import {
 } from "../content/InternalUtils.js";
 import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 
+import type { ECSqlBinding } from "@itwin/presentation-shared";
+
 describe("buildCategoryContext", () => {
   it("orders local anchors after inherited ancestry without mutating either input", () => {
     const inheritedContext = Object.freeze([{ stepIndex: 0, kind: "targetClass" }] as const);
@@ -124,6 +126,12 @@ describe("stableStringify", () => {
     expect(stableStringify({ b: 1, a: 2 })).to.equal('{"a":2,"b":1}');
   });
 
+  it("omits undefined object properties recursively", () => {
+    expect(stableStringify({ bindings: { ids: { type: "idset", value: undefined } }, alias: undefined })).to.equal(
+      '{"bindings":{"ids":{"type":"idset"}}}',
+    );
+  });
+
   it("produces same output regardless of insertion order", () => {
     const a = stableStringify({ x: 1, y: 2, z: 3 });
     const b = stableStringify({ z: 3, x: 1, y: 2 });
@@ -140,6 +148,24 @@ describe("stableStringify", () => {
 
   it("handles objects nested inside arrays", () => {
     expect(stableStringify([{ b: 1, a: 2 }])).to.equal('[{"a":2,"b":1}]');
+  });
+
+  it("preserves nested ID sets without mutating their insertion order", () => {
+    const ids: ReadonlySet<string> = new Set(["0x2", "0x1"]);
+    expect(stableStringify({ bindings: { ids: { type: "idset", value: ids } } })).to.equal(
+      '{"bindings":{"ids":{"type":"idset","value":["0x1","0x2"]}}}',
+    );
+    expect([...ids]).to.deep.equal(["0x2", "0x1"]);
+  });
+
+  it("distinguishes different ID sets", () => {
+    expect(stableStringify(new Set(["0x1"]))).to.not.equal(stableStringify(new Set(["0x2"])));
+    expect(stableStringify(new Set())).to.equal("[]");
+    expect(stableStringify(new Set())).to.not.equal(stableStringify(new Set(["0x1"])));
+  });
+
+  it("serializes ID sets independently of insertion order", () => {
+    expect(stableStringify(new Set(["0x2", "0x1"]))).to.equal(stableStringify(new Set(["0x1", "0x2"])));
   });
 });
 
@@ -192,6 +218,27 @@ describe("getClassLabel", () => {
 });
 
 describe("mergeBindings", () => {
+  it("rejects conflicting ID sets without overwriting the existing binding", () => {
+    const binding: ECSqlBinding = { type: "idset", value: new Set(["0x1"]) };
+    const target = { ids: binding };
+
+    expect(() => mergeBindings(target, { ids: { type: "idset", value: new Set(["0x2"]) } })).to.throw(
+      'Duplicate ECSQL binding name "ids" with different values.',
+    );
+    expect(target.ids).to.equal(binding);
+    expect(target.ids.value).to.deep.equal(new Set(["0x1"]));
+  });
+
+  it("accepts equivalent ID sets with different insertion orders", () => {
+    const target: Record<string, ECSqlBinding> = { ids: { type: "idset", value: new Set(["0x2", "0x1"]) } };
+    expect(() => mergeBindings(target, { ids: { type: "idset", value: new Set(["0x1", "0x2"]) } })).to.not.throw();
+  });
+
+  it("accepts matching ID sets and arrays", () => {
+    const target: Record<string, ECSqlBinding> = { ids: { type: "idset", value: ["0x1", "0x2"] } };
+    expect(() => mergeBindings(target, { ids: { type: "idset", value: new Set(["0x2", "0x1"]) } })).to.not.throw();
+  });
+
   it("does nothing when source is undefined", () => {
     const target = { a: { type: "int" as const, value: 1 } };
     mergeBindings(target, undefined);

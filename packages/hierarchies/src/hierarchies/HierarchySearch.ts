@@ -77,7 +77,7 @@ export type HierarchySearchPath =
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
   /**
-   * Normalizes the hierarchy search path to the object form.
+   * Normalizes a readonly hierarchy search path to the object form without copying or modifying it.
    * @public
    */
   export function normalize(
@@ -464,19 +464,19 @@ export namespace HierarchySearchTree {
         // handle auto-expand
         const lastNode = treePath[treePath.length - 1];
         if (normalized.options?.autoExpand) {
-          (lastNode.options ??= {}).autoExpand = true;
+          lastNode.options = { ...lastNode.options, autoExpand: true };
         }
 
         // handle auto-reveal
         Impl.#assignAutoExpandOptionsBasedOnReveal(treePath, normalized.options?.reveal);
       }
 
-      #acceptTree({ tree, handler }: { tree: HierarchySearchTree; handler?: AcceptHandler }) {
+      #acceptTree({ tree, handler }: { tree: DeepReadonly<HierarchySearchTree>; handler?: AcceptHandler }) {
         const acceptTreeNode = (
           parentEntries: HierarchySearchTreeDictionaryEntry[],
-          parentInputs: HierarchySearchTree[],
+          parentInputs: Array<DeepReadonly<HierarchySearchTree>>,
           level: HierarchySearchTreeDictionary,
-          node: HierarchySearchTree,
+          node: DeepReadonly<HierarchySearchTree>,
         ) => {
           const acceptedNode = this.#acceptNode({
             parentEntries,
@@ -507,9 +507,7 @@ export namespace HierarchySearchTree {
       }
 
       public accept(
-        props: ({ path: DeepReadonly<HierarchySearchPath> } | { tree: HierarchySearchTree }) & {
-          handler?: AcceptHandler;
-        },
+        props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>,
       ): HierarchySearchTreeBuilder<TAcceptHandlerExtras> {
         if ("path" in props) {
           this.#acceptPath(props);
