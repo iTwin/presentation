@@ -1,6 +1,5 @@
 # @itwin/presentation-hierarchies-react
 
-
 ## 2.0.0-alpha.69
 
 ### Patch Changes
