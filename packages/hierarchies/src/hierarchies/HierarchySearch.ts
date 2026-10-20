@@ -67,7 +67,7 @@ export interface HierarchySearchPathOptions {
 }
 
 /**
- * A path of hierarchy node identifiers for searching the hierarchy with additional options.
+ * A path of hierarchy node identifiers for search the hierarchy with additional options.
  * @public
  */
 export type HierarchySearchPath =
