@@ -1280,6 +1280,51 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result!.relatedProperties![1].path).toHaveLength(2);
       expect(result!.relatedProperties![1].path[0].targetClassName).toEqual("TestSchema.ChildElement");
       expect(result!.relatedProperties![1].path[1].targetClassName).toEqual("TestSchema.GrandChildElement");
+      expect(result!.relatedProperties![1].properties![0].stepIndex).toEqual(1);
+    });
+
+    it("preserves target and relationship property selections on nested paths", async () => {
+      const step = (className: string): PresentationRules.RelationshipStepSpecification => ({
+        relationship: { schemaName: "TestSchema", className: `To${className}` },
+        direction: "Forward",
+        targetClass: { schemaName: "TestSchema", className },
+      });
+      const provider = createFieldsProviderFromContentModifierRule({
+        rule: {
+          relatedProperties: [
+            {
+              propertiesSource: [step("A"), step("B")],
+              properties: "_none_",
+              nestedRelatedProperties: [
+                {
+                  propertiesSource: [step("C"), step("D")],
+                  properties: "*",
+                  relationshipProperties: "*",
+                  nestedRelatedProperties: [{ propertiesSource: step("E"), properties: "*" }],
+                },
+              ],
+            },
+          ],
+        },
+      });
+      const result = await provider.getContribution({
+        imodelAccess: createIModelAccessFromClasses(new Map(), { synthesizeMissing: true }),
+        target: createTarget(),
+      });
+      expect(result!.relatedProperties).toHaveLength(3);
+      const [parentDeclaration, nestedDeclaration, deeplyNestedDeclaration] = result!.relatedProperties!;
+
+      expect(parentDeclaration.properties![0].stepIndex).toBe(parentDeclaration.path.length - 1);
+      expect(parentDeclaration.properties![0].relationship).toBeUndefined();
+      expect(parentDeclaration.properties![0].target!.select).toEqual("none");
+
+      expect(nestedDeclaration.properties![0].stepIndex).toBe(nestedDeclaration.path.length - 1);
+      expect(nestedDeclaration.properties![0].relationship!.select).toEqual("all");
+      expect(nestedDeclaration.properties![0].target!.select).toEqual("all");
+
+      expect(deeplyNestedDeclaration.properties![0].stepIndex).toBe(deeplyNestedDeclaration.path.length - 1);
+      expect(deeplyNestedDeclaration.properties![0].relationship).toBeUndefined();
+      expect(deeplyNestedDeclaration.properties![0].target!.select).toEqual("all");
     });
 
     it("throws when propertiesSource class is not a relationship", async () => {
