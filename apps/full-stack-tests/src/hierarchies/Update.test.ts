@@ -11,9 +11,11 @@ import {
   ElementOwnsExternalSourceAspects,
   ElementRefersToElements,
   ExternalSourceAspect,
+  IModelHost,
   IpcHost,
   PhysicalModel,
   PhysicalPartition,
+  SettingsPriority,
   StandaloneDb,
   Subject,
   SubjectOwnsPartitionElements,
@@ -57,6 +59,10 @@ describe("Hierarchies", () => {
     beforeAll(async () => {
       const socket = new TestSocket();
       await IpcHost.startup({ ipcHost: { socket }, iModelHost: { profileName: Guid.createValue() } });
+      IModelHost.appWorkspace.settings.addDictionary(
+        { name: "full-stack-tests", priority: SettingsPriority.application },
+        { "itwin/core/gcs/disableWorkspaces": true },
+      );
 
       // eslint-disable-next-line @itwin/no-internal
       RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);

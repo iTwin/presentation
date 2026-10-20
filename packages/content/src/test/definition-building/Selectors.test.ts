@@ -180,6 +180,30 @@ describe("ValueSelector", () => {
       expect(idB).to.contain("Kind = 2");
     });
 
+    it("keeps separate selectors for otherwise identical paths with different ID sets", () => {
+      const { selectors } = collectValueRequirements({
+        fields: [],
+        externalInputs: ["0x1", "0x2"].map((id) => ({
+          propertyClassName: "Stuff.Other",
+          propertyName: "Name",
+          cardinality: "one",
+          pathFromTarget: [
+            {
+              sourceClassName: "Stuff.Thing",
+              relationshipName: "Stuff.RelA",
+              targetClassName: "Stuff.Other",
+              instanceFilter: {
+                expression: "InVirtualSet(:ids, this.ECInstanceId)",
+                bindings: { ids: { type: "idset", value: new Set([id]) } },
+              },
+            },
+          ],
+        })),
+      });
+
+      expect(Object.keys(selectors)).to.have.lengthOf(2);
+    });
+
     it("drops a removed output field's selector on recompute, but keeps it when it is also an external input (pinning replacement)", () => {
       const removable = propertyField({
         propertyClassName: "Stuff.Thing",
