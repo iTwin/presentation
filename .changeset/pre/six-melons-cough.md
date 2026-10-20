@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-hierarchies-react": patch
+"@itwin/presentation-hierarchies-react": minor
 ---
 
 Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.

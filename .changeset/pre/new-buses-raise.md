@@ -4,11 +4,11 @@
 
 Improve custom errors rendering API:
 
-- Separated `ChildrenLoad` error from the `Unknown` error. All expected tree errors have dedicated type and `Unknown` error can be used to handle custom errors encountered outside of tree.
+- Separated the `ChildrenLoad` error from the `Generic` error. All expected tree errors have a dedicated type, and the `Generic` error can be used to handle custom errors encountered outside of the tree.
 - Exposed `ErrorItemRenderer` that renders all error types supported by the tree.
-- Updated `TreeErrorRenderer` to pass all props necessary to render `ErrorItemRenderer` into `renderError` callback.
+- Updated `TreeErrorRenderer` to pass all props necessary to render `ErrorItemRenderer` into the `renderError` callback.
 
-These changes makes it easier to customize only some types of errors and leave default handling for others.
+These changes make it easier to customize only some types of errors and leave default handling for others.
 
 Example:
 ```tsx
@@ -19,12 +19,13 @@ Example:
       <TreeErrorRenderer
         {...errorProps}
         renderError={(errorItemProps) => {
-          if (errorItemProps.errorItem.errorNode.error.type === "Unknown") {
-            return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.errorItem.errorNode.id} />;
+          if (errorItemProps.error.type === "Generic") {
+            return <ErrorRegion.Item message="Custom error" messageId={errorItemProps.treeNode.id} />;
           }
           return <ErrorItemRenderer {...errorItemProps} />;
         }}
-    />);
+      />
+    );
   }}
 />
 ```
