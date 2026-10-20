@@ -159,5 +159,33 @@ describe("serializeRelationshipPath", () => {
         serializeRelationshipPath({ path: path2, includeInstanceFilters: true }),
       );
     });
+
+    it("normalizes filter and binding property order", () => {
+      const first: RelationshipPath = [
+        step({
+          instanceFilter: {
+            expression: "InVirtualSet(:ids, this.ECInstanceId)",
+            bindings: { ids: { type: "idset", value: new Set(["0x2", "0x1"]) } },
+          },
+        }),
+      ];
+      const second: RelationshipPath = [
+        step({
+          instanceFilter: {
+            bindings: { ids: { value: new Set(["0x1", "0x2"]), type: "idset" } },
+            expression: "InVirtualSet(:ids, this.ECInstanceId)",
+          },
+        }),
+      ];
+
+      expect(serializeRelationshipPath({ path: first })).to.equal(serializeRelationshipPath({ path: second }));
+    });
+
+    it("treats omitted and undefined optional filter properties equally", () => {
+      const first: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0" } })];
+      const second: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0", bindings: undefined } })];
+
+      expect(serializeRelationshipPath({ path: first })).to.equal(serializeRelationshipPath({ path: second }));
+    });
   });
 });

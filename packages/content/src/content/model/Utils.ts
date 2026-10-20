@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { normalizeSetForSerialization } from "../InternalUtils.js";
+import { stableStringify } from "../InternalUtils.js";
 
 import type { DeepReadonly, EC, RelationshipPath } from "@itwin/presentation-shared";
 
@@ -34,13 +34,7 @@ export function serializeRelationshipPath({
       result += `->${step.targetClassName}`;
     }
     if (includeInstanceFilters && step.instanceFilter) {
-      const { bindings, ...rest } = step.instanceFilter;
-      const sortedBindings = bindings
-        ? Object.keys(bindings)
-            .sort()
-            .map((key) => [key, bindings[key]])
-        : undefined;
-      result += `{${JSON.stringify({ ...rest, bindings: sortedBindings }, (_key, value: unknown) => normalizeSetForSerialization(value))}}`;
+      result += `{${stableStringify(step.instanceFilter)}}`;
     }
   });
   return result;

@@ -126,6 +126,12 @@ describe("stableStringify", () => {
     expect(stableStringify({ b: 1, a: 2 })).to.equal('{"a":2,"b":1}');
   });
 
+  it("omits undefined object properties recursively", () => {
+    expect(stableStringify({ bindings: { ids: { type: "idset", value: undefined } }, alias: undefined })).to.equal(
+      '{"bindings":{"ids":{"type":"idset"}}}',
+    );
+  });
+
   it("produces same output regardless of insertion order", () => {
     const a = stableStringify({ x: 1, y: 2, z: 3 });
     const b = stableStringify({ z: 3, x: 1, y: 2 });

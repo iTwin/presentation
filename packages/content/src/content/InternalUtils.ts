@@ -147,30 +147,27 @@ export async function collectInParallel<TInput, TOutput>({
 }
 
 /**
- * Converts ID sets to sorted arrays for serialization without modifying them. Other values are
- * returned unchanged, preserving existing array order and plain-object serialization.
- */
-export function normalizeSetForSerialization(value: unknown): unknown {
-  return value instanceof Set ? [...value].sort() : value;
-}
-
-/**
  * Produces a stable JSON representation with recursively sorted object keys, so key order does not
- * affect the result. ID sets are represented as sorted arrays. Useful for hashing or structural
- * equality comparisons of plain data.
+ * affect the result. ID sets are represented as sorted arrays, and undefined object properties are
+ * omitted like in `JSON.stringify`. Useful for hashing or structural equality comparisons of plain data.
  *
  * @internal
  */
 export function stableStringify(value: unknown): string {
-  value = normalizeSetForSerialization(value);
+  if (value instanceof Set) {
+    return stableStringify([...value].sort());
+  }
   if (value === null || value === undefined || typeof value !== "object") {
     return JSON.stringify(value);
   }
   if (Array.isArray(value)) {
     return `[${value.map(stableStringify).join(",")}]`;
   }
-  const keys = Object.keys(value).sort();
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify((value as Record<string, unknown>)[k])}`).join(",")}}`;
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record)
+    .filter((key) => record[key] !== undefined)
+    .sort();
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
 }
 
 /**
