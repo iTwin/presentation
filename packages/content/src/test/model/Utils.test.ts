@@ -90,6 +90,47 @@ describe("serializeRelationshipPath", () => {
       );
     });
 
+    it("distinguishes filters with different ID sets", () => {
+      const path = (ids: ReadonlySet<string>): RelationshipPath => [
+        step({
+          instanceFilter: {
+            expression: "InVirtualSet(:ids, this.ECInstanceId)",
+            bindings: { ids: { type: "idset", value: ids } },
+          },
+        }),
+      ];
+      const first = serializeRelationshipPath({ path: path(new Set(["0x1"])) });
+      const second = serializeRelationshipPath({ path: path(new Set(["0x2"])) });
+      const empty = serializeRelationshipPath({ path: path(new Set()) });
+
+      expect(first).to.not.equal(second);
+      expect(first).to.not.equal(empty);
+      expect(first).to.contain('"value":["0x1"]');
+    });
+
+    it("normalizes ID set insertion order without changing existing array serialization", () => {
+      const ids: ReadonlySet<string> = new Set(["0x2", "0x1"]);
+      const path = (value: ReadonlySet<string> | readonly string[]): RelationshipPath => [
+        step({
+          instanceFilter: {
+            expression: "InVirtualSet(:ids, this.ECInstanceId)",
+            bindings: { ids: { type: "idset", value } },
+          },
+        }),
+      ];
+
+      expect(serializeRelationshipPath({ path: path(ids) })).to.equal(
+        serializeRelationshipPath({ path: path(new Set(["0x1", "0x2"])) }),
+      );
+      expect(serializeRelationshipPath({ path: path(ids) })).to.equal(
+        serializeRelationshipPath({ path: path(["0x1", "0x2"]) }),
+      );
+      expect([...ids]).to.deep.equal(["0x2", "0x1"]);
+      expect(serializeRelationshipPath({ path: path(Object.freeze(["0x2", "0x1"])) })).to.contain(
+        '"value":["0x2","0x1"]',
+      );
+    });
+
     it("is deterministic for the same filtered path", () => {
       const path: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0" } })];
       expect(serializeRelationshipPath({ path, includeInstanceFilters: true })).to.equal(
@@ -117,6 +158,34 @@ describe("serializeRelationshipPath", () => {
       expect(serializeRelationshipPath({ path, includeInstanceFilters: true })).to.equal(
         serializeRelationshipPath({ path: path2, includeInstanceFilters: true }),
       );
+    });
+
+    it("normalizes filter and binding property order", () => {
+      const first: RelationshipPath = [
+        step({
+          instanceFilter: {
+            expression: "InVirtualSet(:ids, this.ECInstanceId)",
+            bindings: { ids: { type: "idset", value: new Set(["0x2", "0x1"]) } },
+          },
+        }),
+      ];
+      const second: RelationshipPath = [
+        step({
+          instanceFilter: {
+            bindings: { ids: { value: new Set(["0x1", "0x2"]), type: "idset" } },
+            expression: "InVirtualSet(:ids, this.ECInstanceId)",
+          },
+        }),
+      ];
+
+      expect(serializeRelationshipPath({ path: first })).to.equal(serializeRelationshipPath({ path: second }));
+    });
+
+    it("treats omitted and undefined optional filter properties equally", () => {
+      const first: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0" } })];
+      const second: RelationshipPath = [step({ instanceFilter: { expression: "this.X > 0", bindings: undefined } })];
+
+      expect(serializeRelationshipPath({ path: first })).to.equal(serializeRelationshipPath({ path: second }));
     });
   });
 });

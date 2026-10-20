@@ -11,7 +11,7 @@ import {
 } from "../hierarchies/HierarchySearch.js";
 import { createTestGenericNodeKey, createTestInstanceKey } from "./Utils.js";
 
-import type { Props } from "@itwin/presentation-shared";
+import type { DeepReadonly, Props } from "@itwin/presentation-shared";
 import type { HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
 
 describe("HierarchySearchPath", () => {
@@ -156,6 +156,74 @@ describe("HierarchySearchTree", () => {
     });
 
     describe("accept path", () => {
+      it.each(["mutable", "frozen"])("does not mutate %s tree options when auto-expanding a path", (inputType) => {
+        const identifier = createTestGenericNodeKey({ id: "root" });
+        const tree = { identifier, options: { autoExpand: { groupingLevel: 2 } } };
+        if (inputType === "frozen") {
+          Object.freeze(tree.options.autoExpand);
+          Object.freeze(tree.options);
+          Object.freeze(tree);
+        }
+        const builder = HierarchySearchTree.createBuilder();
+        builder.accept({ tree });
+
+        builder.accept({ path: { path: [identifier], options: { autoExpand: true } } });
+
+        expect(builder.getTree()).toEqual([{ identifier, options: { autoExpand: true } }]);
+        expect(tree).toEqual({ identifier, options: { autoExpand: { groupingLevel: 2 } } });
+        expect(builder.getTree()[0].options).not.toBe(tree.options);
+      });
+
+      it("accepts mutable paths in array and object forms", () => {
+        const root = createTestGenericNodeKey({ id: "root" });
+        const target = createTestInstanceKey({ id: "0x1" });
+        const arrayPath: HierarchySearchPath = [];
+        const objectPath: HierarchySearchPath = { path: [] };
+        arrayPath.push(root);
+        objectPath.path.push(root, target);
+        const builder = HierarchySearchTree.createBuilder();
+
+        builder.accept({ path: arrayPath });
+        builder.accept({ path: objectPath });
+
+        expect(builder.getTree()).toEqual([{ identifier: root, isTarget: true, children: [{ identifier: target }] }]);
+      });
+
+      it.each(["array", "object"] as const)("accepts a readonly path in %s form without modifying it", (form) => {
+        const root = Object.freeze(createTestGenericNodeKey({ id: "root" }));
+        const target = Object.freeze(createTestInstanceKey({ id: "0x1" }));
+        const path = Object.freeze([root, target]);
+        const searchPath: DeepReadonly<HierarchySearchPath> =
+          form === "array" ? path : { path, options: Object.freeze({ reveal: true }) };
+        const builder = HierarchySearchTree.createBuilder();
+
+        builder.accept({ path: searchPath });
+
+        expect(builder.getTree()).toEqual([
+          {
+            identifier: root,
+            options: form === "object" ? { autoExpand: true } : undefined,
+            children: [
+              {
+                identifier: target,
+                options: form === "object" ? { autoExpand: { groupingLevel: Number.MAX_SAFE_INTEGER } } : undefined,
+              },
+            ],
+          },
+        ]);
+        expect(path).toEqual([root, target]);
+      });
+
+      it("ignores empty readonly paths", () => {
+        const path = Object.freeze([]);
+        const builder = HierarchySearchTree.createBuilder();
+
+        builder.accept({ path });
+        builder.accept({ path: { path, options: { reveal: true } } });
+
+        expect(builder.getTree()).toEqual([]);
+      });
+
       it("adds a single path in array form", () => {
         const builder = HierarchySearchTree.createBuilder();
         builder.accept({ path: [createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" })] });
