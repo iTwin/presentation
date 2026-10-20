@@ -73,17 +73,17 @@ describe("categories provider configuration", () => {
       excludedElementClassNames: providerExclusions,
     });
     const provider = createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, type: providerType });
-    const tree = createCategoriesTree({
-      viewType: treeType,
-      hierarchyConfig: { elements: { nodes: "include", excludedClasses: treeExclusions } },
-      getIdsProvider: () => provider,
-    });
+    const createTree = () =>
+      createCategoriesTree({
+        imodelAccess: access,
+        viewType: treeType,
+        hierarchyConfig: { elements: { nodes: "include", excludedClasses: treeExclusions } },
+        idsProvider: provider,
+      });
     if (shouldThrow) {
-      expect(() => tree.getHierarchyDefinition(access)).toThrow(
-        "Categories tree ID provider configuration does not match",
-      );
+      expect(createTree).toThrow("Categories tree ID provider configuration does not match");
     } else {
-      expect(() => tree.getHierarchyDefinition(access)).not.toThrow();
+      expect(createTree).not.toThrow();
     }
   });
 

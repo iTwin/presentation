@@ -101,11 +101,6 @@ interface CategoriesTreeIdsProviderProps {
 }
 
 // @beta
-type CategoriesTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & {
-    imodelKey: string;
-};
-
-// @beta
 export namespace CategoriesTreeNode {
     const isDefinitionContainerNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
         key: InstancesNodeKey;
@@ -152,8 +147,11 @@ export namespace CategoriesTreeNode {
 
 // @beta
 interface CategoriesTreeProps {
-    getIdsProvider?: (imodelAccess: CategoriesTreeIModelAccess) => CategoriesTreeIdsProvider;
     hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+    idsProvider?: CategoriesTreeIdsProvider;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
     // (undocumented)
     viewType: "2d" | "3d";
@@ -178,7 +176,6 @@ type CategoriesTreeSearchPathKey = IModelInstanceKey & {
 
 // @beta
 interface CategoriesTreeSearchProps extends CategoriesTreeSearchOptions {
-    imodelAccess: CategoriesTreeIModelAccess;
     label: string;
 }
 
@@ -228,11 +225,6 @@ interface ClassificationsTreeIdsProviderProps {
 }
 
 // @beta
-type ClassificationsTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & {
-    imodelKey: string;
-};
-
-// @beta
 export namespace ClassificationsTreeNode {
     const isClassificationTableNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
         key: InstancesNodeKey;
@@ -253,8 +245,11 @@ export namespace ClassificationsTreeNode {
 
 // @beta
 interface ClassificationsTreeProps {
-    getIdsProvider?: (imodelAccess: ClassificationsTreeIModelAccess) => ClassificationsTreeIdsProvider;
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
+    idsProvider?: ClassificationsTreeIdsProvider;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
 }
 
@@ -276,9 +271,7 @@ type ClassificationsTreeSearchPathKey = IModelInstanceKey & {
 };
 
 // @beta
-type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & {
-    imodelAccess: ClassificationsTreeIModelAccess;
-} & ({
+type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & ({
     label: string;
 } | {
     targetItems: Array<InstanceKey>;
@@ -292,7 +285,7 @@ interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "ident
 
 // @beta
 export function createCategoriesTree(props: CategoriesTreeProps): {
-    getHierarchyDefinition: (imodelAccess: CategoriesTreeIModelAccess) => HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) => AsyncIterableIterator<{
         path: CategoriesTreeSearchPath;
         target: Id64String;
@@ -307,7 +300,7 @@ export function createCategoriesTreeIdsProvider(input: CategoriesTreeIdsProvider
 
 // @beta
 export function createClassificationsTree(props: ClassificationsTreeProps): {
-    getHierarchyDefinition: (imodelAccess: ClassificationsTreeIModelAccess) => HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) => AsyncIterableIterator<{
         path: ClassificationsTreeSearchPath;
         target: Id64String;
@@ -321,8 +314,8 @@ export function createClassificationsTree(props: ClassificationsTreeProps): {
 export function createClassificationsTreeIdsProvider(input: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider;
 
 // @beta
-export function createModelsTree(props?: ModelsTreeProps): {
-    getHierarchyDefinition: (imodelAccess: ModelsTreeIModelAccess) => HierarchyDefinition;
+export function createModelsTree(props: ModelsTreeProps): {
+    hierarchyDefinition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
         path: ModelsTreeSearchPath;
         target: Id64String | ElementsGroupInfo;
@@ -412,11 +405,6 @@ interface ModelsTreeIdsProviderProps {
 }
 
 // @beta
-type ModelsTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & {
-    imodelKey: string;
-};
-
-// @beta
 export namespace ModelsTreeNode {
     const isSubjectNode: (node: Pick<HierarchyNode, "extendedData">) => node is NonGroupingHierarchyNode & {
         key: InstancesNodeKey;
@@ -452,8 +440,11 @@ export namespace ModelsTreeNode {
 
 // @beta
 interface ModelsTreeProps {
-    getIdsProvider?: (imodelAccess: ModelsTreeIModelAccess) => ModelsTreeIdsProvider;
     hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+    idsProvider?: ModelsTreeIdsProvider;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
 }
 
@@ -476,9 +467,7 @@ type ModelsTreeSearchPathKey = IModelInstanceKey & {
 };
 
 // @beta
-type ModelsTreeSearchProps = ModelsTreeSearchOptions & {
-    imodelAccess: ModelsTreeIModelAccess;
-} & ({
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
     targetItems: Array<InstanceKey | ElementsGroupInfo>;
 } | {
     label: string;
@@ -492,11 +481,6 @@ interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | 
 
 // @beta
 type ReadonlyId64Arg = Id64String | ReadonlyArray<Id64String> | ReadonlySet<Id64String>;
-
-// @beta (undocumented)
-namespace ReadonlyId64Arg {
-    function iterable(ids: ReadonlyId64Arg): Iterable<Id64String>;
-}
 
 // @beta
 export interface SharedIdsProvider {

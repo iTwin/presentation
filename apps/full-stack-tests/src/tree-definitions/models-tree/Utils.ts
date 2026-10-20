@@ -29,22 +29,23 @@ import type {
 } from "@itwin/presentation-tree-definitions/internal";
 
 export async function createModelsTreeProvider(
-  props: Props<typeof createModelsTree> & { imodelConnection: IModelConnection; cacheState: "cold" | "warm" },
+  props: Omit<Props<typeof createModelsTree>, "imodelAccess"> & {
+    imodelConnection: IModelConnection;
+    cacheState: "cold" | "warm";
+  },
 ) {
   const { cacheState, imodelConnection, ...restProps } = props;
   const imodelAccess = createIModelAccess(imodelConnection);
   const tree = createModelsTree({
     ...restProps,
+    imodelAccess,
     hierarchyConfig: { subjects: { root: "exclude" }, ...restProps.hierarchyConfig },
   });
   if (cacheState === "warm") {
     // Label search populates the same ID cache used by the hierarchy definition.
-    await collect(tree.createInstanceKeyPaths({ imodelAccess, label: "", limit: "unbounded" }));
+    await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
   }
-  return createIModelHierarchyProvider({
-    imodelAccess,
-    hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
-  });
+  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
 }
 
 export function createSubjectHierarchyNode(props?: {

@@ -89,12 +89,12 @@ function Tree({
   treeLabel: string;
 }) {
   const [searchText, setSearchText] = useState("");
-  const [modelsTree] = useState(() => createModelsTree({}));
+  const modelsTree = useMemo(() => createModelsTree({ imodelAccess }), [imodelAccess]);
 
   const getSearchPaths = useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
     return async ({ abortSignal }) =>
-      searchText ? modelsTree.createSearchTree({ imodelAccess, label: searchText, abortSignal }) : undefined;
-  }, [searchText, modelsTree, imodelAccess]);
+      searchText ? modelsTree.createSearchTree({ label: searchText, abortSignal }) : undefined;
+  }, [searchText, modelsTree]);
 
   const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
 
@@ -117,10 +117,7 @@ function Tree({
     imodelAccess,
     imodelChanged,
     getSearchPaths,
-    getHierarchyDefinition: useCallback(
-      ({ imodelAccess: access }) => modelsTree.getHierarchyDefinition(access),
-      [modelsTree],
-    ),
+    getHierarchyDefinition: useCallback(() => modelsTree.hierarchyDefinition, [modelsTree]),
     getTreeNodeErrors: useCallback((node) => {
       return [
         { type: "Generic", id: `${node.label}-error-1`, message: `test error node`, isNodeExpandable: true },

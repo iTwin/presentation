@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Guid } from "@itwin/core-bentley";
-import { getOrCreate, validateIdsProviderConfig } from "../../shared/Utils.js";
+import { validateIdsProviderConfig } from "../../shared/Utils.js";
 import { ClassificationsTreeDefinition } from "./ClassificationsTreeDefinition.js";
 import {
   createClassificationsTreeIdsProvider,
@@ -21,16 +21,17 @@ import type {
 import type { ClassificationsTreeIdsProvider } from "./ClassificationsTreeIdsProvider.js";
 
 /**
- * Provider resolution and classification system configuration for a classifications hierarchy.
+ * iModel access, ID provider, and classification system configuration for a classifications hierarchy.
  * @beta
  */
 interface ClassificationsTreeProps {
+  /** Schema and query access for the iModel used by the hierarchy definition and searches. */
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   /**
-   * Returns the ID provider for the supplied iModel access, with a matching classification system.
-   * Called once per `imodelKey` with the first access supplied for that key; different iModel versions need separate providers.
-   * Created internally for each iModel when omitted. Configuration is validated when the provider is first resolved for each iModel.
+   * ID provider for the iModel accessed through `imodelAccess`, with a matching classification system.
+   * Created internally when omitted. Throws if its configuration does not match the tree configuration.
    */
-  getIdsProvider?: (imodelAccess: ClassificationsTreeIModelAccess) => ClassificationsTreeIdsProvider;
+  idsProvider?: ClassificationsTreeIdsProvider;
   /** Configuration shared by hierarchy definitions and searches. */
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -38,27 +39,19 @@ interface ClassificationsTreeProps {
 }
 
 /**
- * Schema and query access for a specific iModel version used by classifications hierarchy definitions and searches.
- * @beta
- */
-type ClassificationsTreeIModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
-
-/**
  * Search-specific data access and options for a classifications tree.
  * @beta
  */
-type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions & {
-  /** Access to the iModel version to search. Shares its ID provider with hierarchy definitions using the same key. */
-  imodelAccess: ClassificationsTreeIModelAccess;
-} & ({ label: string } | { targetItems: Array<InstanceKey> });
+type ClassificationsTreeSearchProps = ClassificationsTreeSearchOptions &
+  ({ label: string } | { targetItems: Array<InstanceKey> });
 
 /**
- * Creates a classifications hierarchy definition factory and search helpers that share hierarchy configuration and a unique ID.
+ * Creates a classifications hierarchy definition and search helpers that share hierarchy configuration and a unique ID.
  *
- * Supply `getIdsProvider` to share externally owned, iModel-specific providers with hierarchy and search.
+ * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
  *
- * Pass the returned `getHierarchyDefinition` to `createMergedIModelHierarchyProvider`, or call it with an
- * iModel's access to obtain a definition for `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * Pass the returned `hierarchyDefinition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ * @throws An error if the supplied ID provider configuration does not match the tree configuration.
  * @beta
  */
 export function createClassificationsTree(props: ClassificationsTreeProps) {
@@ -67,52 +60,46 @@ export function createClassificationsTree(props: ClassificationsTreeProps) {
     elements: { excludedClasses: [...new Set(props.hierarchyConfig.elements?.excludedClasses ?? [])].sort() },
   };
   const idsProviderConfig = createClassificationsTreeIdsProviderConfig(hierarchyConfig);
-  const idsProviders = new Map<string, ClassificationsTreeIdsProvider>();
-  const getIdsProvider = (imodelAccess: ClassificationsTreeIModelAccess) =>
-    getOrCreate({
-      map: idsProviders,
-      createFunc: () => {
-        const provider =
-          props.getIdsProvider?.(imodelAccess) ??
-          createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
-        validateIdsProviderConfig(
-          createClassificationsTreeIdsProviderConfig(provider.config),
-          idsProviderConfig,
-          "Classifications tree",
-        );
-        return provider;
-      },
-      key: imodelAccess.imodelKey,
-    });
-  const sharedProps = { hierarchyConfig, uniqueId: props.uniqueId ?? Guid.createValue() };
+  const idsProvider =
+    props.idsProvider ?? createClassificationsTreeIdsProvider({ imodelAccess: props.imodelAccess, hierarchyConfig });
+  validateIdsProviderConfig(
+    createClassificationsTreeIdsProviderConfig(idsProvider.config),
+    idsProviderConfig,
+    "Classifications tree",
+  );
+  const uniqueId = props.uniqueId ?? Guid.createValue();
+  const hierarchyDefinition: HierarchyDefinition = new ClassificationsTreeDefinition({
+    imodelAccess: props.imodelAccess,
+    hierarchyConfig,
+    idsProvider,
+    uniqueId,
+  });
   return {
-    /**
-     * Creates a hierarchy definition bound to the supplied iModel's schema access and ID provider.
-     * @throws An error if the ID provider configuration does not match the tree configuration.
-     */
-    getHierarchyDefinition: (imodelAccess: ClassificationsTreeIModelAccess): HierarchyDefinition =>
-      new ClassificationsTreeDefinition({ ...sharedProps, imodelAccess, idsProvider: getIdsProvider(imodelAccess) }),
+    /** Hierarchy definition bound to the supplied iModel access and ID provider. */
+    hierarchyDefinition,
     /**
      * Yields hierarchy paths to instances matching the supplied label or instance keys.
      * @throws An error if the configured search limit is exceeded.
-     * @throws An error if the ID provider configuration does not match the tree configuration.
      */
     createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) =>
       ClassificationsTreeDefinition.createInstanceKeyPaths({
         ...searchProps,
-        ...sharedProps,
-        idsProvider: getIdsProvider(searchProps.imodelAccess),
+        hierarchyConfig,
+        idsProvider,
+        uniqueId,
+        imodelAccess: props.imodelAccess,
       }),
     /**
      * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
      * @throws An error if the configured search limit is exceeded.
-     * @throws An error if the ID provider configuration does not match the tree configuration.
      */
     createSearchTree: async (searchProps: ClassificationsTreeSearchProps & { revealTargets?: boolean }) =>
       ClassificationsTreeDefinition.createSearchTree({
         ...searchProps,
-        ...sharedProps,
-        idsProvider: getIdsProvider(searchProps.imodelAccess),
+        hierarchyConfig,
+        idsProvider,
+        uniqueId,
+        imodelAccess: props.imodelAccess,
       }),
   };
 }

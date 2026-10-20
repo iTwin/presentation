@@ -36,7 +36,6 @@ import {
 import { createModelsTreeProvider } from "./Utils.js";
 
 import type { InstanceKey, Props } from "@itwin/presentation-shared";
-import type { IModelAccess } from "../Common.js";
 
 describe("Models tree", () => {
   afterEach(() => {
@@ -73,18 +72,13 @@ describe("Models tree", () => {
     vi.spyOn(idsProvider, "getChildSubjectModelIds").mockResolvedValue([]);
     const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockResolvedValue([]);
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const getIdsProvider = vi.fn(() => idsProvider);
-    const tree = createModelsTree({ hierarchyConfig, getIdsProvider });
-    using provider = createIModelHierarchyProvider({
-      imodelAccess,
-      hierarchyDefinition: tree.getHierarchyDefinition(imodelAccess),
-    });
+    const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
+    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
 
     await validateHierarchy({ provider, expect: [] });
     expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
-    expect(await tree.createSearchTree({ imodelAccess, targetItems: [imodel.subject] })).toEqual([]);
+    expect(await tree.createSearchTree({ targetItems: [imodel.subject] })).toEqual([]);
     expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
-    expect(getIdsProvider).toHaveBeenCalledExactlyOnceWith(imodelAccess);
     expect(queryReader).not.toHaveBeenCalled();
   });
 
@@ -125,26 +119,28 @@ describe("Models tree", () => {
         imodelAccess: createIModelAccess(imodelConnection),
       }));
       const [base, changed] = imodels;
-      const getIdsProvider =
-        providerType === "custom"
-          ? vi.fn((imodelAccess: IModelAccess) =>
-              createModelsTreeIdsProvider({
+      const schemaChecks = imodels.map(({ imodelAccess }) => vi.spyOn(imodelAccess, "classDerivesFrom"));
+      const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
+      const changedQueryReader = vi.spyOn(changed.imodelAccess, "createQueryReader");
+      const trees = imodels.map(({ imodelAccess }) => {
+        const idsProvider =
+          providerType === "custom"
+            ? createModelsTreeIdsProvider({
                 imodelAccess,
                 hierarchyConfig,
                 sharedIdsProvider: createSharedIdsProvider({
                   imodelAccess,
                   elementClassName: "BisCore.GeometricElement3d",
                 }),
-              }),
-            )
-          : undefined;
-      const schemaChecks = imodels.map(({ imodelAccess }) => vi.spyOn(imodelAccess, "classDerivesFrom"));
-      const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
-      const changedQueryReader = vi.spyOn(changed.imodelAccess, "createQueryReader");
-      const tree = createModelsTree({ hierarchyConfig, getIdsProvider });
+              })
+            : undefined;
+        return { imodelAccess, tree: createModelsTree({ imodelAccess, hierarchyConfig, idsProvider }) };
+      });
+      const [baseTree, changedTree] = trees;
       using provider = createMergedIModelHierarchyProvider({
         imodels,
-        getHierarchyDefinition: tree.getHierarchyDefinition,
+        getHierarchyDefinition: (imodelAccess) =>
+          trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
       });
 
       expect(await collect(provider.getNodes({ parentNode: undefined }))).toMatchObject([
@@ -160,13 +156,10 @@ describe("Models tree", () => {
       for (const schemaCheck of schemaChecks) {
         expect(schemaCheck).toHaveBeenCalledWith(CLASS_NAMES.GeometricElement3d, CLASS_NAMES.GeometricElement3d);
       }
-      if (getIdsProvider) {
-        expect(getIdsProvider.mock.calls).toEqual([[base.imodelAccess], [changed.imodelAccess]]);
-      }
 
       baseQueryReader.mockClear();
       changedQueryReader.mockClear();
-      expect(await tree.createSearchTree({ imodelAccess: changed.imodelAccess, label: "new element" })).toMatchObject([
+      expect(await changedTree.tree.createSearchTree({ label: "new element" })).toMatchObject([
         {
           identifier: { id: versions.changeset1.model.id },
           children: [
@@ -184,17 +177,12 @@ describe("Models tree", () => {
       );
 
       changedQueryReader.mockClear();
-      expect(
-        await collect(tree.createInstanceKeyPaths({ imodelAccess: base.imodelAccess, label: "new element" })),
-      ).toEqual([]);
+      expect(await collect(baseTree.tree.createInstanceKeyPaths({ label: "new element" }))).toEqual([]);
       expect(changedQueryReader).not.toHaveBeenCalled();
       expect(baseQueryReader).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
       );
-      if (getIdsProvider) {
-        expect(getIdsProvider).toHaveBeenCalledTimes(2);
-      }
     },
   );
 

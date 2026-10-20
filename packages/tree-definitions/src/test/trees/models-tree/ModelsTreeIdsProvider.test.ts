@@ -102,11 +102,12 @@ describe("models provider configuration", () => {
       sharedIdsProvider,
       hierarchyConfig: providerConfig,
     });
-    const tree = createModelsTree({ hierarchyConfig: treeConfig, getIdsProvider: () => provider });
+    const createTree = () =>
+      createModelsTree({ imodelAccess: access, hierarchyConfig: treeConfig, idsProvider: provider });
     if (shouldThrow) {
-      expect(() => tree.getHierarchyDefinition(access)).toThrow("Models tree ID provider configuration does not match");
+      expect(createTree).toThrow("Models tree ID provider configuration does not match");
     } else {
-      expect(() => tree.getHierarchyDefinition(access)).not.toThrow();
+      expect(createTree).not.toThrow();
     }
   });
 

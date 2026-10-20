@@ -64,13 +64,12 @@ describe("classifications provider configuration", () => {
   ])("$name", ({ providerConfig = { rootClassificationSystemCode: "SystemA" }, treeConfig, shouldThrow }) => {
     const access = createAccess();
     const provider = createClassificationsTreeIdsProvider({ imodelAccess: access, hierarchyConfig: providerConfig });
-    const tree = createClassificationsTree({ hierarchyConfig: treeConfig, getIdsProvider: () => provider });
+    const createTree = () =>
+      createClassificationsTree({ imodelAccess: access, hierarchyConfig: treeConfig, idsProvider: provider });
     if (shouldThrow) {
-      expect(() => tree.getHierarchyDefinition(access)).toThrow(
-        "Classifications tree ID provider configuration does not match",
-      );
+      expect(createTree).toThrow("Classifications tree ID provider configuration does not match");
     } else {
-      expect(() => tree.getHierarchyDefinition(access)).not.toThrow();
+      expect(createTree).not.toThrow();
     }
   });
 });
