@@ -147,12 +147,22 @@ export async function collectInParallel<TInput, TOutput>({
 }
 
 /**
+ * Converts ID sets to sorted arrays for serialization without modifying them. Other values are
+ * returned unchanged, preserving existing array order and plain-object serialization.
+ */
+export function normalizeSetForSerialization(value: unknown): unknown {
+  return value instanceof Set ? [...value].sort() : value;
+}
+
+/**
  * Produces a stable JSON representation with recursively sorted object keys, so key order does not
- * affect the result. Useful for hashing or structural equality comparisons of plain data.
+ * affect the result. ID sets are represented as sorted arrays. Useful for hashing or structural
+ * equality comparisons of plain data.
  *
  * @internal
  */
 export function stableStringify(value: unknown): string {
+  value = normalizeSetForSerialization(value);
   if (value === null || value === undefined || typeof value !== "object") {
     return JSON.stringify(value);
   }

@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { normalizeSetForSerialization } from "../InternalUtils.js";
+
 import type { DeepReadonly, EC, RelationshipPath } from "@itwin/presentation-shared";
 
 /**
@@ -38,7 +40,7 @@ export function serializeRelationshipPath({
             .sort()
             .map((key) => [key, bindings[key]])
         : undefined;
-      result += `{${JSON.stringify({ ...rest, bindings: sortedBindings })}}`;
+      result += `{${JSON.stringify({ ...rest, bindings: sortedBindings }, (_key, value: unknown) => normalizeSetForSerialization(value))}}`;
     }
   });
   return result;
