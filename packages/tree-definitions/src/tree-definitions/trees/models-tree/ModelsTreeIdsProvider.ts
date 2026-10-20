@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
-import { assert, Guid } from "@itwin/core-bentley";
+import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import {
   type DeepReadonly,
@@ -17,7 +17,6 @@ import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { ReadonlyId64Arg } from "../../shared/Types.js";
 import { createWhereClause, getOrCreate, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
 
@@ -25,7 +24,7 @@ import type { Observable } from "rxjs";
 import type { Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
-import type { ModelId, SubjectId } from "../../shared/Types.js";
+import type { ModelId, ReadonlyId64Arg, SubjectId } from "../../shared/Types.js";
 import type {
   ModelsTreeHierarchyConfiguration,
   ModelsTreeSearchPath,
@@ -439,7 +438,7 @@ export function createModelsTreeIdsProvider({
         getSubjectInfos().pipe(
           map((subjectInfos) => {
             const childSubjectIds = new Array<SubjectId>();
-            for (const subjectId of ReadonlyId64Arg.iterable(parentSubjectIds)) {
+            for (const subjectId of Id64.iterable(parentSubjectIds)) {
               forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
                 if (!childSubjectInfo.hideInHierarchy) {
                   childSubjectIds.push(childSubjectId);
@@ -458,7 +457,7 @@ export function createModelsTreeIdsProvider({
         getSubjectInfos().pipe(
           map((subjectInfos) => {
             const hiddenSubjectIds = new Array<SubjectId>();
-            for (const subjectId of ReadonlyId64Arg.iterable(parentSubjectIds)) {
+            for (const subjectId of Id64.iterable(parentSubjectIds)) {
               forEachChildSubject(subjectInfos, subjectId, (childSubjectId, childSubjectInfo) => {
                 if (childSubjectInfo.hideInHierarchy) {
                   hiddenSubjectIds.push(childSubjectId);
@@ -469,7 +468,7 @@ export function createModelsTreeIdsProvider({
             }
             const modelIds = new Array<ModelId>();
 
-            for (const subjectId of ReadonlyId64Arg.iterable(parentSubjectIds)) {
+            for (const subjectId of Id64.iterable(parentSubjectIds)) {
               addModelsFromExistingSubject({ subjectId, subjectInfos, modelIds });
             }
 

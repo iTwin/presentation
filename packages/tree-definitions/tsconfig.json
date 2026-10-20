@@ -11,5 +11,5 @@
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["src"]
+  "include": ["src", "types.d.ts"]
 }
