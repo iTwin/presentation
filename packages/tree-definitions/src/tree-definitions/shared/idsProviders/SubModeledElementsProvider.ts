@@ -18,7 +18,12 @@ interface SubModeledElementsProviderProps {
   nonEmptyModelIds: ReadonlySet<ModelId>;
 }
 
-interface SubModeledElementsProviderData {
+/**
+ * Sub-modeled element data used by `SharedIdsProvider.subModeledElements`.
+ * @beta
+ */
+export interface SubModeledElementsProviderData {
+  /** Elements that are modeled by models containing elements. Their IDs are also IDs of the sub-models. */
   allSubModels: Set<ElementId>;
 }
 

@@ -32,7 +32,10 @@ export type SubCategoryId = Id64String;
  */
 export type DefinitionContainerId = Id64String;
 
-/** @internal */
+/**
+ * Identifies an element.
+ * @beta
+ */
 export type ElementId = Id64String;
 
 /**

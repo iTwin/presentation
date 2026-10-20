@@ -6,6 +6,7 @@
 import { defer, delay, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
+import { toObservable } from "../Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
 import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
@@ -13,7 +14,7 @@ import { DataStateTracker } from "./DataStateTracker.js";
 import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
 import type { IdsProviderDataState } from "./SharedIdsProvider.js";
 
@@ -22,20 +23,39 @@ interface ElementModelCategoriesProviderProps {
   componentId: GuidString;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
+  loadDataOverride?: () => Subscribable<ElementModelCategoriesProviderData>;
 }
+/**
+ * Category information of a single model.
+ * @beta
+ */
 interface ModelsCategoriesInfoEntry {
+  /** Categories containing top-level elements that aren't of excluded classes. */
   categoriesOfTopMostNonExcludedElements: Set<CategoryId>;
+  /** Whether the model contains elements that aren't of excluded classes. */
   hasNonExcludedElements: boolean;
 }
 
-interface ElementModelCategoriesProviderData {
+/**
+ * Model and category data used by `SharedIdsProvider.models` and `SharedIdsProvider.categories`.
+ * @beta
+ */
+export interface ElementModelCategoriesProviderData {
+  /** Plan projection models containing elements. */
   planProjectionModels: Set<ModelId>;
+  /** Category information of all models containing elements, including models with only excluded elements. */
   modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
+  /** Categories containing elements that aren't of excluded classes. */
   categoriesContainingNonExcludedElements: Set<CategoryId>;
+  /**
+   * Models containing elements of each category, with flags telling whether the category contains top-level elements
+   * and top-level elements that aren't of excluded classes in that model.
+   */
   categoryModelsInfo: Map<
     CategoryId,
     Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
   >;
+  /** Categories of all elements, including those of excluded classes. */
   allCategories: Set<CategoryId>;
 }
 
@@ -49,6 +69,7 @@ export class ElementModelCategoriesProvider {
   #cachedData: Observable<ElementModelCategoriesProviderData> | undefined;
   #state = new DataStateTracker();
   #subscriberBatches: Array<{ obs: Observable<ElementModelCategoriesProviderData>; subscriberCount: number }> = [];
+  #loadDataOverride?: () => Subscribable<ElementModelCategoriesProviderData>;
 
   constructor(props: ElementModelCategoriesProviderProps) {
     this.#imodelAccess = props.imodelAccess;
@@ -56,6 +77,7 @@ export class ElementModelCategoriesProvider {
     this.#excludedElementClassNames = props.excludedElementClassNames;
     this.#componentId = props.componentId;
     this.#componentName = "ElementModelCategoriesProvider";
+    this.#loadDataOverride = props.loadDataOverride;
   }
 
   private queryElementModelCategories(): Observable<{
@@ -122,57 +144,59 @@ export class ElementModelCategoriesProvider {
 
   public getData(): Observable<ElementModelCategoriesProviderData> {
     this.#cachedData ??= defer(() =>
-      this.queryElementModelCategories().pipe(
-        reduce(
-          (acc, queriedCategory) => {
-            acc.allCategories.add(queriedCategory.categoryId);
-            const categoryModelsEntry = getOrCreate({
-              map: acc.categoryModelsInfo,
-              key: queriedCategory.categoryId,
-              createFunc: () =>
-                new Array<{
-                  id: ModelId;
-                  categoryIsOfTopMostElement: boolean;
-                  hasNonExcludedTopMostElements: boolean;
-                }>(),
-            });
-            categoryModelsEntry.push({
-              id: queriedCategory.modelId,
-              categoryIsOfTopMostElement: queriedCategory.isTopMostElementCategory,
-              hasNonExcludedTopMostElements: queriedCategory.hasNonExcludedTopMostElements,
-            });
-            const modelEntry = getOrCreate({
-              map: acc.modelsCategoriesInfo,
-              key: queriedCategory.modelId,
-              createFunc: (): ModelsCategoriesInfoEntry => ({
-                categoriesOfTopMostNonExcludedElements: new Set<string>(),
-                hasNonExcludedElements: false,
-              }),
-            });
-            if (queriedCategory.isPlanProjectionModel) {
-              acc.planProjectionModels.add(queriedCategory.modelId);
-            }
-            if (queriedCategory.hasElementsFromNonExcludedClasses) {
-              modelEntry.hasNonExcludedElements = true;
-              acc.categoriesContainingNonExcludedElements.add(queriedCategory.categoryId);
-              if (queriedCategory.hasNonExcludedTopMostElements) {
-                modelEntry.categoriesOfTopMostNonExcludedElements.add(queriedCategory.categoryId);
-              }
-            }
-            return acc;
-          },
-          {
-            planProjectionModels: new Set<ModelId>(),
-            modelsCategoriesInfo: new Map<ModelId, ModelsCategoriesInfoEntry>(),
-            allCategories: new Set<CategoryId>(),
-            categoriesContainingNonExcludedElements: new Set<CategoryId>(),
-            categoryModelsInfo: new Map<
-              CategoryId,
-              Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
-            >(),
-          },
-        ),
-      ),
+      this.#loadDataOverride
+        ? toObservable(this.#loadDataOverride())
+        : this.queryElementModelCategories().pipe(
+            reduce(
+              (acc, queriedCategory) => {
+                acc.allCategories.add(queriedCategory.categoryId);
+                const categoryModelsEntry = getOrCreate({
+                  map: acc.categoryModelsInfo,
+                  key: queriedCategory.categoryId,
+                  createFunc: () =>
+                    new Array<{
+                      id: ModelId;
+                      categoryIsOfTopMostElement: boolean;
+                      hasNonExcludedTopMostElements: boolean;
+                    }>(),
+                });
+                categoryModelsEntry.push({
+                  id: queriedCategory.modelId,
+                  categoryIsOfTopMostElement: queriedCategory.isTopMostElementCategory,
+                  hasNonExcludedTopMostElements: queriedCategory.hasNonExcludedTopMostElements,
+                });
+                const modelEntry = getOrCreate({
+                  map: acc.modelsCategoriesInfo,
+                  key: queriedCategory.modelId,
+                  createFunc: (): ModelsCategoriesInfoEntry => ({
+                    categoriesOfTopMostNonExcludedElements: new Set<string>(),
+                    hasNonExcludedElements: false,
+                  }),
+                });
+                if (queriedCategory.isPlanProjectionModel) {
+                  acc.planProjectionModels.add(queriedCategory.modelId);
+                }
+                if (queriedCategory.hasElementsFromNonExcludedClasses) {
+                  modelEntry.hasNonExcludedElements = true;
+                  acc.categoriesContainingNonExcludedElements.add(queriedCategory.categoryId);
+                  if (queriedCategory.hasNonExcludedTopMostElements) {
+                    modelEntry.categoriesOfTopMostNonExcludedElements.add(queriedCategory.categoryId);
+                  }
+                }
+                return acc;
+              },
+              {
+                planProjectionModels: new Set<ModelId>(),
+                modelsCategoriesInfo: new Map<ModelId, ModelsCategoriesInfoEntry>(),
+                allCategories: new Set<CategoryId>(),
+                categoriesContainingNonExcludedElements: new Set<CategoryId>(),
+                categoryModelsInfo: new Map<
+                  CategoryId,
+                  Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
+                >(),
+              },
+            ),
+          ),
     ).pipe(
       tap({
         finalize: () => {

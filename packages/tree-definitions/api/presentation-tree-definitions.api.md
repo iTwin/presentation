@@ -336,6 +336,22 @@ export function createSharedIdsProvider(input: SharedIdsProviderProps): SharedId
 type DefinitionContainerId = Id64String;
 
 // @beta
+type ElementId = Id64String;
+
+// @beta
+interface ElementModelCategoriesProviderData {
+    allCategories: Set<CategoryId>;
+    categoriesContainingNonExcludedElements: Set<CategoryId>;
+    categoryModelsInfo: Map<CategoryId, Array<{
+        id: ModelId;
+        categoryIsOfTopMostElement: boolean;
+        hasNonExcludedTopMostElements: boolean;
+    }>>;
+    modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
+    planProjectionModels: Set<ModelId>;
+}
+
+// @beta
 interface ElementsGroupInfo {
     // (undocumented)
     groupingNode: ClassGroupingHierarchyNode;
@@ -355,6 +371,12 @@ export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "f
 
 // @beta
 type ModelId = Id64String;
+
+// @beta
+interface ModelsCategoriesInfoEntry {
+    categoriesOfTopMostNonExcludedElements: Set<CategoryId>;
+    hasNonExcludedElements: boolean;
+}
 
 // @beta
 interface ModelsTreeHierarchyConfiguration {
@@ -496,6 +518,7 @@ export interface SharedIdsProvider {
     readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
     readonly models: {
         readonly state: IdsProviderDataState;
+        getData(): Subscribable<ElementModelCategoriesProviderData>;
         getAllModels(): Subscribable<ReadonlySet<ModelId>>;
         getPlanProjectionModels(): Subscribable<ReadonlySet<ModelId>>;
         getModels(props: {
@@ -507,6 +530,7 @@ export interface SharedIdsProvider {
     };
     readonly subCategories: {
         readonly state: IdsProviderDataState;
+        getData(): Subscribable<SubCategoriesProviderData>;
         getCategorySubCategoriesMap(): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
         getSubCategoryCategories(props: {
             subCategoryIds: ReadonlyId64Arg;
@@ -514,6 +538,7 @@ export interface SharedIdsProvider {
     };
     readonly subModeledElements: {
         readonly state: IdsProviderDataState;
+        getData(): Subscribable<SubModeledElementsProviderData>;
         getAllSubModeledElements(props?: {
             excludeIfOnlyExcludedClasses?: boolean;
         }): Subscribable<ReadonlySet<Id64String>>;
@@ -528,10 +553,26 @@ interface SharedIdsProviderProps {
     excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    loadDataOverrides?: {
+        elementModelCategories?: () => Subscribable<ElementModelCategoriesProviderData>;
+        subModeledElements?: () => Subscribable<SubModeledElementsProviderData>;
+        subCategories?: () => Subscribable<SubCategoriesProviderData>;
+    };
+}
+
+// @beta
+interface SubCategoriesProviderData {
+    categorySubCategories: Map<CategoryId, Array<SubCategoryId>>;
+    subCategoryCategories: Map<SubCategoryId, CategoryId>;
 }
 
 // @beta
 type SubCategoryId = Id64String;
+
+// @beta
+interface SubModeledElementsProviderData {
+    allSubModels: Set<ElementId>;
+}
 
 // (No @packageDocumentation comment for this package)
 

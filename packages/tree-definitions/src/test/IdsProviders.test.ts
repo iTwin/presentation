@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, from, of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import {
   eachValueFrom,
@@ -271,6 +271,108 @@ describe("ID provider data states", () => {
     expect(await firstValue(base.categories.getAllCategoriesOfElements())).toEqual(new Set(["0x20"]));
     expect(await firstValue(base.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
+  });
+
+  it("exposes loaded data that can override another provider's queries", async () => {
+    const source = createBase(createAccess());
+    const access = createAccess();
+    const overrides = {
+      elementModelCategories: vi.fn(() => source.models.getData()),
+      subModeledElements: vi.fn(() => source.subModeledElements.getData()),
+      subCategories: vi.fn(() => source.subCategories.getData()),
+    };
+    const provider = createSharedIdsProvider({
+      imodelAccess: access,
+      elementClassName: "BisCore.GeometricElement3d",
+      loadDataOverrides: overrides,
+    });
+    expect(provider.models.state).toBe("not-requested");
+    expect(provider.subModeledElements.state).toBe("not-requested");
+    expect(provider.subCategories.state).toBe("not-requested");
+    expect(overrides.elementModelCategories).not.toHaveBeenCalled();
+    expect(overrides.subModeledElements).not.toHaveBeenCalled();
+    expect(overrides.subCategories).not.toHaveBeenCalled();
+
+    expect(await firstValue(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
+    expect(provider.subModeledElements.state).toBe("loaded");
+    expect(provider.models.state).toBe("not-requested");
+    expect(overrides.elementModelCategories).not.toHaveBeenCalled();
+
+    expect(await firstValue(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
+    expect(await firstValue(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await firstValue(provider.models.getData())).toBe(await firstValue(source.models.getData()));
+    expect(provider.models.state).toBe("loaded");
+    expect(provider.categories.state).toBe("loaded");
+
+    expect(await firstValue(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
+      new Map([["0x20", ["0x21"]]]),
+    );
+    expect(provider.subCategories.state).toBe("loaded");
+
+    expect(overrides.elementModelCategories).toHaveBeenCalledTimes(1);
+    expect(overrides.subModeledElements).toHaveBeenCalledTimes(1);
+    expect(overrides.subCategories).toHaveBeenCalledTimes(1);
+    expect(access.createQueryReader).not.toHaveBeenCalled();
+  });
+
+  describe.each([
+    {
+      group: "models",
+      overrideKey: "elementModelCategories",
+      load: async (base: SharedIdsProvider) => firstValue(base.models.getData()),
+      data: () => ({
+        planProjectionModels: new Set<string>(),
+        modelsCategoriesInfo: new Map(),
+        categoriesContainingNonExcludedElements: new Set<string>(),
+        categoryModelsInfo: new Map(),
+        allCategories: new Set(["0x99"]),
+      }),
+    },
+    {
+      group: "subModeledElements",
+      overrideKey: "subModeledElements",
+      load: async (base: SharedIdsProvider) => firstValue(base.subModeledElements.getData()),
+      data: () => ({ allSubModels: new Set(["0x99"]) }),
+    },
+    {
+      group: "subCategories",
+      overrideKey: "subCategories",
+      load: async (base: SharedIdsProvider) => firstValue(base.subCategories.getData()),
+      data: () => ({ subCategoryCategories: new Map(), categorySubCategories: new Map([["0x99", ["0x98"]]]) }),
+    },
+  ] as const)("$overrideKey data override", ({ group, overrideKey, load, data }) => {
+    it("tracks state, shares results, and is called again on retry after failure", async () => {
+      const gate = createGate();
+      const expected = data();
+      const override = vi
+        .fn<() => Subscribable<any>>()
+        .mockReturnValueOnce(from(gate.promise))
+        .mockReturnValue(of(expected));
+      const access = createAccess();
+      const provider = createSharedIdsProvider({
+        imodelAccess: access,
+        elementClassName: "BisCore.GeometricElement3d",
+        loadDataOverrides: { [overrideKey]: override },
+      });
+
+      const pending = load(provider);
+      const concurrent = load(provider);
+      expect(provider[group].state).toBe("requested");
+      expect(override).toHaveBeenCalledTimes(1);
+      const failures = Promise.all([
+        expect(pending).rejects.toThrow("override failed"),
+        expect(concurrent).rejects.toThrow("override failed"),
+      ]);
+      gate.reject(new Error("override failed"));
+      await failures;
+      expect(provider[group].state).toBe("failed");
+
+      expect(await load(provider)).toBe(expected);
+      expect(provider[group].state).toBe("loaded");
+      expect(await load(provider)).toBe(expected);
+      expect(override).toHaveBeenCalledTimes(2);
+      expect(access.createQueryReader).not.toHaveBeenCalled();
+    });
   });
 
   const treeFactories = [
