@@ -39,9 +39,5 @@
   "terminal.integrated.env.windows": {
     "NODE_ENV": "development"
   },
-  "terminal.integrated.scrollback": 5000,
-  "chat.tools.terminal.autoApprove": {
-    "pnpm": true,
-    "git hash-object": true
-  }
+  "terminal.integrated.scrollback": 5000
 }
