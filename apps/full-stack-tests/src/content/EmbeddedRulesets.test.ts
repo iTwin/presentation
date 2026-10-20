@@ -176,6 +176,117 @@ describe("Content", () => {
       expect(propB!.pathFromTarget).toHaveLength(1);
     });
 
+    it("includes selected properties from nested multi-step related paths", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECProperty propertyName="PropB" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="C">
+              <ECProperty propertyName="PropC" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="D">
+              <ECProperty propertyName="PropD" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="E">
+              <ECProperty propertyName="PropE" typeName="string" />
+              <ECProperty propertyName="OtherE" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+            <ECRelationshipClass typeName="BtoC" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="b to c" polymorphic="true">
+                <Class class="B" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="c to b" polymorphic="true">
+                <Class class="C" />
+              </Target>
+            </ECRelationshipClass>
+            <ECRelationshipClass typeName="CtoD" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="c to d" polymorphic="true">
+                <Class class="C" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="d to c" polymorphic="true">
+                <Class class="D" />
+              </Target>
+            </ECRelationshipClass>
+            <ECRelationshipClass typeName="DtoE" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="d to e" polymorphic="true">
+                <Class class="D" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="e to d" polymorphic="true">
+                <Class class="E" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        await insertEmbeddedRuleset(builder, {
+          id: "test",
+          supplementationInfo: { supplementationPurpose: "test" },
+          rules: [
+            {
+              ruleType: "ContentModifier",
+              class: { schemaName: s.schemaName, className: "A" },
+              relatedProperties: [
+                {
+                  propertiesSource: [
+                    { relationship: { schemaName: s.schemaName, className: "AtoB" }, direction: "Forward" },
+                    { relationship: { schemaName: s.schemaName, className: "BtoC" }, direction: "Forward" },
+                  ],
+                  properties: "_none_",
+                  nestedRelatedProperties: [
+                    {
+                      propertiesSource: [
+                        { relationship: { schemaName: s.schemaName, className: "CtoD" }, direction: "Forward" },
+                        { relationship: { schemaName: s.schemaName, className: "DtoE" }, direction: "Forward" },
+                      ],
+                      properties: ["PropE"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+        const b = builder.insertInstance(s.items.B.fullName, { propB: "b" });
+        const c = builder.insertInstance(s.items.C.fullName, { propC: "c" });
+        const d = builder.insertInstance(s.items.D.fullName, { propD: "d" });
+        const e = builder.insertInstance(s.items.E.fullName, { propE: "selected", otherE: "excluded" });
+        builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
+        builder.insertRelationship(s.items.BtoC.fullName, b.id, c.id);
+        builder.insertRelationship(s.items.CtoD.fullName, c.id, d.id);
+        builder.insertRelationship(s.items.DtoE.fullName, d.id, e.id);
+        return { schema: s, a };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName, instanceIds: [setup.a.id] }],
+        config,
+      });
+
+      const relatedFields = getRelatedPropertyFields(descriptor);
+      expect(relatedFields.length).toEqual(1);
+
+      const propE = relatedFields.find((field) => field.propertyName === "PropE");
+      expect(propE).toBeDefined();
+      expect(propE!.pathFromTarget).toHaveLength(4);
+    });
+
     it("applies a nested-content override when applyOnNestedContent is set", async () => {
       using setup = await buildTestECDb(async (builder) => {
         const s = await importSchema(
