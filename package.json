@@ -42,7 +42,7 @@
     "@changesets/cli": "^3.0.3",
     "@stylistic/eslint-plugin": "catalog:build-tools",
     "cpx2": "catalog:build-tools",
-    "cspell": "^10.3.6",
+    "cspell": "^10.4.0",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-unused-imports": "catalog:build-tools",
