@@ -1,5 +1,21 @@
 # @itwin/presentation-tree-definitions
 
+## 0.1.3-alpha.0
+
+### Patch Changes
+
+- [#1606](https://github.com/iTwin/presentation/pull/1606): Fix instances of classes, hidden through `HiddenClass` or `HiddenSchema` custom attributes, affecting hierarchies created by `createModelsTree`, `createCategoriesTree` and `createClassificationsTree`.
+  
+  - Elements of such classes are no longer taken into account when determining whether nodes have children, or whether subjects, models, categories, definition containers and sub-models have content to display. They are also excluded from search results, together with their descendants, and no longer count towards the search limit.
+  - Models, definition containers, classification tables and classifications of such classes are no longer displayed, together with their content. They're also no longer taken into account when determining whether their parent nodes have children, and are excluded from search results and paths.
+  - In `createModelsTree`, elements in models of such classes, private models, or template models no longer count towards the label-search limit.
+- [#1622](https://github.com/iTwin/presentation/pull/1622): Exclude template models and their contents from models, categories, and classifications trees, including cached IDs and hierarchy searches. Classifications trees now also exclude elements belonging to private models.
+- [#1629](https://github.com/iTwin/presentation/pull/1629): Categories tree: Fixed descendants of private definition containers incorrectly appearing as root nodes after the hierarchy cache is populated, including when a hidden-class ancestor contains the private container.
+- [#1628](https://github.com/iTwin/presentation/pull/1628): Cleaned up classifications tree ids provider to not save unnecessary data.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.16
+  - @itwin/presentation-hierarchies@2.0.0-alpha.21
+
 ## 0.1.2
 
 ### Patch Changes
