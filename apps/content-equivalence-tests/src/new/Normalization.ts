@@ -13,7 +13,7 @@ import {
   roundFloatingPointNoise,
 } from "../NormalizationCommon.js";
 import { stableStringify } from "../Persistence.js";
-import { createDeclaredRelationshipsResolver } from "./DeclaredRelationships.js";
+import { createRelationshipNamesResolver } from "./DeclaredRelationships.js";
 
 import type { SchemaContext } from "@itwin/ecschema-metadata";
 import type { CategoryDefinition, ReadonlyContentDescriptor, ReadonlyPropertyField } from "@itwin/presentation-content";
@@ -47,8 +47,8 @@ function getCategoryPath(
   return [...(category.parentId ? getCategoryPath(categories[category.parentId], categories) : []), category.label];
 }
 
-/** Relationships selected by each related field's declaration, per `pathFromTarget` step, keyed by field id. */
-type DeclaredRelationshipNames = Record<string, EC.FullClassNameDotNotation[]>;
+/** Normalized relationship names per `pathFromTarget` step, keyed by field id. */
+type NormalizedRelationshipNames = Record<string, EC.FullClassNameDotNotation[]>;
 
 interface InheritedPropertyMetadata {
   categoryLabel?: string;
@@ -60,7 +60,7 @@ interface InheritedPropertyMetadata {
 type InheritedPropertiesMetadata = Record<string, InheritedPropertyMetadata | undefined>;
 
 interface NormalizationContext {
-  declaredRelationshipNames: DeclaredRelationshipNames;
+  relationshipNames: NormalizedRelationshipNames;
   constraints: RelationshipConstraints;
   inheritedProperties: InheritedPropertiesMetadata;
 }
@@ -131,12 +131,12 @@ async function getInheritedPropertiesMetadata(
 function createCanonicalPath(
   id: string,
   field: ReadonlyPropertyField,
-  { declaredRelationshipNames, constraints }: NormalizationContext,
+  { relationshipNames, constraints }: NormalizationContext,
 ): CanonicalRelationshipStep[] {
   if (field.pathFromTarget.length === 0) {
     return [];
   }
-  const names = declaredRelationshipNames[id];
+  const names = relationshipNames[id];
   return createCanonicalRelationshipPath({
     steps: field.pathFromTarget.map((step, index, steps) => ({
       relationshipName: names[index],
@@ -365,10 +365,10 @@ async function createCanonicalItem(item: CapturedNewItem, context: Normalization
   };
 }
 
-async function getDeclaredRelationshipNames(
+async function getRelationshipNames(
   descriptor: ReadonlyContentDescriptor,
   resolve: (field: ReadonlyPropertyField) => Promise<EC.FullClassNameDotNotation[]>,
-): Promise<DeclaredRelationshipNames> {
+): Promise<NormalizedRelationshipNames> {
   return Object.fromEntries(
     await Promise.all(
       Object.entries(descriptor.fields)
@@ -386,19 +386,19 @@ export async function createCanonicalCapture(
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor,
   schemaContext: SchemaContext,
 ): Promise<CanonicalCapture> {
-  const resolve = await createDeclaredRelationshipsResolver(imodelAccess);
+  const resolve = await createRelationshipNamesResolver(imodelAccess);
   const descriptors = "descriptor" in capture ? [capture.descriptor] : capture.items.map((item) => item.descriptor);
-  const declaredRelationshipNames = await Promise.all(
-    descriptors.map(async (descriptor) => getDeclaredRelationshipNames(descriptor, resolve)),
+  const relationshipNames = await Promise.all(
+    descriptors.map(async (descriptor) => getRelationshipNames(descriptor, resolve)),
   );
   const constraints = await getRelationshipConstraints(
     imodelAccess,
-    new Set(declaredRelationshipNames.flatMap((namesByField) => Object.values(namesByField).flat())),
+    new Set(relationshipNames.flatMap((namesByField) => Object.values(namesByField).flat())),
   );
   const inheritedProperties = await getInheritedPropertiesMetadata(descriptors, imodelAccess, schemaContext);
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor(capture.descriptor, {
-      declaredRelationshipNames: declaredRelationshipNames[0],
+      relationshipNames: relationshipNames[0],
       constraints,
       inheritedProperties,
     });
@@ -407,11 +407,7 @@ export async function createCanonicalCapture(
   return {
     items: await Promise.all(
       capture.items.map(async (item, index) =>
-        createCanonicalItem(item, {
-          declaredRelationshipNames: declaredRelationshipNames[index],
-          constraints,
-          inheritedProperties,
-        }),
+        createCanonicalItem(item, { relationshipNames: relationshipNames[index], constraints, inheritedProperties }),
       ),
     ),
   };
