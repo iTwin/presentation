@@ -116,7 +116,9 @@ function parseManifest(value: unknown): EquivalenceManifest {
 }
 
 export function loadRuntimeConfiguration(): RuntimeConfiguration {
-  const manifestPath = path.resolve(import.meta.dirname, "..", MANIFEST_FILE_NAME);
+  const manifestPath = path.resolve(
+    process.env.CONTENT_EQUIVALENCE_MANIFEST ?? path.join(import.meta.dirname, "..", MANIFEST_FILE_NAME),
+  );
   let parsed: unknown;
   try {
     parsed = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
