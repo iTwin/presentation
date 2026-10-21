@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792594281690,
+  "lastUpdate": 1792594448417,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Unified selection benchmark": [
@@ -51591,6 +51591,162 @@ window.BENCHMARK_DATA = {
             "value": 40,
             "unit": "ms",
             "extra": "count: 7\nmax: 40\np95: 40\nmedian: 31"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ab438d9aab4079f74909b444b2b380ecc83c69d0",
+          "message": "Merge pull request #1662 from iTwin/next\n\nMajor version",
+          "timestamp": "2026-10-21T17:47:13+03:00",
+          "tree_id": "1f6452cf3f75a5c8d55bf13ffca8927bec0275ce",
+          "url": "https://github.com/iTwin/presentation/commit/ab438d9aab4079f74909b444b2b380ecc83c69d0"
+        },
+        "date": 1792594446417,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "search searches with 50000 paths",
+            "value": 7701,
+            "unit": "ms"
+          },
+          {
+            "name": "search searches with 50000 paths (P95 of main thread blocks)",
+            "value": 45,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 45\np95: 45\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 36650,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 29,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 29\np95: 29\nmedian: 28"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 140,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 46,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 8488,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2625,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 122,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 122\np95: 122\nmedian: 31"
+          },
+          {
+            "name": "grouping by label",
+            "value": 5476,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 45,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 45\np95: 45\nmedian: 32"
+          },
+          {
+            "name": "grouping by class",
+            "value": 5720,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 41,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 41\np95: 41\nmedian: 31"
+          },
+          {
+            "name": "grouping by property",
+            "value": 7241,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 58,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 58\np95: 58\nmedian: 36"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7787,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 76,
+            "unit": "ms",
+            "extra": "count: 21\nmax: 101\np95: 76\nmedian: 33"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 14007,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 72,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 72\np95: 72\nmedian: 34"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 4684,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 69,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 69\np95: 69\nmedian: 32"
           }
         ]
       }
