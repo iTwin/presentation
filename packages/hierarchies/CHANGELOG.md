@@ -1,5 +1,23 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.22
+
+### Major Changes
+
+- [#1660](https://github.com/iTwin/presentation/pull/1660): `createMergedIModelHierarchyProvider`: The `getHierarchyDefinition` prop now receives a props object `{ imodelAccess }` instead of a positional `imodelAccess` argument, so more props can be added later.
+  
+  Migration:
+  
+  ```ts
+  const provider = createMergedIModelHierarchyProvider({
+    imodels,
+    // before
+    getHierarchyDefinition: (imodelAccess) => createMyHierarchyDefinition({ imodelAccess }),
+    // after
+    getHierarchyDefinition: ({ imodelAccess }) => createMyHierarchyDefinition({ imodelAccess }),
+  });
+  ```
+
 ## 2.0.0-alpha.21
 
 ### Major Changes

@@ -603,7 +603,9 @@ export interface LimitingECSqlQueryExecutor {
 
 // @public
 interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged" | "instanceLabelSelectClauseFactory" | "hierarchyDefinition"> {
-    getHierarchyDefinition: (imodelAccess: IModelAccess) => HierarchyDefinition;
+    getHierarchyDefinition: (props: {
+        imodelAccess: IModelAccess;
+    }) => HierarchyDefinition;
     imodels: Array<{
         imodelAccess: IModelAccess;
         imodelChanged?: Event_2<() => void>;
