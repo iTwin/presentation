@@ -126,7 +126,8 @@ output/cache/imodel-a7d50df05561/sampling/sampling-053e9ed8114f.json
 
 The capture files retain complete fingerprints and validate them when loaded.
 
-`output/runs` contains one report directory per iModel test. Each report includes:
+`output/runs` contains one timestamped report directory per test run, shared by all
+iModel tests. iModel-specific reports are stored in named subdirectories. Each run includes:
 
 - run configuration and implementation fingerprints;
 - sampled keys and candidate counts;
