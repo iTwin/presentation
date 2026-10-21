@@ -1895,7 +1895,7 @@ describe("createMergedIModelHierarchyProvider", () => {
     const imodelChanged = new BeEvent<() => void>();
     const getHierarchyDefinition = vi.fn<
       Parameters<typeof createMergedIModelHierarchyProvider>[0]["getHierarchyDefinition"]
-    >((imodelAccess) => ({
+    >(({ imodelAccess }) => ({
       async defineHierarchyLevel(props) {
         const { parentNode } = props;
         return parentNode
@@ -1909,8 +1909,8 @@ describe("createMergedIModelHierarchyProvider", () => {
     });
 
     expect(getHierarchyDefinition).toHaveBeenCalledTimes(2);
-    expect(getHierarchyDefinition).toHaveBeenNthCalledWith(1, imodelAccess1);
-    expect(getHierarchyDefinition).toHaveBeenNthCalledWith(2, imodelAccess2);
+    expect(getHierarchyDefinition).toHaveBeenNthCalledWith(1, { imodelAccess: imodelAccess1 });
+    expect(getHierarchyDefinition).toHaveBeenNthCalledWith(2, { imodelAccess: imodelAccess2 });
     expect((await collect(provider.getNodes({ parentNode: undefined }))).map(({ label }) => label)).toEqual([
       "imodel 1",
       "imodel 2",
@@ -1959,7 +1959,7 @@ describe("createMergedIModelHierarchyProvider", () => {
     });
     using provider = createMergedIModelHierarchyProvider({
       imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
-      getHierarchyDefinition: (imodelAccess) => ({
+      getHierarchyDefinition: ({ imodelAccess }) => ({
         async defineHierarchyLevel(props) {
           return props.parentNode ? [] : [{ fullClassName: "a.b", query: { ecsql: imodelAccess.imodelKey } }];
         },
@@ -2022,7 +2022,7 @@ describe("createMergedIModelHierarchyProvider", () => {
 
     using provider = createMergedIModelHierarchyProvider({
       imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
-      getHierarchyDefinition: (imodelAccess) => ({
+      getHierarchyDefinition: ({ imodelAccess }) => ({
         defineHierarchyLevel: async ({ parentNode }) =>
           parentNode ? [] : [{ fullClassName: "a.b", query: { ecsql: "" } }],
         preProcessNode: async ({ node }) => ({ ...node, extendedData: { preProcessedBy: imodelAccess.imodelKey } }),

@@ -216,7 +216,7 @@ interface MergedIModelHierarchyProviderProps extends Omit<
    * Called once per iModel when the provider is created. The latest iModel's definition is used for
    * pre-processing and post-processing nodes after merging.
    */
-  getHierarchyDefinition: (imodelAccess: IModelAccess) => HierarchyDefinition;
+  getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
 
   /**
    * A list of iModels to create merged hierarchy for.
@@ -300,7 +300,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._imodelProps = props.imodels;
     this._imodelContexts = props.imodels.map((imodelProps) => {
       const sourceHierarchyDefinition = getRxjsHierarchyDefinition(
-        props.getHierarchyDefinition(imodelProps.imodelAccess),
+        props.getHierarchyDefinition({ imodelAccess: imodelProps.imodelAccess }),
       );
       return { ...this.#createIModelState(imodelProps), sourceHierarchyDefinition };
     });
