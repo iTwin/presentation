@@ -24,22 +24,20 @@ import {
 } from "@itwin/presentation-content";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { CAPTURE_FORMAT_VERSION, stableStringify } from "../Persistence.js";
+import { QueryScope, runInQueryContext, summarizeCanceledQueries } from "../QueryScope.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { ContentItem, ContentTarget, PropertyField, ReadonlyContentDescriptor } from "@itwin/presentation-content";
-import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
 import type {
   AllElementsDescriptorScenario,
+  CaptureDiagnostics,
   CaptureEnvelope,
   SampledElementsScenario,
   Scenario,
 } from "../Persistence.js";
 
 const SAMPLED_ITEM_CONCURRENCY = 4;
-
-function createIModelAccess(imodel: IModelDb) {
-  return { ...createECSchemaProvider(imodel), ...createECSqlQueryExecutor(imodel) };
-}
 
 export type CapturedNewValue = ContentItem["values"][string];
 
@@ -97,23 +95,57 @@ export async function captureNew(props: {
   scenario: Scenario;
   implementationFingerprint: string;
   imodelFingerprint: string;
+  /** Receives the capture's ECSQL query report after all of its queries have settled, including when it fails. */
+  onDiagnostics?: (diagnostics: CaptureDiagnostics) => void;
 }): Promise<NewCapture> {
-  const { imodel, signal, scenario } = props;
-  const imodelAccess = createIModelAccess(imodel);
-  const config = await createIModelContentConfiguration({ imodelAccess });
+  const { imodel, onDiagnostics, ...captureProps } = props;
+  const scope = new QueryScope(props.signal);
+  const imodelAccess = { ...createECSchemaProvider(imodel), ...scope.wrap(createECSqlQueryExecutor(imodel)) };
+  try {
+    return await captureContent({ ...captureProps, imodelAccess });
+  } catch (error) {
+    // A failing pipeline may stop awaiting its other queries, so settle them before the caller closes the iModel.
+    await scope.cancelAll(new Error("Canceled after an earlier failure in the same capture.", { cause: error }));
+    throw error;
+  } finally {
+    const report = scope.getReport();
+    if (report.totalQueries > 0) {
+      onDiagnostics?.({ details: report, failureSummary: summarizeCanceledQueries(report) });
+    }
+  }
+}
+
+async function captureContent(props: {
+  imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
+  signal: AbortSignal;
+  scenario: Scenario;
+  implementationFingerprint: string;
+  imodelFingerprint: string;
+}): Promise<NewCapture> {
+  const { imodelAccess, signal, scenario } = props;
+  const config = await runInQueryContext({ phase: "configuration" }, async () =>
+    createIModelContentConfiguration({ imodelAccess }),
+  );
   if (scenario.id === "sampled-elements") {
     const items = await mapConcurrently(
       scenario.keys,
       SAMPLED_ITEM_CONCURRENCY,
       async (key) => {
         const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
-        const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
+        const itemSources = await runInQueryContext({ phase: "resolve-sources", instanceKey: key }, async () =>
+          resolveContentSources({ imodelAccess, targets: itemTargets, config }),
+        );
         const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
-        const itemDescriptor = await itemProvider.getContentDescriptor();
-        const capturedItems: CapturedNewItem[] = [];
-        for await (const item of itemProvider.getItems()) {
-          capturedItems.push(captureNewItem(item, itemDescriptor));
-        }
+        const itemDescriptor = await runInQueryContext({ phase: "descriptor", instanceKey: key }, async () =>
+          itemProvider.getContentDescriptor(),
+        );
+        const capturedItems = await runInQueryContext({ phase: "items", instanceKey: key }, async () => {
+          const result: CapturedNewItem[] = [];
+          for await (const item of itemProvider.getItems()) {
+            result.push(captureNewItem(item, itemDescriptor));
+          }
+          return result;
+        });
         if (capturedItems.length !== 1) {
           throw new Error(
             `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
@@ -135,9 +167,13 @@ export async function captureNew(props: {
   }
 
   const allElementTargets: ContentTarget[] = [{ primaryClass: "BisCore.GeometricElement3d" as const }];
-  const allElementSources = await resolveContentSources({ imodelAccess, targets: allElementTargets, config });
+  const allElementSources = await runInQueryContext({ phase: "resolve-sources" }, async () =>
+    resolveContentSources({ imodelAccess, targets: allElementTargets, config }),
+  );
   const allElementProvider = createContentProvider({ imodelAccess, sources: allElementSources, config });
-  const allElementDescriptor = await allElementProvider.getContentDescriptor();
+  const allElementDescriptor = await runInQueryContext({ phase: "descriptor" }, async () =>
+    allElementProvider.getContentDescriptor(),
+  );
   return {
     captureFormatVersion: CAPTURE_FORMAT_VERSION,
     implementation: "new",
