@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
+import type { LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
 
 export function createTestLabelDefinition(label?: Partial<LabelDefinition>): LabelDefinition {
   return {

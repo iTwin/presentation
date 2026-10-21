@@ -7,17 +7,21 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { debounceTime, EMPTY, from, map, mergeMap, Observable, of, Subject, switchMap, tap } from "rxjs";
+import { debounceTime, EMPTY, from, map, mergeMap, of, Subject, switchMap, tap } from "rxjs";
 import { BeEvent, Guid } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, Ruleset } from "@itwin/presentation-common";
+import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { parseFullClassName } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { TableColumnDefinition, TableRowDefinition } from "./Types.js";
+import { Selectables } from "@itwin/unified-selection";
 import { useColumns } from "./UseColumns.js";
 import { useRows } from "./UseRows.js";
 import { useTableOptions } from "./UseTableOptions.js";
+
+import type { Observable } from "rxjs";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
+import type { SelectableInstanceKey, SelectionStorage } from "@itwin/unified-selection";
+import type { TableColumnDefinition, TableRowDefinition } from "./Types.js";
 
 /**
  * Props for [[usePresentationTable]] hook.
@@ -72,7 +76,7 @@ export function usePresentationTable<TColumn, TRow>(
 
   return {
     columns: useMemo(() => columns?.map(columnMapper), [columns, columnMapper]),
-    rows: useMemo(() => rows?.map(rowMapper), [rows, rowMapper]),
+    rows: useMemo(() => rows.map(rowMapper), [rows, rowMapper]),
     isLoading,
     loadMoreRows,
     sort,

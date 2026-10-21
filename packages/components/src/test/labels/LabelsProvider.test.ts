@@ -4,14 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
+import { DEFAULT_KEYS_BATCH_SIZE } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { createMocked } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey } from "@itwin/presentation-common";
 
 describe("PresentationLabelsProvider", () => {
   let provider: PresentationLabelsProvider;

@@ -11,18 +11,21 @@ import {
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey } from "@itwin/presentation-common";
+import { withEditTxn } from "@itwin/core-backend";
+import { IModelApp } from "@itwin/core-frontend";
 import {
   PresentationPropertyDataProvider,
   usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { createStorage } from "@itwin/unified-selection";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey } from "@itwin/presentation-common";
 
 describe("Learning snippets", async () => {
   describe("Property grid", () => {
@@ -95,38 +98,38 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
 
-      const { imodel } = await buildTestIModel((builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
-        elementKeys.push(
-          insertPhysicalElement({
-            builder,
-            userLabel: "My Element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-          insertPhysicalElement({
-            builder,
-            userLabel: "My Element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-        );
+      const { imodelConnection } = await buildTestIModel((imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          elementKeys.push(
+            insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id }),
+            insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id }),
+          );
+        });
       });
 
       // render the component
-      const { container } = render(<MyPropertyGrid imodel={imodel} />);
+      const { container } = render(<MyPropertyGrid imodel={imodelConnection} />);
       await waitFor(() => getByText(container, "Select an element to see its properties"));
 
       // test Unified Selection -> Property Grid content synchronization
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[0]],
+        }),
       );
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 1");
 
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[1]],
+        }),
       );
       // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 2");

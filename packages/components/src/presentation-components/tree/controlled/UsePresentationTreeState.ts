@@ -10,24 +10,24 @@
 import "../../common/DisposePolyfill.js";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
+import { MutableTreeModel, PagedTreeNodeLoader, TreeEventHandler, TreeModelSource } from "@itwin/components-react";
+import { PresentationTreeDataProvider } from "../DataProvider.js";
+import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader.js";
+import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
+import { useTreeReload } from "./UseTreeReload.js";
+
+import type {
   AbstractTreeNodeLoaderWithProvider,
   HighlightableTreeProps,
-  MutableTreeModel,
-  PagedTreeNodeLoader,
   RenderedItemsRange,
-  TreeEventHandler,
   TreeModel,
-  TreeModelSource,
 } from "@itwin/components-react";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
-import {
+import type { PresentationTreeDataProviderProps } from "../DataProvider.js";
+import type {
   IFilteredPresentationTreeDataProvider,
   IPresentationTreeDataProvider,
 } from "../IPresentationTreeDataProvider.js";
-import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader.js";
-import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
-import { ReloadedTree, useTreeReload } from "./UseTreeReload.js";
+import type { ReloadedTree } from "./UseTreeReload.js";
 
 /**
  * Properties for [[usePresentationTreeState]] hook.
@@ -168,7 +168,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
 
   const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded, onHierarchyLimitExceeded });
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
     renderedItems.current = items;
   }, []);

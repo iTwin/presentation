@@ -4,25 +4,48 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
   test: {
-    name: "Hierarchies-react tests",
-    include: ["src/test/**/*.test.{ts,tsx}"],
-    testTimeout: 60000,
+    projects: [
+      {
+        test: {
+          name: "hierarchies-react-unit",
+          include: ["src/test/unit/**/*.test.{ts,tsx}"],
+          testTimeout: 60000,
+          environment: "happy-dom",
+          setupFiles: ["./src/test/unit/setup.ts"],
+          clearMocks: true,
+          restoreMocks: true,
+          mockReset: true,
+          css: false,
+        },
+      },
+      {
+        plugins: [react()],
+        optimizeDeps: { include: ["@mui/material"] },
+        test: {
+          name: "hierarchies-react-components",
+          include: ["src/test/components/**/*.test.{ts,tsx}"],
+          setupFiles: ["./src/test/components/setup.tsx"],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: "chromium", viewport: { width: 800, height: 600 } }],
+            expect: {
+              toMatchScreenshot: {
+                comparatorName: "pixelmatch",
+                /* Any pixel differing by more than 5% (YIQ color distance) fails; tolerates only subtle antialiasing noise. */
+                comparatorOptions: { threshold: 0.05 },
+              },
+            },
+          },
+        },
+      },
+    ],
     slowTestThreshold: 500,
-    environment: "happy-dom",
-    setupFiles: ["./src/test/setup.ts"],
-    clearMocks: true,
-    restoreMocks: true,
-    mockReset: true,
-    css: false,
-    coverage: {
-      provider: "v8",
-      include: ["src/presentation-hierarchies-react/**/*.{ts,tsx}"],
-      reportsDirectory: "./lib/test/coverage",
-      reporter: ["text-summary", "lcov", "cobertura"],
-      thresholds: { statements: 100, functions: 100, branches: 100, lines: 100 },
-    },
   },
 });

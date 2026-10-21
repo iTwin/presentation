@@ -9,25 +9,23 @@
 
 import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import {
+import { NodeKey } from "@itwin/presentation-common";
+import { createLabelRecord } from "../common/Utils.js";
+import { InfoTreeNodeItemType } from "./PresentationTreeNodeItem.js";
+
+import type {
   DelayLoadedTreeNodeItem,
   Observable,
   TreeNodeItem,
   PageOptions as UiPageOptions,
 } from "@itwin/components-react";
-import {
+import type {
   LabelDefinition,
   Node,
-  NodeKey,
   PartialNode,
   PageOptions as PresentationPageOptions,
 } from "@itwin/presentation-common";
-import { createLabelRecord } from "../common/Utils.js";
-import {
-  InfoTreeNodeItemType,
-  PresentationInfoTreeNodeItem,
-  PresentationTreeNodeItem,
-} from "./PresentationTreeNodeItem.js";
+import type { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /** @internal */
 export interface CreateTreeNodeItemProps {

@@ -6,26 +6,27 @@
  * @module InstancesFilter
  */
 
-import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import {
-  isUnaryPropertyFilterBuilderOperator,
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { isUnaryPropertyFilterBuilderOperator, PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
+import { combineFieldNames } from "@itwin/presentation-common";
+import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
+import { translate } from "../common/Utils.js";
+
+import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
+import type {
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroup,
   PropertyFilterBuilderRuleOperator,
-  PropertyFilterBuilderRuleRangeValue,
 } from "@itwin/components-react";
-import {
+import type {
   CategoryDescription,
   ClassInfo,
-  combineFieldNames,
   Descriptor,
   Field,
   NestedContentField,
   PropertiesField,
 } from "@itwin/presentation-common";
-import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
-import { translate } from "../common/Utils.js";
-import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
+import type { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
 /** @internal */
 export function createInstanceFilterPropertyInfos(descriptor: Descriptor): PresentationInstanceFilterPropertyInfo[] {
@@ -72,7 +73,7 @@ function createPropertyInfos(field: Field): PresentationInstanceFilterPropertyIn
   if (field.isPropertiesField()) {
     return [createPropertyInfoFromPropertiesField(field)];
   }
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   return [];
 }
 

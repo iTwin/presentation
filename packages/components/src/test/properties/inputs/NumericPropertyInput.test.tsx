@@ -5,25 +5,21 @@
 
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  PrimitiveValue,
-  PropertyDescription,
-  PropertyRecord,
-  PropertyValueFormat,
-  StandardTypeNames,
-} from "@itwin/appui-abstract";
-import { PropertyUpdatedArgs } from "@itwin/components-react";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
-import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import {
   NumericInput,
   NumericPropertyInput,
 } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyUpdatedArgs } from "@itwin/components-react";
+import type { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 
 const createRecord = (initialValue?: number) => {
   return createTestPropertyRecord(

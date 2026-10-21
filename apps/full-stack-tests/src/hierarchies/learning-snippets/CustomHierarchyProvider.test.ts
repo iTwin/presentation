@@ -4,17 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 /* eslint-disable no-duplicate-imports */
-/* eslint-disable @typescript-eslint/no-base-to-string */
 
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { collect } from "presentation-test-utilities";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
-import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
-import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
+import { BriefcaseConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports
@@ -22,24 +20,23 @@ import {
   ConcatenatedValue,
   ConcatenatedValuePart,
   createDefaultValueFormatter,
-  EventListener,
   IPrimitiveValueFormatter,
   julianToDateTime,
 } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderImports
 import {
-  createHierarchyFilteringHelper,
+  createHierarchySearchHelper,
   GenericNodeKey,
-  HierarchyFilteringPath,
   HierarchyNodeIdentifier,
+  HierarchySearchTree,
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -59,7 +56,7 @@ describe("Hierarchies", () => {
       it("creates basic provider", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.BasicProviderExample
         // Create a hierarchy provider that returns an infinite hierarchy, where each node has one child node.
-        const provider: HierarchyProvider = {
+        const provider = createHierarchyProvider(() => ({
           async *getNodes({ parentNode }) {
             yield !parentNode
               ? { key: { type: "generic", id: `root` }, label: `Root node`, children: true, parentKeys: [] }
@@ -70,11 +67,7 @@ describe("Hierarchies", () => {
                   parentKeys: [...parentNode.parentKeys, parentNode.key],
                 };
           },
-          async *getNodeInstanceKeys() {},
-          setFormatter() {},
-          setHierarchyFilter() {},
-          hierarchyChanged: new BeEvent(),
-        };
+        }));
         // __PUBLISH_EXTRACT_END__
 
         const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
@@ -86,121 +79,111 @@ describe("Hierarchies", () => {
       });
 
       it("creates iModel provider", async () => {
-        const { imodel } = await buildTestIModel();
+        const { imodelConnection } = await buildTestIModel();
         const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample
         // Create a hierarchy provider that returns the root bis.Subject and a hierarchy of its children.
-        class IModelHierarchyProvider implements HierarchyProvider {
-          public hierarchyChanged = new BeEvent();
-          private _disposeTxnListeners: (() => void) | undefined;
-
-          public constructor(private _imodel: IModelConnection) {
-            if (this._imodel instanceof BriefcaseConnection) {
-              // Briefcase connections support data modifications - the provider should listen to txn changes
-              // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
-              // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
-              this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () =>
-                this.hierarchyChanged.raiseEvent(),
-              );
-            }
-          }
-
-          // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
-          // provider is no longer needed.
-          // The tree state hooks from `@itwin/presentation-hierarchies-react` package take care of this for you.
-          public [Symbol.dispose]() {
-            this._disposeTxnListeners?.();
-          }
-
-          public async *getNodes({
-            parentNode,
-          }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
-            if (!parentNode) {
-              // Query and return root bis.Subject node
-              for await (const row of this._imodel.createQueryReader(
-                `
-                  SELECT
-                    COALESCE(s.UserLabel, s.CodeValue, ec_classname(s.ECClassId, 'c')) label,
-                    (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = s.ECInstanceId LIMIT 1) hasChildren
-                  FROM bis.Subject s
-                  WHERE s.Parent.Id IS NULL
-                `,
-              )) {
-                yield {
-                  key: {
-                    type: "instances",
-                    instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key }],
-                  },
-                  label: row.label,
-                  children: !!row.hasChildren,
-                  parentKeys: [],
-                };
-              }
-              return;
-            }
-            // Query and return children for the given parent node, assuming it's based on data from the same iModel
-            if (
-              HierarchyNode.isInstancesNode(parentNode) &&
-              parentNode.key.instanceKeys.length > 0 &&
-              parentNode.key.instanceKeys.every((k) => k.imodelKey === this._imodel.key)
-            ) {
-              for await (const row of this._imodel.createQueryReader(
-                `
-                  SELECT
-                    ec_classname(e.ECClassId, 's.c') className,
-                    e.ECInstanceId id,
-                    COALESCE(e.UserLabel, e.CodeValue, ec_classname(e.ECClassId, 'c')) label,
-                    (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = e.ECInstanceId LIMIT 1) hasChildren
-                  FROM bis.Element e
-                  WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
-                `,
-              )) {
-                yield {
-                  key: {
-                    type: "instances",
-                    instanceKeys: [{ className: row.className, id: row.id, imodelKey: this._imodel.key }],
-                  },
-                  label: row.label,
-                  children: !!row.hasChildren,
-                  parentKeys: [...parentNode.parentKeys, parentNode.key],
-                };
-              }
-            }
-          }
-
-          // Since we're returning nodes based on instances in an iModel, we should also implement the `getNodeInstanceKeys` method
-          // allow efficient retrieval of instance keys
-          public async *getNodeInstanceKeys({ parentNode }: Props<HierarchyProvider["getNodeInstanceKeys"]>) {
-            if (!parentNode) {
-              // Don't need to run a query here - we know all iModels have one root Subject with `0x1` id
-              yield { className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key };
-              return;
-            }
-            // Query and return children instance keys for the given parent node
-            if (
-              HierarchyNode.isInstancesNode(parentNode) &&
-              parentNode.key.instanceKeys.length > 0 &&
-              parentNode.key.instanceKeys.every((k) => k.imodelKey === this._imodel.key)
-            ) {
-              for await (const row of this._imodel.createQueryReader(
-                `
-                  SELECT ec_classname(e.ECClassId, 's.c') className, e.ECInstanceId id
-                  FROM bis.Element e
-                  WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
-                `,
-              )) {
-                yield { className: row.className, id: row.id, imodelKey: this._imodel.key };
-              }
-            }
-          }
-
-          public setFormatter() {}
-          public setHierarchyFilter() {}
-        }
-
         // The `using` keyword makes sure the provider is disposed when it goes out of scope
-        using provider = new IModelHierarchyProvider(imodel);
+        using provider = createHierarchyProvider(({ hierarchyChanged }) => {
+          // Briefcase connections support data modifications - the provider should listen to txn changes
+          // and raise `hierarchyChanged` event when the hierarchy should be refreshed. `BriefcaseTxns` has a number
+          // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
+          const disposeTxnListeners =
+            imodelConnection instanceof BriefcaseConnection
+              ? registerTxnListeners(imodelConnection.txns, () => hierarchyChanged.raiseEvent({}))
+              : undefined;
+          return {
+            // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
+            // provider is no longer needed.
+            // The tree state hooks from `@itwin/presentation-hierarchies-react` package take care of this for you.
+            [Symbol.dispose]() {
+              disposeTxnListeners?.();
+            },
+
+            async *getNodes({
+              parentNode,
+            }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
+              if (!parentNode) {
+                // Query and return root bis.Subject node
+                for await (const row of imodelConnection.createQueryReader(
+                  `
+                    SELECT
+                      COALESCE(s.UserLabel, s.CodeValue, ec_classname(s.ECClassId, 'c')) label,
+                      (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = s.ECInstanceId LIMIT 1) hasChildren
+                    FROM bis.Subject s
+                    WHERE s.Parent.Id IS NULL
+                  `,
+                )) {
+                  yield {
+                    key: {
+                      type: "instances",
+                      instanceKeys: [{ className: "BisCore.Subject", id: "0x1", imodelKey: imodelConnection.key }],
+                    },
+                    label: row.label,
+                    children: !!row.hasChildren,
+                    parentKeys: [],
+                  };
+                }
+                return;
+              }
+              // Query and return children for the given parent node, assuming it's based on data from the same iModel
+              if (
+                HierarchyNode.isInstancesNode(parentNode) &&
+                parentNode.key.instanceKeys.length > 0 &&
+                parentNode.key.instanceKeys.every((k) => k.imodelKey === imodelConnection.key)
+              ) {
+                for await (const row of imodelConnection.createQueryReader(
+                  `
+                    SELECT
+                      ec_classname(e.ECClassId, 's.c') className,
+                      e.ECInstanceId id,
+                      COALESCE(e.UserLabel, e.CodeValue, ec_classname(e.ECClassId, 'c')) label,
+                      (SELECT 1 FROM bis.Element c WHERE c.Parent.Id = e.ECInstanceId LIMIT 1) hasChildren
+                    FROM bis.Element e
+                    WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
+                  `,
+                )) {
+                  yield {
+                    key: {
+                      type: "instances",
+                      instanceKeys: [{ className: row.className, id: row.id, imodelKey: imodelConnection.key }],
+                    },
+                    label: row.label,
+                    children: !!row.hasChildren,
+                    parentKeys: [...parentNode.parentKeys, parentNode.key],
+                  };
+                }
+              }
+            },
+
+            // Since we're returning nodes based on instances in an iModel, we should also implement the `getNodeInstanceKeys` method
+            // to allow efficient retrieval of instance keys
+            async *getNodeInstanceKeys({ parentNode }: Props<HierarchyProvider["getNodeInstanceKeys"]>) {
+              if (!parentNode) {
+                // Don't need to run a query here - we know all iModels have one root Subject with `0x1` id
+                yield { className: "BisCore.Subject", id: "0x1", imodelKey: imodelConnection.key };
+                return;
+              }
+              // Query and return children instance keys for the given parent node
+              if (
+                HierarchyNode.isInstancesNode(parentNode) &&
+                parentNode.key.instanceKeys.length > 0 &&
+                parentNode.key.instanceKeys.every((k) => k.imodelKey === imodelConnection.key)
+              ) {
+                for await (const row of imodelConnection.createQueryReader(
+                  `
+                    SELECT ec_classname(e.ECClassId, 's.c') className, e.ECInstanceId id
+                    FROM bis.Element e
+                    WHERE e.Parent.Id IN (${parentNode.key.instanceKeys.map((key) => key.id).join(",")})
+                  `,
+                )) {
+                  yield { className: row.className, id: row.id, imodelKey: imodelConnection.key };
+                }
+              }
+            },
+          };
+        });
 
         // Traverse the hierarchy to ensure expected nodes are returned. The result depends on
         // the iModel given to the provider.
@@ -208,7 +191,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         expect(consoleLogSpy.mock.calls).toHaveLength(3);
-        expect(consoleLogSpy.mock.calls[0][0]).toBe(imodel.rootSubject.name);
+        expect(consoleLogSpy.mock.calls[0][0]).toBe(imodelConnection.rootSubject.name);
         expect(consoleLogSpy.mock.calls[1][0]).toBe("  BisCore.RealityDataSources");
         expect(consoleLogSpy.mock.calls[2][0]).toBe("  BisCore.DictionaryModel");
       });
@@ -222,7 +205,7 @@ describe("Hierarchies", () => {
 
         // Create a hierarchy provider that returns a two-level hierarchy, where root nodes are authors and their
         // children are books.
-        const provider: HierarchyProvider = {
+        const provider = createHierarchyProvider(() => ({
           async *getNodes({ parentNode }) {
             if (!parentNode) {
               // For root nodes, query authors and return nodes based on them
@@ -246,11 +229,7 @@ describe("Hierarchies", () => {
               }
             }
           },
-          async *getNodeInstanceKeys() {},
-          setHierarchyFilter() {},
-          setFormatter() {},
-          hierarchyChanged: new BeEvent(),
-        };
+        }));
 
         // Traverse the hierarchy:
         await traverseHierarchy(provider);
@@ -291,43 +270,43 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderExample
         // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
         // provider can be changed by calling the `setFormatter` method.
-        class FormattingHierarchyProvider implements HierarchyProvider {
-          private _formatter: IPrimitiveValueFormatter = createDefaultValueFormatter();
-          public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-          public async *getNodes(): ReturnType<HierarchyProvider["getNodes"]> {
-            yield {
-              key: { type: "generic", id: `formatted-node` },
-              // We're using `ConcatenatedValue` to simplify formatting complex values consisting of different parts
-              // that may need to be formatted differently
-              label: await ConcatenatedValue.serialize({
-                parts: [
-                  "Boolean: ",
-                  { type: "Boolean", value: true },
-                  " | Integer: ",
-                  { type: "Integer", value: 123 },
-                  " | Double: ",
-                  { type: "Double", value: 4.56 },
-                  " | Date/Time: ",
-                  { type: "DateTime", extendedType: "ShortDate", value: new Date(Date.UTC(2024, 11, 31)) },
-                  " | Point2d: ",
-                  { type: "Point2d", value: { x: 1.234, y: 5.678 } },
-                ],
-                partFormatter: async (x) => (ConcatenatedValuePart.isString(x) ? x : this._formatter(x)),
-              }),
-              children: false,
-              parentKeys: [],
-            };
-          }
-          public async *getNodeInstanceKeys() {}
-          public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
-            this._formatter = formatter ?? createDefaultValueFormatter();
-            // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-            this.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._formatter } });
-          }
-          public setHierarchyFilter() {}
-        }
+        const provider = createHierarchyProvider(({ hierarchyChanged }) => {
+          let formatter: IPrimitiveValueFormatter = createDefaultValueFormatter();
+          return {
+            async *getNodes(): ReturnType<HierarchyProvider["getNodes"]> {
+              yield {
+                key: { type: "generic", id: `formatted-node` },
+                parentKeys: [],
+                // We're using `ConcatenatedValue` to simplify formatting complex values consisting of different parts
+                // that may need to be formatted differently
+                label: await ConcatenatedValue.serialize({
+                  parts: [
+                    "Boolean: ",
+                    { type: "Boolean", value: true },
+                    " | Integer: ",
+                    { type: "Integer", value: 123 },
+                    " | Double: ",
+                    { type: "Double", value: 4.56 },
+                    " | Date/Time: ",
+                    { type: "DateTime", extendedType: "ShortDate", value: new Date(Date.UTC(2024, 11, 31)) },
+                    " | Point2d: ",
+                    { type: "Point2d", value: { x: 1.234, y: 5.678 } },
+                    " | Point3d: ",
+                    { type: "Point3d", value: { x: 1.234, y: 5.678, z: 9.101 } },
+                  ],
+                  partFormatter: async (x) => (ConcatenatedValuePart.isString(x) ? x : formatter(x)),
+                }),
+                children: false,
+              };
+            },
 
-        const provider = new FormattingHierarchyProvider();
+            setFormatter(newFormatter: IPrimitiveValueFormatter | undefined) {
+              formatter = newFormatter ?? createDefaultValueFormatter();
+              // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
+              hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+            },
+          };
+        });
 
         // Default formatter will format the node label to the following value (Date/Time formatted according to the locale and time zone):
         // `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: 2024-12-31 | Point2d: (1.23, 5.68)`
@@ -351,6 +330,8 @@ describe("Hierarchies", () => {
               ).toISOString();
             case "Point2d":
               return `{ x: ${typedValue.value.x.toExponential(1)}, y: ${typedValue.value.y.toExponential(1)} }`;
+            case "Point3d":
+              return `{ x: ${typedValue.value.x.toExponential(1)}, y: ${typedValue.value.y.toExponential(1)}, z: ${typedValue.value.z.toExponential(1)} }`;
           }
           return typedValue.value.toString();
         });
@@ -362,47 +343,51 @@ describe("Hierarchies", () => {
 
         expect(consoleLogSpy.mock.calls).toHaveLength(2);
         expect(consoleLogSpy.mock.calls[0][0]).toBe(
-          `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68)`,
+          `Boolean: true | Integer: 123 | Double: 4.56 | Date/Time: ${new Date(Date.UTC(2024, 11, 31)).toLocaleDateString()} | Point2d: (1.23, 5.68) | Point3d: (1.23, 5.68, 9.10)`,
         );
         expect(consoleLogSpy.mock.calls[1][0]).toBe(
-          "Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 }",
+          "Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 } | Point3d: { x: 1.2e+0, y: 5.7e+0, z: 9.1e+0 }",
         );
       });
 
-      it("creates filtering provider", async () => {
+      it("creates search provider", async () => {
         const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         const booksService = createBooksService();
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.PathsLookup
-        // A function that matches given string against authors and books, and returns hierarchy paths
-        // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.PathsLookup
+        // A function that matches given string against authors and books, and returns hierarchy tree
+        // from root to the matched nodes. This function must be aware of the hierarchy structure to know what paths
         // to create.
-        async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
-          const results: HierarchyFilteringPath[] = [];
+        async function createHierarchySearchTree(searchText: string): Promise<HierarchySearchTree[]> {
+          const searchTreeBuilder = HierarchySearchTree.createBuilder();
           const [matchingAuthors, matchingBooks] = await Promise.all([
-            booksService.getAuthors({ name: filter }),
-            booksService.getBooks({ title: filter }),
+            booksService.getAuthors({ name: searchText }),
+            booksService.getBooks({ title: searchText }),
           ]);
           for (const author of matchingAuthors) {
-            results.push([{ type: "generic", id: `author:${author.key}` }]);
+            searchTreeBuilder.accept({ path: [{ type: "generic", id: `author:${author.key}` }] });
           }
           for (const book of matchingBooks) {
-            results.push([
-              { type: "generic", id: `author:${book.authorKey}` },
-              { type: "generic", id: `book:${book.key}` },
-            ]);
+            searchTreeBuilder.accept({
+              path: [
+                { type: "generic", id: `author:${book.authorKey}` },
+                { type: "generic", id: `book:${book.key}` },
+              ],
+            });
           }
-          return results;
+          return searchTreeBuilder.getTree();
         }
         // __PUBLISH_EXTRACT_END__
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider
-        let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
-        const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
-        const provider: HierarchyProvider = {
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.Provider
+        let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
+        const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
           async *getNodes({ parentNode }) {
-            const filteringHelper = createHierarchyFilteringHelper(rootFilter?.paths, parentNode);
-            const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers();
+            const searchHelper =
+              !parentNode || HierarchyNode.isGeneric(parentNode)
+                ? createHierarchySearchHelper(rootSearch?.paths, parentNode)
+                : undefined;
+            const targetNodeKeys = searchHelper?.getChildNodeSearchIdentifiers();
             if (!parentNode) {
               // For root nodes, query authors and return nodes based on them
               const authors = await booksService.getAuthors(
@@ -424,7 +409,7 @@ describe("Hierarchies", () => {
                   label: author.name,
                   children: author.hasBooks,
                   parentKeys: [],
-                  ...filteringHelper.createChildNodeProps({ nodeKey }),
+                  ...searchHelper?.createChildNodeProps({ nodeKey }),
                 };
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -455,28 +440,25 @@ describe("Hierarchies", () => {
                   label: book.title,
                   children: false,
                   parentKeys: [...parentNode.parentKeys, parentNode.key],
-                  ...filteringHelper.createChildNodeProps({ nodeKey }),
+                  ...searchHelper?.createChildNodeProps({ nodeKey }),
                 };
               }
             }
           },
-          setHierarchyFilter(props) {
-            // Here we receive all paths that we want to filter the hierarchy by. The paths start from root, so
+          setHierarchySearch(props) {
+            // Here we receive all paths that we want to search the hierarchy by. The paths start from root, so
             // we just store them in a variable to use later when querying root nodes.
-            rootFilter = props;
-            // Changing the filter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-            hierarchyChanged.raiseEvent({ filterChange: { newFilter: rootFilter } });
+            rootSearch = props;
+            // Changing the search requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
+            hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootSearch } });
           },
-          async *getNodeInstanceKeys() {},
-          setFormatter() {},
-          hierarchyChanged,
-        };
+        }));
         // __PUBLISH_EXTRACT_END__
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1
-        // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
-        // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-        provider.setHierarchyFilter({ paths: await createFilterPaths("of") });
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.TraverseSearched1
+        // Apply the search "of" and traverse the searched hierarchy. Notice that author node
+        // of "The Fellowship of Ring" is included, even though it doesn't match the search.
+        provider.setHierarchySearch({ paths: await createHierarchySearchTree("of") });
         await traverseHierarchy(provider);
         // Output:
         // J.R.R. Tolkien
@@ -494,10 +476,10 @@ describe("Hierarchies", () => {
         ]);
         consoleLogSpy.mockClear();
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2
-        // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
-        // of "Tom Clancy" are included, even though they don't match the filter.
-        provider.setHierarchyFilter({ paths: await createFilterPaths("tom") });
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.TraverseSearched2
+        // Apply the search "tom" and traverse the searched hierarchy. Notice that all books
+        // of "Tom Clancy" are included, even though they don't match the search.
+        provider.setHierarchySearch({ paths: await createHierarchySearchTree("tom") });
         await traverseHierarchy(provider);
         // Output:
         // Mark Twain
@@ -554,7 +536,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Provider
-        const provider: HierarchyProvider = {
+        const provider = createHierarchyProvider(() => ({
           async *getNodes({ parentNode, instanceFilter }) {
             if (!parentNode) {
               // For root nodes, query authors and return nodes based on them
@@ -586,11 +568,7 @@ describe("Hierarchies", () => {
               }
             }
           },
-          setHierarchyFilter() {},
-          async *getNodeInstanceKeys() {},
-          setFormatter() {},
-          hierarchyChanged: new BeEvent(),
-        };
+        }));
         // __PUBLISH_EXTRACT_END__
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result1
@@ -717,7 +695,7 @@ function createBooksService() {
   }
   async function getAuthors(query?: BooksServiceFilter<(typeof authors)[0]>) {
     return filterEntries(authors, query, (entry, { key, name, hasBooks }) => {
-      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
+      if (key && !entry.key.includes(key)) {
         return false;
       }
       if (name && !entry.name.toLocaleLowerCase().includes(name.toLocaleLowerCase())) {
@@ -731,13 +709,13 @@ function createBooksService() {
   }
   async function getBooks(query?: BooksServiceFilter<(typeof books)[0]>) {
     return filterEntries(books, query, (entry, { key, authorKey, title }) => {
-      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
+      if (authorKey && !entry.authorKey.includes(authorKey)) {
+        return false;
+      }
+      if (key && !entry.key.includes(key)) {
         return false;
       }
       if (title && !entry.title.toLocaleLowerCase().includes(title.toLocaleLowerCase())) {
-        return false;
-      }
-      if (authorKey && !entry.authorKey.toLocaleLowerCase().includes(authorKey.toLocaleLowerCase())) {
         return false;
       }
       return true;

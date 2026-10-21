@@ -1,0 +1,295 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { getClass } from "@itwin/presentation-shared";
+import { buildCategoryContext, collectInParallel } from "../InternalUtils.js";
+import { createPropertyFields } from "./ClassPropertyFields.js";
+
+import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
+import type { CardinalityHint, CategoryContext, ContentSource } from "../ContentTarget.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
+import type { StepPropertySpec } from "../model/PropertySpec.js";
+import type { PathCardinalityClassifier } from "../PathCardinality.js";
+import type { CategorizedField } from "./ClassPropertyFields.js";
+import type { GetAnchorContributionFn, GetContributionFn } from "./ContributionMemoizer.js";
+
+/** A related property field paired with its category facts and the provider that contributed it. */
+type RelatedCandidate = CategorizedField & { provider: IModelFieldsProvider };
+
+/**
+ * Enumerates the **related** property fields of a content source — the properties reached by
+ * navigating each of the source's resolved relationship paths.
+ *
+ * Each of the source's `resolvedDeclarations` links back to the provider and declaration that
+ * produced it during source resolution (Stage 1). This re-reads that declaration (via
+ * `getContribution`) to recover its per-step property specs, then enumerates fields for every
+ * concrete path the declaration resolved to:
+ *
+ * - When the declaration omits `properties`, all properties of each path's final-step target class
+ *   are loaded (nothing from intermediate steps or relationship classes).
+ * - When `properties` is provided, only the classes explicitly named by each step's `target`
+ *   (the step's target class) and `relationship` (the step's relationship class) are loaded —
+ *   omitted classes and unlisted steps contribute nothing.
+ *
+ * A group's `nested` metadata (see `ResolvedDeclarationGroup`) means the declaration was applied on a
+ * *nested anchor* rather than directly on this source's target: the declaration is instead recovered
+ * via `getAnchorContribution` (the contribution the provider returns for the anchor class), and each
+ * `StepPropertySpec.stepIndex` is relative to the *nested suffix* — `nested.prefixStepCount` is added
+ * to translate it into an index of the full (already prefix + suffix) `path` stored on the group.
+ *
+ * A field's `pathFromTarget` is the sub-path from the content target up to and including the step
+ * whose class supplies the property, and its `valueClassNames` are that step's concrete class. Each
+ * field is paired with the contributing provider (so the merge step can resolve cross-provider
+ * metadata conflicts) and its `FieldCategorization` facts — target-class fields anchor to
+ * `"targetClass"`, relationship-class fields to `"relationshipClass"`. The categorization pass turns
+ * those facts into the actual category tree.
+ *
+ * @internal
+ */
+export async function collectRelatedPropertyFields(props: {
+  imodelAccess: ECSchemaProvider;
+  source: ContentSource;
+  getContribution: GetContributionFn;
+  getAnchorContribution: GetAnchorContributionFn;
+  imodelFieldsProvidersById: ReadonlyMap<IModelFieldsProvider["id"], IModelFieldsProvider>;
+  /** Classifies the cardinality of the path each enumerated field is reached over. */
+  classifier: PathCardinalityClassifier;
+}): Promise<RelatedCandidate[]> {
+  const { imodelAccess, source, getContribution, getAnchorContribution, imodelFieldsProvidersById, classifier } = props;
+  // Enumerate each declaration group concurrently, but flatten the results in input order so the
+  // candidate order is deterministic across runs — downstream merge tie-breaking (equal-priority
+  // inter-provider conflicts) resolves to input order.
+  return collectInParallel({
+    inputs: source.resolvedDeclarations,
+    expand: async (group) => {
+      const provider = imodelFieldsProvidersById.get(group.providerId);
+      if (!provider) {
+        throw new Error(
+          `Content configuration is missing the iModel fields provider "${group.providerId}" that resolved a related-properties declaration for target "${source.target.primaryClass}"${describeNestedContext(group)}.`,
+        );
+      }
+      const contribution = group.nested
+        ? await getAnchorContribution({ provider, anchorClassName: group.nested.anchorClassName })
+        : await getContribution({ provider, target: source.target });
+      const declaration = contribution?.relatedProperties?.[group.declarationIndex];
+      if (!declaration) {
+        throw new Error(
+          `iModel fields provider "${group.providerId}" no longer returns the related-properties declaration at index ${group.declarationIndex} for target "${source.target.primaryClass}"${describeNestedContext(group)}.`,
+        );
+      }
+      const stepIndexOffset = group.nested?.prefixStepCount ?? 0;
+      // A nested group's `effectiveCardinalityHint` already folds in every ancestor declaration's hint.
+      const cardinalityHint = group.nested ? group.nested.effectiveCardinalityHint : declaration.cardinalityHint;
+      const perPath = await Promise.all(
+        group.paths.map(async ({ path, targetClassNames }) =>
+          createFieldsForPath({
+            imodelAccess,
+            classifier,
+            cardinalityHint,
+            path,
+            properties: declaration.properties,
+            primaryClassNames: targetClassNames,
+            stepIndexOffset,
+            propertyCategoryScope: declaration.propertyCategoryScope,
+            categoryContext: group.nested ? group.nested.categoryContext : [],
+          }),
+        ),
+      );
+      return perPath.flat().map((enumerated) => ({ ...enumerated, provider }));
+    },
+  });
+}
+
+/** Describes a group's nested-anchor context for error messages, or `""` for a base (non-nested) group. */
+function describeNestedContext(group: ContentSource["resolvedDeclarations"][number]): string {
+  return group.nested ? ` (nested anchor "${group.nested.anchorClassName}")` : "";
+}
+
+/** Creates fields for the properties of `propertiesClass` that are in effect on it (own, inherited and mixin). */
+function collectClassPropertyFields(
+  props: Omit<Props<typeof createPropertyFields>, "properties"> & { propertiesClass: EC.Class },
+): CategorizedField[] {
+  const { propertiesClass, ...rest } = props;
+  return createPropertyFields({ ...rest, properties: propertiesClass.getProperties() });
+}
+
+/** Enumerates the property fields of a single concrete relationship path. */
+async function createFieldsForPath(props: {
+  imodelAccess: ECSchemaProvider;
+  classifier: PathCardinalityClassifier;
+  /** The owning declaration's cardinality hint, if any. */
+  cardinalityHint: CardinalityHint | undefined;
+  path: RelationshipPath;
+  properties: RelatedPropertiesDeclaration["properties"];
+  /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
+  primaryClassNames: EC.FullClassNameDotNotation[];
+  /**
+   * For a nested group, how many leading steps of `path` are the prefix (from the original target to
+   * the anchor) — added to each `StepPropertySpec.stepIndex` (suffix-relative) to get an index into
+   * `path`. `0` for a base (non-nested) declaration.
+   */
+  stepIndexOffset: number;
+  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  categoryContext: CategoryContext;
+}): Promise<CategorizedField[]> {
+  const {
+    imodelAccess,
+    classifier,
+    cardinalityHint,
+    path,
+    properties,
+    primaryClassNames,
+    propertyCategoryScope,
+    stepIndexOffset,
+  } = props;
+
+  // Default (no per-step specs): all properties of the final step's target class. `path` is always the
+  // full path (prefix + suffix for a nested group), so its last step is already the suffix's last step
+  // — no offset needed here.
+  if (properties === undefined) {
+    const lastStep = path[path.length - 1];
+    const [propertiesClass, pathCardinality] = await Promise.all([
+      getClass(imodelAccess, lastStep.targetClassName),
+      classifier.classify({ path, declaredPath: path, hint: cardinalityHint }),
+    ]);
+    return collectClassPropertyFields({
+      propertiesClass,
+      valueClassNames: [lastStep.targetClassName],
+      relationshipInfo: { pathFromTarget: path, pathCardinality, primaryClassNames },
+      spec: { select: "all" },
+      anchor: "targetClass",
+      propertyCategoryScope,
+      categoryContext: props.categoryContext,
+    });
+  }
+
+  // Opt-in: only the classes explicitly named by each step's `target`/`relationship`.
+  const perStep = await Promise.all(
+    properties.map(async (stepSpec) =>
+      createFieldsForStep({
+        imodelAccess,
+        classifier,
+        cardinalityHint,
+        path,
+        stepSpec,
+        primaryClassNames,
+        stepIndexOffset,
+        propertyCategoryScope,
+        categoryContext: props.categoryContext,
+      }),
+    ),
+  );
+  const fields = perStep.flat();
+  assignCategoryContexts({ fields, propertyCategoryScope, categoryContext: props.categoryContext });
+  return fields;
+}
+
+function assignCategoryContexts(props: {
+  fields: CategorizedField[];
+  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  categoryContext: CategoryContext;
+}): void {
+  const { fields, propertyCategoryScope } = props;
+  const localAnchors: CategoryContext[number][] = [];
+  for (const { field, categorization } of fields) {
+    if (
+      categorization.anchor === "none" ||
+      categorization.category?.source === "override" ||
+      (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory")
+    ) {
+      continue;
+    }
+    localAnchors.push({ stepIndex: field.pathFromTarget.length - 1, kind: categorization.anchor });
+  }
+  for (const { field, categorization } of fields) {
+    if (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory") {
+      continue;
+    }
+    const stepIndex = field.pathFromTarget.length - 1;
+    categorization.categoryContext = buildCategoryContext({
+      inheritedContext: props.categoryContext,
+      localAnchors: localAnchors.filter(
+        (context) =>
+          (propertyCategoryScope !== "parent" && context.stepIndex < stepIndex) ||
+          (context.stepIndex === stepIndex &&
+            context.kind === "relationshipClass" &&
+            categorization.anchor === "targetClass"),
+      ),
+    });
+  }
+}
+
+/** Enumerates the target-class and relationship-class fields opted in by a single `StepPropertySpec`. */
+async function createFieldsForStep(props: {
+  imodelAccess: ECSchemaProvider;
+  classifier: PathCardinalityClassifier;
+  cardinalityHint: CardinalityHint | undefined;
+  path: RelationshipPath;
+  stepSpec: StepPropertySpec;
+  /** Concrete primary classes whose instances connect to `path` (the path's first-step source end). */
+  primaryClassNames: EC.FullClassNameDotNotation[];
+  /** See {@link createFieldsForPath}. */
+  stepIndexOffset: number;
+  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  categoryContext: CategoryContext;
+}): Promise<CategorizedField[]> {
+  const {
+    imodelAccess,
+    classifier,
+    cardinalityHint,
+    path,
+    stepSpec,
+    primaryClassNames,
+    propertyCategoryScope,
+    stepIndexOffset,
+  } = props;
+  const effectiveStepIndex = stepIndexOffset + stepSpec.stepIndex;
+  if (effectiveStepIndex < 0 || effectiveStepIndex >= path.length) {
+    if (stepIndexOffset > 0) {
+      const suffixLength = path.length - stepIndexOffset;
+      throw new Error(
+        `Related-properties declaration references step index ${stepSpec.stepIndex}, but the resolved nested suffix only has ${suffixLength} step(s).`,
+      );
+    }
+    throw new Error(
+      `Related-properties declaration references step index ${stepSpec.stepIndex}, but the resolved path only has ${path.length} step(s).`,
+    );
+  }
+  const step = path[effectiveStepIndex];
+  const pathFromTarget = path.slice(0, effectiveStepIndex + 1);
+  const pathCardinality = await classifier.classify({
+    path: pathFromTarget,
+    declaredPath: path,
+    hint: cardinalityHint,
+  });
+  const enumerated: CategorizedField[] = [];
+  if (stepSpec.target) {
+    enumerated.push(
+      ...collectClassPropertyFields({
+        propertiesClass: await getClass(imodelAccess, step.targetClassName),
+        valueClassNames: [step.targetClassName],
+        relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
+        spec: stepSpec.target,
+        anchor: "targetClass",
+        propertyCategoryScope,
+        categoryContext: props.categoryContext,
+      }),
+    );
+  }
+  if (stepSpec.relationship) {
+    enumerated.push(
+      ...collectClassPropertyFields({
+        propertiesClass: await getClass(imodelAccess, step.relationshipName),
+        valueClassNames: [step.relationshipName],
+        relationshipInfo: { pathFromTarget, pathCardinality, primaryClassNames },
+        spec: stepSpec.relationship,
+        anchor: "relationshipClass",
+        propertyCategoryScope,
+        categoryContext: props.categoryContext,
+      }),
+    );
+  }
+  return enumerated;
+}

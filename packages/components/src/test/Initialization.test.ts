@@ -5,11 +5,12 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { PropertyValueRendererManager } from "@itwin/components-react";
-import { Localization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "../presentation-components/Initialization.js";
 import { InstanceKeyValueRendererName } from "../presentation-components/properties/InstanceKeyValueRenderer.js";
 import { createStub } from "./TestUtils.js";
+
+import type { Localization } from "@itwin/core-common";
 
 describe("initializeLocalization", () => {
   it("registers and unregisters namespace", async () => {

@@ -6,8 +6,10 @@
 import { Component } from "react";
 import { beforeEach, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
-import { SchemaView } from "@itwin/ecschema-metadata";
-import {
+import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content.js";
+
+import type { SchemaView } from "@itwin/ecschema-metadata";
+import type {
   ClassInfo,
   InstanceKey,
   PropertyInfo,
@@ -15,9 +17,8 @@ import {
   RelatedClassInfoWithOptionalRelationship,
   Ruleset,
 } from "@itwin/presentation-common";
-import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
-import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
-import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content.js";
+import type { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
+import type { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
   return { className: key?.className ?? "TestSchema:TestClass", id: key?.id ?? "0x1" };

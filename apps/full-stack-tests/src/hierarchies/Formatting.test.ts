@@ -3,42 +3,45 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  insertDrawingCategory,
-  insertDrawingGraphic,
-  insertDrawingModelWithPartition,
-  insertPhysicalElement,
-  insertPhysicalModelWithPartition,
-  insertPhysicalPartition,
-  insertPhysicalSubModel,
-  insertSheetIndexFolder,
-  insertSpatialCategory,
-} from "presentation-test-utilities";
 import { afterAll, describe, expect, it, test, vi } from "vitest";
-import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime } from "@itwin/presentation-shared";
-import { importSchema } from "../IModelUtils.js";
+import { ECSql } from "@itwin/presentation-shared";
+import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
-import { buildTestIModel } from "../TestIModelSetup.js";
+import { importSchema } from "../SchemaUtils.js";
 import { validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
 
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+
 describe("Hierarchies", () => {
-  let emptyIModel: IModelConnection;
-  let subjectClassName: string;
+  let suiteSetup!: Awaited<ReturnType<typeof setupSuite>>;
+
+  async function setupSuite(fullTestName: string) {
+    return buildTestECDb(fullTestName, async (builder, testName) => {
+      const s = await importSchema(
+        testName,
+        builder,
+        `
+          <ECEntityClass typeName="X">
+            <ECProperty propertyName="UserLabel" typeName="string" />
+          </ECEntityClass>
+        `,
+      );
+      builder.insertInstance(s.items.X.fullName, { userLabel: "" });
+      return { schema: s };
+    });
+  }
 
   test.beforeAll(async (_, suite) => {
     await initialize();
-    emptyIModel = (await buildTestIModel(suite.fullTestName!)).imodel;
-    subjectClassName = Subject.classFullName.replace(":", ".");
+    suiteSetup = await setupSuite(suite.fullTestName!);
   });
 
   afterAll(async () => {
+    suiteSetup[Symbol.dispose]();
     await terminate();
   });
 
@@ -70,7 +73,7 @@ describe("Hierarchies", () => {
         },
       };
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy }),
+        provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
         expect: [
           {
             node: (node) => {
@@ -85,57 +88,40 @@ describe("Hierarchies", () => {
 
     describe("KindOfQuantity", () => {
       it("formats instance node labels", async () => {
-        const { imodel, schema } = await buildTestIModel(async (builder, testName) => {
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const schema = await importSchema(
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
             testName,
             builder,
             `
-              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
               <ECSchemaReference name="Units" version="01.00.07" alias="u" />
               <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
               <KindOfQuantity typeName="LENGTH" persistenceUnit="u:M" presentationUnits="f:DefaultRealU(1)[u:M];f:DefaultRealU(1)[u:FT];f:DefaultRealU(2)[u:US_SURVEY_FT];f:AmerFI" relativeError="0.0001" />
               <ECEntityClass typeName="ClassX">
-                <BaseClass>bis:PhysicalElement</BaseClass>
                 <ECProperty propertyName="PropX" typeName="double" kindOfQuantity="LENGTH" />
               </ECEntityClass>
             `,
           );
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          const element = insertPhysicalElement({
-            builder,
-            classFullName: schema.items.ClassX.fullName,
-            modelId: model.id,
-            categoryId: category.id,
-            ["PropX"]: 123.456,
-          });
-          return { schema, model, category, element };
+          const element = builder.insertInstance(s.items.ClassX.fullName, { propX: 123.456 });
+          return { schema: s, element };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: schema.items.ClassX.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
+                            schemaProvider: ecdbAccess,
                             propertyClassName: schema.items.ClassX.fullName,
                             propertyClassAlias: "this",
                             propertyName: "PropX",
@@ -155,33 +141,57 @@ describe("Hierarchies", () => {
         };
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "metric" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "metric",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[123.5 m]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "imperial" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "imperial",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[405.0 ft]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usCustomary" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "usCustomary",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[405.0 ft]`) }],
         });
         await validateHierarchy({
           provider: createProvider({
-            imodel,
+            ecdb,
             hierarchy,
-            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usSurvey" }),
+            formatterFactory: ({ schemaContext, imodel }) =>
+              createValueFormatter({
+                formatsProvider: new SchemaFormatsProvider(schemaContext),
+                unitsProvider: new SchemaUnitProvider(schemaContext),
+                imodel,
+                unitSystem: "usSurvey",
+              }),
           }),
           expect: [{ node: (node) => expect(node.label).toBe(`[405.04 ft (US Survey)]`) }],
         });
@@ -212,7 +222,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [
             {
               node: (node) => {
@@ -228,39 +238,47 @@ describe("Hierarchies", () => {
 
     describe("DateTime", () => {
       it("formats instance node labels", async () => {
-        const imodelAccess = createIModelAccess(emptyIModel);
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
+        const rawDateTimeValue = new Date();
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="LastMod" typeName="dateTime" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { lastMod: rawDateTimeValue });
+          return { schema: s, x1 };
         });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: subjectClassName,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: "BisCore.Subject",
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "LastMod",
                           }),
                           { type: "String", value: "]" },
                         ]),
                       },
-                      extendedData: { lastMod: { selector: ECSql.createRawPropertyValueSelector("this", "LastMod") } },
                     })}
-                    FROM ${subjectClassName} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -270,12 +288,11 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [
             {
               node: (node) => {
-                const unformattedLastMod = node.extendedData!.lastMod as number;
-                const expectedLabel = `[${julianToDateTime(unformattedLastMod).toLocaleString()}]`;
+                const expectedLabel = `[${rawDateTimeValue.toLocaleString()}]`;
                 const actualLabel = node.label;
                 expect(actualLabel).toBe(expectedLabel);
               },
@@ -307,7 +324,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [
             {
               node: (node) => {
@@ -343,7 +360,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [
             {
               node: (node) => {
@@ -359,38 +376,39 @@ describe("Hierarchies", () => {
 
     describe("Boolean", () => {
       it("formats instance node labels", async () => {
-        const { imodel, modelClassName } = await buildTestIModel(async (builder) => {
-          const p1 = insertPhysicalPartition({ builder, codeValue: "p1", parentId: IModel.rootSubjectId });
-          insertPhysicalSubModel({ builder, modeledElementId: p1.id, isPrivate: false });
-          const p2 = insertPhysicalPartition({ builder, codeValue: "p2", parentId: IModel.rootSubjectId });
-          const m2 = insertPhysicalSubModel({ builder, modeledElementId: p2.id, isPrivate: true });
-          return { modelClassName: m2.className };
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="IsPrivate" typeName="boolean" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { isPrivate: false });
+          const x2 = builder.insertInstance(s.items.X.fullName, { isPrivate: true });
+          return { schema: s, x1, x2 };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: modelClassName,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: modelClassName,
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "IsPrivate",
                           }),
@@ -398,7 +416,7 @@ describe("Hierarchies", () => {
                         ]),
                       },
                     })}
-                    FROM ${modelClassName} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -408,7 +426,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [
             { node: (node) => expect(node.label).toBe(`[false]`) },
             { node: (node) => expect(node.label).toBe(`[true]`) },
@@ -438,7 +456,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`true-false`) }],
         });
       });
@@ -446,34 +464,38 @@ describe("Hierarchies", () => {
 
     describe("Integer", () => {
       it("formats instance node labels", async () => {
-        const { imodel, sheetIndexFolder } = await buildTestIModel(async (builder) => {
-          return { sheetIndexFolder: insertSheetIndexFolder({ builder, entryPriority: 2 }) };
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="EntryPriority" typeName="int" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { entryPriority: 2 });
+          return { schema: s, x1 };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: sheetIndexFolder.className,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: sheetIndexFolder.className,
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "EntryPriority",
                           }),
@@ -481,7 +503,7 @@ describe("Hierarchies", () => {
                         ]),
                       },
                     })}
-                    FROM ${sheetIndexFolder.className} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -491,7 +513,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[2]`) }],
         });
       });
@@ -517,7 +539,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[124]`) }],
         });
       });
@@ -525,43 +547,38 @@ describe("Hierarchies", () => {
 
     describe("Double", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
             builder,
-            modelId: model.id,
-            categoryId: category.id,
-            placement: { origin: { x: 1.23, y: 4.56, z: 7.89 }, angles: { yaw: 90.789 } },
-          });
-          return { model, category, element };
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="Yaw" typeName="double" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { yaw: 90.789 });
+          return { schema: s, x1 };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: element.className,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: element.className,
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "Yaw",
                           }),
@@ -569,7 +586,7 @@ describe("Hierarchies", () => {
                         ]),
                       },
                     })}
-                    FROM ${element.className} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -579,7 +596,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[90.79]`) }],
         });
       });
@@ -606,7 +623,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[123.79]`) }],
         });
       });
@@ -614,43 +631,38 @@ describe("Hierarchies", () => {
 
     describe("Point2d", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertDrawingModelWithPartition({ builder, codeValue: "model" });
-          const category = insertDrawingCategory({ builder, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertDrawingGraphic({
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
             builder,
-            modelId: model.id,
-            categoryId: category.id,
-            placement: { origin: { x: 1.477, y: 2.588 }, angle: 0 },
-          });
-          return { model, category, element };
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="Origin" typeName="point2d" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { origin: { x: 1.477, y: 2.588 } });
+          return { schema: s, x1 };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: element.className,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: element.className,
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "Origin",
                           }),
@@ -658,7 +670,7 @@ describe("Hierarchies", () => {
                         ]),
                       },
                     })}
-                    FROM ${element.className} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -668,7 +680,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`) }],
         });
       });
@@ -695,7 +707,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59)]`) }],
         });
       });
@@ -703,43 +715,38 @@ describe("Hierarchies", () => {
 
     describe("Point3d", () => {
       it("formats instance node labels", async () => {
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
             builder,
-            modelId: model.id,
-            categoryId: category.id,
-            placement: { origin: { x: 1.234, y: 4.567, z: 7.89 }, angles: {} },
-          });
-          return { model, category, element };
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="Origin" typeName="point3d" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { origin: { x: 1.234, y: 4.567, z: 7.89 } });
+          return { schema: s, x1 };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: element.className,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: element.className,
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "Origin",
                           }),
@@ -747,7 +754,7 @@ describe("Hierarchies", () => {
                         ]),
                       },
                     })}
-                    FROM ${element.className} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -757,7 +764,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[(1.23, 4.57, 7.89)]`) }],
         });
       });
@@ -784,7 +791,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy }),
+          provider: createProvider({ ecdb: suiteSetup.ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[(1.48, 2.59, 3.70)]`) }],
         });
       });
@@ -793,43 +800,38 @@ describe("Hierarchies", () => {
     describe("Guid", () => {
       it("formats instance node labels", async () => {
         const guid = Guid.createValue();
-        const { imodel, element } = await buildTestIModel(async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          const element = insertPhysicalElement({
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
             builder,
-            modelId: model.id,
-            categoryId: category.id,
-            federationGuid: guid,
-          });
-          return { model, category, element };
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="FederationGuid" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = builder.insertInstance(s.items.X.fullName, { federationGuid: guid });
+          return { schema: s, x1 };
         });
-        const imodelAccess = createIModelAccess(imodel);
-
-        const selectQueryFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
+        const { ecdb, schema } = setup;
+        const ecdbAccess = createIModelAccess(ecdb);
         const hierarchy: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: element.className,
+                  fullClassName: schema.items.X.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
-                            schemaProvider: imodelAccess,
-                            propertyClassName: element.className,
+                            schemaProvider: ecdbAccess,
+                            propertyClassName: schema.items.X.fullName,
                             propertyClassAlias: "this",
                             propertyName: "FederationGuid",
                           }),
@@ -837,7 +839,7 @@ describe("Hierarchies", () => {
                         ]),
                       },
                     })}
-                    FROM ${element.className} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                   },
                 },
@@ -847,7 +849,7 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ ecdb, hierarchy }),
           expect: [{ node: (node) => expect(node.label).toBe(`[${guid}]`) }],
         });
       });
@@ -860,27 +862,20 @@ describe("Hierarchies", () => {
     });
 
     it("reacts to changed formatter without running queries", async () => {
-      const imodelAccess = createIModelAccess(emptyIModel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: suiteSetup.schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
                     })}
-                    FROM ${subjectClassName} AS this
+                    FROM ${suiteSetup.schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -890,8 +885,8 @@ describe("Hierarchies", () => {
         },
       };
 
-      const provider = createProvider({ imodel: emptyIModel, hierarchy, queryCacheSize: 10 });
-      const queryReaderSpy = vi.spyOn(emptyIModel, "createQueryReader");
+      const provider = createProvider({ ecdb: suiteSetup.ecdb, hierarchy, queryCacheSize: 10 });
+      const queryReaderSpy = vi.spyOn(suiteSetup.ecdb, "createQueryReader");
       await validateHierarchy({ provider, expect: [{ node: (node) => expect(node.label).toBe("") }] });
       expect(queryReaderSpy).toHaveBeenCalledOnce();
       queryReaderSpy.mockClear();

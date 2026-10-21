@@ -4,20 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it } from "vitest";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import {
+  createNodesQueryClauseFactory,
+  NodeSelectClauseColumnNames,
+} from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils.js";
+
+import type {
   GenericInstanceFilter,
   GenericInstanceFilterRelatedInstanceDescription,
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
-import { EC, trimWhitespace } from "@itwin/presentation-shared";
-import {
-  createNodesQueryClauseFactory,
-  NodeSelectClauseColumnNames,
-  NodesQueryClauseFactory,
-} from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils.js";
+import type { EC } from "@itwin/presentation-shared";
+import type { NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 
 describe("createNodesQueryClauseFactory", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
@@ -47,7 +49,7 @@ describe("createNodesQueryClauseFactory", () => {
     });
 
     it(`throws when property class doesn't have the property`, async () => {
-      imodelAccess.stubEntityClass({ schemaName: "testSchema", className: "testName", is: async () => true });
+      imodelAccess.stubEntityClass({ schemaName: "testSchema", className: "testName" });
       await expect(
         factory.createSelectClause({
           ecClassId: { selector: "class_id" },
@@ -67,14 +69,13 @@ describe("createNodesQueryClauseFactory", () => {
       imodelAccess.stubEntityClass({
         schemaName: "testSchema",
         className: "testName",
-        is: async () => true,
         properties: [
           {
             name: "PropertyName",
             isNavigation: () => true,
             direction: "Forward",
-            relationshipClass: Promise.resolve({ target: { abstractConstraint: Promise.resolve(undefined) } }),
-          } as EC.NavigationProperty,
+            relationshipClass: { target: { abstractConstraint: undefined } },
+          } as unknown as EC.NavigationProperty,
         ],
       });
       await expect(
@@ -96,7 +97,6 @@ describe("createNodesQueryClauseFactory", () => {
       imodelAccess.stubEntityClass({
         schemaName: "testSchema",
         className: "testName",
-        is: async () => true,
         properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
       });
       const result = await factory.createSelectClause({
@@ -134,7 +134,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -162,16 +162,13 @@ describe("createNodesQueryClauseFactory", () => {
       imodelAccess.stubEntityClass({
         schemaName: "testSchema",
         className: "testName",
-        is: async () => true,
         properties: [
           {
             name: "PropertyName",
             isNavigation: () => true,
             direction: "Backward",
-            relationshipClass: Promise.resolve({
-              source: { abstractConstraint: Promise.resolve({ fullName: "testSchema.SourceClass" }) },
-            }),
-          } as EC.NavigationProperty,
+            relationshipClass: { source: { abstractConstraint: { fullName: "testSchema.SourceClass" } } },
+          } as unknown as EC.NavigationProperty,
         ],
       });
       const result = await factory.createSelectClause({
@@ -187,7 +184,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -210,7 +207,6 @@ describe("createNodesQueryClauseFactory", () => {
       imodelAccess.stubEntityClass({
         schemaName: "testSchema",
         className: "testName",
-        is: async () => true,
         properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
       });
       const result = await factory.createSelectClause({
@@ -253,7 +249,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(x.ECClassId) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(x.ECClassId, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         x.ECInstanceId AS ${NodeSelectClauseColumnNames.ECInstanceId},
         x.Label AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(x.HasChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -274,6 +270,29 @@ describe("createNodesQueryClauseFactory", () => {
       );
     });
 
+    it("creates valid clause with instance label factory props", async () => {
+      const result = await factory.createSelectClause({
+        ecClassId: { selector: "class_id" },
+        ecInstanceId: { selector: "instance_id" },
+        nodeLabel: { of: { classAlias: "this" } },
+      });
+      const labelClause = await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "this" });
+      expect(trimWhitespace(result)).toBe(
+        trimWhitespace(`
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
+        instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        ${labelClause} AS ${NodeSelectClauseColumnNames.DisplayLabel},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.Grouping},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
+      `),
+      );
+    });
+
     it("creates valid clause with null props", async () => {
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },
@@ -282,7 +301,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -300,7 +319,6 @@ describe("createNodesQueryClauseFactory", () => {
       imodelAccess.stubEntityClass({
         schemaName: "testSchema",
         className: "testName",
-        is: async () => true,
         properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
       });
       const result = await factory.createSelectClause({
@@ -319,7 +337,7 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).toBe(
         trimWhitespace(`
-        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        ec_ClassName(class_id, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
@@ -366,7 +384,7 @@ describe("createNodesQueryClauseFactory", () => {
       ).toEqual({ from: "x.y", joins: "", where: "" });
     });
 
-    it("creates valid result when content and property classes don't intersect", async () => {
+    it("disables query when content and property classes don't intersect", async () => {
       imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
       imodelAccess.stubEntityClass({ schemaName: "x", className: "b" });
       const filter: GenericInstanceFilter = {
@@ -379,10 +397,23 @@ describe("createNodesQueryClauseFactory", () => {
       ).toEqual({ from: "x.b", joins: "", where: "FALSE" });
     });
 
+    it("disables query when property class doesn't exist in imodel", async () => {
+      imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
+      const filter: GenericInstanceFilter = {
+        propertyClassNames: ["x.b"],
+        relatedInstances: [],
+        rules: { operator: "and", rules: [] },
+      };
+      expect(
+        await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } }),
+      ).toEqual({ from: "x.a", joins: "", where: "FALSE" });
+    });
+
     describe("from", () => {
       it("specializes content class if property class is its subclass", async () => {
-        imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
-        imodelAccess.stubEntityClass({ schemaName: "x", className: "b", is: async () => true });
+        const baseClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
+        imodelAccess.stubEntityClass({ schemaName: "x", className: "b", baseClass });
+
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.b"],
           relatedInstances: [],
@@ -394,8 +425,9 @@ describe("createNodesQueryClauseFactory", () => {
       });
 
       it("uses content class if it's a subclass of property class", async () => {
-        imodelAccess.stubEntityClass({ schemaName: "x", className: "a", is: async () => true });
-        imodelAccess.stubEntityClass({ schemaName: "x", className: "b" });
+        const baseClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "b" });
+        imodelAccess.stubEntityClass({ schemaName: "x", className: "a", baseClass });
+
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.b"],
           relatedInstances: [],
@@ -419,22 +451,10 @@ describe("createNodesQueryClauseFactory", () => {
       });
 
       it("uses the most specific property class when multiple classes provided", async () => {
-        imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
-        imodelAccess.stubEntityClass({
-          schemaName: "x",
-          className: "b",
-          is: async (className) => ["x.a"].includes(className),
-        });
-        imodelAccess.stubEntityClass({
-          schemaName: "x",
-          className: "c",
-          is: async (className) => ["x.a", "x.b"].includes(className),
-        });
-        imodelAccess.stubEntityClass({
-          schemaName: "x",
-          className: "d",
-          is: async (className) => ["x.a", "x.b", "x.c"].includes(className),
-        });
+        const xaClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
+        const xbClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "b", baseClass: xaClass });
+        const xcClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "c", baseClass: xbClass });
+        const xdClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "d", baseClass: xcClass });
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.b", "x.d", "x.c"],
           relatedInstances: [],
@@ -442,14 +462,16 @@ describe("createNodesQueryClauseFactory", () => {
         };
         expect(
           await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } }),
-        ).toEqual({ from: "x.d", joins: "", where: "" });
+        ).toEqual({ from: xdClass.fullName, joins: "", where: "" });
       });
     });
 
     describe("where", () => {
       describe("by filter classes", () => {
         it("adds class filter when filter class names are specified", async () => {
-          imodelAccess.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+          imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
+          imodelAccess.stubEntityClass({ schemaName: "x", className: "b" });
+          imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
           const filter: GenericInstanceFilter = {
             propertyClassNames: ["x.y"],
             filteredClassNames: ["x.a", "x.b"],
@@ -466,51 +488,102 @@ describe("createNodesQueryClauseFactory", () => {
             where: "[content-class].[ECClassId] IS ([x].[a], [x].[b])",
           });
         });
+
+        it("adds filter classes that don't exist in the imodel", async () => {
+          imodelAccess.stubEntityClass({ schemaName: "x", className: "a" });
+          imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
+          const filter: GenericInstanceFilter = {
+            propertyClassNames: ["x.y"],
+            filteredClassNames: ["x.a", "x.b"],
+            relatedInstances: [],
+            rules: { operator: "and", rules: [] },
+          };
+          const clauses = await factory.createFilterClauses({
+            filter,
+            contentClass: { fullName: "x.y", alias: "content-class" },
+          });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).toEqual({
+            from: "x.y",
+            joins: "",
+            where: "[content-class].[ECClassId] IS ([x].[a])",
+          });
+        });
+
+        it("disables query when none of the filter classes exist in imodel", async () => {
+          imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
+          const filter: GenericInstanceFilter = {
+            propertyClassNames: ["x.y"],
+            filteredClassNames: ["x.a", "x.b"],
+            relatedInstances: [],
+            rules: { operator: "and", rules: [] },
+          };
+          const clauses = await factory.createFilterClauses({
+            filter,
+            contentClass: { fullName: "x.y", alias: "content-class" },
+          });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).toEqual({
+            from: "x.y",
+            joins: "",
+            where: "FALSE",
+          });
+        });
       });
 
       describe("by properties", () => {
-        const testClassProps = { schemaName: "s", className: "c", is: async () => true };
         interface TestPropertyFilterProps {
+          className: EC.FullClassNameDotNotation;
           classAlias: string;
           rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
           expectedECSql: string;
-          skipClassStub?: boolean;
           relatedInstances?: GenericInstanceFilterRelatedInstanceDescription[];
         }
         async function testPropertyFilter({
           classAlias,
+          className,
           rule,
           expectedECSql,
-          skipClassStub,
           relatedInstances,
         }: TestPropertyFilterProps) {
-          if (!skipClassStub) {
-            imodelAccess.stubEntityClass(testClassProps);
-          }
           const filter: GenericInstanceFilter = {
-            propertyClassNames: ["s.c"],
+            propertyClassNames: [className],
             relatedInstances: relatedInstances ?? [],
             rules: rule,
           };
           const res = await factory.createFilterClauses({
             filter,
-            contentClass: { fullName: "s.c", alias: classAlias },
+            contentClass: { fullName: className, alias: classAlias },
           });
-          expect(trimWhitespace(res.where ?? "")).toBe(trimWhitespace(expectedECSql));
+          expect(trimWhitespace(res.where)).to.eq(trimWhitespace(expectedECSql));
         }
 
-        it(`defaults to content class alias if it's not specified for property rule`, async () =>
-          testPropertyFilter({
+        it(`defaults to content class alias if it's not specified for property rule`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [{ name: "a", isPrimitive: () => true } as EC.PrimitiveProperty],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: {
               operator: "and",
               rules: [{ sourceAlias: "", propertyName: "a", operator: "is-true", propertyTypeName: "boolean" }],
             },
             expectedECSql: `[x].[a]`,
-          }));
+          });
+        });
 
-        it(`joins multiple rule groups with "and" operator`, async () =>
-          testPropertyFilter({
+        it(`joins multiple rule groups with "and" operator`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [
+              { name: "a", isPrimitive: () => true } as EC.PrimitiveProperty,
+              { name: "b", isPrimitive: () => true } as EC.PrimitiveProperty,
+            ],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: {
               operator: "and",
@@ -520,10 +593,20 @@ describe("createNodesQueryClauseFactory", () => {
               ],
             },
             expectedECSql: `[x].[a] AND NOT [x].[b]`,
-          }));
+          });
+        });
 
-        it(`joins multiple rule groups with "or" operator`, async () =>
-          testPropertyFilter({
+        it(`joins multiple rule groups with "or" operator`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [
+              { name: "a", isPrimitive: () => true } as EC.PrimitiveProperty,
+              { name: "b", isPrimitive: () => true } as EC.PrimitiveProperty,
+            ],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: {
               operator: "or",
@@ -533,43 +616,73 @@ describe("createNodesQueryClauseFactory", () => {
               ],
             },
             expectedECSql: `([x].[a] OR NOT [x].[b])`,
-          }));
+          });
+        });
 
-        it(`creates "is true" filter`, async () =>
-          testPropertyFilter({
+        it(`creates "is true" filter`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [{ name: "p", isPrimitive: () => true } as EC.PrimitiveProperty],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: { sourceAlias: "x", propertyName: "p", operator: "is-true", propertyTypeName: "boolean" },
             expectedECSql: `[x].[p]`,
-          }));
+          });
+        });
 
-        it(`creates "is false" filter`, async () =>
-          testPropertyFilter({
+        it(`creates "is false" filter`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [{ name: "p", isPrimitive: () => true } as EC.PrimitiveProperty],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: { sourceAlias: "x", propertyName: "p", operator: "is-false", propertyTypeName: "boolean" },
             expectedECSql: `NOT [x].[p]`,
-          }));
+          });
+        });
 
-        it(`creates "is null" filter`, async () =>
-          testPropertyFilter({
+        it(`creates "is null" filter`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [{ name: "p", isPrimitive: () => true } as EC.PrimitiveProperty],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: { sourceAlias: "x", propertyName: "p", operator: "is-null", propertyTypeName: "boolean" },
             expectedECSql: `[x].[p] IS NULL`,
-          }));
+          });
+        });
 
-        it(`creates "is not null" filter`, async () =>
-          testPropertyFilter({
+        it(`creates "is not null" filter`, async () => {
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
+            properties: [{ name: "p", isPrimitive: () => true } as EC.PrimitiveProperty],
+          });
+          await testPropertyFilter({
+            className: fullName,
             classAlias: "x",
             rule: { sourceAlias: "x", propertyName: "p", operator: "is-not-null", propertyTypeName: "boolean" },
             expectedECSql: `[x].[p] IS NOT NULL`,
-          }));
+          });
+        });
 
         it(`creates navigation property filter`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [{ name: "p", isNavigation: () => true } as EC.NavigationProperty],
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -583,12 +696,13 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates string enumeration property filter`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as EC.EnumerationProperty],
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -602,12 +716,13 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates numeric enumeration property filter`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as EC.EnumerationProperty],
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -621,8 +736,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates point2d property filter`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -634,7 +750,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -649,7 +765,7 @@ describe("createNodesQueryClauseFactory", () => {
             `,
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -668,8 +784,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates point3d property filter`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -681,7 +798,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -697,7 +814,7 @@ describe("createNodesQueryClauseFactory", () => {
             `,
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -718,8 +835,9 @@ describe("createNodesQueryClauseFactory", () => {
 
         it(`creates DateTime property filter`, async () => {
           const now = new Date();
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -731,7 +849,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -745,8 +863,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates floating point property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -758,7 +877,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -790,8 +909,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates string property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -803,7 +923,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: string, expectedECSql: string) => ({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -823,8 +943,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates boolean property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -836,7 +957,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: boolean, expectedECSql: string) => ({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -852,8 +973,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates integer property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -865,7 +987,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -885,8 +1007,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates long property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -898,7 +1021,7 @@ describe("createNodesQueryClauseFactory", () => {
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
-            skipClassStub: true,
+            className: fullName,
             classAlias: "x",
             rule: {
               sourceAlias: "x",
@@ -919,7 +1042,7 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`creates related property filters`, async () => {
-          const contentClass = imodelAccess.stubEntityClass(testClassProps);
+          const contentClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
           const propertyClass = imodelAccess.stubEntityClass({
             schemaName: "x",
             className: "target",
@@ -936,11 +1059,21 @@ describe("createNodesQueryClauseFactory", () => {
           const relationship = imodelAccess.stubRelationshipClass({
             schemaName: "x",
             className: "rel",
-            source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass) },
-            target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass) },
+            source: {
+              polymorphic: false,
+              abstractConstraint: contentClass,
+              constraintClasses: [contentClass],
+              multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            },
+            target: {
+              polymorphic: false,
+              abstractConstraint: propertyClass,
+              constraintClasses: [propertyClass],
+              multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            },
           });
           await testPropertyFilter({
-            skipClassStub: true,
+            className: contentClass.fullName,
             classAlias: "x",
             relatedInstances: [
               {
@@ -967,7 +1100,7 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`throws when related property filter uses non-existing class alias`, async () => {
-          const contentClass = imodelAccess.stubEntityClass(testClassProps);
+          const contentClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
           const propertyClass = imodelAccess.stubEntityClass({
             schemaName: "x",
             className: "target",
@@ -984,8 +1117,18 @@ describe("createNodesQueryClauseFactory", () => {
           const relationship = imodelAccess.stubRelationshipClass({
             schemaName: "x",
             className: "rel",
-            source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass) },
-            target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass) },
+            source: {
+              polymorphic: false,
+              abstractConstraint: contentClass,
+              constraintClasses: [contentClass],
+              multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            },
+            target: {
+              polymorphic: false,
+              abstractConstraint: propertyClass,
+              constraintClasses: [propertyClass],
+              multiplicity: { lowerLimit: 0, upperLimit: 1 },
+            },
           });
           await expect(
             factory.createFilterClauses({
@@ -1017,29 +1160,26 @@ describe("createNodesQueryClauseFactory", () => {
           ).rejects.toBeDefined();
         });
 
-        it(`throws when property class doesn't have the property`, async () => {
-          const contentClass = imodelAccess.stubEntityClass(testClassProps);
-          await expect(
-            factory.createFilterClauses({
-              filter: {
-                propertyClassNames: [contentClass.fullName],
-                relatedInstances: [],
-                rules: {
-                  sourceAlias: "x",
-                  propertyName: "p",
-                  operator: "is-equal",
-                  propertyTypeName: "int",
-                  value: { rawValue: 123, displayValue: "123" },
-                },
-              },
-              contentClass: { fullName: contentClass.fullName, alias: "x" },
-            }),
-          ).rejects.toBeDefined();
+        it(`disables query when property class doesn't have the property`, async () => {
+          const contentClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+          await testPropertyFilter({
+            className: contentClass.fullName,
+            classAlias: "x",
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "is-equal",
+              propertyTypeName: "int",
+              value: { rawValue: 123, displayValue: "123" },
+            },
+            expectedECSql: `FALSE`,
+          });
         });
 
         it(`throws on struct property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -1052,7 +1192,7 @@ describe("createNodesQueryClauseFactory", () => {
           });
           await expect(
             testPropertyFilter({
-              skipClassStub: true,
+              className: fullName,
               classAlias: "x",
               rule: {
                 sourceAlias: "x",
@@ -1067,8 +1207,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`throws on array property filters`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -1081,7 +1222,7 @@ describe("createNodesQueryClauseFactory", () => {
           });
           await expect(
             testPropertyFilter({
-              skipClassStub: true,
+              className: fullName,
               classAlias: "x",
               rule: {
                 sourceAlias: "x",
@@ -1096,8 +1237,9 @@ describe("createNodesQueryClauseFactory", () => {
         });
 
         it(`throws on binary rules without value`, async () => {
-          imodelAccess.stubEntityClass({
-            ...testClassProps,
+          const { fullName } = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "c",
             properties: [
               {
                 name: "p",
@@ -1110,7 +1252,7 @@ describe("createNodesQueryClauseFactory", () => {
           });
           await expect(
             testPropertyFilter({
-              skipClassStub: true,
+              className: fullName,
               classAlias: "x",
               rule: {
                 sourceAlias: "x",
@@ -1128,15 +1270,23 @@ describe("createNodesQueryClauseFactory", () => {
 
     describe("join", () => {
       it("creates joins for single-step related instance path", async () => {
-        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
+        const targetClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "t" });
         imodelAccess.stubRelationshipClass({
           schemaName: "x",
           className: "r",
           direction: "Forward",
-          source: { abstractConstraint: Promise.resolve(sourceClass), polymorphic: false },
-          target: {
-            abstractConstraint: Promise.resolve(imodelAccess.stubEntityClass({ schemaName: "x", className: "t" })),
+          source: {
+            abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
             polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
+          target: {
+            abstractConstraint: targetClass,
+            constraintClasses: [targetClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
           },
         });
         const filter: GenericInstanceFilter = {
@@ -1169,22 +1319,42 @@ describe("createNodesQueryClauseFactory", () => {
       });
 
       it("creates joins for multi-step related instance path", async () => {
-        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
         const intermediateClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "t1" });
         const targetClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "t2" });
         imodelAccess.stubRelationshipClass({
           schemaName: "x",
           className: "r1",
           direction: "Forward",
-          source: { abstractConstraint: Promise.resolve(sourceClass), polymorphic: false },
-          target: { abstractConstraint: Promise.resolve(intermediateClass), polymorphic: false },
+          source: {
+            abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
+          target: {
+            abstractConstraint: intermediateClass,
+            constraintClasses: [intermediateClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
         });
         imodelAccess.stubRelationshipClass({
           schemaName: "x",
           className: "r2",
           direction: "Forward",
-          source: { abstractConstraint: Promise.resolve(intermediateClass), polymorphic: false },
-          target: { abstractConstraint: Promise.resolve(targetClass), polymorphic: false },
+          source: {
+            abstractConstraint: intermediateClass,
+            constraintClasses: [intermediateClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
+          target: {
+            abstractConstraint: targetClass,
+            constraintClasses: [targetClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
         });
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.y"],
@@ -1224,22 +1394,42 @@ describe("createNodesQueryClauseFactory", () => {
       });
 
       it("creates joins for multiple related instance paths", async () => {
-        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
         const targetClass1 = imodelAccess.stubEntityClass({ schemaName: "x", className: "t1" });
         const targetClass2 = imodelAccess.stubEntityClass({ schemaName: "x", className: "t2" });
         imodelAccess.stubRelationshipClass({
           schemaName: "x",
           className: "r1",
           direction: "Forward",
-          source: { abstractConstraint: Promise.resolve(sourceClass), polymorphic: false },
-          target: { abstractConstraint: Promise.resolve(targetClass1), polymorphic: false },
+          source: {
+            abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
+          target: {
+            abstractConstraint: targetClass1,
+            constraintClasses: [targetClass1],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
         });
         imodelAccess.stubRelationshipClass({
           schemaName: "x",
           className: "r2",
           direction: "Forward",
-          source: { abstractConstraint: Promise.resolve(sourceClass), polymorphic: false },
-          target: { abstractConstraint: Promise.resolve(targetClass2), polymorphic: false },
+          source: {
+            abstractConstraint: sourceClass,
+            constraintClasses: [sourceClass],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
+          target: {
+            abstractConstraint: targetClass2,
+            constraintClasses: [targetClass2],
+            polymorphic: false,
+            multiplicity: { lowerLimit: 0, upperLimit: 1 },
+          },
         });
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.y"],
@@ -1281,6 +1471,33 @@ describe("createNodesQueryClauseFactory", () => {
             INNER JOIN [x].[t2] [b] ON [b].[ECInstanceId] = [rel_1_x_r2_0].[SourceECInstanceId]
           `),
         );
+      });
+
+      it("disables query when related instance path contains classes not in the imodel", async () => {
+        const sourceClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
+        const filter: GenericInstanceFilter = {
+          propertyClassNames: [sourceClass.fullName],
+          relatedInstances: [
+            {
+              path: [
+                {
+                  sourceClassName: sourceClass.fullName,
+                  relationshipClassName: "x.r",
+                  targetClassName: "x.t",
+                  isForwardRelationship: true,
+                },
+              ],
+              alias: "a",
+            },
+          ],
+          rules: { operator: "and", rules: [] },
+        };
+        expect(
+          await factory.createFilterClauses({
+            filter,
+            contentClass: { fullName: sourceClass.fullName, alias: "content-class" },
+          }),
+        ).toEqual({ from: sourceClass.fullName, joins: "", where: "FALSE" });
       });
     });
   });

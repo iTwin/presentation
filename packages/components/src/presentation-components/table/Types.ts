@@ -6,8 +6,8 @@
  * @module Table
  */
 
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { Field } from "@itwin/presentation-common";
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { Field } from "@itwin/presentation-common";
 
 /**
  * Data structure that defines table column.

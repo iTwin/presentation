@@ -3,26 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PhysicalPartition, Subject } from "@itwin/core-backend";
-import { IModel } from "@itwin/core-common";
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createIModelAccess, createProvider } from "../Utils.js";
+import { createProvider } from "../Utils.js";
+
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Class grouping", () => {
-    let subjectClassName: string;
-    let physicalPartitionClassName: string;
-
     beforeAll(async () => {
       await initialize();
-      subjectClassName = Subject.classFullName.replace(":", ".");
-      physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
 
     afterAll(async () => {
@@ -30,43 +23,51 @@ describe("Hierarchies", () => {
     });
 
     it("creates different groups for different classes", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: IModel.rootSubjectId });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "4", parentId: IModel.rootSubjectId });
-        return { childSubject1, childPartition2, childSubject3, childPartition4 };
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="B">
+              <ECProperty propertyName="CodeValue" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="X">
+              <BaseClass>B</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="Y">
+              <BaseClass>B</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { codeValue: "1" });
+        const y2 = builder.insertInstance(s.items.Y.fullName, { codeValue: "2" });
+        const x3 = builder.insertInstance(s.items.X.fullName, { codeValue: "3" });
+        const y4 = builder.insertInstance(s.items.Y.fullName, { codeValue: "4" });
+        return { schema: s, x1, y2, x3, y4 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: schema.items.B.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
                       grouping: { byClass: true },
                     })}
                     FROM (
-                      SELECT ECClassId, ECInstanceId, CodeValue, Parent
-                      FROM ${subjectClassName}
+                      SELECT ECClassId, ECInstanceId, CodeValue
+                      FROM ${schema.items.X.fullName}
                       UNION ALL
-                      SELECT ECClassId, ECInstanceId, CodeValue, Parent
-                      FROM ${physicalPartitionClassName}
+                      SELECT ECClassId, ECInstanceId, CodeValue
+                      FROM ${schema.items.Y.fullName}
                     ) AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
                   `,
                 },
               },
@@ -77,18 +78,20 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ ecdb, hierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
+            className: schema.items.X.fullName,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition4], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x3], children: false }),
             ],
           }),
           NodeValidators.createForClassGroupingNode({
+            className: schema.items.Y.fullName,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.y2], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.y4], children: false }),
             ],
           }),
         ],

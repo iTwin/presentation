@@ -6,6 +6,8 @@
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 
+import type { EC } from "@itwin/presentation-shared";
+
 /**
  * An instance key that may be associated with specific iModel.
  * @public
@@ -59,7 +61,7 @@ export interface ClassGroupingNodeKey {
   type: "class-grouping";
 
   /** Full name of the ECClass that this grouping node is grouping by. */
-  className: string;
+  className: EC.FullClassNameDotNotation;
 }
 
 /**
@@ -89,7 +91,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:other";
   /** Identifiers of properties whose values are grouped under this node. */
-  properties: Array<{ className: string; propertyName: string }>;
+  properties: Array<{ className: EC.FullClassNameDotNotation; propertyName: string }>;
 }
 
 /**
@@ -104,7 +106,7 @@ export interface PropertyValueGroupingNodeKey {
   propertyName: string;
 
   /** Full name of the ECClass containing the property. */
-  propertyClassName: string;
+  propertyClassName: EC.FullClassNameDotNotation;
 
   /** Formatted property value that this node is grouping by. */
   formattedPropertyValue: string;
@@ -122,7 +124,7 @@ export interface PropertyValueRangeGroupingNodeKey {
   propertyName: string;
 
   /** Full name of the ECClass containing the property. */
-  propertyClassName: string;
+  propertyClassName: EC.FullClassNameDotNotation;
 
   /** Defines the start of the values' range that this node is grouping by. */
   fromValue: number;
@@ -242,8 +244,8 @@ export namespace HierarchyNodeKey {
             return instanceKeyCompareResult;
           }
           const imodelKeyCompareResult = compareStringsOrUndefined(
-            lhs.instanceKeys[0].imodelKey,
-            rhs.instanceKeys[0].imodelKey,
+            lhs.instanceKeys[i].imodelKey,
+            rhs.instanceKeys[i].imodelKey,
           );
           if (imodelKeyCompareResult !== 0) {
             return imodelKeyCompareResult;

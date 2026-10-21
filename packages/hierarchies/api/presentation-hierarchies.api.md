@@ -4,22 +4,25 @@
 
 ```ts
 
-import { ConcatenatedValue } from '@itwin/presentation-shared';
-import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
-import { ECSchemaProvider } from '@itwin/presentation-shared';
-import { ECSqlQueryDef } from '@itwin/presentation-shared';
-import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
-import { Event as Event_2 } from '@itwin/presentation-shared';
+import type { ConcatenatedValue } from '@itwin/presentation-shared';
+import type { DeepReadonly } from '@itwin/presentation-shared';
+import type { EC } from '@itwin/presentation-shared';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
+import type { ECSqlQueryDef } from '@itwin/presentation-shared';
+import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
+import type { EventListener as EventListener_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
-import { Id64String } from '@itwin/core-bentley';
-import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
-import { ILogger } from '@itwin/presentation-shared';
+import type { Id64String } from '@itwin/core-bentley';
+import type { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
+import type { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
-import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
-import { OmitOverUnion } from '@itwin/presentation-shared';
-import { PrimitiveValue } from '@itwin/presentation-shared';
-import { Props } from '@itwin/presentation-shared';
+import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import type { OmitOverUnion } from '@itwin/presentation-shared';
+import type { PrimitiveValue } from '@itwin/presentation-shared';
+import type { Props } from '@itwin/presentation-shared';
+import type { RaisableEvent } from '@itwin/presentation-shared';
 
 // @public
 interface BaseHierarchyNode {
@@ -28,46 +31,49 @@ interface BaseHierarchyNode {
     extendedData?: {
         [key: string]: any;
     };
-    filtering?: HierarchyNodeFilteringProps;
     label: string;
     parentKeys: HierarchyNodeKey[];
 }
 
 // @public
 export interface ClassGroupingNodeKey {
-    className: string;
+    className: EC.FullClassNameDotNotation;
     type: "class-grouping";
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
-    hasFilter: boolean;
-    hasFilterTargetAncestor: boolean;
-    getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
-    createChildNodeProps: (props: {
-        nodeKey: InstancesNodeKey | GenericNodeKey;
-    } | {
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
-    createChildNodePropsAsync: (props: {
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
+export function createHierarchyProvider<TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">>(partialFactory: (props: {
+    hierarchyChanged: RaisableEvent<EventListener_2<HierarchyProvider["hierarchyChanged"]>>;
+}) => TPartialProvider): TPartialProvider & HierarchyProvider;
+
+// @public
+export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchTree[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {
+    hasSearch: boolean;
+    hasSearchTargetAncestor: boolean;
+    getChildNodeSearchIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
+    createChildNodeProps: {
+        (props: {
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+        }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+        (props: {
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+        }): Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+        (props: {
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+        }): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
+    };
 };
 
 // @public
-export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
-    dispose: () => void;
-    [Symbol.dispose]: () => void;
-};
+export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
 // @public
-export function createNodesQueryClauseFactory(props: {
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-    instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
-}): NodesQueryClauseFactory;
+export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
 export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition;
@@ -80,7 +86,7 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 };
 
 // @public
-export interface DefineHierarchyLevelProps {
+export interface DefineHierarchyLevelProps extends Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> {
     instanceFilter?: GenericInstanceFilter;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
@@ -90,7 +96,7 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
     parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
         key: InstancesNodeKey;
     };
-    parentNodeClassName: string;
+    parentNodeClassName: EC.FullClassNameDotNotation;
     parentNodeInstanceIds: Id64String[];
 };
 
@@ -100,7 +106,7 @@ export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "par
 // @public
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
     // (undocumented)
-    fullClassNames: string[] | ECSqlValueSelector[];
+    fullClassNames: EC.FullClassNameDotNotation[] | ECSqlValueSelector[];
 }
 
 // @public
@@ -150,7 +156,7 @@ type ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSql
 interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
     createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
     createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
-    propertiesClassName: string;
+    propertiesClassName: EC.FullClassNameDotNotation;
     propertyGroups: ECSqlSelectClausePropertyGroup[];
 }
 
@@ -172,38 +178,6 @@ interface ECSqlSelectClausePropertyValueRange {
 interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
-}
-
-// @public @deprecated
-export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
-    filteredNodePaths: HierarchyFilteringPath[];
-    hasFilterTargetAncestor: boolean;
-} | undefined;
-
-// @public (undocumented)
-interface FilteringPathAutoExpandDepthInHierarchy {
-    depthInHierarchy: number;
-}
-
-// @public (undocumented)
-interface FilteringPathAutoExpandDepthInPath {
-    depthInPath: number;
-}
-
-// @public @deprecated (undocumented)
-interface FilteringPathAutoExpandOption {
-    // @deprecated
-    depth: number;
-    // @deprecated
-    includeGroupingNodes?: boolean;
-}
-
-// @public @deprecated (undocumented)
-interface FilterTargetGroupingNodeInfo {
-    // @deprecated
-    depth: number;
-    // @deprecated
-    key: GroupingNodeKey;
 }
 
 // @public
@@ -249,11 +223,11 @@ export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | Prop
 
 // @public
 interface HierarchyChangedEventArgs {
-    filterChange?: {
-        newFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
-    };
     formatterChange?: {
         newFormatter: IPrimitiveValueFormatter | undefined;
+    };
+    searchChange?: {
+        newSearch: Props<HierarchyProvider["setHierarchySearch"]>;
     };
 }
 
@@ -269,23 +243,6 @@ export interface HierarchyDefinition {
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 // @public
-export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
-    path: HierarchyNodeIdentifiersPath;
-    options?: HierarchyFilteringPathOptions;
-};
-
-// @public (undocumented)
-export namespace HierarchyFilteringPath {
-    export function mergeOptions(lhs: HierarchyFilteringPathOptions | undefined, rhs: HierarchyFilteringPathOptions | undefined): HierarchyFilteringPathOptions | undefined;
-    export function normalize(source: HierarchyFilteringPath): Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>;
-}
-
-// @public (undocumented)
-export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
-}
-
-// @public
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @public
@@ -293,6 +250,7 @@ export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 // @public (undocumented)
 export namespace HierarchyNode {
+    export function getGroupingNodeLevel(groupingNode: Pick<GroupingHierarchyNode, "key" | "parentKeys">): number;
     export function isClassGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -354,29 +312,7 @@ type HierarchyNodeAutoExpandProp = "single-child" | "always";
 
 // @public
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
-    fullClassNames: string[];
-}
-
-// @public (undocumented)
-type HierarchyNodeFilteringProps = {
-    hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-} & ({
-    isFilterTarget?: false;
-} | {
-    isFilterTarget: true;
-    filterTargetOptions?: HierarchyFilteringPathOptions;
-});
-
-// @public (undocumented)
-namespace HierarchyNodeFilteringProps {
-    // @deprecated (undocumented)
-    function create(props: {
-        hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-        isFilterTarget?: boolean;
-        filterTargetOptions?: HierarchyFilteringPathOptions;
-    }): HierarchyNodeFilteringProps | undefined;
+    fullClassNames: EC.FullClassNameDotNotation[];
 }
 
 // @public
@@ -403,6 +339,7 @@ export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 // @public (undocumented)
 export namespace HierarchyNodeIdentifier {
+    export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number;
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
     export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
     export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey;
@@ -461,7 +398,7 @@ interface HierarchyNodeProcessingParamsBase {
 interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
     createGroupForOutOfRangeValues?: boolean;
     createGroupForUnspecifiedValues?: boolean;
-    propertiesClassName: string;
+    propertiesClassName: EC.FullClassNameDotNotation;
     propertyGroups: HierarchyNodePropertyGroup[];
 }
 
@@ -490,19 +427,108 @@ export namespace HierarchyNodesDefinition {
     export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition;
 }
 
+// @public (undocumented)
+interface HierarchyNodeSearchProps {
+    childrenTargetPaths?: HierarchySearchTree[];
+    hasSearchTargetAncestor?: boolean;
+    isSearchTarget?: boolean;
+    options?: HierarchySearchTree["options"];
+}
+
 // @public
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    readonly hierarchyChanged: Event_2<(args?: HierarchyChangedEventArgs) => void>;
+    readonly hierarchyChanged: Event_2<(args: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
-    setHierarchyFilter(props: {
-        paths: HierarchyFilteringPath[];
+    setHierarchySearch(props: {
+        paths: HierarchySearchTree[];
     } | undefined): void;
 }
 
+// @public
+export type HierarchySearchPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
+    options?: HierarchySearchPathOptions;
+};
+
 // @public (undocumented)
-type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector & {
+export namespace HierarchySearchPath {
+    export function mergeOptions(lhs: HierarchySearchPathOptions | undefined, rhs: HierarchySearchPathOptions | undefined): HierarchySearchPathOptions | undefined;
+    export function normalize(source: DeepReadonly<HierarchySearchPath>): DeepReadonly<Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath>>;
+}
+
+// @public (undocumented)
+export interface HierarchySearchPathOptions {
+    autoExpand?: boolean;
+    reveal?: boolean | {
+        depthInPath: number;
+    } | {
+        groupingLevel: number;
+    };
+}
+
+// @public
+export interface HierarchySearchTree {
+    children?: HierarchySearchTree[];
+    identifier: HierarchyNodeIdentifier;
+    isTarget?: boolean;
+    options?: {
+        autoExpand?: boolean | {
+            groupingLevel: number;
+        };
+    };
+}
+
+// @public (undocumented)
+export namespace HierarchySearchTree {
+    export function createBuilder<TAcceptHandlerExtras extends Record<string, unknown> = Record<string, unknown>>(): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
+    export function createFromPathsList(paths: Iterable<DeepReadonly<HierarchySearchPath>>): Promise<HierarchySearchTree[]>;
+    export interface HierarchySearchTreeBuilder<TAcceptHandlerExtras extends Record<string, unknown>> {
+        accept(props: HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras>): HierarchySearchTreeBuilder<TAcceptHandlerExtras>;
+        getTree(props?: HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras>): HierarchySearchTree[];
+    }
+    // (undocumented)
+    export interface HierarchySearchTreeBuilderAcceptHandler<TExtras extends Record<string, unknown>> {
+        onEntryHandled?: (props: {
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+            treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>;
+            inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+        }) => void;
+        onNewEntry?: (props: {
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras>>;
+            inputEntry: HierarchySearchTreeBuilderAcceptHandlerTreeInput;
+        }) => boolean;
+    }
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TExtras extends Record<string, unknown>> = Readonly<Pick<HierarchySearchTree, "identifier" | "options"> & {
+        extras: TExtras;
+    }> & Pick<HierarchySearchTree, "isTarget">;
+    // (undocumented)
+    export type HierarchySearchTreeBuilderAcceptHandlerTreeInput = Readonly<Pick<HierarchySearchTree, "identifier" | "isTarget" | "options"> & {
+        hasChildren: boolean;
+    }>;
+    export type HierarchySearchTreeBuilderAcceptProps<TAcceptHandlerExtras extends Record<string, unknown>> = ({
+        path: DeepReadonly<HierarchySearchPath>;
+    } | {
+        tree: DeepReadonly<HierarchySearchTree>;
+    }) & {
+        handler?: HierarchySearchTreeBuilderAcceptHandler<TAcceptHandlerExtras>;
+    };
+    export interface HierarchySearchTreeBuilderFinalizeTreeProps<TAcceptHandlerExtras extends Record<string, unknown>> {
+        processEntry?: (props: {
+            treeEntry: HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>;
+            parentEntries: Array<HierarchySearchTreeBuilderAcceptHandlerTreeEntry<TAcceptHandlerExtras>>;
+        }) => (Omit<HierarchySearchTree, "children"> & {
+            extras: TAcceptHandlerExtras;
+        }) | undefined;
+    }
+    export function mergeOptions(lhs: HierarchySearchTree["options"] | undefined, rhs: HierarchySearchTree["options"] | undefined): HierarchySearchTree["options"] | undefined;
+    export {};
+}
+
+// @public (undocumented)
+type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & {
     imodelKey: string;
 };
 
@@ -517,20 +543,21 @@ interface IModelHierarchyProviderLocalizedStrings {
 
 // @public
 interface IModelHierarchyProviderProps {
-    filtering?: {
-        paths: HierarchyFilteringPath[];
-    };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: HierarchyDefinition;
     imodelAccess: IModelAccess;
     imodelChanged?: Event_2<() => void>;
+    instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
     localizedStrings?: Partial<IModelHierarchyProviderLocalizedStrings>;
     queryCacheSize?: number;
     queryConcurrency?: number;
+    search?: {
+        paths: HierarchySearchTree[];
+    };
 }
 
 // @public
-interface IModelInstanceKey extends InstanceKey {
+export interface IModelInstanceKey extends InstanceKey {
     // (undocumented)
     imodelKey?: string;
 }
@@ -543,7 +570,7 @@ interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingP
 
 // @public
 interface InstanceNodesQueryDefinition {
-    fullClassName: string;
+    fullClassName: EC.FullClassNameDotNotation;
     query: ECSqlQueryDef;
 }
 
@@ -551,7 +578,7 @@ interface InstanceNodesQueryDefinition {
 interface InstancesNodeChildHierarchyLevelDefinition {
     definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
     onlyIfNotHandled?: boolean;
-    parentInstancesNodePredicate: string | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
+    parentInstancesNodePredicate: EC.FullClassNameDotNotation | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
 }
 
 // @public
@@ -575,40 +602,47 @@ export interface LimitingECSqlQueryExecutor {
 }
 
 // @public
+interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged" | "instanceLabelSelectClauseFactory" | "hierarchyDefinition"> {
+    getHierarchyDefinition: (props: {
+        imodelAccess: IModelAccess;
+    }) => HierarchyDefinition;
+    imodels: Array<{
+        imodelAccess: IModelAccess;
+        imodelChanged?: Event_2<() => void>;
+        instanceLabelSelectClauseFactory?: IInstanceLabelSelectClauseFactory;
+    }>;
+}
+
+// @public
 interface MergeHierarchyProvidersProps {
     providers: HierarchyProvider[];
 }
 
 // @public
 export function mergeProviders(input: MergeHierarchyProvidersProps): HierarchyProvider & {
-    dispose: () => void;
     [Symbol.dispose]: () => void;
 };
 
 // @public
-export type NodeParser = (row: {
-    [columnName: string]: any;
-}, parentNode?: HierarchyDefinitionParentNode) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+export type NodeParser = (props: {
+    row: {
+        [columnName: string]: any;
+    };
+    parentNode?: HierarchyDefinitionParentNode;
+    imodelKey: string;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (props: {
+    node: ProcessedHierarchyNode;
+    parentNode?: ParentHierarchyNode;
+}) => Promise<ProcessedHierarchyNode>;
 
 // @public
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
-
-// @public
-export enum NodeSelectClauseColumnNames {
-    AutoExpand = "AutoExpand",
-    DisplayLabel = "DisplayLabel",
-    ECInstanceId = "ECInstanceId",
-    ExtendedData = "ExtendedData",
-    FullClassName = "FullClassName",
-    Grouping = "Grouping",
-    HasChildren = "HasChildren",
-    HideIfNoChildren = "HideIfNoChildren",
-    HideNodeInHierarchy = "HideNodeInHierarchy",
-    SupportsFiltering = "SupportsFiltering"
-}
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+    node: TNode;
+    parentNode?: ParentHierarchyNode;
+}) => Promise<TNode | undefined>;
 
 // @public
 interface NodeSelectClauseProps {
@@ -624,26 +658,27 @@ interface NodeSelectClauseProps {
     };
     // (undocumented)
     grouping?: ECSqlSelectClauseGroupingParams;
-    // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideIfNoChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideNodeInHierarchy?: boolean | ECSqlValueSelector;
     // (undocumented)
-    nodeLabel: string | ECSqlValueSelector;
+    nodeLabel: string | ECSqlValueSelector | {
+        of: Props<IInstanceLabelSelectClauseFactory["createSelectClause"]>;
+    };
     // (undocumented)
     supportsFiltering?: boolean | ECSqlValueSelector;
 }
 
 // @public
-export interface NodesQueryClauseFactory {
+interface NodesQueryClauseFactory {
     createFilterClauses(props: {
         contentClass: {
-            fullName: string;
+            fullName: EC.FullClassNameDotNotation;
             alias: string;
         };
-        filter: GenericInstanceFilter | undefined;
+        filter?: GenericInstanceFilter;
     }): Promise<{
         from: string;
         where: string;
@@ -655,6 +690,7 @@ export interface NodesQueryClauseFactory {
 // @public
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
     key: GenericNodeKey | InstancesNodeKey;
+    search?: HierarchyNodeSearchProps;
     supportsFiltering?: boolean;
 }
 
@@ -663,11 +699,11 @@ type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children
 
 // @public
 interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {
-    classHierarchyInspector: ECClassHierarchyInspector;
     hierarchy: {
         rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
         childNodes: PredicateBasedHierarchyLevelDefinition[];
     };
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 }
 
 // @public
@@ -708,7 +744,7 @@ export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | Proper
 // @public
 export interface PropertyOtherValuesGroupingNodeKey {
     properties: Array<{
-        className: string;
+        className: EC.FullClassNameDotNotation;
         propertyName: string;
     }>;
     type: "property-grouping:other";
@@ -717,7 +753,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
 // @public
 export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
-    propertyClassName: string;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     type: "property-grouping:value";
 }
@@ -725,7 +761,7 @@ export interface PropertyValueGroupingNodeKey {
 // @public
 export interface PropertyValueRangeGroupingNodeKey {
     fromValue: number;
-    propertyClassName: string;
+    propertyClassName: EC.FullClassNameDotNotation;
     propertyName: string;
     toValue: number;
     type: "property-grouping:range";

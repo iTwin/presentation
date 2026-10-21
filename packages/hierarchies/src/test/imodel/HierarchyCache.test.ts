@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
 import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache.js";
 import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils.js";
+
+import type { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
 
 describe("HierarchyCache", () => {
   it("returns `undefined` when cache is empty", () => {

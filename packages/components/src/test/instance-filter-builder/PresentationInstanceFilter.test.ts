@@ -4,10 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
-import { GenericInstanceFilter } from "@itwin/core-common";
-import { Field } from "@itwin/presentation-common";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils.js";
@@ -18,6 +15,11 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
+
+import type { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type { Field } from "@itwin/presentation-common";
 
 describe("PresentationInstanceFilter", () => {
   const category = createTestCategoryDescription({ name: "root", label: "Root" });

@@ -10,28 +10,18 @@ import "../common/DisposePolyfill.js";
 
 import * as mm from "micro-memoize";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Primitives,
-  PrimitiveValue,
-  PropertyDescription,
-  PropertyRecord,
-  PropertyValueFormat,
-} from "@itwin/appui-abstract";
-import { Guid, GuidString } from "@itwin/core-bentley";
-import { TranslationOptions } from "@itwin/core-common";
-import {
-  Descriptor,
-  Field,
-  KeySet,
-  LabelCompositeValue,
-  LabelDefinition,
-  parseCombinedFieldNames,
-  Ruleset,
-  Value,
-} from "@itwin/presentation-common";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { Guid } from "@itwin/core-bentley";
+import { KeySet, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { Selectables } from "@itwin/unified-selection";
-import { LOCALIZATION_NAMESPACE, LocalizationKey } from "./LocalizedStrings.js";
+import { LOCALIZATION_NAMESPACE } from "./LocalizedStrings.js";
+
+import type { Primitives, PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
+import type { GuidString } from "@itwin/core-bentley";
+import type { TranslationOptions } from "@itwin/core-common";
+import type { Descriptor, Field, LabelCompositeValue, Ruleset, Value } from "@itwin/presentation-common";
+import type { LocalizationKey } from "./LocalizedStrings.js";
 
 /**
  * Translate a string with the specified id from the `PresentationComponents`

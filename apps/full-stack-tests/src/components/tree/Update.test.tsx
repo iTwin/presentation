@@ -4,29 +4,29 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
-  AbstractTreeNodeLoader,
-  AbstractTreeNodeLoaderWithProvider,
-  DelayLoadedTreeNodeItem,
-  MutableTreeModelNode,
-  Subscription,
-  TreeModelNode,
-  TreeModelRootNode,
-  TreeModelSource,
+  type AbstractTreeNodeLoader,
+  type AbstractTreeNodeLoaderWithProvider,
+  type DelayLoadedTreeNodeItem,
+  type MutableTreeModelNode,
+  type Subscription,
+  type TreeModelNode,
+  type TreeModelRootNode,
+  type TreeModelSource,
   UiComponents,
 } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import {
-  IPresentationTreeDataProvider,
-  usePresentationTreeState,
-  UsePresentationTreeStateProps,
-} from "@itwin/presentation-components";
+import { IModelApp } from "@itwin/core-frontend";
+import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
+import { usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { renderHook, waitFor } from "../../RenderUtils.js";
-import { TestIModelConnection } from "../../TestIModelSetup.js";
+
+import type { PrimitiveValue } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
+import type { IPresentationTreeDataProvider, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

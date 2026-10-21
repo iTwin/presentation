@@ -6,8 +6,10 @@
  * @module InstancesFilter
  */
 
-import { Id64, Id64String } from "@itwin/core-bentley";
-import { SchemaView } from "@itwin/ecschema-metadata";
+import { Id64 } from "@itwin/core-bentley";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { SchemaView } from "@itwin/ecschema-metadata";
 
 /** @internal */
 export function hasBaseClass(derivedClass: SchemaView.Class, expectedBase: SchemaView.Class | Id64String): boolean {

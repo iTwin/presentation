@@ -3,113 +3,40 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
+import { LOCALIZATION_NAMESPACE } from "./internal/LocalizedStrings.js";
 
-/**
- * Localized strings used in the components.
- * @public
- */
-export interface LocalizedStrings {
-  /**
-   * Message displayed when nodes are loading.
-   * Default value: `Loading...`.
-   */
-  loading: string;
-  /**
-   * Title for apply hierarchy filter button.
-   * Default value: `Apply filter`.
-   */
-  filterHierarchyLevel: string;
-  /**
-   * Title for clear hierarchy filter button.
-   * Default value: `Clear active filter`.
-   */
-  clearHierarchyLevelFilter: string;
-  /**
-   * Message displayed when no nodes matching filter are found.
-   * Default value: `No child nodes match current filter`.
-   */
-  noFilteredChildren: string;
-  /**
-   * Message displayed when result limit exceeds hierarchy size limit.
-   * Default value: `There are more items than allowed limit of {{limit}}.`.
-   */
-  resultLimitExceeded: string;
-  /**
-   * Message displayed when result limit exceeds hierarchy size limit and hierarchy filtering is enabled.
-   * Default value: `Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.`.
-   */
-  resultLimitExceededWithFiltering: string;
-  /**
-   * Message displayed when hierarchy size limit can be overridden.
-   * Default value: `<link>Increase the hierarchy level size limit to {{limit}}.</link>`.
-   */
-  increaseHierarchyLimit: string;
-  /**
-   * Message displayed when hierarchy size limit can be overridden and hierarchy filtering is enabled.
-   * Default value: `Or, <link>increase the hierarchy level size limit to {{limit}}.</link>`.
-   */
-  increaseHierarchyLimitWithFiltering: string;
-  /**
-   * Label for retry action.
-   * Default value: `Retry`.
-   */
-  retry: string;
-  /**
-   * Label for more actions button.
-   * Default value: `More`.
-   */
-  more: string;
-}
+import type { JSX, PropsWithChildren } from "react";
+import type { LocalizationKey } from "./internal/LocalizedStrings.js";
 
-/** @internal */
-export interface LocalizationContext {
-  localizedStrings: LocalizedStrings;
-}
+type TranslateFunc = (key: LocalizationKey) => string;
 
-const defaultLocalizedStrings: LocalizedStrings = {
-  loading: "Loading...",
-  filterHierarchyLevel: "Apply filter",
-  clearHierarchyLevelFilter: "Clear active filter",
-  noFilteredChildren: "No child nodes match current filter",
-  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-  resultLimitExceededWithFiltering:
-    "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
-  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
-  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
-  retry: "Retry",
-  more: "More",
-};
-
-const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });
+const localizationContext = createContext<TranslateFunc>((key) => key);
 
 /**
  * Properties for `LocalizationContextProvider`.
  * @public
  */
 interface LocalizationContextProviderProps {
-  /** Localized strings used in the components. */
-  localizedStrings?: Partial<LocalizedStrings>;
+  /** Localization object compatible with `@itwin/core-common` */
+  localization: { getLocalizedString: (key: string) => string };
 }
 
 /**
- * Context provider for localized strings used in the components.
+ * Context provider for localizing components.
  * @public
  */
 export function LocalizationContextProvider({
-  localizedStrings,
+  localization,
   children,
-}: PropsWithChildren<LocalizationContextProviderProps>) {
-  const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
-
-  useEffect(() => {
-    setState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
-  }, [localizedStrings]);
-
-  return <localizationContext.Provider value={state}>{children}</localizationContext.Provider>;
+}: PropsWithChildren<LocalizationContextProviderProps>): JSX.Element {
+  const translate = useMemo<TranslateFunc>(() => {
+    return (key: LocalizationKey) => localization.getLocalizedString(`${LOCALIZATION_NAMESPACE}:${key}`);
+  }, [localization]);
+  return <localizationContext.Provider value={translate}>{children}</localizationContext.Provider>;
 }
 
 /** @internal */
-export function useLocalizationContext() {
+export function useTranslation() {
   return useContext(localizationContext);
 }

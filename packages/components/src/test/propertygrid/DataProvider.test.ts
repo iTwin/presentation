@@ -3,42 +3,28 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyCategory } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import {
-  ArrayTypeDescription,
-  CategoryDescription,
   combineFieldNames,
   Content,
   ContentFlags,
-  DisplayValue,
-  Field,
   Item,
   KeySet,
   LabelDefinition,
-  PropertiesField,
   PropertyValueFormat,
   RelationshipMeaning,
-  StructFieldMemberDescription,
-  StructTypeDescription,
-  TypeDescription,
-  Value,
-  ValuesDictionary,
 } from "@itwin/presentation-common";
 import {
   FavoritePropertiesManager,
   FavoritePropertiesScope,
   Presentation,
   PresentationManager,
-  RulesetManager,
-  RulesetVariablesManager,
 } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
 import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
 import {
   DEFAULT_PROPERTY_GRID_RULESET,
@@ -55,6 +41,24 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createMocked } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
+import type { PropertyCategory } from "@itwin/components-react";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type {
+  ArrayTypeDescription,
+  CategoryDescription,
+  DisplayValue,
+  Field,
+  PropertiesField,
+  StructFieldMemberDescription,
+  StructTypeDescription,
+  TypeDescription,
+  Value,
+  ValuesDictionary,
+} from "@itwin/presentation-common";
+import type { RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
 
 /**
  * This is just a helper class to provide public access to
@@ -1444,6 +1448,7 @@ describe("PropertyDataProvider", () => {
             const record = createTestContentItem({ values, displayValues });
             provider.getContent = async () => new Content(descriptor, [record]);
             const data = await provider.getData();
+            expect(data.categories).toHaveLength(1);
             expect(data.records[data.categories[0].name]).toMatchObject([
               { property: { displayLabel: "b" }, value: { value: "some value" } },
             ]);

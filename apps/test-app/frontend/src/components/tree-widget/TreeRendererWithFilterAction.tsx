@@ -1,0 +1,143 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { forwardRef, memo, useCallback, useMemo } from "react";
+import {
+  ErrorItemRenderer,
+  StrataKitTreeRenderer,
+  TreeActionBase,
+  TreeErrorRenderer,
+  TreeNodeFilterAction,
+  TreeNodeRenameAction,
+} from "@itwin/presentation-hierarchies-react/stratakit";
+import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
+
+import addSvg from "@stratakit/icons/add.svg";
+
+import type { ComponentProps } from "react";
+import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type {
+  StrataKitTreeRendererAttributes,
+  TreeActionBaseAttributes,
+} from "@itwin/presentation-hierarchies-react/stratakit";
+
+/* eslint-disable no-console */
+
+type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
+
+export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttributes, TreeRendererProps>(
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  function TreeRendererWithFilterAction(props: TreeRendererProps, forwardedRef) {
+    const { getHierarchyLevelDetails, filterHierarchyLevel, ...treeProps } = props;
+    const nodesWithError = useMemo(() => {
+      return mapNodesHierarchy(treeProps.rootNodes, (node) => {
+        if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
+          return {
+            ...node,
+            errors: [
+              ...node.errors,
+              { id: `${node.id}-object-error`, type: "Generic" as const, message: "Object {{node}} is not available" },
+            ],
+          };
+        }
+        return node;
+      });
+    }, [treeProps.rootNodes]);
+
+    const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
+      ({ targetNode, selectedNodes }) => [
+        <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+        <TreeNodeFilterAction
+          key="filter"
+          node={targetNode}
+          onFilter={filterHierarchyLevel}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+        />,
+        <TreeNodeRenameAction key="rename" node={targetNode} />,
+      ],
+      [filterHierarchyLevel, getHierarchyLevelDetails],
+    );
+    const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(
+      ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
+      [],
+    );
+    const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
+      ({ targetNode, selectedNodes }) => [
+        <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+        <TreeNodeFilterAction
+          key="filter"
+          node={targetNode}
+          onFilter={filterHierarchyLevel}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+        />,
+        <TreeNodeRenameAction key="rename" node={targetNode} />,
+      ],
+      [filterHierarchyLevel, getHierarchyLevelDetails],
+    );
+
+    const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
+      return {
+        onLabelChanged: (newLabel: string) => {
+          // Handle label change
+          console.log(`Node label changed from ${node.label} to ${newLabel}`);
+        },
+        labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
+        validate: (newLabel: string) => {
+          return /^[A-Za-z0-9\-\_\[\] ]+$/.test(newLabel);
+        },
+      };
+    }, []);
+
+    return (
+      <StrataKitTreeRenderer
+        {...treeProps}
+        ref={forwardedRef}
+        rootNodes={nodesWithError}
+        getInlineActions={getInlineActions}
+        getMenuActions={getMenuActions}
+        getContextMenuActions={getContextMenuActions}
+        filterHierarchyLevel={filterHierarchyLevel}
+        getHierarchyLevelDetails={getHierarchyLevelDetails}
+        getEditingProps={getEditingProps}
+        errorRenderer={(errorProps) => {
+          return (
+            <TreeErrorRenderer
+              {...errorProps}
+              renderError={(errorItemProps) => <CustomErrorItemRenderer {...errorItemProps} />}
+            />
+          );
+        }}
+      />
+    );
+  },
+);
+
+type ErrorItemProps = ComponentProps<typeof ErrorItemRenderer>;
+function CustomErrorItemRenderer({ error, treeNode, ...rest }: ErrorItemProps) {
+  if (error.type === "Generic") {
+    return <ErrorRegion.Item message={error.message.replace("{{node}}", treeNode.label)} messageId={error.id} />;
+  }
+  return <ErrorItemRenderer error={error} treeNode={treeNode} {...rest} />;
+}
+
+function mapNodesHierarchy(nodes: TreeNode[], callback: (node: TreeNode) => TreeNode): TreeNode[] {
+  return nodes.map((node) => {
+    return { ...callback(node), children: node.children === true ? true : mapNodesHierarchy(node.children, callback) };
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-shadow
+const CustomAction = memo(function CustomAction({
+  node,
+  selectedNodes,
+  ...actionAttributes
+}: { node: TreeNode; selectedNodes: TreeNode[] } & TreeActionBaseAttributes) {
+  const handleClick = useCallback(() => {
+    console.log("Custom action clicked for node:", node);
+    console.log("Currently selected nodes:", selectedNodes);
+  }, [node, selectedNodes]);
+
+  return <TreeActionBase {...actionAttributes} label={"Custom action"} onClick={handleClick} icon={addSvg} />;
+});

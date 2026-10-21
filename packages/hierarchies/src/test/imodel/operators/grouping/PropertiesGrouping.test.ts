@@ -4,9 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
-import { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
+import { createDefaultValueFormatter } from "@itwin/presentation-shared";
 import * as propertiesGrouping from "../../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js";
 import {
   createIModelAccessStub,
@@ -15,6 +13,10 @@ import {
   createTestProcessedInstanceNode,
   testLocalizedStrings,
 } from "../../../Utils.js";
+
+import type { EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import type { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
 
 describe("PropertiesGrouping", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
@@ -486,18 +488,22 @@ describe("PropertiesGrouping", () => {
     [
       {
         testCase: "full class names don't match",
-        previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.other", propertyName: "PropertyName" }],
+        previousPropertiesGroupingInfo: [
+          { propertiesClassName: "TestSchema.other" as const, propertyName: "PropertyName" },
+        ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
         },
         expectedResult: false,
       },
       {
         testCase: "property names don't match",
-        previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Name", propertyName: "OtherName" }],
+        previousPropertiesGroupingInfo: [
+          { propertiesClassName: "TestSchema.Name" as const, propertyName: "OtherName" },
+        ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
         },
         expectedResult: false,
@@ -505,19 +511,21 @@ describe("PropertiesGrouping", () => {
       {
         testCase: "ranged properties don't match",
         previousPropertiesGroupingInfo: [
-          { propertiesClassName: "TestSchema.Name", propertyName: "PropertyName", isRange: true },
+          { propertiesClassName: "TestSchema.Name" as const, propertyName: "PropertyName", isRange: true },
         ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
         },
         expectedResult: false,
       },
       {
         testCase: "all properties match",
-        previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Name", propertyName: "PropertyName" }],
+        previousPropertiesGroupingInfo: [
+          { propertiesClassName: "TestSchema.Name" as const, propertyName: "PropertyName" },
+        ],
         nodesProperties: {
-          propertiesClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name" as const,
           propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
         },
         expectedResult: true,
@@ -675,9 +683,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
-
-        imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class", is: async () => false });
+        const ecClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [],
@@ -713,7 +719,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
-        imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class", is: async () => true });
+        imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyName: "Other" }],
@@ -779,7 +785,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -822,7 +827,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -885,7 +889,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -930,7 +933,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -994,7 +996,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1055,7 +1056,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1126,7 +1126,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1163,6 +1162,44 @@ describe("PropertiesGrouping", () => {
         });
       });
 
+      it("doesn't group nodes when configured class or property name casing differs", async () => {
+        const node = createTestProcessedInstanceNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+          processingParams: {
+            grouping: {
+              byProperties: {
+                // cspell:disable-next-line
+                propertiesClassName: "testschema.class",
+                // cspell:disable-next-line
+                propertyGroups: [{ propertyName: "propertyname", propertyValue: "PropertyValue" }],
+              },
+            },
+          },
+        });
+        const property = {
+          name: "PropertyName",
+          isPrimitive: () => true,
+          isNavigation: () => false,
+          primitiveType: "String",
+        } as unknown as EC.Property;
+        const ecClass = imodelAccess.stubEntityClass({
+          schemaName: "TestSchema",
+          className: "Class",
+          properties: [property],
+        });
+
+        expect(
+          await propertiesGrouping.createPropertyGroups(
+            [node],
+            [],
+            { ecClass, previousPropertiesGroupingInfo: [], propertyGroup: { propertyName: "PropertyName" } },
+            formatter,
+            testLocalizedStrings,
+            imodelAccess,
+          ),
+        ).toEqual({ groupingType: "property", grouped: [], ungrouped: [node] });
+      });
+
       it("creates different property value groups for nodes with different property values", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
@@ -1197,7 +1234,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1280,7 +1316,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1343,7 +1378,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1388,7 +1422,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1451,7 +1484,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1518,7 +1550,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1596,7 +1627,6 @@ describe("PropertiesGrouping", () => {
             ecClass: imodelAccess.stubEntityClass({
               schemaName: "TestSchema",
               className: "Class1",
-              is: async () => true,
               properties: [
                 { name: "PropertyName1", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property,
               ],
@@ -1636,7 +1666,6 @@ describe("PropertiesGrouping", () => {
               ecClass: imodelAccess.stubEntityClass({
                 schemaName: "TestSchema",
                 className: "Class2",
-                is: async () => true,
                 properties: [
                   {
                     name: "PropertyName2",
@@ -1687,7 +1716,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1753,7 +1781,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1839,7 +1866,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1925,7 +1951,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -1997,7 +2022,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
@@ -2092,7 +2116,6 @@ describe("PropertiesGrouping", () => {
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
-          is: async () => true,
           properties: [property],
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {

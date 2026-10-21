@@ -10,15 +10,17 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { EditorContainer, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatDefinition } from "@itwin/core-quantity";
 import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
-import { importSchema } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
+import { importSchema } from "../../SchemaUtils.js";
+
+import type { FormatDefinition } from "@itwin/core-quantity";
 
 describe("Property editors", () => {
   beforeAll(async () => {
@@ -37,32 +39,34 @@ describe("Property editors", () => {
   });
 
   it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
-      const mySchema = await importSchema(
-        testName,
-        builder,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECSchemaReference name="Units" version="01.00.09" alias="u" />
-          <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
-          <KindOfQuantity typeName="TestKOQ" displayLabel="Test KOQ" persistenceUnit="u:M" relativeError="0.001" presentationUnits="f:DefaultRealU(4)[u:M]" />
-          <ECEntityClass typeName="MyPhysicalObject">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECProperty propertyName="MyProperty" typeName="double" kindOfQuantity="TestKOQ" />
-          </ECEntityClass>
-        `,
-      );
-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
-      const element = insertPhysicalElement({
-        builder,
-        modelId: model.id,
-        categoryId: category.id,
-        classFullName: mySchema.items.MyPhysicalObject.fullName,
-        userLabel: "My element",
-        ["MyProperty"]: 1.234,
+    const { imodelConnection, schema, ...imodelKeys } = await buildTestIModel(async (imodel, testName) => {
+      return withEditTxn(imodel, async (txn) => {
+        const mySchema = await importSchema(
+          testName,
+          imodel,
+          `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECSchemaReference name="Units" version="01.00.09" alias="u" />
+            <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
+            <KindOfQuantity typeName="TestKOQ" displayLabel="Test KOQ" persistenceUnit="u:M" relativeError="0.001" presentationUnits="f:DefaultRealU(4)[u:M]" />
+            <ECEntityClass typeName="MyPhysicalObject">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="MyProperty" typeName="double" kindOfQuantity="TestKOQ" />
+            </ECEntityClass>
+          `,
+        );
+        const model = insertPhysicalModelWithPartition({ txn, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ txn, codeValue: "TestSpatialCategory" });
+        const element = insertPhysicalElement({
+          txn,
+          modelId: model.id,
+          categoryId: category.id,
+          classFullName: mySchema.items.MyPhysicalObject.fullName,
+          userLabel: "My element",
+          ["MyProperty"]: 1.234,
+        });
+        return { element, schema: mySchema };
       });
-      return { element, schema: mySchema };
     });
 
     IModelApp.formatsProvider = {
@@ -82,7 +86,7 @@ describe("Property editors", () => {
       onFormatsChanged: new BeEvent(),
     };
 
-    const provider = new PresentationPropertyDataProvider({ imodel });
+    const provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
     provider.keys = new KeySet([imodelKeys.element]);
 
     const descriptor = await provider.getContentDescriptor();
@@ -105,7 +109,7 @@ describe("Property editors", () => {
     const commitSpy = vi.fn();
     const cancelSpy = vi.fn();
     const { getByPlaceholderText, findByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
+      <SchemaMetadataContextProvider imodel={imodelConnection} schemaContextProvider={(x) => x.schemaContext}>
         {/* eslint-disable-next-line @typescript-eslint/no-deprecated */}
         <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
       </SchemaMetadataContextProvider>,
@@ -127,39 +131,41 @@ describe("Property editors", () => {
   });
 
   it("edits merged values", async () => {
-    const { imodel, schema, ...imodelKeys } = await buildTestIModel(async (builder, testName) => {
-      const mySchema = await importSchema(
-        testName,
-        builder,
-        `
+    const { imodelConnection, schema, ...imodelKeys } = await buildTestIModel(async (imodel, testName) => {
+      return withEditTxn(imodel, async (txn) => {
+        const mySchema = await importSchema(
+          testName,
+          imodel,
+          `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="MyPhysicalObject">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECProperty propertyName="MyProperty" typeName="double" />
-          </ECEntityClass>
-        `,
-      );
-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
-      const element1 = insertPhysicalElement({
-        builder,
-        modelId: model.id,
-        categoryId: category.id,
-        classFullName: mySchema.items.MyPhysicalObject.fullName,
-        userLabel: "My element 1",
-        ["MyProperty"]: 1.23,
+            <ECEntityClass typeName="MyPhysicalObject">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="MyProperty" typeName="double" />
+            </ECEntityClass>
+          `,
+        );
+        const model = insertPhysicalModelWithPartition({ txn, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ txn, codeValue: "TestSpatialCategory" });
+        const element1 = insertPhysicalElement({
+          txn,
+          modelId: model.id,
+          categoryId: category.id,
+          classFullName: mySchema.items.MyPhysicalObject.fullName,
+          userLabel: "My element 1",
+          ["MyProperty"]: 1.23,
+        });
+        const element2 = insertPhysicalElement({
+          txn,
+          modelId: model.id,
+          categoryId: category.id,
+          classFullName: mySchema.items.MyPhysicalObject.fullName,
+          userLabel: "My element 2",
+        });
+        return { element1, element2, schema: mySchema };
       });
-      const element2 = insertPhysicalElement({
-        builder,
-        modelId: model.id,
-        categoryId: category.id,
-        classFullName: mySchema.items.MyPhysicalObject.fullName,
-        userLabel: "My element 2",
-      });
-      return { element1, element2, schema: mySchema };
     });
 
-    const provider = new PresentationPropertyDataProvider({ imodel });
+    const provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
     provider.keys = new KeySet([imodelKeys.element1, imodelKeys.element2]);
 
     const descriptor = await provider.getContentDescriptor();

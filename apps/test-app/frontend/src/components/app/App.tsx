@@ -21,22 +21,16 @@ import {
   UiStateStorageHandler,
   WidgetState,
 } from "@itwin/appui-react";
-import { Id64String } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { UnitSystemKey } from "@itwin/core-quantity";
+import { IModelApp } from "@itwin/core-frontend";
 import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import {
-  createHiliteSetProvider,
-  enableUnifiedSelectionSyncWithIModel,
-  HiliteSet,
-  SelectionScope,
-} from "@itwin/unified-selection";
+import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
-import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
+import { Root } from "@stratakit/mui";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
+import { FilterBuilder } from "../filter-builder/FilterBuilder";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
@@ -46,6 +40,12 @@ import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { UnitSystemKey } from "@itwin/core-quantity";
+import type { HiliteSet, SelectionScope } from "@itwin/unified-selection";
+import type { MyAppSettings } from "../../frontendApi/MyAppFrontend";
 
 export interface State {
   imodel?: IModelConnection;
@@ -102,7 +102,7 @@ export function App() {
 
     return () => {
       IModelApp.resetFormatsProvider();
-      removeFormatterListener?.();
+      removeFormatterListener();
       void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
     };
   }, [state.imodel]);
@@ -127,12 +127,8 @@ export function App() {
 
       // determine what the viewport is hiliting
       const selectedView = IModelApp.viewManager.selectedView;
-      const schemas = MyAppFrontend.getSchemaContext(state.imodel);
       const hiliteSetProvider = createHiliteSetProvider({
-        imodelAccess: {
-          ...createECSqlQueryExecutor(state.imodel),
-          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas) }),
-        },
+        imodelAccess: { ...createECSqlQueryExecutor(state.imodel), ...createECSchemaProvider(state.imodel) },
       });
       from(
         hiliteSetProvider.getHiliteSet({
@@ -145,7 +141,7 @@ export function App() {
             (acc, curr) => {
               // note: the hilite list may contain models and subcategories as well - we don't
               // care about them at this moment
-              acc.elements.push(...(curr.elements ?? []));
+              acc.elements.push(...curr.elements);
               return acc;
             },
             { elements: [] },
@@ -165,7 +161,7 @@ export function App() {
   }, [state.imodel]);
 
   return (
-    <ThemeProvider theme="os">
+    <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"}>
       <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
         <div className="app">
           <div className="app-header">
@@ -299,6 +295,13 @@ function IModelComponents(props: IModelComponentsProps) {
               defaultState: WidgetState.Open,
               canPopout: true,
             },
+            {
+              id: "filter-builder-comparison",
+              label: "Filter builder comparison",
+              content: <FilterBuilder imodel={imodel} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
           ],
           end: [
             {
@@ -338,9 +341,7 @@ function IModelComponents(props: IModelComponentsProps) {
       enableUnifiedSelectionSyncWithIModel({
         imodelAccess: {
           ...createECSqlQueryExecutor(imodel),
-          ...createCachingECClassHierarchyInspector({
-            schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
-          }),
+          ...createECSchemaProvider(imodel),
           key: imodel.key,
           hiliteSet: imodel.hilited,
           selectionSet: imodel.selectionSet,
@@ -352,17 +353,18 @@ function IModelComponents(props: IModelComponentsProps) {
   );
 
   return (
-    <SchemaMetadataContextProvider
-      imodel={imodel}
-      schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}
-    >
-      <ThemeManager>
+    <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
+      <ThemeManager theme="light">
         <UiStateStorageHandler>
           <ConfigurableUiContent />
         </UiStateStorageHandler>
       </ThemeManager>
     </SchemaMetadataContextProvider>
   );
+}
+
+function getSchemaContext(imodel: IModelConnection) {
+  return imodel.schemaContext;
 }
 
 function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: string }) {
@@ -378,7 +380,7 @@ function StatelessModelsTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <StatelessTreeV2 treeLabel="Models tree" imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }
@@ -387,7 +389,12 @@ function MultiDataSourceTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <MultiDataSourceTree imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <MultiDataSourceTree
+        treeLabel="Multi data source tree"
+        imodel={props.imodel}
+        width={width ?? 0}
+        height={height ?? 0}
+      />
     </div>
   );
 }

@@ -1,5 +1,50 @@
 # @itwin/unified-selection
 
+## 2.0.0-alpha.4
+
+### Patch Changes
+
+- [#1654](https://github.com/iTwin/presentation/pull/1654): Avoid copying large ID sets when creating selection query bindings, reducing allocations for large selections.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.16
+
+## 2.0.0-alpha.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.15
+
+## 2.0.0-alpha.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.14
+
+## 2.0.0-alpha.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.13
+
+## 2.0.0-alpha.0
+
+### Major Changes
+
+- [#1454](https://github.com/iTwin/presentation/pull/1454): Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+
+  This is a packaging change only — the public API is unchanged — so consumers already using the ESM build are not affected. For downstream packages depending on these:
+
+  - If you list one of these packages as a `peerDependency`, widen the version range to include the new major version.
+  - If you have one of these packages as a `dependency` and re-expose it through your public API, you can safely bump to the new major version — the API is unchanged, so it will not break your API consumers.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+
 ## 1.8.8
 
 ### Patch Changes
@@ -61,6 +106,13 @@
 ### Patch Changes
 
 - 9f2f1f405e82bbb5bad83de67c265ea0407d6cf1: Avoid freezing main thread when loading huge amount of selectable instance keys.
+
+## 1.8.1-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
 
 ## 1.8.0
 
@@ -129,6 +181,13 @@
 - [#1313](https://github.com/iTwin/presentation/pull/1313): Bump dependencies.
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.12
+
+## 1.7.1-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.10
 
 ## 1.7.0
 

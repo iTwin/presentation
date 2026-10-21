@@ -7,8 +7,10 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { FieldDescriptor, SortDirection } from "@itwin/presentation-common";
-import { TableColumnDefinition } from "./Types.js";
+import { SortDirection } from "@itwin/presentation-common";
+
+import type { FieldDescriptor } from "@itwin/presentation-common";
+import type { TableColumnDefinition } from "./Types.js";
 
 /** @internal */
 export interface UseTableOptionsProps {

@@ -6,10 +6,10 @@
 import { createAsyncIterator } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { ROWS_RELOAD_PAGE_SIZE, useRows, UseRowsProps } from "../../presentation-components/table/UseRows.js";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet, SortDirection } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { ROWS_RELOAD_PAGE_SIZE, useRows } from "../../presentation-components/table/UseRows.js";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -19,6 +19,11 @@ import {
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
 import { act, render, renderHook, waitFor } from "../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { DescriptorOverrides } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { UseRowsProps } from "../../presentation-components/table/UseRows.js";
 
 describe("useRows", () => {
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
@@ -388,14 +393,14 @@ describe("useRows", () => {
     // setup presentation manager for rows reload
     getContentIteratorStub.mockReset();
     getContentIteratorStub.mockImplementation(async (options) => {
-      if (options.paging?.start === 0 && options.paging?.size === ROWS_RELOAD_PAGE_SIZE) {
+      if (options.paging?.start === 0 && options.paging.size === ROWS_RELOAD_PAGE_SIZE) {
         return {
           descriptor,
           items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)),
           total: ROWS_RELOAD_PAGE_SIZE,
         };
       }
-      if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging?.size === 1) {
+      if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging.size === 1) {
         return { descriptor, items: createAsyncIterator(items.slice(ROWS_RELOAD_PAGE_SIZE)), total: 1 };
       }
       return undefined;

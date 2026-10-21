@@ -1,0 +1,27 @@
+sep=;
+Release Tag;API Item Type;API Item Name
+public;type;ErrorInfo
+alpha;function;ErrorItemRenderer
+alpha;type;FlatTreeItem
+public;interface;GenericErrorInfo
+public;interface;HierarchyLevelDetails
+alpha;const;LOCALIZATION_NAMESPACES
+public;function;LocalizationContextProvider
+public;interface;ResultSetTooLargeErrorInfo
+alpha;function;StrataKitRootErrorRenderer
+alpha;const;StrataKitTreeRenderer
+alpha;interface;StrataKitTreeRendererAttributes
+alpha;const;TreeActionBase
+alpha;interface;TreeActionBaseAttributes
+alpha;function;TreeErrorRenderer
+public;interface;TreeNode
+alpha;const;TreeNodeFilterAction
+alpha;const;TreeNodeRenameAction
+alpha;type;TreeRendererProps
+alpha;function;useErrorNodes
+alpha;function;useFlatTreeItems
+public;function;useIModelTree
+public;function;useIModelUnifiedSelectionTree
+alpha;function;useNodeHighlighting
+public;function;useTree
+public;function;useUnifiedSelectionTree

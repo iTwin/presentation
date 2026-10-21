@@ -5,13 +5,15 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { CheckBoxState, TreeModelNode, TreeModelNodeInput, TreeNodeItem } from "@itwin/components-react";
-import {
-  InfoTreeNodeItemType,
+import { CheckBoxState } from "@itwin/components-react";
+import { InfoTreeNodeItemType } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
+
+import type { TreeModelNode, TreeModelNodeInput, TreeNodeItem } from "@itwin/components-react";
+import type {
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 
 export function createTreeNodeItem(item?: Partial<PresentationTreeNodeItem>): PresentationTreeNodeItem {
   return {

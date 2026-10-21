@@ -11,15 +11,19 @@ import {
 } from "presentation-test-utilities";
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
+import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
+import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { stubVirtualization } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
+
+import type { TreeRendererProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
@@ -70,15 +74,17 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
-        insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
-        insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+          insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+        });
       });
 
       // render the component
-      const { container, baseElement, user } = render(<MyTree imodel={imodel} />, { addThemeProvider: true });
+      const { container, baseElement, user } = render(<MyTree imodel={imodelConnection} />, { addThemeProvider: true });
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand the model node

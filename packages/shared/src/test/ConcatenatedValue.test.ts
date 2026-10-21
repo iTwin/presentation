@@ -6,7 +6,8 @@
 import { describe, expect, it } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { ConcatenatedValue, ConcatenatedValuePart } from "../shared/ConcatenatedValue.js";
-import { TypedPrimitiveValue } from "../shared/Values.js";
+
+import type { TypedPrimitiveValue } from "../shared/Values.js";
 
 describe("ConcatenatedValuePart", () => {
   describe("isString", () => {

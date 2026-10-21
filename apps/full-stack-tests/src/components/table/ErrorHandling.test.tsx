@@ -9,19 +9,24 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it, vi } from "vitest";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { assert } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
-import { TableColumnDefinition, TableRowDefinition, usePresentationTable } from "@itwin/presentation-components";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet } from "@itwin/presentation-common";
+import { usePresentationTable } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { isIterableManager } from "../../Utils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import type { TableColumnDefinition, TableRowDefinition } from "@itwin/presentation-components";
 
 describe("Learning snippets", () => {
   describe("Table", () => {
@@ -121,16 +126,18 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
-        insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
-        insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+          insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
+        });
       });
       assert(modelKey !== undefined);
 
       // render the component
-      const { container, rerender } = render(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
+      const { container, rerender } = render(<MyTable imodel={imodelConnection} keys={new KeySet([modelKey])} />);
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
       // simulate a network error in RPC request
@@ -146,7 +153,7 @@ describe("Learning snippets", () => {
       }
 
       // re-render the component, ensure we now get an error
-      rerender(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
+      rerender(<MyTable imodel={imodelConnection} keys={new KeySet([modelKey])} />);
       await ensureHasError(container, "Network error");
       consoleStub.mockRestore();
     });

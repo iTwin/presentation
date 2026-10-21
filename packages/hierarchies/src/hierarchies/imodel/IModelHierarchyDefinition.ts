@@ -3,16 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode } from "../HierarchyNode.js";
-import {
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type { EC, ECSqlQueryDef } from "@itwin/presentation-shared";
+import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
+import type {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
   SourceGenericHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "./IModelHierarchyNode.js";
+import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 
 /**
  * A nodes definition that returns a single generic node.
@@ -33,7 +34,7 @@ export interface InstanceNodesQueryDefinition {
    * points to a base class of multiple different classes of instances returned by the query, however
    * the more specific this class is, the more efficient hierarchy building process is.
    */
-  fullClassName: string;
+  fullClassName: EC.FullClassNameDotNotation;
   /**
    * An ECSQL query that selects nodes from an iModel. `SELECT` clause of the query is expected
    * to be built using `NodeSelectQueryFactory.createSelectClause`.
@@ -67,10 +68,16 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @public
  */
-export type NodeParser = (
-  row: { [columnName: string]: any },
-  parentNode?: HierarchyDefinitionParentNode,
-) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+export type NodeParser = (props: {
+  /** The ECSQL row object to parse. Keys & value types depend on the executed query. */
+  row: { [columnName: string]: any };
+
+  /** The parent node whose child node is being parsed. */
+  parentNode?: HierarchyDefinitionParentNode;
+
+  /** The key of iModel which is used to run the query. */
+  imodelKey: string;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
@@ -79,9 +86,13 @@ export type NodeParser = (
  *
  * @public
  */
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(
-  node: TNode,
-) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+  /** Node to be pre-processed. */
+  node: TNode;
+
+  /** The parent node whose child node is being pre-processed. */
+  parentNode?: ParentHierarchyNode;
+}) => Promise<TNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -89,7 +100,13 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
  *
  * @public
  */
-export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (props: {
+  /** Node to be post-processed. */
+  node: ProcessedHierarchyNode;
+
+  /** The parent node whose child node is being post-processed. */
+  parentNode?: ParentHierarchyNode;
+}) => Promise<ProcessedHierarchyNode>;
 
 /**
  * A type of node that can be passed to `HierarchyDefinition.defineHierarchyLevel`. This basically means
@@ -104,7 +121,10 @@ export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "chil
  * Props for `HierarchyDefinition.defineHierarchyLevel`.
  * @public
  */
-export interface DefineHierarchyLevelProps {
+export interface DefineHierarchyLevelProps extends Pick<
+  NodesQueryClauseFactory,
+  "createSelectClause" | "createFilterClauses"
+> {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: HierarchyDefinitionParentNode | undefined;
 

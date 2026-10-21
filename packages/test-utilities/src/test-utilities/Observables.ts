@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, ObservableInput } from "rxjs";
+import { from } from "rxjs";
+
+import type { ObservableInput } from "rxjs";
 
 export async function collect<T>(obs: ObservableInput<T>): Promise<Array<T>> {
   const arr = new Array<T>();

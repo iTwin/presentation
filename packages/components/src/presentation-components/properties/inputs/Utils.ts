@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { type Format, FormatType, Parser, type ParserSpec } from "@itwin/core-quantity";
+import { FormatType, Parser } from "@itwin/core-quantity";
 
+import type { Format, ParserSpec } from "@itwin/core-quantity";
 import type { PropertyValueConstraints } from "../../common/ContentBuilder.js";
 
 /**

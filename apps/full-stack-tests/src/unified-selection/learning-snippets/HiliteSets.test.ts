@@ -13,7 +13,6 @@ import {
 } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProviderImports
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider } from "@itwin/unified-selection";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.IModelProviderImports
@@ -21,8 +20,9 @@ import { createIModelHiliteSetProvider } from "@itwin/unified-selection";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 import { createStorage, Selectables } from "@itwin/unified-selection";
+import { withEditTxn } from "@itwin/core-backend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -36,29 +36,27 @@ describe("Unified selection", () => {
       });
 
       it("Basic hilite set provider", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({
-            builder,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            return { modelKey, categoryKey, elementKey };
           });
-          return { modelKey, categoryKey, elementKey };
         });
 
-        const getIModelConnection = () => imodel;
+        const getIModelConnection = () => imodelConnection;
         const selectables = Selectables.create([keys.elementKey]);
 
         // __PUBLISH_EXTRACT_START__ Presentation.UnifiedSelection.HiliteSets.BasicProvider
-        const schemaProvider = createECSchemaProvider(getIModelConnection().schemaContext);
+        const schemaProvider = createECSchemaProvider(getIModelConnection());
         const hiliteProvider = createHiliteSetProvider({
-          imodelAccess: {
-            ...schemaProvider,
-            ...createCachingECClassHierarchyInspector({ schemaProvider }),
-            ...createECSqlQueryExecutor(imodel),
-          },
+          imodelAccess: { ...schemaProvider, ...createECSqlQueryExecutor(getIModelConnection()) },
         });
         const hiliteSetIterator = hiliteProvider.getHiliteSet({ selectables });
         // __PUBLISH_EXTRACT_END__
@@ -68,32 +66,32 @@ describe("Unified selection", () => {
       });
 
       it("iModel hilite set provider", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({
-            builder,
-            userLabel: "test element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+        const { imodelConnection, ...keys } = await buildTestIModel(async (imodel) => {
+          return withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "test element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            return { modelKey, categoryKey, elementKey };
           });
-          return { modelKey, categoryKey, elementKey };
         });
 
         const selectionStorage = createStorage();
         selectionStorage.addToSelection({
-          imodelKey: createIModelKey(imodel),
+          imodelKey: createIModelKey(imodelConnection),
           source: "test",
           selectables: [keys.elementKey],
         });
 
         function getIModelByKey(imodelKey: string) {
-          if (imodelKey === createIModelKey(imodel)) {
+          if (imodelKey === createIModelKey(imodelConnection)) {
             return {
-              ...createECSqlQueryExecutor(imodel),
-              ...createCachingECClassHierarchyInspector({
-                schemaProvider: createECSchemaProvider(imodel.schemaContext),
-              }),
+              ...createECSqlQueryExecutor(imodelConnection),
+              ...createECSchemaProvider(imodelConnection),
               key: imodelKey,
             };
           }
@@ -109,7 +107,9 @@ describe("Unified selection", () => {
           // this is called to get iModel accessor based on the iModel key
           imodelProvider: (imodelKey) => getIModelByKey(imodelKey),
         });
-        const hiliteSetIterator = selectionHiliteProvider.getCurrentHiliteSet({ imodelKey: createIModelKey(imodel) });
+        const hiliteSetIterator = selectionHiliteProvider.getCurrentHiliteSet({
+          imodelKey: createIModelKey(imodelConnection),
+        });
         // __PUBLISH_EXTRACT_END__
 
         const hiliteSet = await collect(hiliteSetIterator);

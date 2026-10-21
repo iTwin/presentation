@@ -3,21 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { importSchema } from "../../IModelUtils.js";
+import { withEditTxn } from "@itwin/core-backend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -31,60 +31,62 @@ describe("Hierarchies", () => {
       });
 
       it("localizes property grouping node labels", async () => {
-        const { imodel, myPhysicalObjectClassName } = await buildTestIModel(async (builder, testName) => {
-          const schema = await importSchema(
-            testName,
-            builder,
-            `
-              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-              <ECEntityClass typeName="MyPhysicalObject">
-                <BaseClass>bis:PhysicalElement</BaseClass>
-                <ECProperty propertyName="IntProperty" typeName="int" />
-              </ECEntityClass>
-            `,
-          );
-          const category = insertSpatialCategory({ builder, codeValue: "Category" });
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
-          insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 1",
-            intProperty: 2,
+        const { imodelConnection, myPhysicalObjectClassName } = await buildTestIModel(async (imodel, testName) => {
+          return withEditTxn(imodel, async (txn) => {
+            const schema = await importSchema(
+              testName,
+              imodel,
+              `
+                <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+                <ECEntityClass typeName="MyPhysicalObject">
+                  <BaseClass>bis:PhysicalElement</BaseClass>
+                  <ECProperty propertyName="IntProperty" typeName="int" />
+                </ECEntityClass>
+              `,
+            );
+            const category = insertSpatialCategory({ txn, codeValue: "Category" });
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 1",
+              intProperty: 2,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 2",
+              intProperty: 4,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 3",
+              intProperty: 6,
+            });
+            insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: schema.items.MyPhysicalObject.fullName,
+              userLabel: "Element 4",
+            });
+            return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
           });
-          insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 2",
-            intProperty: 4,
-          });
-          insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 3",
-            intProperty: 6,
-          });
-          insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            classFullName: schema.items.MyPhysicalObject.fullName,
-            userLabel: "Element 4",
-          });
-          return { myPhysicalObjectClassName: schema.items.MyPhysicalObject.fullName };
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.PropertyGroupsLocalizationExample
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            defineHierarchyLevel: async ({ parentNode }) => {
+            defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
               if (!parentNode) {
                 // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `IntProperty` property value,
                 // with options to create groups for out-of-range and unspecified values - labels of those grouping nodes get localized
@@ -93,12 +95,7 @@ describe("Hierarchies", () => {
                     fullClassName: myPhysicalObjectClassName,
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({
-                          imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
-                        }).createSelectClause({
+                        SELECT ${await createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },

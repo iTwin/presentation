@@ -7,9 +7,11 @@
  */
 
 import { useState } from "react";
-import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { NonPrimitivePropertyRenderer, Orientation, PropertyValueRendererManager } from "@itwin/components-react";
 import { Anchor, Modal, ModalContent } from "@itwin/itwinui-react";
+
+import type { ArrayValue, PropertyRecord } from "@itwin/appui-abstract";
 
 /**
  * Props for [[TableCellRenderer]] component.

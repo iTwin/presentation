@@ -7,9 +7,8 @@
  * @module Properties
  */
 
-import { PureComponent } from "react";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { PropertyEditorManager } from "@itwin/components-react";
 import { NavigationEditorName, NumericEditorName, QuantityEditorName } from "./EditorNames.js";
 import {
   NavigationPropertyEditor as NavigationPropertyEditorInternal,
@@ -18,16 +17,18 @@ import {
 import { NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
 import { QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
 
+import type { PureComponent } from "react";
+import type { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+
 /* eslint-disable @typescript-eslint/no-deprecated */
 
+export type { NavigationPropertyEditorContextProviderProps } from "./NavigationPropertyEditorContext.js";
 export {
   NavigationPropertyEditorContextProvider,
-  NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
 } from "./NavigationPropertyEditorContext.js";
 
 /* v8 ignore start -- @preserve */
-/* eslint-disable @typescript-eslint/no-deprecated */
 
 /**
  * Editor for navigation properties.

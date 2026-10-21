@@ -32,13 +32,20 @@ catalogs:
   build-tools:
     '@itwin/build-tools': ^5.14.3
     '@itwin/eslint-plugin': ^6.1.1
+    '@rolldown/plugin-babel': ^0.2.3
+    '@stylistic/eslint-plugin': ^5.10.0
     '@types/node': ^24.19.2
     '@vitejs/plugin-react': ^6.1.2
+    babel-plugin-react-compiler: ^1.0.0
     cpx2: ^7.0.2
     cross-env: ^7.0.3
     eslint: ^9.39.5
     eslint-plugin-react: ^7.37.5
+    eslint-plugin-unused-imports: ^4.4.1
+    fast-glob: ^3.3.3
     rimraf: ^6.1.3
+    tsdown: ^0.22.13
+    vite-plugin-static-copy: ^4.1.0
     '@typescript/native': npm:typescript@~7.0.2
     typescript: npm:@typescript/typescript6@~6.0.2
     vite: ^8.3.4
@@ -75,18 +82,33 @@ catalogs:
     '@types/react-dom': ^19.3.0
     classnames: ^2.5.1
     react: ^19.3.1
+    react-compiler-runtime: ^1.0.0
     react-dom: ^19.3.1
     react-error-boundary: ^4.1.2
   rxjs:
     rxjs: ^7.8.2
     rxjs-for-await: ^1.0.0
+  stratakit:
+    '@mui/material': ^9.4.0
+    '@stratakit/foundations': ^1.0.0
+    '@stratakit/icons': ^0.4.6
+    '@stratakit/mui': ^1.1.0
+    '@stratakit/structures': ^0.6.0
   test-tools:
     '@testing-library/dom': ^10.4.2
     '@testing-library/react': ^16.3.3
     '@testing-library/user-event': ^14.6.8
+    '@types/deep-equal-in-any-order': ^1.0.4
+    '@vitest/browser-playwright': ^4.1.10
     '@vitest/coverage-v8': ^4.1.12
+    axe-core: ^4.11.4
+    deep-equal-in-any-order: ^2.2.0
     happy-dom: ^20.14.6
+    playwright: ^1.59.1
     vitest: ^4.1.12
+    vitest-browser-react: ^2.2.0
+  miscellaneous:
+    fast-xml-parser: ^5.11.2
 
 hoistPattern:
   - '!*'
@@ -101,6 +123,7 @@ minimumReleaseAgeExclude:
 
 onlyBuiltDependencies:
   - '@bentley/imodeljs-native'
+  - "@playwright/browser-chromium"
   - electron
   - esbuild
 

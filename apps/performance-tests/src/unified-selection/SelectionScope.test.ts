@@ -6,10 +6,13 @@
 import { describe, expect } from "vitest";
 import { SnapshotDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { Props } from "@itwin/presentation-shared";
 import { computeSelection } from "@itwin/unified-selection";
-import { Datasets, IModelName } from "../util/Datasets.js";
-import { run, RunOptions } from "../util/TestUtilities.js";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+
+import type { Props } from "@itwin/presentation-shared";
+import type { IModelName } from "../util/Datasets.js";
+import type { RunOptions } from "../util/TestUtilities.js";
 
 describe("compute", () => {
   runSelectionScopeTest({

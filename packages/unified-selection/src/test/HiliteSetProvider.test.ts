@@ -6,26 +6,23 @@
 import { ResolvablePromise } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TransientIdSequence } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
-import { SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
+import { createHiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
+import { Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
 import {
   createCustomSelectable,
   createECInstanceId,
   createSelectableInstanceKey,
 } from "./_helpers/SelectablesCreator.js";
 
+import type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type { HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+
 describe("HiliteSetProvider", () => {
   describe("create", () => {
     it("creates a new HiliteSetProvider instance", () => {
       const imodelAccess = {
-        createQueryReader:
-          vi.fn<
-            (
-              query: ECSqlQueryDef,
-              options?: ECSqlQueryReaderOptions,
-            ) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-          >(),
+        createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>(),
         classDerivesFrom: vi.fn<(cn: string, parentCn: string) => Promise<boolean> | boolean>(),
       };
       const result = createHiliteSetProvider({ imodelAccess });
@@ -35,13 +32,7 @@ describe("HiliteSetProvider", () => {
 
   describe("getHiliteSet", () => {
     const imodelAccess = {
-      createQueryReader:
-        vi.fn<
-          (
-            query: ECSqlQueryDef,
-            options?: ECSqlQueryReaderOptions,
-          ) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-        >(),
+      createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>(),
       classDerivesFrom: vi.fn<(cn: string, parentCn: string) => Promise<boolean> | boolean>(),
     };
     let provider: HiliteSetProvider;
@@ -415,7 +406,7 @@ describe("HiliteSetProvider", () => {
         expect((await iter.next()).done).toBe(true);
       });
 
-      it("rethrows ECClassHierarchyInspector errors", async () => {
+      it("rethrows classDerivesFrom errors", async () => {
         imodelAccess.classDerivesFrom.mockImplementation((cn, pc) => {
           if (cn === "TestSchema.TestElement" && pc === "BisCore.Element") {
             throw new Error("dummy error");

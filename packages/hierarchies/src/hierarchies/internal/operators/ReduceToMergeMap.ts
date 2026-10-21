@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, ObservableInput, reduce } from "rxjs";
+import { from, reduce } from "rxjs";
+
+import type { ObservableInput } from "rxjs";
 
 /**
  * Reduces the source observable into a `Map<string, TMapItem[]>`, where all input items are grouped based on their key
@@ -14,11 +16,11 @@ import { from, ObservableInput, reduce } from "rxjs";
  *
  * @internal
  */
-export function reduceToMergeMapList<TSourceItem, TMapItem>(
-  key: (item: TSourceItem) => string,
+export function reduceToMergeMapList<TSourceItem, TMapItem, TMapKey extends string>(
+  key: (item: TSourceItem) => TMapKey,
   value: (item: TSourceItem) => TMapItem,
 ) {
-  return reduceToMergeMapItem<TSourceItem, TMapItem[]>(key, (item, list) => {
+  return reduceToMergeMapItem<TSourceItem, TMapItem[], TMapKey>(key, (item, list) => {
     if (!list) {
       list = [];
     }
@@ -36,13 +38,13 @@ export function reduceToMergeMapList<TSourceItem, TMapItem>(
  *
  * @internal
  */
-export function reduceToMergeMapItem<TSourceItem, TMapItem>(
-  key: (item: TSourceItem) => string,
+export function reduceToMergeMapItem<TSourceItem, TMapItem, TMapKey extends string>(
+  key: (item: TSourceItem) => TMapKey,
   mergeFunc: (sourceItem: TSourceItem, mapItem: TMapItem | undefined) => TMapItem,
 ) {
   return (source: ObservableInput<TSourceItem>) =>
     from(source).pipe(
-      reduce<TSourceItem, Map<string, TMapItem>>((mergedMap, item) => {
+      reduce<TSourceItem, Map<TMapKey, TMapItem>>((mergedMap, item) => {
         if (mergedMap === EMPTY_MAP) {
           // this helps us avoid creating an empty map for cases when source observable
           // doesn't emit any values

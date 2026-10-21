@@ -12,34 +12,29 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import {
-  PrimitiveValue,
-  PropertyDescription,
-  PropertyRecord,
-  PropertyValue,
-  PropertyValueFormat,
-} from "@itwin/appui-abstract";
-import { PropertyCategory } from "@itwin/components-react";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { withEditTxn } from "@itwin/core-backend";
 import { assert } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
 import {
   ArrayPropertiesField,
   combineFieldNames,
-  InstanceKey,
   KeySet,
-  PropertiesField,
   RuleTypes,
   StructPropertiesField,
 } from "@itwin/presentation-common";
-import {
-  DEFAULT_PROPERTY_GRID_RULESET,
-  PresentationPropertyDataProvider,
-  PresentationPropertyDataProviderProps,
-} from "@itwin/presentation-components";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { importSchema } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
+import { importSchema } from "../../SchemaUtils.js";
+import { toColonInstanceKey } from "../Utils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue } from "@itwin/appui-abstract";
+import type { PropertyCategory } from "@itwin/components-react";
+import type { ElementAspectProps } from "@itwin/core-common";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, PropertiesField } from "@itwin/presentation-common";
+import type { PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 
 describe("PropertyDataProvider", async () => {
   beforeAll(async () => {
@@ -63,10 +58,12 @@ describe("PropertyDataProvider", async () => {
       });
 
       it("creates empty result when properties requested for 0 instances", async () => {
-        const { imodel } = await buildTestIModel(async (builder) => {
-          insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            insertSpatialCategory({ txn, codeValue: "My Category" });
+          });
         });
-        using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+        using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet();
         const properties = await provider.getData();
         expect(Object.keys(properties.records)).toHaveLength(0);
@@ -77,18 +74,19 @@ describe("PropertyDataProvider", async () => {
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
 
-        const { imodel } = await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-          elementKey = insertPhysicalElement({
-            builder,
-            fullClassNameSeparator: ":",
-            userLabel: "My Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+            modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+            elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "My Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
           });
         });
-        using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+        using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet([elementKey!]);
         const properties = await provider.getData();
         expect((properties.label.value as PrimitiveValue).displayValue).toContain("My Element");
@@ -124,18 +122,19 @@ describe("PropertyDataProvider", async () => {
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
 
-        const { imodel } = await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-          elementKey = insertPhysicalElement({
-            builder,
-            fullClassNameSeparator: ":",
-            userLabel: "My Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+            modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+            elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "My Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
           });
         });
-        using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+        using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet([{ className: "BisCore:Element", id: elementKey!.id }]);
         const properties = await provider.getData();
         expect((properties.label.value as PrimitiveValue).displayValue).toContain("My Element");
@@ -169,10 +168,10 @@ describe("PropertyDataProvider", async () => {
       it("favorites properties", async () => {
         let categoryKey: InstanceKey;
 
-        const { imodel } = await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          categoryKey = withEditTxn(imodel, (txn) => insertSpatialCategory({ txn, codeValue: "My Category" }));
         });
-        using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+        using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         vi.spyOn(provider as any, "isFieldFavorite").mockReturnValue(true);
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
@@ -194,11 +193,11 @@ describe("PropertyDataProvider", async () => {
       it("overrides default property category", async () => {
         let categoryKey: InstanceKey;
 
-        const { imodel } = await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          categoryKey = withEditTxn(imodel, (txn) => insertSpatialCategory({ txn, codeValue: "My Category" }));
         });
         using provider = createProvider({
-          imodel,
+          imodel: imodelConnection,
           ruleset: {
             ...DEFAULT_PROPERTY_GRID_RULESET,
             rules: [
@@ -228,11 +227,11 @@ describe("PropertyDataProvider", async () => {
       it("finds root property record keys", async () => {
         let categoryKey: InstanceKey;
 
-        const { imodel } = await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          categoryKey = withEditTxn(imodel, (txn) => insertSpatialCategory({ txn, codeValue: "My Category" }));
         });
 
-        using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+        using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet([categoryKey!]);
         const properties = await provider.getData();
 
@@ -243,43 +242,38 @@ describe("PropertyDataProvider", async () => {
         expect(record).toBeDefined();
 
         const keys = await provider.getPropertyRecordInstanceKeys(record!);
-        expect(keys).toEqual([categoryKey!]);
+        expect(keys).toEqual([toColonInstanceKey(categoryKey!)]);
       });
 
       it("finds nested property record keys", async () => {
         let elementKey: InstanceKey;
         let externalsSourceAspectKey: InstanceKey;
 
-        const { imodel } = await buildTestIModel(async (builder) => {
-          const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-          const modelKey = insertPhysicalModelWithPartition({
-            builder,
-            fullClassNameSeparator: ":",
-            codeValue: "My Model",
-          });
-          elementKey = insertPhysicalElement({
-            builder,
-            fullClassNameSeparator: ":",
-            userLabel: "My Element",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          });
-          const repositoryLinkKey = insertRepositoryLink({
-            builder,
-            fullClassNameSeparator: ":",
-            repositoryUrl: "Repository URL",
-            repositoryLabel: "Repository Label",
-          });
-          externalsSourceAspectKey = insertExternalSourceAspect({
-            builder,
-            fullClassNameSeparator: ":",
-            elementId: elementKey.id,
-            identifier: "My External Source Aspect",
-            repositoryId: repositoryLinkKey.id,
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+            elementKey = insertPhysicalElement({
+              txn,
+              userLabel: "My Element",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const repositoryLinkKey = insertRepositoryLink({
+              txn,
+              repositoryUrl: "Repository URL",
+              repositoryLabel: "Repository Label",
+            });
+            externalsSourceAspectKey = insertExternalSourceAspect({
+              txn,
+              elementId: elementKey.id,
+              identifier: "My External Source Aspect",
+              repositoryId: repositoryLinkKey.id,
+            });
           });
         });
 
-        using provider = createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+        using provider = createProvider({ imodel: imodelConnection, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
         provider.keys = new KeySet([elementKey!]);
         const properties = await provider.getData();
 
@@ -303,7 +297,7 @@ describe("PropertyDataProvider", async () => {
         expect(record).toBeDefined();
 
         const keys = await provider.getPropertyRecordInstanceKeys(record!);
-        expect(keys).toEqual([externalsSourceAspectKey!]);
+        expect(keys).toEqual([toColonInstanceKey(externalsSourceAspectKey!)]);
       });
     });
   };
@@ -312,47 +306,45 @@ describe("PropertyDataProvider", async () => {
   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
   it("finds array item & struct member fields", async () => {
-    const { imodel, ...keys } = await buildTestIModel(async (builder, testName) => {
-      const schema = await importSchema(
-        testName,
-        builder,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECStructClass typeName="TestStruct">
-            <ECProperty propertyName="StringMember" typeName="string" />
-            <ECProperty propertyName="NumericMember" typeName="int" />
-          </ECStructClass>
-          <ECEntityClass typeName="TestPhysicalObject">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECArrayProperty propertyName="ArrayProperty" typeName="string" />
-            <ECStructProperty propertyName="StructProperty" typeName="TestStruct" />
-            <ECStructArrayProperty propertyName="StructArrayProperty" typeName="TestStruct" />
-          </ECEntityClass>
-        `,
-      );
-      const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-      const modelKey = insertPhysicalModelWithPartition({
-        builder,
-        fullClassNameSeparator: ":",
-        codeValue: "My Model",
+    const { imodelConnection, ...keys } = await buildTestIModel(async (imodel, testName) => {
+      return withEditTxn(imodel, async (txn) => {
+        const schema = await importSchema(
+          testName,
+          imodel,
+          `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECStructClass typeName="TestStruct">
+              <ECProperty propertyName="StringMember" typeName="string" />
+              <ECProperty propertyName="NumericMember" typeName="int" />
+            </ECStructClass>
+            <ECEntityClass typeName="TestPhysicalObject">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECArrayProperty propertyName="ArrayProperty" typeName="string" />
+              <ECStructProperty propertyName="StructProperty" typeName="TestStruct" />
+              <ECStructArrayProperty propertyName="StructArrayProperty" typeName="TestStruct" />
+            </ECEntityClass>
+          `,
+        );
+        const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+        const elementKey = insertPhysicalElement({
+          txn,
+          classFullName: `${schema.schemaAlias}.TestPhysicalObject` as const,
+          userLabel: "Test element",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          ArrayProperty: ["Item 1", "Item 2"],
+          StructProperty: { StringMember: "Test string", NumericMember: 123 },
+          StructArrayProperty: [
+            { StringMember: "Item 1", NumericMember: 456 },
+            { StringMember: "Item 2", NumericMember: 789 },
+          ],
+        });
+        return { element: elementKey };
       });
-      const elementKey = insertPhysicalElement({
-        builder,
-        classFullName: `${schema.schemaAlias}:TestPhysicalObject`,
-        userLabel: "Test element",
-        modelId: modelKey.id,
-        categoryId: categoryKey.id,
-        ArrayProperty: ["Item 1", "Item 2"],
-        StructProperty: { StringMember: "Test string", NumericMember: 123 },
-        StructArrayProperty: [
-          { StringMember: "Item 1", NumericMember: 456 },
-          { StringMember: "Item 2", NumericMember: 789 },
-        ],
-      });
-      return { element: elementKey };
     });
 
-    using provider = new PresentationPropertyDataProvider({ imodel });
+    using provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
     provider.keys = new KeySet([keys.element]);
     const properties = await provider.getData();
 
@@ -478,7 +470,7 @@ describe("PropertyDataProvider", async () => {
     );
     assert(structArrayRecord?.value.valueFormat === PropertyValueFormat.Array);
     const structArrayItemRecord = structArrayRecord.value.items[0];
-    assert(structArrayItemRecord?.value.valueFormat === PropertyValueFormat.Struct);
+    assert(structArrayItemRecord.value.valueFormat === PropertyValueFormat.Struct);
     const structArrayItemMemberRecord = structArrayItemRecord.value.members.StringMember;
     const structArrayMemberField = (await provider.getFieldByPropertyDescription(
       structArrayItemMemberRecord.property,
@@ -501,11 +493,11 @@ describe("PropertyDataProvider", async () => {
   it("gets property data after re-initializing Presentation", async () => {
     let categoryKey: InstanceKey;
 
-    const { imodel } = await buildTestIModel(async (builder) => {
-      categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+    const { imodelConnection } = await buildTestIModel(async (imodel) => {
+      categoryKey = withEditTxn(imodel, (txn) => insertSpatialCategory({ txn, codeValue: "My Category" }));
     });
     const checkDataProvider = async () => {
-      using provider = new PresentationPropertyDataProvider({ imodel });
+      using provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
       provider.keys = new KeySet([categoryKey]);
       const properties = await provider.getData();
       expect(properties.categories).not.toHaveLength(0);
@@ -523,15 +515,15 @@ describe("PropertyDataProvider", async () => {
   });
 
   describe("with `propertiesMergeMode`", () => {
-    let imodel: IModelConnection;
+    let imodelConnection: IModelConnection;
     let elementA: InstanceKey;
     let elementB: InstanceKey;
 
     beforeAll(async () => {
-      const result = await buildTestIModel("propertiesMergeMode", async (builder, testName) => {
+      const result = await buildTestIModel("propertiesMergeMode", async (imodel, testName) => {
         const schema = await importSchema(
           testName,
-          builder,
+          imodel,
           `
             <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
             <ECEntityClass typeName="Base" modifier="Abstract">
@@ -568,91 +560,89 @@ describe("PropertyDataProvider", async () => {
             </ECEntityClass>
           `,
         );
-        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({
-          builder,
-          fullClassNameSeparator: ":",
-          codeValue: "My Model",
+        return withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          // Both selected elements have a `MyType` type definition (`PhysicalElement -> PhysicalType`),
+          // and each type owns a `CommonTypeAspect` (`PhysicalType -> ElementAspect`), forming two
+          // levels of nested content below the selected elements.
+          const typeA = insertPhysicalType({
+            txn,
+            classFullName: schema.items.MyType.fullName,
+            userLabel: "Type A",
+            TypeProp: "type-a",
+          });
+          const typeB = insertPhysicalType({
+            txn,
+            classFullName: schema.items.MyType.fullName,
+            userLabel: "Type B",
+            TypeProp: "type-b",
+          });
+          const createdElementA = insertPhysicalElement({
+            txn,
+            classFullName: schema.items.ElementA.fullName,
+            userLabel: "Element A",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            typeDefinitionId: typeA.id,
+            SharedProp: "shared-a",
+            PropA: "a-only",
+          });
+          const createdElementB = insertPhysicalElement({
+            txn,
+            classFullName: schema.items.ElementB.fullName,
+            userLabel: "Element B",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            typeDefinitionId: typeB.id,
+            SharedProp: "shared-b",
+            PropB: "b-only",
+          });
+          // Both elements own a `CommonAspect` -> its nested content is common to both selected classes.
+          txn.insertAspect({
+            classFullName: schema.items.CommonAspect.fullName,
+            element: { id: createdElementA.id },
+            CommonAspectProp: "common-a",
+          } as ElementAspectProps);
+          txn.insertAspect({
+            classFullName: schema.items.CommonAspect.fullName,
+            element: { id: createdElementB.id },
+            CommonAspectProp: "common-b",
+          } as ElementAspectProps);
+          // Only `ElementA` owns an `AspectAOnly` -> its nested content is specific to one selected class.
+          txn.insertAspect({
+            classFullName: schema.items.AspectAOnly.fullName,
+            element: { id: createdElementA.id },
+            AspectAOnlyProp: "a-only-aspect",
+          } as ElementAspectProps);
+          // Both types own a `CommonTypeAspect`, which is deeply nested content
+          // (`PhysicalElement -> PhysicalType -> ElementAspect`) common to both selected classes.
+          txn.insertAspect({
+            classFullName: schema.items.CommonTypeAspect.fullName,
+            element: { id: typeA.id },
+            CommonTypeAspectProp: "common-type-a",
+          } as ElementAspectProps);
+          txn.insertAspect({
+            classFullName: schema.items.CommonTypeAspect.fullName,
+            element: { id: typeB.id },
+            CommonTypeAspectProp: "common-type-b",
+          } as ElementAspectProps);
+          // Only `typeA` owns an `TypeAspectAOnly` -> its nested content is specific to one selected class.
+          txn.insertAspect({
+            classFullName: schema.items.TypeAspectAOnly.fullName,
+            element: { id: typeA.id },
+            TypeAspectAOnlyProp: "a-only-type-aspect",
+          } as ElementAspectProps);
+          return { elementA: createdElementA, elementB: createdElementB };
         });
-        // Both selected elements have a `MyType` type definition (`PhysicalElement -> PhysicalType`),
-        // and each type owns a `CommonTypeAspect` (`PhysicalType -> ElementAspect`), forming two
-        // levels of nested content below the selected elements.
-        const typeA = insertPhysicalType({
-          builder,
-          classFullName: schema.items.MyType.fullName,
-          userLabel: "Type A",
-          TypeProp: "type-a",
-        });
-        const typeB = insertPhysicalType({
-          builder,
-          classFullName: schema.items.MyType.fullName,
-          userLabel: "Type B",
-          TypeProp: "type-b",
-        });
-        const createdElementA = insertPhysicalElement({
-          builder,
-          classFullName: schema.items.ElementA.fullName,
-          userLabel: "Element A",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          typeDefinitionId: typeA.id,
-          SharedProp: "shared-a",
-          PropA: "a-only",
-        });
-        const createdElementB = insertPhysicalElement({
-          builder,
-          classFullName: schema.items.ElementB.fullName,
-          userLabel: "Element B",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
-          typeDefinitionId: typeB.id,
-          SharedProp: "shared-b",
-          PropB: "b-only",
-        });
-        // Both elements own a `CommonAspect` -> its nested content is common to both selected classes.
-        builder.insertAspect({
-          classFullName: schema.items.CommonAspect.fullName,
-          element: { id: createdElementA.id },
-          CommonAspectProp: "common-a",
-        });
-        builder.insertAspect({
-          classFullName: schema.items.CommonAspect.fullName,
-          element: { id: createdElementB.id },
-          CommonAspectProp: "common-b",
-        });
-        // Only `ElementA` owns an `AspectAOnly` -> its nested content is specific to one selected class.
-        builder.insertAspect({
-          classFullName: schema.items.AspectAOnly.fullName,
-          element: { id: createdElementA.id },
-          AspectAOnlyProp: "a-only-aspect",
-        });
-        // Both types own a `CommonTypeAspect`, which is deeply nested content
-        // (`PhysicalElement -> PhysicalType -> ElementAspect`) common to both selected classes.
-        builder.insertAspect({
-          classFullName: schema.items.CommonTypeAspect.fullName,
-          element: { id: typeA.id },
-          CommonTypeAspectProp: "common-type-a",
-        });
-        builder.insertAspect({
-          classFullName: schema.items.CommonTypeAspect.fullName,
-          element: { id: typeB.id },
-          CommonTypeAspectProp: "common-type-b",
-        });
-        // Only `typeA` owns an `TypeAspectAOnly` -> its nested content is specific to one selected class.
-        builder.insertAspect({
-          classFullName: schema.items.TypeAspectAOnly.fullName,
-          element: { id: typeA.id },
-          TypeAspectAOnlyProp: "a-only-type-aspect",
-        });
-        return { elementA: createdElementA, elementB: createdElementB };
       });
-      imodel = result.imodel;
+      imodelConnection = result.imodelConnection;
       elementA = result.elementA;
       elementB = result.elementB;
     });
 
     afterAll(async () => {
-      await imodel.close();
+      await imodelConnection.close();
     });
 
     function getAllRecordLabels(records: { [categoryName: string]: PropertyRecord[] }) {
@@ -668,7 +658,7 @@ describe("PropertyDataProvider", async () => {
     }
 
     it("shows union of properties from all selected classes by default", async () => {
-      using provider = new PresentationPropertyDataProvider({ imodel });
+      using provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
       provider.keys = new KeySet([elementA, elementB]);
 
       const properties = await provider.getData();
@@ -689,7 +679,7 @@ describe("PropertyDataProvider", async () => {
     });
 
     it("shows only properties common to all selected classes when merge mode is `intersection`", async () => {
-      using provider = new PresentationPropertyDataProvider({ imodel });
+      using provider = new PresentationPropertyDataProvider({ imodel: imodelConnection });
       provider.propertiesMergeMode = "intersection";
       provider.keys = new KeySet([elementA, elementB]);
 

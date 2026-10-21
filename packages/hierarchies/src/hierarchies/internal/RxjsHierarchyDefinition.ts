@@ -3,14 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, from, Observable, of } from "rxjs";
-import {
+import { filter, from } from "rxjs";
+import { fromPossiblyPromise } from "./Common.js";
+
+import type { Observable } from "rxjs";
+import type { ParentHierarchyNode } from "../HierarchyNode.js";
+import type {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
 } from "../imodel/IModelHierarchyDefinition.js";
-import {
+import type {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
@@ -21,10 +25,11 @@ import {
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @internal
  */
-export type RxjsNodeParser = (
-  row: { [columnName: string]: any },
-  parentNode?: HierarchyDefinitionParentNode,
-) => Observable<SourceInstanceHierarchyNode>;
+export type RxjsNodeParser = (props: {
+  row: { [columnName: string]: any };
+  parentNode?: HierarchyDefinitionParentNode;
+  imodelKey: string;
+}) => Observable<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
@@ -33,9 +38,12 @@ export type RxjsNodeParser = (
  *
  * @internal
  */
-export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(
-  node: TNode,
-) => Observable<TNode>;
+export type RxjsNodePreProcessor = <
+  TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode,
+>(props: {
+  node: TNode;
+  parentNode?: ParentHierarchyNode;
+}) => Observable<TNode>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -43,7 +51,10 @@ export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode 
  *
  * @internal
  */
-export type RxjsNodePostProcessor = (node: ProcessedHierarchyNode) => Observable<ProcessedHierarchyNode>;
+export type RxjsNodePostProcessor = (props: {
+  node: ProcessedHierarchyNode;
+  parentNode?: ParentHierarchyNode;
+}) => Observable<ProcessedHierarchyNode>;
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -89,16 +100,17 @@ export interface RxjsHierarchyDefinition {
 export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinition): RxjsHierarchyDefinition {
   return {
     parseNode: hierarchyDefinition.parseNode
-      ? (row, parentNode) => {
-          const parsedNode = hierarchyDefinition.parseNode!(row, parentNode);
-          return parsedNode instanceof Promise ? from(parsedNode) : of(parsedNode);
+      ? (props) => {
+          const parsedNode = hierarchyDefinition.parseNode!(props);
+          return fromPossiblyPromise(parsedNode);
         }
       : undefined,
     preProcessNode: hierarchyDefinition.preProcessNode
-      ? (node) => from(hierarchyDefinition.preProcessNode!(node)).pipe(filter((preprocessedNode) => !!preprocessedNode))
+      ? (props) =>
+          from(hierarchyDefinition.preProcessNode!(props)).pipe(filter((preprocessedNode) => !!preprocessedNode))
       : undefined,
     postProcessNode: hierarchyDefinition.postProcessNode
-      ? (node) => from(hierarchyDefinition.postProcessNode!(node))
+      ? (props) => from(hierarchyDefinition.postProcessNode!(props))
       : undefined,
     defineHierarchyLevel: (props) => from(hierarchyDefinition.defineHierarchyLevel(props)),
   };

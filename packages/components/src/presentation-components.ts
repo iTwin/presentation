@@ -17,8 +17,8 @@ import { initializeLocalization, initializePropertyValueRenderers } from "./pres
 export * from "./presentation-components/common/ContentDataProvider.js";
 export { type WithConstraints } from "./presentation-components/common/ContentBuilder.js";
 export * from "./presentation-components/common/Diagnostics.js";
-export * from "./presentation-components/common/IPresentationDataProvider.js";
-export * from "./presentation-components/common/IUnifiedSelectionComponent.js";
+export type * from "./presentation-components/common/IPresentationDataProvider.js";
+export type * from "./presentation-components/common/IUnifiedSelectionComponent.js";
 export * from "./presentation-components/common/PropertyRecordsBuilder.js";
 export * from "./presentation-components/common/SchemaMetadataContext.js";
 export {
@@ -53,11 +53,12 @@ export * from "./presentation-components/properties/editors/index.js";
  */
 export * from "./presentation-components/propertygrid/DataProvider.js";
 export * from "./presentation-components/propertygrid/FavoritePropertiesDataFilterer.js";
-export {
+export type {
   PropertyDataProviderWithUnifiedSelectionProps,
   UsePropertyDataProviderWithUnifiedSelectionResult,
-  usePropertyDataProviderWithUnifiedSelection,
 } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
+
+export { usePropertyDataProviderWithUnifiedSelection } from "./presentation-components/propertygrid/UseUnifiedSelection.js";
 
 /**
  * @module FavoriteProperties
@@ -74,7 +75,7 @@ export * from "./presentation-components/favorite-properties/DataProvider.js";
  * Presentation features for [Tree]($components-react:Tree) component.
  */
 export * from "./presentation-components/tree/DataProvider.js";
-export * from "./presentation-components/tree/IPresentationTreeDataProvider.js";
+export type * from "./presentation-components/tree/IPresentationTreeDataProvider.js";
 export * from "./presentation-components/tree/PresentationTreeNodeItem.js";
 export * from "./presentation-components/tree/controlled/PresentationTree.js";
 export * from "./presentation-components/tree/controlled/PresentationTreeNodeRenderer.js";
@@ -91,7 +92,7 @@ export * from "./presentation-components/tree/controlled/UseUnifiedSelection.js"
  * Presentation features for Table component.
  */
 export * from "./presentation-components/table/UsePresentationTable.js";
-export * from "./presentation-components/table/Types.js";
+export type * from "./presentation-components/table/Types.js";
 export * from "./presentation-components/table/CellRenderer.js";
 
 /**
@@ -100,12 +101,10 @@ export * from "./presentation-components/table/CellRenderer.js";
  * @docs-group-description Viewport
  * Presentation features for [ViewportComponent]($imodel-components-react).
  */
-export {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  viewWithUnifiedSelection,
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  ViewWithUnifiedSelectionProps,
-} from "./presentation-components/viewport/WithUnifiedSelection.js";
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+export type { ViewWithUnifiedSelectionProps } from "./presentation-components/viewport/WithUnifiedSelection.js";
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+export { viewWithUnifiedSelection } from "./presentation-components/viewport/WithUnifiedSelection.js";
 
 /**
  * @module DisplayLabels

@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Field } from "@itwin/presentation-common";
 import { buildIntersectionFieldsSelector } from "../../presentation-components/propertygrid/PropertiesIntersection.js";
 import { createTestECClassInfo, createTestPropertyInfo, stubSchemaViewForClasses } from "../_helpers/Common.js";
 import {
@@ -15,6 +13,9 @@ import {
   createTestSelectClassInfo,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo, Field } from "@itwin/presentation-common";
 
 const createClassInfo = (id: string, name: string): ClassInfo => createTestECClassInfo({ id, name });
 const selectClass = (classInfo: ClassInfo) => createTestSelectClassInfo({ selectClassInfo: classInfo });

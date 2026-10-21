@@ -1,0 +1,174 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { Link, Typography } from "@mui/material";
+import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
+import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
+import { useTranslation } from "../LocalizationContext.js";
+
+import type { JSX } from "react";
+import type { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
+import type { ErrorInfo, TreeNode } from "../TreeNode.js";
+
+/** @alpha */
+export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
+  /** The tree node associated with the error. Used for displaying the node label in error messages and for scrolling to the node. */
+  treeNode: Omit<TreeNode, "errors">;
+  /** The error to render. */
+  error: ErrorInfo;
+  /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
+  reloadTree: (options: { parentNodeId: string | undefined }) => void;
+  /** A callback to scroll to the node associated with the error. */
+  scrollToNode: (treeNode: Omit<TreeNode, "errors">) => void;
+  /** A callback to initiate filtering of the given hierarchy level. */
+  filterHierarchyLevel?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+}
+
+/**
+ * Renders StrataKit `<ErrorRegion.Item />` for all supported error types:
+ * - `ResultSetTooLarge` - renders `resultLimitExceeded` message with actions to increase limit or apply filtering
+ * - `NoFilterMatches` - renders `noFilteredChildren` message with action to change filter
+ * - `ChildrenLoad` - renders `failedToCreateHierarchy` message with action to retry loading
+ * - `Generic` - renders message set on error object.
+ *
+ * @alpha
+ */
+export function ErrorItemRenderer({
+  treeNode,
+  error,
+  getHierarchyLevelDetails,
+  filterHierarchyLevel,
+  reloadTree,
+  scrollToNode,
+}: ErrorItemRendererProps): JSX.Element {
+  const translate = useTranslation();
+
+  if (error.type === "ResultSetTooLarge") {
+    const limit = error.resultSetSizeLimit;
+    const onOverrideLimit = () => getHierarchyLevelDetails(treeNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE);
+    return (
+      <ErrorItemContainer
+        treeNode={treeNode}
+        actions={[
+          {
+            action: () => {
+              onOverrideLimit();
+            },
+            label: translate("increaseHierarchyLimit").replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString()),
+            condition: () => limit < MAX_LIMIT_OVERRIDE,
+          },
+          {
+            action: () => {
+              const hierarchyLevelDetails = getHierarchyLevelDetails(treeNode.id);
+              hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
+            },
+            label: translate("increaseHierarchyLimitWithFiltering"),
+            condition: () => !!filterHierarchyLevel && !!treeNode.isFilterable,
+          },
+        ]}
+        message={translate("resultLimitExceeded").replace("{{limit}}", limit.toString())}
+        scrollToElement={() => scrollToNode(treeNode)}
+      />
+    );
+  }
+  if (error.type === "NoFilterMatches") {
+    return (
+      <ErrorItemContainer
+        treeNode={treeNode}
+        actions={[
+          {
+            action: () => {
+              const hierarchyLevelDetails = getHierarchyLevelDetails(treeNode.id);
+              hierarchyLevelDetails && filterHierarchyLevel?.(hierarchyLevelDetails);
+            },
+            label: translate("noFilteredChildrenChangeFilter"),
+            condition: () => true,
+          },
+        ]}
+        message={translate("noFilteredChildren")}
+        scrollToElement={() => scrollToNode(treeNode)}
+      />
+    );
+  }
+  if (error.type === "ChildrenLoad") {
+    return (
+      <ErrorItemContainer
+        treeNode={treeNode}
+        actions={[
+          { action: () => reloadTree({ parentNodeId: treeNode.id }), label: translate("retry"), condition: () => true },
+        ]}
+        message={translate("failedToCreateHierarchy")}
+        scrollToElement={() => scrollToNode(treeNode)}
+      />
+    );
+  }
+  return (
+    <ErrorItemContainer treeNode={treeNode} message={error.message} scrollToElement={() => scrollToNode(treeNode)} />
+  );
+}
+
+type ErrorItemContainerProps = {
+  treeNode: Omit<TreeNode, "errors">;
+  message: string;
+  actions?: { action: () => void; label: string; condition: () => boolean }[];
+} & Pick<MessageWithLinkProps, "scrollToElement">;
+
+function ErrorItemContainer({ treeNode, message, actions, scrollToElement }: ErrorItemContainerProps) {
+  return (
+    <ErrorRegion.Item
+      message={<MessageWithLink linkLabel={treeNode.label} scrollToElement={scrollToElement} message={message} />}
+      messageId={treeNode.id}
+      actions={actions
+        ?.filter(({ condition }) => condition())
+        .map(({ label, action }) => (
+          <Typography key={label} variant="caption" render={<div />}>
+            <Link render={<button type="button" />} onClick={action}>
+              {label}
+            </Link>
+          </Typography>
+        ))}
+    />
+  );
+}
+
+interface MessageWithLinkProps {
+  scrollToElement: () => void;
+  message: string;
+  linkLabel?: string;
+}
+
+function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLinkProps) {
+  const splitMessage = message.split("{{node}}", 2);
+  const firstPart = splitMessage[0];
+  const secondPart = splitMessage.length > 1 ? splitMessage[1] : undefined;
+  const linkToNode = (
+    <Link
+      render={<button type="button" />}
+      onClick={scrollToElement}
+      variant="caption"
+      style={{ verticalAlign: "baseline" }}
+    >
+      {linkLabel}
+    </Link>
+  );
+
+  if (message.length === firstPart.length) {
+    return (
+      <div>
+        {linkToNode}
+        {": "}
+        {firstPart}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {firstPart}
+      {linkToNode}
+      {secondPart ? secondPart : null}
+    </div>
+  );
+}

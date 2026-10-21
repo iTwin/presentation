@@ -5,9 +5,10 @@
 
 import { of } from "rxjs";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
-import { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { doLog, log } from "../../hierarchies/internal/LoggingUtils.js";
 import { setLogger } from "../../hierarchies/Logging.js";
+
+import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 describe("LoggingUtils", () => {
   let logger: { [K in keyof ILogger]: ILogger[K] extends (...args: any[]) => any ? Mock : ILogger[K] };

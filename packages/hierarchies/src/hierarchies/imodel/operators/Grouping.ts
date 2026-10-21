@@ -15,15 +15,13 @@ import {
   map,
   merge,
   mergeMap,
-  Observable,
   of,
   reduce,
   tap,
   toArray,
 } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../HierarchyNode.js";
+import { HierarchyNode } from "../../HierarchyNode.js";
 import {
   LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
   LOGGING_NAMESPACE_PERFORMANCE_INTERNAL as BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
@@ -34,17 +32,22 @@ import {
 import { doLog, log } from "../../internal/LoggingUtils.js";
 import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
 import { tapOnce } from "../../internal/operators/TapOnce.js";
-import {
-  ProcessedGroupingHierarchyNode,
-  ProcessedHierarchyNode,
-  ProcessedInstanceHierarchyNode,
-} from "../IModelHierarchyNode.js";
 import { assignAutoExpand } from "./grouping/AutoExpand.js";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping.js";
 import { createClassGroups } from "./grouping/ClassGrouping.js";
 import { applyGroupHidingParams } from "./grouping/GroupHiding.js";
 import { createLabelGroups } from "./grouping/LabelGrouping.js";
-import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping.js";
+import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping.js";
+
+import type { Observable } from "rxjs";
+import type { ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../HierarchyNode.js";
+import type {
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../IModelHierarchyNode.js";
+import type { PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping.js";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -57,7 +60,7 @@ const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = createOperatorLoggingNamespace(
 
 /** @internal */
 export function createGroupingOperator(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
@@ -102,7 +105,7 @@ export function createGroupingOperator(
         const out = of(res);
         const totalNodes = res.instanceNodes.length + res.restNodes.length;
 
-        return totalNodes <= 1000 ? out : /* v8 ignore next */ out.pipe(delay(0));
+        return totalNodes <= 1000 ? out : /* v8 ignore next -- @preserve */ out.pipe(delay(0));
       }),
       mergeMap(({ instanceNodes, restNodes }): Observable<ProcessedHierarchyNode> => {
         const timer = new StopWatch(undefined, true);
@@ -252,7 +255,7 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 }
 
 function createGroupingHandlers(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

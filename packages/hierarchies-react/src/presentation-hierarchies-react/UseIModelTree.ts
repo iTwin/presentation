@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
-import {
-  createIModelHierarchyProvider,
-  HierarchyDefinition,
-  HierarchyFilteringPath,
-} from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
-import { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
-import { useTree, UseTreeProps, UseTreeResult, useUnifiedSelectionTree } from "./UseTree.js";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { useTranslation } from "./LocalizationContext.js";
+import { useTree, useUnifiedSelectionTree } from "./UseTree.js";
+
+import type { HierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import type { Props } from "@itwin/presentation-shared";
+import type { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import type { UseTreeProps, UseTreeResult } from "./UseTree.js";
 
 /** @public */
 type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
@@ -23,18 +23,26 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
  * Props for `useIModelTree` and `useIModelUnifiedSelectionTree` hooks.
  * @public
  */
-type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> &
-  Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
-    /** Provides the hierarchy definition for the tree. */
+type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> &
+  Pick<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged"> & {
+    /**
+     * Provides the hierarchy definition for the tree.
+     */
     getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
 
-    /** Provides paths to filtered nodes. */
-    getFilteredPaths?: (props: {
-      /** Object that provides access to the iModel schema and can run queries against the iModel. */
+    /**
+     * Provides paths to target nodes.
+     */
+    getSearchPaths?: (props: {
+      /**
+       * Object that provides access to the iModel schema and can run queries against the iModel.
+       */
       imodelAccess: IModelAccess;
-      /** Signal indicating that that the request was canceled */
+      /**
+       * Signal indicating that that the request was canceled
+       */
       abortSignal: AbortSignal;
-    }) => Promise<HierarchyFilteringPath[] | undefined>;
+    }) => Promise<HierarchySearchTree[] | undefined>;
   };
 
 /**
@@ -51,10 +59,10 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
  * @public
  */
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
-  const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
+  const { imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths, ...rest } = props;
   return useTree({
     ...rest,
-    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings }),
+    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths }),
   });
 }
 
@@ -74,20 +82,18 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
  * @public
  */
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
-  const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
+  const { imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths, ...rest } = props;
   return useUnifiedSelectionTree({
     ...rest,
-    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings }),
+    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths }),
   });
 }
 
 function useIModelTreeProps(
-  props: Pick<
-    UseIModelTreeProps,
-    "imodelAccess" | "imodelChanged" | "getHierarchyDefinition" | "getFilteredPaths" | "localizedStrings"
-  >,
-): Pick<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> {
-  const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings } = props;
+  props: Pick<UseIModelTreeProps, "imodelAccess" | "imodelChanged" | "getHierarchyDefinition" | "getSearchPaths">,
+): Pick<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> {
+  const { imodelAccess, imodelChanged, getHierarchyDefinition, getSearchPaths } = props;
+  const translate = useTranslation();
   return {
     getHierarchyProvider: useCallback(
       () =>
@@ -95,13 +101,13 @@ function useIModelTreeProps(
           imodelAccess,
           imodelChanged,
           hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
-          localizedStrings,
+          localizedStrings: { other: translate("other"), unspecified: translate("unspecified") },
         }),
-      [imodelAccess, imodelChanged, getHierarchyDefinition, localizedStrings],
+      [imodelAccess, imodelChanged, translate, getHierarchyDefinition],
     ),
-    getFilteredPaths: useCallback(
-      async ({ abortSignal }: { abortSignal: AbortSignal }) => getFilteredPaths?.({ imodelAccess, abortSignal }),
-      [imodelAccess, getFilteredPaths],
+    getSearchPaths: useCallback(
+      async ({ abortSignal }: { abortSignal: AbortSignal }) => getSearchPaths?.({ imodelAccess, abortSignal }),
+      [imodelAccess, getSearchPaths],
     ),
   };
 }

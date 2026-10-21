@@ -6,10 +6,12 @@
  * @module Internal
  */
 
-import { Id64String } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaView } from "@itwin/ecschema-metadata";
-import {
+import { getClassId, hasBaseClass } from "../instance-filter-builder/SchemaViewUtils.js";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SchemaView } from "@itwin/ecschema-metadata";
+import type {
   Descriptor,
   DescriptorOverrides,
   Field,
@@ -17,7 +19,6 @@ import {
   NestedContentField,
   PropertiesField,
 } from "@itwin/presentation-common";
-import { getClassId, hasBaseClass } from "../instance-filter-builder/SchemaViewUtils.js";
 
 type DescriptorFieldsSelector = NonNullable<DescriptorOverrides["fieldsSelector"]>;
 

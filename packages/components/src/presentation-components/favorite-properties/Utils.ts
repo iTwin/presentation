@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { CategoryDescription } from "@itwin/presentation-common";
 import { translate } from "../common/Utils.js";
+
+import type { CategoryDescription } from "@itwin/presentation-common";
 
 /** @internal */
 export const FAVORITES_CATEGORY_NAME = "Favorite";

@@ -7,17 +7,17 @@
  * @module Tree
  */
 
-import { ReactElement } from "react";
-import {
+import { ControlledTree, useTreeModel } from "@itwin/components-react";
+
+import type { ReactElement } from "react";
+import type {
   AbstractTreeNodeLoaderWithProvider,
-  ControlledTree,
   ControlledTreeProps,
   TreeEventHandler,
   TreeRendererProps,
-  useTreeModel,
 } from "@itwin/components-react";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
-import { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import type { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
 
 /* v8 ignore start -- @preserve */
 
@@ -38,6 +38,7 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
   ) => ReactElement;
 };
 
+/* c8 ignore start */
 /**
  * Component that provides a convenient API for using [[usePresentationTreeState]] hook with [ControlledTree]($components-react).
  *

@@ -11,7 +11,7 @@ on:
       - apps/performance-tests/package.json
       - packages/core-interop/**
       - packages/hierarchies/**
-      - packages/models-tree/**
+      - packages/tree-definitions/**
       - packages/shared/**
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
           cache-name: cache-dataset
         with:
           path: "./apps/performance-tests/datasets/*.bim"
-          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts', './apps/performance-tests/src/util/IModelUtilities.ts') }}
 
       - name: Run benchmark tests
         run: pnpm benchmark:hierarchies
@@ -61,7 +61,7 @@ jobs:
         if: steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: "./apps/performance-tests/datasets/*.bim"
-          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts', './apps/performance-tests/src/util/IModelUtilities.ts') }}
 
       - name: Store benchmark result
         uses: JonasDov/github-action-benchmark@04d30c72aa7aad091b58aacbb6c182ebb2ecb6c0

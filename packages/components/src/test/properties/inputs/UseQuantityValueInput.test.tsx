@@ -6,16 +6,19 @@
 import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, QuantityFormatter } from "@itwin/core-frontend";
-import { Format, FormatsProvider, FormatType, ParseError, QuantityParseResult } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
+import { Format, FormatType, ParseError } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import {
+import { useQuantityValueInput } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
+import { render, waitFor } from "../../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs, QuantityFormatter } from "@itwin/core-frontend";
+import type { FormatsProvider, QuantityParseResult } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type {
   QuantityValue,
-  useQuantityValueInput,
   UseQuantityValueInputProps,
 } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
-import { render, waitFor } from "../../TestUtils.js";
 
 function TestInput({
   onChange,

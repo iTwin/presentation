@@ -6,23 +6,29 @@
 import "./DisposePolyfill.js";
 
 import { EMPTY, firstValueFrom, from, map, merge, Subject, takeUntil, toArray } from "rxjs";
-import { Guid, GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
-import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
-import { createIModelHiliteSetProvider, IModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
-import { SelectableInstanceKey, Selectables } from "./Selectable.js";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
-import { computeSelection, SelectionScope } from "./SelectionScope.js";
-import { SelectionStorage } from "./SelectionStorage.js";
-import {
+import { Guid } from "@itwin/core-bentley";
+import { createHiliteSetProvider } from "./HiliteSetProvider.js";
+import { createIModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
+import { Selectables } from "./Selectable.js";
+import { computeSelection } from "./SelectionScope.js";
+import { CoreSelectionSetEventType } from "./types/IModel.js";
+import { safeDispose } from "./Utils.js";
+
+import type { GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
+import type { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import type { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
+import type { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
+import type { IModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
+import type { SelectableInstanceKey } from "./Selectable.js";
+import type { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
+import type { SelectionScope } from "./SelectionScope.js";
+import type { SelectionStorage } from "./SelectionStorage.js";
+import type {
   CoreIModelHiliteSet,
   CoreIModelSelectionSet,
   CoreSelectableIds,
-  CoreSelectionSetEventType,
   CoreSelectionSetEventUnsafe,
 } from "./types/IModel.js";
-import { safeDispose } from "./Utils.js";
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.
@@ -38,13 +44,12 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    *
    * ```ts
    * import { createECSqlQueryExecutor, createECSchemaProvider, createIModelKey } from "@itwin/presentation-core-interop";
-   * import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
    * import { IModelConnection } from "@itwin/core-frontend";
    *
    * const imodel: IModelConnection = ...
    * const imodelAccess = {
    *   ...createECSqlQueryExecutor(imodel),
-   *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
+   *   ...createECSchemaProvider(imodel),
    *   key: createIModelKey(imodel),
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,
@@ -52,7 +57,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * ```
    */
   imodelAccess: ECSqlQueryExecutor &
-    ECClassHierarchyInspector & {
+    Pick<ECSchemaProvider, "classDerivesFrom"> & {
       /** Key of the iModel. Generally taken from `IModelConnection.key`. */
       readonly key: string;
       /** The set of currently hilited elements taken from `IModelConnection.hilited`. */

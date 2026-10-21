@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
 import {
   createTestGenericNodeKey,
@@ -13,11 +12,13 @@ import {
   createTestProcessedInstanceNode,
 } from "../../../Utils.js";
 
+import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+
 describe("LabelGrouping", () => {
   it("groups one node", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
@@ -45,7 +46,7 @@ describe("LabelGrouping", () => {
   it("groups one node when 'action' is set to 'group'", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { action: "group" } } },
@@ -73,7 +74,7 @@ describe("LabelGrouping", () => {
   it("groups one node when 'byLabel' is set to empty object", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: {} } },
@@ -101,13 +102,13 @@ describe("LabelGrouping", () => {
   it("creates separate groups for nodes with same labels and different groupIds", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId2" } } },
@@ -140,13 +141,13 @@ describe("LabelGrouping", () => {
   it("groups multiple nodes with same groupIds and labels", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
@@ -174,13 +175,13 @@ describe("LabelGrouping", () => {
   it("groups multiple nodes", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
       }),
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
@@ -208,13 +209,13 @@ describe("LabelGrouping", () => {
   it("creates different groups for differently labeled nodes", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
       }),
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "2",
         processingParams: { grouping: { byLabel: true } },
@@ -253,7 +254,7 @@ describe("LabelGrouping", () => {
   it("doesn't group nodes with byLabel set to false", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
       }),
     ];

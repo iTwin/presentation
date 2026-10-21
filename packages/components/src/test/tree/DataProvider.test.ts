@@ -5,35 +5,14 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
-import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
-import { CheckBoxState, PageOptions } from "@itwin/components-react";
-import { assert, BeEvent, Logger } from "@itwin/core-bentley";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CheckBoxState } from "@itwin/components-react";
+import { BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ClassInfo,
-  ClientDiagnosticsAttribute,
-  Descriptor,
-  ECInstancesNodeKey,
-  FilterByTextHierarchyRequestOptions,
-  HierarchyRequestOptions,
-  Node,
-  NodeKey,
-  Paged,
-  PresentationError,
-  PresentationStatus,
-  PropertyInfo,
-  RulesetVariable,
-} from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { Descriptor, PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
-import {
-  PresentationInfoTreeNodeItem,
-  PresentationTreeNodeItem,
-  PresentationTreeNodeItemFilteringInfo,
-} from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import {
@@ -45,6 +24,29 @@ import {
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
 import { createMocked } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
+import type { PageOptions } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
+  ClassInfo,
+  ClientDiagnosticsAttribute,
+  ECInstancesNodeKey,
+  FilterByTextHierarchyRequestOptions,
+  HierarchyRequestOptions,
+  Node,
+  NodeKey,
+  Paged,
+  PropertyInfo,
+  RulesetVariable,
+} from "@itwin/presentation-common";
+import type { RulesetVariablesManager } from "@itwin/presentation-frontend";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type {
+  PresentationInfoTreeNodeItem,
+  PresentationTreeNodeItem,
+  PresentationTreeNodeItemFilteringInfo,
+} from "../../presentation-components/tree/PresentationTreeNodeItem.js";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({ instanceKeys: [createTestECInstanceKey({ id })] });
@@ -268,6 +270,7 @@ describe("TreeDataProvider", () => {
       const results = await Promise.all(promises);
 
       expect(results[0], "results[0] should eq results[1]").toBe(results[1]);
+      expect(results[2], "results[2] should eq results[0]").toBe(results[0]);
       expect(results[2], "results[2] should eq results[3]").toBe(results[3]);
       expect(results[4], "results[4] should eq results[5]").toBe(results[5]);
       expect(results[6], "results[6] should eq results[7]").toBe(results[7]);
@@ -645,7 +648,7 @@ describe("TreeDataProvider", () => {
           ({ diagnostics }) =>
             diagnostics?.backendVersion === true &&
             diagnostics.perf === true &&
-            diagnostics?.dev === "error" &&
+            diagnostics.dev === "error" &&
             diagnostics.handler === diagnosticsHandler,
         ),
       );
@@ -654,7 +657,6 @@ describe("TreeDataProvider", () => {
 
   describe("filterable nodes", () => {
     async function loadDescriptor(filteringInfo: PresentationTreeNodeItemFilteringInfo) {
-      assert(filteringInfo.descriptor !== undefined);
       if (filteringInfo.descriptor instanceof Descriptor) {
         return filteringInfo.descriptor;
       }

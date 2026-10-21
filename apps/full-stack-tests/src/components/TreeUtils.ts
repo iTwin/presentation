@@ -9,7 +9,7 @@ import { fireEvent, within } from "@testing-library/react";
 export function getNodeByLabel(htmlContainer: HTMLElement, label: string) {
   const node = within(htmlContainer)
     .queryAllByRole("treeitem")
-    .find((el) => el.textContent?.includes(label));
+    .find((el) => el.textContent.includes(label));
   if (!node) {
     throw new Error(`Failed to find node with label "${label}"`);
   }

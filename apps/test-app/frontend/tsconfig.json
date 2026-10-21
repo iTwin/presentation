@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "rootDir": ".",
-    "noEmit": true
+    "noEmit": true,
+    "types": ["@stratakit/mui/types.d.ts"]
   },
   "include": ["src", "vite.config.mts"]
 }

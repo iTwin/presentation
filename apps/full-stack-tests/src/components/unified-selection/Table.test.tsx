@@ -9,20 +9,21 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, Ruleset } from "@itwin/presentation-common";
-import {
-  TableColumnDefinition,
-  TableRowDefinition,
-  usePresentationTableWithUnifiedSelection,
-} from "@itwin/presentation-components";
-import { createStorage, SelectionStorage } from "@itwin/unified-selection";
+import { withEditTxn } from "@itwin/core-backend";
+import { IModelApp } from "@itwin/core-frontend";
+import { usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import { createStorage } from "@itwin/unified-selection";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import type { TableColumnDefinition, TableRowDefinition } from "@itwin/presentation-components";
+import type { SelectionStorage } from "@itwin/unified-selection";
 
 describe("Learning snippets", async () => {
   describe("Table", () => {
@@ -111,23 +112,15 @@ describe("Learning snippets", async () => {
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
 
-      const { imodel } = await buildTestIModel((builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
-        elementKeys.push(
-          insertPhysicalElement({
-            builder,
-            userLabel: "My Element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-          insertPhysicalElement({
-            builder,
-            userLabel: "My Element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-          }),
-        );
+      const { imodelConnection } = await buildTestIModel((imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          elementKeys.push(
+            insertPhysicalElement({ txn, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id }),
+            insertPhysicalElement({ txn, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id }),
+          );
+        });
       });
 
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
@@ -136,7 +129,7 @@ describe("Learning snippets", async () => {
 
       function App() {
         // pass selection storage to the component to hook into it
-        return <MyTable imodel={imodel} selectionStorage={selectionStorage} />;
+        return <MyTable imodel={imodelConnection} selectionStorage={selectionStorage} />;
       }
       // __PUBLISH_EXTRACT_END__
 
@@ -147,28 +140,38 @@ describe("Learning snippets", async () => {
 
       // test Unified Selection -> Table content synchronization
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[0]],
+        }),
       );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1"]);
 
       act(() =>
-        selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }),
+        selectionStorage.replaceSelection({
+          imodelKey: imodelConnection.key,
+          source: "",
+          selectables: [elementKeys[1]],
+        }),
       );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 2"]);
 
       act(() =>
         selectionStorage.replaceSelection({
-          imodelKey: imodel.key,
+          imodelKey: imodelConnection.key,
           source: "",
           selectables: [elementKeys[0], elementKeys[1]],
         }),
       );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
-      act(() => selectionStorage.clearSelection({ imodelKey: imodel.key, source: "" }));
+      act(() => selectionStorage.clearSelection({ imodelKey: imodelConnection.key, source: "" }));
       await waitFor(() => getByText(container, "Select something to see properties"));
 
-      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [modelKey] }));
+      act(() =>
+        selectionStorage.replaceSelection({ imodelKey: imodelConnection.key, source: "", selectables: [modelKey] }),
+      );
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
     });
   });

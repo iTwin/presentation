@@ -62,24 +62,10 @@
               "modifiers": ["side_effect"],
               "elementNamePattern": ["**/*.js", "@*/*"]
             },
-            {
-              "groupName": "icons",
-              "elementNamePattern": ["**/*.svg"]
-            },
-            {
-              "groupName": "style-imports",
-              "elementNamePattern": ["**/*.css", "**/*.scss"]
-            },
-            {
-              "groupName": "scoped",
-              "modifiers": ["value"],
-              "elementNamePattern": ["@*/**"]
-            },
-            {
-              "groupName": "type-scoped",
-              "modifiers": ["type"],
-              "elementNamePattern": ["@*/**"]
-            }
+            { "groupName": "icons", "elementNamePattern": ["**/*.svg"] },
+            { "groupName": "style-imports", "elementNamePattern": ["**/*.css", "**/*.scss"] },
+            { "groupName": "scoped", "modifiers": ["value"], "elementNamePattern": ["@*/**"] },
+            { "groupName": "type-scoped", "modifiers": ["type"], "elementNamePattern": ["@*/**"] }
           ]
         }
       }

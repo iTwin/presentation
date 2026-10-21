@@ -5,25 +5,24 @@
 
 import { assert } from "@itwin/core-bentley";
 import {
-  ArrayElement,
   createMainThreadReleaseOnTimePassedHandler,
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
   formatConcatenatedValue,
   getClass,
-  IPrimitiveValueFormatter,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
-import { HierarchyNodeKey, PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
-import {
+import { HierarchyNode } from "../../../HierarchyNode.js";
+import { HierarchyNodeKey } from "../../../HierarchyNodeKey.js";
+
+import type { ArrayElement, EC, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
+import type { PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import type {
   HierarchyNodePropertiesGroupingParams,
   HierarchyNodePropertyGroup,
   HierarchyNodePropertyValueRange,
   ProcessedInstanceHierarchyNode,
 } from "../../IModelHierarchyNode.js";
-import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
+import type { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
@@ -53,7 +52,7 @@ export interface PropertyGroupInfo {
 
 /** @internal */
 export type PreviousPropertiesGroupingInfo = Array<{
-  propertiesClassName: string;
+  propertiesClassName: EC.FullClassNameDotNotation;
   propertyName: string;
   isRange?: boolean;
 }>;
@@ -65,7 +64,7 @@ export async function createPropertyGroups(
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: ECClassHierarchyInspector,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<GroupingHandlerResult> {
   let otherValuesGrouping: { node: ProcessedInstancesGroupingHierarchyNode; new: boolean } | undefined;
   const getOtherValuesGroupingNode = () => {
@@ -110,13 +109,8 @@ export async function createPropertyGroups(
       continue;
     }
     const currentProperty = byProperties.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
-    const propertyIdentifier = {
-      propertyName: currentProperty.propertyName,
-      propertyClassName: byProperties.propertiesClassName,
-    };
-
     const propertyClass = handlerGroupingParams.ecClass;
-    const property = await propertyClass.getProperty(currentProperty.propertyName);
+    const property = propertyClass.getProperty(currentProperty.propertyName);
 
     if (
       !property?.isNavigation() &&
@@ -126,6 +120,7 @@ export async function createPropertyGroups(
       continue;
     }
 
+    const propertyIdentifier = { propertyName: property.name, propertyClassName: property.class.fullName };
     const extendedTypeName = "extendedTypeName" in property ? property.extendedTypeName : undefined;
     const primitiveType = "primitiveType" in property ? property.primitiveType : "String";
     assert(primitiveType !== "Binary" && primitiveType !== "IGeometry");
@@ -134,7 +129,7 @@ export async function createPropertyGroups(
       if (byProperties.createGroupForUnspecifiedValues) {
         addGroupingToMap(
           groupings.grouped,
-          `${currentProperty.propertyName}:Unspecified`,
+          `${propertyIdentifier.propertyName}:Unspecified`,
           {
             label: localizedStrings.unspecified,
             propertyGroupingNodeKey: {
@@ -151,7 +146,7 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const koqName = (await property.kindOfQuantity)?.fullName;
+    const koqName = property.kindOfQuantity?.fullName;
     if (currentProperty.ranges) {
       if (typeof currentProperty.propertyValue === "number") {
         const propValue = currentProperty.propertyValue;
@@ -178,7 +173,7 @@ export async function createPropertyGroups(
             `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
           addGroupingToMap(
             groupings.grouped,
-            `${currentProperty.propertyName}:[${matchingRange.fromValue}-${matchingRange.toValue}]${matchingRange.rangeLabel ? `(${matchingRange.rangeLabel})` : ""}`,
+            `${propertyIdentifier.propertyName}:[${matchingRange.fromValue}-${matchingRange.toValue}]${matchingRange.rangeLabel ? `(${matchingRange.rangeLabel})` : ""}`,
             {
               label: rangeLabel,
               propertyGroupingNodeKey: {
@@ -225,7 +220,7 @@ export async function createPropertyGroups(
 
     addGroupingToMap(
       groupings.grouped,
-      `${currentProperty.propertyName}:${formattedValue}`,
+      `${propertyIdentifier.propertyName}:${formattedValue}`,
       {
         label: formattedValue,
         propertyGroupingNodeKey: {
@@ -325,6 +320,17 @@ export async function getUniquePropertiesGroupInfo(
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const parentPropertyGroupPath = parentNode ? createNodePropertyGroupPathMatchers(parentNode) : [];
   const uniqueProperties = new Map<string, PropertyGroupInfo>();
+  // `getClass` resolves the same class for every node sharing a `propertiesClassName`, so resolve each class once and
+  // reuse it across nodes instead of calling `getClass` (schema lookup + class lookup) on every node.
+  const propertiesClassCache = new Map<EC.FullClassNameDotNotation, EC.Class>();
+  const getPropertiesClass = async (fullClassName: EC.FullClassNameDotNotation): Promise<EC.Class> => {
+    let ecClass = propertiesClassCache.get(fullClassName);
+    if (!ecClass) {
+      ecClass = await getClass(schemaProvider, fullClassName);
+      propertiesClassCache.set(fullClassName, ecClass);
+    }
+    return ecClass;
+  };
   for (const node of nodes) {
     await releaseMainThread();
 
@@ -333,43 +339,45 @@ export async function getUniquePropertiesGroupInfo(
       continue;
     }
 
+    const propertiesClass = await getPropertiesClass(byProperties.propertiesClassName);
     let propertyGroupIndex = 0;
     const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
+      const property = propertiesClass.getProperty(propertyGroup.propertyName);
+      const propertyName = property?.name ?? propertyGroup.propertyName;
+      const propertyClassName = property?.class.fullName ?? propertiesClass.fullName;
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       const lastKey =
         previousPropertiesInfo.length > 0
           ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey
           : "";
-      const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
-      const mapKey = `${byProperties.propertiesClassName}:${propertyGroupKey}`;
+      const propertyGroupKey = `${lastKey}:${propertyName}(${mapKeyRanges})`;
+      const mapKey = `${propertiesClass.fullName}:${propertyGroupKey}`;
 
       let isAlreadyGrouped = false;
-      if (
-        !isAlreadyGrouped &&
-        parentPropertyGroupPath.length > 0 &&
-        propertyGroupIndex < parentPropertyGroupPath.length
-      ) {
+      if (parentPropertyGroupPath.length > 0 && propertyGroupIndex < parentPropertyGroupPath.length) {
         const groupMatcher = parentPropertyGroupPath[propertyGroupIndex];
         isAlreadyGrouped = groupMatcher({
-          propertiesClassName: byProperties.propertiesClassName,
-          propertyName: propertyGroup.propertyName,
+          propertiesClassName: propertyClassName,
+          propertyName,
           isRange: !!propertyGroup.ranges,
         });
       }
       if (!isAlreadyGrouped && !uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
-          ecClass: await getClass(schemaProvider, byProperties.propertiesClassName),
-          propertyGroup: { propertyName: propertyGroup.propertyName, ranges: propertyGroup.ranges },
+          ecClass: propertiesClass,
+          propertyGroup: { propertyName, ranges: propertyGroup.ranges },
           previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
-            propertiesClassName: byProperties.propertiesClassName,
+            propertiesClassName:
+              propertiesClass.getProperty(groupingInfo.propertyGroup.propertyName)?.class.fullName ??
+              propertiesClass.fullName,
             propertyName: groupingInfo.propertyGroup.propertyName,
             isRange: !!groupingInfo.propertyGroup.ranges,
           })),
         });
       }
 
-      previousPropertiesInfo.push({ propertyGroup, propertyGroupKey });
+      previousPropertiesInfo.push({ propertyGroup: { ...propertyGroup, propertyName }, propertyGroupKey });
       ++propertyGroupIndex;
     }
   }
@@ -391,8 +399,8 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
-  nodeFullClassName: string,
-  classHierarchyInspector: ECClassHierarchyInspector,
+  nodeFullClassName: EC.FullClassNameDotNotation,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
@@ -468,7 +476,7 @@ export function doRangesMatch(
 
 /** @internal */
 export async function createPropertiesGroupingHandlers(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

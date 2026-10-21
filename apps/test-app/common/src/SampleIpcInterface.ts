@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64Arg } from "@itwin/core-bentley";
-import { ElementProps } from "@itwin/core-common";
+import type { Id64Arg } from "@itwin/core-bentley";
+import type { ElementProps } from "@itwin/core-common";
 
 /** @internal */
 export const PRESENTATION_TEST_APP_IPC_CHANNEL_NAME = "presentation-test-app-ipc-interface";

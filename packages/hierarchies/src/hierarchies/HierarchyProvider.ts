@@ -3,17 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./internal/DisposePolyfill.js";
-
-import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
-import { GenericInstanceFilter } from "@itwin/core-common";
-import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
-import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
-import { safeDispose } from "./internal/Common.js";
-import { eachValueFrom } from "./internal/EachValueFrom.js";
-import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
+
+import type { GenericInstanceFilter } from "@itwin/core-common";
+import type {
+  Event,
+  EventListener,
+  InstanceKey,
+  IPrimitiveValueFormatter,
+  Props,
+  RaisableEvent,
+} from "@itwin/presentation-shared";
+import type { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import type { HierarchySearchTree } from "./HierarchySearch.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.
@@ -47,8 +49,8 @@ interface HierarchyChangedEventArgs {
   /** Set when the hierarchy change was caused by a formatter change. */
   formatterChange?: { newFormatter: IPrimitiveValueFormatter | undefined };
 
-  /** Set when the hierarchy change was caused by a hierarchy filter change. */
-  filterChange?: { newFilter: Props<HierarchyProvider["setHierarchyFilter"]> };
+  /** Set when the hierarchy change was caused by a hierarchy search change. */
+  searchChange?: { newSearch: Props<HierarchyProvider["setHierarchySearch"]> };
 }
 
 /**
@@ -57,14 +59,13 @@ interface HierarchyChangedEventArgs {
  */
 export interface HierarchyProvider {
   /**
-   * An event that provider raises due to a hierarchy change, that requires a reload. Provider may
-   * set additional event arguments to provide extra information about what caused the change.
+   * An event that provider raises due to a hierarchy change that requires a reload.
    *
    * Consumers are expected to subscribe to this event and reload the hierarchy when it's raised.
-   * Implementations may provide additional details on what caused the change through the optional
+   * Implementations may provide additional details on what caused the change through the
    * event arguments.
    */
-  readonly hierarchyChanged: Event<(args?: HierarchyChangedEventArgs) => void>;
+  readonly hierarchyChanged: Event<(args: HierarchyChangedEventArgs) => void>;
 
   /**
    * Gets nodes for the specified parent node. This is **the method to implement**, otherwise
@@ -92,83 +93,83 @@ export interface HierarchyProvider {
   setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 
   /**
-   * Sets the hierarchy filter used by this hierarchy provider. Setting to `undefined`
-   * removes the filter.
+   * Sets the hierarchy search used by this hierarchy provider. Setting to `undefined`
+   * removes the search.
    *
-   * @note There's a difference between `undefined` filter and filter with empty paths list. The
-   * former means no filter is applied, while the latter means the filter is applied and it filters-out
+   * @note There's a difference between `undefined` search and search with empty paths list. The
+   * former means no search is applied, while the latter means the search is applied and it filters-out
    * all hierarchy.
    *
-   * @note Changing filter is expected to trigger the `hierarchyChanged` event with `filterChange` arg.
+   * @note Changing search is expected to trigger the `hierarchyChanged` event with `searchChange` arg.
    */
-  setHierarchyFilter(
+  setHierarchySearch(
     props:
       | {
-          /** A list of node identifiers from root to target node. */
-          paths: HierarchyFilteringPath[];
+          /** A list of search trees that define paths from root to search target nodes. */
+          paths: HierarchySearchTree[];
         }
       | undefined,
   ): void;
 }
 
 /**
- * Props for `mergeProviders` function.
+ * An utility to create a `HierarchyProvider` from a partial implementation.
+ *
+ * Creating a `HierarchyProvider` directly requires implementing all its methods:
+ * ```ts
+ * {
+ *   hierarchyChanged: new BeEvent(),
+ *   async *getNodes({ parentNode }) {
+ *     // yield nodes...
+ *   },
+ *   async *getNodeInstanceKeys() {},
+ *   setFormatter() {},
+ *   setHierarchySearch() {},
+ * }
+ * ```
+ *
+ * However, in many cases you may only need to implement the `getNodes` method and
+ * can rely on default implementations for other methods.
+ *
+ * With this utility you can implement only part of it, e.g. just the `getNodes` method:
+ * ```ts
+ * // provide implementation as a javascript object
+ * createHierarchyProvider(({ hierarchyChanged }) => ({
+ *   async *getNodes({ parentNode }) {
+ *     // yield nodes...
+ *   },
+ * }));
+ *
+ * // or, provide implementation as a class instance:
+ * createHierarchyProvider(
+ *   ({ hierarchyChanged }) =>
+ *     new (class implements Pick<HierarchyProvider, "getNodes"> {
+ *       public async *getNodes({ parentNode }): ReturnType<HierarchyProvider["getNodes"]> {
+ *         // yield nodes...
+ *       }
+ *     })(),
+ * );
+ * ```
+ *
  * @public
  */
-interface MergeHierarchyProvidersProps {
-  /** List of providers to merge. */
-  providers: HierarchyProvider[];
-}
-
-/**
- * Creates a single, merged, hierarchy provider from multiple given providers.
- * @public
- */
-export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
-  /** @deprecated in 1.4. Use `[Symbol.dispose]` instead. */
-  dispose: () => void;
-  [Symbol.dispose]: () => void;
-} {
-  const hierarchyChanged = new BeEvent<() => void>();
-  providers.forEach((p) => {
-    p.hierarchyChanged.addListener(() => hierarchyChanged.raiseEvent());
-  });
-  const dispose = () => {
-    hierarchyChanged.clear();
-    providers.forEach((p) => safeDispose(p));
-  };
-
-  return {
+export function createHierarchyProvider<
+  TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">,
+>(
+  partialFactory: (props: {
+    hierarchyChanged: RaisableEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>;
+  }) => TPartialProvider,
+): TPartialProvider & HierarchyProvider {
+  const hierarchyChanged: Props<typeof partialFactory>["hierarchyChanged"] = new BeEvent();
+  const impl = partialFactory({ hierarchyChanged });
+  return Object.assign(impl, {
     hierarchyChanged,
-    getNodes: (props) =>
-      eachValueFrom(
-        from(providers).pipe(
-          mergeMap((provider) =>
-            from(provider.getNodes(props)).pipe(
-              mergeMap((node) => {
-                if (node.children) {
-                  return of(node);
-                }
-                // each provider only considers its own data when determining node's children - in case it says
-                // the node has no children, we have to check against the other providers too
-                return from(providers).pipe(
-                  filter((p) => p !== provider),
-                  mergeMap((p) => p.getNodes({ parentNode: node })),
-                  map(() => true),
-                  first(undefined, false),
-                  map((hasChildren) => ({ ...node, children: hasChildren })),
-                );
-              }),
-            ),
-          ),
-          sortNodesByLabelOperator,
-          // TODO: consider merging similar nodes
-        ),
-      ),
-    getNodeInstanceKeys: (props) => eachValueFrom(from(providers).pipe(mergeMap((p) => p.getNodeInstanceKeys(props)))),
-    setFormatter: (formatter) => providers.forEach((p) => p.setFormatter(formatter)),
-    setHierarchyFilter: (props) => providers.forEach((p) => p.setHierarchyFilter(props)),
-    [Symbol.dispose]: dispose,
-    dispose,
-  };
+    ...(impl.getNodeInstanceKeys
+      ? { getNodeInstanceKeys: impl.getNodeInstanceKeys }
+      : /* v8 ignore next */ { async *getNodeInstanceKeys() {} }),
+    ...(impl.setFormatter ? { setFormatter: impl.setFormatter } : /* v8 ignore next */ { setFormatter() {} }),
+    ...(impl.setHierarchySearch
+      ? { setHierarchySearch: impl.setHierarchySearch }
+      : /* v8 ignore next */ { setHierarchySearch() {} }),
+  });
 }

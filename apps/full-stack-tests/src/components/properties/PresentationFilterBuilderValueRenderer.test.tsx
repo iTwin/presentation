@@ -11,15 +11,18 @@ import {
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { IModelApp } from "@itwin/core-frontend";
-import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
+import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { importSchema } from "../../IModelUtils.js";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { queryByText, render } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { stubVirtualization } from "../../Utils.js";
+
+import type { ClassInfo } from "@itwin/presentation-common";
 
 describe("Presentation filter builder value renderer", () => {
   stubVirtualization();
@@ -36,54 +39,56 @@ describe("Presentation filter builder value renderer", () => {
 
   it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided", async () => {
     let schemaAlias = "";
-    const imodel = await buildTestIModel(async (builder, testName) => {
-      const schema = await importSchema(
-        testName,
-        builder,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="MyPhysicalObjectParent">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECProperty propertyName="PropertyName" typeName="string" />
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject1">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject2">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-      schemaAlias = schema.schemaAlias;
-      const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "Test SpatialCategory" });
-      const parentElement = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObjectParent.fullName,
-        userLabel: "Parent Test Class",
-        ["PropertyName"]: "Parent",
+    const result = await buildTestIModel(async (imodel, testName) => {
+      return withEditTxn(imodel, async (txn) => {
+        const schema = await importSchema(
+          testName,
+          imodel,
+          `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECEntityClass typeName="MyPhysicalObjectParent">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="PropertyName" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject1">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject2">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        schemaAlias = schema.schemaAlias;
+        const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ txn, codeValue: "Test SpatialCategory" });
+        const parentElement = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObjectParent.fullName,
+          userLabel: "Parent Test Class",
+          ["PropertyName"]: "Parent",
+        });
+        const element1 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject1.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class",
+          ["PropertyName"]: "Value1",
+        });
+        const element2 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject2.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class 2",
+          ["PropertyName"]: "Value2",
+        });
+        return { parentElement, element1, element2, category };
       });
-      const element1 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject1.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class",
-        ["PropertyName"]: "Value1",
-      });
-      const element2 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject2.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class 2",
-        ["PropertyName"]: "Value2",
-      });
-      return { parentElement, element1, element2, category };
     });
 
     const testProperty = {
@@ -93,12 +98,12 @@ describe("Presentation filter builder value renderer", () => {
     };
 
     const keys = new KeySet([
-      { id: imodel.element1.id, className: imodel.element1.className },
-      { id: imodel.element2.id, className: imodel.element2.className },
+      { id: result.element1.id, className: result.element1.className },
+      { id: result.element2.id, className: result.element2.className },
     ]);
 
     const testDescriptor = await Presentation.presentation.getContentDescriptor({
-      imodel: imodel.imodel,
+      imodel: result.imodelConnection,
       rulesetOrId: {
         id: `Test descriptor ruleset`,
         rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
@@ -113,14 +118,14 @@ describe("Presentation filter builder value renderer", () => {
     }
 
     const selectedClasses: ClassInfo[] = [
-      { id: imodel.element1.id, name: imodel.element1.className, label: "Test Class" },
+      { id: result.element1.id, name: result.element1.className, label: "Test Class" },
     ];
 
     const { baseElement, findByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
         property={testProperty}
         onChange={() => {}}
-        imodel={imodel.imodel}
+        imodel={result.imodelConnection}
         descriptor={testDescriptor}
         descriptorInputKeys={keys}
         selectedClasses={selectedClasses}
@@ -139,54 +144,56 @@ describe("Presentation filter builder value renderer", () => {
 
   it("renders 'PresentationFilterBuilderValueRenderer' with correct property values when selected classes are provided without keys", async () => {
     let schemaAlias = "";
-    const imodel = await buildTestIModel(async (builder, testName) => {
-      const schema = await importSchema(
-        testName,
-        builder,
-        `
+    const result = await buildTestIModel(async (imodel, testName) => {
+      return withEditTxn(imodel, async (txn) => {
+        const schema = await importSchema(
+          testName,
+          imodel,
+          `
           <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="MyPhysicalObjectParent">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <ECProperty propertyName="PropertyName" typeName="string" />
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject1">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-          <ECEntityClass typeName="MyPhysicalObject2">
-            <BaseClass>MyPhysicalObjectParent</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-      schemaAlias = schema.schemaAlias;
-      const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
-      const category = insertSpatialCategory({ builder, codeValue: "Test SpatialCategory" });
-      const parentElement = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObjectParent.fullName,
-        userLabel: "Parent Test Class",
-        ["PropertyName"]: "Parent",
+            <ECEntityClass typeName="MyPhysicalObjectParent">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="PropertyName" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject1">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="MyPhysicalObject2">
+              <BaseClass>MyPhysicalObjectParent</BaseClass>
+            </ECEntityClass>
+          `,
+        );
+        schemaAlias = schema.schemaAlias;
+        const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "TestPhysicalModel" });
+        const category = insertSpatialCategory({ txn, codeValue: "Test SpatialCategory" });
+        const parentElement = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObjectParent.fullName,
+          userLabel: "Parent Test Class",
+          ["PropertyName"]: "Parent",
+        });
+        const element1 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject1.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class",
+          ["PropertyName"]: "Value1",
+        });
+        const element2 = insertPhysicalElement({
+          txn,
+          modelId: physicalModel.id,
+          categoryId: category.id,
+          classFullName: schema.items.MyPhysicalObject2.fullName,
+          parentId: parentElement.id,
+          userLabel: "Test Class 2",
+          ["PropertyName"]: "Value2",
+        });
+        return { parentElement, element1, element2, category };
       });
-      const element1 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject1.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class",
-        ["PropertyName"]: "Value1",
-      });
-      const element2 = insertPhysicalElement({
-        builder,
-        modelId: physicalModel.id,
-        categoryId: category.id,
-        classFullName: schema.items.MyPhysicalObject2.fullName,
-        parentId: parentElement.id,
-        userLabel: "Test Class 2",
-        ["PropertyName"]: "Value2",
-      });
-      return { parentElement, element1, element2, category };
     });
 
     const testProperty = {
@@ -196,12 +203,12 @@ describe("Presentation filter builder value renderer", () => {
     };
 
     const keys = new KeySet([
-      { id: imodel.element1.id, className: imodel.element1.className },
-      { id: imodel.element2.id, className: imodel.element2.className },
+      { id: result.element1.id, className: result.element1.className },
+      { id: result.element2.id, className: result.element2.className },
     ]);
 
     const testDescriptor = await Presentation.presentation.getContentDescriptor({
-      imodel: imodel.imodel,
+      imodel: result.imodelConnection,
       rulesetOrId: {
         id: `Test descriptor ruleset`,
         rules: [{ ruleType: "Content", specifications: [{ specType: "SelectedNodeInstances" }] }],
@@ -216,14 +223,14 @@ describe("Presentation filter builder value renderer", () => {
     }
 
     const selectedClasses: ClassInfo[] = [
-      { id: imodel.element1.id, name: imodel.element1.className, label: "Test Class" },
+      { id: result.element1.id, name: result.element1.className, label: "Test Class" },
     ];
 
     const { baseElement, findByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
         property={testProperty}
         onChange={() => {}}
-        imodel={imodel.imodel}
+        imodel={result.imodelConnection}
         descriptor={testDescriptor}
         selectedClasses={selectedClasses}
         operator={"is-equal"}

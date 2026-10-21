@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { Localization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { LOCALIZATION_NAMESPACE } from "../../presentation-components/common/LocalizedStrings.js";
 import { translate } from "../../presentation-components/common/Utils.js";
+
+import type { Localization } from "@itwin/core-common";
 
 describe("translate", () => {
   it("prepends the versioned namespace to the string id", () => {

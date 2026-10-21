@@ -5,21 +5,24 @@
 
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { Format, FormatType, ParseError, QuantityParseResult } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
+import { Format, FormatType, ParseError } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
-import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { QuantityEditorName } from "../../../presentation-components/properties/editors/EditorNames.js";
 import { QuantityPropertyEditorInput } from "../../../presentation-components/properties/inputs/QuantityPropertyEditorInput.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { QuantityParseResult } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
 import type { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 
 const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: number; kindOfQuantityName?: string }) => {
   return createTestPropertyRecord(
@@ -210,9 +213,10 @@ describe("<QuantityPropertyEditorInput />", () => {
         <QuantityPropertyEditorInput propertyRecord={record} onCommit={onCommitSpy} />
       </SchemaMetadataContextProvider>,
     );
-    const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = (await waitFor(() => getByRole("textbox"))) as HTMLInputElement;
 
     await user.click(inputContainer);
+    await waitFor(() => expect(inputContainer.selectionEnd).to.eq(inputContainer.value.length));
     await user.keyboard("{Enter}");
 
     expect(onCommitSpy).toHaveBeenCalledOnce();

@@ -10,28 +10,26 @@
 import "../../common/DisposePolyfill.js";
 
 import { Subject, takeUntil, tap } from "rxjs";
-import {
+import { TreeEventHandler } from "@itwin/components-react";
+import { Guid } from "@itwin/core-bentley";
+import { NodeKey } from "@itwin/presentation-common";
+import { Presentation, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
+import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
+import { toRxjsObservable } from "../Utils.js";
+
+import type {
   AbstractTreeNodeLoaderWithProvider,
   MutableTreeModel,
   MutableTreeModelNode,
   TreeEditingParams,
-  TreeEventHandler,
   TreeModelChanges,
   TreeNodeItem,
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
-import { Guid } from "@itwin/core-bentley";
-import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
-import {
-  Presentation,
-  SelectionChangeEventArgs,
-  SelectionChangeType,
-  SelectionHelper,
-} from "@itwin/presentation-frontend";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
-import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
-import { toRxjsObservable } from "../Utils.js";
+import type { Keys, KeySet } from "@itwin/presentation-common";
+import type { SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler
@@ -158,7 +156,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    /* v8 ignore next 3 -- @preserve */
+    /* v8 ignore next -- @preserve */
     if (!isPresentationTreeNodeItem(node)) {
       return false;
     }
@@ -258,7 +256,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     this.modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
-        /* v8 ignore next 3 -- @preserve */
+        /* v8 ignore next -- @preserve */
         if (!node) {
           continue;
         }

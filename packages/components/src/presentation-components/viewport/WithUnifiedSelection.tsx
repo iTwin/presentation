@@ -8,10 +8,12 @@
 
 import "../common/DisposePolyfill.js";
 
-import { createContext, memo, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { ViewportProps } from "@itwin/imodel-components-react";
+import { createContext, memo, useContext, useEffect, useState } from "react";
 import { getDisplayName } from "../common/Utils.js";
 import { ViewportSelectionHandler } from "./ViewportSelectionHandler.js";
+
+import type { PropsWithChildren } from "react";
+import type { ViewportProps } from "@itwin/imodel-components-react";
 
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.

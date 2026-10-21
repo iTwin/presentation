@@ -6,7 +6,8 @@
 import { assert } from "@itwin/core-bentley";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./ConcatenatedValue.js";
 import { julianToDateTime } from "./Utils.js";
-import { TypedPrimitiveValue } from "./Values.js";
+
+import type { TypedPrimitiveValue } from "./Values.js";
 
 /**
  * A type definition for a function that knows how to create a display string for a typed primitive value.

@@ -4,18 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { InstanceKey, Item, KeySet } from "@itwin/presentation-common";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { createStorage, Selectables } from "@itwin/unified-selection";
-import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
 import {
   usePresentationTable,
-  UsePresentationTableProps,
   usePresentationTableWithUnifiedSelection,
-  UsePresentationTableWithUnifiedSelectionProps,
 } from "../../presentation-components/table/UsePresentationTable.js";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
@@ -24,6 +21,15 @@ import {
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
 import { act, createMocked, renderHook, waitFor } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
+import type { FormattingUnitSystemChangedArgs, QuantityFormatter } from "@itwin/core-frontend";
+import type { InstanceKey, Item } from "@itwin/presentation-common";
+import type { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
+import type {
+  UsePresentationTableProps,
+  UsePresentationTableWithUnifiedSelectionProps,
+} from "../../presentation-components/table/UsePresentationTable.js";
 
 describe("usePresentationTable", () => {
   const imodel = { key: "imodel_key" } as IModelConnection;

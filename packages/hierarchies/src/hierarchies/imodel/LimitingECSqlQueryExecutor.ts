@@ -4,20 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Guid, StopWatch } from "@itwin/core-bentley";
-import {
-  createMainThreadReleaseOnTimePassedHandler,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
-  trimWhitespace,
-} from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
   LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
 } from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
+
+import type {
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
@@ -118,25 +118,23 @@ function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 300
   return {
     onStep() {
       if (firstStep) {
-        /* v8 ignore start */
+        /* v8 ignore next -- @preserve */
         doLog({
           category: LOGGING_NAMESPACE_PERFORMANCE,
           severity: timer.current.milliseconds >= firstStepWarningThreshold ? "warning" : "trace",
           message: () => `[${queryId}] First step took ${timer.currentSeconds} s.`,
         });
-        /* v8 ignore stop */
         firstStep = false;
       }
       ++rowsCount;
     },
     onComplete() {
-      /* v8 ignore start */
+      /* v8 ignore next -- @preserve */
       doLog({
         category: LOGGING_NAMESPACE_PERFORMANCE,
         severity: timer.current.milliseconds >= allRowsWarningThreshold ? "warning" : "trace",
         message: () => `[${queryId}] Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`,
       });
-      /* v8 ignore stop */
     },
   };
 }
@@ -144,14 +142,18 @@ function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 300
 /* v8 ignore start */
 function createQueryLogMessage(query: ECSqlQueryDef): string {
   const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
-  const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
+  const bindings = query.bindings
+    ? Array.isArray(query.bindings)
+      ? `[${query.bindings.map((b) => JSON.stringify(b.value)).join(", ")}]`
+      : JSON.stringify(query.bindings)
+    : undefined;
   let output = "{\n";
   if (ctes) {
     output += `  ctes: [ \n${ctes} \n], \n`;
   }
   output += `  ecsql: ${trimWhitespace(query.ecsql)}, \n`;
   if (bindings) {
-    output += `  bindings: [${bindings}], \n`;
+    output += `  bindings: ${bindings}, \n`;
   }
   output += "}";
   return output;

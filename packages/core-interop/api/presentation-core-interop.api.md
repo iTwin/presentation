@@ -5,23 +5,23 @@
 ```ts
 
 import { ECSchemaProvider } from '@itwin/presentation-shared';
-import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import { ECSqlReader } from '@itwin/core-common';
-import { Event } from '@itwin/presentation-shared';
-import { ILogger } from '@itwin/presentation-shared';
-import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
+import type { FormatsProvider } from '@itwin/core-quantity';
+import type { ILogger } from '@itwin/presentation-shared';
+import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
-import { QueryOptions } from '@itwin/core-common';
-import { Schema } from '@itwin/ecschema-metadata';
-import { SchemaContext } from '@itwin/ecschema-metadata';
-import { SchemaKey } from '@itwin/ecschema-metadata';
-import { UnitSystemKey } from '@itwin/core-quantity';
+import type { QueryOptions } from '@itwin/core-common';
+import type { QueryRowProxy } from '@itwin/core-common';
+import type { SchemaView } from '@itwin/ecschema-metadata';
+import type { UnitsProvider } from '@itwin/core-quantity';
+import type { UnitSystemKey } from '@itwin/core-quantity';
 
 // @public
 interface CoreECSqlReaderFactory {
     // (undocumented)
-    createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
+    createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): AsyncIterableIterator<QueryRowProxy>;
 }
 
 // @public
@@ -33,13 +33,14 @@ interface CoreIModel {
 }
 
 // @public
-interface CoreSchemaContext {
-    // (undocumented)
-    getSchema(key: SchemaKey): Promise<Schema | undefined>;
-}
+type CoreSchemaViewGetter = (props?: {
+    schemas?: string[];
+}) => Promise<PublicCoreSchemaView>;
 
 // @public
-export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider;
+export function createECSchemaProvider(imodel: {
+    getSchemaView: CoreSchemaViewGetter;
+} & CoreECSqlReaderFactory): ECSchemaProvider;
 
 // @public
 export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
@@ -56,7 +57,13 @@ export function createValueFormatter(props: CreateValueFormatterProps): IPrimiti
 // @public
 interface CreateValueFormatterProps {
     baseFormatter?: IPrimitiveValueFormatter;
-    schemaContext: SchemaContext;
+    formatsProvider: Pick<FormatsProvider, "getFormat">;
+    imodel: {
+        getSchemaView(props?: {
+            schemas?: string[];
+        }): Promise<PersistenceUnitSchemaView>;
+    };
+    unitsProvider: UnitsProvider;
     unitSystem?: UnitSystemKey;
 }
 
@@ -76,10 +83,16 @@ interface ICoreLogger {
 
 // @public
 interface ICoreTxnManager {
-    onChangesApplied: Event;
-    onCommit: Event;
-    onCommitted: Event;
+    onChangesApplied: Event_2;
+    onCommit: Event_2;
+    onCommitted: Event_2;
 }
+
+// @public
+type PersistenceUnitSchemaView = Pick<SchemaView, "findKindOfQuantity" | "getSchemaByAlias">;
+
+// @public
+type PublicCoreSchemaView = Pick<SchemaView, "schemaToken" | "isOutdated" | "schemaCount" | "classCount" | "getSchema" | "getSchemaByAlias" | "getSchemas" | "findClass" | "findEnumeration" | "findKindOfQuantity" | "findPropertyCategory">;
 
 // @public
 export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void;

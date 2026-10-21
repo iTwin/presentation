@@ -4,10 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ComboBox, SelectOption } from "@itwin/itwinui-react";
-import {
+import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { ComboBox } from "@itwin/itwinui-react";
+import { deserializeUniqueValues, findField, serializeUniqueValues, translate } from "../../common/Utils.js";
+import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils.js";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader.js";
+
+import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type {
   ClassInfo,
   Descriptor,
   Field,
@@ -16,16 +23,7 @@ import {
   MultiSchemaClassesSpecification,
   Ruleset,
 } from "@itwin/presentation-common";
-import {
-  deserializeUniqueValues,
-  findField,
-  serializeUniqueValues,
-  translate,
-  UniqueValue,
-} from "../../common/Utils.js";
-import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils.js";
-import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
-import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader.js";
+import type { UniqueValue } from "../../common/Utils.js";
 
 /** @internal */
 export interface UniquePropertyValuesSelectorProps {
@@ -61,7 +59,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     descriptorInputKeys,
     typeName: property.typename,
     selectedValues,
-    filterText: searchInput,
+    searchText: searchInput,
   });
 
   const onValueChange = useCallback(

@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { OmitOverUnion } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering.js";
-import {
+import { HierarchyNodeKey } from "./HierarchyNodeKey.js";
+
+import type { OmitOverUnion } from "@itwin/presentation-shared";
+import type {
   ClassGroupingNodeKey,
   GenericNodeKey,
   GroupingNodeKey,
-  HierarchyNodeKey,
   IModelHierarchyNodeKey,
   IModelInstanceKey,
   InstancesNodeKey,
@@ -19,47 +19,18 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "./HierarchyNodeKey.js";
+import type { HierarchySearchTree } from "./HierarchySearch.js";
 
 /** @public */
-export type HierarchyNodeFilteringProps = {
-  /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
-  hasFilterTargetAncestor?: boolean;
-  /** Paths to node's children that are filter targets. */
-  filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-} & (
-  | {
-      /** Whether or not this node is a filter target. */
-      isFilterTarget?: false;
-    }
-  | {
-      /** Whether or not this node is a filter target. */
-      isFilterTarget: true;
-      /** Options that were used to filter the node. */
-      filterTargetOptions?: HierarchyFilteringPathOptions;
-    }
-);
-/** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace HierarchyNodeFilteringProps {
-  /** @deprecated in 1.3. Use `createHierarchyFilteringHelper` and its `createChildNodeProps` function to create filtering props for nodes. */
-  /* v8 ignore start */
-  export function create(props: {
-    hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-    isFilterTarget?: boolean;
-    filterTargetOptions?: HierarchyFilteringPathOptions;
-  }): HierarchyNodeFilteringProps | undefined {
-    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions } = props;
-    if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
-      return {
-        ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
-        ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
-        ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
-      };
-    }
-    return undefined;
-  }
-  /* v8 ignore stop */
+export interface HierarchyNodeSearchProps {
+  /** If set to true, then one of the ancestor nodes in the hierarchy is the search target. */
+  hasSearchTargetAncestor?: boolean;
+  /** Paths to node's children that are search targets. */
+  childrenTargetPaths?: HierarchySearchTree[];
+  /** Whether or not this node is a search target. */
+  isSearchTarget?: boolean;
+  /** Options assigned to this node through search. */
+  options?: HierarchySearchTree["options"];
 }
 
 /**
@@ -77,8 +48,6 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
-  /** Data that may be assigned to the node if filtering is enabled */
-  filtering?: HierarchyNodeFilteringProps;
 }
 
 /**
@@ -93,6 +62,8 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
    * filter when requesting child hierarchy level will have no effect.
    */
   supportsFiltering?: boolean;
+  /** Data that is assigned to the node if hierarchy search is enabled */
+  search?: HierarchyNodeSearchProps;
 }
 
 /**
@@ -184,6 +155,23 @@ export namespace HierarchyNode {
     node: TNode,
   ): node is TNode & { key: PropertyGroupingNodeKey; supportsFiltering?: undefined } & GroupingHierarchyNode {
     return HierarchyNodeKey.isPropertyGrouping(node.key);
+  }
+
+  /**
+   * Gets the grouping level of the given grouping node.
+   *
+   * May be useful when setting `groupingLevel` for `HierarchySearchTree.options.autoExpand` or `HierarchySearchPathOptions.reveal`.
+   */
+  export function getGroupingNodeLevel(groupingNode: Pick<GroupingHierarchyNode, "key" | "parentKeys">): number {
+    let level = 1;
+    for (let i = groupingNode.parentKeys.length - 1; i >= 0; i--) {
+      if (HierarchyNodeKey.isGrouping(groupingNode.parentKeys[i])) {
+        level++;
+      } else {
+        break;
+      }
+    }
+    return level;
   }
 }
 

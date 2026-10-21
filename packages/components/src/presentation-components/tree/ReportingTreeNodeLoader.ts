@@ -9,15 +9,16 @@
  */
 
 import { share, Subject, tap } from "rxjs";
-import {
+import { PagedTreeNodeLoader } from "@itwin/components-react";
+import { toRxjsObservable } from "./Utils.js";
+
+import type {
   Observable,
-  PagedTreeNodeLoader,
   TreeDataProvider,
   TreeModelNode,
   TreeModelRootNode,
   TreeNodeLoadResult,
 } from "@itwin/components-react";
-import { toRxjsObservable } from "./Utils.js";
 
 /**
  * Wrapper for `PagedTreeNodeLoader` that reports load times of nodes.

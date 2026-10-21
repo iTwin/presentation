@@ -7,7 +7,6 @@ import { collect, waitFor } from "presentation-test-utilities";
 import { from, Observable } from "rxjs";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { LogLevel } from "@itwin/core-bentley";
-import { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode.js";
 import {
   createHideNodesInHierarchyOperator,
   LOGGING_NAMESPACE,
@@ -19,6 +18,8 @@ import {
   createTestProcessedInstanceNode,
   setupLogging,
 } from "../../Utils.js";
+
+import type { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode.js";
 
 describe("HideNodesInHierarchyOperator", () => {
   beforeAll(() => {

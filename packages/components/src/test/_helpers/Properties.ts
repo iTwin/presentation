@@ -3,14 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
+import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+
+import type {
   ArrayValue,
   PrimitiveValue,
   PropertyDescription,
   PropertyEditorInfo,
-  PropertyRecord,
-  PropertyValueFormat,
-  StandardTypeNames,
   StructValue,
 } from "@itwin/appui-abstract";
 

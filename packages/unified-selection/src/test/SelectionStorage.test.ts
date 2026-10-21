@@ -4,13 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
-import {
-  CLEAR_SELECTION_STORAGE_SOURCE,
-  createStorage,
-  SelectionStorage,
-} from "../unified-selection/SelectionStorage.js";
+import { Selectables } from "../unified-selection/Selectable.js";
+import { CLEAR_SELECTION_STORAGE_SOURCE, createStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type { SelectionStorage } from "../unified-selection/SelectionStorage.js";
 
 const generateSelection = (): SelectableInstanceKey[] => {
   return [

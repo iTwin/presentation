@@ -3,33 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  EMPTY,
-  filter,
-  forkJoin,
-  from,
-  map,
-  merge,
-  mergeMap,
-  Observable,
-  scan,
-  shareReplay,
-  Subject,
-  toArray,
-} from "rxjs";
+import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { Guid, GuidString, Id64String } from "@itwin/core-bentley";
-import {
-  ECClassHierarchyInspector,
+import { Guid } from "@itwin/core-bentley";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { TRANSIENT_ELEMENT_CLASSNAME } from "./Selectable.js";
+import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
+
+import type { Observable } from "rxjs";
+import type { GuidString, Id64String } from "@itwin/core-bentley";
+import type {
+  EC,
+  ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
   ECSqlQueryRow,
-  normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "./Selectable.js";
-import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
+import type { SelectableInstanceKey, Selectables } from "./Selectable.js";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 
@@ -56,7 +48,7 @@ export interface HiliteSet {
  */
 export interface HiliteSetProviderProps {
   /** An object that provides access to iModel's metadata and allows running ECSQL queries on it. */
-  imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
 }
 
 /**
@@ -82,7 +74,7 @@ export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSe
 }
 
 class HiliteSetProviderImpl implements HiliteSetProvider {
-  private _imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+  private _imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
   // Map between a class name and its type
   private _classRelationCache: Map<string, InstanceIdType | Promise<InstanceIdType>>;
   #componentId: GuidString;
@@ -172,7 +164,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     return promise;
   }
 
-  private async getTypeImpl(fullClassName: string): Promise<InstanceIdType> {
+  private async getTypeImpl(fullClassName: EC.FullClassNameDotNotation): Promise<InstanceIdType> {
     return (
       (await this.checkType(fullClassName, "BisCore.Subject", "subject")) ??
       (await this.checkType(fullClassName, "BisCore.Model", "model")) ??
@@ -186,7 +178,11 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     );
   }
 
-  private async checkType(keyClassName: string, checkClassName: string, type: InstanceIdType) {
+  private async checkType(
+    keyClassName: EC.FullClassNameDotNotation,
+    checkClassName: EC.FullClassNameDotNotation,
+    type: InstanceIdType,
+  ) {
     try {
       const res = this._imodelAccess.classDerivesFrom(keyClassName, checkClassName);
       const isOfType = typeof res === "boolean" ? res : await res;

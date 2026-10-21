@@ -3,39 +3,30 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECDb, IModelDb } from "@itwin/core-backend";
+import { IModelDb } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import {
   createECSchemaProvider as createECSchemaProviderInterop,
   createECSqlQueryExecutor,
   createIModelKey,
 } from "@itwin/presentation-core-interop";
-import {
-  createIModelHierarchyProvider,
-  createLimitingECSqlQueryExecutor,
-  HierarchyDefinition,
-} from "@itwin/presentation-hierarchies";
-import {
-  createCachingECClassHierarchyInspector,
-  Event,
-  IPrimitiveValueFormatter,
-  parseFullClassName,
-  Props,
-} from "@itwin/presentation-shared";
-import { createSchemaContext } from "../IModelUtils.js";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createSchemaContext, unifyIModelAPIs } from "../IModelUtils.js";
+
+import type { ECDb } from "@itwin/core-backend";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import type { Event, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
-type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
+type HierarchySearchPaths = NonNullable<NonNullable<HierarchyProviderProps["search"]>["paths"]>;
 
 export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
-  const schemaProvider = createECSchemaProviderInterop(createSchemaContext(imodel));
-  const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
+  const schemaProvider = createECSchemaProviderInterop(unifyIModelAPIs(imodel));
   const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
   return {
     imodelKey: imodel instanceof IModelConnection || imodel instanceof IModelDb ? createIModelKey(imodel) : "ecdb",
     ...schemaProvider,
-    ...classHierarchyInspector,
     ...queryExecutor,
   };
 }
@@ -45,38 +36,52 @@ export function createProvider(
     | {
         imodelAccess: ReturnType<typeof createIModelAccess>;
         imodelChanged?: Event<() => void>;
-        hierarchy: HierarchyDefinition;
         localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-        filteredNodePaths?: HierarchyFilteringPaths;
+        search?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
     | {
-        imodel: IModelConnection | IModelDb | ECDb;
-        formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
+        imodel: IModelConnection | IModelDb;
+        formatterFactory?: (props: {
+          schemaContext: SchemaContext;
+          imodel: ReturnType<typeof unifyIModelAPIs>;
+        }) => IPrimitiveValueFormatter;
+      }
+    | {
+        ecdb: ECDb;
+        formatterFactory?: (props: {
+          schemaContext: SchemaContext;
+          imodel: ReturnType<typeof unifyIModelAPIs>;
+        }) => IPrimitiveValueFormatter;
       }
   ) & {
     imodelChanged?: Event<() => void>;
-    hierarchy: HierarchyDefinition;
+    hierarchy: HierarchyDefinition | ((imodelAccess: ReturnType<typeof createIModelAccess>) => HierarchyDefinition);
     localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-    filteredNodePaths?: HierarchyFilteringPaths;
+    search?: HierarchySearchPaths;
     queryCacheSize?: number;
+    sourceName?: string;
   },
 ) {
-  const { imodelChanged, hierarchy, localizedStrings, filteredNodePaths, queryCacheSize } = props;
+  const { imodelChanged, hierarchy, localizedStrings, search, queryCacheSize } = props;
   const formatter =
-    "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
+    "formatterFactory" in props && props.formatterFactory
+      ? props.formatterFactory({
+          schemaContext: createSchemaContext("imodel" in props ? props.imodel : props.ecdb),
+          imodel: unifyIModelAPIs("imodel" in props ? props.imodel : props.ecdb),
+        })
+      : undefined;
+  const imodelAccess =
+    "imodelAccess" in props ? props.imodelAccess : createIModelAccess("imodel" in props ? props.imodel : props.ecdb);
   return createIModelHierarchyProvider({
-    imodelAccess: "imodelAccess" in props ? props.imodelAccess : createIModelAccess(props.imodel),
+    imodelAccess,
     imodelChanged,
-    hierarchyDefinition: hierarchy,
+    hierarchyDefinition: typeof hierarchy === "function" ? hierarchy(imodelAccess) : hierarchy,
     formatter,
     localizedStrings,
-    filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
+    search: search ? { paths: search } : undefined,
     queryCacheSize: queryCacheSize ?? 0,
+    // @ts-expect-error: using non-exposed way to override source name
+    sourceName: props.sourceName,
   });
-}
-
-export function createClassECSqlSelector(fullClassName: string) {
-  const { schemaName, className } = parseFullClassName(fullClassName);
-  return `[${schemaName}].[${className}]`;
 }

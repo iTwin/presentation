@@ -3,16 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Mock, vi } from "vitest";
-import { EC } from "../shared/Metadata.js";
+import { vi } from "vitest";
 import { parseFullClassName } from "../shared/Utils.js";
+
+import type { Mock } from "vitest";
+import type { EC, HiddenClassesTreeNode } from "../shared/Metadata.js";
 
 export interface StubClassFuncProps {
   schemaName: string;
   className: string;
   classLabel?: string;
   properties?: EC.Property[];
-  is?: (fullClassName: string) => Promise<boolean>;
+  is?: (fullClassName: EC.FullClassName) => boolean;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
@@ -24,53 +26,85 @@ export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
 interface SchemaStub {
   name: string;
-  getClass: Mock;
+  version: EC.SchemaVersion;
+  isHidden: boolean;
+  getClass: Mock<EC.Schema["getClass"]>;
+  getEnumeration: Mock<EC.Schema["getEnumeration"]>;
+  getKindOfQuantity: Mock<EC.Schema["getKindOfQuantity"]>;
+  getPropertyCategory: Mock<EC.Schema["getPropertyCategory"]>;
   classes: Map<string, EC.Class>;
 }
 export function createECSchemaProviderStub() {
-  const schemaStubs: { [schemaName: string]: SchemaStub } = {};
+  const schemaStubs = new Map<string, SchemaStub>();
   const stub = {
     getSchema: vi.fn(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return schemaStubs[schemaName];
+      return schemaStubs.get(schemaName);
     }),
+    classDerivesFrom: vi.fn(
+      (
+        derivedClassFullName: EC.FullClassNameDotNotation,
+        candidateBaseClassFullName: EC.FullClassNameDotNotation,
+      ): boolean => {
+        if (derivedClassFullName === candidateBaseClassFullName) {
+          return true;
+        }
+        const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derivedClassFullName);
+        const derivedClass = schemaStubs.get(derivedSchemaName)?.classes.get(derivedClassName);
+        if (!derivedClass) {
+          return false;
+        }
+
+        const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(candidateBaseClassFullName);
+        const baseClass = schemaStubs.get(baseSchemaName)?.classes.get(baseClassName);
+
+        if (!baseClass) {
+          return false;
+        }
+
+        return derivedClass.is(baseClass);
+      },
+    ),
+    getHiddenClassesTree: vi.fn(async (): Promise<HiddenClassesTreeNode[]> => []),
   };
   const getSchemaStub = (schemaName: string) => {
-    let schemaStub = schemaStubs[schemaName];
+    let schemaStub = schemaStubs.get(schemaName);
     if (!schemaStub) {
       const classMap = new Map<string, EC.Class>();
       schemaStub = {
         name: schemaName,
+        version: { read: 1, write: 0, minor: 0 },
+        isHidden: false,
         classes: classMap,
-        getClass: vi.fn(async (className: string) => classMap.get(className)),
+        getClass: vi.fn((className: string) => classMap.get(className)),
+        getEnumeration: vi.fn(() => undefined),
+        getKindOfQuantity: vi.fn(() => undefined),
+        getPropertyCategory: vi.fn(() => undefined),
       };
-      schemaStubs[schemaName] = schemaStub;
+      schemaStubs.set(schemaName, schemaStub);
     }
     return schemaStub;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: { name: props.schemaName },
+    schema: getSchemaStub(props.schemaName),
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
-    getProperty: async (propertyName: string): Promise<EC.Property | undefined> => {
+    isHidden: undefined,
+    getProperty: (propertyName: string): EC.Property | undefined => {
       if (!props.properties) {
         return undefined;
       }
       return props.properties.find((p) => p.name === propertyName);
     },
-    getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
-    is: vi.fn(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
+    getProperties: (): Array<EC.Property> => props.properties ?? [],
+    is: vi.fn((targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       if (!props.is) {
         return false;
       }
       if (typeof targetClassOrClassName === "string") {
         return props.is(`${schemaName!}.${targetClassOrClassName}`);
       }
-      // need this just to make sure `.` is used for separating schema and class names
-      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(
-        targetClassOrClassName.fullName,
-      );
-      return props.is(`${parsedSchemaName}.${parsedClassName}`);
+      return props.is(targetClassOrClassName.fullName);
     }),
     isEntityClass: () => false,
     isRelationshipClass: () => false,
@@ -84,8 +118,8 @@ export function createECSchemaProviderStub() {
     const res = {
       ...createBaseClassProps(props),
       direction: props.direction ?? "Forward",
-      source: props.source ?? { polymorphic: true, abstractConstraint: async () => undefined },
-      target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
+      source: props.source ?? { polymorphic: true, abstractConstraint: undefined },
+      target: props.target ?? { polymorphic: true, abstractConstraint: undefined },
       isRelationshipClass: () => true,
     } as unknown as EC.RelationshipClass;
     getSchemaStub(props.schemaName).classes.set(props.className, res);
@@ -102,7 +136,7 @@ export function createECSchemaProviderStub() {
     stubRelationshipClass,
     stubOtherClass,
     getClassRequestCount(props: { schemaName: string; className: string }): number {
-      const schemaStub = schemaStubs[props.schemaName];
+      const schemaStub = schemaStubs.get(props.schemaName);
       if (!schemaStub) {
         return 0;
       }

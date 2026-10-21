@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { Observable } from "rxjs/internal/Observable";
 import { concat } from "rxjs/internal/observable/concat";
 import { defer } from "rxjs/internal/observable/defer";
 import { EMPTY } from "rxjs/internal/observable/empty";
@@ -23,18 +22,22 @@ import {
   isTreeModelNode,
   isTreeModelNodePlaceholder,
   PagedTreeNodeLoader,
+  TreeModelSource,
+} from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
+import { toRxjsObservable } from "../Utils.js";
+
+import type { Observable } from "rxjs/internal/Observable";
+import type {
   RenderedItemsRange,
   TreeModel,
   TreeModelNode,
   TreeModelNodePlaceholder,
   TreeModelRootNode,
-  TreeModelSource,
   TreeNodeLoadResult,
   VisibleTreeNodes,
 } from "@itwin/components-react";
-import { assert } from "@itwin/core-bentley";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
-import { toRxjsObservable } from "../Utils.js";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 
 /**
  * Creates a new tree model from scratch while attempting to match provided tree model's expanded structure.
@@ -117,7 +120,6 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
           take(1),
           // If the node is found, load and expand its children recursively
           concatMap((loadedNode) => {
-            assert(loadedNode !== undefined);
             return concat(this.loadChildren(loadedNode), expandedNode.expandedChildren);
           }),
         );

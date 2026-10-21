@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { context, Span, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics.js";
+
+import type { Span } from "@opentelemetry/api";
 
 describe("exportDiagnostics", () => {
   interface TestSpanContext {

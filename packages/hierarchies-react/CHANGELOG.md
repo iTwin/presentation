@@ -1,5 +1,1063 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.71
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.22
+
+## 2.0.0-alpha.70
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.16
+  - @itwin/presentation-hierarchies@2.0.0-alpha.21
+  - @itwin/unified-selection@2.0.0-alpha.4
+
+## 2.0.0-alpha.69
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.15
+  - @itwin/presentation-hierarchies@2.0.0-alpha.20
+  - @itwin/unified-selection@2.0.0-alpha.3
+
+## 2.0.0-alpha.68
+
+### Major Changes
+
+- [#1571](https://github.com/iTwin/presentation/pull/1571): Moved `@stratakit/icons` from a regular dependency to an optional peer dependency.
+
+## 2.0.0-alpha.67
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.14
+  - @itwin/presentation-hierarchies@2.0.0-alpha.19
+  - @itwin/unified-selection@2.0.0-alpha.2
+
+## 2.0.0-alpha.66
+
+### Major Changes
+
+- [#1540](https://github.com/iTwin/presentation/pull/1540): Updated StrataKit dependencies to newer versions, including `@stratakit/mui@1.0.0` and `@stratakit/structures@0.6.0`. `@stratakit/foundations` is now a peer dependency and should be installed by the application, along with `@mui/material@^9.4.0`.
+
+### Patch Changes
+
+- [#1514](https://github.com/iTwin/presentation/pull/1514): Fix label editor validation message size
+- [#1538](https://github.com/iTwin/presentation/pull/1538): Fixed keyboard-initiated node rename instantly closing the label editor. Additionally, improved tree node rendering performance by rendering a single shared context menu and label editor at the tree level instead of mounting them in every node.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.13
+  - @itwin/presentation-hierarchies@2.0.0-alpha.18
+  - @itwin/unified-selection@2.0.0-alpha.1
+
+## 2.0.0-alpha.65
+
+### Patch Changes
+
+- [#1477](https://github.com/iTwin/presentation/pull/1477): `ErrorItemRenderer`: Improved unknown error formatting by displaying the affected node before the error message, separated by a colon. Localized error messages now preserve their defined spacing around the node link.
+
+## 2.0.0-alpha.64
+
+### Patch Changes
+
+- [#1469](https://github.com/iTwin/presentation/pull/1469): `TreeActionBase`: Made the `onClick` prop optional.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.12
+  - @itwin/presentation-hierarchies@2.0.0-alpha.17
+  - @itwin/unified-selection@2.0.0-alpha.0
+
+## 2.0.0-alpha.63
+
+### Major Changes
+
+- [#1425](https://github.com/iTwin/presentation/pull/1425): Moved the package to use `@mui/material` and `@stratakit/mui`.
+
+  **Breaking:** Removed `@stratakit/foundations`, `@stratakit/icons` optional peer dependencies. Added `@mui/material` and `@stratakit/mui` as optional peer dependencies.
+
+### Patch Changes
+
+- [#1325](https://github.com/iTwin/presentation/pull/1325): Add accessible name for tree context menu.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.11
+  - @itwin/presentation-hierarchies@2.0.0-alpha.16
+  - @itwin/unified-selection@1.8.1-alpha.0
+
+## 2.0.0-alpha.62
+
+### Patch Changes
+
+- [#1304](https://github.com/iTwin/presentation/pull/1304): Remove `@stratakit/bricks` and `@stratakit/structures` from peer dependencies list.
+
+  Only `@stratakit/foundations` and `@stratakit/icons` are required as peer dependencies when using StrataKit components, the rest of `@stratakit` packages can be used as direct dependencies.
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.15
+  - @itwin/presentation-shared@2.0.0-alpha.10
+  - @itwin/unified-selection@1.7.1-alpha.0
+
+## 2.0.0-alpha.61
+
+### Minor Changes
+
+- [#1267](https://github.com/iTwin/presentation/pull/1267): `TreeNode` now supports multiple errors via `errors: ErrorInfo[]`, allowing both internal errors and custom errors provided through `getTreeNodeErrors` to be combined and displayed.
+
+  **Breaking changes:**
+
+  - `TreeNode.error?: ErrorInfo` replaced by `TreeNode.errors: ErrorInfo[]`.
+  - `UseTreeProps.getTreeNodeError` renamed to `getTreeNodeErrors` and now returns `ErrorInfo[]` instead of `ErrorInfo | undefined`.
+  - `ErrorItemRendererProps` now provides `treeNode` without `errors` and `error` instead of `errorNode`.
+  - `TreeErrorRenderer`'s `renderError` callback is now called once per error (instead of once per node), receiving the updated `ErrorItemRendererProps`.
+  - `scrollToNode` callback in `ErrorItemRendererProps` now receives `Omit<TreeNode, "errors">` instead of `TreeNode`.
+
+## 2.0.0-alpha.60
+
+### Minor Changes
+
+- ce317097cb094c1c0eb15b66f7560dd54ad7893b: Updated optional `@stratakit/*` peer dependencies to their latest versions (`@stratakit/foundations@0.4.7`, `@stratakit/icons@0.3.1`, `@stratakit/structures@0.5.6`).
+
+## 2.0.0-alpha.59
+
+### Major Changes
+
+- [#1259](https://github.com/iTwin/presentation/pull/1259): Introduce separate import path for StrataKit based components. StrataKit based components have to be imported through `@itwin/presentation-hierarchies-react/stratakit`. This allows to use this package with or without StrataKit dependencies.
+
+### Patch Changes
+
+- [#1256](https://github.com/iTwin/presentation/pull/1256): Fix `alpha` dependencies being specified with a range (`^`), allowing package manager to use higher versions, possibly with breaking changes.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.14
+
+## 2.0.0-alpha.58
+
+### Major Changes
+
+- [#1236](https://github.com/iTwin/presentation/pull/1236): Start using tree structure for defining hierarchy search paths.
+
+  The expected return type of `useTree` hooks' `getSearchPaths` callback prop has changed from `Promise<HierarchySearchPath[] | undefined>` to `Promise<HierarchySearchTree[] | undefined>`. The newly added `HierarchySearchTree.createFromPathsList` from `@itwin/presentation-hierarchies` can be used to do the conversion:`
+
+  ```tsx
+  import { HierarchySearchTree } from "@itwin/presentation-hierarchies";
+
+  function MyTree() {
+    const [searchText, setSearchText] = useState("");
+    const treeProps = useIModelUnifiedSelectionTree({
+      // ...
+      getSearchPaths: useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
+        return async () => {
+          // before
+          return getSearchTargetPaths({ searchText }),
+          // after
+          return HierarchySearchTree.createFromPathsList(await getSearchTargetPaths({ searchText }));
+          };
+      }, [searchText]),
+    });
+
+    // ...
+
+    return (
+      <StrataKitTreeRenderer
+        {...treeProps.treeRendererProps}
+        // ...
+      />
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.9-alpha.0
+  - @itwin/presentation-hierarchies@2.0.0-alpha.13
+  - @itwin/presentation-shared@2.0.0-alpha.9
+
+## 2.0.0-alpha.57
+
+### Patch Changes
+
+- [#1238](https://github.com/iTwin/presentation/pull/1238): Fix root nodes with errors not being counted when collapsed
+
+## 2.0.0-alpha.56
+
+### Minor Changes
+
+- [#1230](https://github.com/iTwin/presentation/pull/1230): Added `isNodeExpandable` property to `GenericErrorInfo`, allowing nodes with generic errors to remain expandable.
+
+## 2.0.0-alpha.55
+
+### Major Changes
+
+- [#1223](https://github.com/iTwin/presentation/pull/1223): Reworked `localization` to use `i18next`-compatible approach. Instead of passing a `localizedStrings` object into `LocalizationContextProvider`, the package now delivers an English locale JSON file and resolves strings through a `getLocalizedString` function at runtime.
+
+  **Breaking changes**
+
+  - `LocalizationContextProvider` no longer accepts a `localizedStrings` object. It now requires a `localization` prop — an object with a `getLocalizedString(key: string): string` method (compatible with `Localization` from @itwin/core-common).
+  - `LOCALIZATION_NAMESPACES` must be registered with your localization provider during app initialization to make localized strings available.
+
+### Minor Changes
+
+- [#1221](https://github.com/iTwin/presentation/pull/1221): Add `getTreeNodeError` callback prop to `useTree` hook and its derivatives, providing a way to set custom errors on tree nodes.
+
+### Patch Changes
+
+- [#1219](https://github.com/iTwin/presentation/pull/1219): Fix component documentation mentioning iTwinUI
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.8
+  - @itwin/presentation-hierarchies@2.0.0-alpha.12
+  - @itwin/unified-selection@1.6.8-alpha.0
+
+## 2.0.0-alpha.54
+
+### Patch Changes
+
+- [#1198](https://github.com/iTwin/presentation/pull/1198): Change `HierarchyProvider.hierarchyChanged` argument to be required.
+
+  This simplifies the API for users of `HierarchyProvider`, as they no longer need to check for `undefined` when handling hierarchy changes.
+
+  For implementors of custom `HierarchyProvider`, this change means that they must always provide an even argument when raising the `hierarchyChanged` event. Since all members of the argument type are optional, it's okay to raise the even with an empty object, e.g.: `this.hierarchyChanged.raiseEvent({})`.
+
+- [#1200](https://github.com/iTwin/presentation/pull/1200): Removed unnecessary, always-truthy condition checks.
+- [#1193](https://github.com/iTwin/presentation/pull/1193): Process package output with [React Compiler](https://react.dev/reference/react-compiler/compiling-libraries).
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.7
+  - @itwin/presentation-hierarchies@2.0.0-alpha.11
+
+## 2.0.0-alpha.53
+
+### Patch Changes
+
+- [#1192](https://github.com/iTwin/presentation/pull/1192): Fix situations where expander was rendered for leaf nodes.
+- [#1196](https://github.com/iTwin/presentation/pull/1196): Added accessible name for tree node rename input.
+
+## 2.0.0-alpha.52
+
+### Patch Changes
+
+- [#1187](https://github.com/iTwin/presentation/pull/1187): Fixed tree node rename committed with keyboard activating previously focused element.
+
+## 2.0.0-alpha.51
+
+### Major Changes
+
+- [#1185](https://github.com/iTwin/presentation/pull/1185): Bumped peer dependencies:
+  - `@stratakit/bricks`: `^0.5.4`
+  - `@stratakit/foundations`: `^0.4.5`
+  - `@stratakit/icons`: `^0.2.2`
+  - `@stratakit/structures`: `^0.5.4`
+
+## 2.0.0-alpha.50
+
+### Major Changes
+
+- [#1184](https://github.com/iTwin/presentation/pull/1184): Fixed selection handling in `StrataKitTreeRenderer`. Mouse double clicks are now correctly ignored to prevent rapid selection toggling. Keyboard selection using `Space` and `Enter` keys is working.
+
+  **Breaking changes**
+
+  - `useSelectionHandler` is no longer exported. This function is an internal implementation detail of `StrataKitTreeRenderer` and should not be used directly.
+
+- [#1181](https://github.com/iTwin/presentation/pull/1181): **Breaking change:** Rename `PresentationHierarchyNode` to `TreeNode` for clarity.
+
+  We already have a `HierarchyNode` type in `@itwin/presentation-hierarchies`, so having a `PresentationHierarchyNode` in `@itwin/presentation-hierarchies-react` was causing confusion. Additionally, this change aligns with the naming convention that we try to keep, where "hierarchy" refers to data and "tree" refers to UI components.
+
+- [#1183](https://github.com/iTwin/presentation/pull/1183): Clean up `TreeErrorRenderer` and `ErrorItemRenderer`.
+
+  **Breaking changes:**
+
+  - Replaced `useErrorList` hook with `useErrorNodes` hook that returns error nodes (`TreeNode[]`) instead of error items. The `expandTo` function became unnecessary, because expanding to error nodes is now handled internally. As a result, the whole `ErrorItem` type (result of `useErrorList`) was removed. Reacting to this, the following other breaking changes were made:
+    - Renamed `errorItem` -> `errorNode` in `ErrorItemRenderer` component and changed the type from removed `ErrorItem` to `TreeNode`.
+    - Renamed `errorList` -> `errorNodes` in `TreeErrorRenderer` component and changed the type from `ErrorItem[]` to `TreeNode[]`.
+  - The `reloadTree` function prop in `ErrorItemRenderer` and `TreeErrorRenderer` components no longer takes the `state` option. The option was required and always had the same value, so it was redundant.
+  - Renamed `onFilterClick` -> `filterHierarchyLevel` in `ErrorItemRenderer`, `TreeErrorRenderer` and `StrataKitTreeRenderer` components. This makes its name consistent with other function props ("do something" vs "on something happened").
+  - Renamed `scrollToElement` -> `scrollToNode` in `ErrorItemRenderer` and `TreeErrorRenderer`, and changed its type to take `TreeNode` instead of an error item returned by `useErrorList` hook.
+
+## 2.0.0-alpha.49
+
+### Major Changes
+
+- [#1166](https://github.com/iTwin/presentation/pull/1166): Added ability to enter node rename mode programmatically through `StrataKitTreeRenderer` ref. The `renameNode` method accepts a predicate function to identify the target node. If the node is not visible (because its parent is collapsed), all parents will be expanded automatically to make it visible and the node will be scrolled into view.
+
+  Example:
+
+  ```tsx
+  import {
+    StrataKitTreeRenderer,
+    StrataKitTreeRendererAttributes,
+  } from "@itwin/presentation-hierarchies-react";
+
+  function MyTree() {
+    const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
+
+    return (
+      <>
+        <div className="tree-header">
+          <button
+            onClick={() => {
+              treeRef.current?.renameNode(
+                (node) => node.label === "Node to rename"
+              );
+            }}
+          >
+            Rename node
+          </button>
+        </div>
+        <StrataKitTreeRenderer ref={treeRef} />
+      </>
+    );
+  }
+  ```
+
+  **Breaking changes**
+
+  - `StrataKitTreeNodeRenderer` is no longer exported.
+  - `RenameContextProvider` is no longer exported. It is not necessary when using `StrataKitTreeRenderer`.
+  - `RenameAction` now requires a `node` prop.
+
+- [#1179](https://github.com/iTwin/presentation/pull/1179): **Breaking change:** Rename tree node action components for clarity.
+
+  - `FilterAction` -> `TreeNodeFilterAction`
+  - `RenameAction` -> `TreeNodeRenameAction`
+
+- [#1178](https://github.com/iTwin/presentation/pull/1178): Updated tree node rename UI to show input in popover instead of inline. Additionally added ability to show hint for supported characters and validate new label.
+
+  Example:
+
+  ```tsx
+  type TreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
+
+  const getEditingProps = useCallback<
+    Required<TreeRendererProps>["getEditingProps"]
+  >((node) => {
+    return {
+      onLabelChanged: (newLabel: string) => {
+        // Handle label change
+      },
+      labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
+      validate: (newLabel: string) => /^[A-Za-z0-9\- ]+$/.test(newLabel),
+    };
+  }, []);
+
+  return (
+    <StrataKitTreeRenderer {...treeProps} getEditingProps={getEditingProps} />
+  );
+  ```
+
+  **Breaking changes**
+
+  - `getEditingProps` callback was changed to require `onLabelChanged`. If node does not support renaming `getEditingProps` should return `undefined`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.10
+  - @itwin/presentation-shared@2.0.0-alpha.6
+  - @itwin/unified-selection@1.6.6-alpha.0
+
+## 2.0.0-alpha.48
+
+### Minor Changes
+
+- [#1159](https://github.com/iTwin/presentation/pull/1159): Introduced `getTreeItemProps` and `treeRootProps` to `StrataKitTreeRenderer`. This allows passing props to underlying `Tree.Item` and `Tree.Root` components.
+
+  **Breaking changes**
+
+  `StrataKitTreeNodeRenderer` props changes:
+
+  - `getMenuActions` callback changed to `menuActions` prop (type: `ReactNode[]`)
+  - `getInlineActions` callback changed to `inlineActions` prop (type: `ReactNode[]`)
+  - `getContextMenuActions` callback changed to `contextMenuActions` prop (type: `ReactNode[]`)
+  - `getLabel` callback removed - use `label` prop instead
+  - `getSublabel` callback removed - use `description` prop instead
+  - `getDecorations` callback removed - use `decorations` prop instead
+  - `getClassName` callback removed - use `className` prop instead
+  - `onNodeClick` and `onNodeKeyDown` callbacks removed - use `onClick` and `onKeyDown` props instead
+
+  `StrataKitTreeRenderer` props changes:
+
+  - Props previously passed to `StrataKitTreeNodeRenderer` are no longer accepted
+  - Use `getTreeItemProps` callback to provide props to specific `Tree.Item` components
+  - Use `getMenuActions`, `getInlineActions`, and `getContextMenuActions` on `StrataKitTreeRenderer` to provide actions for nodes
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.9
+
+## 2.0.0-alpha.47
+
+### Patch Changes
+
+- [#1142](https://github.com/iTwin/presentation/pull/1142): Bump dependencies.
+- [#1142](https://github.com/iTwin/presentation/pull/1142): Fix `StrataKitTreeRenderer` getting into infinite React render loop.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.8
+  - @itwin/presentation-shared@2.0.0-alpha.5
+
+## 2.0.0-alpha.46
+
+### Minor Changes
+
+- [#1011](https://github.com/iTwin/presentation/pull/1011): Renamed `getFilteredPaths` prop to `getSearchPaths` in tree hooks: `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.7
+
+## 2.0.0-alpha.45
+
+### Patch Changes
+
+- [#1134](https://github.com/iTwin/presentation/pull/1134): Fixed expanded tree nodes showing expander when tree is reloaded and child nodes are removed.
+
+## 2.0.0-alpha.44
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.3-alpha.0
+
+## 2.0.0-alpha.43
+
+### Patch Changes
+
+- cc836290199b9ff778773b03ab578f90043e95f0: Do not open tree context menu is there is no actions.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.4
+  - @itwin/presentation-hierarchies@2.0.0-alpha.6
+
+## 2.0.0-alpha.42
+
+### Patch Changes
+
+- [#1118](https://github.com/iTwin/presentation/pull/1118): Fixed first hidden inline action causing second action to be focused when navigating using keyboard.
+
+## 2.0.0-alpha.41
+
+### Major Changes
+
+- [#1113](https://github.com/iTwin/presentation/pull/1113): Pass selected nodes to tree node action getters to support actions that should be applied on all selected nodes.
+
+  **Breaking changes**
+
+  - `StrataKitTreeRenderer.getInlineActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
+  - `StrataKitTreeRenderer.getMenuActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
+
+  Before
+
+  ```tsx
+  return (
+    <StrataKitTreeRenderer
+      getInlineActions={(node) => [<InlineAction node={node} />]}
+      getMenuActions={(node) => [<MenuAction node={node} />]}
+    />
+  );
+  ```
+
+  After
+
+  ```tsx
+  return (
+    <StrataKitTreeRenderer
+      getInlineActions={({ targetNode }) => [
+        <InlineAction node={targetNode} />,
+      ]}
+      getMenuActions={({ targetNode }) => [<MenuAction node={targetNode} />]}
+    />
+  );
+  ```
+
+- [#1115](https://github.com/iTwin/presentation/pull/1115): Unified tree actions handling to make it easier defining actions that could be reused in different contexts: inline, context menu and actions dropdown.
+
+  **Breaking changes**
+
+  - Removed `reserveSpace` property from `<RenameAction />` and `<FilterAction />`. These actions now automatically infer the context they're used in.
+  - Added requirement to render newly introduced `<TreeActionBase />` component instead of `<Tree.ItemAction />` when rendering custom tree actions.
+
+### Minor Changes
+
+- [#1115](https://github.com/iTwin/presentation/pull/1115): Added `getContextMenuActions` callback for rendering tree actions in context menu.
+
+## 2.0.0-alpha.40
+
+### Patch Changes
+
+- [#1110](https://github.com/iTwin/presentation/pull/1110): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.5
+  - @itwin/presentation-shared@2.0.0-alpha.3
+  - @itwin/unified-selection@1.6.2-alpha.0
+
+## 2.0.0-alpha.39
+
+### Minor Changes
+
+- [#1106](https://github.com/iTwin/presentation/pull/1106): Added an `id` property to `StrataKitTreeRenderer` that is passed to it's scroll wrapper.
+- [#1107](https://github.com/iTwin/presentation/pull/1107): Introduced new `getClassName` callback to `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer` for providing class to tree node HTML element.
+
+### Patch Changes
+
+- [#1109](https://github.com/iTwin/presentation/pull/1109): Fixed error item Anchor font size.
+
+## 2.0.0-alpha.38
+
+### Patch Changes
+
+- [#1102](https://github.com/iTwin/presentation/pull/1102): Updated tree error item renderer to render error actions as buttons based on StrataKit docs JSDoc suggestion.
+
+## 2.0.0-alpha.37
+
+### Major Changes
+
+- [#1100](https://github.com/iTwin/presentation/pull/1100): Bumped StrataKit peer dependencies to:
+  - `@stratakit/structures`: ^0.5.0
+  - `@stratakit/icons`: ^0.2.0
+  - `@stratakit/foundations`: ^0.4.0
+  - `@stratakit/bricks`: ^0.5.0
+
+## 2.0.0-alpha.36
+
+### Major Changes
+
+- [#1094](https://github.com/iTwin/presentation/pull/1094): Improve custom errors rendering API:
+
+  - Separated `ChildrenLoad` error from the `Unknown` error. All expected tree errors have dedicated type and `Unknown` error can be used to handle custom errors encountered outside of tree.
+  - Exposed `ErrorItemRenderer` that renders all error types supported by the tree.
+  - Updated `TreeErrorRenderer` to pass all props necessary to render `ErrorItemRenderer` into `renderError` callback.
+
+  These changes makes it easier to customize only some types of errors and leave default handling for others.
+
+  Example:
+
+  ```tsx
+  <StrataKitTreeRenderer
+    {...treeProps}
+    errorRenderer={(errorProps) => {
+      return (
+        <TreeErrorRenderer
+          {...errorProps}
+          renderError={(errorItemProps) => {
+            if (errorItemProps.errorItem.errorNode.error.type === "Unknown") {
+              return (
+                <ErrorRegion.Item
+                  message="Custom error"
+                  messageId={errorItemProps.errorItem.errorNode.id}
+                />
+              );
+            }
+            return <ErrorItemRenderer {...errorItemProps} />;
+          }}
+        />
+      );
+    }}
+  />
+  ```
+
+## 2.0.0-alpha.35
+
+### Patch Changes
+
+- [#1075](https://github.com/iTwin/presentation/pull/1075): Fix accessibility issues in `<TreeErrorRenderer />`.
+
+  This involves a few localized string changes:
+
+  - Added `issuesForTree`, defaulting to "Issues for {{tree_label}}.", used as a region landmark label for the error message container.
+  - Added `noIssuesFound`, defaulting to "No issues found.", used as a label for errors' list when there are no issues.
+  - Changed `issuesFound` to default to "{{number_of_issues}} issue(s) found.", and updated its usage to inject the number of issues found into the string instead of prefixing it before the string, which allows to place the number at any place in the string (may be a requirement for some languages). This is **a breaking change** for anyone, supplying their own localized strings.
+
+  Also, **a new required prop** `treeLabel` was added to `<TreeErrorRenderer />` and `<StrataKitTreeRenderer />` components. The label is used to uniquely identify a tree in the application, which is required for accessibility purposes.
+
+## 2.0.0-alpha.34
+
+### Patch Changes
+
+- [#1068](https://github.com/iTwin/presentation/pull/1068): Extend `@stratakit` peer dependency range to support the latest versions
+
+## 2.0.0-alpha.33
+
+### Patch Changes
+
+- [#1057](https://github.com/iTwin/presentation/pull/1057): Change `useNodeHighlighting` hook to only highlight nodes that are filter targets.
+
+## 2.0.0-alpha.32
+
+### Patch Changes
+
+- [#1045](https://github.com/iTwin/presentation/pull/1045): Fix highlight matching in `useNodeHighlighting` hook. Highlighting now works when the `highlightText` contains special characters (`[`, `+`, `*`, etc.).
+
+## 2.0.0-alpha.31
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+- [#1040](https://github.com/iTwin/presentation/pull/1040): Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.
+
+  Example usage:
+
+  ```ts
+  import {
+    StrataKitTreeRenderer,
+    useNodeHighlighting,
+  } from "@itwin/presentation-hierarchies-react";
+
+  type BaseTreeRendererProps = React.ComponentPropsWithoutRef<
+    typeof StrataKitTreeRenderer
+  >;
+
+  function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
+    // Create highlight based on searchText
+    const highlightText =
+      props.searchText !== "" ? props.searchText : undefined;
+    const { getLabel } = useNodeHighlighting({ highlightText });
+
+    // Provide getLabel function to tree renderer
+    return <StrataKitTreeRenderer {...props} getLabel={getLabel} />;
+  }
+  ```
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.4
+  - @itwin/presentation-shared@2.0.0-alpha.2
+  - @itwin/unified-selection@1.5.1-alpha.1
+
+## 2.0.0-alpha.30
+
+### Patch Changes
+
+- [#1037](https://github.com/iTwin/presentation/pull/1037): Added additional documentation for `RenameAction`
+
+## 2.0.0-alpha.29
+
+### Patch Changes
+
+- [#1035](https://github.com/iTwin/presentation/pull/1035): Version bump after merge from `master`.
+
+## 2.0.0-alpha.28
+
+### Patch Changes
+
+- [#1031](https://github.com/iTwin/presentation/pull/1031): Version bump
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.3
+  - @itwin/unified-selection@1.5.1-alpha.0
+
+## 2.0.0-alpha.27
+
+### Patch Changes
+
+- [#1026](https://github.com/iTwin/presentation/pull/1026): Fix `reserveSpace` property being required instead of optional for `FilterAction` and `RenameAction`.
+
+## 2.0.0-alpha.26
+
+### Major Changes
+
+- [#1023](https://github.com/iTwin/presentation/pull/1023): Split `getActions` into `getMenuActions` & `getInlineActions` for `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer`.
+
+  Updated peer dependencies:
+
+  - @stratakit/bricks@0.3.3
+  - @stratakit/foundations@0.2.2
+  - @stratakit/structures@0.3.1
+
+  Added `reserveSpace` property to `FilterAction` and `RenameAction`, which reserves space for the action when it is not available
+
+### Minor Changes
+
+- [#1007](https://github.com/iTwin/presentation/pull/1007): Renames:
+  `FlatNode` => `FlatTreeNodeItem`
+  `FlatTreeNode` => `FlatTreeItem`
+  `PlaceholderNode` => `PlaceholderItem`
+  `useFlatTreeNodeList` => `useFlatTreeItems`
+
+  Changed `FlatTreeNodeItem` (previously `FlatNode`) to have property `node: PresentationHierarchyNode` instead of extending `PresentationHierarchyNode`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.2
+
+## 2.0.0-alpha.25
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.1
+  - @itwin/presentation-shared@2.0.0-alpha.1
+  - @itwin/unified-selection@1.4.3-alpha.0
+
+## 2.0.0-alpha.24
+
+### Patch Changes
+
+- [#975](https://github.com/iTwin/presentation/pull/975): Associate tree nodes rendered by `<StrataKitTreeNodeRenderer />` component with error messages rendered in `<TreeErrorRenderer />`. This improves accessibility by linking error information to the node.
+- [#979](https://github.com/iTwin/presentation/pull/979): Adjust how `useTree` and other variants of it determines `isReloading` value. `isReloading` is now set to `true` if root nodes are being loaded.
+
+## 2.0.0-alpha.23
+
+### Minor Changes
+
+- [#972](https://github.com/iTwin/presentation/pull/972): Added `getEditingProps` prop to `<StrataKitTreeRenderer />` component that allows to make node labels editable. In order to enter label editing mode `<RenameAction />` component was added.
+
+## 2.0.0-alpha.22
+
+### Minor Changes
+
+- [#970](https://github.com/iTwin/presentation/pull/970): Exposed the type of tree state hooks' result `treeRendererProps` attribute - `TreeRendererProps`. The type can be useful when creating custom tree renderers.
+
+## 2.0.0-alpha.21
+
+### Major Changes
+
+- [#961](https://github.com/iTwin/presentation/pull/961): **Breaking changes** to tree state hooks `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`:
+
+  - All tree rendering props have been moved under `treeRendererProps`. The value can be passed to `<StrataKitTreeRenderer />` component.
+  - In case an error occurs while loading the root hierarchy level, instead of `treeRendererProps`, the `rootErrorRendererProps` are set, which can be passed to `<StrataKitRootErrorRenderer />` component to render the error state.
+  - The `isLoading` attribute has been renamed to `isReloading`.
+  - Errors are no longer defined as children of `PresentationHierarchyNode` and instead are now included as `error` attribute for more fluent API.
+
+  When rendering tree state, the recommended order of checks is:
+
+  1. If `rootErrorRendererProps` is defined, there was an error - render error state.
+  2. If `treeRendererProps` is not defined, the component is doing the initial load - render loading state.
+  3. If `treeRendererProps` is defined, the hierarchy is loaded - render the tree component.
+
+     The `isReloading` attribute may also be set at the same time, indicating that the hierarchy is being reloaded in the background. Consumers may want to render an overlay in this case, or not render the tree at all.
+
+  Example:
+
+  ```ts
+  function MyComponent () {
+      const useTreeResult = useIModelUnifiedSelectionTree({...});
+
+      // handle possible root errors with our provided component or your own custom implementation
+      if (treeProps.rootErrorRendererProps) {
+        return <StrataKitRootErrorRenderer {...useTreeResult.rootErrorRendererProps} />;
+      }
+
+      // handle loading state
+      if (!treeProps.treeRendererProps) {
+        return <MyLoadingComponent />;
+      }
+
+      // handle loaded hierarchy
+      return <StrataKitTreeRenderer {...useTreeResult.treeProps} />;
+  }
+  ```
+
+## 2.0.0-alpha.20
+
+### Major Changes
+
+- [#965](https://github.com/iTwin/presentation/pull/965): Added `@stratakit/structures` as a peer dependency.
+
+## 2.0.0-alpha.19
+
+### Major Changes
+
+- [#954](https://github.com/iTwin/presentation/pull/954): Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
+
+  - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
+  - `EC.Class` now additionally has these members:
+    - `baseClass: Promise<Class | undefined>`
+    - `getDerivedClasses(): Promise<Class[]>`
+
+  While this is an addition, it's considered a breaking change, because objects of the updated types are expected to be supplied to us by consumers.
+
+  In reality, consumers will likely use `@itwin/presentation-core-interop` package for creating them, and the package has been updated to handle the change, so reacting to the breaking change is as simple as bumping the version of `@itwin/presentation-core-interop` package in the consumer's `package.json`.
+
+### Patch Changes
+
+- [#957](https://github.com/iTwin/presentation/pull/957): Avoid leaking custom props to the `PlaceholderNode` that are causing console errors.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.0
+  - @itwin/presentation-shared@2.0.0-alpha.0
+  - @itwin/unified-selection@1.4.2-alpha.0
+
+## 2.0.0-alpha.18
+
+### Major Changes
+
+- [#951](https://github.com/iTwin/presentation/pull/951): Move from `@itwin/itwinui-react@5.0.0-alpha` to `@stratakit/*` packages.
+
+## 2.0.0-alpha.17
+
+### Patch Changes
+
+- [#949](https://github.com/iTwin/presentation/pull/949): Use default imports instead of `URL` constructor for icons.
+
+## 2.0.0-alpha.16
+
+### Minor Changes
+
+- [#945](https://github.com/iTwin/presentation/pull/945): Re-export `getLogger` and `setLogger` functions from `@itwin/presentation-hierarchies` to allow setting a logger.
+
+## 2.0.0-alpha.15
+
+### Major Changes
+
+- [#942](https://github.com/iTwin/presentation/pull/942): Unified selection API cleanup.
+
+  - Remove deprecated `UnifiedSelectionProvider`.
+  - Make `selectionStorage` prop required for unified selection - enabled tree state hooks (`useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree`).
+
+  Previously, the `selectionStorage` prop was optional, and if not provided, the hooks used unified selection React context (provided by `UnifiedSelectionProvider`) as fallback. Finally, if the context was not provided either, the hooks acted as regular non-unified selection hooks.
+
+  This didn't make much sense, as the hooks were designed to work with unified selection, as their name suggests. So it makes sense to require the selection storage to be provided to them, and at that point the context becomes redundant.
+
+- [#936](https://github.com/iTwin/presentation/pull/936): Replaced `actions` property on `TreeNodeRenderer` with `getActions` to match how decorations are handled. Removed `useFilterAction` hook and replaced it with `FilterAction` component.
+
+  Before:
+
+  ```tsx
+  import {
+    TreeNodeRenderer,
+    useFilterAction,
+  } from "@itwin/presentation-hierarchies-react";
+
+  const filterAction = useFilterAction({ onFilter, getHierarchyLevelDetails });
+  return (
+    <TreeNodeRenderer
+      actions={useMemo(
+        () => [
+          filterAction,
+          (node) => ({
+            label: "Custom Action",
+            actions: () => log(node.label),
+            icon: customIconHref,
+          }),
+        ],
+        [filterAction]
+      )}
+    />
+  );
+  ```
+
+  After:
+
+  ```tsx
+  import { Icon, Tree } from "@itwin/itwinui-react";
+  import {
+    FilterAction,
+    TreeNodeRenderer,
+  } from "@itwin/presentation-hierarchies-react";
+
+  return (
+    <TreeNodeRenderer
+      getActions={useCallback(
+        (node) => [
+          <FilterAction
+            key="filter"
+            node={node}
+            onFilter={onFilter}
+            getHierarchyLevelDetails={getHierarchyLevelDetails}
+          />,
+          <Tree.ItemAction
+            key="customAction"
+            label="Custom action"
+            onClick={() => log(node.label)}
+            icon={<Icon href={customIconHref} />}
+          />,
+        ],
+        [onFilter, getHierarchyLevelDetails]
+      )}
+    />
+  );
+  ```
+
+### Minor Changes
+
+- [#930](https://github.com/iTwin/presentation/pull/930): Exposed `TreeErrorRenderer`, which takes `renderError` property to render custom error messages.
+  `TreeRenderer` now takes `errorRenderer` to render a custom error display component.
+
+  Custom error display component example:
+
+  ```ts
+  <TreeRenderer
+    {...treeProps}
+    errorRenderer={(errorsRendererProps) => (
+      <MyErrorRenderer {...errorsRendererProps} />
+    )}
+  />
+  ```
+
+  Custom error message example:
+
+  ```ts
+  <TreeRenderer
+      {...treeProps}
+      errorRenderer={(errorsRendererProps) => (
+          <TreeErrorRenderer
+              {...errorsRendererProps}
+              renderError={(errorProps) => {
+                  return <unstable_ErrorRegion.Item message={...} />;
+              }}
+          />
+      )}
+  />
+  ```
+
+- [#937](https://github.com/iTwin/presentation/pull/937): `TreeRenderer` now takes `rootErrorRenderer` to render a custom root error display component.
+
+  Custom error display component example:
+
+  ```ts
+  <TreeRenderer
+    {...treeProps}
+    rootErrorRenderer={(rootErrorRendererProps) => (
+      <MyRootErrorRenderer {...rootErrorRendererProps} />
+    )}
+  />
+  ```
+
+- [#930](https://github.com/iTwin/presentation/pull/930): Changed flat tree building functions to hooks:
+  - `flattenNodes` => `useFlatTreeNodeList`.
+  - `getErrors` => `useErrorList`.
+
+### Patch Changes
+
+- [#930](https://github.com/iTwin/presentation/pull/930): Fix `ResultSetTooLarge` error suggesting filtering when parent node is not filterable.
+
+## 2.0.0-alpha.14
+
+### Patch Changes
+
+- [#928](https://github.com/iTwin/presentation/pull/928): Memoize tree components to reduce the amount of renders.
+
+## 2.0.0-alpha.13
+
+### Patch Changes
+
+- [#924](https://github.com/iTwin/presentation/pull/924): Fix tree error dropdown not applying actions.
+
+## 2.0.0-alpha.12
+
+### Patch Changes
+
+- [#922](https://github.com/iTwin/presentation/pull/922): Fix tree displaying aditional scrollbars, when scrolling to the last element with low tree width.
+
+## 2.0.0-alpha.11
+
+### Patch Changes
+
+- [#916](https://github.com/iTwin/presentation/pull/916): Fix tree nodes overlapping when nodes with and without sublabel are rendered alongside.
+- [#920](https://github.com/iTwin/presentation/pull/920): Changed error display for node errors to match new design system.
+
+## 2.0.0-alpha.10
+
+### Patch Changes
+
+- [#913](https://github.com/iTwin/presentation/pull/913): Removed outline showed after node expander is clicked.
+
+## 2.0.0-alpha.9
+
+### Patch Changes
+
+- [#906](https://github.com/iTwin/presentation/pull/906): Replaced `TreeNodeRenderer.getIcon` prop with `getDecorations` prop.
+
+  The `getIcon` prop took either an icon URI, or a `ReactElement`. The new `getDecorations` prop allows passing multiple React elements, allowing consumers to render not just the icon, but also addition components like a tag or a color swatch. Migration:
+
+  ```ts
+  // previously, when `getIcon` returned a `ReactElement`:
+  function myGetIcon(node: PresentationHierarchyNode): React.ReactElement {
+    // implementation...
+  }
+  <TreeNodeRenderer getIcon={myGetIcon} />
+
+  // now:
+  <TreeNodeRenderer getDecorations={myGetIcon} />
+
+  // previously, when `getIcon` returned an icon URI:
+  function myGetIconUri(node: PresentationHierarchyNode): string {
+    // implementation...
+  }
+  <TreeNodeRenderer getIcon={myGetIconUri} />
+
+  // now:
+  <TreeNodeRenderer getDecorations={(node) => <Icon href={myGetIconUri(node)} />} />
+  ```
+
+- [#911](https://github.com/iTwin/presentation/pull/911): Fix incorrect left padding on tree items
+
+## 2.0.0-alpha.8
+
+### Patch Changes
+
+- [#903](https://github.com/iTwin/presentation/pull/903): Added `activeDescription` optional property to TreeItemAction interface, which when provided a value will display a dot above the button indicating an active state. The provided value is used to set accesible description and should explain why the action item is active.
+- [#903](https://github.com/iTwin/presentation/pull/903): Changed `createFilterAction` function to a React hook and renamed it to `useFilterAction`.
+
+## 2.0.0-alpha.7
+
+### Patch Changes
+
+- [#892](https://github.com/iTwin/presentation/pull/892): Fix focus outline for tree items not being visible on action items click.
+- [#894](https://github.com/iTwin/presentation/pull/894): Fix `treeRenderer` property `getSublabel` not being used.
+
+## 2.0.0-alpha.6
+
+### Patch Changes
+
+- [#890](https://github.com/iTwin/presentation/pull/890): Fix alpha peer dependencies to no longer have caret.
+
+## 2.0.0-alpha.5
+
+### Minor Changes
+
+- [#883](https://github.com/iTwin/presentation/pull/883): Trees rendered with `TreeRenderer` will now be virtualized.
+
+## 2.0.0-alpha.4
+
+### Minor Changes
+
+- [#878](https://github.com/iTwin/presentation/pull/878): Tree node renderer now uses `Tree.ItemAction`. `Show` property now takes in undefined values, values behave like this:
+
+  - `undefined` - visible on hover/focus,
+  - `true` - visible at all times,
+  - `false` - hidden at all times.
+
+  Updated peer dependencies:
+
+  - itwinui-icons to 5.0.0-alpha.3,
+  - itwinui-react to 5.0.0-alpha.6,
+
+## 2.0.0-alpha.3
+
+### Patch Changes
+
+- [#870](https://github.com/iTwin/presentation/pull/870): `TreeRenderer` and `TreeNodeRenderer` now take actions as specification function array.
+  - `label`: Action item's label.
+  - `action`: The action performed when the button is clicked.
+  - `show` A boolean determining whether the button should be displayed.
+  - `icon`: The button's icon.
+
+## 2.0.0-alpha.2
+
+### Major Changes
+
+- [#864](https://github.com/iTwin/presentation/pull/864): Add `@itwin/itwinui-icons` as optional peer dependency (only required when using iTwinUI-based tree / node renderers).
+
+## 2.0.0-alpha.1
+
+### Patch Changes
+
+- [#860](https://github.com/iTwin/presentation/pull/860): Changes to tree node action buttons related to filtering:
+  - Fix filter button style.
+  - Removed "reset filter" button. The filter can be reset through the filter editing dialog.
+- [#862](https://github.com/iTwin/presentation/pull/862): Update `@itwin/itwinui-react` dependency to `5.0.0-alpha.3`.
+
+  This fixes the following issues:
+
+  - nodes being selected on expand,
+  - node action buttons being rendered incorrectly.
+
+## 2.0.0-alpha.0
+
+### Major Changes
+
+- [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
+
 ## 1.11.8
 
 ### Patch Changes

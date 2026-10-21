@@ -4,21 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  ArrayValue,
-  PropertyDescription,
-  PropertyRecord,
-  StandardTypeNames,
-  StructValue,
-  PropertyValueFormat as UiPropertyValueFormat,
-} from "@itwin/appui-abstract";
-import {
-  createContentTraverser,
-  EnumerationInfo,
-  LabelDefinition,
-  PropertyValueFormat,
-} from "@itwin/presentation-common";
-import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
+import { StandardTypeNames, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
+import { createContentTraverser, LabelDefinition, PropertyValueFormat } from "@itwin/presentation-common";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import {
   NavigationEditorName,
@@ -39,6 +26,10 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
+
+import type { ArrayValue, PropertyDescription, PropertyRecord, StructValue } from "@itwin/appui-abstract";
+import type { EnumerationInfo } from "@itwin/presentation-common";
+import type { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<PropertyRecord> = [];

@@ -6,15 +6,18 @@
 
 import { describe, expect, it } from "vitest";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { TreeNodeItem } from "@itwin/components-react";
 import {
   InfoTreeNodeItemType,
   isPresentationInfoTreeNodeItem,
   isPresentationTreeNodeItem,
+} from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
+
+import type { TreeNodeItem } from "@itwin/components-react";
+import type {
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 describe("isPresentationTreeNodeItem", () => {
   it("returns correct values", () => {

@@ -12,7 +12,7 @@ import { UiFramework } from "@itwin/appui-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
 import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
-import { IModelApp, IModelAppOptions, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
 import {
@@ -21,9 +21,12 @@ import {
   Presentation,
 } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
+import { LOCALIZATION_NAMESPACES } from "@itwin/presentation-hierarchies-react";
 import { rpcInterfaces } from "@test-app/common";
-import { MyAppFrontend } from "./api/MyAppFrontend";
+import { MyAppFrontend } from "./frontendApi/MyAppFrontend";
 import { App } from "./components/app/App";
+
+import type { IModelAppOptions } from "@itwin/core-frontend";
 
 // initialize logging
 Logger.initializeToConsole();
@@ -48,17 +51,13 @@ async function initializeApp() {
     BentleyCloudRpcManager.initializeClient(rpcParams, rpcInterfaces);
     // __PUBLISH_EXTRACT_END__
   }
-  const readyPromises = new Array<Promise<void>>();
-
-  const namespacePromise = IModelApp.localization.registerNamespace("Sample");
-  if (namespacePromise !== undefined) {
-    readyPromises.push(namespacePromise);
-  }
-
-  readyPromises.push(initializePresentation());
-  readyPromises.push(UiFramework.initialize());
-  readyPromises.push(IModelApp.quantityFormatter.setActiveUnitSystem("metric"));
-  await Promise.all(readyPromises);
+  await Promise.all([
+    IModelApp.localization.registerNamespace("Sample"),
+    ...LOCALIZATION_NAMESPACES.map(async (namespace) => IModelApp.localization.registerNamespace(namespace)),
+    initializePresentation(),
+    UiFramework.initialize(),
+    IModelApp.quantityFormatter.setActiveUnitSystem("metric"),
+  ]);
 }
 
 async function initializePresentation() {
@@ -67,7 +66,6 @@ async function initializePresentation() {
     presentation: {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
-      schemaContextProvider: (imodel) => MyAppFrontend.getSchemaContext(imodel),
     },
     favorites: {
       storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),

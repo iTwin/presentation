@@ -4,9 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyData } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import {
   DEFAULT_PROPERTY_GRID_RULESET,
@@ -14,8 +11,12 @@ import {
   PresentationPropertyDataProvider,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { TestIModelConnection } from "../../TestIModelSetup.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyData } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
 
 describe("FavoritePropertiesDataProvider", async () => {
   let imodel: IModelConnection;

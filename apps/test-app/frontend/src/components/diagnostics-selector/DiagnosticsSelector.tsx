@@ -5,9 +5,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, DropdownMenu, LabeledSelect, MenuExtraContent, ToggleSwitch } from "@itwin/itwinui-react";
-import { DiagnosticsLoggerSeverity } from "@itwin/presentation-common";
-import { DiagnosticsProps } from "@itwin/presentation-components";
 import { consoleDiagnosticsHandler } from "@itwin/presentation-frontend";
+
+import type { DiagnosticsLoggerSeverity } from "@itwin/presentation-common";
+import type { DiagnosticsProps } from "@itwin/presentation-components";
 
 export interface DiagnosticsSelectorProps {
   onDiagnosticsOptionsChanged: (diagnosticsOptions: DiagnosticsProps) => void;

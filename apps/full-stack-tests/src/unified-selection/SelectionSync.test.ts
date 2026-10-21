@@ -20,27 +20,21 @@ import {
   waitFor,
 } from "presentation-test-utilities";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Id64Arg, Id64Set } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { withEditTxn } from "@itwin/core-backend";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
-import {
-  createStorage,
-  enableUnifiedSelectionSyncWithIModel,
-  HiliteSet,
-  SelectableInstanceKey,
-  Selectables,
-  SelectionScope,
-  SelectionStorage,
-} from "@itwin/unified-selection";
-import { createSchemaContext } from "../IModelUtils.js";
+import { createStorage, enableUnifiedSelectionSyncWithIModel, Selectables } from "@itwin/unified-selection";
+import { buildTestIModel, unifyIModelAPIs } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
-import { buildTestIModel } from "../TestIModelSetup.js";
 import { getSchemaFromPackage } from "./getSchema.js";
 
+import type { Id64Arg, Id64Set } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Props } from "@itwin/presentation-shared";
+import type { HiliteSet, SelectableInstanceKey, SelectionScope, SelectionStorage } from "@itwin/unified-selection";
+
 describe("Unified selection sync with iModel", () => {
-  let imodel: IModelConnection;
+  let imodelConnection: IModelConnection;
   let selectionStorage: SelectionStorage;
 
   beforeAll(async () => {
@@ -56,28 +50,27 @@ describe("Unified selection sync with iModel", () => {
   });
 
   afterEach(async () => {
-    if (imodel) {
-      selectionStorage.clearStorage({ imodelKey: createIModelKey(imodel) });
-      await imodel.close();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (imodelConnection) {
+      selectionStorage.clearStorage({ imodelKey: createIModelKey(imodelConnection) });
+      await imodelConnection.close();
     }
   });
 
   function getStorageSelection(): Selectables {
-    return selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) });
+    return selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) });
   }
 
   function enableSync(props?: { selectionScope?: SelectionScope }): Disposable {
-    const schemaProvider = createECSchemaProvider(createSchemaContext(imodel));
-    const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
-    const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
+    const schemaProvider = createECSchemaProvider(unifyIModelAPIs(imodelConnection));
+    const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodelConnection), 123);
     const dispose = enableUnifiedSelectionSyncWithIModel({
       imodelAccess: {
-        key: createIModelKey(imodel),
+        key: createIModelKey(imodelConnection),
         ...schemaProvider,
-        ...classHierarchyInspector,
         ...queryExecutor,
-        selectionSet: imodel.selectionSet,
-        hiliteSet: imodel.hilited,
+        selectionSet: imodelConnection.selectionSet,
+        hiliteSet: imodelConnection.hilited,
       },
       selectionStorage,
       activeScopeProvider: () => props?.selectionScope ?? "element",
@@ -90,44 +83,48 @@ describe("Unified selection sync with iModel", () => {
       let subjectKey: SelectableInstanceKey;
       let modelKeys: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          subjectKey = insertSubject({ builder, codeValue: "test subject" });
-          const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
-          const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
-          const subject4 = insertSubject({ builder, codeValue: "subject 4", parentId: subject3.id });
-          modelKeys = [
-            insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subject2.id }),
-            insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subject4.id }),
-          ];
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            subjectKey = insertSubject({ txn, codeValue: "test subject" });
+            const subject2 = insertSubject({ txn, codeValue: "subject 2", parentId: subjectKey.id });
+            const subject3 = insertSubject({ txn, codeValue: "subject 3", parentId: subjectKey.id });
+            const subject4 = insertSubject({ txn, codeValue: "subject 4", parentId: subject3.id });
+            modelKeys = [
+              insertPhysicalModelWithPartition({ txn, codeValue: "model 1", partitionParentId: subject2.id }),
+              insertPhysicalModelWithPartition({ txn, codeValue: "model 2", partitionParentId: subject4.id }),
+            ];
+          });
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [subjectKey!],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: modelKeys.map(({ id }) => id),
           subCategories: [],
           elements: [],
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: modelKeys.map(({ id }) => id), subCategories: [], elements: [] }
             : { elements: [] },
         );
       });
 
-      if (is5xSelectionSet(imodel.selectionSet)) {
-        imodel.selectionSet.emptyAll();
+      if (is5xSelectionSet(imodelConnection.selectionSet)) {
+        imodelConnection.selectionSet.emptyAll();
         await waitFor(() => {
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-          expect(imodel.hilited.isEmpty).toBe(true);
+          expect(
+            Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+          ).toBe(true);
+          expect(imodelConnection.hilited.isEmpty).toBe(true);
         });
       }
     });
@@ -137,29 +134,35 @@ describe("Unified selection sync with iModel", () => {
     it("syncs model selection", async () => {
       let modelKey: SelectableInstanceKey;
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          modelKey = withEditTxn(imodel, (txn) => insertPhysicalModelWithPartition({ txn, codeValue: "test model" }));
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
-      selectionStorage.addToSelection({ imodelKey: createIModelKey(imodel), source: "test", selectables: [modelKey!] });
+      selectionStorage.addToSelection({
+        imodelKey: createIModelKey(imodelConnection),
+        source: "test",
+        selectables: [modelKey!],
+      });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({ models: [modelKey!.id], subCategories: [], elements: [] });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getHiliteSet(imodelConnection)).toEqual({ models: [modelKey!.id], subCategories: [], elements: [] });
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [modelKey!.id], subCategories: [], elements: [] }
             : { elements: [] },
         );
       });
 
-      if (is5xSelectionSet(imodel.selectionSet)) {
-        imodel.selectionSet.emptyAll();
+      if (is5xSelectionSet(imodelConnection.selectionSet)) {
+        imodelConnection.selectionSet.emptyAll();
         await waitFor(() => {
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-          expect(imodel.hilited.isEmpty).toBe(true);
+          expect(
+            Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+          ).toBe(true);
+          expect(imodelConnection.hilited.isEmpty).toBe(true);
         });
       }
     });
@@ -170,42 +173,47 @@ describe("Unified selection sync with iModel", () => {
       let categoryKey: SelectableInstanceKey;
       let subCategoryKeys: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          subCategoryKeys = [
-            getDefaultSubcategoryKey(categoryKey.id),
-            insertSubCategory({ builder, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
-            insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
-          ];
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+
+            subCategoryKeys = [
+              getDefaultSubcategoryKey(categoryKey.id),
+              insertSubCategory({ txn, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
+              insertSubCategory({ txn, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
+            ];
+          });
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [categoryKey!],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: subCategoryKeys.map(({ id }) => id),
           elements: [],
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: subCategoryKeys.map(({ id }) => id), elements: [] }
             : { elements: [] },
         );
       });
 
-      if (is5xSelectionSet(imodel.selectionSet)) {
-        imodel.selectionSet.emptyAll();
+      if (is5xSelectionSet(imodelConnection.selectionSet)) {
+        imodelConnection.selectionSet.emptyAll();
         await waitFor(() => {
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-          expect(imodel.hilited.isEmpty).toBe(true);
+          expect(
+            Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+          ).toBe(true);
+          expect(imodelConnection.hilited.isEmpty).toBe(true);
         });
       }
     });
@@ -213,35 +221,41 @@ describe("Unified selection sync with iModel", () => {
     it("syncs subcategory selection", async () => {
       let categoryKey: SelectableInstanceKey;
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          categoryKey = withEditTxn(imodel, (txn) => insertSpatialCategory({ txn, codeValue: "test category" }));
         })
-      ).imodel;
+      ).imodelConnection;
       const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
 
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [subCategoryKey],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({ models: [], subCategories: [subCategoryKey.id], elements: [] });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getHiliteSet(imodelConnection)).toEqual({
+          models: [],
+          subCategories: [subCategoryKey.id],
+          elements: [],
+        });
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [subCategoryKey.id], elements: [] }
             : { elements: [] },
         );
       });
 
-      if (is5xSelectionSet(imodel.selectionSet)) {
-        imodel.selectionSet.emptyAll();
+      if (is5xSelectionSet(imodelConnection.selectionSet)) {
+        imodelConnection.selectionSet.emptyAll();
         await waitFor(() => {
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-          expect(imodel.hilited.isEmpty).toBe(true);
+          expect(
+            Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+          ).toBe(true);
+          expect(imodelConnection.hilited.isEmpty).toBe(true);
         });
       }
     });
@@ -250,42 +264,46 @@ describe("Unified selection sync with iModel", () => {
       let categoryKey: SelectableInstanceKey;
       let subCategoryKeys: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          subCategoryKeys = [
-            getDefaultSubcategoryKey(categoryKey.id),
-            insertSubCategory({ builder, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
-            insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
-          ];
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            subCategoryKeys = [
+              getDefaultSubcategoryKey(categoryKey.id),
+              insertSubCategory({ txn, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
+              insertSubCategory({ txn, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
+            ];
+          });
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [categoryKey!, subCategoryKeys![0]],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: subCategoryKeys.map(({ id }) => id),
           elements: [],
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: subCategoryKeys.map(({ id }) => id), elements: [] }
             : { elements: [] },
         );
       });
 
-      if (is5xSelectionSet(imodel.selectionSet)) {
-        imodel.selectionSet.emptyAll();
+      if (is5xSelectionSet(imodelConnection.selectionSet)) {
+        imodelConnection.selectionSet.emptyAll();
         await waitFor(() => {
-          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-          expect(imodel.hilited.isEmpty).toBe(true);
+          expect(
+            Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+          ).toBe(true);
+          expect(imodelConnection.hilited.isEmpty).toBe(true);
         });
       }
     });
@@ -296,116 +314,124 @@ describe("Unified selection sync with iModel", () => {
       let assemblyKey: SelectableInstanceKey;
       let childElementKeys: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          assemblyKey = insertPhysicalElement({
-            builder,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            assemblyKey = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const element2 = insertPhysicalElement({
+              txn,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey.id,
+            });
+            const element3 = insertPhysicalElement({
+              txn,
+              userLabel: "element 3",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey.id,
+            });
+            const element4 = insertPhysicalElement({
+              txn,
+              userLabel: "element 4",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: element3.id,
+            });
+            const element5 = insertPhysicalElement({
+              txn,
+              userLabel: "element 5",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: element3.id,
+            });
+            childElementKeys = [element2, element3, element4, element5];
           });
-          const element2 = insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          });
-          const element3 = insertPhysicalElement({
-            builder,
-            userLabel: "element 3",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          });
-          const element4 = insertPhysicalElement({
-            builder,
-            userLabel: "element 4",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: element3.id,
-          });
-          const element5 = insertPhysicalElement({
-            builder,
-            userLabel: "element 5",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: element3.id,
-          });
-          childElementKeys = [element2, element3, element4, element5];
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [assemblyKey!],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] }
             : { elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] },
         );
       });
 
-      imodel.selectionSet.emptyAll();
+      imodelConnection.selectionSet.emptyAll();
       await waitFor(() => {
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-        expect(imodel.hilited.isEmpty).toBe(true);
+        expect(
+          Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+        ).toBe(true);
+        expect(imodelConnection.hilited.isEmpty).toBe(true);
       });
     });
 
     it("multiple elements selection", async () => {
       let elementKeys: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          elementKeys = [
-            insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-            insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-            insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
-          ];
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          await withEditTxn(imodel, async (txn) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await imodel.importSchemaStrings([schema]);
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            elementKeys = [
+              insertPhysicalElement({ txn, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({ txn, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+              insertPhysicalElement({ txn, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
+            ];
+          });
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: elementKeys!,
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: elementKeys.map(({ id }) => id),
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: elementKeys.map(({ id }) => id) }
             : { elements: elementKeys.map(({ id }) => id) },
         );
       });
 
-      imodel.selectionSet.emptyAll();
+      imodelConnection.selectionSet.emptyAll();
       await waitFor(() => {
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-        expect(imodel.hilited.isEmpty).toBe(true);
+        expect(
+          Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+        ).toBe(true);
+        expect(imodelConnection.hilited.isEmpty).toBe(true);
       });
     });
 
@@ -413,73 +439,75 @@ describe("Unified selection sync with iModel", () => {
       let assemblyKey: SelectableInstanceKey;
       let childElementKeys: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          assemblyKey = insertPhysicalElement({
-            builder,
-            userLabel: "element 1",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            assemblyKey = insertPhysicalElement({
+              txn,
+              userLabel: "element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const element2 = insertPhysicalElement({
+              txn,
+              userLabel: "element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey.id,
+            });
+            const element3 = insertPhysicalElement({
+              txn,
+              userLabel: "element 3",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: assemblyKey.id,
+            });
+            const element4 = insertPhysicalElement({
+              txn,
+              userLabel: "element 4",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: element3.id,
+            });
+            const element5 = insertPhysicalElement({
+              txn,
+              userLabel: "element 5",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: element3.id,
+            });
+            childElementKeys = [element2, element3, element4, element5];
           });
-          const element2 = insertPhysicalElement({
-            builder,
-            userLabel: "element 2",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          });
-          const element3 = insertPhysicalElement({
-            builder,
-            userLabel: "element 3",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: assemblyKey.id,
-          });
-          const element4 = insertPhysicalElement({
-            builder,
-            userLabel: "element 4",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: element3.id,
-          });
-          const element5 = insertPhysicalElement({
-            builder,
-            userLabel: "element 5",
-            modelId: modelKey.id,
-            categoryId: categoryKey.id,
-            parentId: element3.id,
-          });
-          childElementKeys = [element2, element3, element4, element5];
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync({ selectionScope: { id: "element", ancestorLevel: -1 } });
 
-      imodel.selectionSet.replace(childElementKeys![0].id);
+      imodelConnection.selectionSet.replace(childElementKeys![0].id);
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] }
             : { elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] },
         );
         expect(getStorageSelection()).toEqual(Selectables.create([assemblyKey!]));
       });
 
-      imodel.selectionSet.replace(childElementKeys![1].id);
+      imodelConnection.selectionSet.replace(childElementKeys![1].id);
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] }
             : { elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)] },
         );
@@ -494,77 +522,83 @@ describe("Unified selection sync with iModel", () => {
       let physicalElement: SelectableInstanceKey;
       let expectedElements: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({
-            builder,
-            codeValue: "test functional model",
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          await withEditTxn(imodel, async (txn) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await imodel.importSchemaStrings([schema]);
+            const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ txn, codeValue: "test functional model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            physicalElement = insertPhysicalElement({
+              txn,
+              userLabel: "element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+            const physicalElementChild = insertPhysicalElement({
+              txn,
+              userLabel: "child element 1",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElement.id,
+            });
+            const physicalElementChild2 = insertPhysicalElement({
+              txn,
+              userLabel: "child element 2",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElement.id,
+            });
+            const physicalElementChildChild = insertPhysicalElement({
+              txn,
+              userLabel: "child 1 child element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementChild.id,
+            });
+            functionalElement = insertFunctionalElement({
+              txn,
+              modelId: functionalModelKey.id,
+              representedElementId: physicalElement.id,
+              relationshipName: "PhysicalElementFulfillsFunction",
+            });
+            expectedElements = [
+              physicalElement,
+              physicalElementChild,
+              physicalElementChild2,
+              physicalElementChildChild,
+            ];
           });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          physicalElement = insertPhysicalElement({
-            builder,
-            userLabel: "element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
-          const physicalElementChild = insertPhysicalElement({
-            builder,
-            userLabel: "child element 1",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElement.id,
-          });
-          const physicalElementChild2 = insertPhysicalElement({
-            builder,
-            userLabel: "child element 2",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElement.id,
-          });
-          const physicalElementChildChild = insertPhysicalElement({
-            builder,
-            userLabel: "child 1 child element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementChild.id,
-          });
-          functionalElement = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: physicalElement.id,
-            relationshipName: "PhysicalElementFulfillsFunction",
-          });
-          expectedElements = [physicalElement, physicalElementChild, physicalElementChild2, physicalElementChildChild];
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [functionalElement!],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: expectedElements.map(({ id }) => id),
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: expectedElements.map(({ id }) => id) }
             : { elements: expectedElements.map(({ id }) => id) },
         );
       });
 
-      imodel.selectionSet.emptyAll();
+      imodelConnection.selectionSet.emptyAll();
       await waitFor(() => {
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-        expect(imodel.hilited.isEmpty).toBe(true);
+        expect(
+          Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+        ).toBe(true);
+        expect(imodelConnection.hilited.isEmpty).toBe(true);
       });
     });
 
@@ -573,69 +607,75 @@ describe("Unified selection sync with iModel", () => {
       let graphicsElement: SelectableInstanceKey;
       let expectedElements: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
-          const functionalModelKey = insertFunctionalModelWithPartition({
-            builder,
-            codeValue: "test functional model",
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          await withEditTxn(imodel, async (txn) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await imodel.importSchemaStrings([schema]);
+            const drawingModelKey = insertDrawingModelWithPartition({ txn, codeValue: "test drawing model" });
+            const functionalModelKey = insertFunctionalModelWithPartition({ txn, codeValue: "test functional model" });
+            const categoryKey = insertDrawingCategory({ txn, codeValue: "test drawing category" });
+            graphicsElement = insertDrawingGraphic({ txn, modelId: drawingModelKey.id, categoryId: categoryKey.id });
+            const graphicsElementChild = insertDrawingGraphic({
+              txn,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElement.id,
+            });
+            const graphicsElementChild2 = insertDrawingGraphic({
+              txn,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementChild.id,
+            });
+            const graphicsElementChildChild = insertDrawingGraphic({
+              txn,
+              modelId: drawingModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: graphicsElementChild.id,
+            });
+            functionalElement = insertFunctionalElement({
+              txn,
+              modelId: functionalModelKey.id,
+              representedElementId: graphicsElement.id,
+              relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            });
+            expectedElements = [
+              graphicsElement,
+              graphicsElementChild,
+              graphicsElementChild2,
+              graphicsElementChildChild,
+            ];
           });
-          const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
-          graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
-          const graphicsElementChild = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElement.id,
-          });
-          const graphicsElementChild2 = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementChild.id,
-          });
-          const graphicsElementChildChild = insertDrawingGraphic({
-            builder,
-            modelId: drawingModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: graphicsElementChild.id,
-          });
-          functionalElement = insertFunctionalElement({
-            builder,
-            modelId: functionalModelKey.id,
-            representedElementId: graphicsElement.id,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          });
-          expectedElements = [graphicsElement, graphicsElementChild, graphicsElementChild2, graphicsElementChildChild];
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [functionalElement!],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: expectedElements.map(({ id }) => id),
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: expectedElements.map(({ id }) => id) }
             : { elements: expectedElements.map(({ id }) => id) },
         );
       });
 
-      imodel.selectionSet.emptyAll();
+      imodelConnection.selectionSet.emptyAll();
       await waitFor(() => {
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-        expect(imodel.hilited.isEmpty).toBe(true);
+        expect(
+          Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+        ).toBe(true);
+        expect(imodelConnection.hilited.isEmpty).toBe(true);
       });
     });
   });
@@ -645,74 +685,79 @@ describe("Unified selection sync with iModel", () => {
       let groupInformationElement: SelectableInstanceKey;
       let expectedElements: SelectableInstanceKey[];
 
-      imodel = (
-        await buildTestIModel(async (builder) => {
-          const groupModel = insertGroupInformationModelWithPartition({
-            builder,
-            codeValue: "group information model",
+      imodelConnection = (
+        await buildTestIModel(async (imodel) => {
+          await withEditTxn(imodel, async (txn) => {
+            const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+            await imodel.importSchemaStrings([schema]);
+            const groupModel = insertGroupInformationModelWithPartition({ txn, codeValue: "group information model" });
+            const physicalModelKey = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+            const categoryKey = insertSpatialCategory({ txn, codeValue: "test category" });
+            groupInformationElement = insertGroupInformationElement({ txn, modelId: groupModel.id });
+            const physicalElementGroupMember = insertPhysicalElement({
+              txn,
+              userLabel: "child element 1",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+            txn.insertRelationship({
+              sourceId: groupInformationElement.id,
+              targetId: physicalElementGroupMember.id,
+              classFullName: "BisCore.ElementGroupsMembers",
+            });
+            const physicalElementGroupMember2 = insertPhysicalElement({
+              txn,
+              userLabel: "child element 2",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+            });
+            txn.insertRelationship({
+              sourceId: groupInformationElement.id,
+              targetId: physicalElementGroupMember2.id,
+              classFullName: "BisCore.ElementGroupsMembers",
+            });
+            const physicalElementGroupMemberChild = insertPhysicalElement({
+              txn,
+              userLabel: "child 1 child element",
+              modelId: physicalModelKey.id,
+              categoryId: categoryKey.id,
+              parentId: physicalElementGroupMember.id,
+            });
+            expectedElements = [
+              physicalElementGroupMember,
+              physicalElementGroupMember2,
+              physicalElementGroupMemberChild,
+            ];
           });
-          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
-          await builder.importSchema(schema);
-          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          groupInformationElement = insertGroupInformationElement({ builder, modelId: groupModel.id });
-          const physicalElementGroupMember = insertPhysicalElement({
-            builder,
-            userLabel: "child element 1",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
-          builder.insertRelationship({
-            sourceId: groupInformationElement.id,
-            targetId: physicalElementGroupMember.id,
-            classFullName: "BisCore.ElementGroupsMembers",
-          });
-          const physicalElementGroupMember2 = insertPhysicalElement({
-            builder,
-            userLabel: "child element 2",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-          });
-          builder.insertRelationship({
-            sourceId: groupInformationElement.id,
-            targetId: physicalElementGroupMember2.id,
-            classFullName: "BisCore.ElementGroupsMembers",
-          });
-          const physicalElementGroupMemberChild = insertPhysicalElement({
-            builder,
-            userLabel: "child 1 child element",
-            modelId: physicalModelKey.id,
-            categoryId: categoryKey.id,
-            parentId: physicalElementGroupMember.id,
-          });
-          expectedElements = [physicalElementGroupMember, physicalElementGroupMember2, physicalElementGroupMemberChild];
         })
-      ).imodel;
+      ).imodelConnection;
       using _ = enableSync();
 
       selectionStorage.addToSelection({
-        imodelKey: createIModelKey(imodel),
+        imodelKey: createIModelKey(imodelConnection),
         source: "test",
         selectables: [groupInformationElement!],
       });
 
       await waitFor(() => {
-        expect(getHiliteSet(imodel)).toEqual({
+        expect(getHiliteSet(imodelConnection)).toEqual({
           models: [],
           subCategories: [],
           elements: expectedElements.map(({ id }) => id),
         });
-        expect(getSelectionSet(imodel)).toEqual(
-          is5xSelectionSet(imodel.selectionSet)
+        expect(getSelectionSet(imodelConnection)).toEqual(
+          is5xSelectionSet(imodelConnection.selectionSet)
             ? { models: [], subCategories: [], elements: expectedElements.map(({ id }) => id) }
             : { elements: expectedElements.map(({ id }) => id) },
         );
       });
 
-      imodel.selectionSet.emptyAll();
+      imodelConnection.selectionSet.emptyAll();
       await waitFor(() => {
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) }))).toBe(true);
-        expect(imodel.hilited.isEmpty).toBe(true);
+        expect(
+          Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: createIModelKey(imodelConnection) })),
+        ).toBe(true);
+        expect(imodelConnection.hilited.isEmpty).toBe(true);
       });
     });
   });

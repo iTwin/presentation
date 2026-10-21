@@ -4,39 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
-import { afterEach, beforeEach, describe, expect, it, Mocked, vi } from "vitest";
-import { PropertyDescription } from "@itwin/appui-abstract";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
-import {
-  ClientDiagnosticsAttribute,
-  combineFieldNames,
-  Content,
-  ContentDescriptorRequestOptions,
-  ContentRequestOptions,
-  Descriptor,
-  Item,
-  KeySet,
-  Paged,
-  PropertyValueFormat,
-  RegisteredRuleset,
-  Ruleset,
-  SelectionInfo,
-  TypeDescription,
-  VariableValue,
-} from "@itwin/presentation-common";
-import {
-  IModelContentChangeEventArgs,
-  Presentation,
-  PresentationManager,
-  RulesetManager,
-  RulesetVariablesManager,
-} from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { combineFieldNames, Content, KeySet, PropertyValueFormat, RegisteredRuleset } from "@itwin/presentation-common";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import {
   CacheInvalidationProps,
   ContentDataProvider,
-  ContentDataProviderProps,
 } from "../../presentation-components/common/ContentDataProvider.js";
 import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common.js";
 import {
@@ -47,6 +22,29 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createMocked } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
+import type {
+  ClientDiagnosticsAttribute,
+  ContentDescriptorRequestOptions,
+  ContentRequestOptions,
+  Descriptor,
+  Item,
+  Paged,
+  Ruleset,
+  SelectionInfo,
+  TypeDescription,
+  VariableValue,
+} from "@itwin/presentation-common";
+import type {
+  IModelContentChangeEventArgs,
+  RulesetManager,
+  RulesetVariablesManager,
+} from "@itwin/presentation-frontend";
+import type { ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider.js";
 
 /**
  * The Provider class is used to make protected [[ContentDataProvider]]
@@ -432,7 +430,7 @@ describe("ContentDataProvider", () => {
           if (!options.paging?.start && !options.paging?.size) {
             return resultNoPageOptions;
           }
-          if (!options.paging?.start && options.paging.size) {
+          if (!options.paging.start && options.paging.size) {
             return resultNoPageStartWithSize;
           }
           if (options.paging.start) {
@@ -689,7 +687,7 @@ describe("ContentDataProvider", () => {
       await provider.getContentSetSize();
       expect(presentationManager.getContentIterator).toHaveBeenCalledExactlyOnceWith(
         matchOptions(
-          (options) => options.diagnostics?.editor === "error" && options.diagnostics?.handler === diagnosticsHandler,
+          (options) => options.diagnostics?.editor === "error" && options.diagnostics.handler === diagnosticsHandler,
         ),
       );
     });
@@ -718,9 +716,9 @@ describe("ContentDataProvider", () => {
         matchOptions(
           (options) =>
             options.diagnostics?.backendVersion === true &&
-            options.diagnostics?.perf === true &&
-            options.diagnostics?.dev === "error" &&
-            options.diagnostics?.handler === diagnosticsHandler,
+            options.diagnostics.perf === true &&
+            options.diagnostics.dev === "error" &&
+            options.diagnostics.handler === diagnosticsHandler,
         ),
       );
     });

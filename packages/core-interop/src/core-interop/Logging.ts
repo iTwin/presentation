@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { LogLevel as CoreLogLevel } from "@itwin/core-bentley";
-import { ILogger, LogLevel } from "@itwin/presentation-shared";
+
+import type { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 /**
  * Defines input for `createLogger`. Generally, this is the [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/)

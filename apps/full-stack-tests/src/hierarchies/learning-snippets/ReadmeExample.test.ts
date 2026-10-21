@@ -5,64 +5,41 @@
 /* eslint-disable no-console */
 /* eslint-disable no-duplicate-imports */
 
-// Test-specific imports should be kept out of extracted code
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Logger } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
+import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExampleImports
 import {
   createIModelHierarchyProvider,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
+import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-
+import { withEditTxn } from "@itwin/core-backend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess
-// Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
-// recommended to cache the schema context and reuse it across different application's components to
-// avoid loading and storing same schemas multiple times.
-const imodelSchemaContextsCache = new Map<string, SchemaContext>();
-function getIModelSchemaContext(imodel: IModelConnection) {
-  const imodelKey = createIModelKey(imodel);
-  let context = imodelSchemaContextsCache.get(imodelKey);
-  if (!context) {
-    context = new SchemaContext();
-    context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodelKey, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
-  }
-  return context;
-}
-
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     // The key of the iModel we're accessing
     imodelKey: createIModelKey(imodel),
-    // Schema provider provides access to EC information (metadata)
+    // Schema provider provides access to EC information (metadata) and class hierarchy inspection
     ...schemaProvider,
-    // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
     // The second argument is the maximum number of rows the executor will return - this allows us to
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
@@ -72,35 +49,21 @@ function createIModelAccess(imodel: IModelConnection) {
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExample
 function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]): HierarchyProvider {
-  // Create a factory for building labels SELECT query clauses according to BIS conventions
-  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-
-  // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({
-    imodelAccess,
-    instanceLabelSelectClauseFactory: labelsQueryFactory,
-  });
-
-  // Then, define the hierarchy
+  // Define the hierarchy
   const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-    classHierarchyInspector: imodelAccess,
+    imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
-      rootNodes: async () => [
+      rootNodes: async ({ createSelectClause }) => [
         {
           fullClassName: "BisCore.GeometricModel3d",
           query: {
             ecsql: `
               SELECT
-                ${await nodesQueryFactory.createSelectClause({
+                ${await createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({
-                      classAlias: "this",
-                      className: "BisCore.GeometricModel3d",
-                    }),
-                  },
+                  nodeLabel: { of: { classAlias: "this", className: "BisCore.GeometricModel3d" } },
                 })}
               FROM BisCore.GeometricModel3d this
             `,
@@ -111,21 +74,19 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
+          definitions: async ({
+            parentNodeInstanceIds,
+            createSelectClause,
+          }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Element",
               query: {
                 ecsql: `
                   SELECT
-                    ${await nodesQueryFactory.createSelectClause({
+                    ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
-                      nodeLabel: {
-                        selector: await labelsQueryFactory.createSelectClause({
-                          classAlias: "this",
-                          className: "BisCore.Element",
-                        }),
-                      },
+                      nodeLabel: { of: { classAlias: "this", className: "BisCore.Element" } },
                       grouping: { byClass: true },
                     })}
                   FROM BisCore.Element this
@@ -157,13 +118,15 @@ async function main() {
 // __PUBLISH_EXTRACT_END__
 
 async function getIModelConnection(): Promise<IModelConnection> {
-  const { imodel } = await buildTestIModel(async (builder) => {
-    const category = insertSpatialCategory({ builder, codeValue: "Test category" });
-    const model = insertPhysicalModelWithPartition({ builder, codeValue: "Test model" });
-    insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
-    insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "Test element 2" });
+  const { imodelConnection } = await buildTestIModel(async (imodel) => {
+    withEditTxn(imodel, (txn) => {
+      const category = insertSpatialCategory({ txn, codeValue: "Test category" });
+      const model = insertPhysicalModelWithPartition({ txn, codeValue: "Test model" });
+      insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "Test element 1" });
+      insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "Test element 2" });
+    });
   });
-  return imodel;
+  return imodelConnection;
 }
 
 describe("Hierarchies", () => {

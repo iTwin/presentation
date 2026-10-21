@@ -9,9 +9,10 @@
 
 import "../../common/DisposePolyfill.js";
 
-import { AbstractTreeNodeLoaderWithProvider } from "@itwin/components-react";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
+
+import type { AbstractTreeNodeLoaderWithProvider } from "@itwin/components-react";
+import type { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 
 /**
  * Parameters for [[useControlledPresentationTreeFiltering]] hook

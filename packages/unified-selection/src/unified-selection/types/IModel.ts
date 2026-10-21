@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64Arg, Id64Set } from "@itwin/core-bentley";
-import { Event } from "@itwin/presentation-shared";
+import type { Id64Arg, Id64Set } from "@itwin/core-bentley";
+import type { Event } from "@itwin/presentation-shared";
 
 /**
  * A collection of geometric element, model and subcategory ids that can be added to

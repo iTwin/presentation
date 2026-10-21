@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
-import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { createStorage, Selectables } from "@itwin/unified-selection";
 import { usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectionStorage } from "@itwin/unified-selection";
+import type { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 describe("usePropertyDataProviderWithUnifiedSelection", () => {
   const imodelKey = "test-imodel-key";

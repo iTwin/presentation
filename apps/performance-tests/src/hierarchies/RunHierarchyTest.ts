@@ -5,20 +5,15 @@
 
 import { expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import {
-  createNodesQueryClauseFactory,
-  DefineHierarchyLevelProps,
-  NodesQueryClauseFactory,
-} from "@itwin/presentation-hierarchies";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  Props,
-} from "@itwin/presentation-shared";
-import { Datasets, IModelName } from "../util/Datasets.js";
-import { run, RunOptions } from "../util/TestUtilities.js";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
+
+import type { DefineHierarchyLevelProps } from "@itwin/presentation-hierarchies";
+import type { EC, Props } from "@itwin/presentation-shared";
+import type { IModelName } from "../util/Datasets.js";
+import type { RunOptions } from "../util/TestUtilities.js";
 
 /**
  * Runs a full hierarchy test against a given iModel. The hierarchy is created using the given
@@ -28,8 +23,8 @@ import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
-    fullClassName?: string;
-    nodeSelectProps?: Partial<Props<NodesQueryClauseFactory["createSelectClause"]>>;
+    fullClassName?: EC.FullClassNameDotNotation;
+    nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
@@ -38,27 +33,21 @@ export function runHierarchyTest(
     ...testProps,
     setup: () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
-      const fullClassName = testProps.fullClassName ?? PhysicalElement.classFullName.replace(":", ".");
+      const fullClassName = testProps.fullClassName ?? normalizeFullClassName(PhysicalElement.classFullName);
       return {
         iModel,
-        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => ({
-          async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
-            if (props.parentNode) {
+        getHierarchyFactory: () => ({
+          async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
+            if (parentNode) {
               return [];
             }
 
-            const query = createNodesQueryClauseFactory({
-              imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                classHierarchyInspector: imodelAccess,
-              }),
-            });
             return [
               {
                 fullClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await query.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ...nodeSelectProps,
                       ecClassId: nodeSelectProps?.ecClassId ?? { selector: `this.ECClassId` },
                       ecInstanceId: nodeSelectProps?.ecInstanceId ?? { selector: `this.ECInstanceId` },
@@ -74,7 +63,7 @@ export function runHierarchyTest(
       };
     },
     test: async (props) => {
-      const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
+      const provider = await StatelessHierarchyProvider.create({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
         expect(nodeCount).toBe(testProps.expectedNodeCount);

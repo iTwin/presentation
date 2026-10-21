@@ -11,17 +11,21 @@ import {
 } from "presentation-test-utilities";
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
+import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
+import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { isIterableManager } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
+
+import type { TreeRendererProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
@@ -70,28 +74,30 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const { imodel } = await buildTestIModel((builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
-        const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
-        for (let i = 0; i < 2; ++i) {
-          insertPhysicalElement({
-            builder,
-            userLabel: `A element ${i + 1}`,
-            modelId: modelKeyA.id,
-            categoryId: categoryKey.id,
-          });
-          insertPhysicalElement({
-            builder,
-            userLabel: `B element ${i + 1}`,
-            modelId: modelKeyB.id,
-            categoryId: categoryKey.id,
-          });
-        }
+      const { imodelConnection } = await buildTestIModel((imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKeyA = insertPhysicalModelWithPartition({ txn, codeValue: "My Model A" });
+          const modelKeyB = insertPhysicalModelWithPartition({ txn, codeValue: "My Model B" });
+          for (let i = 0; i < 2; ++i) {
+            insertPhysicalElement({
+              txn,
+              userLabel: `A element ${i + 1}`,
+              modelId: modelKeyA.id,
+              categoryId: categoryKey.id,
+            });
+            insertPhysicalElement({
+              txn,
+              userLabel: `B element ${i + 1}`,
+              modelId: modelKeyB.id,
+              categoryId: categoryKey.id,
+            });
+          }
+        });
       });
 
       // render the component
-      const { container, getByText, rerender } = render(<MyTree imodel={imodel} />);
+      const { container, getByText, rerender } = render(<MyTree imodel={imodelConnection} />);
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand model A node
@@ -125,7 +131,7 @@ describe("Learning snippets", () => {
       expect(() => getNodeByLabel(container, `B element 2`)).toThrow();
 
       // now try to force-rerender the tree to see how the error is handled at the root nodes' level
-      rerender(<MyTree key={Guid.createValue()} imodel={imodel} />);
+      rerender(<MyTree key={Guid.createValue()} imodel={imodelConnection} />);
       await waitFor(() => getByRole(container, "tree"));
       expect(() => getNodeByLabel(container, `My Model A`)).toThrow();
       expect(() => getNodeByLabel(container, `My Model B`)).toThrow();

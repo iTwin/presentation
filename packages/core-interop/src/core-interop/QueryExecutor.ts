@@ -3,25 +3,29 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { OrderedId64Iterable } from "@itwin/core-bentley";
-import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
+import { Guid, OrderedId64Iterable } from "@itwin/core-bentley";
+import { QueryBinder, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import {
+import { trimWhitespace } from "@itwin/presentation-shared";
+
+import type { QueryOptions, QueryRowProxy } from "@itwin/core-common";
+import type {
   ECSqlBinding,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
   ECSqlQueryRow,
-  trimWhitespace,
 } from "@itwin/presentation-shared";
+
+export const QUERY_CANCEL_DELAY_MS = 100;
 
 /**
  * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)
  * or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/).
  * @public
  */
-interface CoreECSqlReaderFactory {
-  createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
+export interface CoreECSqlReaderFactory {
+  createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): AsyncIterableIterator<QueryRowProxy>;
 }
 
 /**
@@ -56,71 +60,116 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
           opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
           break;
       }
-      if (config?.restartToken) {
-        opts.setRestartToken(config?.restartToken);
-      }
+      const restartToken = config?.restartToken ?? Guid.createValue();
+      opts.setRestartToken(restartToken);
+      const onCancel = () => {
+        try {
+          const cancelReader = imodel.createQueryReader(
+            "SELECT 1",
+            undefined,
+            new QueryOptionsBuilder().setRestartToken(restartToken).getOptions(),
+          );
+          void (async () => {
+            try {
+              for await (const _ of cancelReader) {
+                /* drain */
+              }
+            } catch {
+              /* expected */
+            }
+          })();
+        } catch {
+          /* ignore */
+        }
+      };
       return new ECSqlQueryReaderImpl(
-        imodel.createQueryReader(trimWhitespace(addCTEs(ecsql, ctes)), bind(bindings ?? []), opts.getOptions()),
+        imodel.createQueryReader(
+          trimWhitespace(addCTEs(ecsql, ctes)),
+          bindings ? bind(bindings) : undefined,
+          opts.getOptions(),
+        ),
         config?.rowFormat === "Indexes" ? "array" : "object",
+        onCancel,
       );
     },
   };
 }
 
 class ECSqlQueryReaderImpl implements ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+  private _cancelTimer: ReturnType<typeof setTimeout> | undefined;
+
   public constructor(
-    private _coreReader: ECSqlReader,
+    private _coreReader: AsyncIterableIterator<QueryRowProxy>,
     private _format: "array" | "object",
+    private _onCancel: () => void,
   ) {}
+
   public [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
     return this;
   }
+
   public async next(): Promise<IteratorResult<ECSqlQueryRow>> {
     const res = await this._coreReader.next();
     if (res.done) {
+      if (this._cancelTimer) {
+        clearTimeout(this._cancelTimer);
+        this._cancelTimer = undefined;
+      }
       return { done: true, value: undefined };
     }
     return { done: false, value: this._format === "array" ? res.value.toArray() : res.value.toRow() };
   }
+
+  public async return(): Promise<IteratorResult<ECSqlQueryRow>> {
+    if (this._coreReader.return) {
+      await this._coreReader.return();
+    } else {
+      this._cancelTimer = setTimeout(() => this._onCancel(), QUERY_CANCEL_DELAY_MS);
+    }
+    return { done: true, value: undefined };
+  }
 }
 
-function bind(bindings: ECSqlBinding[]): QueryBinder {
+function bind(bindings: ECSqlBinding[] | Record<string, ECSqlBinding>): QueryBinder {
   const binder = new QueryBinder();
-  bindings.forEach((b, i) => {
+  const entries: Array<[string | number, ECSqlBinding]> = Array.isArray(bindings)
+    ? bindings.map((b, i) => [i + 1, b])
+    : Object.entries(bindings);
+  for (const [key, b] of entries) {
     if (b.value === undefined) {
-      binder.bindNull(i + 1);
-      return;
+      binder.bindNull(key);
+      continue;
     }
     switch (b.type) {
       case "boolean":
-        binder.bindBoolean(i + 1, b.value);
+        binder.bindBoolean(key, b.value);
         break;
       case "double":
-        binder.bindDouble(i + 1, b.value);
+        binder.bindDouble(key, b.value);
         break;
       case "id":
-        binder.bindId(i + 1, b.value);
+        binder.bindId(key, b.value);
         break;
       case "idset":
-        binder.bindIdSet(i + 1, OrderedId64Iterable.sortArray(b.value));
+        binder.bindIdSet(key, OrderedId64Iterable.sortArray([...b.value]));
         break;
       case "int":
-        binder.bindInt(i + 1, b.value);
+        binder.bindInt(key, b.value);
         break;
       case "long":
-        binder.bindLong(i + 1, b.value);
+        binder.bindLong(key, b.value);
         break;
       case "point2d":
-        binder.bindPoint2d(i + 1, Point2d.fromJSON(b.value));
+        binder.bindPoint2d(key, Point2d.fromJSON(b.value));
         break;
       case "point3d":
-        binder.bindPoint3d(i + 1, Point3d.fromJSON(b.value));
+        binder.bindPoint3d(key, Point3d.fromJSON(b.value));
         break;
       case "string":
-        binder.bindString(i + 1, b.value);
+        binder.bindString(key, b.value);
         break;
     }
-  });
+  }
   return binder;
 }
 

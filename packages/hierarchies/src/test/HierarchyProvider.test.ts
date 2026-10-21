@@ -3,190 +3,117 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { collect, createAsyncIterator } from "presentation-test-utilities";
+import { collect } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
-import { BeEvent } from "@itwin/core-bentley";
-import { InstanceKey, Props } from "@itwin/presentation-shared";
-import { HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import { HierarchyProvider, mergeProviders } from "../hierarchies/HierarchyProvider.js";
+import { createHierarchyProvider } from "../hierarchies/HierarchyProvider.js";
 import { createTestGenericNode, createTestGenericNodeKey } from "./Utils.js";
 
-describe("mergeProviders", () => {
-  it("returns nodes from all providers", async () => {
-    const providers = [
-      createTestProvider({
-        nodes: ({ parentNode }) =>
-          !parentNode
-            ? [
-                createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1" }),
-                createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s1" }), label: "x" }),
-              ]
-            : [],
-      }),
-      createTestProvider({
-        nodes: ({ parentNode }) =>
-          !parentNode
-            ? [
-                createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s2" }), label: "2" }),
-                createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s2" }), label: "x" }),
-              ]
-            : [],
-      }),
-    ];
-    const mergedProvider = mergeProviders({ providers });
-    expect(await collect(mergedProvider.getNodes({ parentNode: undefined }))).toEqual([
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1" }),
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s2" }), label: "2" }),
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s2" }), label: "x" }),
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s1" }), label: "x" }),
+import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { HierarchyProvider } from "../hierarchies/HierarchyProvider.js";
+
+describe("createHierarchyProvider", () => {
+  it("creates a simple provider", async () => {
+    const provider = createHierarchyProvider(() => ({
+      async *getNodes({ parentNode }) {
+        if (!parentNode) {
+          yield createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }), label: "root" });
+        }
+      },
+    }));
+    expect(await collect(provider.getNodes({ parentNode: undefined }))).to.deep.eq([
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }), label: "root" }),
     ]);
   });
 
-  it("creates hierarchy from multiple providers", async () => {
-    const providers = [
-      createTestProvider({
-        nodes: ({ parentNode }) => {
-          if (!parentNode) {
-            return [
-              createTestGenericNode({
-                key: createTestGenericNodeKey({ id: "1", source: "s1" }),
-                label: "1",
-                children: true,
-              }),
-            ];
-          }
-          if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "1") {
-            return [
-              createTestGenericNode({
-                key: createTestGenericNodeKey({ id: "2", source: "s1" }),
-                label: "2",
-                children: false,
-              }),
-            ];
-          }
-          return [];
-        },
-      }),
-      createTestProvider({
-        nodes: ({ parentNode }) =>
-          parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "2"
-            ? [
-                createTestGenericNode({
-                  key: createTestGenericNodeKey({ id: "3", source: "s2" }),
-                  label: "3",
-                  children: false,
-                }),
-              ]
-            : [],
-      }),
-    ];
-    const mergedProvider = mergeProviders({ providers });
+  it("calls provider implementation functions", async () => {
+    const provider = createHierarchyProvider(() => ({
+      getNodes: vi.fn(async function* () {}),
+      getNodeInstanceKeys: vi.fn(async function* () {}),
+      setFormatter: vi.fn(),
+      setHierarchySearch: vi.fn(),
+    }));
 
-    const nodes1 = await collect(mergedProvider.getNodes({ parentNode: undefined }));
-    expect(nodes1).toEqual([
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1", children: true }),
-    ]);
+    provider.getNodes({ parentNode: undefined });
+    expect(provider.getNodes).toHaveBeenCalledOnce();
 
-    const nodes2 = await collect(mergedProvider.getNodes({ parentNode: nodes1[0] }));
-    expect(nodes2).toEqual([
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s1" }), label: "2", children: true }),
-    ]);
+    provider.getNodeInstanceKeys({ parentNode: undefined });
+    expect(provider.getNodeInstanceKeys).toHaveBeenCalledOnce();
 
-    const nodes3 = await collect(mergedProvider.getNodes({ parentNode: nodes2[0] }));
-    expect(nodes3).toEqual([
-      createTestGenericNode({ key: createTestGenericNodeKey({ id: "3", source: "s2" }), label: "3", children: false }),
-    ]);
+    provider.setFormatter(undefined);
+    expect(provider.setFormatter).toHaveBeenCalledOnce();
+
+    provider.setHierarchySearch(undefined);
+    expect(provider.setHierarchySearch).toHaveBeenCalledOnce();
   });
 
-  it("returns instance keys from all providers", async () => {
-    const providers = [
-      createTestProvider({
-        instanceKeys: () => [
-          { className: "1", id: "1" },
-          { className: "x", id: "x" },
-        ],
-      }),
-      createTestProvider({ instanceKeys: () => [{ className: "2", id: "2" }] }),
-    ];
-    const mergedProvider = mergeProviders({ providers });
-    const instanceKeys = await collect(mergedProvider.getNodeInstanceKeys({ parentNode: undefined }));
-    expect(instanceKeys).toHaveLength(3);
-    expect(instanceKeys).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ className: "1", id: "1" }),
-        expect.objectContaining({ className: "x", id: "x" }),
-        expect.objectContaining({ className: "2", id: "2" }),
-      ]),
-    );
-    providers.forEach((provider) => expect(provider.getNodeInstanceKeys.mock.calls).toHaveLength(1));
-  });
+  it("provides `hierarchyChanged` event access", async () => {
+    const provider = createHierarchyProvider(({ hierarchyChanged }) => ({
+      async *getNodes() {},
+      setFormatter(formatter) {
+        hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+      },
+      setHierarchySearch(props) {
+        hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
+      },
+    }));
 
-  it("sets formatter on all providers", async () => {
-    const providers = [createTestProvider(), createTestProvider()];
-    const mergedProvider = mergeProviders({ providers });
-    const formatter = {} as any;
-    mergedProvider.setFormatter(formatter);
-    providers.forEach((provider) => expect(provider.setFormatter).toHaveBeenCalledExactlyOnceWith(formatter));
-  });
-
-  it("sets hierarchy filter on all providers", async () => {
-    const providers = [createTestProvider(), createTestProvider()];
-    const mergedProvider = mergeProviders({ providers });
-    const filter = {} as any;
-    mergedProvider.setHierarchyFilter(filter);
-    providers.forEach((provider) => expect(provider.setHierarchyFilter).toHaveBeenCalledExactlyOnceWith(filter));
-  });
-
-  it("raises `hierarchyChanged` event when one of the merged providers raises it", async () => {
-    const providers = [createTestProvider(), createTestProvider()];
-    const mergedProvider = mergeProviders({ providers });
     const spy = vi.fn();
-    mergedProvider.hierarchyChanged.addListener(spy);
+    provider.hierarchyChanged.addListener(spy);
 
-    providers[0].hierarchyChanged.raiseEvent();
-    expect(spy).toHaveBeenCalledOnce();
+    provider.setFormatter(undefined);
+    expect(spy).toHaveBeenCalledExactlyOnceWith({ formatterChange: { newFormatter: undefined } });
+    spy.mockReset();
 
-    providers[1].hierarchyChanged.raiseEvent();
-    expect(spy).toHaveBeenCalledTimes(2);
+    const searchProps = { paths: [] };
+    provider.setHierarchySearch(searchProps);
+    expect(spy).toHaveBeenCalledExactlyOnceWith({ searchChange: { newSearch: searchProps } });
   });
 
-  it("disposes all disposable providers", async () => {
-    const providers = [
-      createTestProvider({ disposable: "yes" }),
-      createTestProvider({ disposable: "deprecated" }),
-      createTestProvider(),
-    ];
-    const mergedProvider = mergeProviders({ providers });
-    mergedProvider[Symbol.dispose]();
-    providers.forEach((provider) => {
-      provider.dispose && expect(provider.dispose).toHaveBeenCalledOnce();
-      provider[Symbol.dispose] && expect(provider[Symbol.dispose]).toHaveBeenCalledOnce();
-    });
+  it("allows providers with custom methods", async () => {
+    const provider = createHierarchyProvider(() => ({ async *getNodes() {}, customMethod: vi.fn() }));
+    provider.customMethod();
+    expect(provider.customMethod).toHaveBeenCalledOnce();
+  });
+
+  it("allows class-based providers with custom methods", async () => {
+    using provider = createHierarchyProvider(
+      () =>
+        new (class implements Pick<HierarchyProvider, "getNodes"> {
+          public async *getNodes() {}
+          public customMethod() {}
+          public [Symbol.dispose]() {}
+        })(),
+    );
+    const spy = vi.spyOn(provider, "customMethod");
+    provider.customMethod();
+    expect(spy).toHaveBeenCalledOnce();
+  });
+
+  it("allows class-based providers use their private members", async () => {
+    const provider = createHierarchyProvider(
+      () =>
+        new (class implements Pick<HierarchyProvider, "getNodes" | "setFormatter"> {
+          private _formatter: IPrimitiveValueFormatter | undefined;
+          public async *getNodes() {
+            yield createTestGenericNode({
+              key: createTestGenericNodeKey({ id: "root" }),
+              label: (await this._formatter?.({ type: "String", value: "root" })) ?? "root",
+            });
+          }
+          public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+            this._formatter = formatter;
+          }
+        })(),
+    );
+
+    expect(await collect(provider.getNodes({ parentNode: undefined }))).to.deep.eq([
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }), label: "root" }),
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
+    provider.setFormatter(async (value) => `formatted ${value.value}`);
+    expect(await collect(provider.getNodes({ parentNode: undefined }))).to.deep.eq([
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }), label: "formatted root" }),
+    ]);
   });
 });
-
-function createTestProvider(props?: {
-  nodes?: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
-  instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
-  disposable?: "yes" | "deprecated" | "no";
-}) {
-  return {
-    hierarchyChanged: new BeEvent(),
-    getNodes: vi
-      .fn()
-      .mockImplementation((getNodesProps) =>
-        createAsyncIterator(
-          props?.nodes ? props.nodes(getNodesProps).map((partial) => createTestGenericNode(partial)) : [],
-        ),
-      ),
-    getNodeInstanceKeys: vi
-      .fn()
-      .mockImplementation((getNodeInstanceKeysProps) =>
-        createAsyncIterator(props?.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : []),
-      ),
-    setFormatter: vi.fn(),
-    setHierarchyFilter: vi.fn(),
-    ...(props?.disposable === "yes" ? { [Symbol.dispose]: vi.fn() } : {}),
-    ...(props?.disposable === "deprecated" ? { dispose: vi.fn() } : {}),
-  };
-}

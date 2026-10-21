@@ -1,0 +1,459 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { afterAll, beforeAll, beforeEach, describe, it, test } from "vitest";
+import { omit } from "@itwin/core-bentley";
+import { createChangedDbs } from "../../ECDbUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import {
+  createHierarchyDefinitionFactory,
+  createMergedHierarchyProvider,
+  importQSchema,
+  importXYZSchema,
+  pickAndTransform,
+} from "./HierarchiesMerging.js";
+
+describe("Hierarchies", () => {
+  beforeAll(async function () {
+    await initialize();
+  });
+
+  afterAll(async () => {
+    await terminate();
+  });
+
+  describe("Merging iModel hierarchies", () => {
+    describe("Property range grouping nodes", () => {
+      describe("General case", () => {
+        async function setupDbs(testName: string) {
+          return createChangedDbs({
+            name: testName,
+            setupBase: async (builder) => {
+              const xyzSchema = await importXYZSchema(builder);
+              const x = builder.insertInstance(xyzSchema.items.X.fullName, { ["Label"]: "x" });
+              const y1 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 11 });
+              builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y1.id);
+              const y2 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y2", ["PropY"]: 21 });
+              builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y2.id);
+              const y3 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y3", ["PropY"]: 22 });
+              builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y3.id);
+              return { xyzSchema, x, y1, y2, y3 };
+            },
+            setupChangeset1: async (builder, base) => {
+              const qSchema = await importQSchema(builder);
+              builder.deleteInstance(base.y2);
+              builder.updateInstance(base.y3, { ["PropY"]: 31 });
+              const q1 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q1", ["PropY"]: 41 });
+              builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, q1.id);
+              const w = builder.insertInstance(qSchema.items.W.fullName, { ["Label"]: "w" });
+              const q2 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q2", ["PropY"]: 23 });
+              builder.insertRelationship(base.xyzSchema.items.XY.fullName, w.id, q2.id);
+              return { ...omit(base, ["y2"]), qSchema, w, q1, q2 };
+            },
+          });
+        }
+
+        let dbs: Awaited<ReturnType<typeof setupDbs>>;
+        let keys: {
+          base: Omit<typeof dbs.base, "ecdb" | "ecdbPath" | "xyzSchema">;
+          changeset1: Omit<typeof dbs.changeset1, "ecdb" | "ecdbPath" | "xyzSchema" | "qSchema">;
+        };
+        let provider: ReturnType<typeof createMergedHierarchyProvider>;
+
+        test.beforeAll(async function (_context, suite) {
+          dbs = await setupDbs(suite.fullTestName!);
+          keys = {
+            base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
+            changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "w", "q1", "q2"], (_, value) => ({
+              ...value,
+              imodelKey: "changeset1",
+            })),
+          };
+        });
+
+        afterAll(async () => {
+          dbs[Symbol.dispose]();
+        });
+
+        beforeEach(() => {
+          provider = createMergedHierarchyProvider({
+            imodels: [
+              { ecdb: dbs.base.ecdb, key: "base" },
+              { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
+            ],
+            createHierarchyDefinition: createHierarchyDefinitionFactory({
+              xyzSchema: dbs.base.xyzSchema,
+              createYGroupingParams: (alias) => ({
+                byProperties: {
+                  propertiesClassName: dbs.base.xyzSchema.items.Y.fullName,
+                  propertyGroups: [
+                    {
+                      propertyClassAlias: alias,
+                      propertyName: "PropY",
+                      ranges: [
+                        { fromValue: 10, toValue: 20, rangeLabel: "10 - 20" },
+                        { fromValue: 20, toValue: 30, rangeLabel: "20 - 30" },
+                        { fromValue: 30, toValue: 40, rangeLabel: "30 - 40" },
+                      ],
+                    },
+                  ],
+                  createGroupForOutOfRangeValues: true,
+                },
+              }),
+            }),
+          });
+        });
+
+        it("merges grouping and grouped nodes", async function () {
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForInstanceNode({
+                label: "w",
+                children: [
+                  NodeValidators.createForPropertyValueRangeGroupingNode({
+                    label: "20 - 30",
+                    groupedInstanceKeys: [keys.changeset1.q2],
+                    children: [
+                      NodeValidators.createForInstanceNode({ label: "q2", instanceKeys: [keys.changeset1.q2] }),
+                    ],
+                  }),
+                ],
+              }),
+              NodeValidators.createForInstanceNode({
+                label: "x",
+                children: [
+                  NodeValidators.createForPropertyValueRangeGroupingNode({
+                    label: "10 - 20",
+                    groupedInstanceKeys: [keys.base.y1, keys.changeset1.y1],
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        label: "y1",
+                        instanceKeys: [keys.changeset1.y1, keys.base.y1],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForPropertyValueRangeGroupingNode({
+                    label: "20 - 30",
+                    groupedInstanceKeys: [keys.base.y2],
+                    children: [NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.base.y2] })],
+                  }),
+                  NodeValidators.createForPropertyValueRangeGroupingNode({
+                    label: "30 - 40",
+                    groupedInstanceKeys: [keys.base.y3, keys.changeset1.y3],
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        label: "y3",
+                        instanceKeys: [keys.base.y3, keys.changeset1.y3],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForPropertyOtherValuesGroupingNode({
+                    label: "Other",
+                    groupedInstanceKeys: [keys.changeset1.q1],
+                    children: [
+                      NodeValidators.createForInstanceNode({ label: "q1", instanceKeys: [keys.changeset1.q1] }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        describe("Hierarchy search", () => {
+          it("creates hierarchy when targeting all instances from both imodels", async () => {
+            provider.setHierarchySearch({
+              paths: [
+                {
+                  identifier: keys.base.x,
+                  isTarget: true,
+                  children: [{ identifier: keys.base.y1 }, { identifier: keys.base.y2 }, { identifier: keys.base.y3 }],
+                },
+                {
+                  identifier: keys.changeset1.x,
+                  isTarget: true,
+                  children: [
+                    { identifier: keys.changeset1.y1 },
+                    { identifier: keys.changeset1.y3 },
+                    { identifier: keys.changeset1.q1 },
+                  ],
+                },
+                { identifier: keys.changeset1.w, isTarget: true, children: [{ identifier: keys.changeset1.q2 }] },
+              ],
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  label: "w",
+                  isSearchTarget: true,
+                  children: [
+                    NodeValidators.createForPropertyValueRangeGroupingNode({
+                      label: "20 - 30",
+                      groupedInstanceKeys: [keys.changeset1.q2],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "q2",
+                          instanceKeys: [keys.changeset1.q2],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                NodeValidators.createForInstanceNode({
+                  label: "x",
+                  isSearchTarget: true,
+                  children: [
+                    NodeValidators.createForPropertyValueRangeGroupingNode({
+                      label: "10 - 20",
+                      groupedInstanceKeys: [keys.base.y1, keys.changeset1.y1],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "y1",
+                          instanceKeys: [keys.changeset1.y1, keys.base.y1],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                    NodeValidators.createForPropertyValueRangeGroupingNode({
+                      label: "20 - 30",
+                      groupedInstanceKeys: [keys.base.y2],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "y2",
+                          instanceKeys: [keys.base.y2],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                    NodeValidators.createForPropertyValueRangeGroupingNode({
+                      label: "30 - 40",
+                      groupedInstanceKeys: [keys.base.y3, keys.changeset1.y3],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "y3",
+                          instanceKeys: [keys.base.y3, keys.changeset1.y3],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                    NodeValidators.createForPropertyOtherValuesGroupingNode({
+                      label: "Other",
+                      groupedInstanceKeys: [keys.changeset1.q1],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "q1",
+                          instanceKeys: [keys.changeset1.q1],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
+          });
+
+          it("creates hierarchy when targeting instances from different imodels", async () => {
+            provider.setHierarchySearch({
+              paths: [
+                { identifier: keys.base.x, children: [{ identifier: keys.base.y2 }] },
+                { identifier: keys.changeset1.x, children: [{ identifier: keys.changeset1.q1 }] },
+                { identifier: keys.changeset1.w, children: [{ identifier: keys.changeset1.q2 }] },
+              ],
+            });
+            await validateHierarchy({
+              provider,
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  label: "w",
+                  children: [
+                    NodeValidators.createForPropertyValueRangeGroupingNode({
+                      label: "20 - 30",
+                      groupedInstanceKeys: [keys.changeset1.q2],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "q2",
+                          instanceKeys: [keys.changeset1.q2],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+                NodeValidators.createForInstanceNode({
+                  label: "x",
+                  children: [
+                    NodeValidators.createForPropertyValueRangeGroupingNode({
+                      label: "20 - 30",
+                      groupedInstanceKeys: [keys.base.y2],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "y2",
+                          instanceKeys: [keys.base.y2],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                    NodeValidators.createForPropertyOtherValuesGroupingNode({
+                      label: "Other",
+                      groupedInstanceKeys: [keys.changeset1.q1],
+                      children: [
+                        NodeValidators.createForInstanceNode({
+                          label: "q1",
+                          instanceKeys: [keys.changeset1.q1],
+                          isSearchTarget: true,
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            });
+          });
+        });
+      });
+
+      it("creates grouping node when it's not created for individual imodels due to `hideIfOneGroupedNode` flag", async function () {
+        using dbs = await createChangedDbs({
+          setupBase: async (builder) => {
+            const schema = await importXYZSchema(builder);
+            const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
+            const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 111 });
+            builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
+            return { schema, x, y1 };
+          },
+          setupChangeset1: async (builder, base) => {
+            builder.deleteInstance(base.y1);
+            const y2 = builder.insertInstance(base.schema.items.Y.fullName, { ["Label"]: "y2", ["PropY"]: 199 });
+            builder.insertRelationship(base.schema.items.XY.fullName, base.x.id, y2.id);
+            return { ...omit(base, ["y1"]), y2 };
+          },
+        });
+        const keys = {
+          base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y2"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
+        };
+
+        await validateHierarchy({
+          provider: createMergedHierarchyProvider({
+            imodels: [
+              {
+                // has one Y node that is not grouped
+                ecdb: dbs.base.ecdb,
+                key: "base",
+              },
+              {
+                // has one Y node that is not grouped
+                ecdb: dbs.changeset1.ecdb,
+                key: "changeset1",
+              },
+            ],
+            createHierarchyDefinition: createHierarchyDefinitionFactory({
+              xyzSchema: dbs.base.schema,
+              createYGroupingParams: (alias) => ({
+                byProperties: {
+                  propertiesClassName: dbs.base.schema.items.Y.fullName,
+                  propertyGroups: [
+                    { propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] },
+                  ],
+                  hideIfOneGroupedNode: true,
+                },
+              }),
+            }),
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              label: "x",
+              children: [
+                NodeValidators.createForPropertyValueRangeGroupingNode({
+                  label: "100 - 200",
+                  groupedInstanceKeys: [keys.base.y1, keys.changeset1.y2],
+                  children: [
+                    NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1] }),
+                    NodeValidators.createForInstanceNode({ label: "y2", instanceKeys: [keys.changeset1.y2] }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("creates grouping node when it's not created for individual imodels due to `hideIfNoSiblings` flag", async function () {
+        using dbs = await createChangedDbs({
+          setupBase: async (builder) => {
+            const schema = await importXYZSchema(builder);
+            const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
+            const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 111 });
+            builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
+            return { schema, x, y1 };
+          },
+          setupChangeset1: async (builder, base) => {
+            builder.deleteInstance(base.y1);
+            const z = builder.insertInstance(base.schema.items.Z.fullName, { ["Label"]: "z" });
+            builder.insertRelationship(base.schema.items.XZ.fullName, base.x.id, z.id);
+            return { ...omit(base, ["y1"]), z };
+          },
+        });
+        const keys = {
+          base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({
+            ...value,
+            imodelKey: "changeset1",
+          })),
+        };
+
+        await validateHierarchy({
+          provider: createMergedHierarchyProvider({
+            imodels: [
+              {
+                // has Y node which is not grouped
+                ecdb: dbs.base.ecdb,
+                key: "base",
+              },
+              {
+                // has Z node
+                ecdb: dbs.changeset1.ecdb,
+                key: "changeset1",
+              },
+            ],
+            createHierarchyDefinition: createHierarchyDefinitionFactory({
+              xyzSchema: dbs.base.schema,
+              createYGroupingParams: (alias) => ({
+                byProperties: {
+                  propertiesClassName: dbs.base.schema.items.Y.fullName,
+                  propertyGroups: [
+                    { propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] },
+                  ],
+                  hideIfNoSiblings: true,
+                },
+              }),
+            }),
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              label: "x",
+              children: [
+                NodeValidators.createForPropertyValueRangeGroupingNode({
+                  label: "100 - 200",
+                  groupedInstanceKeys: [keys.base.y1],
+                  children: [NodeValidators.createForInstanceNode({ label: "y1", instanceKeys: [keys.base.y1] })],
+                }),
+                NodeValidators.createForInstanceNode({ label: "z", instanceKeys: [keys.changeset1.z] }),
+              ],
+            }),
+          ],
+        });
+      });
+    });
+  });
+});

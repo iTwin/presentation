@@ -5,10 +5,13 @@
 
 import "./DisposePolyfill.js";
 
-import { bufferCount, concatAll, concatMap, delay, Observable, of } from "rxjs";
-import { Id64, Id64Array, Id64Set } from "@itwin/core-bentley";
-import {
-  createMainThreadReleaseOnTimePassedHandler,
+import { bufferCount, concatAll, concatMap, delay, of } from "rxjs";
+import { Id64 } from "@itwin/core-bentley";
+import { createMainThreadReleaseOnTimePassedHandler } from "@itwin/presentation-shared";
+
+import type { Observable } from "rxjs";
+import type { Id64Array, Id64Set } from "@itwin/core-bentley";
+import type {
   ECSqlBinding,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
@@ -23,7 +26,7 @@ import {
 export function formIdBindings(property: string, ids: Id64Array | Id64Set, bindings: ECSqlBinding[]): string {
   const count = Id64.sizeOf(ids);
   if (count > 1000) {
-    bindings.push({ type: "idset", value: ids instanceof Set ? [...ids] : ids });
+    bindings.push({ type: "idset", value: ids });
     return `InVirtualSet(?, ${property})`;
   }
 

@@ -4,26 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect } from "vitest";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
-import {
-  defaultHierarchyConfiguration,
-  ModelsTreeDefinition,
-  ModelsTreeIdsCache,
-} from "@itwin/presentation-models-tree";
-import {
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  InstanceKey,
-} from "@itwin/presentation-shared";
+import { SnapshotDb } from "@itwin/core-backend";
+import { createModelsTree } from "@itwin/presentation-tree-definitions";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
-import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
+
+import type { IModelDb } from "@itwin/core-backend";
+import type { ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
+import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) =>
-    new ModelsTreeDefinition({ imodelAccess });
+  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) =>
+    createModelsTree({ imodelAccess }).definition;
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
@@ -32,7 +25,7 @@ describe("models tree", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
+      const provider = await StatelessHierarchyProvider.create({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).toBeGreaterThan(0);
     },
@@ -43,7 +36,7 @@ describe("models tree", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
+      const provider = await StatelessHierarchyProvider.create({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy();
       expect(result).toBeGreaterThan(0);
     },
@@ -53,34 +46,32 @@ describe("models tree", () => {
     testName: "creates initial filtered view for 50k target items",
     setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
-      const imodelAccess = StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
+      const imodelAccess = await StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
       const targetItems = new Array<InstanceKey>();
       const query: ECSqlQueryDef = {
         ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d`,
       };
       for await (const row of imodelAccess.createQueryReader(query, { limit: "unbounded" })) {
-        targetItems.push({ id: row.ECInstanceId, className: "Generic:PhysicalObject" });
+        targetItems.push({ id: row.ECInstanceId, className: "Generic.PhysicalObject" });
       }
       return { iModel, imodelAccess, targetItems };
     },
     cleanup: (props) => props.iModel.close(),
     test: async ({ imodelAccess, targetItems }) => {
-      const idsCache = new ModelsTreeIdsCache(imodelAccess, defaultHierarchyConfiguration);
       const abortSignal = new AbortController().signal;
-      const filtering = {
-        paths: await ModelsTreeDefinition.createInstanceKeyPaths({
-          imodelAccess,
-          limit: "unbounded",
-          targetItems,
-          idsCache,
-          abortSignal,
-        }),
-      };
-      expect(filtering.paths).toHaveLength(50000);
-      const provider = new StatelessHierarchyProvider({
+      const modelsTree = createModelsTree({ imodelAccess });
+      const search = { paths: await modelsTree.createSearchTree({ limit: "unbounded", targetItems, abortSignal }) };
+      const countTargets = (nodes: typeof search.paths): number =>
+        nodes.reduce(
+          (acc, node) =>
+            acc + (node.isTarget || !node.children ? 1 : 0) + (node.children ? countTargets(node.children) : 0),
+          0,
+        );
+      expect(countTargets(search.paths)).toBe(50000);
+      const provider = await StatelessHierarchyProvider.create({
         imodelAccess,
-        getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
-        filtering,
+        getHierarchyFactory: () => modelsTree.definition,
+        search,
       });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).toBe(2);

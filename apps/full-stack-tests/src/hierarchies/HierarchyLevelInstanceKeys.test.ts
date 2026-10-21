@@ -4,93 +4,117 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
-import { afterAll, describe, expect, it, test } from "vitest";
-import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
-import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { InstanceKey } from "@itwin/presentation-shared";
+import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
-import { buildTestIModel } from "../TestIModelSetup.js";
-import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
+import { importSchema } from "../SchemaUtils.js";
+import { createProvider } from "./Utils.js";
+
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level instance keys", () => {
-    let imodel: IModelConnection;
-
-    test.beforeAll(async (_, suite) => {
+    beforeAll(async () => {
       await initialize();
-
-      imodel = (await buildTestIModel(suite.fullTestName!)).imodel;
     });
 
     afterAll(async () => {
-      await imodel.close();
       await terminate();
     });
 
     it("gets instance keys for root hierarchy level", async () => {
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="X">
+              <ECProperty propertyName="CodeValue" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { codeValue: "root" });
+        return { schema: s, x1 };
       });
+      const { ecdb, schema, ...keys } = setup;
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel() {
+        async defineHierarchyLevel({ createSelectClause }) {
           return [
             {
-              fullClassName: Subject.classFullName,
+              fullClassName: schema.items.X.fullName,
               query: {
                 ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${createClassECSqlSelector(Subject.classFullName)} AS this
+                  FROM ${schema.items.X.fullName} AS this
                 `,
               },
             },
           ];
         },
       };
-      const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
+      const provider = createProvider({ ecdb, hierarchy });
+      const instanceKeys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(instanceKeys).toMatchObject([{ className: schema.items.X.fullName, id: keys.x1.id }]);
     });
 
     it("gets instance keys for instance node's child hierarchy level", async () => {
-      const rootSubjectKey: InstanceKey = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="X">
+              <ECProperty propertyName="CodeValue" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="Y">
+              <ECProperty propertyName="Label" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="XY" strength="referencing" strengthDirection="forward" modifier="None">
+              <Source multiplicity="(0..1)" roleLabel="owns" polymorphic="false">
+                <Class class="X" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="owned by" polymorphic="false">
+                <Class class="Y" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { codeValue: "parent" });
+        const y1 = builder.insertInstance(s.items.Y.fullName, { label: "child1" });
+        const y2 = builder.insertInstance(s.items.Y.fullName, { label: "child2" });
+        builder.insertRelationship(s.items.XY.fullName, x1.id, y1.id);
+        builder.insertRelationship(s.items.XY.fullName, x1.id, y2.id);
+        return { schema: s, x1, y1, y2 };
       });
+      const { ecdb, schema, ...keys } = setup;
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (
             parentNode &&
             HierarchyNode.isInstancesNode(parentNode) &&
-            parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))
+            parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, keys.x1))
           ) {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `p.CodeValue` },
+                      nodeLabel: { selector: `this.Label` },
                     })}
-                    FROM ${createClassECSqlSelector(Model.classFullName)} AS this
-                    JOIN ${createClassECSqlSelector(InformationPartitionElement.classFullName)} AS p ON p.ECInstanceId = this.ModeledElement.Id
-                    WHERE p.Parent.Id = ?
+                    FROM ${schema.items.Y.fullName} AS this
+                    JOIN ${schema.items.XY.fullName} AS rel ON rel.TargetECInstanceId = this.ECInstanceId
+                    WHERE rel.SourceECInstanceId = ?
                   `,
-                  bindings: [{ type: "id", value: rootSubjectKey.id }],
+                  bindings: [{ type: "id", value: keys.x1.id }],
                 },
               },
             ];
@@ -98,42 +122,49 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const rootSubjectNode = {
-        key: { type: "instances" as const, instanceKeys: [rootSubjectKey] },
+      const xNode = {
+        key: { type: "instances" as const, instanceKeys: [keys.x1] },
         parentKeys: [],
-        label: "root subject",
+        label: "parent",
         children: true,
       };
-      const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: rootSubjectNode }));
-      expect(keys).toMatchObject([
-        { className: LinkModel.classFullName.replace(":", "."), id: "0xe" },
-        { className: DictionaryModel.classFullName.replace(":", "."), id: "0x10" },
+      const provider = createProvider({ ecdb, hierarchy });
+      const instanceKeys = await collect(provider.getNodeInstanceKeys({ parentNode: xNode }));
+      expect(instanceKeys).toMatchObject([
+        { className: schema.items.Y.fullName, id: keys.y1.id },
+        { className: schema.items.Y.fullName, id: keys.y2.id },
       ]);
     });
 
     it("gets instance keys for generic node's child hierarchy level", async () => {
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="X">
+              <ECProperty propertyName="CodeValue" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { codeValue: "root" });
+        return { schema: s, x1 };
       });
+      const { ecdb, schema, ...keys } = setup;
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
                     })}
-                    FROM ${createClassECSqlSelector(Subject.classFullName)} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -148,35 +179,56 @@ describe("Hierarchies", () => {
         label: "custom parent node",
         children: true,
       };
-      const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: testCustomNode }));
-      expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
+      const provider = createProvider({ ecdb, hierarchy });
+      const instanceKeys = await collect(provider.getNodeInstanceKeys({ parentNode: testCustomNode }));
+      expect(instanceKeys).toMatchObject([{ className: schema.items.X.fullName, id: keys.x1.id }]);
     });
 
     it("gets instance keys for hidden instance node's child hierarchy level", async () => {
-      const rootSubjectKey: InstanceKey = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="X">
+              <ECProperty propertyName="CodeValue" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="Y">
+              <ECProperty propertyName="Label" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="XY" strength="referencing" strengthDirection="forward" modifier="None">
+              <Source multiplicity="(0..1)" roleLabel="owns" polymorphic="false">
+                <Class class="X" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="owned by" polymorphic="false">
+                <Class class="Y" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { codeValue: "parent" });
+        const y1 = builder.insertInstance(s.items.Y.fullName, { label: "child1" });
+        const y2 = builder.insertInstance(s.items.Y.fullName, { label: "child2" });
+        builder.insertRelationship(s.items.XY.fullName, x1.id, y1.id);
+        builder.insertRelationship(s.items.XY.fullName, x1.id, y2.id);
+        return { schema: s, x1, y1, y2 };
       });
+      const { ecdb, schema, ...keys } = setup;
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
                       hideNodeInHierarchy: true,
                     })}
-                    FROM ${createClassECSqlSelector(Subject.classFullName)} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -184,23 +236,23 @@ describe("Hierarchies", () => {
           }
           if (
             HierarchyNode.isInstancesNode(parentNode) &&
-            parentNode.key.instanceKeys.some((ik) => ik.id === rootSubjectKey.id)
+            parentNode.key.instanceKeys.some((ik) => ik.id === keys.x1.id)
           ) {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: schema.items.Y.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `p.CodeValue` },
+                      nodeLabel: { selector: `this.Label` },
                     })}
-                    FROM ${createClassECSqlSelector(Model.classFullName)} AS this
-                    JOIN ${createClassECSqlSelector(InformationPartitionElement.classFullName)} AS p ON p.ECInstanceId = this.ModeledElement.Id
-                    WHERE p.Parent.Id = ?
+                    FROM ${schema.items.Y.fullName} AS this
+                    JOIN ${schema.items.XY.fullName} AS rel ON rel.TargetECInstanceId = this.ECInstanceId
+                    WHERE rel.SourceECInstanceId = ?
                   `,
-                  bindings: [{ type: "id", value: rootSubjectKey.id }],
+                  bindings: [{ type: "id", value: keys.x1.id }],
                 },
               },
             ];
@@ -208,24 +260,31 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys).toMatchObject([
-        { className: LinkModel.classFullName.replace(":", "."), id: "0xe" },
-        { className: DictionaryModel.classFullName.replace(":", "."), id: "0x10" },
+      const provider = createProvider({ ecdb, hierarchy });
+      const instanceKeys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(instanceKeys).toMatchObject([
+        { className: schema.items.Y.fullName, id: keys.y1.id },
+        { className: schema.items.Y.fullName, id: keys.y2.id },
       ]);
     });
 
     it("gets instance keys for hidden generic node's child hierarchy level", async () => {
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="X">
+              <ECProperty propertyName="CodeValue" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName, { codeValue: "root" });
+        return { schema: s, x1 };
       });
+      const { ecdb, schema, ...keys } = setup;
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               { node: { key: "test", label: "hidden custom node", processingParams: { hideInHierarchy: true } } },
@@ -234,15 +293,15 @@ describe("Hierarchies", () => {
           if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
-                fullClassName: Subject.classFullName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
                     })}
-                    FROM ${createClassECSqlSelector(Subject.classFullName)} AS this
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -251,9 +310,9 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const provider = createProvider({ imodel, hierarchy });
-      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
-      expect(keys).toMatchObject([{ className: "BisCore.Subject", id: "0x1" }]);
+      const provider = createProvider({ ecdb, hierarchy });
+      const instanceKeys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(instanceKeys).toMatchObject([{ className: schema.items.X.fullName, id: keys.x1.id }]);
     });
   });
 });

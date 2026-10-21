@@ -31,7 +31,7 @@ async function getUnifiedSelectionContextFn() {
     const optionalPkg = await import("@itwin/unified-selection-react");
     return optionalPkg.useUnifiedSelectionContext;
   } catch {
-    /* v8 ignore next 3 -- @preserve */
+    /* v8 ignore next -- @preserve */
     return undefined;
   }
 }

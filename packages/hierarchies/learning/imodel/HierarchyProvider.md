@@ -18,37 +18,17 @@ The `createIModelHierarchyProvider` factory function takes an `imodelAccess` pro
 
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
-
-// Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
-// recommended to cache the schema context and reuse it across different application's components to
-// avoid loading and storing same schemas multiple times.
-const imodelSchemaContextsCache = new Map<string, SchemaContext>();
-function getIModelSchemaContext(imodel: IModelConnection) {
-  const imodelKey = createIModelKey(imodel);
-  let context = imodelSchemaContextsCache.get(imodelKey);
-  if (!context) {
-    context = new SchemaContext();
-    context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodelKey, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
-  }
-  return context;
-}
+import { createLimitingECSqlQueryExecutor, HierarchyLevelDefinition } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 
 function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     // The key of the iModel we're accessing
     imodelKey: createIModelKey(imodel),
-    // Schema provider provides access to EC information (metadata)
+    // Schema provider provides access to EC information (metadata) and class hierarchy inspection
     ...schemaProvider,
-    // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
     // The second argument is the maximum number of rows the executor will return - this allows us to
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
@@ -78,7 +58,7 @@ Below are the steps the provider takes to process a hierarchy from the moment th
 
 6. Nodes are passed through the grouping processor.
 
-7. If nodes' children flag is undefined, it is determined by loading the children.
+7. If nodes' children flag is undefined, it is determined by loading the children. Otherwise the supplied flag is used as-is, so it's the hierarchy definition's responsibility to make sure it matches the actual children, e.g. by excluding instances of hidden classes the same way the child hierarchy level query does (see [Excluding instances of hidden classes](./HierarchyDefinition.md#excluding-instances-of-hidden-classes)).
 
 8. Nodes are passed through the hierarchy definition's `postProcessNode` function, if one is defined.
 

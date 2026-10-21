@@ -4,12 +4,12 @@
 
 ```ts
 
-import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
-import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
-import { Event as Event_2 } from '@itwin/presentation-shared';
-import { Id64Arg } from '@itwin/core-bentley';
-import { Id64Set } from '@itwin/core-bentley';
-import { Id64String } from '@itwin/core-bentley';
+import type { ECSchemaProvider } from '@itwin/presentation-shared';
+import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
+import type { Id64Arg } from '@itwin/core-bentley';
+import type { Id64Set } from '@itwin/core-bentley';
+import type { Id64String } from '@itwin/core-bentley';
 
 // @public @deprecated
 export interface CachingHiliteSetProvider {
@@ -24,7 +24,7 @@ export interface CachingHiliteSetProvider {
 // @public @deprecated
 interface CachingHiliteSetProviderProps {
     createHiliteSetProvider?: typeof createHiliteSetProvider;
-    imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+    imodelProvider: (imodelKey: string) => Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
     selectionStorage: SelectionStorage;
 }
 
@@ -124,7 +124,7 @@ interface EnableUnifiedSelectionSyncWithIModelProps {
     cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & {
         [Symbol.dispose]: () => void;
     });
-    imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & {
+    imodelAccess: ECSqlQueryExecutor & Pick<ECSchemaProvider, "classDerivesFrom"> & {
         readonly key: string;
         readonly hiliteSet: CoreIModelHiliteSet;
         readonly selectionSet: CoreIModelSelectionSet;
@@ -152,7 +152,7 @@ export interface HiliteSetProvider {
 
 // @public
 interface HiliteSetProviderProps {
-    imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
 }
 
 // @public
@@ -169,7 +169,7 @@ export interface IModelHiliteSetProvider {
 // @public
 interface IModelHiliteSetProviderProps {
     createHiliteSetProvider?: typeof createHiliteSetProvider;
-    imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+    imodelProvider: (imodelKey: string) => Pick<ECSchemaProvider, "classDerivesFrom"> & ECSqlQueryExecutor;
     selectionStorage: SelectionStorage;
 }
 

@@ -5,30 +5,33 @@
 
 import {
   ArrayPropertiesField,
-  CategoryDescription,
-  ClassInfo,
   Descriptor,
-  DescriptorSource,
-  DisplayValuesMap,
-  EditorDescription,
   Field,
-  InstanceKey,
   Item,
   LabelDefinition,
   NestedContentField,
   PropertiesField,
-  Property,
   PropertyValueFormat,
+  StructPropertiesField,
+} from "@itwin/presentation-common";
+import { createTestECClassInfo, createTestECInstanceKey, createTestRelationshipPath } from "./Common.js";
+
+import type {
+  CategoryDescription,
+  ClassInfo,
+  DescriptorSource,
+  DisplayValuesMap,
+  EditorDescription,
+  InstanceKey,
+  Property,
   RelationshipMeaning,
   RelationshipPath,
   RendererDescription,
   SelectClassInfo,
-  StructPropertiesField,
   StructTypeDescription,
   TypeDescription,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { createTestECClassInfo, createTestECInstanceKey, createTestRelationshipPath } from "./Common.js";
 
 export const createTestCategoryDescription = (props?: Partial<CategoryDescription>) => ({
   name: "test-category",

@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it, Mocked, vi } from "vitest";
-import { IModelConnection } from "@itwin/core-frontend";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { useColumns, UseColumnsProps } from "../../presentation-components/table/UseColumns.js";
+import { useColumns } from "../../presentation-components/table/UseColumns.js";
 import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
@@ -15,6 +14,10 @@ import {
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
 import { createMocked, render, renderHook, waitFor } from "../TestUtils.js";
+
+import type { Mocked } from "vitest";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { UseColumnsProps } from "../../presentation-components/table/UseColumns.js";
 
 describe("useColumns", () => {
   const imodel = {} as IModelConnection;

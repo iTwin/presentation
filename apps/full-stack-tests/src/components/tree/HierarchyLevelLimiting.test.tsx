@@ -10,14 +10,18 @@ import {
 } from "presentation-test-utilities";
 import { useState } from "react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
+import { SelectionMode, UiComponents } from "@itwin/components-react";
+import { withEditTxn } from "@itwin/core-backend";
+import { IModelApp } from "@itwin/core-frontend";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
+
+import type { TreeRendererProps } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
@@ -36,7 +40,6 @@ describe("Learning snippets", () => {
     });
 
     // TODO: remove skip once core dependencies are bumped to >5.8.0
-    // it.skipIf(Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4)("limits hierarchy level size", async () => {
     it.skip("limits hierarchy level size", async () => {
       // stub console log to avoid hierarchy limit warning in console
       const consoleStub = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -80,30 +83,32 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
-        const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
-        for (let i = 0; i < 10; ++i) {
-          insertPhysicalElement({
-            builder,
-            userLabel: `A element ${i + 1}`,
-            modelId: modelKeyA.id,
-            categoryId: categoryKey.id,
-          });
-        }
-        const modelKeyB = insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
-        for (let i = 0; i < 11; ++i) {
-          insertPhysicalElement({
-            builder,
-            userLabel: `B element ${i + 1}`,
-            modelId: modelKeyB.id,
-            categoryId: categoryKey.id,
-          });
-        }
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          const modelKeyA = insertPhysicalModelWithPartition({ txn, codeValue: "My Model A" });
+          for (let i = 0; i < 10; ++i) {
+            insertPhysicalElement({
+              txn,
+              userLabel: `A element ${i + 1}`,
+              modelId: modelKeyA.id,
+              categoryId: categoryKey.id,
+            });
+          }
+          const modelKeyB = insertPhysicalModelWithPartition({ txn, codeValue: "My Model B" });
+          for (let i = 0; i < 11; ++i) {
+            insertPhysicalElement({
+              txn,
+              userLabel: `B element ${i + 1}`,
+              modelId: modelKeyB.id,
+              categoryId: categoryKey.id,
+            });
+          }
+        });
       });
 
       // render the component
-      const { container, getByText } = render(<MyTree imodel={imodel} />, { addThemeProvider: true });
+      const { container, getByText } = render(<MyTree imodel={imodelConnection} />, { addThemeProvider: true });
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand both model nodes

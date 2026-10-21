@@ -6,30 +6,40 @@
 export * as ECSql from "./shared/ecsql-snippets/index.js";
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue.js";
-export {
-  ECSqlBinding,
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
-} from "./shared/ECSqlCore.js";
-export { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "./shared/Formatting.js";
-export {
-  IInstanceLabelSelectClauseFactory,
-  createDefaultInstanceLabelSelectClauseFactory,
-  createClassBasedInstanceLabelSelectClauseFactory,
-  createBisInstanceLabelSelectClauseFactory,
-  parseInstanceLabel,
-} from "./shared/InstanceLabelSelectClauseFactory.js";
-export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging.js";
-export { ArrayElement, EventArgs, EventListener, OmitOverUnion, Props } from "./shared/MappedTypes.js";
-export {
-  createCachingECClassHierarchyInspector,
+export { eachValueFrom } from "./shared/EachValueFrom.js";
+export { ECSqlBinding } from "./shared/ECSqlCore.js";
+export type { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore.js";
+export type { IPrimitiveValueFormatter } from "./shared/Formatting.js";
+export { createDefaultValueFormatter, formatConcatenatedValue } from "./shared/Formatting.js";
+export type { IInstanceLabelSelectClauseFactory } from "./shared/InstanceLabelSelectClauseFactory.js";
+export { parseInstanceLabel } from "./shared/InstanceLabelSelectClauseFactory.js";
+export { createDefaultInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/DefaultInstanceLabelSelectClauseFactory.js";
+export { createClassBasedInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/ClassBasedInstanceLabelSelectClauseFactory.js";
+export { createBisInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/BisInstanceLabelSelectClauseFactory.js";
+export { createIModelInstanceLabelSelectClauseFactory } from "./shared/instance-label-factory-impls/IModelInstanceLabelSelectClauseFactory.js";
+export type { ILogger, LogFunction, LogLevel } from "./shared/Logging.js";
+export { NOOP_LOGGER } from "./shared/Logging.js";
+export type { ArrayElement, DeepReadonly, OmitOverUnion, Props } from "./shared/MappedTypes.js";
+export type {
+  ArrayValueDescriptor,
   EC,
-  getClass,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  HiddenClassesTreeNode,
+  NavigationValueDescriptor,
+  PrimitiveValueDescriptor,
+  PrimitiveValueType,
+  RelationshipPath,
+  StructValueDescriptor,
+  ValueDescriptor,
 } from "./shared/Metadata.js";
+export {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  createCachingECClassHierarchyInspector,
+  getClass,
+} from "./shared/Metadata.js";
+export { createHiddenClassesTree } from "./shared/HiddenClasses.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,
@@ -39,4 +49,5 @@ export {
   trimWhitespace,
 } from "./shared/Utils.js";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values.js";
-export { Event } from "./shared/Event.js";
+export type { ArrayValue, StructValue, NavigationValue, Value, Point2dValue, Point3dValue } from "./shared/Values.js";
+export type { Event, RaisableEvent, EventArgs, EventListener } from "./shared/Event.js";

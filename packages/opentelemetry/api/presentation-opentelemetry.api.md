@@ -4,8 +4,8 @@
 
 ```ts
 
-import { Context } from '@opentelemetry/api';
-import { Diagnostics } from '@itwin/presentation-common';
+import type { Context } from '@opentelemetry/api';
+import type { Diagnostics } from '@itwin/presentation-common';
 
 // @beta
 export function exportDiagnostics(diagnostics: Diagnostics, ctx: Context): void;

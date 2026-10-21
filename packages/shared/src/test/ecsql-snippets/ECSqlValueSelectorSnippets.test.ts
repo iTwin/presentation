@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  createClassSelector,
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
   createInstanceKeySelector,
@@ -14,9 +15,10 @@ import {
   createRawPropertyValueSelector,
   TypedValueSelectClauseProps,
 } from "../../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
-import { EC } from "../../shared/Metadata.js";
 import { trimWhitespace } from "../../shared/Utils.js";
 import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
+
+import type { EC } from "../../shared/Metadata.js";
 
 describe("TypedValueSelectClauseProps", () => {
   describe("isPrimitiveValueSelector", () => {
@@ -123,9 +125,9 @@ describe("createPrimitivePropertyValueSelectorProps", () => {
           isPrimitive: () => true,
           isNavigation: () => false,
           primitiveType: "Double",
-          kindOfQuantity: Promise.resolve({ fullName: "TestSchema.TestKindOfQuantity" }),
+          kindOfQuantity: { fullName: "TestSchema.TestKindOfQuantity" },
           extendedTypeName: "TestExtendedType",
-        } as EC.PrimitiveProperty,
+        } as unknown as EC.PrimitiveProperty,
       ],
     });
     expect(
@@ -339,6 +341,17 @@ describe("createNullableSelector", () => {
     expect(createNullableSelector({ checkSelector: "CHECK", valueSelector: "VALUE" })).toEqual(
       "IIF(CHECK, VALUE, NULL)",
     );
+  });
+});
+
+describe("createClassSelector", () => {
+  it("bracket-quotes a dot-separated full class name", () => {
+    expect(createClassSelector("TestSchema.TestClass")).to.equal("[TestSchema].[TestClass]");
+  });
+
+  it("throws on invalid full class name", () => {
+    expect(() => createClassSelector(".c")).to.throw();
+    expect(() => createClassSelector("s.")).to.throw();
   });
 });
 

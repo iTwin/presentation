@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef } from "react";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
-import { useTree } from "./UseTree.js";
+
+import type { TreeRendererProps } from "./Renderers.js";
+import type { TreeNode } from "./TreeNode.js";
 
 /**
  * A union of different supported selection modes in a tree component:
@@ -30,30 +31,22 @@ export type SelectionChangeType = "add" | "replace" | "remove";
 
 /**
  * Props for `useSelectionHandler` hook.
- * @public
+ * @alpha
  */
-type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
-  /** Selection mode that the component is working in. */
+type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNodes"> & {
+  /**
+   * Selection mode that the component is working in.
+   */
   selectionMode: SelectionMode;
 };
 
 /**
  * Result of `useSelectionHandler` hook.
- * @public
+ * @internal
  */
 interface UseSelectionHandlerResult {
-  /** Should be called by node renderer when a node component is clicked. */
-  onNodeClick: (
-    node: PresentationHierarchyNode,
-    isSelected: boolean,
-    event: React.MouseEvent<HTMLElement, MouseEvent>,
-  ) => void;
-  /** Should be called by node renderer when a keyboard event happens on a node. */
-  onNodeKeyDown: (
-    node: PresentationHierarchyNode,
-    isSelected: boolean,
-    event: React.KeyboardEvent<HTMLElement>,
-  ) => void;
+  /** Updates nodes selection based on current node state and modifier keys used. */
+  handleNodeSelect: (props: { nodeId: string; isSelected: boolean; shiftDown: boolean; ctrlDown: boolean }) => void;
 }
 
 interface FlatTreeState {
@@ -63,7 +56,7 @@ interface FlatTreeState {
 
 /**
  * A react hook that helps implement different selection modes in a tree component created using `useTree` hook.
- * @public
+ * @internal
  */
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
@@ -71,9 +64,6 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
   const state = useRef<FlatTreeState>({ flatNodeList: [], nodeIdToIndexMap: new Map() });
 
   useEffect(() => {
-    if (!rootNodes) {
-      return;
-    }
     state.current = computeFlatNodeList(rootNodes);
   }, [rootNodes]);
 
@@ -92,8 +82,8 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     return state.current.flatNodeList.slice(startingIndex, endIndex + 1);
   };
 
-  const onNodeSelect = useCallback(
-    (nodeId: string, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean) => {
+  const handleNodeSelect = useCallback<UseSelectionHandlerResult["handleNodeSelect"]>(
+    ({ nodeId, isSelected, shiftDown, ctrlDown }) => {
       const selection = getSelectionAction(selectionMode, isSelected, shiftDown, ctrlDown);
       if (selection.type === "disabled") {
         return;
@@ -110,23 +100,7 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     [selectionMode, selectNodes],
   );
 
-  const onNodeClick = useCallback(
-    (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => {
-      return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
-    },
-    [onNodeSelect],
-  );
-
-  const onNodeKeyDown = useCallback(
-    (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => {
-      if (event.key === " " || event.key === "Spacebar" || event.key === "Enter") {
-        return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
-      }
-    },
-    [onNodeSelect],
-  );
-
-  return { onNodeClick, onNodeKeyDown };
+  return { handleNodeSelect };
 }
 
 interface SelectionAction {
@@ -144,9 +118,9 @@ function getSelectionAction(
     case "none":
       return { select: "node", type: "disabled" };
     case "single":
-      return { select: "node", type: isSelected ? "replace" : "remove" };
+      return { select: "node", type: isSelected ? "remove" : "replace" };
     case "multiple":
-      return { select: "node", type: isSelected ? "add" : "remove" };
+      return { select: "node", type: isSelected ? "remove" : "add" };
     case "extended":
       return getExtendedSelectionAction(isSelected, shiftDown, ctrlDown);
   }
@@ -157,20 +131,17 @@ function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctr
     return { select: "range", type: "replace" };
   }
   if (ctrlDown) {
-    return { select: "node", type: isSelected ? "add" : "remove" };
+    return { select: "node", type: isSelected ? "remove" : "add" };
   }
   return { select: "node", type: "replace" };
 }
 
-function computeFlatNodeList(rootNodes: Array<PresentationTreeNode>): FlatTreeState {
+function computeFlatNodeList(rootNodes: Array<TreeNode>): FlatTreeState {
   const flatNodeList: Array<string> = [];
   const nodeIdToIndexMap: Map<string, number> = new Map();
 
-  const flattenNodeRecursively = (nodes: Array<PresentationTreeNode>) => {
+  const flattenNodeRecursively = (nodes: Array<TreeNode>) => {
     nodes.forEach((node) => {
-      if (!isPresentationHierarchyNode(node)) {
-        return;
-      }
       nodeIdToIndexMap.set(node.id, flatNodeList.length);
       flatNodeList.push(node.id);
       if (node.isExpanded && typeof node.children !== "boolean") {

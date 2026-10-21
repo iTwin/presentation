@@ -8,13 +8,8 @@ import Backend from "i18next-http-backend";
 import * as path from "path";
 import { IModelHost, SettingsPriority } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import {
-  IModelReadRpcInterface,
-  RpcConfiguration,
-  RpcDefaultConfiguration,
-  RpcInterfaceDefinition,
-} from "@itwin/core-common";
-import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
+import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration } from "@itwin/core-common";
+import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
@@ -24,11 +19,12 @@ import {
   PresentationBackendNativeLoggerCategory,
 } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
-import {
-  Presentation as PresentationFrontend,
-  PresentationProps as PresentationFrontendProps,
-} from "@itwin/presentation-frontend";
+import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
 import { setTestOutputDir } from "./FilenameUtils.js";
+
+import type { RpcInterfaceDefinition } from "@itwin/core-common";
+import type { IModelAppOptions } from "@itwin/core-frontend";
+import type { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 
 class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {

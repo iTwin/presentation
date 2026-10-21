@@ -3,17 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  createMainThreadReleaseOnTimePassedHandler,
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  getClass,
-} from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
-import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
-import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
-import { GroupingHandler, GroupingHandlerResult } from "../Grouping.js";
+import { createMainThreadReleaseOnTimePassedHandler, getClass } from "@itwin/presentation-shared";
+import { HierarchyNode } from "../../../HierarchyNode.js";
+
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+import type { ParentHierarchyNode } from "../../../HierarchyNode.js";
+import type { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import type { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
+import type { GroupingHandler, GroupingHandlerResult } from "../Grouping.js";
 
 /** @internal */
 export async function getBaseClassGroupingECClasses(
@@ -23,7 +20,7 @@ export async function getBaseClassGroupingECClasses(
 ): Promise<EC.Class[]> {
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = await getGroupingBaseClassNames(nodes);
-  if (baseClassesFullClassNames.size === 0) {
+  if (baseClassesFullClassNames.length === 0) {
     return [];
   }
 
@@ -33,7 +30,7 @@ export async function getBaseClassGroupingECClasses(
     await releaseMainThread();
     baseClasses.push(await getClass(schemaProvider, fullName));
   }
-  const sortedClasses = await sortByBaseClass(
+  const sortedClasses = sortByBaseClass(
     baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()),
   );
 
@@ -53,7 +50,7 @@ export async function getBaseClassGroupingECClasses(
 export async function createBaseClassGroupsForSingleBaseClass(
   nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: EC.Class,
-  classHierarchyInspector: ECClassHierarchyInspector,
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
 ): Promise<GroupingHandlerResult> {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
@@ -63,7 +60,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     await releaseMainThread();
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
-      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseClassFullName)
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.includes(baseClassFullName)
     ) {
       ungroupedNodes.push(node);
       continue;
@@ -73,7 +70,9 @@ export async function createBaseClassGroupsForSingleBaseClass(
     const baseCheckerResult = classHierarchyInspector.classDerivesFrom(fullCurrentNodeClassName, baseClassFullName);
 
     const isCurrentNodeClassOfBase =
-      baseCheckerResult instanceof Promise ? await baseCheckerResult : /* v8 ignore next */ baseCheckerResult;
+      baseCheckerResult instanceof Promise
+        ? await baseCheckerResult
+        : /* v8 ignore next -- @preserve */ baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);
@@ -98,7 +97,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
 async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]) {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  const baseClasses = new Set<string>();
+  const baseClasses = new Set<EC.FullClassNameDotNotation>();
   for (const node of nodes) {
     await releaseMainThread();
     if (node.processingParams?.grouping?.byBaseClasses) {
@@ -107,10 +106,10 @@ async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]
       }
     }
   }
-  return baseClasses;
+  return [...baseClasses];
 }
 
-async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
+function sortByBaseClass(classes: EC.Class[]): EC.Class[] {
   if (classes.length === 0) {
     return classes;
   }
@@ -118,7 +117,7 @@ async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
   for (let inputIndex = 1; inputIndex < classes.length; ++inputIndex) {
     let wasAdded = false;
     for (let outputIndex = output.length - 1; outputIndex >= 0; --outputIndex) {
-      if (await classes[inputIndex].is(output[outputIndex])) {
+      if (classes[inputIndex].is(output[outputIndex])) {
         output.splice(outputIndex + 1, 0, classes[inputIndex]);
         wasAdded = true;
         break;
@@ -134,7 +133,7 @@ async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
 
 /** @internal */
 export async function createBaseClassGroupingHandlers(
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandler[]> {

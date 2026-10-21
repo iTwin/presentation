@@ -4,11 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AbstractTreeNodeLoaderWithProvider } from "@itwin/components-react";
-import { LabelDefinition, Node, StandardNodeTypes } from "@itwin/presentation-common";
+import { LabelDefinition, StandardNodeTypes } from "@itwin/presentation-common";
 import { useControlledPresentationTreeFiltering } from "../../../presentation-components/tree/controlled/TreeHooks.js";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
+
+import type { AbstractTreeNodeLoaderWithProvider } from "@itwin/components-react";
+import type { Node } from "@itwin/presentation-common";
+import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 

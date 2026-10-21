@@ -12,10 +12,13 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ECSql, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { withEditTxn } from "@itwin/core-backend";
+import { ECSql } from "@itwin/presentation-shared";
 import { createIModelAccess } from "../hierarchies/Utils.js";
+import { buildTestIModel } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
-import { buildTestIModel } from "../TestIModelSetup.js";
+
+import type { ECSqlQueryRow } from "@itwin/presentation-shared";
 
 describe("createRelationshipPathJoinClause", () => {
   beforeAll(async () => {
@@ -27,24 +30,26 @@ describe("createRelationshipPathJoinClause", () => {
   });
 
   it("creates executable outer join through a navigation property relationship", async () => {
-    const { imodel, type, elementWithType, elementWithoutType } = await buildTestIModel(async (builder) => {
-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-      const category = insertSpatialCategory({ builder, codeValue: "test category" });
-      const insertedType = insertPhysicalType({ builder });
-      return {
-        type: insertedType,
-        elementWithType: insertPhysicalElement({
-          builder,
-          modelId: model.id,
-          categoryId: category.id,
-          typeDefinitionId: insertedType.id,
-        }),
-        elementWithoutType: insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id }),
-      };
+    const { imodelConnection, type, elementWithType, elementWithoutType } = await buildTestIModel(async (imodel) => {
+      return withEditTxn(imodel, (txn) => {
+        const model = insertPhysicalModelWithPartition({ txn, codeValue: "test model" });
+        const category = insertSpatialCategory({ txn, codeValue: "test category" });
+        const insertedType = insertPhysicalType({ txn });
+        return {
+          type: insertedType,
+          elementWithType: insertPhysicalElement({
+            txn,
+            modelId: model.id,
+            categoryId: category.id,
+            typeDefinitionId: insertedType.id,
+          }),
+          elementWithoutType: insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id }),
+        };
+      });
     });
-    const imodelAccess = createIModelAccess(imodel);
+    const imodelAccess = createIModelAccess(imodelConnection);
 
-    const joinClause = await ECSql.createRelationshipPathJoinClause({
+    const { joins } = await ECSql.createRelationshipPathJoinClause({
       schemaProvider: imodelAccess,
       path: [
         {
@@ -61,7 +66,7 @@ describe("createRelationshipPathJoinClause", () => {
     const ecsql = `
       SELECT [s].[ECInstanceId] [sourceId], [t].[ECInstanceId] [targetId]
       FROM [BisCore].[PhysicalElement] [s]
-      ${joinClause}
+      ${joins}
     `;
 
     const rows = new Array<ECSqlQueryRow>();
@@ -78,26 +83,28 @@ describe("createRelationshipPathJoinClause", () => {
   });
 
   it("creates executable outer join through a link table relationship", async () => {
-    const { imodel, groupWithMember, member, emptyGroup } = await buildTestIModel(async (builder) => {
-      const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "test group model" });
-      const physicalModel = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
-      const category = insertSpatialCategory({ builder, codeValue: "test category" });
-      const insertedGroup = insertGroupInformationElement({ builder, modelId: groupModel.id });
-      const insertedMember = insertPhysicalElement({ builder, modelId: physicalModel.id, categoryId: category.id });
-      builder.insertRelationship({
-        classFullName: "BisCore.ElementGroupsMembers",
-        sourceId: insertedGroup.id,
-        targetId: insertedMember.id,
+    const { imodelConnection, groupWithMember, member, emptyGroup } = await buildTestIModel(async (imodel) => {
+      return withEditTxn(imodel, (txn) => {
+        const groupModel = insertGroupInformationModelWithPartition({ txn, codeValue: "test group model" });
+        const physicalModel = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+        const category = insertSpatialCategory({ txn, codeValue: "test category" });
+        const insertedGroup = insertGroupInformationElement({ txn, modelId: groupModel.id });
+        const insertedMember = insertPhysicalElement({ txn, modelId: physicalModel.id, categoryId: category.id });
+        txn.insertRelationship({
+          classFullName: "BisCore.ElementGroupsMembers",
+          sourceId: insertedGroup.id,
+          targetId: insertedMember.id,
+        });
+        return {
+          groupWithMember: insertedGroup,
+          member: insertedMember,
+          emptyGroup: insertGroupInformationElement({ txn, modelId: groupModel.id }),
+        };
       });
-      return {
-        groupWithMember: insertedGroup,
-        member: insertedMember,
-        emptyGroup: insertGroupInformationElement({ builder, modelId: groupModel.id }),
-      };
     });
-    const imodelAccess = createIModelAccess(imodel);
+    const imodelAccess = createIModelAccess(imodelConnection);
 
-    const joinClause = await ECSql.createRelationshipPathJoinClause({
+    const { joins } = await ECSql.createRelationshipPathJoinClause({
       schemaProvider: imodelAccess,
       path: [
         {
@@ -114,7 +121,7 @@ describe("createRelationshipPathJoinClause", () => {
     const ecsql = `
       SELECT [s].[ECInstanceId] [sourceId], [t].[ECInstanceId] [targetId]
       FROM [BisCore].[GroupInformationElement] [s]
-      ${joinClause}
+      ${joins}
     `;
 
     const rows = new Array<ECSqlQueryRow>();

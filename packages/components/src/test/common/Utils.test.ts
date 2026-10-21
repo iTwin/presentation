@@ -5,8 +5,7 @@
 
 import { Component } from "react";
 import { beforeEach, describe, expect, it } from "vitest";
-import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
-import { combineFieldNames, LabelCompositeValue } from "@itwin/presentation-common";
+import { combineFieldNames } from "@itwin/presentation-common";
 import {
   AsyncTasksTracker,
   createLabelRecord,
@@ -22,6 +21,9 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
+
+import type { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import type { LabelCompositeValue } from "@itwin/presentation-common";
 
 class TestComponent extends Component {}
 

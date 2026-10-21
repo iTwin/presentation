@@ -3,35 +3,42 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { PhysicalPartition, Subject } from "@itwin/core-backend";
-import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
-  createNodesQueryClauseFactory,
-  HierarchyDefinition,
-  NodesQueryClauseFactory,
-} from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
+import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createIModelAccess, createProvider } from "../Utils.js";
+import { createProvider } from "../Utils.js";
+
+import type { DefineHierarchyLevelProps, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import type { Props } from "@itwin/presentation-shared";
+
+const SCHEMA_PROPS = { schemaName: "GroupHidingTest", schemaAlias: "ght" };
+const SCHEMA_XML = `
+  <ECEntityClass typeName="B">
+    <ECProperty propertyName="CodeValue" typeName="string" />
+    <ECProperty propertyName="UserLabel" typeName="string" />
+  </ECEntityClass>
+  <ECEntityClass typeName="X">
+    <BaseClass>B</BaseClass>
+  </ECEntityClass>
+  <ECEntityClass typeName="Y">
+    <ECProperty propertyName="CodeValue" typeName="string" />
+    <ECProperty propertyName="UserLabel" typeName="string" />
+  </ECEntityClass>
+`;
+const X_FULL_NAME = "GroupHidingTest.X";
+const Y_FULL_NAME = "GroupHidingTest.Y";
+const B_FULL_NAME = "GroupHidingTest.B";
 
 describe("Hierarchies", () => {
   describe("Grouping nodes' hiding", () => {
     type ECSqlSelectClauseGroupingParams = NonNullable<
-      Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]
+      Props<DefineHierarchyLevelProps["createSelectClause"]>["grouping"]
     >;
-    let subjectClassName: string;
-    let physicalPartitionClassName: string;
-    const groupName = "test1";
 
     beforeAll(async () => {
       await initialize();
-      subjectClassName = Subject.classFullName.replace(":", ".");
-      physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
     });
 
     afterAll(async () => {
@@ -39,39 +46,38 @@ describe("Hierarchies", () => {
     });
 
     function createHierarchyWithSpecifiedGrouping(
-      imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
     ): HierarchyDefinition {
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return {
-        async defineHierarchyLevel({ parentNode }) {
+        async defineHierarchyLevel({ parentNode, createSelectClause }) {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: X_FULL_NAME,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.${labelProperty ?? "CodeValue"}` },
                       grouping: specifiedGrouping,
                     })}
-                    FROM (
-                      SELECT ECClassId, ECInstanceId, CodeValue, Parent, UserLabel
-                      FROM ${subjectClassName}
-                      UNION ALL
-                      SELECT ECClassId, ECInstanceId, CodeValue, Parent, UserLabel
-                      FROM ${physicalPartitionClassName}
-                    ) AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                    FROM ${X_FULL_NAME} AS this
+                  `,
+                },
+              },
+              {
+                fullClassName: Y_FULL_NAME,
+                query: {
+                  ecsql: `
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.${labelProperty ?? "CodeValue"}` },
+                      grouping: specifiedGrouping,
+                    })}
+                    FROM ${Y_FULL_NAME} AS this
                   `,
                 },
               },
@@ -84,94 +90,94 @@ describe("Hierarchies", () => {
 
     describe("Base class grouping", () => {
       const baseClassHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], hideIfNoSiblings: true },
+        byBaseClasses: { fullClassNames: [B_FULL_NAME], hideIfNoSiblings: true },
       };
-
       const baseClassHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
-        byBaseClasses: { fullClassNames: ["BisCore.InformationReferenceElement"], hideIfOneGroupedNode: true },
+        byBaseClasses: { fullClassNames: [B_FULL_NAME], hideIfOneGroupedNode: true },
       };
 
       it("hides base class groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2" });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfNoSiblingsGrouping),
           }),
           expect: [
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
           ],
         });
       });
 
       it("hides base class groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          return { childSubject1 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          return { x1 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfOneGroupedNodeGrouping),
           }),
-          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
         });
       });
 
       it("doesn't hide base class groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
-          return { childSubject1, childPartition2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          const y1 = builder.insertInstance(Y_FULL_NAME, { codeValue: "B1" });
+          return { x1, y1 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfNoSiblingsGrouping),
           }),
           expect: [
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
             NodeValidators.createForClassGroupingNode({
-              label: "Information Reference",
-              className: "BisCore.InformationReferenceElement",
-              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+              className: B_FULL_NAME,
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
             }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.y1], children: false }),
           ],
         });
       });
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2" });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfOneGroupedNodeGrouping),
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              label: "Information Reference",
-              className: "BisCore.InformationReferenceElement",
+              className: B_FULL_NAME,
               children: [
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
               ],
             }),
           ],
@@ -181,90 +187,95 @@ describe("Hierarchies", () => {
 
     describe("Class grouping", () => {
       const classHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = { byClass: { hideIfNoSiblings: true } };
-
       const classHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
         byClass: { hideIfOneGroupedNode: true },
       };
 
       it("hides class groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2" });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfNoSiblingsGrouping),
           }),
           expect: [
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
           ],
         });
       });
 
       it("hides class groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          return { childSubject1 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          return { x1 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfOneGroupedNodeGrouping),
           }),
-          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
         });
       });
 
       it("doesn't hide class groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
-          return { childSubject1, childPartition2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          const y1 = builder.insertInstance(Y_FULL_NAME, { codeValue: "B1" });
+          return { x1, y1 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              className: "BisCore.PhysicalPartition",
-              children: [
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2], children: false }),
-              ],
+              className: X_FULL_NAME,
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
             }),
             NodeValidators.createForClassGroupingNode({
-              className: "BisCore.Subject",
-              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+              className: Y_FULL_NAME,
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.y1], children: false })],
             }),
           ],
         });
       });
 
       it("doesn't hide class groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1" });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2" });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfOneGroupedNodeGrouping),
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              className: "BisCore.Subject",
+              className: X_FULL_NAME,
               children: [
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
               ],
             }),
           ],
@@ -273,124 +284,98 @@ describe("Hierarchies", () => {
     });
 
     describe("Label grouping", () => {
+      const groupName = "test1";
+
       const labelHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
         byLabel: { hideIfOneGroupedNode: true },
       };
-
       const labelHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = { byLabel: { hideIfNoSiblings: true } };
 
       it("hides label groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childSubject2 = insertSubject({
-            builder,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2", userLabel: groupName });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel"),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfNoSiblingsGrouping, "UserLabel"),
           }),
           expect: [
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
           ],
         });
       });
 
       it("hides label groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          return { x1 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel"),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfOneGroupedNodeGrouping, "UserLabel"),
           }),
-          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
         });
       });
 
       it("doesn't hide label groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childSubject2 = insertSubject({
-            builder,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: "test2",
-          });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2", userLabel: "test2" });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel"),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfNoSiblingsGrouping, "UserLabel"),
           }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
-              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
             }),
             NodeValidators.createForLabelGroupingNode({
               label: "test2",
-              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false })],
             }),
           ],
         });
       });
 
       it("doesn't hide label groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childSubject2 = insertSubject({
-            builder,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2", userLabel: groupName });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel"),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfOneGroupedNodeGrouping, "userLabel"),
           }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
               children: [
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
               ],
             }),
           ],
@@ -399,140 +384,113 @@ describe("Hierarchies", () => {
     });
 
     describe("Properties grouping", () => {
+      const groupName = "test1";
       const propertiesHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
         byProperties: {
-          propertiesClassName: "BisCore.Element",
+          propertiesClassName: B_FULL_NAME,
           propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
           hideIfNoSiblings: true,
         },
       };
-
       const propertiesHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
         byProperties: {
-          propertiesClassName: "BisCore.Element",
+          propertiesClassName: B_FULL_NAME,
           propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
           hideIfOneGroupedNode: true,
         },
       };
 
       it("hides property groups when there're no siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childSubject2 = insertSubject({
-            builder,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2", userLabel: groupName });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfNoSiblingsGrouping),
           }),
           expect: [
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-            NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
           ],
         });
       });
 
       it("hides property groups when there's only 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          return { x1 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfOneGroupedNodeGrouping),
           }),
-          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
         });
       });
 
       it("doesn't hide property groups when there are siblings", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childSubject2 = insertSubject({
-            builder,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: `${groupName}2`,
-          });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2", userLabel: `${groupName}2` });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfNoSiblingsGrouping),
           }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
-              propertyClassName: "BisCore.Element",
+              propertyClassName: B_FULL_NAME,
               formattedPropertyValue: groupName,
-              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false })],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false })],
             }),
             NodeValidators.createForPropertyValueGroupingNode({
               label: `${groupName}2`,
-              propertyClassName: "BisCore.Element",
+              propertyClassName: B_FULL_NAME,
               formattedPropertyValue: `${groupName}2`,
-              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false })],
+              children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false })],
             }),
           ],
         });
       });
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async () => {
-        const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-          const childSubject1 = insertSubject({
-            builder,
-            codeValue: "A1",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          const childSubject2 = insertSubject({
-            builder,
-            codeValue: "A2",
-            parentId: IModel.rootSubjectId,
-            userLabel: groupName,
-          });
-          return { childSubject1, childSubject2 };
+        using setup = await buildTestECDb(async (builder) => {
+          await importSchema(SCHEMA_PROPS, builder, SCHEMA_XML);
+          const x1 = builder.insertInstance(X_FULL_NAME, { codeValue: "A1", userLabel: groupName });
+          const x2 = builder.insertInstance(X_FULL_NAME, { codeValue: "A2", userLabel: groupName });
+          return { x1, x2 };
         });
+        const { ecdb, ...keys } = setup;
 
         await validateHierarchy({
           provider: createProvider({
-            imodel,
-            hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping),
+            ecdb,
+            hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfOneGroupedNodeGrouping),
           }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
-              propertyClassName: "BisCore.Element",
+              propertyClassName: B_FULL_NAME,
               formattedPropertyValue: groupName,
               children: [
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-                NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+                NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
               ],
             }),
           ],

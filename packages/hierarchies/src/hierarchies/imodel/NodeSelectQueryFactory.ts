@@ -3,28 +3,26 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, Id64String } from "@itwin/core-bentley";
+import { assert } from "@itwin/core-bentley";
+import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
 import {
-  GenericInstanceFilter,
+  ECSql,
+  getClass,
+  normalizeFullClassName,
+  parseFullClassName,
+  PrimitiveValue,
+} from "@itwin/presentation-shared";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type {
   GenericInstanceFilterRelationshipStep,
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleGroupOperator,
   GenericInstanceFilterRuleOperator,
-  GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import {
-  EC,
-  ECClassHierarchyInspector,
-  ECSchemaProvider,
-  ECSql,
-  getClass,
-  IInstanceLabelSelectClauseFactory,
-  parseFullClassName,
-  PrimitiveValue,
-  Props,
-} from "@itwin/presentation-shared";
-import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
+import type { EC, ECSchemaProvider, IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
+import type { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -33,7 +31,7 @@ import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
  * @public
  */
 export enum NodeSelectClauseColumnNames {
-  /** Full class name of the instance the node represents. Type: `string` in format `{schema name}:{class name}`. */
+  /** Full class name of the instance the node represents. Type: `string` in format `{schema name}.{class name}`. */
   FullClassName = "FullClassName",
   /** ECInstance ID of the instance the node represents. Type: `Id64String`. */
   ECInstanceId = "ECInstanceId",
@@ -75,10 +73,17 @@ interface ECSqlValueSelector {
 interface NodeSelectClauseProps {
   ecClassId: ECSqlValueSelector;
   ecInstanceId: ECSqlValueSelector;
-  nodeLabel: string | ECSqlValueSelector;
+  nodeLabel: string | ECSqlValueSelector | { of: Props<IInstanceLabelSelectClauseFactory["createSelectClause"]> };
   extendedData?: { [key: string]: Id64String | string | number | boolean | ECSqlValueSelector };
   autoExpand?: boolean | ECSqlValueSelector;
   supportsFiltering?: boolean | ECSqlValueSelector;
+  /**
+   * Specifies whether the node has children. When omitted, children are determined by requesting them, which is
+   * expensive, so supplying a value is preferred.
+   *
+   * Supplied values are used as-is, so they must apply the same structural restrictions as
+   * the child hierarchy level queries.
+   */
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
@@ -155,7 +160,7 @@ interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGro
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  propertiesClassName: string;
+  propertiesClassName: EC.FullClassNameDotNotation;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *
@@ -224,7 +229,7 @@ interface ECSqlSelectClausePropertyValueRange {
  * @public
  */
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-  fullClassNames: string[] | ECSqlValueSelector[];
+  fullClassNames: EC.FullClassNameDotNotation[] | ECSqlValueSelector[];
 }
 
 /**
@@ -244,21 +249,20 @@ export interface NodesQueryClauseFactory {
    *
    * Special cases:
    * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
-   * - If the provided content class doesn't intersect with the property class in provided filter, a special result
-   * is returned to make sure the resulting query is valid and doesn't return anything.
+   * - If the provided content class doesn't intersect with the property class in provided filter OR referenced schema items (classes/properties)
+   * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   createFilterClauses(props: {
-    contentClass: { fullName: string; alias: string };
-    filter: GenericInstanceFilter | undefined;
+    contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
+    filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }>;
 }
 
 /**
  * Creates an instance of `NodeSelectQueryFactory`.
- * @public
  */
 export function createNodesQueryClauseFactory(props: {
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider;
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 }): NodesQueryClauseFactory {
   return new NodeSelectQueryFactory(props);
@@ -266,11 +270,11 @@ export function createNodesQueryClauseFactory(props: {
 
 /** A factory for creating a nodes' select ECSQL query. */
 class NodeSelectQueryFactory {
-  private _imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  private _imodelAccess: ECSchemaProvider;
   private _instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: {
-    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    imodelAccess: ECSchemaProvider;
     instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
   }) {
     this._imodelAccess = props.imodelAccess;
@@ -281,9 +285,13 @@ class NodeSelectQueryFactory {
   public async createSelectClause(props: NodeSelectClauseProps) {
     // note: the columns order must match the order in `NodeSelectClauseColumnNames`
     return `
-      ec_ClassName(${props.ecClassId.selector}) AS ${NodeSelectClauseColumnNames.FullClassName},
+      ec_ClassName(${props.ecClassId.selector}, 's.c') AS ${NodeSelectClauseColumnNames.FullClassName},
       ${props.ecInstanceId.selector} AS ${NodeSelectClauseColumnNames.ECInstanceId},
-      ${createECSqlValueSelector(props.nodeLabel)} AS ${NodeSelectClauseColumnNames.DisplayLabel},
+      ${createECSqlValueSelector(
+        typeof props.nodeLabel === "object" && "of" in props.nodeLabel
+          ? { selector: await this._instanceLabelSelectClauseFactory.createSelectClause(props.nodeLabel.of) }
+          : props.nodeLabel,
+      )} AS ${NodeSelectClauseColumnNames.DisplayLabel},
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
@@ -300,89 +308,163 @@ class NodeSelectQueryFactory {
     `;
   }
 
-  /**
-   * Creates the necessary ECSQL snippets to create an instance filter described by the `filter` argument.
-   * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
-   * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
-   * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
-   * `filter.filterClassNames` and by properties as described by `filter.rules`.
-   *
-   * Special cases:
-   * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
-   * - If the provided content class doesn't intersect with the property class in provided filter, a special result
-   * is returned to make sure the resulting query is valid and doesn't return anything.
-   */
+  /** See `NodesQueryClauseFactory.createFilterClauses`. */
   public async createFilterClauses(props: {
-    contentClass: { fullName: string; alias: string };
-    filter: GenericInstanceFilter | undefined;
+    contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
+    filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }> {
     const { contentClass, filter } = props;
     if (!filter) {
-      // undefined filter means we don't want any filtering to be applied
       return { from: contentClass.fullName, joins: "", where: "" };
     }
-
-    const from = await specializeContentClass({
-      classHierarchyInspector: this._imodelAccess,
-      contentClassName: contentClass.fullName,
-      filterClassNames: filter.propertyClassNames,
+    const { from, joins, where } = await createInstanceFilterClauses({
+      imodelAccess: this._imodelAccess,
+      contentClass,
+      filter,
     });
-    if (!from) {
-      // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
-      return { from: contentClass.fullName, joins: "", where: "FALSE" };
+    return { from, joins: joins.join("\n"), where: where.join(" AND ") };
+  }
+}
+
+/**
+ * Creates the necessary ECSQL snippets to create an instance filter described by the `filter` argument.
+ * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
+ * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
+ * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
+ * `filter.filterClassNames` and by properties as described by `filter.rules`.
+ *
+ * Special cases:
+ * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
+ * - If the provided content class doesn't intersect with the property class in provided filter, a special result
+ * is returned to make sure the resulting query is valid and doesn't return anything.
+ */
+async function createInstanceFilterClauses(props: {
+  imodelAccess: ECSchemaProvider;
+  contentClass: { fullName: EC.FullClassNameDotNotation; alias: string };
+  filter: GenericInstanceFilter;
+}): Promise<{ from: EC.FullClassNameDotNotation; where: string[]; joins: string[] }> {
+  const { imodelAccess, contentClass, filter } = props;
+
+  // In some cases the given filter means we want the query to return nothing - e.g. when filtering by classes that don't intersect
+  // with the given content class. Return a special result that makes sure the resulting query is valid, but returns no rows.
+  const DISABLE_QUERY = { from: contentClass.fullName, joins: [], where: ["FALSE"] };
+
+  const from = await specializeContentClass({
+    classHierarchyInspector: {
+      async classDerivesFrom(
+        derivedClassName: EC.FullClassNameDotNotation,
+        baseClassName: EC.FullClassNameDotNotation,
+      ): Promise<boolean> {
+        try {
+          return await imodelAccess.classDerivesFrom(derivedClassName, baseClassName);
+        } catch (e) {
+          /* v8 ignore else -- @preserve */
+          if (isSchemaOrClassNotFoundError(e)) {
+            // either derived or base class doesn't exist in this iModel
+            return false;
+          }
+
+          /* v8 ignore next -- @preserve */
+          throw e;
+        }
+      },
+    },
+    contentClassName: contentClass.fullName,
+    filterClassNames: filter.propertyClassNames.map(normalizeFullClassName),
+  });
+  if (!from) {
+    // filter class doesn't intersect with content class
+    return DISABLE_QUERY;
+  }
+
+  let filteredClassNamesInThisIModel: EC.FullClassNameDotNotation[] | undefined;
+  if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
+    filteredClassNamesInThisIModel = (
+      await Promise.all(
+        filter.filteredClassNames
+          .map(normalizeFullClassName)
+          .map(async (fullClassName) => ({
+            fullClassName,
+            filteredClass: await tryGetClass(imodelAccess, fullClassName),
+          })),
+      )
+    )
+      .filter(({ filteredClass }) => !!filteredClass)
+      .map(({ fullClassName }) => fullClassName);
+
+    if (filteredClassNamesInThisIModel.length === 0) {
+      // we had filter classes, but none of them exist in this iModel
+      return DISABLE_QUERY;
+    }
+  }
+
+  let joins: string[] | undefined;
+  try {
+    joins = await Promise.all(
+      filter.relatedInstances.map(async (rel, i) => {
+        const res = await ECSql.createRelationshipPathJoinClause({
+          schemaProvider: imodelAccess,
+          path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
+        });
+        assert(!res.bindings, "Expecting no bindings as the relationship path has no instance filter.");
+        return res.joins;
+      }),
+    );
+  } catch (e) {
+    /* v8 ignore else -- @preserve */
+    if (isSchemaOrClassNotFoundError(e)) {
+      // at least one related instance spec uses a class that doesn't exist in this iModel
+      return DISABLE_QUERY;
     }
 
-    /**
-     * TODO:
-     * There may be similar related instance paths, e.g.:
-     * - A -> B -> C,
-     * - A -> B -> D.
-     * At this moment we're handling each path individually which means A and B would get joined twice. We could look into
-     * creating a join tree first, e.g.
-     *         C
-     *        /
-     * A -> B
-     *        \
-     *         D
-     */
-    const joins = await Promise.all(
-      filter.relatedInstances.map(async (rel, i) =>
-        ECSql.createRelationshipPathJoinClause({
-          schemaProvider: this._imodelAccess,
-          path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
-        }),
-      ),
-    );
+    /* v8 ignore next -- @preserve */
+    throw e;
+  }
 
-    const whereConditions = new Array<string>();
-    if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
-      whereConditions.push(
-        `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
-          ${filter.filteredClassNames
+  const classAliasMap = new Map<string, EC.FullClassNameDotNotation>([[contentClass.alias, from]]);
+  filter.relatedInstances.forEach(
+    ({ path, alias }) =>
+      path.length > 0 && classAliasMap.set(alias, normalizeFullClassName(path[path.length - 1].targetClassName)),
+  );
+  let propertiesFilter: string | undefined;
+  try {
+    propertiesFilter = await createWhereClause(
+      contentClass.alias,
+      async (alias) => {
+        const aliasClassName = classAliasMap.get(alias);
+        return aliasClassName ? getClass(imodelAccess, aliasClassName) : undefined;
+      },
+      filter.rules,
+    );
+  } catch (e) {
+    // note: don't need to worry about schemas & classes here, because that's taken care of above, when
+    // validating property class names & related instance defs
+    /* v8 ignore else -- @preserve */
+    if (isPropertyNotFoundError(e)) {
+      // filter uses a property that doesn't exist in this iModel
+      return DISABLE_QUERY;
+    }
+
+    /* v8 ignore next -- @preserve */
+    throw e;
+  }
+
+  const where = new Array<string>();
+  if (filteredClassNamesInThisIModel) {
+    where.push(
+      `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
+          ${filteredClassNamesInThisIModel
             .map(parseFullClassName)
             .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
             .join(", ")}
         )`,
-      );
-    }
-    const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
-    filter.relatedInstances.forEach(
-      ({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName),
     );
-    const propertiesFilter = await createWhereClause(
-      contentClass.alias,
-      async (alias) => {
-        const aliasClassName = classAliasMap.get(alias);
-        return aliasClassName ? getClass(this._imodelAccess, aliasClassName) : undefined;
-      },
-      filter.rules,
-    );
-    if (propertiesFilter) {
-      whereConditions.push(propertiesFilter);
-    }
-
-    return { from, joins: joins.join("\n"), where: whereConditions.join(" AND ") };
   }
+  if (propertiesFilter) {
+    where.push(propertiesFilter);
+  }
+
+  return { from, joins, where };
 }
 
 function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector) {
@@ -401,7 +483,7 @@ function isSelector(x: any): x is ECSqlValueSelector {
 
 async function createGroupingSelector(
   grouping: ECSqlSelectClauseGroupingParams,
-  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider,
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
 ): Promise<string> {
   const groupingSelectors = new Array<{ key: string; selector: string }>();
@@ -508,17 +590,17 @@ async function createPropertyGroupSelectors(
   const selectors = new Array<{ key: string; selector: string }>();
   selectors.push({ key: "propertyName", selector: `${createECSqlValueSelector(propertyGroup.propertyName)}` });
 
-  const property = await propertyClass.getProperty(propertyGroup.propertyName);
+  const property = propertyClass.getProperty(propertyGroup.propertyName);
   if (!property) {
     throw new Error(`Property "${propertyGroup.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
   }
 
   if (property.isNavigation()) {
-    const relationshipClass = await property.relationshipClass;
+    const relationshipClass = property.relationshipClass;
     const abstractConstraint =
       property.direction === "Forward"
-        ? await relationshipClass.target.abstractConstraint
-        : await relationshipClass.source.abstractConstraint;
+        ? relationshipClass.target.abstractConstraint
+        : relationshipClass.source.abstractConstraint;
     // TODO: MISSING_COVERAGE
     /* v8 ignore else -- @preserve */
     if (!abstractConstraint) {
@@ -597,8 +679,18 @@ async function createWhereClause(
       .join(` ${getECSqlLogicalOperator(rule.operator)} `);
     return clause ? (rule.operator === "or" ? `(${clause})` : clause) : undefined;
   }
+
   const sourceAlias = rule.sourceAlias ? rule.sourceAlias : contentClassAlias;
-  const propertyValueSelector = ECSql.createRawPropertyValueSelector(sourceAlias, rule.propertyName);
+  const propertyClass = await classLoader(sourceAlias);
+  if (!propertyClass) {
+    throw new Error(`Class with alias "${sourceAlias}" not found.`);
+  }
+  const property = propertyClass.getProperty(rule.propertyName);
+  if (!property) {
+    throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
+  }
+
+  const propertyValueSelector = ECSql.createRawPropertyValueSelector(sourceAlias, property.name);
   if (isUnaryRuleOperator(rule.operator)) {
     switch (rule.operator) {
       case "is-true":
@@ -622,24 +714,17 @@ async function createWhereClause(
     const escapedValue = value.replace(/[%_\\]/g, "\\$&");
     return `${propertyValueSelector} ${ecsqlOperator} '%${escapedValue}%' ESCAPE '\\'`;
   }
-  const propertyClass = await classLoader(sourceAlias);
-  if (!propertyClass) {
-    throw new Error(`Class with alias "${sourceAlias}" not found.`);
-  }
-  const property = await propertyClass.getProperty(rule.propertyName);
-  if (!property) {
-    throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
-  }
+
   if (property.isNavigation()) {
-    assert(rule.value !== undefined && GenericInstanceFilterRuleValue.isInstanceKey(value));
+    assert(GenericInstanceFilterRuleValue.isInstanceKey(value));
     return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value.id)}`;
   }
   if (property.isEnumeration()) {
-    assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
+    assert(!GenericInstanceFilterRuleValue.isInstanceKey(value));
     return `${propertyValueSelector} ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value)}`;
   }
   if (property.isPrimitive()) {
-    assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
+    assert(!GenericInstanceFilterRuleValue.isInstanceKey(value));
     switch (property.primitiveType) {
       case "Point2d": {
         assert(rule.operator === "is-equal" || rule.operator === "is-not-equal");
@@ -724,26 +809,32 @@ function getECSqlComparisonOperator(
   }
 }
 
-type JoinRelationshipPath = Props<typeof ECSql.createRelationshipPathJoinClause>["path"];
+type JoinRelationshipPath = Extract<
+  Props<typeof ECSql.createRelationshipPathJoinClause>,
+  { schemaProvider: ECSchemaProvider }
+>["path"];
 function assignRelationshipPathAliases(
   path: GenericInstanceFilterRelationshipStep[],
   pathIndex: number,
   sourceAlias: string,
   targetAlias: string,
 ): JoinRelationshipPath {
-  function createAlias(fullClassName: string, index: number) {
+  function createAlias(fullClassName: EC.FullClassNameDotNotation, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
   const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
+    const sourceClassName = normalizeFullClassName(step.sourceClassName);
+    const targetClassName = normalizeFullClassName(step.targetClassName);
+    const relationshipName = normalizeFullClassName(step.relationshipClassName);
     result.push({
-      targetClassName: step.targetClassName,
-      relationshipName: step.relationshipClassName,
-      sourceClassName: step.sourceClassName,
+      targetClassName,
+      relationshipName,
+      sourceClassName,
       relationshipReverse: !step.isForwardRelationship,
       sourceAlias: i === 0 ? sourceAlias : result[i - 1].targetAlias,
-      relationshipAlias: createAlias(step.relationshipClassName, i),
-      targetAlias: i === path.length - 1 ? targetAlias : createAlias(step.targetClassName, i),
+      relationshipAlias: createAlias(relationshipName, i),
+      targetAlias: i === path.length - 1 ? targetAlias : createAlias(targetClassName, i),
       joinType: "inner",
     });
   });
@@ -751,11 +842,13 @@ function assignRelationshipPathAliases(
 }
 
 interface SpecializeContentClassProps {
-  classHierarchyInspector: ECClassHierarchyInspector;
-  contentClassName: string;
-  filterClassNames: string[];
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">;
+  contentClassName: EC.FullClassNameDotNotation;
+  filterClassNames: EC.FullClassNameDotNotation[];
 }
-async function specializeContentClass(props: SpecializeContentClassProps): Promise<string | undefined> {
+async function specializeContentClass(
+  props: SpecializeContentClassProps,
+): Promise<EC.FullClassNameDotNotation | undefined> {
   const filterClass = await getSpecializedPropertyClass(props.classHierarchyInspector, props.filterClassNames);
   if (!filterClass) {
     return props.contentClassName;
@@ -770,9 +863,9 @@ async function specializeContentClass(props: SpecializeContentClassProps): Promi
 }
 
 async function getSpecializedPropertyClass(
-  classHierarchyInspector: ECClassHierarchyInspector,
-  classes: string[],
-): Promise<string | undefined> {
+  classHierarchyInspector: Pick<ECSchemaProvider, "classDerivesFrom">,
+  classes: EC.FullClassNameDotNotation[],
+): Promise<EC.FullClassNameDotNotation | undefined> {
   if (classes.length === 0) {
     return undefined;
   }
@@ -784,4 +877,30 @@ async function getSpecializedPropertyClass(
     }
   }
   return resolvedClassName;
+}
+
+async function tryGetClass(
+  schemaProvider: ECSchemaProvider,
+  fullClassName: EC.FullClassNameDotNotation,
+): Promise<EC.Class | undefined> {
+  try {
+    return await getClass(schemaProvider, fullClassName);
+  } catch (e) {
+    /* v8 ignore else -- @preserve */
+    if (isSchemaOrClassNotFoundError(e)) {
+      return undefined;
+    }
+
+    /* v8 ignore next -- @preserve */
+    throw e;
+  }
+}
+function isSchemaOrClassNotFoundError(e: unknown): e is Error {
+  return (
+    e instanceof Error &&
+    (!!e.message.match(/^Schema "[\w\d_]+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/))
+  );
+}
+function isPropertyNotFoundError(e: unknown): e is Error {
+  return e instanceof Error && !!e.message.match(/^Property "[\w\d]+" not found in ECClass/);
 }

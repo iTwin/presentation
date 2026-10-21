@@ -3,11 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createElement, PropsWithChildren, ReactElement } from "react";
-import { expect, Mocked, vi } from "vitest";
+import { createElement } from "react";
+import { expect, vi } from "vitest";
 import { ThemeProvider } from "@itwin/itwinui-react";
-import { RenderOptions, RenderResult, render as renderRTL, waitFor } from "@testing-library/react";
-import { userEvent, UserEvent } from "@testing-library/user-event";
+import { render as renderRTL, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+
+import type { PropsWithChildren, ReactElement } from "react";
+import type { Mocked } from "vitest";
+import type { RenderOptions, RenderResult } from "@testing-library/react";
+import type { UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
   return (Inner?: React.JSXElementConstructor<{ children: React.ReactNode }>) => {

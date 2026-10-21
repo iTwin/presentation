@@ -3,23 +3,28 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertSubject } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, it } from "vitest";
-import { Subject } from "@itwin/core-backend";
-import { IModel } from "@itwin/core-common";
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { buildTestECDb } from "../../ECDbUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
+import { importSchema } from "../../SchemaUtils.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createIModelAccess, createProvider } from "../Utils.js";
+import { createProvider } from "../Utils.js";
+
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
+
+const SCHEMA_XML = `
+  <ECEntityClass typeName="X">
+    <ECProperty propertyName="UserLabel" typeName="string" />
+    <ECProperty propertyName="Description" typeName="string" />
+    <ECProperty propertyName="CodeValue" typeName="string" />
+    <ECProperty propertyName="ParentId" typeName="long" />
+  </ECEntityClass>
+`;
 
 describe("Hierarchies", () => {
-  let subjectClassName: string;
-
   beforeAll(async () => {
     await initialize();
-    subjectClassName = Subject.classFullName.replace(":", ".");
   });
 
   afterAll(async () => {
@@ -30,58 +35,32 @@ describe("Hierarchies", () => {
     it("creates different groups for different labels", async () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const childSubject1 = insertSubject({
-          builder,
-          codeValue: "1",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
-        });
-        const childSubject2 = insertSubject({
-          builder,
-          codeValue: "2",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName2,
-        });
-        const childSubject3 = insertSubject({
-          builder,
-          codeValue: "3",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName1,
-        });
-        const childSubject4 = insertSubject({
-          builder,
-          codeValue: "4",
-          parentId: IModel.rootSubjectId,
-          userLabel: labelGroupName2,
-        });
-        return { childSubject1, childSubject2, childSubject3, childSubject4 };
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(testName, builder, SCHEMA_XML);
+        const x1 = builder.insertInstance(s.items.X.fullName, { userLabel: labelGroupName1 });
+        const x2 = builder.insertInstance(s.items.X.fullName, { userLabel: labelGroupName2 });
+        const x3 = builder.insertInstance(s.items.X.fullName, { userLabel: labelGroupName1 });
+        const x4 = builder.insertInstance(s.items.X.fullName, { userLabel: labelGroupName2 });
+        return { schema: s, x1, x2, x3, x4 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel(props) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.UserLabel` },
-                    grouping: { byLabel: true },
-                  })}
-                  FROM ${subjectClassName} AS this
-                  WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                `,
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      grouping: { byLabel: true },
+                    })}
+                    FROM ${schema.items.X.fullName} AS this
+                  `,
                 },
               },
             ];
@@ -91,20 +70,20 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ ecdb, hierarchy }),
         expect: [
           NodeValidators.createForLabelGroupingNode({
             label: labelGroupName1,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x3], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
             ],
           }),
           NodeValidators.createForLabelGroupingNode({
             label: labelGroupName2,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject4], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x4], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
             ],
           }),
         ],
@@ -114,62 +93,44 @@ describe("Hierarchies", () => {
     it("creates different groups for same labels and different groupIds", async () => {
       const descriptionGroupName1 = "test1";
       const descriptionGroupName2 = "test2";
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const childSubject1 = insertSubject({
-          builder,
-          codeValue: "1",
-          parentId: IModel.rootSubjectId,
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(testName, builder, SCHEMA_XML);
+        const x1 = builder.insertInstance(s.items.X.fullName, {
           userLabel: "test",
           description: descriptionGroupName1,
         });
-        const childSubject2 = insertSubject({
-          builder,
-          codeValue: "2",
-          parentId: IModel.rootSubjectId,
+        const x2 = builder.insertInstance(s.items.X.fullName, {
           userLabel: "test",
           description: descriptionGroupName2,
         });
-        const childSubject3 = insertSubject({
-          builder,
-          codeValue: "3",
-          parentId: IModel.rootSubjectId,
+        const x3 = builder.insertInstance(s.items.X.fullName, {
           userLabel: "test",
           description: descriptionGroupName1,
         });
-        const childSubject4 = insertSubject({
-          builder,
-          codeValue: "4",
-          parentId: IModel.rootSubjectId,
+        const x4 = builder.insertInstance(s.items.X.fullName, {
           userLabel: "test",
           description: descriptionGroupName2,
         });
-        return { childSubject1, childSubject2, childSubject3, childSubject4 };
+        return { schema: s, x1, x2, x3, x4 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel(props) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.UserLabel` },
-                    grouping: { byLabel: { groupId: { selector: `this.Description` } } },
-                  })}
-                  FROM ${subjectClassName} AS this
-                  WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                `,
+                    SELECT ${await createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      grouping: { byLabel: { groupId: { selector: `this.Description` } } },
+                    })}
+                    FROM ${schema.items.X.fullName} AS this
+                  `,
                 },
               },
             ];
@@ -179,22 +140,22 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ ecdb, hierarchy }),
         expect: [
           NodeValidators.createForLabelGroupingNode({
             label: "test",
             groupId: descriptionGroupName2,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject4], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x4], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
             ],
           }),
           NodeValidators.createForLabelGroupingNode({
             label: "test",
             groupId: descriptionGroupName1,
             children: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x3], children: false }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
             ],
           }),
         ],
@@ -204,55 +165,30 @@ describe("Hierarchies", () => {
 
   describe("Label merging", () => {
     it("doesn't merge when different groupIds or labels are provided", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({
-          builder,
-          codeValue: "1",
-          parentId: rootSubject.id,
-          userLabel: "label1",
-          description: "description1",
-        });
-        const childSubject2 = insertSubject({
-          builder,
-          codeValue: "2",
-          parentId: rootSubject.id,
-          userLabel: "label1",
-          description: "description2",
-        });
-        const childSubject3 = insertSubject({
-          builder,
-          codeValue: "3",
-          parentId: rootSubject.id,
-          userLabel: "label2",
-          description: "description1",
-        });
-        return { rootSubject, childSubject1, childSubject2, childSubject3 };
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(testName, builder, SCHEMA_XML);
+        const x1 = builder.insertInstance(s.items.X.fullName, { userLabel: "label1", description: "description1" });
+        const x2 = builder.insertInstance(s.items.X.fullName, { userLabel: "label1", description: "description2" });
+        const x3 = builder.insertInstance(s.items.X.fullName, { userLabel: "label2", description: "description1" });
+        return { schema: s, x1, x2, x3 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel(props) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
                       grouping: { byLabel: { action: "merge", groupId: { selector: `this.Description` } } },
                     })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -263,46 +199,39 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ ecdb, hierarchy }),
         expect: [
-          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2], children: false }),
-          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1], children: false }),
-          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject3], children: false }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2], children: false }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1], children: false }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.x3], children: false }),
         ],
       });
     });
 
     it("merges instance nodes with same merge id", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id });
-        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id });
-        return { rootSubject, childSubject1, childSubject2 };
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(testName, builder, SCHEMA_XML);
+        const x1 = builder.insertInstance(s.items.X.fullName);
+        const x2 = builder.insertInstance(s.items.X.fullName);
+        return { schema: s, x1, x2 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel(props) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "merge this",
                       grouping: { byLabel: { action: "merge", groupId: "merge" } },
                     })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                    FROM ${schema.items.X.fullName} AS this
                   `,
                 },
               },
@@ -313,10 +242,10 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ ecdb, hierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject1, keys.childSubject2],
+            instanceKeys: [keys.x1, keys.x2],
             label: "merge this",
             children: false,
           }),
@@ -325,38 +254,35 @@ describe("Hierarchies", () => {
     });
 
     it("merges instance nodes from different hidden parent hierarchy levels ", async () => {
-      const { imodel, ...keys } = await buildTestIModel(async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const visibleSubject1 = insertSubject({ builder, codeValue: "merged", parentId: rootSubject.id });
-        const hiddenSubject = insertSubject({ builder, codeValue: "hide", parentId: rootSubject.id });
-        const visibleSubject2 = insertSubject({ builder, codeValue: "merged", parentId: hiddenSubject.id });
-        return { rootSubject, visibleSubject1, visibleSubject2 };
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(testName, builder, SCHEMA_XML);
+        const visibleX1 = builder.insertInstance(s.items.X.fullName, { codeValue: "merged" });
+        const hiddenX = builder.insertInstance(s.items.X.fullName, { codeValue: "hide" });
+        const visibleX2 = builder.insertInstance(s.items.X.fullName, {
+          codeValue: "merged",
+          parentId: parseInt(hiddenX.id, 16),
+        });
+        return { schema: s, visibleX1, hiddenX, visibleX2 };
       });
+      const { ecdb, schema, ...keys } = setup;
 
-      const imodelAccess = createIModelAccess(imodel);
-      const selectQueryFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       const hierarchy: HierarchyDefinition = {
-        async defineHierarchyLevel(props) {
+        async defineHierarchyLevel({ createSelectClause, ...props }) {
           if (!props.parentNode) {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
                       grouping: { byLabel: { action: "merge", groupId: "merge" } },
                       hideNodeInHierarchy: { selector: `IIF(this.CodeValue = 'hide', 1, 0)` },
                     })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                    FROM ${schema.items.X.fullName} AS this
+                    WHERE this.ParentId IS NULL
                   `,
                 },
               },
@@ -365,17 +291,17 @@ describe("Hierarchies", () => {
           if (HierarchyNode.isInstancesNode(props.parentNode) && props.parentNode.label === "hide") {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: schema.items.X.fullName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectQueryFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
                       grouping: { byLabel: { action: "merge", groupId: "merge" } },
                     })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.Parent.Id = ?
+                    FROM ${schema.items.X.fullName} AS this
+                    WHERE this.ParentId = ?
                   `,
                   bindings: props.parentNode.key.instanceKeys.map((k) => ({ type: "id", value: k.id })),
                 },
@@ -387,10 +313,10 @@ describe("Hierarchies", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ ecdb, hierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.visibleSubject1, keys.visibleSubject2],
+            instanceKeys: [keys.visibleX1, keys.visibleX2],
             label: "merged",
             children: false,
           }),

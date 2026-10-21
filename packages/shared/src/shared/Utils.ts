@@ -5,9 +5,13 @@
 
 import { assert } from "@itwin/core-bentley";
 
+import type { EC } from "./Metadata.js";
+
 /**
  * An utility to parse schema and class names from full class name, where
  * schema and class names are separated by either `:` or `.`.
+ *
+ * @throws Error if the provided full class name is not valid.
  * @public
  */
 export function parseFullClassName(fullClassName: string) {
@@ -35,16 +39,12 @@ export function parseFullClassName(fullClassName: string) {
 /**
  * An utility to normalize full class name from either `SchemaName:ClassName` or
  * `SchemaName.ClassName` to always use the dot format.
+ *
+ * @throws Error if the provided full class name is not valid.
  * @public
  */
-export function normalizeFullClassName(fullClassName: string): string {
-  const colonPos = fullClassName.indexOf(":");
-  if (-1 === colonPos) {
-    assert(fullClassName.indexOf(".") !== -1, "Invalid full class name");
-    return fullClassName;
-  }
-  const schemaName = fullClassName.slice(0, colonPos);
-  const className = fullClassName.slice(colonPos + 1);
+export function normalizeFullClassName(fullClassName: string): EC.FullClassNameDotNotation {
+  const { schemaName, className } = parseFullClassName(fullClassName);
   return `${schemaName}.${className}`;
 }
 

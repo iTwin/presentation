@@ -4,18 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect } from "vitest";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
-import {
-  createNodesQueryClauseFactory,
-  createPredicateBasedHierarchyDefinition,
-  DefineInstanceNodeChildHierarchyLevelProps,
-  HierarchyLevelDefinition,
-  NodesQueryClauseFactory,
-} from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { SnapshotDb } from "@itwin/core-backend";
+import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
+
+import type { IModelDb } from "@itwin/core-backend";
+import type {
+  DefineInstanceNodeChildHierarchyLevelProps,
+  HierarchyLevelDefinition,
+} from "@itwin/presentation-hierarchies";
 
 describe("hide if no children", () => {
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
@@ -26,26 +25,24 @@ describe("hide if no children", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({
+      const provider = await StatelessHierarchyProvider.create({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           return createPredicateBasedHierarchyDefinition({
-            classHierarchyInspector: imodelAccess,
+            imodelAccess,
             hierarchy: {
-              rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async ({ createSelectClause }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
-                  definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
+                  definitions: async ({
+                    parentNode,
+                    createSelectClause,
+                  }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
-                      queryFactory,
+                      createSelectClause,
                       limit: 1000,
                       hideIfNoChildren: true,
                       hasChildren: depth >= 2 ? false : undefined,
@@ -68,26 +65,24 @@ describe("hide if no children", () => {
     setup,
     cleanup,
     test: async (iModel) => {
-      const provider = new StatelessHierarchyProvider({
+      const provider = await StatelessHierarchyProvider.create({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           return createPredicateBasedHierarchyDefinition({
-            classHierarchyInspector: imodelAccess,
+            imodelAccess,
             hierarchy: {
-              rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async ({ createSelectClause }) =>
+                createPhysicalElementsHierarchyLevelDefinition({ createSelectClause, limit: 5 }),
               childNodes: [
                 {
                   parentInstancesNodePredicate: `BisCore.PhysicalElement`,
-                  definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
+                  definitions: async ({
+                    parentNode,
+                    createSelectClause,
+                  }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
-                      queryFactory,
+                      createSelectClause,
                       limit: 1000,
                       hideIfNoChildren: true,
                       hasChildren: depth >= 2 ? true : undefined,
@@ -107,27 +102,27 @@ describe("hide if no children", () => {
 });
 
 async function createPhysicalElementsHierarchyLevelDefinition(props: {
-  queryFactory: NodesQueryClauseFactory;
+  createSelectClause: DefineInstanceNodeChildHierarchyLevelProps["createSelectClause"];
   limit: number;
   hasChildren?: boolean;
   hideIfNoChildren?: boolean;
 }): Promise<HierarchyLevelDefinition> {
-  const { queryFactory, limit, hasChildren, hideIfNoChildren } = props;
+  const { createSelectClause, limit, hasChildren, hideIfNoChildren } = props;
   return [
     {
       fullClassName: `BisCore.PhysicalElement`,
       query: {
         ecsql: `
-        SELECT ${await queryFactory.createSelectClause({
-          ecClassId: { selector: `this.ECClassId` },
-          ecInstanceId: { selector: `this.ECInstanceId` },
-          nodeLabel: { selector: `this.UserLabel` },
-          hasChildren,
-          hideIfNoChildren,
-        })}
-        FROM BisCore.PhysicalElement AS this
-        LIMIT ${limit}
-      `,
+          SELECT ${await createSelectClause({
+            ecClassId: { selector: `this.ECClassId` },
+            ecInstanceId: { selector: `this.ECInstanceId` },
+            nodeLabel: { selector: `this.UserLabel` },
+            hasChildren,
+            hideIfNoChildren,
+          })}
+          FROM BisCore.PhysicalElement AS this
+          LIMIT ${limit}
+        `,
       },
     },
   ];

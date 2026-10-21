@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   insertDrawingCategory,
   insertPhysicalElement,
@@ -12,15 +11,16 @@ import {
   insertRepositoryLink,
   insertSpatialCategory,
 } from "presentation-test-utilities";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.Imports
-import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+import { withEditTxn } from "@itwin/core-backend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -35,29 +35,21 @@ describe("Hierarchies", () => {
 
       describe("By label", () => {
         it("groups by label", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const category = insertSpatialCategory({ builder, codeValue: "Category" });
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
-            insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              userLabel: "Example element",
-            });
-            insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              userLabel: "Example element",
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            return withEditTxn(imodel, (txn) => {
+              const category = insertSpatialCategory({ txn, codeValue: "Category" });
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+              insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
+              insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "Example element" });
             });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.PhysicalElement` nodes to be return as
                   // root nodes and have them grouped by label
@@ -66,12 +58,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalElement",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -112,30 +99,32 @@ describe("Hierarchies", () => {
         });
 
         it("merges by label", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const category = insertSpatialCategory({ builder, codeValue: "Category" });
-            const model = insertPhysicalModelWithPartition({ builder, codeValue: "Model" });
-            const element1 = insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              userLabel: "Example element",
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            return withEditTxn(imodel, (txn) => {
+              const category = insertSpatialCategory({ txn, codeValue: "Category" });
+              const model = insertPhysicalModelWithPartition({ txn, codeValue: "Model" });
+              const element1 = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                userLabel: "Example element",
+              });
+              const element2 = insertPhysicalElement({
+                txn,
+                modelId: model.id,
+                categoryId: category.id,
+                userLabel: "Example element",
+              });
+              return { element1, element2 };
             });
-            const element2 = insertPhysicalElement({
-              builder,
-              modelId: model.id,
-              categoryId: category.id,
-              userLabel: "Example element",
-            });
-            return { element1, element2 };
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelMergingExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.PhysicalElement` nodes to be returned as root
                   // nodes and have them merged based on label
@@ -144,12 +133,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalElement",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -180,18 +164,20 @@ describe("Hierarchies", () => {
 
       describe("By class", () => {
         it("groups by node's class", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
-            const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
-            return { spatialCategory, drawingCategory };
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            return withEditTxn(imodel, (txn) => {
+              const drawingCategory = insertDrawingCategory({ txn, codeValue: "Example drawing category" });
+              const spatialCategory = insertSpatialCategory({ txn, codeValue: "Example spatial category" });
+              return { spatialCategory, drawingCategory };
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.ClassGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.Category` nodes to be returned as root nodes and have
                   // them grouped by class.
@@ -200,12 +186,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.Category",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.CodeValue" },
@@ -252,18 +233,20 @@ describe("Hierarchies", () => {
         });
 
         it("groups by base classes", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            const drawingCategory = insertDrawingCategory({ builder, codeValue: "Example drawing category" });
-            const spatialCategory = insertSpatialCategory({ builder, codeValue: "Example spatial category" });
-            return { spatialCategory, drawingCategory };
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            return withEditTxn(imodel, (txn) => {
+              const drawingCategory = insertDrawingCategory({ txn, codeValue: "Example drawing category" });
+              const spatialCategory = insertSpatialCategory({ txn, codeValue: "Example spatial category" });
+              return { spatialCategory, drawingCategory };
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.BaseClassGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.Category` nodes to be grouped by the following classes:
                   // - `BisCore.Element`
@@ -273,12 +256,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.Category",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.CodeValue" },
@@ -327,19 +305,21 @@ describe("Hierarchies", () => {
 
       describe("By properties", () => {
         it("groups by property value", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 1", format: "iModel" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example iModel link 2", format: "iModel" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example DGN link", format: "DGN" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link with no format" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            withEditTxn(imodel, (txn) => {
+              insertRepositoryLink({ txn, repositoryLabel: "Example iModel link 1", format: "iModel" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example iModel link 2", format: "iModel" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example DGN link", format: "DGN" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example link with no format" });
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                   // them grouped by the `Format` property.
@@ -348,12 +328,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -415,19 +390,21 @@ describe("Hierarchies", () => {
         });
 
         it("groups by property value ranges", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertPhysicalMaterial({ builder, userLabel: "Material 1", density: 4 });
-            insertPhysicalMaterial({ builder, userLabel: "Material 2", density: 7 });
-            insertPhysicalMaterial({ builder, userLabel: "Material 3", density: 11 });
-            insertPhysicalMaterial({ builder, userLabel: "Material 4", density: 200 });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            withEditTxn(imodel, (txn) => {
+              insertPhysicalMaterial({ txn, userLabel: "Material 1", density: 4 });
+              insertPhysicalMaterial({ txn, userLabel: "Material 2", density: 7 });
+              insertPhysicalMaterial({ txn, userLabel: "Material 3", density: 11 });
+              insertPhysicalMaterial({ txn, userLabel: "Material 4", density: 200 });
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueRangesGroupingExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.PhysicalMaterial` nodes to be returned as root nodes and have
                   // them grouped by the `Density` property value in given ranges.
@@ -436,12 +413,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalMaterial",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -507,19 +479,21 @@ describe("Hierarchies", () => {
       });
 
       it("creates multi-level grouping hierarchy", async () => {
-        const { imodel } = await buildTestIModel(async (builder) => {
-          insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
-          insertRepositoryLink({ builder, repositoryLabel: "Example iModel link", format: "iModel" });
-          insertRepositoryLink({ builder, repositoryLabel: "Example DGN link 1", format: "DGN" });
-          insertRepositoryLink({ builder, repositoryLabel: "Example DGN link 2", format: "DGN" });
+        const { imodelConnection } = await buildTestIModel(async (imodel) => {
+          withEditTxn(imodel, (txn) => {
+            insertRepositoryLink({ txn, repositoryLabel: "Example iModel link", format: "iModel" });
+            insertRepositoryLink({ txn, repositoryLabel: "Example iModel link", format: "iModel" });
+            insertRepositoryLink({ txn, repositoryLabel: "Example DGN link 1", format: "DGN" });
+            insertRepositoryLink({ txn, repositoryLabel: "Example DGN link 2", format: "DGN" });
+          });
         });
-        const imodelAccess = createIModelAccess(imodel);
+        const imodelAccess = createIModelAccess(imodelConnection);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.MultiLevelGroupingExample
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
-            defineHierarchyLevel: async ({ parentNode }) => {
+            defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
               if (!parentNode) {
                 // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                 // them grouped by the `Format` property.
@@ -528,12 +502,7 @@ describe("Hierarchies", () => {
                     fullClassName: "BisCore.RepositoryLink",
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({
-                          imodelAccess,
-                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                            classHierarchyInspector: imodelAccess,
-                          }),
-                        }).createSelectClause({
+                        SELECT ${await createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },
@@ -634,18 +603,20 @@ describe("Hierarchies", () => {
 
       describe("Customization options", () => {
         it("doesn't return grouping node if there's only one grouped instance and `hideIfOneGroupedNode = true`", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            withEditTxn(imodel, (txn) => {
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 1" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 2" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 2" });
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfOneGroupedNodeExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                   // them grouped by label only if there's more than one instance with the same label.
@@ -654,12 +625,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -693,17 +659,19 @@ describe("Hierarchies", () => {
         });
 
         it("doesn't return grouping node if it has no siblings and `hideIfNoSiblings = true`", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            withEditTxn(imodel, (txn) => {
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 1" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 2" });
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfNoSiblingsExample
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   // The hierarchy definition requests `BisCore.RepositoryLink` nodes to be returned as root nodes and have
                   // them grouped by class only if the grouping node has siblings.
@@ -712,12 +680,7 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({
-                            imodelAccess,
-                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                              classHierarchyInspector: imodelAccess,
-                            }),
-                          }).createSelectClause({
+                          SELECT ${await createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -752,16 +715,18 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag on grouping nodes when `autoExpand = true`", async () => {
-          const { imodel } = await buildTestIModel(async (builder) => {
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 1" });
-            insertRepositoryLink({ builder, repositoryLabel: "Example link 2" });
+          const { imodelConnection } = await buildTestIModel(async (imodel) => {
+            withEditTxn(imodel, (txn) => {
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 1" });
+              insertRepositoryLink({ txn, repositoryLabel: "Example link 2" });
+            });
           });
-          const imodelAccess = createIModelAccess(imodel);
+          const imodelAccess = createIModelAccess(imodelConnection);
 
           const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
-              defineHierarchyLevel: async ({ parentNode }) => {
+              defineHierarchyLevel: async ({ parentNode, createSelectClause }) => {
                 if (!parentNode) {
                   return [
                     {
@@ -770,12 +735,7 @@ describe("Hierarchies", () => {
                         ecsql:
                           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.AutoExpandExample
                           `
-                            SELECT ${await createNodesQueryClauseFactory({
-                              imodelAccess,
-                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-                                classHierarchyInspector: imodelAccess,
-                              }),
-                            }).createSelectClause({
+                            SELECT ${await createSelectClause({
                               ecClassId: { selector: "this.ECClassId" },
                               ecInstanceId: { selector: "this.ECInstanceId" },
                               nodeLabel: { selector: "this.UserLabel" },

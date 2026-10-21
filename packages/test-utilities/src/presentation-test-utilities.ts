@@ -7,4 +7,5 @@ export * from "./test-utilities/AsyncIterators.js";
 export * from "./test-utilities/IModelUtils.js";
 export * from "./test-utilities/Observables.js";
 export * from "./test-utilities/ResolvablePromise.js";
+export * from "./test-utilities/SchemaView.js";
 export * from "./test-utilities/WaitFor.js";

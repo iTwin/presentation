@@ -4,13 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { MutableRefObject, useEffect } from "react";
-import { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";
+import { useEffect } from "react";
 import { IModelApp } from "@itwin/core-frontend";
-import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
+import { Presentation } from "@itwin/presentation-frontend";
 import { getRulesetId } from "../../common/Utils.js";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
+import { PresentationTreeDataProvider } from "../DataProvider.js";
 import { reloadTree } from "./TreeReloader.js";
+
+import type { MutableRefObject } from "react";
+import type { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";
+import type { IModelHierarchyChangeEventArgs } from "@itwin/presentation-frontend";
+import type { PresentationTreeDataProviderProps } from "../DataProvider.js";
 
 /** @internal */
 export interface ReloadedTree {
@@ -46,7 +50,7 @@ function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
 
     let subscription: Subscription | undefined;
     const reload = () => {
-      const currentModelSource = modelSource?.current;
+      const currentModelSource = modelSource.current;
       /* v8 ignore if -- @preserve */
       if (!currentModelSource) {
         return;
@@ -87,7 +91,7 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): 
           return;
         }
 
-        const currentModelSource = modelSource?.current;
+        const currentModelSource = modelSource.current;
         /* v8 ignore if -- @preserve */
         if (!currentModelSource) {
           return;
@@ -122,7 +126,7 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): vo
         return;
       }
 
-      const currentModelSource = modelSource?.current;
+      const currentModelSource = modelSource.current;
       /* v8 ignore if -- @preserve */
       if (!currentModelSource) {
         return;
@@ -155,7 +159,7 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams):
     const removeListener = Presentation.presentation
       .vars(getRulesetId(dataProviderProps.ruleset))
       .onVariableChanged.addListener(() => {
-        const currentModelSource = modelSource?.current;
+        const currentModelSource = modelSource.current;
         /* v8 ignore if -- @preserve */
         if (!currentModelSource) {
           return;
@@ -186,7 +190,7 @@ function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void 
   useEffect(() => {
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
-      const currentModelSource = modelSource?.current;
+      const currentModelSource = modelSource.current;
       /* v8 ignore if -- @preserve */
       if (!currentModelSource) {
         return;

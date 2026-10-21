@@ -5,14 +5,12 @@
 
 import {
   asapScheduler,
-  Connectable,
   connectable,
   defer,
   EMPTY,
   finalize,
   iif,
   mergeMap,
-  Observable,
   observeOn,
   onErrorResumeNextWith,
   queueScheduler,
@@ -20,6 +18,8 @@ import {
   subscribeOn,
   tap,
 } from "rxjs";
+
+import type { Connectable, Observable } from "rxjs";
 
 /** @internal */
 export class SubscriptionScheduler {

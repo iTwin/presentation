@@ -1,0 +1,127 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { describe, expect, it } from "vitest";
+import { useNodeHighlighting } from "../../presentation-hierarchies-react/UseNodeHighlighting.js";
+import { render, renderHook } from "./TestUtils.js";
+
+import type { NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import type { TreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
+
+describe("useNodeHighlighting", () => {
+  it("does not highlight when highlight is undefined", () => {
+    const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "node" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: {} });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")).toBeNull();
+  });
+
+  it("does not highlight text when no matches found", () => {
+    const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "node" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "test" } });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")).toBeNull();
+  });
+
+  it("does not highlight text when node is not filter target", () => {
+    const rootNodes = [createTreeNode({ id: "node", label: "node" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "node" } });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")).toBeNull();
+  });
+
+  it("highlights text when match found", () => {
+    const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "node" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "node" } });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")?.textContent).toBe("node");
+  });
+
+  it("highlights text with special characters", () => {
+    const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "[1-x]node" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "[1-x]node" } });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")?.textContent).toBe("[1-x]node");
+  });
+
+  it("highlights text in the middle", () => {
+    const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "1 test 2" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "test" } });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    const spans = container.querySelectorAll("span");
+    const marks = container.querySelectorAll("mark");
+
+    expect(spans).toHaveLength(2);
+    expect(marks).toHaveLength(1);
+    expect(spans[0].textContent).toBe("1 ");
+    expect(spans[1].textContent).toBe(" 2");
+    expect(marks[0].textContent).toBe("test");
+  });
+
+  it("highlights edges of text", () => {
+    const rootNodes = [createdSearchTargetTreeNode({ id: "node", label: "test node test" })];
+
+    const { result } = renderHook(useNodeHighlighting, { initialProps: { highlightText: "test" } });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    const spans = container.querySelectorAll("span");
+    const marks = container.querySelectorAll("mark");
+
+    expect(spans).toHaveLength(1);
+    expect(marks).toHaveLength(2);
+    expect(spans[0].textContent).toBe(" node ");
+    expect(marks[0].textContent).toBe("test");
+    expect(marks[1].textContent).toBe("test");
+  });
+});
+
+function createTreeNode(partial?: Partial<TreeNode>): TreeNode {
+  return {
+    id: "test-node",
+    label: "test-node",
+    isExpanded: false,
+    isLoading: false,
+    isFilterable: false,
+    isFiltered: false,
+    nodeData: createNonGroupingHierarchyNode(),
+    children: [],
+    errors: [],
+    ...partial,
+  };
+}
+
+function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
+  return {
+    label: "test-node",
+    key: { type: "instances", instanceKeys: [] },
+    parentKeys: [],
+    children: false,
+    ...partial,
+  };
+}
+
+function createdSearchTargetTreeNode(partial?: Partial<TreeNode>): TreeNode {
+  const node = createTreeNode(partial);
+  return { ...node, nodeData: { ...node.nodeData, search: { isSearchTarget: true } } };
+}

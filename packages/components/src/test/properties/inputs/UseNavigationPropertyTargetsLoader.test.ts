@@ -5,20 +5,24 @@
 
 import { createAsyncIterator } from "presentation-test-utilities";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { IModelApp } from "@itwin/core-frontend";
+import { Content, LabelDefinition } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyItemsLoader,
-  NavigationPropertyTarget,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Item, NavigationPropertyInfo } from "@itwin/presentation-common";
+import type { PresentationManager } from "@itwin/presentation-frontend";
+import type { NavigationPropertyTarget } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;

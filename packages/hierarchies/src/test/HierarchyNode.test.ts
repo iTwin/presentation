@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { GroupingHierarchyNode, HierarchyNode } from "../hierarchies/HierarchyNode.js";
+import { HierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { createTestGenericNodeKey } from "./Utils.js";
+
+import type { GroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 
 describe("HierarchyNode", () => {
   const genericNode: HierarchyNode = {
@@ -21,7 +23,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const classGroupingNode: GroupingHierarchyNode = {
-    key: { type: "class-grouping", className: "c" },
+    key: { type: "class-grouping", className: "s.c" },
     groupedInstanceKeys: [],
     label: "class grouping node",
     parentKeys: [],
@@ -184,6 +186,78 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isPropertyGroupingNode(propertyOtherValuesGroupingNode)).toBe(true);
       expect(HierarchyNode.isPropertyGroupingNode(propertyValueGroupingNode)).toBe(true);
       expect(HierarchyNode.isPropertyGroupingNode(propertyValueRangeGroupingNode)).toBe(true);
+    });
+  });
+
+  describe("getGroupingNodeLevel", () => {
+    it("returns 1 when parentKeys is empty", () => {
+      expect(HierarchyNode.getGroupingNodeLevel({ key: classGroupingNode.key, parentKeys: [] })).toBe(1);
+    });
+
+    it("returns 1 when the last parent key is a non-grouping key", () => {
+      expect(
+        HierarchyNode.getGroupingNodeLevel({
+          key: classGroupingNode.key,
+          parentKeys: [{ type: "instances", instanceKeys: [] }],
+        }),
+      ).toBe(1);
+    });
+
+    it("returns 2 when the last parent key is a grouping key", () => {
+      expect(
+        HierarchyNode.getGroupingNodeLevel({
+          key: labelGroupingNode.key,
+          parentKeys: [
+            { type: "instances", instanceKeys: [] },
+            { type: "class-grouping", className: "s.c" },
+          ],
+        }),
+      ).toBe(2);
+    });
+
+    it("returns 3 when the last two parent keys are grouping keys", () => {
+      expect(
+        HierarchyNode.getGroupingNodeLevel({
+          key: propertyValueGroupingNode.key,
+          parentKeys: [
+            { type: "instances", instanceKeys: [] },
+            { type: "class-grouping", className: "s.c" },
+            { type: "label-grouping", label: "l" },
+          ],
+        }),
+      ).toBe(3);
+    });
+
+    it("stops counting at the nearest non-grouping parent key from the end", () => {
+      expect(
+        HierarchyNode.getGroupingNodeLevel({
+          key: classGroupingNode.key,
+          parentKeys: [
+            { type: "class-grouping", className: "s.a" },
+            { type: "instances", instanceKeys: [] },
+            { type: "label-grouping", label: "l" },
+          ],
+        }),
+      ).toBe(2);
+    });
+
+    it("counts generic parent keys as non-grouping", () => {
+      expect(
+        HierarchyNode.getGroupingNodeLevel({ key: classGroupingNode.key, parentKeys: [{ type: "generic", id: "x" }] }),
+      ).toBe(1);
+    });
+
+    it("counts all parent keys when all are grouping keys", () => {
+      expect(
+        HierarchyNode.getGroupingNodeLevel({
+          key: classGroupingNode.key,
+          parentKeys: [
+            { type: "class-grouping", className: "s.a" },
+            { type: "label-grouping", label: "l" },
+            { type: "property-grouping:other", properties: [] },
+          ],
+        }),
+      ).toBe(4);
     });
   });
 });

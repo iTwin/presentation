@@ -5,33 +5,25 @@
 
 import "./PropertiesWidget.css";
 
-import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
-  ActionButtonRendererProps,
   CompositeFilterType,
   CompositePropertyDataFilterer,
   DisplayValuePropertyDataFilterer,
-  FilteredPropertyData,
   FilteringInput,
   FilteringInputStatus,
   FilteringPropertyDataProvider,
-  HighlightInfo,
   LabelPropertyDataFilterer,
   Orientation,
-  PropertyCategory,
   PropertyCategoryLabelFilterer,
-  PropertyData,
-  PropertyGridContextMenuArgs,
   useDebouncedAsyncValue,
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { GlobalContextMenu } from "@itwin/core-react";
 import { Flex, MenuItem, ToggleSwitch } from "@itwin/itwinui-react";
-import { Field } from "@itwin/presentation-common";
 import {
-  DiagnosticsProps,
   FavoritePropertiesDataFilterer,
   PresentationPropertyDataProvider,
   usePropertyDataProviderWithUnifiedSelection,
@@ -39,6 +31,19 @@ import {
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
+
+import type { ComponentPropsWithoutRef } from "react";
+import type {
+  ActionButtonRendererProps,
+  FilteredPropertyData,
+  HighlightInfo,
+  PropertyCategory,
+  PropertyData,
+  PropertyGridContextMenuArgs,
+} from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Field } from "@itwin/presentation-common";
+import type { DiagnosticsProps } from "@itwin/presentation-components";
 
 const FAVORITES_SCOPE = FavoritePropertiesScope.IModel;
 
@@ -54,18 +59,18 @@ export function PropertiesWidget(props: Props) {
     devDiagnostics: undefined,
   });
 
-  const [filterText, setFilterText] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [isFavoritesFilterActive, setIsFavoritesFilterActive] = useState(false);
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [activeHighlight, setActiveHighlight] = useState<HighlightInfo>();
 
   const setFilter = useCallback(
     (filter: string) => {
-      if (filter !== filterText) {
-        setFilterText(filter);
+      if (filter !== searchText) {
+        setSearchText(filter);
       }
     },
-    [filterText],
+    [searchText],
   );
 
   const [filteringResult, setFilteringResult] = useState<FilteredPropertyData>();
@@ -109,7 +114,7 @@ export function PropertiesWidget(props: Props) {
             style={{ flex: "auto" }}
             resultSelectorProps={resultSelectorProps}
             status={
-              filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter
+              searchText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter
             }
           />
           <ToggleSwitch
@@ -127,7 +132,7 @@ export function PropertiesWidget(props: Props) {
             imodel={imodel}
             rulesetId={rulesetId}
             filtering={{
-              filter: filterText,
+              filter: searchText,
               onlyFavorites: isFavoritesFilterActive,
               activeHighlight,
               onFilteringStateChanged,
@@ -191,13 +196,13 @@ function FilterablePropertyGrid({
     selectionStorage: unifiedSelectionContext.storage,
   });
 
-  const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
+  const { filter: searchText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
   const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
   const [filteringDataProvider, setFilteringDataProvider] = useState<FilteringPropertyDataProvider>();
   useEffect(() => {
-    const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
-    const labelFilterer = new LabelPropertyDataFilterer(filterText);
-    const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
+    const valueFilterer = new DisplayValuePropertyDataFilterer(searchText);
+    const labelFilterer = new LabelPropertyDataFilterer(searchText);
+    const categoryFilterer = new PropertyCategoryLabelFilterer(searchText);
     const favoriteFilterer = new FavoritePropertiesDataFilterer({
       source: dataProvider,
       favoritesScope: FAVORITES_SCOPE,
@@ -219,7 +224,7 @@ function FilterablePropertyGrid({
     return () => {
       filteringDataProv[Symbol.dispose]();
     };
-  }, [dataProvider, filterText, onlyFavorites]);
+  }, [dataProvider, searchText, onlyFavorites]);
 
   const { value: filteringResult } = useDebouncedAsyncValue(
     useCallback(async () => {
@@ -279,8 +284,8 @@ function FilterablePropertyGrid({
         orientation={Orientation.Horizontal}
         horizontalOrientationMinWidth={500}
         highlight={
-          filterText && filterText.length !== 0
-            ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
+          searchText && searchText.length !== 0
+            ? { highlightedText: searchText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
             : undefined
         }
         isPropertyEditingEnabled={true}
@@ -420,7 +425,7 @@ function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Fie
   }, [field, imodel]);
   const { value: isFieldFavorite } = useDebouncedAsyncValue(
     useCallback(
-      async () => field && Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE),
+      async () => Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE),
       [field, props.imodel],
     ),
   );

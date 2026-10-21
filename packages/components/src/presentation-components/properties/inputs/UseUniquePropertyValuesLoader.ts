@@ -7,20 +7,15 @@ import "../../common/DisposePolyfill.js";
 
 import { useEffect, useMemo, useState } from "react";
 import { from, mergeMap, toArray } from "rxjs";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SelectOption } from "@itwin/itwinui-react";
-import {
-  DisplayValue,
-  DisplayValueGroup,
-  Field,
-  FieldDescriptor,
-  Keys,
-  KeySet,
-  Ruleset,
-} from "@itwin/presentation-common";
+import { DisplayValue, KeySet } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { translate, UniqueValue } from "../../common/Utils.js";
+import { translate } from "../../common/Utils.js";
 import { FILTER_WARNING_OPTION, ItemsLoader, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectOption } from "@itwin/itwinui-react";
+import type { DisplayValueGroup, Field, FieldDescriptor, Keys, Ruleset } from "@itwin/presentation-common";
+import type { UniqueValue } from "../../common/Utils.js";
 
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
@@ -28,7 +23,7 @@ interface UseUniquePropertyValuesLoaderProps {
   field?: Field;
   descriptorInputKeys?: Keys;
   typeName: string;
-  filterText?: string;
+  searchText?: string;
   selectedValues?: string[];
 }
 
@@ -44,7 +39,7 @@ export function useUniquePropertyValuesLoader({
   field,
   descriptorInputKeys,
   typeName,
-  filterText,
+  searchText,
   selectedValues,
 }: UseUniquePropertyValuesLoaderProps) {
   const [itemsLoader, setItemsLoader] = useState<ItemsLoader<UniqueValue> | undefined>();
@@ -79,18 +74,18 @@ export function useUniquePropertyValuesLoader({
 
   // On filter text change, check if more items need to be loaded
   useEffect(() => {
-    if (!filterText || !itemsLoader) {
+    if (!searchText || !itemsLoader) {
       return;
     }
 
     const timeout = setTimeout(() => {
-      void itemsLoader.loadItems(filterText);
+      void itemsLoader.loadItems(searchText);
     }, 250);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [itemsLoader, filterText]);
+  }, [itemsLoader, searchText]);
 
   return {
     selectOptions: useMemo<SelectOption<string>[]>(() => {

@@ -6,15 +6,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { Format, FormatterSpec, ParserSpec } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelApp } from "@itwin/core-frontend";
+import { Format } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext.js";
 import { QuantityEditorName } from "../../../presentation-components/properties/editors/EditorNames.js";
 import { QuantityPropertyEditor } from "../../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
+
+import type { FormattingUnitSystemChangedArgs, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import type { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
 
 const createRecord = ({
   initialValue,

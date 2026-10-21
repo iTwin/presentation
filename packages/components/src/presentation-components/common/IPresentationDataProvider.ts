@@ -8,7 +8,7 @@
 
 import "./DisposePolyfill.js";
 
-import { IModelConnection } from "@itwin/core-frontend";
+import type { IModelConnection } from "@itwin/core-frontend";
 
 /**
  * Interface for a presentation data provider

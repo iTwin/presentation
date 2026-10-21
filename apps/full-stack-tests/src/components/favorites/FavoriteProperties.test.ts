@@ -4,17 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyData } from "@itwin/components-react";
-import {
-  IModelApp,
-  IModelConnection,
-  ITwinIdArg,
-  PreferenceArg,
-  PreferenceKeyArg,
-  TokenArg,
-} from "@itwin/core-frontend";
-import { Field, KeySet } from "@itwin/presentation-common";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import {
   createFavoritePropertiesStorage,
@@ -22,8 +13,13 @@ import {
   FavoritePropertiesScope,
   Presentation,
 } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { TestIModelConnection } from "../../TestIModelSetup.js";
+
+import type { PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyData } from "@itwin/components-react";
+import type { IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, TokenArg } from "@itwin/core-frontend";
+import type { Field } from "@itwin/presentation-common";
 
 describe("Favorite properties", () => {
   const FAVORITES_CATEGORY_NAME = "Favorite";

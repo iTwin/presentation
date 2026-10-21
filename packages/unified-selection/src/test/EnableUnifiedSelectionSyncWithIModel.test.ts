@@ -5,29 +5,26 @@
 
 import { createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BeEvent, BeUiEvent, Id64Arg } from "@itwin/core-bentley";
-import {
-  ECSqlQueryDef,
-  ECSqlQueryExecutor,
-  ECSqlQueryReaderOptions,
-  ECSqlQueryRow,
-  EventArgs,
-  Props,
-} from "@itwin/presentation-shared";
+import { BeEvent, BeUiEvent, type Id64Arg } from "@itwin/core-bentley";
 import {
   enableUnifiedSelectionSyncWithIModel,
-  EnableUnifiedSelectionSyncWithIModelProps,
   IModelSelectionHandler,
 } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
-import { HiliteSet, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
-import { Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
-import {
+import { Selectables } from "../unified-selection/Selectable.js";
+import { createStorage } from "../unified-selection/SelectionStorage.js";
+import { CoreSelectionSetEventType } from "../unified-selection/types/IModel.js";
+import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+
+import type { ECSqlQueryExecutor, ECSqlQueryRow, EventListener } from "@itwin/presentation-shared";
+import type { EnableUnifiedSelectionSyncWithIModelProps } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
+import type { HiliteSet, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
+import type { Selectable, SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type {
   StorageSelectionChangesListener,
   StorageSelectionChangeType,
 } from "../unified-selection/SelectionChangeEvent.js";
-import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
-import { CoreSelectableIds, CoreSelectionSetEventType } from "../unified-selection/types/IModel.js";
-import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
+import type { SelectionStorage } from "../unified-selection/SelectionStorage.js";
+import type { CoreSelectableIds } from "../unified-selection/types/IModel.js";
 
 describe("enableUnifiedSelectionSyncWithIModel", () => {
   const selectionStorage = {
@@ -91,16 +88,16 @@ describe("IModelSelectionHandler", () => {
 
   function createSelectionStorage() {
     const stub = {
-      addToSelection: vi.fn<(props: Props<SelectionStorage["addToSelection"]>) => void>(),
-      removeFromSelection: vi.fn<(props: Props<SelectionStorage["removeFromSelection"]>) => void>(),
-      replaceSelection: vi.fn<(props: Props<SelectionStorage["replaceSelection"]>) => void>(),
-      clearSelection: vi.fn<(props: Props<SelectionStorage["clearSelection"]>) => void>(),
+      addToSelection: vi.fn<SelectionStorage["addToSelection"]>(),
+      removeFromSelection: vi.fn<SelectionStorage["removeFromSelection"]>(),
+      replaceSelection: vi.fn<SelectionStorage["replaceSelection"]>(),
+      clearSelection: vi.fn<SelectionStorage["clearSelection"]>(),
       getSelection: vi
-        .fn<(props: { imodelKey: string }) => Selectables>()
+        .fn<SelectionStorage["getSelection"]>()
         .mockReturnValue({ custom: new Map(), instanceKeys: new Map() }),
-      getSelectionLevels: vi.fn<(props: { imodelKey: string }) => number[]>().mockReturnValue([]),
-      selectionChangeEvent: new BeUiEvent<EventArgs<SelectionStorage["selectionChangeEvent"]>>(),
-      clearStorage: vi.fn<(props: { imodelKey: string }) => void>(),
+      getSelectionLevels: vi.fn<SelectionStorage["getSelectionLevels"]>().mockReturnValue([]),
+      selectionChangeEvent: new BeUiEvent<Parameters<EventListener<SelectionStorage["selectionChangeEvent"]>>[0]>(),
+      clearStorage: vi.fn<SelectionStorage["clearStorage"]>(),
     };
     return {
       ...stub,
@@ -178,13 +175,7 @@ describe("IModelSelectionHandler", () => {
     hiliteSet?: ReturnType<typeof createHiliteSet>;
   }) {
     return {
-      createQueryReader:
-        vi.fn<
-          (
-            query: ECSqlQueryDef,
-            options?: ECSqlQueryReaderOptions,
-          ) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-        >(),
+      createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>(),
       classDerivesFrom: vi.fn<(cn: string, parentCn: string) => Promise<boolean> | boolean>(),
       key: "test",
       get hiliteSet() {

@@ -4,21 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ResolvablePromise } from "presentation-test-utilities";
-import {
-  asapScheduler,
-  asyncScheduler,
-  defer,
-  from,
-  Observable,
-  ObservableInput,
-  queueScheduler,
-  scheduled,
-  SchedulerLike,
-  Subscription,
-  throwError,
-} from "rxjs";
+import { asapScheduler, asyncScheduler, defer, from, queueScheduler, scheduled, throwError } from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler.js";
+
+import type { Observable, ObservableInput, SchedulerLike, Subscription } from "rxjs";
 
 describe("SubscriptionScheduler", () => {
   const concurrentSubscriptions = 3;

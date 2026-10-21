@@ -6,13 +6,14 @@
  * @module Core
  */
 
-import {
+import { createCombinedDiagnosticsHandler } from "@itwin/presentation-frontend";
+
+import type {
   ClientDiagnosticsHandler,
   ClientDiagnosticsOptions,
   DiagnosticsLoggerSeverity,
   DiagnosticsOptions,
 } from "@itwin/presentation-common";
-import { createCombinedDiagnosticsHandler } from "@itwin/presentation-frontend";
 
 /**
  * Settings for capturing diagnostics data.

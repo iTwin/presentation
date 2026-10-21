@@ -10,7 +10,7 @@
 import "./PresentationTreeNodeRenderer.scss";
 
 import classnames from "classnames";
-import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
+import { TreeNodeRenderer } from "@itwin/components-react";
 import { TreeNode } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
@@ -20,6 +20,8 @@ import {
   isPresentationInfoTreeNodeItem,
   isPresentationTreeNodeItem,
 } from "../PresentationTreeNodeItem.js";
+
+import type { TreeNodeRendererProps } from "@itwin/components-react";
 
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.

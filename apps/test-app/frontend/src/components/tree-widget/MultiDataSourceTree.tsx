@@ -4,48 +4,56 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { XMLParser } from "fast-xml-parser";
-import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Guid, GuidString, Id64String } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { Guid } from "@itwin/core-bentley";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createHierarchyFilteringHelper,
+  createHierarchyProvider,
+  createHierarchySearchHelper,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  HierarchySearchTree,
+  mergeProviders,
+} from "@itwin/presentation-hierarchies";
+import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
+import { SampleRpcInterface } from "@test-app/common";
+
+import type { ComponentPropsWithoutRef, ReactElement } from "react";
+import type { GuidString, Id64String } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   GetHierarchyNodesProps,
-  HierarchyFilteringPath,
-  HierarchyNode,
-  HierarchyNodeIdentifier,
+  HierarchyLevelDefinition,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
-  mergeProviders,
+  HierarchySearchPath,
 } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
-import {
-  createBisInstanceLabelSelectClauseFactory,
-  createCachingECClassHierarchyInspector,
-  ECSql,
-  IInstanceLabelSelectClauseFactory,
-  InstanceKey,
-  IPrimitiveValueFormatter,
-  Props,
-} from "@itwin/presentation-shared";
-import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
-import { SampleRpcInterface } from "@test-app/common";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import type { TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { IInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
 
-export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
+export function MultiDataSourceTree({
+  imodel,
+  ...props
+}: {
+  imodel: IModelConnection;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => setIModelAccess(createIModelAccess(imodel)), [imodel]);
 
@@ -57,45 +65,56 @@ export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnec
 }
 
 function createIModelAccess(imodel: IModelConnection) {
-  const schemas = MyAppFrontend.getSchemaContext(imodel);
-  const schemaProvider = createECSchemaProvider(schemas);
+  const schemaProvider = createECSchemaProvider(imodel);
   return {
     imodelKey: imodel.key,
     ...schemaProvider,
-    ...createCachingECClassHierarchyInspector({ schemaProvider }),
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
 }
 
 const RSS_PROVIDER = createRssHierarchyProvider();
 
-function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
-  const [filter, setFilter] = useState("");
+function Tree({
+  imodelAccess,
+  height,
+  width,
+  treeLabel,
+}: {
+  imodelAccess: IModelAccess;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
+  const [searchText, setSearchText] = useState("");
   const [componentId] = useState(() => Guid.createValue());
-  const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
+  const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
     return async () => {
-      if (!filter) {
+      if (!searchText) {
         return undefined;
       }
-      return Promise.all([
-        getModelsHierarchyFilteringPaths({ imodelAccess, filter, componentId, componentName: "MultiDataSourceTree" }),
-        RSS_PROVIDER.getFilteredPaths(filter),
-      ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
+      const searchTreeBuilder = HierarchySearchTree.createBuilder();
+      for await (const path of getModelsHierarchySearchPaths({
+        imodelAccess,
+        searchText,
+        componentId,
+        componentName: "MultiDataSourceTree",
+      })) {
+        searchTreeBuilder.accept({ path });
+      }
+      for await (const path of RSS_PROVIDER.getSearchPaths(searchText)) {
+        searchTreeBuilder.accept({ path });
+      }
+      return searchTreeBuilder.getTree();
     };
-  }, [filter, imodelAccess, componentId]);
+  }, [searchText, imodelAccess, componentId]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
     throw new Error("Unified selection context is not available");
   }
 
-  const {
-    rootNodes,
-    isLoading,
-    reloadTree,
-    setFormatter: _,
-    ...treeProps
-  } = useUnifiedSelectionTree({
+  const { isLoading, ...treeProps } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     createSelectableForGenericNode: useCallback<
       NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>
@@ -121,7 +140,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
         }),
       [imodelAccess],
     ),
-    getFilteredPaths,
+    getSearchPaths,
     onHierarchyLoadError: (props) => {
       // eslint-disable-next-line no-console
       console.error(props.error);
@@ -129,29 +148,39 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
   });
 
   const renderContent = () => {
-    if (rootNodes && rootNodes.length === 0 && filter) {
+    if (treeProps.rootErrorRendererProps) {
+      return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+    }
+    if (!treeProps.treeRendererProps) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching filter text {filter}</Text>
+          <Text isMuted> Loading </Text>
+        </Flex>
+      );
+    }
+
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted>There are no nodes matching search text {searchText}</Text>
         </Flex>
       );
     }
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer
-          rootNodes={rootNodes ?? []}
-          {...treeProps}
-          reloadTree={reloadTree}
-          getIcon={getIcon}
+        <StrataKitTreeRenderer
+          {...treeProps.treeRendererProps}
           selectionMode={"extended"}
+          treeLabel={treeLabel}
+          getTreeItemProps={(node) => ({ decorations: getIcon(node) })}
         />
       </Flex.Item>
     );
   };
 
   const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined && !isLoading) {
+    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isLoading) {
       return <></>;
     }
     return (
@@ -185,7 +214,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
   return (
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <DebouncedSearchBox onChange={setFilter} />
+        <DebouncedSearchBox onChange={setSearchText} />
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}
@@ -223,22 +252,18 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
 }
 
 function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }) {
-  const labels = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-  const clauses = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labels });
   return createPredicateBasedHierarchyDefinition({
-    classHierarchyInspector: imodelAccess,
+    imodelAccess,
     hierarchy: {
-      rootNodes: async () => [
+      rootNodes: async ({ createSelectClause }) => [
         {
           fullClassName: "BisCore.Subject",
           query: {
             ecsql: `
-              SELECT ${await clauses.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: {
-                  selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }),
-                },
+                nodeLabel: { of: { classAlias: "this", className: "BisCore.Subject" } },
                 hasChildren: true,
                 extendedData: { nodeType: "root-subject" },
               })}
@@ -251,17 +276,17 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
       childNodes: [
         {
           parentInstancesNodePredicate: "BisCore.Subject",
-          definitions: async () => [
+          definitions: async ({
+            createSelectClause,
+          }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
             {
               fullClassName: "BisCore.Model",
               query: {
                 ecsql: `
-                  SELECT ${await clauses.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
-                    nodeLabel: {
-                      selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
-                    },
+                    nodeLabel: { of: { classAlias: "this", className: "BisCore.Model" } },
                     grouping: { byClass: true },
                     extendedData: { nodeType: "model" },
                   })}
@@ -273,17 +298,15 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
         },
         {
           parentInstancesNodePredicate: "BisCore.Model",
-          definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => [
+          definitions: async ({ parentNode, createSelectClause }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
-              fullClassName: "BisCore.Model",
+              fullClassName: "BisCore.Model" as const,
               query: {
                 ecsql: `
-                  SELECT ${await clauses.createSelectClause({
+                  SELECT ${await createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
-                    nodeLabel: {
-                      selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
-                    },
+                    nodeLabel: { of: { classAlias: "this", className: "BisCore.Model" } },
                     grouping: { byClass: true },
                     extendedData: { nodeType: "model" },
                   })}
@@ -296,7 +319,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
         },
       ],
     },
-    postProcessNode: async (node) => {
+    postProcessNode: async ({ node }) => {
       if (HierarchyNode.isClassGroupingNode(node)) {
         return { ...node, extendedData: { nodeType: "model-class" } };
       }
@@ -304,37 +327,41 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchyFilteringPaths({
+async function* getModelsHierarchySearchPaths({
   imodelAccess,
-  filter,
+  searchText,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  searchText: string;
   componentId: string;
   componentName: string;
-}): Promise<HierarchyFilteringPath[]> {
-  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
-  const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory, componentId, componentName }),
-    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory, componentId, componentName })),
-  ]);
-  return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
+}): AsyncIterableIterator<HierarchySearchPath> {
+  const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess });
+  const [rootSubjectPathPromise, modelPaths] = [
+    getRootSubjectSearchedPath({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
+    getModelsSearchPaths({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
+  ];
+  const rootSubjectPath = await rootSubjectPathPromise;
+  if (rootSubjectPath) {
+    yield rootSubjectPath;
+  }
+  yield* modelPaths;
 }
-async function* getModelsFilteringPaths({
+async function* getModelsSearchPaths({
   imodelAccess,
-  filter,
+  searchText,
   labelsFactory,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  searchText: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentId: string;
   componentName: string;
-}): AsyncIterableIterator<HierarchyFilteringPath> {
+}): AsyncIterableIterator<HierarchySearchPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
     className: "BisCore.Model",
@@ -369,7 +396,7 @@ async function* getModelsFilteringPaths({
       FROM ModelsHierarchy mh
       WHERE mh.ParentId IS NULL
     `,
-      bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+      bindings: [{ type: "string", value: searchText.replace(/[%_\\]/g, "\\$&") }],
     },
     { restartToken: `${componentName}/${componentId}/models-paths` },
   );
@@ -380,19 +407,19 @@ async function* getModelsFilteringPaths({
         { className: "BisCore.Subject", id: "0x1", imodelKey: imodelAccess.imodelKey },
         ...path.reverse().map((k) => ({ ...k, imodelKey: imodelAccess.imodelKey })),
       ],
-      options: { autoExpand: true },
+      options: { reveal: true },
     };
   }
 }
-async function getRootSubjectFilteredPath({
+async function getRootSubjectSearchedPath({
   imodelAccess,
-  filter,
+  searchText,
   labelsFactory,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  searchText: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentId: string;
   componentName: string;
@@ -406,7 +433,7 @@ async function getRootSubjectFilteredPath({
         ${await labelsFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject", selectorsConcatenator: ECSql.createConcatenatedValueStringSelector })} LIKE '%' || ? || '%' ESCAPE '\\'
         AND this.ECInstanceId = 0x1
     `,
-      bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+      bindings: [{ type: "string", value: searchText.replace(/[%_\\]/g, "\\$&") }],
     },
     { restartToken: `${componentName}/${componentId}/subject-path` },
   );
@@ -414,8 +441,8 @@ async function getRootSubjectFilteredPath({
   return row ? [{ className: "BisCore.Subject", id: row.id, imodelKey: imodelAccess.imodelKey }] : undefined;
 }
 
-function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
-  switch (node.extendedData?.nodeType) {
+function getIcon(node: TreeNode): ReactElement | undefined {
+  switch (node.nodeData.extendedData?.nodeType) {
     case "root-subject":
       return <SvgImodelHollow />;
     case "model-class":
@@ -431,7 +458,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
 }
 
 function createRssHierarchyProvider(): HierarchyProvider & {
-  getFilteredPaths: (filter: string) => Promise<HierarchyFilteringPath[]>;
+  getSearchPaths: (filter: string) => AsyncIterableIterator<HierarchySearchPath>;
 } {
   let feedPromise: Promise<{ title?: string; items: Array<{ title?: string; guid: GuidString }> }> | undefined;
   async function getFeed() {
@@ -446,39 +473,28 @@ function createRssHierarchyProvider(): HierarchyProvider & {
     return feed;
   }
 
-  let filter: HierarchyFilteringPath[] | undefined;
-  return {
-    hierarchyChanged: new BeEvent(),
-
-    async getFilteredPaths(filterString: string): Promise<HierarchyFilteringPath[]> {
+  let search: HierarchySearchTree[] | undefined;
+  return createHierarchyProvider(({ hierarchyChanged }) => ({
+    async *getSearchPaths(searchText: string): AsyncIterableIterator<HierarchySearchPath> {
       const feed = await getFeed();
-      if (!feed) {
-        return [];
+      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
+        yield { path: [{ type: "generic", id: "rss-root", source: "rss" }], options: { reveal: true } };
       }
-      const paths = new Array<HierarchyNodeIdentifiersPath>();
-
-      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
-        paths.push([{ type: "generic", id: "rss-root", source: "rss" }]);
-      }
-
-      feed.items.forEach((item) => {
-        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
-          paths.push([
-            { type: "generic", id: "rss-root", source: "rss" },
-            { type: "generic", id: `rss-${item.guid}`, source: "rss" },
-          ]);
+      for (const item of feed.items) {
+        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
+          yield {
+            path: [
+              { type: "generic", id: "rss-root", source: "rss" },
+              { type: "generic", id: `rss-${item.guid}`, source: "rss" },
+            ],
+            options: { reveal: true },
+          };
         }
-      });
-
-      return paths.map((path) => ({ path, options: { autoExpand: true } }));
+      }
     },
 
     async *getNodes({ parentNode }: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
       const feed = await getFeed();
-      if (!feed) {
-        return;
-      }
-
       async function* generateNodes(): AsyncIterableIterator<HierarchyNode & { key: GenericNodeKey }> {
         if (!parentNode) {
           yield {
@@ -506,29 +522,27 @@ function createRssHierarchyProvider(): HierarchyProvider & {
           }
         }
       }
+      const searchHelper =
+        !parentNode || HierarchyNode.isGeneric(parentNode)
+          ? createHierarchySearchHelper(search, parentNode)
+          : undefined;
 
-      const filteringHelper = createHierarchyFilteringHelper(filter, parentNode);
-      if (!filteringHelper.hasFilter) {
+      if (!searchHelper?.hasSearch) {
         yield* generateNodes();
         return;
       }
 
-      const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers()!;
+      const targetNodeKeys = searchHelper.getChildNodeSearchIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
-          yield { ...node, ...filteringHelper.createChildNodeProps({ nodeKey: node.key }) };
+          yield { ...node, ...searchHelper.createChildNodeProps({ nodeKey: node.key }) };
         }
       }
     },
 
-    async *getNodeInstanceKeys(
-      _props: Omit<GetHierarchyNodesProps, "ignoreCache">,
-    ): AsyncIterableIterator<InstanceKey> {},
-
-    setFormatter(_formatter: IPrimitiveValueFormatter | undefined): void {},
-
-    setHierarchyFilter(props: { paths: HierarchyFilteringPath[] } | undefined): void {
-      filter = props?.paths;
+    setHierarchySearch(props: { paths: HierarchySearchTree[] } | undefined): void {
+      search = props?.paths;
+      hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
     },
-  };
+  }));
 }

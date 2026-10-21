@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps } from "@itwin/components-react";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { Input } from "@itwin/itwinui-react";
-import { WithConstraints } from "../../common/ContentBuilder.js";
-import { PropertyEditorAttributes } from "../editors/Common.js";
 import { applyNumericConstraints, getDecimalRoundingError, getMinMaxFromPropertyConstraints } from "./Utils.js";
+
+import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
+import type { PropertyEditorProps } from "@itwin/components-react";
+import type { WithConstraints } from "../../common/ContentBuilder.js";
+import type { PropertyEditorAttributes } from "../editors/Common.js";
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -72,7 +74,7 @@ function parsePrimitiveValue(value: string): PrimitiveValue {
 
 function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   const value = propertyRecord.value;
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }

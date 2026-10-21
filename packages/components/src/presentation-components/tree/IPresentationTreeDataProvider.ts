@@ -7,15 +7,15 @@
  * @module Tree
  */
 
-import { ActiveMatchInfo, ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
+import type { ActiveMatchInfo, ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   HierarchyRequestOptions,
   InstanceFilterDefinition,
   NodeKey,
   NodePathElement,
 } from "@itwin/presentation-common";
-import { IPresentationDataProvider } from "../common/IPresentationDataProvider.js";
+import type { IPresentationDataProvider } from "../common/IPresentationDataProvider.js";
 
 /**
  * Presentation tree data provider.

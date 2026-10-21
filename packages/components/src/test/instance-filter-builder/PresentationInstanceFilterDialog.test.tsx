@@ -9,15 +9,11 @@ import { PropertyValueFormat as AbstractPropertyValueFormat } from "@itwin/appui
 import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
-import {
-  PresentationInstanceFilterDialog,
-  PresentationInstanceFilterPropertiesSource,
-} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
+import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
 import { createTestECClassInfo, stubSchemaViewForClasses, stubVirtualization } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -39,6 +35,10 @@ import {
   waitForElement,
   within,
 } from "../TestUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationInstanceFilterPropertiesSource } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubVirtualization();

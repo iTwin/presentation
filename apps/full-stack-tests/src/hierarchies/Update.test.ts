@@ -22,18 +22,12 @@ import {
   SubjectOwnsSubjects,
   withEditTxn,
 } from "@itwin/core-backend";
-import { BeEvent, Guid, Id64String, OpenMode } from "@itwin/core-bentley";
+import { BeEvent, Guid, OpenMode } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
   EmptyLocalization,
-  ExternalSourceAspectProps,
   IModel,
   IModelReadRpcInterface,
-  IpcListener,
-  IpcSocketBackend,
-  IpcSocketFrontend,
-  RelationshipProps,
-  RemoveFunction,
   RpcConfiguration,
   RpcManager,
 } from "@itwin/core-common";
@@ -41,11 +35,21 @@ import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-front
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { ECSql, normalizeFullClassName } from "@itwin/presentation-shared";
 import { createFileNameFromString, setupOutputFileLocation } from "../FilenameUtils.js";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
-import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
+import { createIModelAccess, createProvider } from "./Utils.js";
+
+import type { Id64String } from "@itwin/core-bentley";
+import type {
+  ExternalSourceAspectProps,
+  IpcListener,
+  IpcSocketBackend,
+  IpcSocketFrontend,
+  RelationshipProps,
+  RemoveFunction,
+} from "@itwin/core-common";
+import type { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 describe("Hierarchies", () => {
   describe("Updating hierarchies upon iModel change", () => {
@@ -84,7 +88,7 @@ describe("Hierarchies", () => {
     });
 
     beforeEach(async (ctx) => {
-      const fileName = createFileNameFromString(ctx.task.name);
+      const fileName = createFileNameFromString(`${ctx.task.suite!.fullTestName!}`);
       const filePath = setupOutputFileLocation(fileName);
 
       if (fs.existsSync(filePath)) {
@@ -129,7 +133,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
               }),
             ],
           });
@@ -143,7 +147,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "test subject",
               }),
             ],
@@ -155,7 +159,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "modified label",
               }),
             ],
@@ -170,7 +174,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "test subject",
               }),
             ],
@@ -189,7 +193,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "",
               }),
             ],
@@ -201,7 +205,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "test aspect",
               }),
             ],
@@ -217,7 +221,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "test aspect",
               }),
             ],
@@ -229,7 +233,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "modified aspect",
               }),
             ],
@@ -245,7 +249,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "test aspect",
               }),
             ],
@@ -257,7 +261,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
                 label: "",
               }),
             ],
@@ -276,7 +280,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }],
+                instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }],
               }),
             ],
           });
@@ -291,7 +295,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }],
+                instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }],
                 label: "test. IsPrivate: false",
               }),
             ],
@@ -303,7 +307,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }],
+                instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }],
                 label: "test. IsPrivate: true",
               }),
             ],
@@ -319,7 +323,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }],
+                instanceKeys: [{ className: normalizeFullClassName(PhysicalModel.classFullName), id: modelId }],
               }),
             ],
           });
@@ -342,7 +346,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
               }),
             ],
           });
@@ -359,7 +363,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subject1Id }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subject1Id }],
               }),
             ],
           });
@@ -370,7 +374,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subject2Id }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subject2Id }],
               }),
             ],
           });
@@ -386,7 +390,7 @@ describe("Hierarchies", () => {
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
+                instanceKeys: [{ className: normalizeFullClassName(Subject.classFullName), id: subjectId }],
               }),
             ],
           });
@@ -399,27 +403,20 @@ describe("Hierarchies", () => {
         function createRootSubjectChildrenProvider(
           props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" },
         ) {
-          const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel() {
+            async defineHierarchyLevel({ createSelectClause }) {
               return [
                 {
-                  fullClassName: Subject.classFullName,
+                  fullClassName: normalizeFullClassName(Subject.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await selectQueryFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: props.label === "codeValue" ? `this.CodeValue` : `aspect.Identifier` },
                       })}
-                      FROM ${createClassECSqlSelector(Subject.classFullName)} AS this
-                      LEFT JOIN ${createClassECSqlSelector(ExternalSourceAspect.classFullName)} AS aspect ON aspect.Element.Id = this.ECInstanceId
+                      FROM ${ECSql.createClassSelector(normalizeFullClassName(Subject.classFullName))} AS this
+                      LEFT JOIN ${ECSql.createClassSelector(normalizeFullClassName(ExternalSourceAspect.classFullName))} AS aspect ON aspect.Element.Id = this.ECInstanceId
                       WHERE this.Parent.Id = 0x1
                     `,
                   },
@@ -434,27 +431,20 @@ describe("Hierarchies", () => {
         }
 
         function createRootSubjectReferredElementsProvider() {
-          const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel() {
+            async defineHierarchyLevel({ createSelectClause }) {
               return [
                 {
-                  fullClassName: Element.classFullName,
+                  fullClassName: normalizeFullClassName(Element.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await selectQueryFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.CodeValue` },
                       })}
-                      FROM ${createClassECSqlSelector(Element.classFullName)} AS this
-                      JOIN ${createClassECSqlSelector(ElementRefersToElements.classFullName)} AS rel ON rel.TargetECInstanceId = this.ECInstanceId
+                      FROM ${ECSql.createClassSelector(normalizeFullClassName(Element.classFullName))} AS this
+                      JOIN ${ECSql.createClassSelector(normalizeFullClassName(ElementRefersToElements.classFullName))} AS rel ON rel.TargetECInstanceId = this.ECInstanceId
                       WHERE rel.SourceECInstanceId = 0x1
                     `,
                   },
@@ -470,42 +460,36 @@ describe("Hierarchies", () => {
 
         function createPhysicalModelsProvider() {
           const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({
-            imodelAccess,
-            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-              classHierarchyInspector: imodelAccess,
-            }),
-          });
           const hierarchy: HierarchyDefinition = {
-            async defineHierarchyLevel() {
+            async defineHierarchyLevel({ createSelectClause }) {
               return [
                 {
-                  fullClassName: Subject.classFullName,
+                  fullClassName: normalizeFullClassName(Subject.classFullName),
                   query: {
                     ecsql: `
-                      SELECT ${await selectQueryFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: {
                           selector: ECSql.createConcatenatedValueJsonSelector([
                             await ECSql.createPrimitivePropertyValueSelectorProps({
                               schemaProvider: imodelAccess,
-                              propertyClassName: Element.classFullName,
+                              propertyClassName: normalizeFullClassName(Element.classFullName),
                               propertyClassAlias: "modeledElement",
                               propertyName: "CodeValue",
                             }),
                             { type: "String", value: ". IsPrivate: " },
                             await ECSql.createPrimitivePropertyValueSelectorProps({
                               schemaProvider: imodelAccess,
-                              propertyClassName: PhysicalModel.classFullName,
+                              propertyClassName: normalizeFullClassName(PhysicalModel.classFullName),
                               propertyClassAlias: "this",
                               propertyName: "IsPrivate",
                             }),
                           ]),
                         },
                       })}
-                      FROM ${createClassECSqlSelector(PhysicalModel.classFullName)} AS this
-                      JOIN ${createClassECSqlSelector(Element.classFullName)} AS modeledElement ON modeledElement.ECInstanceId = this.ModeledElement.Id
+                      FROM ${ECSql.createClassSelector(normalizeFullClassName(PhysicalModel.classFullName))} AS this
+                      JOIN ${ECSql.createClassSelector(normalizeFullClassName(Element.classFullName))} AS modeledElement ON modeledElement.ECInstanceId = this.ModeledElement.Id
                     `,
                   },
                 },

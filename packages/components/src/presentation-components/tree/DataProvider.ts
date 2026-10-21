@@ -9,46 +9,38 @@
 
 import "../common/DisposePolyfill.js";
 
-import {
-  DelayLoadedTreeNodeItem,
-  PageOptions,
-  PropertyFilterRuleGroupOperator,
-  TreeNodeItem,
-} from "@itwin/components-react";
+import { PropertyFilterRuleGroupOperator } from "@itwin/components-react";
 import { Logger } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
+import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { createDiagnosticsOptions } from "../common/Diagnostics.js";
+import { getRulesetId, memoize, translate } from "../common/Utils.js";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createInstanceFilterDefinition } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import { InfoTreeNodeItemType, isPresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
+import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
+
+import type { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   ClassInfo,
   ClientDiagnosticsOptions,
   FilterByTextHierarchyRequestOptions,
   HierarchyRequestOptions,
   InstanceFilterDefinition,
   Node,
-  NodeKey,
   NodePathElement,
   Paged,
-  PresentationError,
-  PresentationStatus,
+  PageOptions,
   RequestOptionsWithRuleset,
   Ruleset,
 } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics.js";
-import { LocalizationKey } from "../common/LocalizedStrings.js";
-import { getRulesetId, memoize, translate } from "../common/Utils.js";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
-import {
-  createInstanceFilterDefinition,
-  PresentationInstanceFilterInfo,
-} from "../instance-filter-builder/PresentationFilterBuilder.js";
-import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
-import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
-import {
-  InfoTreeNodeItemType,
-  isPresentationTreeNodeItem,
-  PresentationTreeNodeItem,
-} from "./PresentationTreeNodeItem.js";
-import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
+import type { DiagnosticsProps } from "../common/Diagnostics.js";
+import type { LocalizationKey } from "../common/LocalizedStrings.js";
+import type { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import type { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
+import type { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import type { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -190,7 +182,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   public dispose() {
     this.#dispose();
   }

@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Format, FormatType, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatType } from "@itwin/core-quantity";
 import {
   applyNumericConstraints,
   getDecimalRoundingError,
   getMinMaxFromPropertyConstraints,
   getPersistenceUnitRoundingError,
 } from "../../../presentation-components/properties/inputs/Utils.js";
+
+import type { ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 
 describe("getDecimalRoundingError", () => {
   it("returns correct results", () => {

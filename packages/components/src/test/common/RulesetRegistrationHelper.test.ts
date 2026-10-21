@@ -7,10 +7,12 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BeDuration } from "@itwin/core-bentley";
 import { RegisteredRuleset } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
+import { Presentation } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../presentation-components/common/RulesetRegistrationHelper.js";
 import { createTestRuleset } from "../_helpers/Common.js";
 import { createStub } from "../TestUtils.js";
+
+import type { PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 
 describe("RulesetRegistrationHelper", () => {
   const rulesetManager = { add: createStub<RulesetManager["add"]>() };

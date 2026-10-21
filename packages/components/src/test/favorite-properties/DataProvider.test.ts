@@ -3,17 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it, Mocked, MockInstance, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyData } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider.js";
 import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils.js";
-import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import { createMocked } from "../TestUtils.js";
+
+import type { Mocked, MockInstance } from "vitest";
+import type { PropertyData } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
+import type { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 describe("FavoritePropertiesDataProvider", () => {
   let provider: FavoritePropertiesDataProvider;

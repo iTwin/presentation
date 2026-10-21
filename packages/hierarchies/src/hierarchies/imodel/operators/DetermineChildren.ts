@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concatMap, map, Observable, of } from "rxjs";
+import { concatMap, map, of } from "rxjs";
 import {
   createNodeIdentifierForLogging,
   createOperatorLoggingNamespace,
@@ -11,7 +11,9 @@ import {
 } from "../../internal/Common.js";
 import { log } from "../../internal/LoggingUtils.js";
 import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
-import { ProcessedHierarchyNode } from "../IModelHierarchyNode.js";
+
+import type { Observable } from "rxjs";
+import type { ProcessedHierarchyNode } from "../IModelHierarchyNode.js";
 
 const OPERATOR_NAME = "DetermineChildren";
 /** @internal */

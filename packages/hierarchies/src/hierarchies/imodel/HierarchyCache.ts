@@ -3,10 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
-import { InstanceKey } from "@itwin/presentation-shared";
+import { LRUDictionary, LRUMap } from "@itwin/core-bentley";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { GetHierarchyNodesProps } from "../HierarchyProvider.js";
+
+import type { LRUCache } from "@itwin/core-bentley";
+import type { InstanceKey } from "@itwin/presentation-shared";
+import type { GetHierarchyNodesProps } from "../HierarchyProvider.js";
 
 interface HierarchyCacheEntry<T> {
   /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */
@@ -33,15 +35,15 @@ export class HierarchyCache<T> {
   private createCacheKeys(
     props: Omit<GetHierarchyNodesProps, "parentNode"> & {
       parentNode: { key: HierarchyNodeKey; parentKeys: HierarchyNodeKey[] } | undefined;
-      filteredInstanceKeys?: InstanceKey[];
+      targetInstanceKeys?: InstanceKey[];
     },
   ) {
     function createVariationKey() {
-      const { instanceFilter, hierarchyLevelSizeLimit, filteredInstanceKeys } = props;
-      if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined && filteredInstanceKeys === undefined) {
+      const { instanceFilter, hierarchyLevelSizeLimit, targetInstanceKeys } = props;
+      if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined && targetInstanceKeys === undefined) {
         return undefined;
       }
-      return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit, filteredInstanceKeys });
+      return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit, targetInstanceKeys });
     }
 
     if (!props.parentNode) {

@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { IModelConnection } from "@itwin/core-frontend";
 import { PresentationLabelsProvider } from "@itwin/presentation-components";
+import { TestIModelConnection } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { TestIModelConnection } from "../../TestIModelSetup.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
 
 describe("LabelsProvider", async () => {
   let imodel: IModelConnection;

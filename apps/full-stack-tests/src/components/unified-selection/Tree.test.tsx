@@ -12,19 +12,24 @@ import {
 import { useCallback, useState } from "react";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import { withEditTxn } from "@itwin/core-backend";
+import { IModelApp } from "@itwin/core-frontend";
+import { KeySet, RuleTypes } from "@itwin/presentation-common";
 import {
   PresentationTree,
-  PresentationTreeEventHandlerProps,
   UnifiedSelectionTreeEventHandler,
   usePresentationTreeState,
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, fireEvent, render, waitFor } from "../../RenderUtils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
+import { toColonInstanceKey } from "../Utils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import type { PresentationTreeEventHandlerProps } from "@itwin/presentation-components";
 
 describe("Learning snippets", async () => {
   describe("Tree", () => {
@@ -69,20 +74,21 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       let elementKey: InstanceKey;
-      const { imodel } = await buildTestIModel(async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-        elementKey = insertPhysicalElement({
-          builder,
-          fullClassNameSeparator: ":",
-          userLabel: "My Element",
-          modelId: modelKey.id,
-          categoryId: categoryKey.id,
+      const { imodelConnection } = await buildTestIModel(async (imodel) => {
+        withEditTxn(imodel, (txn) => {
+          const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
+          elementKey = insertPhysicalElement({
+            txn,
+            userLabel: "My Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
         });
       });
 
       // render the component
-      const { container, getByRole } = render(<MyTree imodel={imodel} />);
+      const { container, getByRole } = render(<MyTree imodel={imodelConnection} />);
       await waitFor(() => getByRole("tree"));
 
       // find & expand the model node
@@ -92,12 +98,12 @@ describe("Learning snippets", async () => {
       const elementNode = await waitFor(() => getNodeByLabel(container, "My Element"));
 
       // test Unified Selection -> Tree selection synchronization
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!])));
+      act(() => Presentation.selection.replaceSelection("", imodelConnection, new KeySet([modelKey!])));
       await waitFor(() => {
         expect(isNodeSelectedInTree(modelNode)).toBe(true);
         expect(isNodeSelectedInTree(elementNode)).toBe(false);
       });
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKey!])));
+      act(() => Presentation.selection.replaceSelection("", imodelConnection, new KeySet([elementKey!])));
       await waitFor(() => {
         expect(isNodeSelectedInTree(modelNode)).toBe(false);
         expect(isNodeSelectedInTree(elementNode)).toBe(true);
@@ -106,11 +112,11 @@ describe("Learning snippets", async () => {
       // test Tree selection -> Unified Selection synchronization
       fireEvent.click(modelNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodel)).toEqual([modelKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([toColonInstanceKey(modelKey)]);
       });
       fireEvent.click(elementNode);
       await waitFor(() => {
-        expect(getInstanceKeysInUnifiedSelection(imodel)).toEqual([elementKey]);
+        expect(getInstanceKeysInUnifiedSelection(imodelConnection)).toEqual([toColonInstanceKey(elementKey)]);
       });
     });
   });

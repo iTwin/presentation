@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { PageOptions } from "@itwin/components-react";
-import { LabelDefinition, Node } from "@itwin/presentation-common";
+import { LabelDefinition } from "@itwin/presentation-common";
 import {
   createPartialTreeNodeItem,
   createTreeNodeItem,
@@ -13,6 +12,9 @@ import {
   pageOptionsUiToPresentation,
 } from "../../presentation-components/tree/Utils.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
+
+import type { PageOptions } from "@itwin/components-react";
+import type { Node } from "@itwin/presentation-common";
 
 describe("Utils", () => {
   describe("createTreeNodeItem", () => {

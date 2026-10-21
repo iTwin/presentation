@@ -3,32 +3,44 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, Observable, of } from "rxjs";
-import { Guid, Id64String } from "@itwin/core-bentley";
-import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
-import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
-import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
-import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
-import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+import { from, mergeMap, of } from "rxjs";
+import { Guid } from "@itwin/core-bentley";
+import { parseInstanceLabel } from "@itwin/presentation-shared";
+import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
+import { log } from "../internal/LoggingUtils.js";
+
+import type { Observable, ObservedValueOf } from "rxjs";
+import type { Id64String } from "@itwin/core-bentley";
+import type { EC, ECSqlQueryDef, Props } from "@itwin/presentation-shared";
+import type { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
+import type { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import type { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+
+const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.QueryRows`;
 
 interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   query: ECSqlQueryDef;
   limit?: number | "unbounded";
-  parser?: RxjsNodeParser;
+  parser?: (props: Pick<Props<RxjsNodeParser>, "row">) => ReturnType<RxjsNodeParser>;
 }
 
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
   const { queryExecutor, query, limit } = props;
-  const parser: RxjsNodeParser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
+  const parser = props.parser ?? ((row) => of(defaultNodesParser(row)));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
     restartToken: `readNodes/${Guid.createValue()}`,
     ...(limit !== undefined ? { limit } : undefined),
   };
 
-  return from(queryExecutor.createQueryReader(query, config)).pipe(mergeMap((row) => parser(row)));
+  return from(queryExecutor.createQueryReader(query, config)).pipe(
+    /* v8 ignore next -- @preserve */
+    log({ category: LOGGING_NAMESPACE, severity: "trace", message: (row) => JSON.stringify(row) }),
+    mergeMap((row) => parser({ row })),
+  );
 }
 
 /**
@@ -36,7 +48,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
  * @internal
  */
 export interface RowDef {
-  [NodeSelectClauseColumnNames.FullClassName]: string;
+  [NodeSelectClauseColumnNames.FullClassName]: EC.FullClassNameDotNotation;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
   [NodeSelectClauseColumnNames.DisplayLabel]: string;
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
@@ -49,7 +61,9 @@ export interface RowDef {
 }
 
 /** @internal */
-export function defaultNodesParser(row: { [columnName: string]: any }): SourceInstanceHierarchyNode {
+export const defaultNodesParser: (
+  props: Pick<Props<RxjsNodeParser>, "row">,
+) => ObservedValueOf<ReturnType<RxjsNodeParser>> = ({ row }) => {
   const typedRow = row as RowDef;
   const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
@@ -59,14 +73,11 @@ export function defaultNodesParser(row: { [columnName: string]: any }): SourceIn
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and generic nodes
     label: parseInstanceLabel(typedRow.DisplayLabel),
-    key: {
-      type: "instances",
-      instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
-    },
+    key: { type: "instances", instanceKeys: [{ className: typedRow.FullClassName, id: typedRow.ECInstanceId }] },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
     ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),
     ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
     ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };
-}
+};

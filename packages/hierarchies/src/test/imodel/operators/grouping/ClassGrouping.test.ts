@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 import { createClassGroups } from "../../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
 import {
   createECSchemaProviderStub,
@@ -12,6 +11,8 @@ import {
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
 } from "../../../Utils.js";
+
+import type { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
 
 describe("ClassGrouping", () => {
   let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;
@@ -81,6 +82,21 @@ describe("ClassGrouping", () => {
       ],
       ungrouped: [],
     });
+  });
+
+  it("creates a class group when parent class casing differs", async () => {
+    const node = createTestProcessedInstanceNode({
+      key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+      parentKeys: [createTestGenericNodeKey({ id: "x" })],
+      processingParams: { grouping: { byClass: true } },
+    });
+    schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "A" });
+    const parentNode = createTestProcessedGroupingNode({ key: { type: "class-grouping", className: "TestSchema.a" } });
+
+    const result = await createClassGroups(schemaProvider, parentNode, [node]);
+
+    expect(result.grouped).toHaveLength(1);
+    expect(result.ungrouped).toEqual([]);
   });
 
   it("creates different groups for nodes of different classes", async () => {

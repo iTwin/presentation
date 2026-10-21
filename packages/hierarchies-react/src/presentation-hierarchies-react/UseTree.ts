@@ -3,52 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  GenericInstanceFilter,
-  HierarchyFilteringPath,
-  HierarchyNode,
-  HierarchyProvider,
-} from "@itwin/presentation-hierarchies";
-import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "./internal/TreeActions.js";
-import {
-  isTreeModelHierarchyNode,
-  isTreeModelInfoNode,
-  TreeModel,
-  TreeModelHierarchyNode,
-  TreeModelNode,
-  TreeModelRootNode,
-} from "./internal/TreeModel.js";
-import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import { TreeModel } from "./internal/TreeModel.js";
+import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection.js";
 import { safeDispose } from "./internal/Utils.js";
-import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
-import { SelectionChangeType } from "./UseSelectionHandler.js";
+import { useLatest } from "./Utils.js";
 
-/**
- * A data structure that contains information about a single hierarchy level.
- * @public
- */
-export interface HierarchyLevelDetails {
-  /** The parent node whose hierarchy level's information is contained in this data structure */
-  hierarchyNode: HierarchyNode | undefined;
-
-  /** A function to get instance keys of the hierarchy level. */
-  getInstanceKeysIterator: (props?: {
-    instanceFilter?: GenericInstanceFilter;
-    hierarchyLevelSizeLimit?: number | "unbounded";
-  }) => AsyncIterableIterator<InstanceKey>;
-
-  /** Get the limit of how many nodes can be loaded in this hierarchy level. */
-  sizeLimit?: number | "unbounded";
-  /** Set the limit of how many nodes can be loaded in this hierarchy level. */
-  setSizeLimit: (value: undefined | number | "unbounded") => void;
-
-  /** Get the active instance filter applied to this hierarchy level. */
-  instanceFilter?: GenericInstanceFilter;
-  /** Set the instance filter to apply to this hierarchy level */
-  setInstanceFilter: (filter: GenericInstanceFilter | undefined) => void;
-}
+import type { GenericInstanceFilter, HierarchyProvider, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import type { TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
+import type { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import type { RootErrorRendererProps, TreeRendererProps } from "./Renderers.js";
+import type { ErrorInfo, TreeNode } from "./TreeNode.js";
+import type { SelectionChangeType } from "./UseSelectionHandler.js";
 
 /**
  * A React hook that creates state for a tree component.
@@ -89,18 +58,24 @@ export function useUnifiedSelectionTree({
   ...props
 }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getTreeModelNode, ...rest } = useTreeInternal(props);
-  return {
-    ...rest,
-    ...useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode, createSelectableForGenericNode }),
-  };
+  const selectionProps = useUnifiedTreeSelection({
+    sourceName,
+    selectionStorage,
+    getTreeModelNode,
+    createSelectableForGenericNode,
+  });
+  if (rest.rootErrorRendererProps === undefined && rest.treeRendererProps?.rootNodes) {
+    return { ...rest, treeRendererProps: { ...rest.treeRendererProps, ...selectionProps } };
+  }
+  return rest;
 }
 
 /** @public */
 export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
-  /** Provides paths to filtered nodes. */
-  getFilteredPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchyFilteringPath[] | undefined>;
+  /** Provides paths to search nodes. */
+  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchySearchTree[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -114,75 +89,66 @@ export interface UseTreeProps {
   }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */
   onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void;
-}
-
-/**
- * Options for doing either full or a sub tree reload.
- * @public
- */
-interface ReloadTreeOptions {
-  /** Specifies parent node under which sub tree should be reloaded. */
-  parentNodeId: string | undefined;
-
   /**
-   * Specifies how current tree state should be handled:
-   * - `keep` - try to keep current tree state (expanded/collapsed nodes, instance filters, etc.).
-   * - `discard` - do not try to keep current tree state. Tree model will be update after nodes are reloaded.
-   * - `reset` - remove subtree from the model before reloading and reload nodes ignoring cache.
-   *
-   * Defaults to `"keep"`.
+   * Callback to set custom TreeNode errors.
+   * Errors returned from this callback are combined with internal errors when populating `TreeNode.errors`.
    */
-  state?: "keep" | "discard" | "reset";
+  getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[];
 }
 
 /** @public */
-export interface UseTreeResult {
+export type UseTreeResult = {
   /**
-   * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
-   */
-  rootNodes: PresentationTreeNode[] | undefined;
-  /**
-   * Specifies whether tree is loading or not. It is set to `true` when initial tree load is in progress
-   * or tree is reloading.
+   * Specifies whether a tree load is in progress.
    */
   isLoading: boolean;
   /**
-   * A function that should be called to reload the tree.
+   * Get a tree node by id
    */
-  reloadTree: (options?: ReloadTreeOptions) => void;
+  getNode: (nodeId: string) => TreeNode | undefined;
   /**
-   * A function that should be called to either expand or collapse the given node.
+   * Sets a formatter for the primitive values that are displayed in the hierarchy.
    */
-  expandNode: (nodeId: string, isExpanded: boolean) => void;
-  /**
-   * A function that should be called to select nodes in the tree.
-   * @param nodeIds Ids of the nodes that are selected.
-   * @param changeType Type of change that occurred for the selection.
-   */
-  selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
-  /** Determines whether a given node is selected. */
-  isNodeSelected: (nodeId: string) => boolean;
-  /** Get a tree node by id */
-  getNode: (nodeId: string) => PresentationHierarchyNode | undefined;
-  /** Returns hierarchy level details for a given node ID. */
-  getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
-  /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
-}
+} & RendererProps;
+
+/**.
+ * @alpha
+ */
+type RendererProps =
+  | {
+      /**
+       * An object containing information used to render root error handling UI.
+       * Use in combination with `RootErrorRenderer` or your custom implementation.
+       * Defined when root nodes fail to load.
+       */
+      rootErrorRendererProps: RootErrorRendererProps;
+    }
+  | {
+      /** Is undefined when rootNodes were successfully loaded or are in initial loading process. */
+      rootErrorRendererProps: undefined;
+      /**
+       * An object containing information used to render tree.
+       * Use with `TreeRenderer` or your custom implementation.
+       * Is undefined on initial loading process.
+       */
+      treeRendererProps?: TreeRendererProps;
+    };
 
 interface TreeState {
   model: TreeModel;
-  rootNodes: Array<PresentationTreeNode> | undefined;
+  rootNodes: Array<TreeNode> | undefined;
 }
 
 function useTreeInternal({
   getHierarchyProvider,
-  getFilteredPaths,
+  getSearchPaths,
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
+  getTreeNodeErrors,
 }: UseTreeProps): UseTreeResult & {
-  getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined;
+  getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined;
 } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
@@ -191,13 +157,17 @@ function useTreeInternal({
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
   const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
+  const getTreeNodeErrorsRef = useLatest(getTreeNodeErrors);
 
   const [actions] = useState<TreeActions>(
+    // eslint-disable-next-line react-hooks/refs
     () =>
       new TreeActions(
         (model) => {
           const rootNodes =
-            model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
+            model.parentChildMap.get(undefined) !== undefined
+              ? generateTreeStructure(undefined, model, getTreeNodeErrorsRef.current)
+              : undefined;
           setState({ model, rootNodes });
         },
         (actionType, duration) => onPerformanceMeasuredRef.current?.(actionType, duration),
@@ -212,10 +182,11 @@ function useTreeInternal({
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
     const removeHierarchyChangedListener = provider.hierarchyChanged.addListener((hierarchyChangeArgs) => {
-      const shouldDiscardState = hierarchyChangeArgs?.filterChange?.newFilter !== undefined;
+      const shouldDiscardState = hierarchyChangeArgs.searchChange?.newSearch !== undefined;
       actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
     });
     actions.setHierarchyProvider(provider);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHierarchyProvider(provider);
     return () => {
       removeHierarchyChangedListener();
@@ -224,32 +195,32 @@ function useTreeInternal({
     };
   }, [actions, getHierarchyProvider]);
 
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   useEffect(() => {
-    let disposed = false;
+    let disposed = false as boolean;
     const controller = new AbortController();
     void (async () => {
       if (!hierarchyProvider) {
         return;
       }
 
-      if (!getFilteredPaths) {
-        hierarchyProvider.setHierarchyFilter(undefined);
-        // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
+      if (!getSearchPaths) {
+        hierarchyProvider.setHierarchySearch(undefined);
+        // reload tree in case hierarchy provider does not use hierarchy search to load initial nodes
         actions.reloadTree({ state: "keep" });
-        setIsFiltering(false);
+        setIsSearching(false);
         return;
       }
 
-      setIsFiltering(true);
-      let paths: HierarchyFilteringPath[] | undefined;
+      setIsSearching(true);
+      let paths: HierarchySearchTree[] | undefined;
       try {
-        paths = await getFilteredPaths({ abortSignal: controller.signal });
+        paths = await getSearchPaths({ abortSignal: controller.signal });
       } catch {
       } finally {
         if (!disposed) {
-          hierarchyProvider.setHierarchyFilter(paths ? { paths } : undefined);
-          setIsFiltering(false);
+          hierarchyProvider.setHierarchySearch(paths ? { paths } : undefined);
+          setIsSearching(false);
         }
       }
     })();
@@ -257,9 +228,9 @@ function useTreeInternal({
       controller.abort();
       disposed = true;
     };
-  }, [hierarchyProvider, getFilteredPaths, actions]);
+  }, [hierarchyProvider, getSearchPaths, actions]);
 
-  const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
+  const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined>(
     (nodeId: string) => {
       return actions.getNode(nodeId);
     },
@@ -267,38 +238,38 @@ function useTreeInternal({
   );
 
   const getNode = useCallback(
-    (nodeId: string): PresentationHierarchyNode | undefined => {
+    (nodeId: string): TreeNode | undefined => {
       const node = actions.getNode(nodeId);
-      if (!node || !isTreeModelHierarchyNode(node)) {
+      if (!node || node.id === undefined) {
         return undefined;
       }
-      return createPresentationHierarchyNode(node, state.model);
+      return createTreeNode(node, state.model, getTreeNodeErrorsRef.current);
     },
-    [actions, state.model],
+    [actions, getTreeNodeErrorsRef, state.model],
   );
 
-  const expandNode = useCallback<UseTreeResult["expandNode"]>(
+  const expandNode = useCallback<TreeRendererProps["expandNode"]>(
     (nodeId: string, isExpanded: boolean) => {
       actions.expandNode(nodeId, isExpanded);
     },
     [actions],
   );
 
-  const reloadTree = useCallback<UseTreeResult["reloadTree"]>(
+  const reloadTree = useCallback<TreeRendererProps["reloadTree"]>(
     (options) => {
       actions.reloadTree(options);
     },
     [actions],
   );
 
-  const selectNodes = useCallback<UseTreeResult["selectNodes"]>(
+  const selectNodes = useCallback<TreeRendererProps["selectNodes"]>(
     (nodeIds: Array<string>, changeType: SelectionChangeType) => {
       actions.selectNodes(nodeIds, changeType);
     },
     [actions],
   );
 
-  const isNodeSelected = useCallback<UseTreeResult["isNodeSelected"]>(
+  const isNodeSelected = useCallback<TreeRendererProps["isNodeSelected"]>(
     (nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId),
     [state],
   );
@@ -306,7 +277,6 @@ function useTreeInternal({
   const setFormatter = useCallback<UseTreeResult["setFormatter"]>(
     (formatter: IPrimitiveValueFormatter | undefined) => {
       currentFormatter.current = formatter;
-      /* v8 ignore if -- @preserve */
       if (!hierarchyProvider) {
         return;
       }
@@ -316,10 +286,10 @@ function useTreeInternal({
     [hierarchyProvider],
   );
 
-  const getHierarchyLevelDetails = useCallback<UseTreeResult["getHierarchyLevelDetails"]>(
+  const getHierarchyLevelDetails = useCallback<TreeRendererProps["getHierarchyLevelDetails"]>(
     (nodeId) => {
       const node = actions.getNode(nodeId);
-      if (!hierarchyProvider || !node || isTreeModelInfoNode(node)) {
+      if (!hierarchyProvider || !node) {
         return undefined;
       }
       const hierarchyNode = node.nodeData;
@@ -344,16 +314,31 @@ function useTreeInternal({
     [actions, hierarchyProvider],
   );
 
-  return {
-    rootNodes: state.rootNodes,
-    isLoading: !!state.model.rootNode.isLoading || isFiltering,
+  const renderProps: RendererProps = useMemo(() => {
+    if (state.model.rootNode.error) {
+      return { rootErrorRendererProps: { error: state.model.rootNode.error, reloadTree, getHierarchyLevelDetails } };
+    }
+    return {
+      rootErrorRendererProps: undefined,
+      treeRendererProps: state.rootNodes
+        ? { rootNodes: state.rootNodes, expandNode, selectNodes, isNodeSelected, reloadTree, getHierarchyLevelDetails }
+        : undefined,
+    };
+  }, [
     expandNode,
+    getHierarchyLevelDetails,
+    isNodeSelected,
     reloadTree,
     selectNodes,
-    isNodeSelected,
+    state.model.rootNode.error,
+    state.rootNodes,
+  ]);
+
+  return {
+    ...renderProps,
+    isLoading: !!state.model.rootNode.isLoading || isSearching,
     getTreeModelNode,
     getNode,
-    getHierarchyLevelDetails,
     setFormatter,
   };
 }
@@ -361,7 +346,8 @@ function useTreeInternal({
 function generateTreeStructure(
   parentNodeId: string | undefined,
   model: TreeModel,
-): Array<PresentationTreeNode> | undefined {
+  getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[],
+): Array<TreeNode> | undefined {
   const currentChildren = model.parentChildMap.get(parentNodeId);
   if (!currentChildren) {
     return undefined;
@@ -369,58 +355,40 @@ function generateTreeStructure(
 
   return currentChildren
     .map((childId) => model.idToNode.get(childId))
-    .filter((node): node is TreeModelNode => !!node)
-    .map<PresentationTreeNode>((node) => {
-      if (isTreeModelHierarchyNode(node)) {
-        return createPresentationHierarchyNode(node, model);
-      }
-
-      if (node.type === "ResultSetTooLarge") {
-        return { id: node.id, parentNodeId, type: node.type, resultSetSizeLimit: node.resultSetSizeLimit };
-      }
-
-      if (node.type === "NoFilterMatches") {
-        return { id: node.id, parentNodeId, type: node.type };
-      }
-
-      return { id: node.id, parentNodeId, type: node.type, message: node.message };
+    .filter((node): node is TreeModelHierarchyNode => !!node)
+    .map<TreeNode>((node) => {
+      return createTreeNode(node, model, getTreeNodeErrors);
     });
 }
 
-function createPresentationHierarchyNode(
+function createTreeNode(
   modelNode: TreeModelHierarchyNode,
   model: TreeModel,
-): PresentationHierarchyNode {
-  let children: Array<PresentationTreeNode> | undefined;
+  getTreeNodeErrors?: (node: HierarchyNode) => ErrorInfo[],
+): TreeNode {
+  const allErrors = [
+    // internal errors
+    ...(modelNode.error ? [modelNode.error] : []),
+    // external errors
+    ...(getTreeNodeErrors?.(modelNode.nodeData) ?? []),
+  ];
+
+  let children: Array<TreeNode> | undefined;
   return {
-    ...toPresentationHierarchyNodeBase(modelNode),
+    id: modelNode.id,
+    label: modelNode.label,
+    nodeData: modelNode.nodeData,
+    isLoading: !!modelNode.isLoading,
+    isExpanded: !!modelNode.isExpanded,
+    isFilterable:
+      !HierarchyNode.isGroupingNode(modelNode.nodeData) && !!modelNode.nodeData.supportsFiltering && modelNode.children,
+    isFiltered: !!modelNode.instanceFilter,
+    errors: allErrors,
     get children() {
       if (!children) {
-        children = generateTreeStructure(modelNode.id, model);
+        children = generateTreeStructure(modelNode.id, model, getTreeNodeErrors);
       }
       return children ? children : modelNode.children === true ? true : [];
     },
   };
-}
-
-function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<PresentationHierarchyNode, "children"> {
-  return {
-    id: node.id,
-    label: node.label,
-    nodeData: node.nodeData,
-    isLoading: !!node.isLoading,
-    isExpanded: !!node.isExpanded,
-    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
-    isFiltered: !!node.instanceFilter,
-    extendedData: node.nodeData.extendedData,
-  };
-}
-
-function useLatest<T>(value: T) {
-  const ref = useRef(value);
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
-
-  return ref;
 }

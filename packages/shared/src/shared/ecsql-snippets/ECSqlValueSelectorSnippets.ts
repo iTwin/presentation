@@ -4,8 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSchemaProvider, getClass, PrimitiveValueType } from "../Metadata.js";
-import { PrimitiveValue, TypedPrimitiveValue } from "../Values.js";
+import { getClass } from "../Metadata.js";
+import { parseFullClassName } from "../Utils.js";
+import { PrimitiveValue } from "../Values.js";
+
+import type { EC, ECSchemaProvider, PrimitiveValueType } from "../Metadata.js";
+import type { TypedPrimitiveValue } from "../Values.js";
 
 /**
  * Props for selecting a `TypedPrimitiveValue` using given ECSQL selector.
@@ -56,14 +60,14 @@ export async function createPrimitivePropertyValueSelectorProps({
   /** Access to schema information. */
   schemaProvider: ECSchemaProvider;
   /** Full class name of the property. Format: `SchemaName.ClassName`. */
-  propertyClassName: string;
+  propertyClassName: EC.FullClassNameDotNotation;
   /** Query alias of the class that contains the property. */
   propertyClassAlias: string;
   /** Name of the property to create `TypedPrimitiveValue` for. */
   propertyName: string;
 }): Promise<TypedPrimitiveValueSelectorProps> {
   const ecClass = await getClass(schemaProvider, propertyClassName);
-  const property = await ecClass.getProperty(propertyName);
+  const property = ecClass.getProperty(propertyName);
   if (!property) {
     throw new Error(`The property "${propertyName}" not found in class "${propertyClassName}".`);
   }
@@ -102,7 +106,7 @@ export async function createPrimitivePropertyValueSelectorProps({
         ...(extendedType ? { extendedType } : /* v8 ignore next */ {}),
       };
     case "Double":
-      const koqName = (await property.kindOfQuantity)?.fullName;
+      const koqName = property.kindOfQuantity?.fullName;
       return {
         selector: propertySelector,
         type: "Double",
@@ -165,6 +169,18 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
     case "boolean":
       return value ? "TRUE" : "FALSE";
   }
+}
+
+/**
+ * Converts a full class name (`SchemaName.ClassName`) into a
+ * bracket-quoted ECSQL class selector: `[SchemaName].[ClassName]`.
+ *
+ * @throws Error if the provided full class name is not valid.
+ * @public
+ */
+export function createClassSelector(fullClassName: EC.FullClassNameDotNotation): string {
+  const { schemaName, className } = parseFullClassName(fullClassName);
+  return `[${schemaName}].[${className}]`;
 }
 
 /**

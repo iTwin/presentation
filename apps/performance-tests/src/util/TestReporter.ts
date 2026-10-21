@@ -70,7 +70,7 @@ export default class TestReporter implements Reporter {
     this.#testInfo.push(info);
     if (state === "failed") {
       this.#hasFailures = true;
-      if (result.errors && result.errors.length > 0) {
+      if (result.errors.length > 0) {
         this.printErrors(result.errors);
       }
     }

@@ -3,27 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
-import {
+import { catchError, EMPTY, expand, filter, from, map, mergeMap, of, toArray } from "rxjs";
+import { createNodeId } from "./Utils.js";
+
+import type { Observable } from "rxjs";
+import type {
   GenericInstanceFilter,
   HierarchyNode,
   HierarchyProvider,
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
-import {
-  isTreeModelHierarchyNode,
-  TreeModelHierarchyNode,
-  TreeModelInfoNode,
-  TreeModelNode,
-  TreeModelRootNode,
-} from "./TreeModel.js";
-import { createNodeId } from "./Utils.js";
+import type { ErrorInfo } from "../TreeNode.js";
+import type { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 
 /** @internal */
-export interface LoadedTreePart {
-  parentId: string | undefined;
-  loadedNodes: TreeModelNode[];
-}
+export type LoadedTreePart = { parent: TreeModelHierarchyNode | TreeModelRootNode } & (
+  | { loadedNodes: TreeModelHierarchyNode[] }
+  | { error: ErrorInfo }
+);
 
 /** @internal */
 export interface HierarchyLevelOptions {
@@ -59,7 +56,6 @@ export class TreeLoader implements ITreeLoader {
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
   ) {
-    /* v8 ignore next -- @preserve */
     this._treeNodeIdFactory = treeNodeIdFactory ?? createNodeId;
   }
 
@@ -84,14 +80,24 @@ export class TreeLoader implements ITreeLoader {
       }),
     ).pipe(
       toArray(),
+      map((childNodes): LoadedTreePart => {
+        return instanceFilter && childNodes.length === 0
+          ? { parent, error: { id: `${infoNodeIdBase}-no-filter-matches`, type: "NoFilterMatches" as const } }
+          : { parent, loadedNodes: childNodes.map(treeModelNodesFactory) };
+      }),
       catchError((err) => {
-        const nodeProps = { id: `${infoNodeIdBase}-Unknown`, parentId: parent.id };
         let hierarchyLoadErrorType: "unknown" | "timeout" = "unknown";
         if (err instanceof Error) {
-          nodeProps.id = `${infoNodeIdBase}-${err.message}`;
           if (isRowsLimitError(err)) {
             this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
-            return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
+            return of({
+              parent,
+              error: {
+                id: `${infoNodeIdBase}-${err.message}`,
+                type: "ResultSetTooLarge" as const,
+                resultSetSizeLimit: err.limit,
+              },
+            });
           }
           if (isTimeoutError(err)) {
             hierarchyLoadErrorType = "timeout";
@@ -99,26 +105,27 @@ export class TreeLoader implements ITreeLoader {
         }
 
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
-        return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
+        return of({
+          parent,
+          error: {
+            id: `${infoNodeIdBase}-ChildrenLoad`,
+            type: "ChildrenLoad" as const,
+            message: "Failed to create hierarchy level",
+          },
+        });
       }),
-      map((childNodes): LoadedTreePart => ({
-        parentId: parent.id,
-        loadedNodes:
-          instanceFilter && childNodes.length === 0
-            ? [{ id: `${infoNodeIdBase}-no-filter-matches`, parentId: parent.id, type: "NoFilterMatches" as const }]
-            : childNodes.map(treeModelNodesFactory),
-      })),
     );
   }
 
   public loadNodes({ shouldLoadChildren, ...options }: LoadNodesOptions) {
     return this.loadChildren(options).pipe(
       expand((loadedPart) =>
-        from(
-          loadedPart.loadedNodes.filter(
-            (node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node),
-          ),
-        ).pipe(mergeMap((node) => this.loadChildren({ ...options, parent: node }))),
+        "loadedNodes" in loadedPart
+          ? from(loadedPart.loadedNodes).pipe(
+              filter((node) => shouldLoadChildren(node)),
+              mergeMap((node) => this.loadChildren({ ...options, parent: node })),
+            )
+          : EMPTY,
       ),
     );
   }
@@ -130,12 +137,8 @@ function createTreeModelNodesFactory({
 }: {
   buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
-}): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
-  return (node: TreeModelInfoNode | HierarchyNode) => {
-    if (!isHierarchyNode(node)) {
-      return node;
-    }
-
+}): (node: HierarchyNode) => TreeModelHierarchyNode {
+  return (node: HierarchyNode) => {
     const modelNode: TreeModelHierarchyNode = {
       id: treeNodeIdFactory(node),
       children: node.children,
@@ -146,13 +149,8 @@ function createTreeModelNodesFactory({
   };
 }
 
-function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is HierarchyNode {
-  return "key" in node && node.key !== undefined;
-}
-
 function isRowsLimitError(error: Error): error is RowsLimitExceededError {
-  const asRowsError = error as RowsLimitExceededError;
-  return asRowsError.limit !== undefined && asRowsError.message.includes("Query rows limit of");
+  return "limit" in error && error.message.includes("Query rows limit of");
 }
 
 function isTimeoutError(error: Error) {

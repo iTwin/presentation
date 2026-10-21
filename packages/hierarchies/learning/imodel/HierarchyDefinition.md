@@ -19,32 +19,27 @@ In its most simple form, a hierarchy definition may just have one `defineHierarc
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
+  HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, createSelectClause }) {
     // For root nodes, simply return one generic node
     if (!parentNode) {
       return [{ node: { key: "physical-elements", label: "Physical elements" } }];
     }
     // For the root node, return a query that selects all physical elements
     if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
-      const queryClauseFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },
@@ -63,9 +58,76 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 <!-- END EXTRACTION -->
 
+## Excluding instances of hidden classes
+
+Classes may be hidden from users through `CoreCustomAttributes.HiddenClass` or `CoreCustomAttributes.HiddenSchema` custom attributes. The library doesn't exclude their instances automatically - it's up to hierarchy definitions to do that in their queries. The `ECSql.createHiddenClassesFilter` function from `@itwin/presentation-shared` creates ECSQL conditions for that.
+
+Hiding is relative to the base class the filter is created for - if the base class itself is hidden, its instances are still returned, but instances of its hidden sub-classes are not. Values of `hasChildren`, supplied through `createSelectClause`, are used as-is, so custom selectors should exclude the same children as the child hierarchy level queries do:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyDefinitions.Imports, Presentation.Hierarchies.HierarchyDefinitions.HiddenClassesImports, Presentation.Hierarchies.HierarchyDefinitions.HiddenClasses], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import {
+  createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
+import { ECSql } from "@itwin/presentation-shared";
+
+const hierarchyDefinition: HierarchyDefinition = {
+  async defineHierarchyLevel({ parentNode, createSelectClause }) {
+    const parentIds =
+      parentNode && HierarchyNode.isInstancesNode(parentNode)
+        ? parentNode.key.instanceKeys.map(({ id }) => id)
+        : undefined;
+    // Create a filter that excludes instances of `BisCore.PhysicalElement` sub-classes, hidden through
+    // `HiddenClass` or `HiddenSchema` custom attributes. The tree of hidden classes is requested once and the
+    // filter can be used to create clauses for multiple aliases.
+    const hiddenClassesFilter = await ECSql.createHiddenClassesFilter({
+      schemaProvider: imodelAccess,
+      baseClassName: "BisCore.PhysicalElement",
+    });
+    const hiddenClassesClause = hiddenClassesFilter.createWhereClause("this");
+    // The `hasChildren` selector has to exclude the same children as the child hierarchy level query does
+    const childHiddenClassesClause = hiddenClassesFilter.createWhereClause("child");
+    return [
+      {
+        fullClassName: "BisCore.PhysicalElement",
+        query: {
+          ecsql: `
+            SELECT ${await createSelectClause({
+              ecClassId: { selector: "this.ECClassId" },
+              ecInstanceId: { selector: "this.ECInstanceId" },
+              nodeLabel: { selector: "this.UserLabel" },
+              hasChildren: {
+                selector: `IFNULL((
+                  SELECT 1
+                  FROM BisCore.PhysicalElement child
+                  WHERE child.Parent.Id = this.ECInstanceId ${childHiddenClassesClause ? `AND ${childHiddenClassesClause}` : ""}
+                  LIMIT 1
+                ), 0)`,
+              },
+            })}
+            FROM BisCore.PhysicalElement this
+            WHERE ${parentIds ? "InVirtualSet(?, this.Parent.Id)" : "this.Parent.Id IS NULL"}
+              ${hiddenClassesClause ? `AND ${hiddenClassesClause}` : ""}
+          `,
+          bindings: parentIds ? [{ type: "idset", value: parentIds }] : [],
+        },
+      },
+    ];
+  },
+};
+```
+
+<!-- END EXTRACTION -->
+
 ## Custom parsing
 
-By default, it's expected that the nodes' SELECT clause is created using `NodesQueryClauseFactory.createSelectClause` and then specifying `parseNode` callback in the hierarchy definition is not necessary, as the default parser knows how parse ECSQL rows.
+By default, it's expected that the nodes' SELECT clause is created using the `createSelectClause` function (available through `defineHierarchyLevel` props) and then specifying `parseNode` callback in the hierarchy definition is not necessary, as the default parser knows how to parse ECSQL rows.
 
 However, some hierarchy definitions may choose to write SELECT clause manually and then they need to provide a custom `parseNode` callback to parse the ECSQL result row into a `SourceInstanceHierarchyNode` object. Example:
 
@@ -74,9 +136,10 @@ However, some hierarchy definitions may choose to write SELECT clause manually a
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
+  HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
@@ -88,7 +151,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
-            // Define the query without using `NodesQueryClauseFactory` - we'll parse the results manually. But to create
+            // Define the query without using `createSelectClause` - we'll parse the results manually. But to create
             // an instances node we need at least a class name, instance id, and a label.
             ecsql: `
               SELECT
@@ -105,7 +168,7 @@ const hierarchyDefinition: HierarchyDefinition = {
     // Otherwise, return an empty array to indicate that there are no children
     return [];
   },
-  parseNode(row) {
+  parseNode({ row }) {
     // Parse the row into an instance node
     return {
       key: { type: "instances", instanceKeys: [{ className: row.ClassName, id: row.Id }] },
@@ -128,28 +191,23 @@ For example, the following code snippet shows how to use the `preProcessNode` ca
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
+  HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, createSelectClause }) {
     // For root nodes, return all physical elements
     if (!parentNode) {
-      const queryClauseFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },
@@ -163,7 +221,7 @@ const hierarchyDefinition: HierarchyDefinition = {
     // Otherwise, return an empty array to indicate that there are no children
     return [];
   },
-  async preProcessNode(node) {
+  async preProcessNode({ node }) {
     // The pre-processor queries an external service to get an external ID for the node
     // and either adds it to the node's extended data or omits the node from the hierarchy
     // if the external ID is not found.
@@ -189,28 +247,23 @@ For example, the following code snippet shows how to use the `postProcessNode` c
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
+  HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, createSelectClause }) {
     // For root nodes, return all physical elements grouped by class
     if (!parentNode) {
-      const queryClauseFactory = createNodesQueryClauseFactory({
-        imodelAccess,
-        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-          classHierarchyInspector: imodelAccess,
-        }),
-      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },
@@ -229,7 +282,7 @@ const hierarchyDefinition: HierarchyDefinition = {
     // Otherwise, return an empty array to indicate that there are no children
     return [];
   },
-  async postProcessNode(node) {
+  async postProcessNode({ node }) {
     // All instance nodes will have an iconId assigned in the query, but grouping nodes won't - do it here
     if (HierarchyNode.isClassGroupingNode(node)) {
       return { ...node, extendedData: { ...node.extendedData, iconId: "icon-class-group" } };
@@ -252,20 +305,15 @@ For example, the following code snippet shows how to define a hierarchy, similar
 
 ```ts
 import {
-  createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
+  DefineGenericNodeChildHierarchyLevelProps,
   HierarchyDefinition,
+  HierarchyLevelDefinition,
   HierarchyNode,
 } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({
-  imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  }),
-});
 const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
-  classHierarchyInspector: imodelAccess,
+  imodelAccess,
   hierarchy: {
     // For root nodes, simply return one generic node
     rootNodes: async () => [{ node: { key: "physical-elements", label: "Physical elements" } }],
@@ -273,12 +321,14 @@ const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
       {
         // For the root node, return a query that selects all physical elements
         parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
-        definitions: async () => [
+        definitions: async ({
+          createSelectClause,
+        }: DefineGenericNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> => [
           {
             fullClassName: "BisCore.PhysicalElement",
             query: {
               ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "x.ECClassId" },
                 ecInstanceId: { selector: "x.ECInstanceId" },
                 nodeLabel: { selector: "x.UserLabel" },

@@ -6,37 +6,38 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import {
-  isPropertyFilterRuleGroup,
+import { PropertyValueFormat } from "@itwin/appui-abstract";
+import { isPropertyFilterRuleGroup } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
+import { GenericInstanceFilter } from "@itwin/core-common";
+import { PresentationError, PresentationStatus, RelationshipPath } from "@itwin/presentation-common";
+import { deserializeUniqueValues, findField, serializeUniqueValues } from "../common/Utils.js";
+import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils.js";
+
+import type { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import type {
   PropertyFilter,
   PropertyFilterRule,
   PropertyFilterRuleGroup,
   PropertyFilterRuleGroupOperator,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
-import { assert } from "@itwin/core-bentley";
-import {
-  GenericInstanceFilter,
+import type {
   GenericInstanceFilterRelatedInstanceDescription,
   GenericInstanceFilterRelationshipStep,
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import {
+import type {
   ClassInfo,
   Descriptor,
   Field,
   NestedContentField,
-  PresentationError,
-  PresentationStatus,
   PropertiesField,
-  RelationshipPath,
   Value,
 } from "@itwin/presentation-common";
-import { deserializeUniqueValues, findField, serializeUniqueValues, UniqueValue } from "../common/Utils.js";
-import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils.js";
+import type { UniqueValue } from "../common/Utils.js";
 
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be
@@ -249,7 +250,7 @@ function createGenericInstanceFilterUniqueValueRules(filter: PresentationInstanc
   if (filter.operator !== "is-equal" && filter.operator !== "is-not-equal") {
     return undefined;
   }
-  if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
+  if (typeof filter.value?.value !== "string" || typeof filter.value.displayValue !== "string") {
     return undefined;
   }
   const result = createUniqueValueConditions(filter, filter.value.displayValue, filter.value.value);
@@ -467,7 +468,7 @@ function parseUniqueValuesRule(
 
   const uniqueValues: UniqueValue[] = [];
   for (const rule of rules) {
-    assert(rule.value?.displayValue !== undefined && rule.value.rawValue !== undefined);
+    assert(rule.value?.displayValue !== undefined);
     const displayValue = rule.value.displayValue;
     const value = rule.value.rawValue as Value;
 

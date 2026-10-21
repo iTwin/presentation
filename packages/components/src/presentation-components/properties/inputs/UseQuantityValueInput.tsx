@@ -3,14 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChangeEventHandler, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatterSpec, FormatType, ParserSpec } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { FormatType } from "@itwin/core-quantity";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { PropertyValueConstraints } from "../../common/ContentBuilder.js";
 import { applyNumericConstraints, getMinMaxFromPropertyConstraints, getPersistenceUnitRoundingError } from "./Utils.js";
+
+import type { ChangeEventHandler } from "react";
+import type { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
+import type { PropertyValueConstraints } from "../../common/ContentBuilder.js";
 
 /**
  * Value of kind of quantity property.
@@ -70,7 +73,7 @@ export function useQuantityValueInput({
     }) => void
   >(({ newHighPrecisionFormatter, newParser, newDefaultFormatter }) => {
     setState((prev): State => {
-      /* v8 ignore next 1 -- @preserve */
+      /* v8 ignore next -- @preserve */
       const defaultValue =
         prev.quantityValue.rawValue !== undefined
           ? newDefaultFormatter.applyFormatting(prev.quantityValue.rawValue)
@@ -103,7 +106,7 @@ export function useQuantityValueInput({
     const newValue = e.currentTarget.value;
     const parseResult = parser.parseToQuantityValue(newValue);
     const roundingError = getPersistenceUnitRoundingError(newValue, parser);
-    const defaultFormattedValue = parseResult.ok ? defaultFormatter?.applyFormatting(parseResult.value) : undefined;
+    const defaultFormattedValue = parseResult.ok ? defaultFormatter.applyFormatting(parseResult.value) : undefined;
     const rawValue = parseResult.ok
       ? applyNumericConstraints({ ...getMinMaxFromPropertyConstraints(constraints), value: parseResult.value })
       : undefined;
@@ -174,6 +177,8 @@ function useFormatterAndParser(
     const listeners = [
       IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser),
     ];
+    // note: `IModelApp.formatsProvider` may not be available in older versions of core
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (IModelApp.formatsProvider) {
       listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
     }

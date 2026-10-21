@@ -3,19 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, ReactElement, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
-import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
-import { ClassInfo, DefaultContentDisplayTypes, Descriptor, InstanceKey, KeySet } from "@itwin/presentation-common";
-import {
-  PresentationInstanceFilter,
-  PresentationInstanceFilterDialog,
-  PresentationInstanceFilterInfo,
-  PresentationInstanceFilterPropertiesSource,
-} from "@itwin/presentation-components";
+import { IModelApp } from "@itwin/core-frontend";
+import { DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
+import { PresentationInstanceFilter, PresentationInstanceFilterDialog } from "@itwin/presentation-components";
 import {
   createECSchemaProvider,
   createECSqlQueryExecutor,
@@ -23,31 +16,50 @@ import {
   registerTxnListeners,
 } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import {
-  HierarchyLevelDetails,
-  PresentationHierarchyNode,
-  useIModelUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
-import { TreeRenderer } from "@itwin/presentation-hierarchies-react/itwinui";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+  createLimitingECSqlQueryExecutor,
+  GenericInstanceFilter,
+  HierarchyNodeKey,
+} from "@itwin/presentation-hierarchies";
+import { LocalizationContextProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { createModelsTree } from "@itwin/presentation-tree-definitions";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
-import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { Button, CircularProgress, Stack, Switch, TextField, Typography } from "@mui/material";
+import { Icon } from "@stratakit/mui";
+import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
+import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
+
+import type { ComponentPropsWithoutRef } from "react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo, Descriptor, InstanceKey } from "@itwin/presentation-common";
+import type {
+  PresentationInstanceFilterInfo,
+  PresentationInstanceFilterPropertiesSource,
+} from "@itwin/presentation-components";
+import type { HierarchyLevelDetails, TreeNode } from "@itwin/presentation-hierarchies-react";
+import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
+import type { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
-export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
+export function StatelessTreeV2({
+  imodel,
+  ...props
+}: {
+  imodel: IModelConnection;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
-    const schemas = MyAppFrontend.getSchemaContext(imodel);
-    const schemaProvider = createECSchemaProvider(schemas);
+    const schemaProvider = createECSchemaProvider(imodel);
     setIModelAccess({
       imodelKey: imodel.key,
       ...schemaProvider,
-      ...createCachingECClassHierarchyInspector({ schemaProvider }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);
@@ -56,7 +68,11 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
     return null;
   }
 
-  return <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />;
+  return (
+    <LocalizationContextProvider localization={IModelApp.localization}>
+      <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />
+    </LocalizationContextProvider>
+  );
 }
 
 function Tree({
@@ -64,26 +80,23 @@ function Tree({
   imodelAccess,
   height,
   width,
+  treeLabel,
 }: {
   imodel: IModelConnection;
   imodelAccess: IModelAccess;
   height: number;
   width: number;
+  treeLabel: string;
 }) {
-  const [filter, setFilter] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const modelsTree = useMemo(() => createModelsTree({ imodelAccess }), [imodelAccess]);
 
-  const getFilteredPaths = useMemo<UseIModelTreeProps["getFilteredPaths"]>(() => {
-    return async ({ imodelAccess: filterIModelAccess, abortSignal }) => {
-      if (!filter) {
-        return undefined;
-      }
-      return ModelsTreeDefinition.createInstanceKeyPaths({
-        imodelAccess: filterIModelAccess,
-        label: filter,
-        abortSignal,
-      });
-    };
-  }, [filter]);
+  const getSearchPaths = useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
+    return async ({ abortSignal }) =>
+      searchText ? modelsTree.createSearchTree({ label: searchText, abortSignal }) : undefined;
+  }, [searchText, modelsTree]);
+
+  const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
 
   const [imodelChanged] = useState(new BeEvent<() => void>());
   useEffect(() => {
@@ -98,25 +111,31 @@ function Tree({
     throw new Error("Unified selection context is not available");
   }
 
-  const { rootNodes, isLoading, reloadTree, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
+  const { setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     sourceName: "StatelessTreeV2",
     imodelAccess,
     imodelChanged,
-    getFilteredPaths,
-    getHierarchyDefinition,
-    onPerformanceMeasured: (action, duration) => {
+    getSearchPaths,
+    getHierarchyDefinition: useCallback(() => modelsTree.definition, [modelsTree]),
+    getTreeNodeErrors: useCallback((node) => {
+      return [
+        { type: "Generic", id: `${node.label}-error-1`, message: `test error node`, isNodeExpandable: true },
+        { type: "Generic", id: `${node.label}-error-2`, message: `test error node 2`, isNodeExpandable: true },
+      ];
+    }, []),
+    onPerformanceMeasured: useCallback((action, duration) => {
       // eslint-disable-next-line no-console
       console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
-    },
+    }, []),
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
-  const toggleFormatter = () => {
+  const toggleFormatter = useCallback(() => {
     const newValue = !shouldUseCustomFormatter;
     setShouldUseCustomFormatter(newValue);
     setFormatter(newValue ? customFormatter : undefined);
-  };
+  }, [shouldUseCustomFormatter, setFormatter]);
 
   const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
@@ -161,71 +180,64 @@ function Tree({
   }, [filteringOptions]);
 
   const renderContent = () => {
-    if (rootNodes && rootNodes.length === 0 && filter) {
+    if (treeProps.rootErrorRendererProps) {
+      return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+    }
+
+    if (!treeProps.treeRendererProps) {
       return (
-        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching filter text {filter}</Text>
-        </Flex>
+        <Stack style={{ alignItems: "center", justifyContent: "center", height: "100%", gap: 8 }}>
+          <CircularProgress size={32} />
+          <Typography color="text.secondary">Loading</Typography>
+        </Stack>
+      );
+    }
+
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
+      return (
+        <Stack style={{ alignItems: "center", justifyContent: "center", height: "100%" }}>
+          <Typography color="text.secondary">There are no nodes matching search text {searchText}</Typography>
+        </Stack>
       );
     }
 
     return (
-      <TreeRenderer
-        {...treeProps}
-        rootNodes={rootNodes ?? []}
-        reloadTree={reloadTree}
-        onFilterClick={setFilteringOptions}
-        getIcon={getIcon}
+      <TreeRendererWithFilterAction
+        {...treeProps.treeRendererProps}
+        ref={treeRef}
+        filterHierarchyLevel={setFilteringOptions}
         selectionMode={"extended"}
-        size="small"
-        style={{ height: "100%", width: "100%" }}
+        treeLabel={treeLabel}
+        getTreeItemProps={(node) => ({ decorations: <Icon href={getIcon(node)} /> })}
       />
     );
   };
 
-  const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined && !isLoading) {
-      return <></>;
-    }
-    return (
-      <div
-        style={{
-          position: "absolute",
-          zIndex: 1000,
-          height: "inherit",
-          width: "100%",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            opacity: 0.5,
-            pointerEvents: "none",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "var(--iui-color-background-backdrop)",
-          }}
-        />
-        <ProgressRadial size="large" indeterminate />
-      </div>
-    );
-  };
-
   return (
-    <Flex flexDirection="column" style={{ width, height }}>
-      <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <DebouncedSearchBox onChange={setFilter} />
-        <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
+    <Stack style={{ width, height }}>
+      <Stack direction="row" spacing={1} style={{ width: "100%", padding: "0.5rem" }}>
+        <DebouncedSearchBox onChange={setSearchText} />
+        <Switch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
         {imodel.isBriefcaseConnection() ? (
           <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button>
         ) : null}
-      </Flex>
+        <Button
+          onClick={() => {
+            if (!treeRef.current) {
+              return;
+            }
+            const selectedElements = getSelectedElementIds(imodel);
+            treeRef.current.renameNode(
+              (node) =>
+                HierarchyNodeKey.isInstances(node.nodeData.key) &&
+                selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
+            );
+          }}
+        >
+          Rename selected node
+        </Button>
+      </Stack>
       {renderContent()}
-      {renderLoadingOverlay()}
       <PresentationInstanceFilterDialog
         imodel={imodel}
         isOpen={!!filteringOptions}
@@ -233,7 +245,7 @@ function Tree({
           if (!filteringOptions) {
             return;
           }
-          filteringOptions?.setInstanceFilter(toGenericFilter(info));
+          filteringOptions.setInstanceFilter(toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {
@@ -242,11 +254,11 @@ function Tree({
         propertiesSource={propertiesSource}
         initialFilter={getInitialFilter}
       />
-    </Flex>
+    </Stack>
   );
 }
 
-type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
+type SearchBoxProps = ComponentPropsWithoutRef<typeof TextField>;
 
 function DebouncedSearchBox({
   onChange,
@@ -256,12 +268,7 @@ function DebouncedSearchBox({
     return debounced(onChange, 500);
   }, [onChange]);
 
-  return (
-    <SearchBox
-      {...props}
-      inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }}
-    />
-  );
+  return <TextField {...props} placeholder="Search..." onChange={(e) => handleChange(e.currentTarget.value)} />;
 }
 
 function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
@@ -275,12 +282,8 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   };
 }
 
-function getHierarchyDefinition(props: Parameters<UseIModelTreeProps["getHierarchyDefinition"]>[0]) {
-  return new ModelsTreeDefinition(props);
-}
-
-const customFormatter: IPrimitiveValueFormatter = async (val) => {
-  return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
+const customFormatter: IPrimitiveValueFormatter = async ({ value }) => {
+  return `THIS_IS_FORMATTED_${JSON.stringify(value)}_THIS_IS_FORMATTED`;
 };
 
 function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
@@ -318,24 +321,31 @@ function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericIn
   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 }
 
-function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
-  if (node.extendedData?.imageId === undefined) {
+const subjectSvg = new URL("@stratakit/icons/bis-subject.svg", import.meta.url).href;
+const classSvg = new URL("@stratakit/icons/bis-class.svg", import.meta.url).href;
+const modelSvg = new URL("@stratakit/icons/model-cube.svg", import.meta.url).href;
+const categorySvg = new URL("@stratakit/icons/bis-category-3d.svg", import.meta.url).href;
+const elementSvg = new URL("@stratakit/icons/bis-element.svg", import.meta.url).href;
+const iModelSvg = new URL("@stratakit/icons/imodel.svg", import.meta.url).href;
+
+function getIcon(node: TreeNode): string | undefined {
+  if (node.nodeData.extendedData?.imageId === undefined) {
     return undefined;
   }
 
-  switch (node.extendedData.imageId) {
+  switch (node.nodeData.extendedData.imageId) {
     case "icon-layers":
-      return <SvgLayers />;
+      return categorySvg;
     case "icon-item":
-      return <SvgItem />;
+      return elementSvg;
     case "icon-ec-class":
-      return <SvgItem />;
+      return classSvg;
     case "icon-imodel-hollow-2":
-      return <SvgImodelHollow />;
+      return iModelSvg;
     case "icon-folder":
-      return <SvgFolder />;
+      return subjectSvg;
     case "icon-model":
-      return <SvgModel />;
+      return modelSvg;
   }
 
   return undefined;

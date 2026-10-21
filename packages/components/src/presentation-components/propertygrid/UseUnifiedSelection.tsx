@@ -8,12 +8,14 @@
 
 import { useEffect, useState } from "react";
 import { from, map, Subject, switchMap, takeLast } from "rxjs";
-import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
-import { Selectables, SelectionStorage } from "@itwin/unified-selection";
+import { Selectables } from "@itwin/unified-selection";
 import { createKeySetFromSelectables } from "../common/Utils.js";
-import { IPresentationPropertyDataProvider } from "./DataProvider.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SelectionStorage } from "@itwin/unified-selection";
+import type { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
 

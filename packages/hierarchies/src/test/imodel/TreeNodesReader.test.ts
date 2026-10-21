@@ -6,16 +6,18 @@
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
-import { ConcatenatedValue } from "@itwin/presentation-shared";
-import { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
-import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { defaultNodesParser, readNodes, RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
+import { defaultNodesParser, readNodes } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createTestSourceInstanceNode } from "../Utils.js";
+
+import type { ConcatenatedValue } from "@itwin/presentation-shared";
+import type { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
+import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("readNodes", () => {
   const parser = vi.fn<(row: { [columnName: string]: any }) => SourceInstanceHierarchyNode>();
-  const createQueryReaderMock = vi.fn();
+  const createQueryReaderMock = vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>();
   const queryExecutor = { createQueryReader: createQueryReaderMock } as unknown as LimitingECSqlQueryExecutor;
 
   it("returns all rows from queryExecutor", async () => {
@@ -23,7 +25,7 @@ describe("readNodes", () => {
     const nodes = ids.map((id) =>
       createTestSourceInstanceNode({
         label: id.toString(),
-        key: { type: "instances", instanceKeys: [{ className: "x", id: id.toString() }] },
+        key: { type: "instances", instanceKeys: [{ className: "s.x", id: id.toString() }] },
         children: false,
       }),
     );
@@ -69,7 +71,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.AutoExpand]: true,
       [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node).toEqual({
       key: { type: "instances", instanceKeys: [{ className: "schema.class", id: "0x1" }] },
       label: "test label",
@@ -96,7 +98,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: "",
       [NodeSelectClauseColumnNames.HasChildren]: 0 as any,
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node.children).toBe(false);
   });
 
@@ -107,7 +109,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: "",
       [NodeSelectClauseColumnNames.HasChildren]: undefined,
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node.children).toBeUndefined();
   });
 
@@ -122,7 +124,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
       [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelParts),
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node.label).toEqual(labelParts);
   });
 });

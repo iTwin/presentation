@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILogger, NOOP_LOGGER } from "@itwin/presentation-shared";
+import { NOOP_LOGGER } from "@itwin/presentation-shared";
+
+import type { ILogger } from "@itwin/presentation-shared";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 let g_logger: ILogger = NOOP_LOGGER;
@@ -13,7 +15,7 @@ let g_logger: ILogger = NOOP_LOGGER;
  * @public
  */
 export function setLogger(logger: ILogger | undefined) {
-  g_logger = logger ?? /* v8 ignore next */ NOOP_LOGGER;
+  g_logger = logger ?? /* v8 ignore next -- @preserve */ NOOP_LOGGER;
 }
 
 /**

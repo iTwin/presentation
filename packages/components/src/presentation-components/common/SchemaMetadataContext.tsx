@@ -6,9 +6,11 @@
  * @module Core
  */
 
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { createContext, useContext, useEffect, useState } from "react";
+
+import type { PropsWithChildren } from "react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { SchemaContext } from "@itwin/ecschema-metadata";
 
 /**
  * Context that stores metadata related to schemas.

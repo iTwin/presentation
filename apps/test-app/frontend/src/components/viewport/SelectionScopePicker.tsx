@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useState } from "react";
-import { SelectionScope } from "@itwin/unified-selection";
+
+import type { SelectionScope } from "@itwin/unified-selection";
 
 interface SelectionScopePickerProps {
   onSelectionScopeChanged: (scope: SelectionScope) => void;

@@ -10,46 +10,48 @@ import "../common/DisposePolyfill.js";
 
 import { inPlaceSort } from "fast-sort";
 import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
-import {
-  IPropertyDataProvider,
-  PropertyCategory,
-  PropertyData,
-  PropertyDataChangeEvent,
-} from "@itwin/components-react";
+import { PropertyDataChangeEvent } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
 import {
   addFieldHierarchy,
-  CategoryDescription,
   ContentFlags,
   createContentTraverser,
   createFieldHierarchies,
   DefaultContentDisplayTypes,
+  PropertyValueFormat as PresentationPropertyValueFormat,
+  RelationshipMeaning,
+  Value,
+} from "@itwin/presentation-common";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import { InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder.js";
+import { ContentDataProvider } from "../common/ContentDataProvider.js";
+import { createLabelRecord, findField, memoize } from "../common/Utils.js";
+import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
+import { buildIntersectionFieldsSelector } from "./PropertiesIntersection.js";
+
+import type { IPropertyDataProvider, PropertyCategory, PropertyData } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
+  CategoryDescription,
   Descriptor,
   DescriptorOverrides,
   Field,
   FieldHierarchy,
   InstanceKey,
   NestedContentValue,
-  PropertyValueFormat as PresentationPropertyValueFormat,
   ProcessFieldHierarchiesProps,
   ProcessPrimitiveValueProps,
-  RelationshipMeaning,
   Ruleset,
   StartArrayProps,
   StartContentProps,
   StartStructProps,
-  Value,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { createIModelKey } from "@itwin/presentation-core-interop";
-import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder.js";
-import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider.js";
-import { DiagnosticsProps } from "../common/Diagnostics.js";
-import { createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
-import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
-import { buildIntersectionFieldsSelector } from "./PropertiesIntersection.js";
+import type { FieldHierarchyRecord } from "../common/ContentBuilder.js";
+import type { CacheInvalidationProps, IContentDataProvider } from "../common/ContentDataProvider.js";
+import type { DiagnosticsProps } from "../common/Diagnostics.js";
+import type { WithIModelKey } from "../common/Utils.js";
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
@@ -156,7 +158,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   public override dispose() {
     this.#dispose();
   }
@@ -410,7 +412,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 
   private setupFavoritePropertiesListener() {
-    /* v8 ignore next 3 -- @preserve */
+    /* v8 ignore next -- @preserve */
     if (this._onFavoritesChangedRemoveListener) {
       return;
     }
@@ -540,7 +542,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     // determine which categories are actually used
     const usedCategoryNames = new Set();
     this._categorizedRecords.forEach((records, categoryName) => {
-      /* v8 ignore next 3 -- @preserve */
+      /* v8 ignore next -- @preserve */
       if (records.length === 0) {
         return;
       }
@@ -676,12 +678,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   }
 
   public override processPrimitiveValue(props: ProcessPrimitiveValueProps): void {
-    if (
-      this.shouldSkipField(
-        props.field,
-        () => null === props.rawValue || undefined === props.rawValue || "" === props.rawValue,
-      )
-    ) {
+    if (this.shouldSkipField(props.field, () => undefined === props.rawValue || "" === props.rawValue)) {
       return;
     }
 
@@ -810,6 +807,7 @@ function shouldDestructureArrayField(field: Field) {
   return (
     field.isNestedContentField() ||
     /* This is only needed for pre-5.8.1 iTwin.js core */
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField?.()))
   );
 }
@@ -861,6 +859,7 @@ function destructureStructArrayItems(items: PropertyRecord[], fieldHierarchy: Fi
     items.forEach((item) => {
       assert(item.value.valueFormat === UiPropertyValueFormat.Struct);
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (item.value.members[nestedFieldHierarchy.field.name] === undefined) {
         // the member may not exist at all if we decided to skip it beforehand
         return;
@@ -914,6 +913,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
           const fieldHierarchy =
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField?.()
               ? { ...entry.fieldHierarchy, field: entry.fieldHierarchy.field.itemsField }
               : entry.fieldHierarchy;
@@ -930,6 +930,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       // destructure structs by replacing them with their member records
       const members = entry.fieldHierarchy.childFields.reduce((list, nestedFieldHierarchy) => {
         assert(entry.record.value.valueFormat === UiPropertyValueFormat.Struct);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         assert(entry.record.value.members[nestedFieldHierarchy.field.name] !== undefined);
         const member = {
           fieldHierarchy: nestedFieldHierarchy,

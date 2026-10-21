@@ -4,17 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import {
-  PropertyFilterBuilderActions,
-  PropertyFilterBuilderRuleGroup,
-  PropertyFilterRuleGroupOperator,
-  UiComponents,
-} from "@itwin/components-react";
+import { PropertyFilterRuleGroupOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
 import {
@@ -28,6 +21,11 @@ import {
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
 import { act, fireEvent, render, renderHook, waitFor } from "../TestUtils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup } from "@itwin/components-react";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { ClassInfo, Descriptor } from "@itwin/presentation-common";
 
 describe("InstanceFilterBuilder", () => {
   stubVirtualization();

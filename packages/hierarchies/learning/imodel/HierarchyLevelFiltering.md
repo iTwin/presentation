@@ -14,8 +14,7 @@ To make a generic node filterable, the hierarchy definition should set `supports
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
@@ -35,24 +34,17 @@ To make an instance node filterable, the hierarchy definition should set `suppor
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({
-  imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  }),
-});
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel({ parentNode }) {
+  async defineHierarchyLevel({ parentNode, createSelectClause }) {
     if (!parentNode) {
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
           query: {
             ecsql: `
-              SELECT ${await queryClauseFactory.createSelectClause({
+              SELECT ${await createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: { selector: "this.UserLabel" },
@@ -87,38 +79,31 @@ The callback argument allows the filter to be assigned to the node. Upon that no
 
 As mentioned in the previous section, hierarchy definition gets the applied filter as the `DefineHierarchyLevelProps.instanceFilter` argument to its `defineHierarchyLevel` function. And it's definition's job to apply this filter on the returned `InstanceNodesQueryDefinition`.
 
-While the library can't do that automatically, it does provide a helper function that can be used to apply the filter on the query. The function is available as `NodesQueryClauseFactory.createFilterClauses` retrieved from `createNodesQueryClauseFactory` (which can also be used to create SELECT clauses). The function takes information about the class the nodes represent and the filter, and returns a set of clauses that can be used to apply the filter on the query:
+While the library can't do that automatically, it does provide a helper function that can be used to apply the filter on the query. The function is available as `createFilterClauses` through the `defineHierarchyLevel` props. The function takes information about the class the nodes represent and the filter, and returns a set of clauses that can be used to apply the filter on the query:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyLevelFiltering.Imports, Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({
-  imodelAccess,
-  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-    classHierarchyInspector: imodelAccess,
-  }),
-});
 const hierarchyDefinition: HierarchyDefinition = {
-  async defineHierarchyLevel(props) {
+  async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
     // `createFilterClauses` function returns `from`, `joins`, and `where` clauses which need to be used in the
     // query in appropriate places
-    const { from, joins, where } = await queryClauseFactory.createFilterClauses({
+    const { from, joins, where } = await createFilterClauses({
       // specify the content class whose instances are used to build nodes - this should
       // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
       contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
       // specify the filter that we get from props for this hierarchy level
-      filter: props.instanceFilter,
+      filter: instanceFilter,
     });
     return [
       {
         fullClassName: "BisCore.PhysicalElement",
         query: {
           ecsql: `
-            SELECT ${await queryClauseFactory.createSelectClause({
+            SELECT ${await createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: { selector: "this.UserLabel" },

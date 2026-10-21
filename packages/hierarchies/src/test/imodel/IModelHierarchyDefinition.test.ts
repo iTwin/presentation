@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import {
+import { HierarchyNodesDefinition } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import { createTestSourceGenericNode } from "../Utils.js";
+
+import type {
   GenericHierarchyNodeDefinition,
-  HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import { createTestSourceGenericNode } from "../Utils.js";
 
 describe("HierarchyNodesDefinition", () => {
   const genericNodeDefinition = createGenericNodeDefinition();

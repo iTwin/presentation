@@ -4,21 +4,21 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-import { Observable } from "rxjs/internal/Observable";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import {
+import { MutableTreeModel, UiComponents } from "@itwin/components-react";
+import { EmptyLocalization } from "@itwin/core-common";
+import { reloadTree } from "../../../presentation-components/tree/controlled/TreeReloader.js";
+
+import type { Observable } from "rxjs/internal/Observable";
+import type {
   DelayLoadedTreeNodeItem,
-  MutableTreeModel,
   RenderedItemsRange,
   TreeModelNodeInput,
   TreeModelSource,
-  UiComponents,
 } from "@itwin/components-react";
-import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { reloadTree } from "../../../presentation-components/tree/controlled/TreeReloader.js";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 
 describe("reloadTree", () => {
   let dataProvider: IPresentationTreeDataProvider;

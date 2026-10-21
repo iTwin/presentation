@@ -363,7 +363,7 @@ The new system is very similar:
 ```ts
 const provider = createHiliteSetProvider({
   imodelAccess: {
-    ...createECSchemaProvider(imodelSchemaContext),
+    ...createECSchemaProvider(imodel),
     ...createECSqlQueryExecutor(imodel),
   },
 });

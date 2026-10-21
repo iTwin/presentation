@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { ECSqlBinding } from "@itwin/presentation-shared";
 import { formIdBindings, safeDispose } from "../unified-selection/Utils.js";
+
+import type { ECSqlBinding } from "@itwin/presentation-shared";
 
 describe("safeDispose", () => {
   it("disposes object with `Symbol.dispose` method", () => {
@@ -43,7 +44,7 @@ describe("formIdBindings", () => {
     const result = formIdBindings("ECInstanceId", ids, bindings);
     expect(result).toBe("InVirtualSet(?, ECInstanceId)");
     expect(bindings).toHaveLength(1);
-    expect(bindings[0]).toEqual({ type: "idset", value: idsArray });
+    expect(bindings[0]).toEqual({ type: "idset", value: ids });
   });
 
   it("returns FALSE when ids are empty", () => {

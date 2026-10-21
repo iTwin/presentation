@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -21,6 +21,8 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {

@@ -4,21 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import {
-  type PrimitiveValue,
-  type PropertyDescription,
-  type PropertyRecord,
-  PropertyValueFormat,
-} from "@itwin/appui-abstract";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { Input } from "@itwin/itwinui-react";
 import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
 import { NumericPropertyInput } from "./NumericPropertyInput.js";
-import { useQuantityValueInput, type UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
+import { useQuantityValueInput } from "./UseQuantityValueInput.js";
 
+import type { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import type { PropertyEditorProps } from "@itwin/components-react";
 import type { WithConstraints } from "../../common/ContentBuilder.js";
 import type { PropertyEditorAttributes } from "../editors/Common.js";
+import type { UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -32,17 +29,18 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
     const schemaMetadataContext = useSchemaMetadataContext();
 
     if (
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      /* eslint-disable-next-line @typescript-eslint/no-deprecated */
       (!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) ||
       !schemaMetadataContext
     ) {
       return <NumericPropertyInput {...props} ref={ref} />;
     }
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    /* eslint-disable-next-line @typescript-eslint/no-deprecated */
     const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
     assert(koqName !== undefined);
 
-    const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number | undefined;
     return (
       <QuantityPropertyValueInput
         {...props}
@@ -128,11 +126,11 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         onFocus={() => {
           setEditing(true);
           requestAnimationFrame(() => {
-            if (quantityValue.highPrecisionFormattedValue === inputProps.placeholder) {
-              inputRef.current?.setSelectionRange(0, 0);
-              return;
-            }
-            inputRef.current?.setSelectionRange(0, 9999);
+            const selectionEnd =
+              quantityValue.highPrecisionFormattedValue === inputProps.placeholder
+                ? 0
+                : quantityValue.highPrecisionFormattedValue.length;
+            inputRef.current?.setSelectionRange(0, selectionEnd);
           });
         }}
         onKeyDown={handleKeyDown}

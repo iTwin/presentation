@@ -33,19 +33,31 @@ expect(await myFormatter({ type: "Boolean", value: false })).toBe("no!");
 
 In the above example, the formatter customizes boolean values' formatting and relies on the default formatter for other types. The default formatter is delivered through `@itwin/presentation-shared` package and knows how to format basic primitive types. To support units' formatting, a formatter needs access to ECSchemas and know the user's preferred unit system. `@itwin/presentation-core-interop` delivers one such formatter through the `createValueFormatter` factory function:
 
-<!-- [[include: [Presentation.Hierarchies.Formatting.CoreInteropFormatterExample.Imports, Presentation.Hierarchies.Formatting.CoreInteropFormatterExample], ts]] -->
+<!-- [[include: [Presentation.CoreInterop.CreateValueFormatter.Imports, Presentation.CoreInterop.CreateValueFormatter.Example], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
+import { IModelApp } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 
-const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
-const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
+const imodel = getIModelConnection();
+const metricFormatter = createValueFormatter({
+  formatsProvider: IModelApp.formatsProvider,
+  unitsProvider: IModelApp.quantityFormatter,
+  imodel,
+  unitSystem: "metric",
+});
+const imperialFormatter = createValueFormatter({
+  formatsProvider: IModelApp.formatsProvider,
+  unitsProvider: IModelApp.quantityFormatter,
+  imodel,
+  unitSystem: "imperial",
+});
 
 // Define the raw value to be formatted
 const value = 1.234;
 
-// Define the KindOfQuantity to use for formatting:
+// Define the `KindOfQuantity` to use for formatting:
 // <KindOfQuantity
 //   typeName="FlowRate"
 //   displayLabel="Flow Rate"
@@ -53,7 +65,7 @@ const value = 1.234;
 //   relativeError="1e-05"
 //   presentationUnits="f:DefaultRealU(4)[u:LITRE_PER_MIN];f:DefaultRealU(4)[u:GALLON_PER_MIN]"
 // />
-const koqName = `${mySchemaName}.FlowRate`;
+const koqName = `${KOQ_SCHEMA_NAME}.FlowRate`;
 
 // Not passing `koqName` formats the value without units using the default formatter:
 expect(await metricFormatter({ type: "Double", value })).toBe("1.23");

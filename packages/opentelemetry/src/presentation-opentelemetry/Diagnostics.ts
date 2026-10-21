@@ -6,8 +6,11 @@
  * @module Core
  */
 
-import { Diagnostics, DiagnosticsLogEntry, DiagnosticsScopeLogs } from "@itwin/presentation-common";
-import { context, Context, HrTime, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import { DiagnosticsLogEntry } from "@itwin/presentation-common";
+import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+
+import type { Diagnostics, DiagnosticsScopeLogs } from "@itwin/presentation-common";
+import type { Context, HrTime } from "@opentelemetry/api";
 
 /**
  * Export Presentation diagnostics as OpenTelemetry traces to the given context.

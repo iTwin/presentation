@@ -1,0 +1,207 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
+
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
+
+/** Creates a primitive `EC.Property` stub for tests. */
+export function createPrimitiveProperty(props: {
+  name: string;
+  primitiveType?: EC.PrimitiveType;
+  label?: string;
+  koq?: string;
+  /** When `true`, the property reports as an array of the given primitive type. */
+  array?: boolean;
+  /** The property's extended type name, e.g. `"Json"` or `"BeGuid"`. */
+  extendedTypeName?: string;
+  /**
+   * The class that declares the property. Use a full name for simple fixtures, or an `EC.Class` when
+   * a test needs to walk the declaring class's `isHidden`/`baseClass` chain (e.g. `EC.Property.class`).
+   */
+  declaringClass?: EC.FullClassNameDotNotation | EC.Class;
+  /** Whether the property itself is reported as hidden. Defaults to `false`. */
+  isHidden?: boolean;
+  /** EC schema property category assigned to the property, if any. */
+  category?: { fullName: EC.FullClassNameDotNotation; label?: string };
+}): EC.Property {
+  return {
+    name: props.name,
+    label: props.label,
+    class:
+      typeof props.declaringClass === "string"
+        ? ({ fullName: props.declaringClass } as EC.Class)
+        : (props.declaringClass ?? ({ fullName: "TestSchema.TestClass" } as unknown as EC.Class)),
+    isHidden: props.isHidden ?? false,
+    kindOfQuantity: props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined,
+    category: props.category
+      ? ({
+          fullName: props.category.fullName,
+          name: props.category.fullName.slice(props.category.fullName.indexOf(".") + 1),
+          label: props.category.label,
+        } as unknown as EC.PropertyCategory)
+      : undefined,
+    isArray: () => props.array ?? false,
+    isStruct: () => false,
+    isPrimitive: () => true,
+    isEnumeration: () => false,
+    isNavigation: () => false,
+    primitiveType: props.primitiveType ?? "String",
+    extendedTypeName: props.extendedTypeName,
+  } as unknown as EC.Property;
+}
+
+/** Creates an entity `EC.Class` stub for tests. */
+export function createEntityClass(props: {
+  fullName: EC.FullClassNameDotNotation;
+  label?: string;
+  /** All properties visible on the class (own + inherited), returned by `getProperties`. */
+  properties?: EC.Property[];
+  /**
+   * Properties declared directly on the class, returned by `getOwnProperties`.
+   * Defaults to `properties` when omitted.
+   */
+  ownProperties?: EC.Property[];
+  /** The class this one derives from, resolved by `baseClass`. */
+  baseClass?: EC.Class;
+  /** Mixins applied directly to the class. */
+  mixins?: EC.Mixin[];
+  /** Classes that derive directly or indirectly from this class. */
+  derivedClasses?: EC.Class[];
+  /** Tri-state class visibility. Leave `undefined` to test a class with no defined visibility. */
+  isHidden?: boolean;
+}): EC.EntityClass {
+  const { schemaName, className } = parseFullClassName(props.fullName);
+  return {
+    schema: { name: schemaName } as unknown as EC.Schema,
+    fullName: props.fullName,
+    name: className,
+    label: props.label,
+    baseClass: props.baseClass,
+    isHidden: props.isHidden,
+    is: () => false,
+    getProperty: (name: string) => props.properties?.find((p) => p.name === name),
+    getProperties: () => props.properties ?? [],
+    getOwnProperties: () => props.ownProperties ?? props.properties ?? [],
+    isEntityClass: () => true,
+    isRelationshipClass: () => false,
+    isStructClass: () => false,
+    isMixin: () => false,
+    getMixins: () => props.mixins ?? [],
+    getDerivedClassNames: () => (props.derivedClasses ?? []).map((c) => c.fullName),
+  } as unknown as EC.EntityClass;
+}
+
+/**
+ * Creates a relationship `EC.Class` stub for tests. Defaults to a 1:1 relationship; pass
+ * `cardinality: "many"` for a 1:many one — so a reverse traversal of either lands on a
+ * single-valued constraint.
+ */
+export function createRelationshipClass(props: {
+  fullName: EC.FullClassNameDotNotation;
+  label?: string;
+  cardinality?: "one" | "many";
+  properties?: EC.Property[];
+}): EC.RelationshipClass {
+  const { schemaName, className } = parseFullClassName(props.fullName);
+  const constraint = (upperLimit: number | "unbounded") =>
+    ({ multiplicity: { lowerLimit: 0, upperLimit } }) as unknown as EC.RelationshipConstraint;
+  return {
+    schema: { name: schemaName } as unknown as EC.Schema,
+    fullName: props.fullName,
+    name: className,
+    label: props.label,
+    is: () => false,
+    getProperty: (name: string) => props.properties?.find((property) => property.name === name),
+    getProperties: () => props.properties ?? [],
+    getOwnProperties: () => props.properties ?? [],
+    isEntityClass: () => false,
+    isRelationshipClass: () => true,
+    isStructClass: () => false,
+    isMixin: () => false,
+    getDerivedClassNames: () => [],
+    direction: "Forward",
+    source: constraint(1),
+    target: constraint(props.cardinality === "many" ? "unbounded" : 1),
+  } as unknown as EC.RelationshipClass;
+}
+
+/** Creates a mixin class stub for tests. */
+export function createMixinClass(props: {
+  fullName: EC.FullClassNameDotNotation;
+  /** All properties visible on the class (own + inherited), returned by `getProperties`. */
+  properties?: EC.Property[];
+  /**
+   * Properties declared directly on the class, returned by `getOwnProperties`.
+   * Defaults to `properties` when omitted.
+   */
+  ownProperties?: EC.Property[];
+  baseClass?: EC.Class;
+  /** Tri-state class visibility. Leave `undefined` to test a class with no defined visibility. */
+  isHidden?: boolean;
+}): EC.Mixin {
+  const { schemaName, className } = parseFullClassName(props.fullName);
+  return {
+    schema: { name: schemaName } as unknown as EC.Schema,
+    fullName: props.fullName,
+    name: className,
+    baseClass: props.baseClass,
+    isHidden: props.isHidden,
+    is: () => false,
+    getProperty: (name: string) => props.properties?.find((property) => property.name === name),
+    getProperties: () => props.properties ?? [],
+    getOwnProperties: () => props.ownProperties ?? props.properties ?? [],
+    isEntityClass: () => false,
+    isRelationshipClass: () => false,
+    isStructClass: () => false,
+    isMixin: () => true,
+    getDerivedClassNames: () => [],
+  } as unknown as EC.Mixin;
+}
+
+/**
+ * Creates an `ECSchemaProvider` stub backed by the given classes, looked up by their (normalized)
+ * full name. `classDerivesFrom` walks the stubs' `baseClass` chain *and* applied mixins (including
+ * mixins' own base chains), mirroring the real provider — a class implementing a mixin derives from
+ * it, so a mixin-declared property is reachable from that class.
+ */
+export function createSchemaAccess(classes: EC.Class[]): ECSchemaProvider {
+  const byFullName = new Map(classes.map((cls) => [cls.fullName, cls]));
+  return {
+    getHiddenClassesTree: async () => [],
+    getSchema: async (schemaName: string) => ({
+      name: schemaName,
+      version: { read: 1, write: 0, minor: 0 },
+      isHidden: false,
+      getClass: (className: string) => byFullName.get(`${schemaName}.${className}`),
+      getEnumeration: () => undefined,
+      getKindOfQuantity: () => undefined,
+      getPropertyCategory: () => undefined,
+    }),
+    classDerivesFrom: async (derivedClassFullName, candidateBaseClassFullName) => {
+      const target = normalizeFullClassName(candidateBaseClassFullName);
+      const start = byFullName.get(normalizeFullClassName(derivedClassFullName));
+      const pending = start ? [start] : [];
+      const visited = new Set<string>();
+      while (pending.length > 0) {
+        const current = pending.pop()!;
+        if (visited.has(current.fullName)) {
+          continue;
+        }
+        visited.add(current.fullName);
+        if (current.fullName === target) {
+          return true;
+        }
+        if (current.baseClass) {
+          pending.push(current.baseClass);
+        }
+        if (current.isEntityClass()) {
+          pending.push(...current.getMixins());
+        }
+      }
+      return false;
+    },
+  };
+}

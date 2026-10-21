@@ -1,0 +1,138 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { describe, expect } from "vitest";
+import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
+import { Id64 } from "@itwin/core-bentley";
+import { HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { Datasets } from "../util/Datasets.js";
+import { run } from "../util/TestUtilities.js";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
+
+import type { IModelDb } from "@itwin/core-backend";
+import type { DefineHierarchyLevelProps } from "@itwin/presentation-hierarchies";
+
+describe("search", () => {
+  const totalNumberOfSearchPaths = 50000;
+  // We could use any number here.
+  // Using 1k because of two reasons:
+  // 1. It is more than Compound SELECT Statement limit (500);
+  // 2. Test takes < 20s. With more paths it would take longer.
+  const numberOfPathsForASingleParent = 1000;
+  const physicalElementsSmallestDecimalId = 20;
+
+  run({
+    testName: `searches with ${totalNumberOfSearchPaths} paths`,
+    setup: () => {
+      const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
+      const search = HierarchySearchTree.createBuilder();
+      const parentIdsArr = new Array<number>();
+      for (let i = 1; i <= totalNumberOfSearchPaths / numberOfPathsForASingleParent; ++i) {
+        parentIdsArr.push(i + physicalElementsSmallestDecimalId);
+        for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
+          search.accept({
+            path: [
+              {
+                className: `${schemaName}.${defaultClassName}_0`,
+                id: `0x${physicalElementsSmallestDecimalId.toString(16)}`,
+              },
+              {
+                className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
+                id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
+              },
+              {
+                className: `${schemaName}.${defaultClassName}_${Math.floor(j / itemsPerGroup)}`,
+                id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}`,
+              },
+            ],
+          });
+        }
+      }
+
+      const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
+      const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
+      const createHierarchyLevelDefinition = async (
+        createSelectClause: DefineHierarchyLevelProps["createSelectClause"],
+        whereClause: (alias: string) => string,
+      ) => {
+        return [
+          {
+            fullClassName,
+            query: {
+              ecsql: `
+                SELECT ${await createSelectClause({
+                  ecClassId: { selector: `this.ECClassId` },
+                  ecInstanceId: { selector: `this.ECInstanceId` },
+                  nodeLabel: { selector: `this.UserLabel` },
+                })}
+                FROM ${fullClassName} AS this
+                ${whereClause("this")}
+              `,
+            },
+          },
+        ];
+      };
+      return {
+        iModel,
+        getHierarchyFactory: () => ({
+          async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
+            // A hierarchy with this structure is created:
+            //
+            //        id:21 -> all other BisCore.PhysicalElement
+            //       /  .
+            //  id:20   .
+            //       \  .
+            //        id:70 -> all other BisCore.PhysicalElement
+            //
+            // We need to split the hierarchy in 50 parts to reduce the time of the test.
+
+            if (!parentNode) {
+              return createHierarchyLevelDefinition(
+                createSelectClause,
+                (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`,
+              );
+            }
+            if (
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
+            ) {
+              return createHierarchyLevelDefinition(
+                createSelectClause,
+                (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`,
+              );
+            }
+
+            if (
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.key.instanceKeys.some(({ id }) => parentIdsArr.includes(Id64.getLocalId(id)))
+            ) {
+              return createHierarchyLevelDefinition(
+                createSelectClause,
+                (alias) =>
+                  `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
+              );
+            }
+
+            return [];
+          },
+        }),
+        search,
+      };
+    },
+    cleanup: (props: { iModel: IModelDb }) => {
+      props.iModel.close();
+    },
+    test: async ({ search, ...props }) => {
+      const provider = await StatelessHierarchyProvider.create({
+        ...props,
+        search: { paths: search.getTree() },
+        rowLimit: "unbounded",
+      });
+      const nodeCount = await provider.loadHierarchy();
+      expect(nodeCount).toBe(totalNumberOfSearchPaths);
+    },
+  });
+});

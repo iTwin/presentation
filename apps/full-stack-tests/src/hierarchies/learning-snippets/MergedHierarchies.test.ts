@@ -5,11 +5,10 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Imports
-import { BeEvent } from "@itwin/core-bentley";
 import {
+  createHierarchyProvider,
   GetHierarchyNodesProps,
   HierarchyNode,
-  HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -32,18 +31,14 @@ describe("Hierarchies", () => {
         // Create a very basic hierarchy provider factory
         function createBasicHierarchyProvider(
           nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[],
-        ): HierarchyProvider {
-          return {
-            hierarchyChanged: new BeEvent(),
+        ) {
+          return createHierarchyProvider(() => ({
             async *getNodes({ parentNode }) {
               for (const node of nodes(parentNode)) {
                 yield node;
               }
             },
-            async *getNodeInstanceKeys() {},
-            setFormatter() {},
-            setHierarchyFilter() {},
-          };
+          }));
         }
         // A provider that returns a single "Node X" root node
         const provider1 = createBasicHierarchyProvider((parent) => {

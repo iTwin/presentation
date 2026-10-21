@@ -242,6 +242,15 @@
 
 - [#1296](https://github.com/iTwin/presentation/pull/1296): `PresentationPropertyDataProvider`: Fix nested array properties being mistakenly destructured when there was only 1 array item.
 
+## 5.13.4-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.10
+  - @itwin/presentation-core-interop@2.0.0-alpha.1
+  - @itwin/unified-selection@1.7.1-alpha.0
+
 ## 5.13.3
 
 ### Patch Changes
@@ -257,6 +266,13 @@
   - @itwin/presentation-core-interop@1.3.11
   - @itwin/presentation-shared@1.2.11
   - @itwin/unified-selection@1.7.0
+
+## 5.13.2-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-core-interop@2.0.0-alpha.0
 
 ## 5.13.1
 

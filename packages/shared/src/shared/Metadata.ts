@@ -6,6 +6,9 @@
 import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils.js";
 
+import type { ECSqlBinding } from "./ECSqlCore.js";
+import type { DeepReadonly } from "./MappedTypes.js";
+
 /**
  * An interface for an object that knows how to get an ECSchema from an iModel.
  *
@@ -14,41 +17,117 @@ import { parseFullClassName } from "./Utils.js";
  */
 export interface ECSchemaProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+
+  /**
+   * Checks whether the class identified by `derivedClassFullName` is the same as, or derives from, the class
+   * identified by `candidateBaseClassFullName`. A class is considered to derive from itself.
+   *
+   * The result may be returned synchronously when the class hierarchy information is already available, or as a
+   * promise otherwise.
+   */
+  classDerivesFrom(
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
+  ): Promise<boolean> | boolean;
+
+  /**
+   * Returns a tree of classes, derived from the given class, whose visibility is changed through `HiddenClass`
+   * or `HiddenSchema` custom attributes. See `HiddenClassesTreeNode` for details on the tree structure.
+   *
+   * Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected
+   * to cache the result per selected class and share it between callers - including concurrent ones.
+   *
+   * Query authors should use `ECSql.createHiddenClassesFilter` to exclude instances of hidden classes from their queries.
+   * Implementations may use `createHiddenClassesTree` to build the tree.
+   *
+   * @throws Error if the selected class or any of its derived classes' schemas can't be found.
+   */
+  getHiddenClassesTree(selectClassName: EC.FullClassNameDotNotation): Promise<DeepReadonly<HiddenClassesTreeNode[]>>;
+}
+
+/**
+ * A node in a tree of classes, derived from some selected class, whose schema-defined visibility differs from
+ * their parent's. Visibility is defined through `CoreCustomAttributes.HiddenClass` and `CoreCustomAttributes.HiddenSchema`
+ * custom attributes.
+ *
+ * The tree is relative to the selected class, which is always considered visible - even if it's hidden itself:
+ * This exception applies only to the selected class; its descendants still inherit its schema-defined hidden state.
+ *
+ * - Root nodes are the outermost derived classes that are hidden (`state: "hide"`).
+ * - Children of a `"hide"` node are its derived classes that are explicitly shown (`state: "show"`), overriding
+ *   the inherited hiding.
+ * - Children of a `"show"` node are its derived classes that are hidden again, and so on.
+ *
+ * Derived classes whose visibility matches their parent's are not included - their descendants are attached
+ * directly to the closest included ancestor. An empty tree means all instances of the selected class are visible.
+ *
+ * @see `ECSchemaProvider.getHiddenClassesTree`
+ * @see `ECSql.createHiddenClassesFilter`
+ * @public
+ */
+export type HiddenClassesTreeNode = HiddenClassesTreeNodeShown | HiddenClassesTreeNodeHidden;
+/** @public */
+interface HiddenClassesTreeNodeShown {
+  /** Full name of the class this node represents. */
+  fullName: EC.FullClassNameDotNotation;
+  /** Visibility state of the class and its derived classes, unless overridden by `children`. */
+  state: "show";
+  /** Derived classes whose visibility state differs from this node's `state`. */
+  children: HiddenClassesTreeNodeHidden[];
+}
+/** @public */
+interface HiddenClassesTreeNodeHidden {
+  /** Full name of the class this node represents. */
+  fullName: EC.FullClassNameDotNotation;
+  /** Visibility state of the class and its derived classes, unless overridden by `children`. */
+  state: "hide";
+  /** Derived classes whose visibility state differs from this node's `state`. */
+  children: HiddenClassesTreeNodeShown[];
 }
 
 /**
  * An interface for a class hierarchy inspector that can be used to determine if one class derives from another.
  * @see `createCachingECClassHierarchyInspector`
+ * @deprecated in 2.0. Use `ECSchemaProvider` instead - it now exposes `classDerivesFrom` directly.
  * @public
  */
 export interface ECClassHierarchyInspector {
-  classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+  classDerivesFrom(
+    derivedClassFullName: EC.FullClassNameDotNotation,
+    candidateBaseClassFullName: EC.FullClassNameDotNotation,
+  ): Promise<boolean> | boolean;
 }
 
 /**
  * Creates a new `ECClassHierarchyInspector` that caches results of `derivesFrom` calls.
+ *
  * @public
+ * @deprecated in 2.0. Use `createECSchemaProvider` from `@itwin/presentation-core-interop` instead - the created
+ * `ECSchemaProvider` exposes `classDerivesFrom` directly, without the need for a separate class hierarchy inspector.
  */
 export function createCachingECClassHierarchyInspector(props: {
   /** Schema provider used to load schemas and their classes. */
   schemaProvider: ECSchemaProvider;
   /** Optional cache size, describing the number of derived/base class combinations to store in cache. Defaults to `0`, which means no caching. */
   cacheSize?: number;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
 }): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
-  function createCacheKey(derivedClassName: string, baseClassName: string) {
+  function createCacheKey(derivedClassName: EC.FullClassNameDotNotation, baseClassName: EC.FullClassNameDotNotation) {
     return `${derivedClassName}/${baseClassName}`;
   }
   return {
-    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean {
+    classDerivesFrom(
+      derivedClassFullName: EC.FullClassNameDotNotation,
+      candidateBaseClassFullName: EC.FullClassNameDotNotation,
+    ): Promise<boolean> | boolean {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
       if (result === undefined) {
-        result = Promise.all([
-          getClass(props.schemaProvider, derivedClassFullName),
-          getClass(props.schemaProvider, candidateBaseClassFullName),
-        ]).then(async ([derivedClass, baseClass]) => {
-          const resolvedResult = await derivedClass.is(baseClass);
+        result = getClass(props.schemaProvider, derivedClassFullName).then((derivedClass) => {
+          const { schemaName: candidateBaseClassSchemaName, className: candidateBaseClassName } =
+            parseFullClassName(candidateBaseClassFullName);
+          const resolvedResult = derivedClass.is(candidateBaseClassName, candidateBaseClassSchemaName);
           map.set(cacheKey, resolvedResult);
           return resolvedResult;
         });
@@ -65,6 +144,24 @@ export function createCachingECClassHierarchyInspector(props: {
  * @see `ECSchemaProvider`
  */
 export namespace EC {
+  export type FullClassNameDotNotation = `${string}.${string}`;
+  export type FullClassNameColonNotation = `${string}:${string}`;
+  export type FullClassName = FullClassNameColonNotation | FullClassNameDotNotation;
+
+  /**
+   * Schema version components.
+   * Note: comparison order is write > read > minor (not left-to-right).
+   * @public
+   */
+  export interface SchemaVersion {
+    /** First component in "read.write.minor" string format. */
+    read: number;
+    /** Second component in "read.write.minor" string format (most significant for compatibility). */
+    write: number;
+    /** Third component in "read.write.minor" string format. */
+    minor: number;
+  }
+
   /**
    * Represents an ECSchema that contains classes, relationships, etc.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
@@ -72,7 +169,14 @@ export namespace EC {
    */
   export interface Schema {
     name: string;
-    getClass(name: string): Promise<Class | undefined>;
+    description?: string;
+    /** The schema version. Format: `"read.write.minor"`, comparison order: write > read > minor. */
+    version: SchemaVersion;
+    isHidden: boolean;
+    getClass(name: string): Class | undefined;
+    getEnumeration(name: string): Enumeration | undefined;
+    getKindOfQuantity(name: string): KindOfQuantity | undefined;
+    getPropertyCategory(name: string): PropertyCategory | undefined;
   }
 
   /**
@@ -82,9 +186,10 @@ export namespace EC {
    */
   export interface SchemaItem {
     schema: Schema;
-    fullName: string;
+    fullName: FullClassNameDotNotation;
     name: string;
     label?: string;
+    description?: string;
   }
 
   /**
@@ -93,14 +198,19 @@ export namespace EC {
    * @public
    */
   export interface Class extends SchemaItem {
-    is(className: string, schemaName: string): Promise<boolean>;
-    is(other: Class): Promise<boolean>;
-    getProperty(name: string): Promise<Property | undefined>;
-    getProperties(): Promise<Array<Property>>;
+    baseClass?: Class;
+    isHidden?: boolean;
+    is(className: string, schemaName: string): boolean;
+    is(other: Class): boolean;
+    getProperty(name: string): Property | undefined;
+    getProperties(): Array<Property>;
+    /** Gets only the properties defined directly on this class, excluding those inherited from base classes. */
+    getOwnProperties(): Array<Property>;
     isEntityClass(): this is EntityClass;
     isRelationshipClass(): this is RelationshipClass;
     isStructClass(): this is StructClass;
     isMixin(): this is Mixin;
+    getDerivedClassNames(props?: { onlyDirect?: boolean }): EC.FullClassNameDotNotation[];
   }
 
   /**
@@ -108,7 +218,10 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/entityclass/
    * @public
    */
-  export type EntityClass = Class;
+  export interface EntityClass extends Class {
+    /** Gets the mixins applied directly to this entity class. */
+    getMixins(): Mixin[];
+  }
 
   /**
    * Represents a struct class.
@@ -129,7 +242,20 @@ export namespace EC {
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/kindofquantity/
    * @public
    */
-  export type KindOfQuantity = SchemaItem;
+  export interface KindOfQuantity extends SchemaItem {
+    relativeError: number;
+    persistenceUnit: string;
+  }
+
+  /**
+   * Represents a property category used to group related properties.
+   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/propertycategory/
+   * @public
+   */
+  export interface PropertyCategory extends SchemaItem {
+    /** Determines the display order of the category relative to other categories. Higher priority categories are displayed first. */
+    priority: number;
+  }
 
   /**
    * Represents a relationship constraint multiplicity.
@@ -138,7 +264,8 @@ export namespace EC {
    */
   export interface RelationshipConstraintMultiplicity {
     lowerLimit: number;
-    upperLimit: number;
+    /** `"unbounded"` when the constraint declares no upper bound (`*`). */
+    upperLimit: number | "unbounded";
   }
 
   /**
@@ -147,9 +274,10 @@ export namespace EC {
    * @public
    */
   export interface RelationshipConstraint {
-    multiplicity?: RelationshipConstraintMultiplicity;
+    multiplicity: RelationshipConstraintMultiplicity;
     polymorphic: boolean;
-    abstractConstraint: Promise<EntityClass | Mixin | RelationshipClass | undefined>;
+    constraintClasses: Class[];
+    abstractConstraint?: EntityClass | Mixin | RelationshipClass;
   }
 
   /**
@@ -193,9 +321,12 @@ export namespace EC {
    */
   export interface Property {
     name: string;
+    description?: string;
     class: Class;
     label?: string;
-    kindOfQuantity: Promise<KindOfQuantity | undefined>;
+    isHidden: boolean;
+    kindOfQuantity?: KindOfQuantity;
+    category?: PropertyCategory;
 
     isArray(): this is ArrayProperty;
     isStruct(): this is StructProperty;
@@ -254,7 +385,7 @@ export namespace EC {
    * @public
    */
   export interface EnumerationProperty extends Property {
-    enumeration: Promise<Enumeration | undefined>;
+    enumeration?: Enumeration;
     extendedTypeName?: string;
   }
 
@@ -264,7 +395,7 @@ export namespace EC {
    * @public
    */
   export interface NavigationProperty extends Property {
-    relationshipClass: Promise<RelationshipClass>;
+    relationshipClass: RelationshipClass;
     direction: "Forward" | "Backward";
   }
 
@@ -297,10 +428,158 @@ export namespace EC {
 }
 
 /**
- * An identifiers' union of all supported primitive value types.
+ * A union of all primitive value types supported by the Presentation packages.
+ *
+ * Compared to `EC.PrimitiveType`:
+ * - Adds `"Id"` to support id properties such as `ECInstanceId` or `ECClassId`, which have no equivalent in `EC.PrimitiveType`.
+ * - Excludes `"Binary"` and `"IGeometry"`, as properties of those types are not supported by the Presentation packages.
+ *
  * @public
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+
+/**
+ * A type descriptor for a value's shape.
+ *
+ * - `PrimitiveValueDescriptor`: a scalar primitive.
+ * - `StructValueDescriptor`: a named struct with typed members.
+ * - `ArrayValueDescriptor`: an ordered collection of a single element type.
+ * - `NavigationValueDescriptor`: a reference to another EC instance, carrying the reference's target class name.
+ *
+ * @public
+ */
+export type ValueDescriptor =
+  | PrimitiveValueDescriptor
+  | StructValueDescriptor
+  | ArrayValueDescriptor
+  | NavigationValueDescriptor;
+
+/**
+ * Describes a scalar primitive value.
+ *
+ * When the value is backed by an enumeration (only possible for `String`-, `Integer`- and
+ * `Long`-typed values), `enumeration` carries the enumeration's metadata (its declared enumerators
+ * and their labels) so consumers can map raw values to display labels without re-reading schema. The
+ * `type` discriminates the enumerator value type (`String` → `string`, `Integer | Long` → `number`).
+ *
+ * `extendedType` carries the property's raw `extendedTypeName` (e.g. `"Json"`, `"BeGuid"`), when set,
+ * to let consumers refine how a `type`-typed value should be interpreted without re-reading schema.
+ *
+ * @public
+ */
+export type PrimitiveValueDescriptor = { kind: "primitive"; extendedType?: string } & (
+  | {
+      /** The primitive value type. */
+      type: Extract<PrimitiveValueType, "String">;
+      kindOfQuantity?: undefined;
+      /** Metadata of the enumeration backing this value, when it is enumeration-backed. */
+      enumeration?: EnumerationInfo<string>;
+    }
+  | {
+      /** The primitive value type. */
+      type: Extract<PrimitiveValueType, "Integer" | "Long">;
+      /**
+       * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+       * Determines how the value should be formatted and which units to display.
+       */
+      kindOfQuantity?: string;
+      /** Metadata of the enumeration backing this value, when it is enumeration-backed. */
+      enumeration?: EnumerationInfo<number>;
+    }
+  | {
+      /** The primitive value type. */
+      type: Extract<PrimitiveValueType, "Double">;
+      /**
+       * Full name of the KindOfQuantity associated with this property (e.g., `"Units.LENGTH"`).
+       * Determines how the value should be formatted and which units to display.
+       */
+      kindOfQuantity?: string;
+      enumeration?: undefined;
+    }
+  | {
+      /** The primitive value type. */
+      type: Exclude<PrimitiveValueType, "Integer" | "Long" | "Double" | "String">;
+      kindOfQuantity?: undefined;
+      enumeration?: undefined;
+    }
+);
+
+/**
+ * Metadata about the enumeration backing a primitive value. Preserved on a
+ * `PrimitiveValueDescriptor` so consumers can map raw enum values to their display labels
+ * without re-reading schema.
+ * @public
+ */
+interface EnumerationInfo<TValue extends string | number = string | number> {
+  /** Name of the enumeration type (e.g., `"MySchema.MyEnum"` for schema-backed enums). */
+  name: string;
+  /** When `true`, values are restricted to the declared enumerators. */
+  isStrict: boolean;
+  /** The declared enumerators. */
+  enumerators: EnumeratorInfo<TValue>[];
+}
+
+/**
+ * A single enumerator of an `EnumerationInfo`.
+ * @public
+ */
+interface EnumeratorInfo<TValue extends string | number = string | number> {
+  /** Display label for the enumerator. */
+  label: string;
+  /** The enumerator's raw value (string- or integer-backed, per the owning descriptor's `type`). */
+  value: TValue;
+  /** Optional description. */
+  description?: string;
+}
+
+/**
+ * Describes a named struct value with typed members.
+ * @public
+ */
+export interface StructValueDescriptor {
+  kind: "struct";
+  /** The list of named, typed members that make up this struct. */
+  members: StructMember[];
+}
+
+/**
+ * Describes a single member of a `StructValueDescriptor`.
+ * @public
+ */
+interface StructMember {
+  /** The member's property name. */
+  name: string;
+  /** A human-readable label for display purposes. */
+  label: string;
+  /** The type descriptor for this member's value. */
+  type: ValueDescriptor;
+}
+
+/**
+ * Describes an ordered collection of values of a single element type.
+ * @public
+ */
+export interface ArrayValueDescriptor {
+  kind: "array";
+  /** The type descriptor for each element in the array. */
+  elementType: ValueDescriptor;
+}
+
+/**
+ * Describes a navigation property value — a reference to another EC instance.
+ * The runtime value is the referenced instance's id (`Id64String`); this descriptor
+ * additionally carries the reference's target class name as metadata, so consumers can
+ * build selects against the referenced instance (e.g. to resolve its label).
+ * @public
+ */
+export interface NavigationValueDescriptor {
+  kind: "navigation";
+  /**
+   * Full name of the relationship's target-constraint class the navigation points at
+   * (the referenced instance's class, or its base constraint class).
+   */
+  targetClassName: EC.FullClassNameDotNotation;
+}
 
 /**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
@@ -308,17 +587,71 @@ export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IG
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
-  sourceClassName: string;
+  sourceClassName: EC.FullClassNameDotNotation;
   /** Full name of the target ECClass */
-  targetClassName: string;
+  targetClassName: EC.FullClassNameDotNotation;
   /** Full name of the ECRelationshipClass */
-  relationshipName: string;
+  relationshipName: EC.FullClassNameDotNotation;
   /**
    * Indicates that the relationship direction be reversed. This should be set to `true` when step direction
    * doesn't match relationship direction, e.g. relationship is from source `A` to target `B` and the step
    * describes a step from `B` to `A`.
    */
   relationshipReverse?: boolean;
+  /**
+   * Optional filter applied to instances at this step.
+   * Only instances matching the filter will be included when traversing this relationship.
+   * The filter expression can reference target class properties and, for non-navigation-property
+   * relationships (link table relationships), also relationship class properties.
+   * Referencing relationship class properties via `relationshipAlias` is not supported for
+   * navigation-property steps because the relationship table is not part of the query in that case.
+   */
+  instanceFilter?: {
+    /**
+     * ECSQL WHERE clause expression (without the WHERE keyword).
+     *
+     * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
+     * of the filtered class, and `relationshipAlias` (defaults to `"rel"`) to reference
+     * properties on the relationship class. At query generation time, the pipeline replaces
+     * all `{alias}.` occurrences (in both their bare `{alias}.` and bracket-quoted `[{alias}].`
+     * forms) with the actual query aliases.
+     *
+     * @example
+     * ```
+     * expression: "this.Area > :minArea AND rel.Priority > 0"
+     * ```
+     */
+    expression: string;
+
+    /**
+     * The placeholder used in `expression` to reference the target class (`targetClassName`).
+     * Every occurrence of `{targetAlias}.` in the expression, whether bare (`{targetAlias}.`)
+     * or bracket-quoted (`[{targetAlias}].`), will be replaced with the actual query alias at
+     * query generation time.
+     *
+     * @default "this"
+     */
+    targetAlias?: string;
+
+    /**
+     * The placeholder used in `expression` to reference the relationship class (`relationshipName`).
+     * Every occurrence of `{relationshipAlias}.` in the expression, whether bare (`{relationshipAlias}.`)
+     * or bracket-quoted (`[{relationshipAlias}].`), will be replaced with the actual relationship alias
+     * at query generation time.
+     *
+     * Only meaningful for non-navigation-property (link table) relationships. When the step uses a
+     * navigation property, the relationship table is not part of the query, so any reference via
+     * this alias will produce invalid ECSQL.
+     *
+     * @default "rel"
+     */
+    relationshipAlias?: string;
+
+    /**
+     * Bind values for the expression, keyed by parameter name.
+     */
+    bindings?: Record<string, ECSqlBinding>;
+  };
 }
 
 /**
@@ -332,13 +665,16 @@ export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPa
  * @throws Error if the schema or class is not found.
  * @public
  */
-export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class> {
+export async function getClass(
+  schemaProvider: Pick<ECSchemaProvider, "getSchema">,
+  fullClassName: EC.FullClassNameDotNotation,
+): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await schemaProvider.getSchema(schemaName);
   if (!schema) {
     throw new Error(`Schema "${schemaName}" not found.`);
   }
-  const lookupClass = await schema.getClass(className);
+  const lookupClass = schema.getClass(className);
   if (!lookupClass) {
     throw new Error(`Class "${className}" not found in schema "${schemaName}".`);
   }

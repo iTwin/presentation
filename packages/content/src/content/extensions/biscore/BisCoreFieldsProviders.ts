@@ -1,0 +1,472 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { resolveEffectiveSourceClass } from "../../InternalUtils.js";
+import { defineIModelFieldsProvider } from "../IModelFieldsProvider.js";
+import { isBisCoreSchemaAtLeast } from "./BisCoreUtils.js";
+
+import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { ContentTarget } from "../../ContentTarget.js";
+import type { CategoryDefinition } from "../../model/Category.js";
+import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../IModelFieldsProvider.js";
+import type { BisCoreLocalizedStrings } from "./BisCoreLocalizedStrings.js";
+
+/** A single step of a `RelationshipPath` (not separately exported by `@itwin/presentation-shared`). */
+type RelationshipPathStep = RelationshipPath[number];
+
+/**
+ * Category id constants shared by contributions that nest fields under "Source Information".
+ *
+ * @internal
+ */
+export const SOURCE_INFORMATION_CATEGORY_ID = "source_information";
+/** @internal */
+export const MODEL_SOURCE_CATEGORY_ID = "model_source";
+/** @internal */
+export const SECONDARY_SOURCES_CATEGORY_ID = "secondary_sources";
+/** @internal */
+export const DOCUMENT_LINK_CATEGORY_ID = "document_link";
+
+function createSourceInformationCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: strings.sourceInformation };
+}
+function createModelSourceCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return { id: MODEL_SOURCE_CATEGORY_ID, label: strings.modelSource, parentId: SOURCE_INFORMATION_CATEGORY_ID };
+}
+function createSecondarySourcesCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return {
+    id: SECONDARY_SOURCES_CATEGORY_ID,
+    label: strings.secondarySources,
+    parentId: SOURCE_INFORMATION_CATEGORY_ID,
+  };
+}
+function createDocumentLinkCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
+  return { id: DOCUMENT_LINK_CATEGORY_ID, label: strings.documentLink, parentId: SOURCE_INFORMATION_CATEGORY_ID };
+}
+
+/**
+ * Builds `BisCore:Element`'s owned aspects (`ElementOwnsUniqueAspect` and `ElementOwnsMultiAspects`)
+ * related properties declarations.
+ *
+ * Both declarations use `"parent"` category scope: an aspect property's property category is shown
+ * directly under the owning context rather than nested in an aspect-class category, and properties
+ * without a property category fall back to the aspect class's category.
+ *
+ * The generic `ElementOwnsMultiAspects` → `ElementMultiAspect` declaration excludes
+ * `BisCore.ExternalSourceAspect` instances (`BisCore` ≥ 1.0.2) — that aspect's `Identifier` property
+ * is contributed with its own label/category override by `createExternalSourceContribution`. Without
+ * the exclusion, the generic and external-source declarations would produce separate fields because
+ * their path filters differ, surfacing the property twice with different presentation metadata.
+ *
+ * The exclusion is intentionally polymorphic, with two deliberate consequences:
+ * - `ExternalSourceAspect` instances with `Kind = 'Relationship'` surface no fields at all — they
+ *   describe a synchronization relationship rather than the element itself, so their properties are
+ *   not meaningful element content.
+ * - Properties declared by `ExternalSourceAspect` subclasses don't surface either — a non-polymorphic
+ *   exclusion would produce duplicate `Identifier` fields for those subclasses, since the external-source
+ *   declaration resolves its `ExternalSourceAspect` target polymorphically.
+ *
+ * The exclusion applies on nested content too, even though the external-source declarations don't
+ * reach there: a provider's contribution shape can't depend on whether it's being applied to the
+ * direct target or to a nested anchor, and suppressing this internal synchronization aspect
+ * everywhere is preferable to surfacing it in some places only.
+ */
+async function createAspectRelatedProperties(
+  imodelAccess: ECSchemaProvider,
+  target: ContentTarget,
+): Promise<RelatedPropertiesDeclaration[]> {
+  const excludeExternalSourceAspect = await isBisCoreSchemaAtLeast(imodelAccess, "1.0.2");
+  return [
+    {
+      path: [
+        {
+          sourceClassName: target.primaryClass,
+          targetClassName: "BisCore.ElementUniqueAspect",
+          relationshipName: "BisCore.ElementOwnsUniqueAspect",
+        },
+      ],
+      cardinalityHint: "one",
+      propertyCategoryScope: "parent",
+      properties: [{ stepIndex: 0, target: { select: "all" } }],
+    },
+    {
+      path: [
+        {
+          sourceClassName: target.primaryClass,
+          targetClassName: "BisCore.ElementMultiAspect",
+          relationshipName: "BisCore.ElementOwnsMultiAspects",
+          ...(excludeExternalSourceAspect
+            ? { instanceFilter: { expression: "this.ECClassId IS NOT (BisCore.ExternalSourceAspect)" } }
+            : undefined),
+        },
+      ],
+      cardinalityHint: "many",
+      propertyCategoryScope: "parent",
+      properties: [{ stepIndex: 0, target: { select: "all" } }],
+    },
+  ];
+}
+
+/**
+ * Builds `BisCore:Element` links (`ElementHasLinks`) and the model-source repository link (`ModelContainsElements` →
+ * `ModelModelsElement` → `ElementHasLinks`, renamed into the "Model Source" category) related
+ * properties declarations and their categories.
+ */
+function createLinksContribution(
+  target: ContentTarget,
+  strings: BisCoreLocalizedStrings,
+): {
+  relatedProperties: RelatedPropertiesDeclaration[];
+  categories: Record<CategoryDefinition["id"], CategoryDefinition>;
+} {
+  const relatedProperties: RelatedPropertiesDeclaration[] = [
+    // Links directly associated with the element.
+    {
+      path: [
+        {
+          sourceClassName: target.primaryClass,
+          targetClassName: "BisCore.LinkElement",
+          relationshipName: "BisCore.ElementHasLinks",
+        },
+      ],
+      cardinalityHint: "many",
+    },
+    // The repository link of the model the element resides in — surfaced as "Model Source".
+    {
+      path: [
+        {
+          sourceClassName: target.primaryClass,
+          targetClassName: "BisCore.Model",
+          relationshipName: "BisCore.ModelContainsElements",
+          relationshipReverse: true,
+        },
+        {
+          sourceClassName: "BisCore.Model",
+          targetClassName: "BisCore.Element",
+          relationshipName: "BisCore.ModelModelsElement",
+        },
+        {
+          sourceClassName: "BisCore.Element",
+          targetClassName: "BisCore.RepositoryLink",
+          relationshipName: "BisCore.ElementHasLinks",
+        },
+      ],
+      // The element's model and its modeled element are 1:1, but the final `ElementHasLinks` step
+      // may reach multiple repository links.
+      cardinalityHint: "many",
+      properties: [
+        {
+          stepIndex: 2,
+          target: {
+            select: { include: ["Url", "UserLabel"] },
+            // EC property names are PascalCase; disable the naming-convention rule for these keys.
+            /* eslint-disable @typescript-eslint/naming-convention */
+            overrides: {
+              Url: { label: "Path", categoryId: MODEL_SOURCE_CATEGORY_ID },
+              UserLabel: { label: "Name", categoryId: MODEL_SOURCE_CATEGORY_ID },
+            },
+            /* eslint-enable @typescript-eslint/naming-convention */
+          },
+        },
+      ],
+    },
+  ];
+  return {
+    relatedProperties,
+    categories: {
+      [SOURCE_INFORMATION_CATEGORY_ID]: createSourceInformationCategory(strings),
+      [MODEL_SOURCE_CATEGORY_ID]: createModelSourceCategory(strings),
+    },
+  };
+}
+
+function createGroupsContribution(target: ContentTarget): { relatedProperties: RelatedPropertiesDeclaration[] } {
+  return {
+    relatedProperties: [
+      {
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.GroupInformationElement",
+            relationshipName: "BisCore.ElementGroupsMembers",
+            relationshipReverse: true,
+          },
+        ],
+        cardinalityHint: "many",
+      },
+      {
+        path: [
+          {
+            sourceClassName: target.primaryClass,
+            targetClassName: "BisCore.GroupInformationElement",
+            relationshipName: "BisCore.ElementGroupsMembers",
+            relationshipReverse: true,
+          },
+          {
+            sourceClassName: "BisCore.GroupInformationElement",
+            targetClassName: "BisCore.LinkElement",
+            relationshipName: "BisCore.ElementHasLinks",
+          },
+        ],
+        cardinalityHint: "many",
+        // Selecting both steps nests the link's category under the group's.
+        properties: [
+          { stepIndex: 0, target: { select: "all" } },
+          { stepIndex: 1, target: { select: "all" } },
+        ],
+      },
+    ],
+  };
+}
+
+/**
+ * Builds `BisCore:Element`'s external-source information related properties declarations and
+ * categories: the owning `ExternalSourceAspect`'s source identifier (`BisCore` ≥ 1.0.2), and the
+ * source's document link and, for group sources, its secondary sources' document links (`BisCore` ≥
+ * 1.0.13). All fields nest under "Source Information".
+ */
+async function createExternalSourceContribution(
+  imodelAccess: ECSchemaProvider,
+  target: ContentTarget,
+  strings: BisCoreLocalizedStrings,
+): Promise<{
+  relatedProperties: RelatedPropertiesDeclaration[];
+  categories: Record<CategoryDefinition["id"], CategoryDefinition>;
+}> {
+  const relatedProperties: RelatedPropertiesDeclaration[] = [];
+  const categories: Record<CategoryDefinition["id"], CategoryDefinition> = {};
+
+  const externalSourceAspectStep: RelationshipPathStep = {
+    sourceClassName: target.primaryClass,
+    targetClassName: "BisCore.ExternalSourceAspect",
+    relationshipName: "BisCore.ElementOwnsMultiAspects",
+    instanceFilter: { expression: "this.Kind <> 'Relationship'" },
+  };
+
+  if (await isBisCoreSchemaAtLeast(imodelAccess, "1.0.2")) {
+    categories[SOURCE_INFORMATION_CATEGORY_ID] = createSourceInformationCategory(strings);
+    relatedProperties.push({
+      path: [externalSourceAspectStep],
+      cardinalityHint: "many",
+      properties: [
+        {
+          stepIndex: 0,
+          target: {
+            select: { include: ["Identifier"] },
+            // EC property names are PascalCase; disable the naming-convention rule for this key.
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            overrides: { Identifier: { label: "Source Element ID", categoryId: SOURCE_INFORMATION_CATEGORY_ID } },
+          },
+        },
+      ],
+    });
+  }
+
+  if (await isBisCoreSchemaAtLeast(imodelAccess, "1.0.13")) {
+    categories[SOURCE_INFORMATION_CATEGORY_ID] = createSourceInformationCategory(strings);
+    categories[DOCUMENT_LINK_CATEGORY_ID] = createDocumentLinkCategory(strings);
+    categories[SECONDARY_SOURCES_CATEGORY_ID] = createSecondarySourcesCategory(strings);
+
+    // The source's own document link (repository link).
+    relatedProperties.push({
+      path: [
+        externalSourceAspectStep,
+        {
+          sourceClassName: "BisCore.ExternalSourceAspect",
+          targetClassName: "BisCore.ExternalSource",
+          relationshipName: "BisCore.ElementIsFromSource",
+        },
+        {
+          sourceClassName: "BisCore.ExternalSource",
+          targetClassName: "BisCore.RepositoryLink",
+          relationshipName: "BisCore.ExternalSourceIsInRepository",
+        },
+      ],
+      // Each aspect reaches at most one source/repository, but an element may own multiple
+      // `ExternalSourceAspect`s (the first step is 0..*), same as the identifier declaration above.
+      cardinalityHint: "many",
+      properties: [
+        {
+          stepIndex: 2,
+          target: {
+            select: "all",
+            defaultOverrides: { categoryId: DOCUMENT_LINK_CATEGORY_ID },
+            // EC property names are PascalCase; disable the naming-convention rule for these keys.
+            /* eslint-disable @typescript-eslint/naming-convention */
+            overrides: { UserLabel: { label: "Name" }, Url: { label: "Path" }, Model: { hidden: true } },
+            /* eslint-enable @typescript-eslint/naming-convention */
+          },
+        },
+      ],
+    });
+
+    // When the source is a group, the document links of every source in the group.
+    relatedProperties.push({
+      path: [
+        externalSourceAspectStep,
+        {
+          sourceClassName: "BisCore.ExternalSourceAspect",
+          targetClassName: "BisCore.ExternalSourceGroup",
+          relationshipName: "BisCore.ElementIsFromSource",
+        },
+        {
+          sourceClassName: "BisCore.ExternalSourceGroup",
+          targetClassName: "BisCore.ExternalSource",
+          relationshipName: "BisCore.ExternalSourceGroupGroupsSources",
+        },
+        {
+          sourceClassName: "BisCore.ExternalSource",
+          targetClassName: "BisCore.RepositoryLink",
+          relationshipName: "BisCore.ExternalSourceIsInRepository",
+        },
+      ],
+      cardinalityHint: "many",
+      properties: [
+        {
+          stepIndex: 3,
+          target: {
+            select: { include: ["UserLabel", "Url"] },
+            // EC property names are PascalCase; disable the naming-convention rule for these keys.
+            /* eslint-disable @typescript-eslint/naming-convention */
+            overrides: {
+              UserLabel: { label: "Name", categoryId: SECONDARY_SOURCES_CATEGORY_ID },
+              Url: { label: "Path", categoryId: SECONDARY_SOURCES_CATEGORY_ID },
+            },
+            /* eslint-enable @typescript-eslint/naming-convention */
+          },
+        },
+      ],
+    });
+  }
+
+  return { relatedProperties, categories };
+}
+
+/**
+ * Builds 2d/3d type-definition related properties declarations (`GeometricElement3dHasTypeDefinition`
+ * / `GeometricElement2dHasTypeDefinition`) and represented-element declarations
+ * (`DrawingGraphicRepresentsElement` / `GraphicalElement3dRepresentsElement`).
+ *
+ * A declaration applies when the target class derives from its source class, or the source class derives
+ * from the target class (a request for `BisCore.GeometricElement3d` still reaches
+ * `GraphicalElement3dRepresentsElement`). In the latter case the path starts at the source class, so the
+ * declaration only applies to its instances.
+ */
+async function createTypeDefinitionAndRepresentedElementRelatedProperties(
+  imodelAccess: ECSchemaProvider,
+  target: ContentTarget,
+): Promise<RelatedPropertiesDeclaration[]> {
+  const relatedProperties: RelatedPropertiesDeclaration[] = [];
+  const declare = async (props: {
+    declaredSourceClassName: EC.FullClassNameDotNotation;
+    relationshipName: EC.FullClassNameDotNotation;
+    targetClassName: EC.FullClassNameDotNotation;
+    cardinalityHint: RelatedPropertiesDeclaration["cardinalityHint"];
+  }) => {
+    const sourceClassName = await resolveEffectiveSourceClass(
+      imodelAccess,
+      target.primaryClass,
+      props.declaredSourceClassName,
+    );
+    if (sourceClassName) {
+      relatedProperties.push({
+        path: [{ sourceClassName, targetClassName: props.targetClassName, relationshipName: props.relationshipName }],
+        cardinalityHint: props.cardinalityHint,
+      });
+    }
+  };
+
+  await declare({
+    declaredSourceClassName: "BisCore.GeometricElement3d",
+    relationshipName: "BisCore.GeometricElement3dHasTypeDefinition",
+    targetClassName: "BisCore.TypeDefinitionElement",
+    cardinalityHint: "one",
+  });
+  await declare({
+    declaredSourceClassName: "BisCore.GraphicalElement3d",
+    relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
+    targetClassName: "BisCore.Element",
+    cardinalityHint: "many",
+  });
+  await declare({
+    declaredSourceClassName: "BisCore.GeometricElement2d",
+    relationshipName: "BisCore.GeometricElement2dHasTypeDefinition",
+    targetClassName: "BisCore.TypeDefinitionElement",
+    cardinalityHint: "one",
+  });
+  await declare({
+    declaredSourceClassName: "BisCore.DrawingGraphic",
+    relationshipName: "BisCore.DrawingGraphicRepresentsElement",
+    targetClassName: "BisCore.Element",
+    cardinalityHint: "many",
+  });
+
+  return relatedProperties;
+}
+
+/**
+ * The iModel fields provider contributing `BisCore:Element`'s owned aspect fields
+ * (`ElementOwnsUniqueAspect` and `ElementOwnsMultiAspects`).
+ *
+ * Kept separate from `bisCoreFieldsProvider` because owned aspects are the only BisCore contribution
+ * that applies on nested content, and `applyRecursively` is a provider-level (not
+ * declaration-level) opt-in. Owned aspects therefore surface on the content target itself and on
+ * every nested anchor — the related instances whose full property set some declaration surfaces,
+ * e.g. an element's link, its type definition, an element it represents or its external source's
+ * document link. Declarations picking only a few named properties of their target (the model-source
+ * and secondary-source links) don't anchor nested content, so those elements surface no aspect
+ * fields.
+ *
+ * @internal
+ */
+export function createBisCoreAspectsFieldsProvider(): IModelFieldsProvider {
+  return defineIModelFieldsProvider({
+    id: "biscore-aspects_v1",
+    applyRecursively: true,
+    async getContribution({ imodelAccess, target }) {
+      if (!(await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.Element"))) {
+        return undefined;
+      }
+      return { relatedProperties: await createAspectRelatedProperties(imodelAccess, target) };
+    },
+  });
+}
+
+/**
+ * Creates the iModel fields provider contributing BisCore-specific fields for any target deriving
+ * from `BisCore.Element`: groups, element and group-member links plus the model-source repository link,
+ * external-source information (source identifier and, on newer `BisCore` versions, document links
+ * and secondary sources), and 2d/3d type-definition and represented-element fields.
+ *
+ * None of these contributions apply on nested content — they're only contributed for the direct
+ * content target. Owned aspect fields, which do apply on nested content, are contributed by
+ * `bisCoreAspectsFieldsProvider` instead.
+ */
+export function createBisCoreFieldsProvider(strings: BisCoreLocalizedStrings): IModelFieldsProvider {
+  return defineIModelFieldsProvider({
+    id: "biscore-fields_v1",
+    async getContribution({ imodelAccess, target }) {
+      if (!(await imodelAccess.classDerivesFrom(target.primaryClass, "BisCore.Element"))) {
+        return undefined;
+      }
+
+      const groupsContribution = createGroupsContribution(target);
+      const linksContribution = createLinksContribution(target, strings);
+      const externalSourceContribution = await createExternalSourceContribution(imodelAccess, target, strings);
+
+      const relatedProperties: RelatedPropertiesDeclaration[] = [
+        ...linksContribution.relatedProperties,
+        ...groupsContribution.relatedProperties,
+        ...externalSourceContribution.relatedProperties,
+        ...(await createTypeDefinitionAndRepresentedElementRelatedProperties(imodelAccess, target)),
+      ];
+
+      return {
+        relatedProperties,
+        categories: { ...linksContribution.categories, ...externalSourceContribution.categories },
+      };
+    },
+  });
+}

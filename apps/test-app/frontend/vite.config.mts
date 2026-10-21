@@ -5,12 +5,16 @@
 
 import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    babel({
+      presets: [reactCompilerPreset({ target: "18" })],
+    }),
     viteStaticCopy({
       targets: [
         {
@@ -34,5 +38,13 @@ export default defineConfig({
         replacement: "$1",
       },
     ],
+  },
+  build: {
+    assetsInlineLimit: (filePath) => {
+      if (filePath.includes("@itwin/itwinui-icons/")) {
+        return false;
+      }
+      return undefined;
+    },
   },
 });

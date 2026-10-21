@@ -7,12 +7,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import {
-  PresentationInstanceFilterBuilder,
-  PresentationInstanceFilterInfo,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationInstanceFilterBuilder } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { createTestECClassInfo, stubSchemaViewForClasses, stubVirtualization } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -20,6 +17,9 @@ import {
   createTestPropertiesContentField,
 } from "../_helpers/Content.js";
 import { render, waitFor, waitForElement, within } from "../TestUtils.js";
+
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 
 describe("PresentationInstanceFilter", () => {
   stubVirtualization();

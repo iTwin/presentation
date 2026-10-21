@@ -22,16 +22,11 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
 
   ```ts
   import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createHiliteSetProvider } from "@itwin/unified-selection";
 
-  const schemaProvider = createECSchemaProvider(getIModelConnection().schemaContext);
+  const schemaProvider = createECSchemaProvider(getIModelConnection());
   const hiliteProvider = createHiliteSetProvider({
-    imodelAccess: {
-      ...schemaProvider,
-      ...createCachingECClassHierarchyInspector({ schemaProvider }),
-      ...createECSqlQueryExecutor(imodel),
-    },
+    imodelAccess: { ...schemaProvider, ...createECSqlQueryExecutor(getIModelConnection()) },
   });
   const hiliteSetIterator = hiliteProvider.getHiliteSet({ selectables });
   ```
@@ -55,7 +50,9 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
     // this is called to get iModel accessor based on the iModel key
     imodelProvider: (imodelKey) => getIModelByKey(imodelKey),
   });
-  const hiliteSetIterator = selectionHiliteProvider.getCurrentHiliteSet({ imodelKey: createIModelKey(imodel) });
+  const hiliteSetIterator = selectionHiliteProvider.getCurrentHiliteSet({
+    imodelKey: createIModelKey(imodelConnection),
+  });
   ```
 
    <!-- END EXTRACTION -->

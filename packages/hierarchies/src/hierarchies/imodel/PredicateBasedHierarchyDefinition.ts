@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } from "rxjs";
-import { Id64String } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../HierarchyNode.js";
-import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
-import {
+
+import type { Id64String } from "@itwin/core-bentley";
+import type { EC, ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
+import type { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import type {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyDefinitionParentNode,
@@ -35,7 +36,7 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
    * keys are grouped by class and a hierarchy level definition is requested for each combination of class and
    * instance IDs (with the same `parentNode`).
    */
-  parentNodeClassName: string;
+  parentNodeClassName: EC.FullClassNameDotNotation;
 
   /**
    * ECInstanceIds of the parent instance node.
@@ -64,7 +65,7 @@ interface InstancesNodeChildHierarchyLevelDefinition {
    * - The function version should return a boolean indicating whether this hierarchy level definition should be used
    * for the given parent node.
    */
-  parentInstancesNodePredicate: string | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
+  parentInstancesNodePredicate: EC.FullClassNameDotNotation | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
 
   /**
    * Called to create a hierarchy level definition when the `parentInstancesNodePredicate` predicate passes.
@@ -144,7 +145,7 @@ interface PredicateBasedHierarchyDefinitionProps extends Pick<
   "parseNode" | "preProcessNode" | "postProcessNode"
 > {
   /** Access to ECClass hierarchy in the iModel */
-  classHierarchyInspector: ECClassHierarchyInspector;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
 
   /** Hierarchy level definitions */
   hierarchy: {
@@ -219,7 +220,7 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
       return firstValueFrom(
         from(groupInstanceIdsByClass(parentNode.key.instanceKeys).entries()).pipe(
           mergeMap(async ([parentNodeClassName, parentNodeInstanceIds]) =>
-            createHierarchyLevelDefinitions(this._props.classHierarchyInspector, instancesParentNodeDefs, {
+            createHierarchyLevelDefinitions(this._props.imodelAccess, instancesParentNodeDefs, {
               ...props,
               parentNodeClassName,
               parentNodeInstanceIds,
@@ -237,7 +238,7 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
 }
 
 async function createHierarchyLevelDefinitions(
-  classHierarchy: ECClassHierarchyInspector,
+  classHierarchy: Pick<ECSchemaProvider, "classDerivesFrom">,
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   requestProps: DefineInstanceNodeChildHierarchyLevelProps,
 ) {
@@ -267,7 +268,7 @@ async function createHierarchyLevelDefinitions(
 }
 
 function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
-  const instanceIdsByClass = new Map<string, Id64String[]>();
+  const instanceIdsByClass = new Map<EC.FullClassNameDotNotation, Id64String[]>();
   instanceKeys.forEach((key) => {
     let instanceIds = instanceIdsByClass.get(key.className);
     if (!instanceIds) {

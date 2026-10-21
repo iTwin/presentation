@@ -10,47 +10,49 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { IModelConnection } from "@itwin/core-frontend";
 import { afterAll, describe, it, test } from "vitest";
+import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
-import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
+import { withEditTxn } from "@itwin/core-backend";
+import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
 import { createIModelAccess } from "../Utils.js";
-import { buildTestIModel } from "../../TestIModelSetup.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Hierarchy level filtering", () => {
-      let imodel: IModelConnection;
+      let imodelConnection: IModelConnection;
 
       test.beforeAll(async (_, suite) => {
         await initialize();
 
-        const res = await buildTestIModel(suite.fullTestName!, async (builder) => {
-          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
-          const category = insertSpatialCategory({ builder, codeValue: "category" });
-          const a = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, userLabel: "A" });
-          const b = insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "B",
-            parentId: a.id,
+        const res = await buildTestIModel(suite.fullTestName!, async (imodel) => {
+          return withEditTxn(imodel, (txn) => {
+            const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const a = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id, userLabel: "A" });
+            const b = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "B",
+              parentId: a.id,
+            });
+            const c = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: category.id,
+              userLabel: "C",
+              parentId: b.id,
+            });
+            return { a, b, c };
           });
-          const c = insertPhysicalElement({
-            builder,
-            modelId: model.id,
-            categoryId: category.id,
-            userLabel: "C",
-            parentId: b.id,
-          });
-          return { a, b, c };
         });
-        imodel = res.imodel;
+        imodelConnection = res.imodelConnection;
       });
 
       afterAll(async () => {
@@ -69,7 +71,10 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({
+            imodelAccess: createIModelAccess(imodelConnection),
+            hierarchyDefinition,
+          }),
           expect: [
             NodeValidators.createForGenericNode({ key: "custom node", label: "Custom Node", supportsFiltering: true }),
           ],
@@ -77,23 +82,16 @@ describe("Hierarchies", () => {
       });
 
       it("creates filterable instances node", async () => {
-        const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.InstanceNodesQueryDefinition
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel({ parentNode }) {
+          async defineHierarchyLevel({ parentNode, createSelectClause }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
                   query: {
                     ecsql: `
-                      SELECT ${await queryClauseFactory.createSelectClause({
+                      SELECT ${await createSelectClause({
                         ecClassId: { selector: "this.ECClassId" },
                         ecInstanceId: { selector: "this.ECInstanceId" },
                         nodeLabel: { selector: "this.UserLabel" },
@@ -111,37 +109,33 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({
+            imodelAccess: createIModelAccess(imodelConnection),
+            hierarchyDefinition,
+          }),
           expect: [NodeValidators.createForInstanceNode({ label: "A", supportsFiltering: true })],
         });
       });
 
       it("applies filter", async () => {
-        const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.ApplyFilter
-        const queryClauseFactory = createNodesQueryClauseFactory({
-          imodelAccess,
-          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({
-            classHierarchyInspector: imodelAccess,
-          }),
-        });
         const hierarchyDefinition: HierarchyDefinition = {
-          async defineHierarchyLevel(props) {
+          async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
             // `createFilterClauses` function returns `from`, `joins`, and `where` clauses which need to be used in the
             // query in appropriate places
-            const { from, joins, where } = await queryClauseFactory.createFilterClauses({
+            const { from, joins, where } = await createFilterClauses({
               // specify the content class whose instances are used to build nodes - this should
               // generally match the instance whose ECClassId and ECInstanceId are used in the SELECT clause
               contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
               // specify the filter that we get from props for this hierarchy level
-              filter: props.instanceFilter,
+              filter: instanceFilter,
             });
             return [
               {
                 fullClassName: "BisCore.PhysicalElement",
                 query: {
                   ecsql: `
-                    SELECT ${await queryClauseFactory.createSelectClause({
+                    SELECT ${await createSelectClause({
                       ecClassId: { selector: "this.ECClassId" },
                       ecInstanceId: { selector: "this.ECInstanceId" },
                       nodeLabel: { selector: "this.UserLabel" },
@@ -157,10 +151,10 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         const provider = createIModelHierarchyProvider({
-          imodelAccess: createIModelAccess(imodel),
+          imodelAccess: createIModelAccess(imodelConnection),
           hierarchyDefinition,
         });
-        const instanceFilter: GenericInstanceFilter = {
+        const testInstanceFilter: GenericInstanceFilter = {
           propertyClassNames: ["BisCore.PhysicalElement"],
           relatedInstances: [],
           rules: {
@@ -184,7 +178,7 @@ describe("Hierarchies", () => {
           },
         };
         validateHierarchyLevel({
-          nodes: await collect(provider.getNodes({ parentNode: undefined, instanceFilter })),
+          nodes: await collect(provider.getNodes({ parentNode: undefined, instanceFilter: testInstanceFilter })),
           expect: [
             NodeValidators.createForInstanceNode({ label: "B" }),
             NodeValidators.createForInstanceNode({ label: "C" }),

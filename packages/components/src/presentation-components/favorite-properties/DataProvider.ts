@@ -6,14 +6,16 @@
  * @module FavoriteProperties
  */
 
-import { PropertyData } from "@itwin/components-react";
-import { Id64Arg } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, Ruleset } from "@itwin/presentation-common";
+import { KeySet } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { computeSelection } from "@itwin/unified-selection";
 import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider.js";
 import { getFavoritesCategory } from "./Utils.js";
+
+import type { PropertyData } from "@itwin/components-react";
+import type { Id64Arg } from "@itwin/core-bentley";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type { Ruleset } from "@itwin/presentation-common";
 
 /**
  * An data provider interface for returning favorite properties for the given elements
@@ -75,7 +77,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     this.includeFieldsWithNoValues = true;
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithCompositeValues = true;
-    this._customRuleset = /* v8 ignore next -- @preserve */ props?.ruleset;
+    this._customRuleset = props.ruleset;
     /* v8 ignore start -- @preserve */
     this._getActiveScope = props.activeScopeProvider;
     /* v8 ignore stop -- @preserve */

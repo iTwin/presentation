@@ -1,0 +1,240 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { serializeRelationshipPath } from "./Utils.js";
+
+import type { DeepReadonly, EC, ECSqlBinding, RelationshipPath, ValueDescriptor } from "@itwin/presentation-shared";
+import type { CardinalityHint } from "../ContentTarget.js";
+
+/**
+ * Base attributes shared by all field kinds.
+ *
+ * @public
+ */
+interface BaseField {
+  /**
+   * Stable ID that uniquely identifies this field across descriptor rebuilds.
+   * Derived from: propertyClassName + propertyAccessPath (for property fields),
+   * or a declared stable name (for calculated/external fields).
+   */
+  id: string;
+  /** Display name shown to the user. */
+  label: string;
+  /**
+   * The shape of a *single* value for this field.
+   *
+   * A property field reached over a many-valued path carries one such value per related instance, so
+   * its stored value is an array of this shape — see {@link (PropertyField:interface).pathCardinality}.
+   */
+  type: ValueDescriptor;
+  /** The category this field belongs to (by ID). */
+  categoryId?: string;
+  /** If true, the field is queried but not displayed in UI. */
+  hidden?: boolean;
+  /** If true, the field is read-only. */
+  readOnly?: boolean;
+}
+
+/**
+ * A field backed by a real EC property.
+ *
+ * @public
+ */
+export interface PropertyField extends BaseField {
+  kind: "property";
+  /**
+   * Full class name of the class that *declares* this property (e.g., "BisCore.Element").
+   * Drives the SQL column / property metadata. Distinct from {@link (PropertyField:interface).valueClassNames},
+   * which are the concrete *value-supplier* classes this field represents.
+   */
+  propertyClassName: EC.FullClassNameDotNotation;
+  /** The EC property name within the property's class. */
+  propertyName: string;
+  /**
+   * For a related property, identifies whether the property belongs to the relationship path step's
+   * target class or relationship class. Undefined for a direct property.
+   */
+  propertyClassKind?: "target" | "relationship";
+  /**
+   * Relationship path from the content target to this field's property class.
+   * Empty array means the field belongs to the target class directly.
+   */
+  pathFromTarget: RelationshipPath;
+  /**
+   * Whether one primary instance reaches at most one related instance over
+   * {@link (PropertyField:interface).pathFromTarget} (`"one"`) or possibly several (`"many"`).
+   * Always `"one"` for a direct property.
+   *
+   * `"many"` means the field's stored value is an array carrying one
+   * {@link (PropertyField:interface).type}-shaped element per related instance. The type itself stays
+   * the property's own value shape, so an array-shaped `type` always means a genuine EC array property.
+   *
+   * Taken from the contributing declaration's `cardinalityHint` where given, else from schema
+   * multiplicity of the traversed relationship constraints.
+   * Other fields and external inputs on the same query path do not change this field's value shape.
+   * Loading fails if a `"one"` field reaches more than one related instance.
+   */
+  pathCardinality: CardinalityHint;
+  /**
+   * Concrete classes of the instances that supply this field's value (the field's "value origin").
+   *
+   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these are the
+   * primary (selected) classes; for a related property they are the concrete classes at the
+   * relationship path's terminal end. For example, `["Stuff.Door", "Stuff.Window"]` for a
+   * `Height` declared on `Stuff.Thing`, or `["BisCore.ExternalSourceAspectX",
+   * "BisCore.ExternalSourceAspectY"]` for an `Identifier` declared on
+   * `BisCore.ExternalSourceAspect` and loaded over a relationship.
+   *
+   * Do not confuse this with:
+   * - {@link (PropertyField:interface).propertyClassName} — the class that *declares* the property.
+   * - The content *target* classes (the classes content was requested for). For a direct property the
+   *   value classes coincide with the target classes, but for a related property they are the
+   *   related-endpoint classes rather than the target.
+   *
+   * Always non-empty, de-duplicated, and sorted by full name.
+   */
+  valueClassNames: EC.FullClassNameDotNotation[];
+  /**
+   * Concrete primary (content target) classes whose instances have access to this field.
+   *
+   * For a direct property (empty {@link (PropertyField:interface).pathFromTarget}) these coincide
+   * with {@link (PropertyField:interface).valueClassNames} — the primary class *is* the value
+   * origin. For a related property they are the concrete classes at the relationship path's
+   * *first* step's source end — i.e. the primary-side classes that actually connect to this
+   * field's related value, as opposed to {@link (PropertyField:interface).valueClassNames}, which
+   * are the classes at the path's terminal (related) end.
+   *
+   * For example, given primary classes `A1`/`A2` both related to `B` over the same relationship,
+   * a property declared on `B` has `valueClassNames: ["B"]` but `primaryClassNames: ["A1", "A2"]`. If
+   * instead `A1` and `A2` relate to distinct concrete classes `B1`/`B2`, separate fields are
+   * created: one with `valueClassNames: ["B1"]`/`primaryClassNames: ["A1"]`, the other with
+   * `valueClassNames: ["B2"]`/`primaryClassNames: ["A2"]`.
+   *
+   * Always non-empty, de-duplicated, and sorted by full name.
+   */
+  primaryClassNames: EC.FullClassNameDotNotation[];
+}
+/** @public */
+export namespace PropertyField {
+  /**
+   * Computes the ID of a property field from its source class, property name,
+   * and relationship path from the target. Use this to look up property fields
+   * directly in `descriptor.fields`.
+   *
+   * When a non-empty `forkKey` is provided, it is appended as a `#${forkKey}` suffix so a field
+   * that has been carved for a subset of its value-supplier classes gets a distinct, stable ID.
+   * An `undefined` or empty `forkKey` leaves the identity unchanged — so a survivor field keeps
+   * its original ID.
+   */
+  export function computeId(props: {
+    propertyClassName: EC.FullClassNameDotNotation;
+    propertyName: string;
+    pathFromTarget?: RelationshipPath;
+    forkKey?: string;
+  }): Field["id"] {
+    let identity = `${props.propertyClassName}.${props.propertyName}`;
+    if (props.pathFromTarget && props.pathFromTarget.length > 0) {
+      identity += `(${serializeRelationshipPath({ path: props.pathFromTarget, includeInstanceFilters: true })})`;
+    }
+    if (props.forkKey) {
+      identity += `#${props.forkKey}`;
+    }
+    return identity;
+  }
+}
+
+/**
+ * A field whose value is computed by an ECSQL expression evaluated in the query.
+ * Participates in SQL-level sorting, filtering, and distinct values.
+ *
+ * @public
+ */
+export interface CalculatedField extends BaseField {
+  kind: "calculated";
+  /**
+   * The class `expression` is evaluated against, as declared by the contributing provider. The field
+   * applies to this class and its subclasses; `primaryClassNames` lists the selected ones.
+   */
+  sourceClassName: EC.FullClassNameDotNotation;
+  /**
+   * The ECSQL expression that computes this field's value.
+   *
+   * Use `targetAlias` (defaults to `"this"`) followed by a dot to reference properties
+   * of the content target class. At query generation time, the pipeline performs a literal
+   * replacement of all `{targetAlias}.` occurrences with the actual query alias.
+   *
+   * **Important:** The value of `targetAlias` must not appear elsewhere in the expression
+   * (e.g., inside string literals or subquery aliases) — every occurrence followed by a dot
+   * will be substituted.
+   *
+   * @example
+   * ```
+   * expression: "this.CodeValue || '-' || this.UserLabel"
+   * // → "e.CodeValue || '-' || e.UserLabel"  (where "e" is the runtime alias)
+   * ```
+   */
+  expression: string;
+  /**
+   * The placeholder used in `expression` to reference the content target class.
+   * Every occurrence of `{targetAlias}.` in the expression will be replaced with the
+   * actual query alias at query generation time.
+   *
+   * @default "this"
+   */
+  targetAlias?: string;
+  /**
+   * Bind values referenced by `expression`, keyed by parameter name.
+   */
+  bindings?: Record<string, ECSqlBinding>;
+  /**
+   * Concrete primary (content target) classes whose instances have access to this field — the
+   * union, across every content target the contributing declaration applied to, of each target's
+   * resolved concrete classes (see `ContentSource.resolvedPrimaryClasses`).
+   *
+   * Always non-empty, de-duplicated, and sorted by full name.
+   */
+  primaryClassNames: EC.FullClassNameDotNotation[];
+}
+
+/**
+ * A field whose value is populated by an external fields provider
+ * (data fetched from outside the iModel).
+ * Cannot participate in SQL-level sorting, filtering, or distinct values.
+ *
+ * @public
+ */
+export interface ExternalField extends BaseField {
+  kind: "external";
+  /** The ID of the external fields provider that populates this field. */
+  providerId: string;
+}
+
+/**
+ * A discriminated union of all field kinds.
+ *
+ * @public
+ */
+export type Field = PropertyField | CalculatedField | ExternalField;
+
+/**
+ * Readonly version of {@link (PropertyField:interface)}.
+ * @public
+ */
+export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
+/**
+ * Readonly version of {@link CalculatedField}.
+ * @public
+ */
+export type ReadonlyCalculatedField = DeepReadonly<CalculatedField>;
+/**
+ * Readonly version of {@link ExternalField}.
+ * @public
+ */
+export type ReadonlyExternalField = DeepReadonly<ExternalField>;
+/**
+ * Readonly version of {@link Field}.
+ * @public
+ */
+export type ReadonlyField = ReadonlyPropertyField | ReadonlyCalculatedField | ReadonlyExternalField;

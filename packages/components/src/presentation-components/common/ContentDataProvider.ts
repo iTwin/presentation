@@ -8,17 +8,19 @@
 
 import "./DisposePolyfill.js";
 
-import { PropertyDescription } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import {
+import { Content, DEFAULT_KEYS_BATCH_SIZE, Descriptor, KeySet } from "@itwin/presentation-common";
+import { type IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createDiagnosticsOptions, type DiagnosticsProps } from "./Diagnostics.js";
+import { findField, getRulesetId, memoize, type RulesetOrId } from "./Utils.js";
+
+import type { PropertyDescription } from "@itwin/appui-abstract";
+import type { IModelConnection } from "@itwin/core-frontend";
+import type {
   ClientDiagnosticsOptions,
-  Content,
-  DEFAULT_KEYS_BATCH_SIZE,
-  Descriptor,
   DescriptorOverrides,
   Field,
-  KeySet,
   PageOptions,
   RegisteredRuleset,
   RequestOptionsWithRuleset,
@@ -26,11 +28,7 @@ import {
   RulesetVariable,
   SelectionInfo,
 } from "@itwin/presentation-common";
-import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
-import { createDiagnosticsOptions, DiagnosticsProps } from "./Diagnostics.js";
-import { IPresentationDataProvider } from "./IPresentationDataProvider.js";
-import { findField, getRulesetId, memoize, RulesetOrId } from "./Utils.js";
+import type { IPresentationDataProvider } from "./IPresentationDataProvider.js";
 
 /**
  * Properties for invalidating content cache.
@@ -187,7 +185,7 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   public dispose() {
     this.#dispose();
   }
@@ -265,15 +263,15 @@ export class ContentDataProvider implements IContentDataProvider {
    * Invalidates cached content.
    */
   protected invalidateCache(props: CacheInvalidationProps): void {
-    if (props.descriptor && this.getDefaultContentDescriptor) {
+    if (props.descriptor) {
       this.getDefaultContentDescriptor.cache.keys.length = 0;
       this.getDefaultContentDescriptor.cache.values.length = 0;
     }
-    if (props.descriptorConfiguration && this.getContentDescriptor) {
+    if (props.descriptorConfiguration) {
       this.getContentDescriptor.cache.keys.length = 0;
       this.getContentDescriptor.cache.values.length = 0;
     }
-    if ((props.content || props.size) && this._getContentAndSize) {
+    if (props.content || props.size) {
       this._getContentAndSize.cache.keys.length = 0;
       this._getContentAndSize.cache.values.length = 0;
     }
@@ -322,7 +320,7 @@ export class ContentDataProvider implements IContentDataProvider {
 
   private getDefaultContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
     this.setupListeners();
-    /* v8 ignore next 5 -- @preserve */
+    /* v8 ignore next -- @preserve */
     if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
       const msg = `ContentDataProvider.getContentDescriptor requesting descriptor with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -394,7 +392,7 @@ export class ContentDataProvider implements IContentDataProvider {
       this.setupListeners();
       const descriptorOverrides = await this.getDescriptorOverrides();
 
-      /* v8 ignore next 5 -- @preserve */
+      /* v8 ignore next -- @preserve */
       if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
         const msg = `ContentDataProvider.getContent requesting with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -453,11 +451,11 @@ export class ContentDataProvider implements IContentDataProvider {
 }
 
 function areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
     return false;
   }
-  /* v8 ignore next 3 -- @preserve */
+  /* v8 ignore next -- @preserve */
   if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
     return false;
   }

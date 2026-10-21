@@ -4,18 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
-import { computeSelection, SelectionScope } from "../unified-selection/SelectionScope.js";
+import { TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
+import { computeSelection } from "../unified-selection/SelectionScope.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
+import type { ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import type { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import type { SelectionScope } from "../unified-selection/SelectionScope.js";
+
 describe("SelectionScope", () => {
-  const queryExecutor = {
-    createQueryReader:
-      vi.fn<
-        (query: ECSqlQueryDef, options?: ECSqlQueryReaderOptions) => ReturnType<ECSqlQueryExecutor["createQueryReader"]>
-      >(),
-  };
+  const queryExecutor = { createQueryReader: vi.fn<ECSqlQueryExecutor["createQueryReader"]>() };
 
   describe("computeSelection", () => {
     function createFakeQueryReader<TRow extends object>(
@@ -29,7 +27,7 @@ describe("SelectionScope", () => {
     }
 
     function mockQuery(targetECSqlContent: string, result: SelectableInstanceKey[]) {
-      queryExecutor.createQueryReader.mockImplementation((query: ECSqlQueryDef) => {
+      queryExecutor.createQueryReader.mockImplementation((query) => {
         if (query.ecsql.includes(targetECSqlContent)) {
           return createFakeQueryReader<ECSqlQueryRow>(
             // eslint-disable-next-line @typescript-eslint/naming-convention
