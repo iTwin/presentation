@@ -393,6 +393,33 @@ describe("mergePropertyFieldsByIdentity", () => {
         ]),
       ).to.throw(/divergent metadata/);
     });
+
+    it("accepts equal contexts from the same provider", () => {
+      expect(
+        placementOf([
+          { providerId: "a_v1", context: innerContext },
+          { providerId: "a_v1", context: [...innerContext] },
+        ]),
+      ).to.deep.equal({ anchor: "targetClass", categoryContext: innerContext });
+    });
+
+    it("rejects same-length contexts with divergent step indexes from the same provider", () => {
+      expect(() =>
+        placementOf([
+          { providerId: "a_v1", context: outerContext },
+          { providerId: "a_v1", context: [{ stepIndex: 1, kind: "targetClass" }] },
+        ]),
+      ).to.throw(/divergent metadata/);
+    });
+
+    it("rejects same-length contexts with divergent kinds from the same provider", () => {
+      expect(() =>
+        placementOf([
+          { providerId: "a_v1", context: outerContext },
+          { providerId: "a_v1", context: [{ stepIndex: 0, kind: "relationshipClass" }] },
+        ]),
+      ).to.throw(/divergent metadata/);
+    });
   });
 
   it("merges candidates that agree on property category facts", () => {

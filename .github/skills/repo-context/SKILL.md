@@ -47,6 +47,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 
 ## Key Conventions
 
+- For packages under `packages/`, a package is **private** when its `package.json` sets `"private": true`; otherwise it is **public**. A **production package** is any public package, plus any private package whose `package.json` declares a `license` field. Production packages require 100% test coverage; use `pnpm cover` to check it.
 - Packages produce ESM-only output via `tsconfig.lib.json` (built with `tsc`) or `tsdown`
 - Public API is tracked via `extract-api` and `.api.md` report files in `api/` folders
 - Copyright headers are required on all source files (enforced by `copyrightLinter.js`):

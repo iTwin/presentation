@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 2.0.0-alpha.4
+
+### Patch Changes
+
+- [#1654](https://github.com/iTwin/presentation/pull/1654): Avoid copying large ID sets when creating selection query bindings, reducing allocations for large selections.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.16
+
 ## 2.0.0-alpha.3
 
 ### Patch Changes

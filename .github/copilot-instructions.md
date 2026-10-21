@@ -1,12 +1,17 @@
 # Copilot Instructions
 
-## PR Review Guidelines
+The guidelines below apply both to agents implementing changes and to reviewers of pull requests: implementers follow them, reviewers check them.
 
-When reviewing pull requests in this repository, check the following:
+## Reviewing Pull Requests
+
+- Do not validate build, lint, formatting or test coverage; CI handles those.
+- Focus on API design, logical correctness, readability, and maintainability.
+
+## Guidelines
 
 ### Testing Requirements
 
-- New functionality must be covered by tests (unit and/or integration depending on the feature).
+- New functionality must be covered by tests (unit and/or integration depending on the feature). Production packages (see [`SKILL.md`](skills/repo-context/SKILL.md)) must keep 100% coverage; when implementing, verify it with `pnpm cover` in the package.
 - Tests use Vitest — verify new tests follow the existing patterns in the package.
 - Integration tests live in `apps/full-stack-tests/`; unit tests live alongside source in each package.
 - Verify that edge cases, error paths, and boundary conditions are tested.
@@ -17,14 +22,16 @@ When reviewing pull requests in this repository, check the following:
 - Avoid cross-package coupling beyond the established dependency graph.
 - React code should follow the existing hook/component patterns in `packages/hierarchies-react/`, `packages/unified-selection-react/`, and `packages/components/`.
 
+### Code Reuse
+
+- Tests: when a utility is already available in another package's tests (including `apps/full-stack-tests/`), or doesn't exist yet but could be useful elsewhere in the future, prefer adding it to the private `presentation-test-utilities` package (`packages/test-utilities`) rather than duplicating test code across the repo.
+- Production code: prefer reusing code through `@itwin/presentation-shared` (`packages/shared`). It's a public package, so the public API, changeset, and documentation requirements below apply to anything added there.
+
 ### Public API
 
-- Any change to an exported symbol (added, removed, or signature-changed) must update the corresponding `api/*.api.md` report file in the affected package.
-- Breaking changes to public APIs in public packages must be clearly justified and coordinated with the team.
-- For private packages, prefer breaking public APIs over preserving compatibility when doing so produces a better API design.
+- Any change to an exported symbol (added, removed, or signature-changed) must update the corresponding `api/*.api.md` report file in the affected package. When implementing, run `pnpm build` and `pnpm extract-api` in the package and verify no unexpected API diff is introduced. `extract-api` fails when an API reachable through barrel exports lacks a release tag.
+- Prioritize a good API over backward compatibility at all costs. For private packages, do not avoid breaking changes just to preserve compatibility. For public packages, when a breaking change could produce a better API, propose it alongside a backward-compatible approach and let the user choose.
 - Do not add `@internal` tags. APIs not reachable through a barrel export are internal. Every API reachable through a barrel export requires an `@public` or `@beta` release tag.
-- `extract-api` must fail when an API reachable through barrel exports lacks a release tag.
-- Run `pnpm build` and `pnpm extract-api` in the affected package, then check the `api/*.api.md` report files and verify no unexpected API diff is introduced.
 
 ### Changelog / Changesets
 

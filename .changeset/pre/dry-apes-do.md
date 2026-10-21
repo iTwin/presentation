@@ -27,9 +27,3 @@ function MyTree() {
   );
 }
 ```
-
-**Breaking changes**
-
-- `StrataKitTreeNodeRenderer` is no longer exported.
-- `RenameContextProvider` is no longer exported. It is not necessary when using `StrataKitTreeRenderer`.
-- `RenameAction` now requires a `node` prop.
