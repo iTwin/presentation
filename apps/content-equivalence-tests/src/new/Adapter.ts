@@ -93,30 +93,36 @@ function captureNewItem(item: ContentItem, descriptor: ReadonlyContentDescriptor
 
 export async function captureNew(props: {
   imodel: IModelDb;
+  signal: AbortSignal;
   scenario: Scenario;
   implementationFingerprint: string;
   imodelFingerprint: string;
 }): Promise<NewCapture> {
-  const { imodel, scenario } = props;
+  const { imodel, signal, scenario } = props;
   const imodelAccess = createIModelAccess(imodel);
   const config = await createIModelContentConfiguration({ imodelAccess });
   if (scenario.id === "sampled-elements") {
-    const items = await mapConcurrently(scenario.keys, SAMPLED_ITEM_CONCURRENCY, async (key) => {
-      const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
-      const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
-      const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
-      const itemDescriptor = await itemProvider.getContentDescriptor();
-      const capturedItems: CapturedNewItem[] = [];
-      for await (const item of itemProvider.getItems()) {
-        capturedItems.push(captureNewItem(item, itemDescriptor));
-      }
-      if (capturedItems.length !== 1) {
-        throw new Error(
-          `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
-        );
-      }
-      return capturedItems[0];
-    });
+    const items = await mapConcurrently(
+      scenario.keys,
+      SAMPLED_ITEM_CONCURRENCY,
+      async (key) => {
+        const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
+        const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
+        const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
+        const itemDescriptor = await itemProvider.getContentDescriptor();
+        const capturedItems: CapturedNewItem[] = [];
+        for await (const item of itemProvider.getItems()) {
+          capturedItems.push(captureNewItem(item, itemDescriptor));
+        }
+        if (capturedItems.length !== 1) {
+          throw new Error(
+            `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
+          );
+        }
+        return capturedItems[0];
+      },
+      signal,
+    );
     return {
       captureFormatVersion: CAPTURE_FORMAT_VERSION,
       implementation: "new",

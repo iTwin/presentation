@@ -64,6 +64,11 @@ also contain an `instanceKeys` array:
 
 Explicit keys are added to the deterministic per-class sample.
 
+Keep iModels on a local disk. The new implementation's ECSQL requests have a
+60-second time quota. On slow storage, such as Windows drives mounted in WSL
+(`/mnt/c`, `/mnt/e`), large iModels exceed it. Requests then fail with
+`query too long to execute or server is too busy`.
+
 ## Run
 
 From this directory:
@@ -72,9 +77,10 @@ From this directory:
 pnpm test
 ```
 
-Each iModel runs as a separate, sequential test with no test timeout. The verbose
-reporter shows per-iModel progress and results. A failing iModel does not prevent
-the remaining iModels from running.
+Each iModel runs as a separate, sequential test with no Vitest test timeout;
+scenarios have their own time limit, described below. The verbose reporter shows
+per-iModel progress and results. A failing iModel does not prevent the remaining
+iModels from running.
 
 Timestamped logs identify the iModel, scenario, and implementation being processed.
 They show whether samples and captures are reused from cache or generated, when
@@ -92,6 +98,11 @@ at copies of the same iModels reuses their cached captures.
 
 `CONTENT_EQUIVALENCE_OUTPUT` changes the output directory. It defaults to
 `./output`.
+
+`CONTENT_EQUIVALENCE_SCENARIO_TIMEOUT_MINUTES` sets a time limit, in minutes,
+for each scenario. It defaults to `30`, and `0` disables it. When the limit is
+reached, the scenario fails without starting new work. The runner waits for work
+already running to finish before closing the iModel and moving on.
 
 `CONTENT_EQUIVALENCE_REFRESH` controls capture regeneration:
 
