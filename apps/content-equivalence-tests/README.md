@@ -86,6 +86,10 @@ To run a specific iModel, filter by its name:
 pnpm test -t building
 ```
 
+`CONTENT_EQUIVALENCE_MANIFEST` selects a different manifest file. It defaults to
+`./imodels.json`. Captures are keyed by iModel content, so a manifest pointing
+at copies of the same iModels reuses their cached captures.
+
 `CONTENT_EQUIVALENCE_OUTPUT` changes the output directory. It defaults to
 `./output`.
 
