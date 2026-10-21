@@ -113,6 +113,9 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
 
 /** Compares category facts and their resolved ancestry. */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
+  if (a.category?.source === "override") {
+    return b.category?.source === "override" && a.category.id === b.category.id;
+  }
   return (
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&

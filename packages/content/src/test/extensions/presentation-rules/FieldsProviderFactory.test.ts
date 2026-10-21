@@ -506,6 +506,14 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.calculatedFields![0].categoryId).toEqual("my-cat");
     });
+
+    it("maps categoryId { type: 'None' } to no category", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        rule: { calculatedProperties: [{ label: "X", value: "1", categoryId: { type: "None" } }] },
+      });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
+      expect(result?.calculatedFields![0].categoryId).toBeUndefined();
+    });
   });
 
   describe("propertyCategories", () => {
@@ -524,26 +532,29 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         cat2: { id: "cat2", label: "Category 2", description: undefined, parentId: undefined },
       });
     });
+
+    it("maps parentId { type: 'Id' }", async () => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        rule: {
+          propertyCategories: [{ id: "cat1", label: "Cat 1", parentId: { type: "Id", categoryId: "parent-id" } }],
+        },
+      });
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
+      expect(result?.categories!.cat1.parentId).toEqual("parent-id");
+    });
   });
 
   describe("relatedProperties", () => {
     function createIModelAccessWithRelationship(props: {
       relSchemaName: string;
       relClassName: string;
-      relLabel?: string;
       targetSchemaName: string;
       targetClassName: string;
-      targetLabel?: string;
     }) {
-      const targetClass = createStubClass({
-        schemaName: props.targetSchemaName,
-        className: props.targetClassName,
-        label: props.targetLabel,
-      });
+      const targetClass = createStubClass({ schemaName: props.targetSchemaName, className: props.targetClassName });
       const relClass = createStubRelationshipClass({
         schemaName: props.relSchemaName,
         className: props.relClassName,
-        label: props.relLabel,
         targetClass,
       });
 
@@ -662,13 +673,12 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result!.relatedProperties![0].path[0].targetClassName).toEqual("TestSchema.SpecificChild");
     });
 
-    it("creates target category for related properties", async () => {
+    it("declares no categories or category overrides for related properties", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
         relSchemaName: "TestSchema",
         relClassName: "ElementOwnsChild",
         targetSchemaName: "TestSchema",
         targetClassName: "ChildElement",
-        targetLabel: "Child Element",
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
@@ -685,20 +695,16 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
-      const categories = Object.values(result!.categories!);
-      const targetCat = categories.find((c) => c.id.endsWith("/target"));
-      expect(targetCat).toBeDefined();
-      expect(targetCat!.label).toEqual("Child Element");
+      expect(result!.categories).toBeUndefined();
+      expect(result!.relatedProperties![0].properties![0].target!.defaultOverrides).toBeUndefined();
     });
 
-    it("creates relationship category when forceCreateRelationshipCategory is set", async () => {
+    it("maps forceCreateRelationshipCategory to a relationship spec selecting no properties", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
         relSchemaName: "TestSchema",
         relClassName: "ElementOwnsChild",
-        relLabel: "Owns Child",
         targetSchemaName: "TestSchema",
         targetClassName: "ChildElement",
-        targetLabel: "Child Element",
       });
 
       const provider = createFieldsProviderFromContentModifierRule({
@@ -716,20 +722,13 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
-      const categories = Object.values(result!.categories!);
-      const relCat = categories.find((c) => c.id.endsWith("/rel"));
-      expect(relCat).toBeDefined();
-      expect(relCat!.label).toEqual("Owns Child");
-      // Target category should be parented under relationship category
-      const targetCat = categories.find((c) => c.id.endsWith("/target"));
-      expect(targetCat!.parentId).toEqual(relCat!.id);
+      expect(result!.relatedProperties![0].properties![0].relationship).toEqual({ select: "none" });
     });
 
-    it("creates relationship category when relationshipProperties is specified", async () => {
+    it("maps relationshipProperties '*' to a relationship spec selecting all properties", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
         relSchemaName: "TestSchema",
         relClassName: "ElementOwnsChild",
-        relLabel: "Owns Child",
         targetSchemaName: "TestSchema",
         targetClassName: "ChildElement",
       });
@@ -749,36 +748,37 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         },
       });
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
-      const categories = Object.values(result!.categories!);
-      expect(categories.find((c) => c.id.endsWith("/rel"))).toBeDefined();
+      expect(result!.relatedProperties![0].properties![0].relationship!.select).toEqual("all");
     });
 
-    it("does not create relationship category for empty relationshipProperties", async () => {
-      const imodelAccess = createIModelAccessWithRelationship({
-        relSchemaName: "TestSchema",
-        relClassName: "ElementOwnsChild",
-        targetSchemaName: "TestSchema",
-        targetClassName: "ChildElement",
-      });
+    it.each<PresentationRules.RelatedPropertiesSpecification["relationshipProperties"]>([[], "_none_"])(
+      "omits the relationship spec for relationshipProperties=%j",
+      async (relationshipProperties) => {
+        const imodelAccess = createIModelAccessWithRelationship({
+          relSchemaName: "TestSchema",
+          relClassName: "ElementOwnsChild",
+          targetSchemaName: "TestSchema",
+          targetClassName: "ChildElement",
+        });
 
-      const provider = createFieldsProviderFromContentModifierRule({
-        rule: {
-          relatedProperties: [
-            {
-              propertiesSource: {
-                relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
-                direction: "Forward",
+        const provider = createFieldsProviderFromContentModifierRule({
+          rule: {
+            relatedProperties: [
+              {
+                propertiesSource: {
+                  relationship: { schemaName: "TestSchema", className: "ElementOwnsChild" },
+                  direction: "Forward",
+                },
+                properties: "*",
+                relationshipProperties,
               },
-              properties: "*",
-              relationshipProperties: [],
-            },
-          ],
-        },
-      });
-      const result = await provider.getContribution({ imodelAccess, target: createTarget() });
-      const categories = Object.values(result!.categories!);
-      expect(categories.find((c) => c.id.endsWith("/rel"))).toBeUndefined();
-    });
+            ],
+          },
+        });
+        const result = await provider.getContribution({ imodelAccess, target: createTarget() });
+        expect(result!.relatedProperties![0].properties![0].relationship).toBeUndefined();
+      },
+    );
 
     it("maps properties '_none_' to select 'none'", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
@@ -878,7 +878,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
     });
 
-    it("defaults properties when neither properties nor propertyNames is specified", async () => {
+    it("selects all target properties without overrides when neither properties nor propertyNames is specified", async () => {
       const imodelAccess = createIModelAccessWithRelationship({
         relSchemaName: "TestSchema",
         relClassName: "ElementOwnsChild",
@@ -901,12 +901,8 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
-      // When no properties are specified, `select` defaults to "all", and the target's default
-      // category is applied via `defaultOverrides`.
       expect(target.select).toEqual("all");
-      const targetCategory = Object.values(result!.categories!).find((c) => c.id.endsWith("/target"));
-      expect(targetCategory).toBeDefined();
-      expect(target.defaultOverrides!.categoryId).toEqual(targetCategory!.id);
+      expect(target.defaultOverrides).toBeUndefined();
     });
 
     it("maps plain '*' string in properties array", async () => {
@@ -1145,9 +1141,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       const target = result!.relatedProperties![0].properties![0].target!;
       expect(target.select).toEqual("all");
-      expect(target.defaultOverrides!.readOnly).toBeUndefined();
-      expect(target.defaultOverrides!.label).toBeUndefined();
-      expect(target.defaultOverrides!.hidden).toBeUndefined();
+      expect(target.defaultOverrides).toBeUndefined();
     });
 
     it("maps properties with categoryId { type: 'Id' }", async () => {
@@ -1173,14 +1167,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].properties![0].target!.overrides!.Prop1.categoryId).toEqual("my-cat");
-    });
-
-    it("maps calculatedProperties with categoryId { type: 'None' }", async () => {
-      const provider = createFieldsProviderFromContentModifierRule({
-        rule: { calculatedProperties: [{ label: "X", value: "1", categoryId: { type: "None" } }] },
-      });
-      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
-      expect(result?.calculatedFields![0].categoryId).toBeUndefined();
     });
 
     it("maps multi-step relationship path", async () => {
@@ -1225,13 +1211,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result!.relatedProperties![0].path[1].targetClassName).toEqual("TestSchema.GrandChildElement");
     });
 
-    it("flattens nested related properties", async () => {
-      const childClass = createStubClass({ schemaName: "TestSchema", className: "ChildElement", label: "Child" });
-      const grandChildClass = createStubClass({
-        schemaName: "TestSchema",
-        className: "GrandChildElement",
-        label: "GrandChild",
-      });
+    it("flattens nested related properties into declarations prefixed with the parent's path and steps", async () => {
+      const childClass = createStubClass({ schemaName: "TestSchema", className: "ChildElement" });
+      const grandChildClass = createStubClass({ schemaName: "TestSchema", className: "GrandChildElement" });
       const relClass1 = createStubRelationshipClass({
         schemaName: "TestSchema",
         className: "ElementOwnsChild",
@@ -1280,10 +1262,13 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       expect(result!.relatedProperties![1].path).toHaveLength(2);
       expect(result!.relatedProperties![1].path[0].targetClassName).toEqual("TestSchema.ChildElement");
       expect(result!.relatedProperties![1].path[1].targetClassName).toEqual("TestSchema.GrandChildElement");
-      expect(result!.relatedProperties![1].properties![0].stepIndex).toEqual(1);
+      expect(result!.relatedProperties![1].properties).toEqual([
+        { stepIndex: 0, target: { select: "none" } },
+        { stepIndex: 1, target: { select: "all" } },
+      ]);
     });
 
-    it("preserves target and relationship property selections on nested paths", async () => {
+    it("offsets nested step indexes and keeps every ancestor step as a spec selecting no properties", async () => {
       const step = (className: string): PresentationRules.RelationshipStepSpecification => ({
         relationship: { schemaName: "TestSchema", className: `To${className}` },
         direction: "Forward",
@@ -1295,6 +1280,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
             {
               propertiesSource: [step("A"), step("B")],
               properties: "_none_",
+              forceCreateRelationshipCategory: true,
               nestedRelatedProperties: [
                 {
                   propertiesSource: [step("C"), step("D")],
@@ -1307,24 +1293,23 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           ],
         },
       });
-      const result = await provider.getContribution({
-        imodelAccess: createIModelAccessFromClasses(new Map(), { synthesizeMissing: true }),
-        target: createTarget(),
+      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
+      const scopeOnly = (stepIndex: number) => ({
+        stepIndex,
+        target: { select: "none" },
+        relationship: { select: "none" },
       });
-      expect(result!.relatedProperties).toHaveLength(3);
-      const [parentDeclaration, nestedDeclaration, deeplyNestedDeclaration] = result!.relatedProperties!;
-
-      expect(parentDeclaration.properties![0].stepIndex).toBe(parentDeclaration.path.length - 1);
-      expect(parentDeclaration.properties![0].relationship).toBeUndefined();
-      expect(parentDeclaration.properties![0].target!.select).toEqual("none");
-
-      expect(nestedDeclaration.properties![0].stepIndex).toBe(nestedDeclaration.path.length - 1);
-      expect(nestedDeclaration.properties![0].relationship!.select).toEqual("all");
-      expect(nestedDeclaration.properties![0].target!.select).toEqual("all");
-
-      expect(deeplyNestedDeclaration.properties![0].stepIndex).toBe(deeplyNestedDeclaration.path.length - 1);
-      expect(deeplyNestedDeclaration.properties![0].relationship).toBeUndefined();
-      expect(deeplyNestedDeclaration.properties![0].target!.select).toEqual("all");
+      expect(result!.relatedProperties).toEqual([
+        expect.objectContaining({
+          properties: [{ stepIndex: 1, target: { select: "none" }, relationship: { select: "none" } }],
+        }),
+        expect.objectContaining({
+          properties: [scopeOnly(1), { stepIndex: 3, target: { select: "all" }, relationship: { select: "all" } }],
+        }),
+        expect.objectContaining({
+          properties: [scopeOnly(1), scopeOnly(3), { stepIndex: 4, target: { select: "all" } }],
+        }),
+      ]);
     });
 
     it("throws when propertiesSource class is not a relationship", async () => {
@@ -1375,16 +1360,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       await expect(provider.getContribution({ imodelAccess, target: createTarget() })).rejects.toThrow(
         /Cannot determine target class/,
       );
-    });
-
-    it("maps propertyCategories parentId with { type: 'Id' }", async () => {
-      const provider = createFieldsProviderFromContentModifierRule({
-        rule: {
-          propertyCategories: [{ id: "cat1", label: "Cat 1", parentId: { type: "Id", categoryId: "parent-id" } }],
-        },
-      });
-      const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
-      expect(result?.categories!.cat1.parentId).toEqual("parent-id");
     });
   });
 

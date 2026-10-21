@@ -17,7 +17,7 @@ import {
 } from "../MetadataStubs.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource, ResolvedPath } from "../../content/ContentTarget.js";
+import type { CategoryContext, ContentSource, ResolvedPath } from "../../content/ContentTarget.js";
 import type {
   IModelFieldsProvider,
   RelatedPropertiesDeclaration,
@@ -98,10 +98,155 @@ async function enumerate(props: Parameters<typeof collectRelatedPropertyFields>[
 }
 
 describe("collectRelatedPropertyFields", () => {
+  it("keeps only a same-step property-less relationship category when property categories attach to the parent", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({ fullName: "TestSchema.B" }),
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "Nested", declaringClass: "TestSchema.C" })],
+      }),
+    ]);
+    const provider = createProvider("p_v1", [
+      {
+        path: [aToB, bToC],
+        propertyCategoryScope: "parent",
+        properties: [
+          { stepIndex: 0, target: { select: "none" } },
+          { stepIndex: 1, relationship: { select: "none" }, target: { select: "all" } },
+        ],
+      },
+    ]);
+    const source = createSource([
+      { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])] },
+    ]);
+    const fields = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    expect(fields.map(({ categorization }) => categorization.categoryContext)).toEqual([
+      [{ stepIndex: 1, kind: "relationshipClass" }],
+    ]);
+  });
+
+  it.each<{
+    name: string;
+    declaration: Pick<RelatedPropertiesDeclaration, "properties" | "propertyCategoryScope">;
+    expected: CategoryContext;
+  }>([
+    {
+      name: "an earlier step selecting no properties",
+      declaration: {
+        properties: [
+          { stepIndex: 0, target: { select: "none" } },
+          { stepIndex: 1, target: { select: "all" } },
+        ],
+      },
+      expected: [{ stepIndex: 0, kind: "targetClass" }],
+    },
+    {
+      name: "an earlier step whose fields all have category overrides",
+      declaration: {
+        properties: [
+          { stepIndex: 0, target: { select: "all", defaultOverrides: { categoryId: "custom" } } },
+          { stepIndex: 1, target: { select: "all" } },
+        ],
+      },
+      expected: [{ stepIndex: 0, kind: "targetClass" }],
+    },
+    {
+      name: "an earlier step selecting all from a class without properties",
+      declaration: {
+        properties: [
+          { stepIndex: 0, target: { select: "all" } },
+          { stepIndex: 1, target: { select: "all" } },
+        ],
+      },
+      expected: [{ stepIndex: 0, kind: "targetClass" }],
+    },
+    {
+      name: "a same-step relationship without properties",
+      declaration: { properties: [{ stepIndex: 1, relationship: { select: "all" }, target: { select: "all" } }] },
+      expected: [{ stepIndex: 1, kind: "relationshipClass" }],
+    },
+    {
+      name: "a same-step relationship whose fields attach to parent property categories",
+      declaration: {
+        propertyCategoryScope: "parent",
+        properties: [{ stepIndex: 1, relationship: { select: { include: ["RelProp"] } }, target: { select: "all" } }],
+      },
+      expected: [{ stepIndex: 1, kind: "relationshipClass" }],
+    },
+  ])("encloses later fields in $name", async ({ declaration, expected }) => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties:
+          declaration.properties![0].target?.defaultOverrides !== undefined
+            ? [createPrimitiveProperty({ name: "PropB", declaringClass: "TestSchema.B" })]
+            : [],
+      }),
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "PropC", declaringClass: "TestSchema.C" })],
+      }),
+      createRelationshipClass({
+        fullName: "TestSchema.BToC",
+        properties:
+          declaration.propertyCategoryScope === "parent"
+            ? [
+                createPrimitiveProperty({
+                  name: "RelProp",
+                  declaringClass: "TestSchema.BToC",
+                  category: { fullName: "TestSchema.Geometry" },
+                }),
+              ]
+            : [],
+      }),
+    ]);
+    const provider = createProvider("p_v1", [{ path: [aToB, bToC], ...declaration }]);
+    const source = createSource([
+      { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])] },
+    ]);
+    const fields = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    expect(
+      fields
+        .filter(({ field }) => field.propertyName === "PropC")
+        .map(({ categorization }) => categorization.categoryContext),
+    ).toEqual([expected]);
+  });
+
   it("returns no fields when the source has no resolved declarations", async () => {
     const imodelAccess = createSchemaAccess([]);
     const fields = await enumerate({ imodelAccess, source: createSource([]), ...wireProviders([]) });
     expect(fields).to.deep.equal([]);
+  });
+
+  it("prepends the inherited context and offsets step spec classes for a nested group", async () => {
+    const imodelAccess = createSchemaAccess([
+      createEntityClass({
+        fullName: "TestSchema.C",
+        properties: [createPrimitiveProperty({ name: "PropC", declaringClass: "TestSchema.C" })],
+      }),
+    ]);
+    const provider = createProvider("p_v1", [
+      { path: [bToC], properties: [{ stepIndex: 0, relationship: { select: "none" }, target: { select: "all" } }] },
+    ]);
+    const source = createSource([
+      {
+        providerId: provider.id,
+        declarationIndex: 0,
+        paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
+        nested: {
+          anchorClassName: "TestSchema.B",
+          prefixStepCount: 1,
+          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        },
+      },
+    ]);
+    const fields = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
+    expect(fields.map(({ categorization }) => categorization.categoryContext)).toEqual([
+      [
+        { stepIndex: 0, kind: "targetClass" },
+        { stepIndex: 1, kind: "relationshipClass" },
+      ],
+    ]);
   });
 
   it("pairs each enumerated field with the contributing provider", async () => {

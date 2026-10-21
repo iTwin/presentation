@@ -200,10 +200,7 @@ export interface ResolvedPath {
  *
  * @public
  */
-export type CategoryContext = readonly {
-  readonly stepIndex: number;
-  readonly kind: "targetClass" | "relationshipClass";
-}[];
+export type CategoryContext = { stepIndex: number; kind: "targetClass" | "relationshipClass" }[];
 
 /**
  * A group of concrete relationship paths resolved from a single provider declaration.

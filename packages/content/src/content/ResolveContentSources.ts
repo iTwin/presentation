@@ -574,19 +574,12 @@ function createNestedCategoryContext(props: {
   const selections = declaration.properties ?? [
     { stepIndex: anchorStepIndex - stepIndexOffset, target: { select: "all" } },
   ];
-  const localAnchors = selections.flatMap((spec): CategoryContext => {
-    const stepIndex = stepIndexOffset + spec.stepIndex;
-    if (stepIndex > anchorStepIndex) {
-      return [];
-    }
-    return [
-      ...(spec.relationship && spec.relationship.select !== "none"
-        ? [{ stepIndex, kind: "relationshipClass" as const }]
-        : []),
-      ...(spec.target && spec.target.select !== "none" ? [{ stepIndex, kind: "targetClass" as const }] : []),
-    ];
+  return buildCategoryContext({
+    inheritedContext,
+    properties: selections,
+    stepIndexOffset,
+    include: (entry) => entry.stepIndex <= anchorStepIndex,
   });
-  return buildCategoryContext({ inheritedContext, localAnchors });
 }
 
 /** Keys a `(providerId, anchor class)` pair for the nested-expansion cycle guard and contribution memoization. */
