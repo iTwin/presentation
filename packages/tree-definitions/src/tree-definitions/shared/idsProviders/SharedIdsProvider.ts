@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
+import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { fromWithRelease, toObservable } from "../Rxjs.js";
-import { getOrCreate } from "../Utils.js";
+import { fromWithRelease } from "../Rxjs.js";
+import { getLoadDataOverride, getOrCreate, loadData } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
@@ -17,6 +17,7 @@ import type { GuidString, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
 import type { CategoryId, ElementId, ModelId, ReadonlyId64Arg, SubCategoryId } from "../Types.js";
+import type { LoadedData, RequireNarrowedLoadDataOverrides } from "../Utils.js";
 import type { ElementModelCategoriesProviderData } from "./ElementModelCategoriesProvider.js";
 import type { SubCategoriesProviderData } from "./SubCategoriesProvider.js";
 import type { SubModeledElementsProviderData } from "./SubModeledElementsProvider.js";
@@ -43,20 +44,24 @@ export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "f
  * Custom implementations must expose live state and mark data `loaded` only when it is available.
  * @beta
  */
-export interface SharedIdsProvider {
+export interface SharedIdsProvider<
+  T1 extends ElementModelCategoriesProviderData = ElementModelCategoriesProviderData,
+  T2 extends SubModeledElementsProviderData = SubModeledElementsProviderData,
+  T3 extends SubCategoriesProviderData = SubCategoriesProviderData,
+> {
   /** Readonly snapshot of the element filters used to create this provider, including resolved defaults. */
   readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
-  /** Model lookups. */
+  /** Model lookups, computed from data loaded by `loadDataOverrides.loadElementModelCategories` or the default iModel query. */
   readonly models: {
     /** State of model data. */
     readonly state: IdsProviderDataState;
     /**
-     * Returns the cached model and category data, which also backs `categories` lookups.
-     * Can be used as `loadDataOverrides.elementModelCategories` of another provider.
+     * Returns the cached model and category data.
+     * Can be used as `loadDataOverrides.loadElementModelCategories` of another provider.
      *
      * **NOTE:** This subscribable emits a single value and completes.
      */
-    getData(): Subscribable<ElementModelCategoriesProviderData>;
+    getData(): Subscribable<T1>;
     /**
      * Returns IDs of non-private, non-template models containing visible elements of the configured class, including excluded classes.
      *
@@ -84,17 +89,17 @@ export interface SharedIdsProvider {
       excludeIfOnlyExcludedClasses?: boolean;
     }): Subscribable<ModelId>;
   };
-  /** Sub-modeled element lookups. */
+  /** Sub-modeled element lookups, computed from data loaded by `loadDataOverrides.loadSubModeledElements` or the default iModel query. */
   readonly subModeledElements: {
     /** State of sub-modeled element data. */
     readonly state: IdsProviderDataState;
     /**
-     * Returns the cached sub-modeled element data. Can be used as `loadDataOverrides.subModeledElements` of another provider.
+     * Returns the cached sub-modeled element data. Can be used as `loadDataOverrides.loadSubModeledElements` of another provider.
      *
      * **NOTE:** Unless overridden, depends on `models` data, which is loaded first if it isn't loaded yet.
      * This subscribable emits a single value and completes.
      */
-    getData(): Subscribable<SubModeledElementsProviderData>;
+    getData(): Subscribable<T2>;
     /**
      * Returns IDs of elements modeling sub-models with visible elements, optionally omitting those with only excluded elements.
      *
@@ -102,10 +107,17 @@ export interface SharedIdsProvider {
      */
     getAllSubModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Subscribable<ReadonlySet<Id64String>>;
   };
-  /** Category lookups. */
+  /** Category lookups, computed from the same data as `models` - loaded by `loadDataOverrides.loadElementModelCategories` or the default iModel query. */
   readonly categories: {
     /** State of category data. */
     readonly state: IdsProviderDataState;
+    /**
+     * Returns the cached model and category data.
+     * Can be used as `loadDataOverrides.loadElementModelCategories` of another provider.
+     *
+     * **NOTE:** This subscribable emits a single value and completes.
+     */
+    getData(): Subscribable<T1>;
     /**
      * Returns categories containing visible, non-excluded top-level elements in the specified model.
      *
@@ -125,16 +137,16 @@ export interface SharedIdsProvider {
      */
     getAllCategoriesOfElements(): Subscribable<ReadonlySet<CategoryId>>;
   };
-  /** Sub-category lookups. */
+  /** Sub-category lookups, computed from data loaded by `loadDataOverrides.loadSubCategories` or the default iModel query. */
   readonly subCategories: {
     /** State of sub-category data. */
     readonly state: IdsProviderDataState;
     /**
-     * Returns the cached sub-category data. Can be used as `loadDataOverrides.subCategories` of another provider.
+     * Returns the cached sub-category data. Can be used as `loadDataOverrides.loadSubCategories` of another provider.
      *
      * **NOTE:** This subscribable emits a single value and completes.
      */
-    getData(): Subscribable<SubCategoriesProviderData>;
+    getData(): Subscribable<T3>;
     /**
      * Returns a mapping from category IDs to their sub-category IDs.
      *
@@ -153,10 +165,23 @@ export interface SharedIdsProvider {
 }
 
 /**
+ * Loaders replacing the default iModel queries of individual `SharedIdsProvider` datasets.
+ * @beta
+ */
+export interface LoadDataOverrides {
+  /** Loads data used by `models` and `categories` lookups. */
+  loadElementModelCategories?: () => Subscribable<ElementModelCategoriesProviderData>;
+  /** Loads data used by `subModeledElements` lookups. When provided, `models` data isn't loaded for it. */
+  loadSubModeledElements?: () => Subscribable<SubModeledElementsProviderData>;
+  /** Loads data used by `subCategories` lookups. */
+  loadSubCategories?: () => Subscribable<SubCategoriesProviderData>;
+}
+
+/**
  * Query access and element class filters shared by tree ID providers.
  * @beta
  */
-interface SharedIdsProviderProps {
+interface SharedIdsProviderProps<TOverrides extends LoadDataOverrides = LoadDataOverrides> {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
@@ -164,44 +189,53 @@ interface SharedIdsProviderProps {
    * Replace the default iModel queries of individual datasets. Overrides should only load data: emit a single value
    * and complete. The provider calls them lazily, tracks state, caches and shares the result, and calls them again
    * on retry after failure. Data must match the element filters of this provider and must not be mutated afterwards.
+   *
+   * Required when `TOverrides` is narrower than `LoadDataOverrides`, since only overrides can produce narrowed data.
    */
-  loadDataOverrides?: {
-    /** Loads data used by `models` and `categories` lookups. */
-    elementModelCategories?: () => Subscribable<ElementModelCategoriesProviderData>;
-    /** Loads data used by `subModeledElements` lookups. When provided, `models` data isn't loaded for it. */
-    subModeledElements?: () => Subscribable<SubModeledElementsProviderData>;
-    /** Loads data used by `subCategories` lookups. */
-    subCategories?: () => Subscribable<SubCategoriesProviderData>;
-  };
+  loadDataOverrides?: TOverrides;
 }
 
 /**
  * Creates a cached ID provider for visible elements of the specified class and optional excluded classes.
  * Data is a snapshot for the lifetime of this provider; recreate it after element or schema changes.
  * Share it only across compatible iModel and filter configurations. Recreate it after relevant data changes.
+ *
+ * Each `getData()` lookup of the created provider returns the data type of the corresponding `loadDataOverrides`
+ * loader, or the default data type when the loader isn't provided.
  * @beta
  */
-export function createSharedIdsProvider({
+export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = LoadDataOverrides>({
   elementClassName,
   imodelAccess,
   excludedElementClassNames: excludedClassOverrides,
   loadDataOverrides,
-}: SharedIdsProviderProps): SharedIdsProvider {
+}: SharedIdsProviderProps<TOverrides> &
+  RequireNarrowedLoadDataOverrides<LoadDataOverrides, TOverrides>): SharedIdsProvider<
+  LoadedData<TOverrides["loadElementModelCategories"], ElementModelCategoriesProviderData>,
+  LoadedData<TOverrides["loadSubModeledElements"], SubModeledElementsProviderData>,
+  LoadedData<TOverrides["loadSubCategories"], SubCategoriesProviderData>
+> {
+  type ModelsAndCategoriesData = LoadedData<
+    TOverrides["loadElementModelCategories"],
+    ElementModelCategoriesProviderData
+  >;
+  type SubModeledElementsData = LoadedData<TOverrides["loadSubModeledElements"], SubModeledElementsProviderData>;
+  type SubCategoriesData = LoadedData<TOverrides["loadSubCategories"], SubCategoriesProviderData>;
   const config = createSharedIdsProviderConfig({ elementClassName, excludedElementClassNames: excludedClassOverrides });
   const excludedElementClassNames = config.excludedElementClassNames;
   const componentId: GuidString = Guid.createValue();
   const subCategoriesProvider = new SubCategoriesProvider({
     queryExecutor: imodelAccess,
     componentId,
-    loadDataOverride: loadDataOverrides?.subCategories,
+    loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadSubCategories"),
   });
-  let subModeledElementsData: ReturnType<SubModeledElementsProvider["getData"]> | undefined;
+  let subModeledElementsData: Observable<SubModeledElementsData> | undefined;
   const elementModelCategoriesProvider = new ElementModelCategoriesProvider({
     imodelAccess,
     componentId,
     elementClassName,
     excludedElementClassNames,
-    loadDataOverride: loadDataOverrides?.elementModelCategories,
+    loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadElementModelCategories"),
   });
   const subModeledElementsState = new DataStateTracker();
   let subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
@@ -211,25 +245,21 @@ export function createSharedIdsProvider({
       .getData()
       .pipe(map(({ modelsCategoriesInfo }) => new Set([...modelsCategoriesInfo.keys()])));
   }
-  function getSubModeledElementsData(): ReturnType<SubModeledElementsProvider["getData"]> {
-    const subModeledElementsOverride = loadDataOverrides?.subModeledElements;
-    subModeledElementsData ??= (
-      subModeledElementsOverride
-        ? defer(() => toObservable(subModeledElementsOverride()))
-        : getAllModels().pipe(
-            mergeMap((allModels) =>
-              new SubModeledElementsProvider({
-                queryExecutor: imodelAccess,
-                componentId,
-                elementClassName,
-                nonEmptyModelIds: allModels,
-              }).getData(),
-            ),
-          )
-    ).pipe(
-      subModeledElementsState.track(),
-      shareReplay(),
-    );
+  function getSubModeledElementsData(): Observable<SubModeledElementsData> {
+    subModeledElementsData ??= loadData({
+      loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadSubModeledElements"),
+      loadDefault: () =>
+        getAllModels().pipe(
+          mergeMap((allModels) =>
+            new SubModeledElementsProvider({
+              queryExecutor: imodelAccess,
+              componentId,
+              elementClassName,
+              nonEmptyModelIds: allModels,
+            }).getData(),
+          ),
+        ),
+    }).pipe(subModeledElementsState.track(), shareReplay());
     return subModeledElementsData;
   }
 
@@ -263,7 +293,7 @@ export function createSharedIdsProvider({
   return {
     config,
     models: {
-      getData: (): Subscribable<ElementModelCategoriesProviderData> => {
+      getData: (): Subscribable<ModelsAndCategoriesData> => {
         return elementModelCategoriesProvider.getData();
       },
       get state(): IdsProviderDataState {
@@ -294,9 +324,7 @@ export function createSharedIdsProvider({
             }
             return from(categoryModels);
           }),
-          excludedSubModels && excludedSubModels.size > 0
-            ? filter(({ id }) => !excludedSubModels.has(id))
-            : identity,
+          excludedSubModels && excludedSubModels.size > 0 ? filter(({ id }) => !excludedSubModels.has(id)) : identity,
           includeOnlyTopMostElementCategory
             ? filter(({ categoryIsOfTopMostElement }) => categoryIsOfTopMostElement)
             : identity,
@@ -311,7 +339,7 @@ export function createSharedIdsProvider({
       get state(): IdsProviderDataState {
         return subModeledElementsState.state;
       },
-      getData: (): Subscribable<SubModeledElementsProviderData> => {
+      getData: (): Subscribable<SubModeledElementsData> => {
         return getSubModeledElementsData();
       },
       getAllSubModeledElements: (props?: { excludeIfOnlyExcludedClasses?: boolean }): Subscribable<Set<ElementId>> => {
@@ -321,6 +349,9 @@ export function createSharedIdsProvider({
     categories: {
       get state(): IdsProviderDataState {
         return elementModelCategoriesProvider.state;
+      },
+      getData: (): Subscribable<ModelsAndCategoriesData> => {
+        return elementModelCategoriesProvider.getData();
       },
       getCategories: ({ modelId }: { modelId: Id64String }): Subscribable<Set<CategoryId>> =>
         elementModelCategoriesProvider.getData().pipe(
@@ -342,7 +373,7 @@ export function createSharedIdsProvider({
       get state(): IdsProviderDataState {
         return subCategoriesProvider.state;
       },
-      getData: (): Subscribable<SubCategoriesProviderData> => {
+      getData: (): Subscribable<SubCategoriesData> => {
         return subCategoriesProvider.getData();
       },
       getCategorySubCategoriesMap: (): Subscribable<Map<CategoryId, SubCategoryId[]>> => {

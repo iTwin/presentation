@@ -330,7 +330,7 @@ export function createModelsTree(props: ModelsTreeProps): {
 export function createModelsTreeIdsProvider(input: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider;
 
 // @beta
-export function createSharedIdsProvider(input: SharedIdsProviderProps): SharedIdsProvider;
+export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = LoadDataOverrides>(input: SharedIdsProviderProps<TOverrides> & RequireNarrowedLoadDataOverrides<LoadDataOverrides, TOverrides>): SharedIdsProvider<LoadedData<TOverrides["loadElementModelCategories"], ElementModelCategoriesProviderData>, LoadedData<TOverrides["loadSubModeledElements"], SubModeledElementsProviderData>, LoadedData<TOverrides["loadSubCategories"], SubCategoriesProviderData>>;
 
 // @beta
 type DefinitionContainerId = Id64String;
@@ -368,6 +368,16 @@ interface ElementsGroupInfo {
 
 // @beta
 export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "failed";
+
+// @beta
+interface LoadDataOverrides {
+    loadElementModelCategories?: () => Subscribable<ElementModelCategoriesProviderData>;
+    loadSubCategories?: () => Subscribable<SubCategoriesProviderData>;
+    loadSubModeledElements?: () => Subscribable<SubModeledElementsProviderData>;
+}
+
+// @beta
+type LoadedData<TLoader, TDefault> = NonNullable<TLoader> extends () => Subscribable<infer TData extends TDefault> ? TData : TDefault;
 
 // @beta
 type ModelId = Id64String;
@@ -506,9 +516,15 @@ interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | 
 type ReadonlyId64Arg = Id64String | ReadonlyArray<Id64String> | ReadonlySet<Id64String>;
 
 // @beta
-export interface SharedIdsProvider {
+type RequireNarrowedLoadDataOverrides<TDefaultOverrides, TOverrides extends TDefaultOverrides> = TDefaultOverrides extends TOverrides ? unknown : {
+    loadDataOverrides: TOverrides;
+};
+
+// @beta
+export interface SharedIdsProvider<T1 extends ElementModelCategoriesProviderData = ElementModelCategoriesProviderData, T2 extends SubModeledElementsProviderData = SubModeledElementsProviderData, T3 extends SubCategoriesProviderData = SubCategoriesProviderData> {
     readonly categories: {
         readonly state: IdsProviderDataState;
+        getData(): Subscribable<T1>;
         getCategories(props: {
             modelId: Id64String;
         }): Subscribable<ReadonlySet<CategoryId>>;
@@ -518,7 +534,7 @@ export interface SharedIdsProvider {
     readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
     readonly models: {
         readonly state: IdsProviderDataState;
-        getData(): Subscribable<ElementModelCategoriesProviderData>;
+        getData(): Subscribable<T1>;
         getAllModels(): Subscribable<ReadonlySet<ModelId>>;
         getPlanProjectionModels(): Subscribable<ReadonlySet<ModelId>>;
         getModels(props: {
@@ -530,7 +546,7 @@ export interface SharedIdsProvider {
     };
     readonly subCategories: {
         readonly state: IdsProviderDataState;
-        getData(): Subscribable<SubCategoriesProviderData>;
+        getData(): Subscribable<T3>;
         getCategorySubCategoriesMap(): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
         getSubCategoryCategories(props: {
             subCategoryIds: ReadonlyId64Arg;
@@ -538,7 +554,7 @@ export interface SharedIdsProvider {
     };
     readonly subModeledElements: {
         readonly state: IdsProviderDataState;
-        getData(): Subscribable<SubModeledElementsProviderData>;
+        getData(): Subscribable<T2>;
         getAllSubModeledElements(props?: {
             excludeIfOnlyExcludedClasses?: boolean;
         }): Subscribable<ReadonlySet<Id64String>>;
@@ -546,18 +562,14 @@ export interface SharedIdsProvider {
 }
 
 // @beta
-interface SharedIdsProviderProps {
+interface SharedIdsProviderProps<TOverrides extends LoadDataOverrides = LoadDataOverrides> {
     // (undocumented)
     elementClassName: EC.FullClassNameDotNotation;
     // (undocumented)
     excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-    loadDataOverrides?: {
-        elementModelCategories?: () => Subscribable<ElementModelCategoriesProviderData>;
-        subModeledElements?: () => Subscribable<SubModeledElementsProviderData>;
-        subCategories?: () => Subscribable<SubCategoriesProviderData>;
-    };
+    loadDataOverrides?: TOverrides;
 }
 
 // @beta

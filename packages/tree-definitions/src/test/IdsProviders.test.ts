@@ -283,9 +283,9 @@ describe("ID provider data states", () => {
     const source = createBase(createAccess());
     const access = createAccess();
     const overrides = {
-      elementModelCategories: vi.fn(() => source.models.getData()),
-      subModeledElements: vi.fn(() => source.subModeledElements.getData()),
-      subCategories: vi.fn(() => source.subCategories.getData()),
+      loadElementModelCategories: vi.fn(() => source.models.getData()),
+      loadSubModeledElements: vi.fn(() => source.subModeledElements.getData()),
+      loadSubCategories: vi.fn(() => source.subCategories.getData()),
     };
     const provider = createSharedIdsProvider({
       imodelAccess: access,
@@ -295,14 +295,14 @@ describe("ID provider data states", () => {
     expect(provider.models.state).toBe("not-requested");
     expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.subCategories.state).toBe("not-requested");
-    expect(overrides.elementModelCategories).not.toHaveBeenCalled();
-    expect(overrides.subModeledElements).not.toHaveBeenCalled();
-    expect(overrides.subCategories).not.toHaveBeenCalled();
+    expect(overrides.loadElementModelCategories).not.toHaveBeenCalled();
+    expect(overrides.loadSubModeledElements).not.toHaveBeenCalled();
+    expect(overrides.loadSubCategories).not.toHaveBeenCalled();
 
     expect(await firstValue(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("not-requested");
-    expect(overrides.elementModelCategories).not.toHaveBeenCalled();
+    expect(overrides.loadElementModelCategories).not.toHaveBeenCalled();
 
     expect(await firstValue(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
     expect(await firstValue(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
@@ -315,16 +315,16 @@ describe("ID provider data states", () => {
     );
     expect(provider.subCategories.state).toBe("loaded");
 
-    expect(overrides.elementModelCategories).toHaveBeenCalledTimes(1);
-    expect(overrides.subModeledElements).toHaveBeenCalledTimes(1);
-    expect(overrides.subCategories).toHaveBeenCalledTimes(1);
+    expect(overrides.loadElementModelCategories).toHaveBeenCalledTimes(1);
+    expect(overrides.loadSubModeledElements).toHaveBeenCalledTimes(1);
+    expect(overrides.loadSubCategories).toHaveBeenCalledTimes(1);
     expect(access.createQueryReader).not.toHaveBeenCalled();
   });
 
   describe.each([
     {
       group: "models",
-      overrideKey: "elementModelCategories",
+      overrideKey: "loadElementModelCategories",
       load: async (base: SharedIdsProvider) => firstValue(base.models.getData()),
       data: () => ({
         planProjectionModels: new Set<string>(),
@@ -336,13 +336,13 @@ describe("ID provider data states", () => {
     },
     {
       group: "subModeledElements",
-      overrideKey: "subModeledElements",
+      overrideKey: "loadSubModeledElements",
       load: async (base: SharedIdsProvider) => firstValue(base.subModeledElements.getData()),
       data: () => ({ allSubModels: new Set(["0x99"]) }),
     },
     {
       group: "subCategories",
-      overrideKey: "subCategories",
+      overrideKey: "loadSubCategories",
       load: async (base: SharedIdsProvider) => firstValue(base.subCategories.getData()),
       data: () => ({ subCategoryCategories: new Map(), categorySubCategories: new Map([["0x99", ["0x98"]]]) }),
     },

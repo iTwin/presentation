@@ -3,28 +3,35 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, delay, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { delay, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
-import { toObservable } from "../Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate, loadData } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { EC, ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
+import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
-import type { IdsProviderDataState } from "./SharedIdsProvider.js";
+import type { LoadedData } from "../Utils.js";
+import type { IdsProviderDataState, LoadDataOverrides } from "./SharedIdsProvider.js";
 
-interface ElementModelCategoriesProviderProps {
+/** Loader replacing the default iModel query of `ElementModelCategoriesProvider`. */
+type Loader = LoadDataOverrides["loadElementModelCategories"];
+
+interface ElementModelCategoriesProviderProps<TLoader extends Loader> {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
-  loadDataOverride?: () => Subscribable<ElementModelCategoriesProviderData>;
+  loadDataOverride?: TLoader;
 }
+
+/** Data produced by `ElementModelCategoriesProvider` with the given loader. */
+type Data<TLoader extends Loader> = LoadedData<TLoader, ElementModelCategoriesProviderData>;
+
 /**
  * Category information of a single model.
  * @beta
@@ -60,18 +67,18 @@ export interface ElementModelCategoriesProviderData {
 }
 
 /** @internal */
-export class ElementModelCategoriesProvider {
+export class ElementModelCategoriesProvider<TLoader extends Loader = undefined> {
   #imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: EC.FullClassNameDotNotation;
   #excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
-  #cachedData: Observable<ElementModelCategoriesProviderData> | undefined;
+  #cachedData: Observable<Data<TLoader>> | undefined;
   #state = new DataStateTracker();
-  #subscriberBatches: Array<{ obs: Observable<ElementModelCategoriesProviderData>; subscriberCount: number }> = [];
-  #loadDataOverride?: () => Subscribable<ElementModelCategoriesProviderData>;
+  #subscriberBatches: Array<{ obs: Observable<Data<TLoader>>; subscriberCount: number }> = [];
+  #loadDataOverride?: TLoader;
 
-  constructor(props: ElementModelCategoriesProviderProps) {
+  constructor(props: ElementModelCategoriesProviderProps<TLoader>) {
     this.#imodelAccess = props.imodelAccess;
     this.#elementClassName = props.elementClassName;
     this.#excludedElementClassNames = props.excludedElementClassNames;
@@ -142,62 +149,61 @@ export class ElementModelCategoriesProvider {
     return this.#state.state;
   }
 
-  public getData(): Observable<ElementModelCategoriesProviderData> {
-    this.#cachedData ??= defer(() =>
-      this.#loadDataOverride
-        ? toObservable(this.#loadDataOverride())
-        : this.queryElementModelCategories().pipe(
-            reduce(
-              (acc, queriedCategory) => {
-                acc.allCategories.add(queriedCategory.categoryId);
-                const categoryModelsEntry = getOrCreate({
-                  map: acc.categoryModelsInfo,
-                  key: queriedCategory.categoryId,
-                  createFunc: () =>
-                    new Array<{
-                      id: ModelId;
-                      categoryIsOfTopMostElement: boolean;
-                      hasNonExcludedTopMostElements: boolean;
-                    }>(),
-                });
-                categoryModelsEntry.push({
-                  id: queriedCategory.modelId,
-                  categoryIsOfTopMostElement: queriedCategory.isTopMostElementCategory,
-                  hasNonExcludedTopMostElements: queriedCategory.hasNonExcludedTopMostElements,
-                });
-                const modelEntry = getOrCreate({
-                  map: acc.modelsCategoriesInfo,
-                  key: queriedCategory.modelId,
-                  createFunc: (): ModelsCategoriesInfoEntry => ({
-                    categoriesOfTopMostNonExcludedElements: new Set<string>(),
-                    hasNonExcludedElements: false,
-                  }),
-                });
-                if (queriedCategory.isPlanProjectionModel) {
-                  acc.planProjectionModels.add(queriedCategory.modelId);
-                }
-                if (queriedCategory.hasElementsFromNonExcludedClasses) {
-                  modelEntry.hasNonExcludedElements = true;
-                  acc.categoriesContainingNonExcludedElements.add(queriedCategory.categoryId);
-                  if (queriedCategory.hasNonExcludedTopMostElements) {
-                    modelEntry.categoriesOfTopMostNonExcludedElements.add(queriedCategory.categoryId);
-                  }
-                }
-                return acc;
-              },
-              {
-                planProjectionModels: new Set<ModelId>(),
-                modelsCategoriesInfo: new Map<ModelId, ModelsCategoriesInfoEntry>(),
-                allCategories: new Set<CategoryId>(),
-                categoriesContainingNonExcludedElements: new Set<CategoryId>(),
-                categoryModelsInfo: new Map<
-                  CategoryId,
-                  Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
-                >(),
-              },
-            ),
-          ),
-    ).pipe(
+  private loadData(): Observable<ElementModelCategoriesProviderData> {
+    return this.queryElementModelCategories().pipe(
+      reduce(
+        (acc, queriedCategory) => {
+          acc.allCategories.add(queriedCategory.categoryId);
+          const categoryModelsEntry = getOrCreate({
+            map: acc.categoryModelsInfo,
+            key: queriedCategory.categoryId,
+            createFunc: () =>
+              new Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>(),
+          });
+          categoryModelsEntry.push({
+            id: queriedCategory.modelId,
+            categoryIsOfTopMostElement: queriedCategory.isTopMostElementCategory,
+            hasNonExcludedTopMostElements: queriedCategory.hasNonExcludedTopMostElements,
+          });
+          const modelEntry = getOrCreate({
+            map: acc.modelsCategoriesInfo,
+            key: queriedCategory.modelId,
+            createFunc: (): ModelsCategoriesInfoEntry => ({
+              categoriesOfTopMostNonExcludedElements: new Set<string>(),
+              hasNonExcludedElements: false,
+            }),
+          });
+          if (queriedCategory.isPlanProjectionModel) {
+            acc.planProjectionModels.add(queriedCategory.modelId);
+          }
+          if (queriedCategory.hasElementsFromNonExcludedClasses) {
+            modelEntry.hasNonExcludedElements = true;
+            acc.categoriesContainingNonExcludedElements.add(queriedCategory.categoryId);
+            if (queriedCategory.hasNonExcludedTopMostElements) {
+              modelEntry.categoriesOfTopMostNonExcludedElements.add(queriedCategory.categoryId);
+            }
+          }
+          return acc;
+        },
+        {
+          planProjectionModels: new Set<ModelId>(),
+          modelsCategoriesInfo: new Map<ModelId, ModelsCategoriesInfoEntry>(),
+          allCategories: new Set<CategoryId>(),
+          categoriesContainingNonExcludedElements: new Set<CategoryId>(),
+          categoryModelsInfo: new Map<
+            CategoryId,
+            Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
+          >(),
+        },
+      ),
+    );
+  }
+
+  public getData(): Observable<Data<TLoader>> {
+    this.#cachedData ??= loadData({
+      loadDataOverride: this.#loadDataOverride,
+      loadDefault: () => this.loadData(),
+    }).pipe(
       tap({
         finalize: () => {
           this.#subscriberBatches = [];

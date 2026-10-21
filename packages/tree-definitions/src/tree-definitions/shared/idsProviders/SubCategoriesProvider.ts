@@ -6,23 +6,28 @@
 import { defer, EMPTY, expand, map, reduce, shareReplay } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
-import { toObservable } from "../Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import { createWhereClause, getOrCreate } from "../Utils.js";
+import { createWhereClause, getOrCreate, loadData } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { Subscribable } from "@itwin/presentation-shared";
 import type { CategoryId, SubCategoryId } from "../Types.js";
-import type { IdsProviderDataState } from "./SharedIdsProvider.js";
+import type { LoadedData } from "../Utils.js";
+import type { IdsProviderDataState, LoadDataOverrides } from "./SharedIdsProvider.js";
 
-interface SubCategoriesProviderProps {
+/** Loader replacing the default iModel query of `SubCategoriesProvider`. */
+type Loader = LoadDataOverrides["loadSubCategories"];
+
+interface SubCategoriesProviderProps<TLoader extends Loader> {
   queryExecutor: LimitingECSqlQueryExecutor;
   componentId?: GuidString;
-  loadDataOverride?: () => Subscribable<SubCategoriesProviderData>;
+  loadDataOverride?: TLoader;
 }
+
+/** Data produced by `SubCategoriesProvider` with the given loader. */
+type Data<TLoader extends Loader> = LoadedData<TLoader, SubCategoriesProviderData>;
 
 /**
  * Sub-category data used by `SharedIdsProvider.subCategories`.
@@ -36,16 +41,16 @@ export interface SubCategoriesProviderData {
 }
 
 /** @internal */
-export class SubCategoriesProvider {
+export class SubCategoriesProvider<TLoader extends Loader = undefined> {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
-  #cachedData: Observable<SubCategoriesProviderData> | undefined;
+  #cachedData: Observable<Data<TLoader>> | undefined;
   #state = new DataStateTracker();
   #rowLimit = 7500;
-  #loadDataOverride?: () => Subscribable<SubCategoriesProviderData>;
+  #loadDataOverride?: TLoader;
 
-  constructor(props: SubCategoriesProviderProps) {
+  constructor(props: SubCategoriesProviderProps<TLoader>) {
     this.#queryExecutor = props.queryExecutor;
     this.#componentId = props.componentId ?? Guid.createValue();
     this.#componentName = "SubCategoriesProvider";
@@ -93,29 +98,32 @@ export class SubCategoriesProvider {
     return this.#state.state;
   }
 
-  public getData(): Observable<SubCategoriesProviderData> {
-    this.#cachedData ??= defer(() =>
-      this.#loadDataOverride
-        ? toObservable(this.#loadDataOverride())
-        : this.querySubCategories().pipe(
-            reduce(
-              (acc, queriedSubCategory) => {
-                acc.subCategoryCategories.set(queriedSubCategory.id, queriedSubCategory.parentId);
-                const entry = getOrCreate({
-                  map: acc.categorySubCategories,
-                  key: queriedSubCategory.parentId,
-                  createFunc: () => new Array<SubCategoryId>(),
-                });
-                entry.push(queriedSubCategory.id);
-                return acc;
-              },
-              {
-                subCategoryCategories: new Map<SubCategoryId, CategoryId>(),
-                categorySubCategories: new Map<CategoryId, Array<SubCategoryId>>(),
-              },
-            ),
-          ),
-    ).pipe(this.#state.track(), shareReplay());
+  private loadData(): Observable<SubCategoriesProviderData> {
+    return this.querySubCategories().pipe(
+      reduce(
+        (acc, queriedSubCategory) => {
+          acc.subCategoryCategories.set(queriedSubCategory.id, queriedSubCategory.parentId);
+          const entry = getOrCreate({
+            map: acc.categorySubCategories,
+            key: queriedSubCategory.parentId,
+            createFunc: () => new Array<SubCategoryId>(),
+          });
+          entry.push(queriedSubCategory.id);
+          return acc;
+        },
+        {
+          subCategoryCategories: new Map<SubCategoryId, CategoryId>(),
+          categorySubCategories: new Map<CategoryId, Array<SubCategoryId>>(),
+        },
+      ),
+    );
+  }
+
+  public getData(): Observable<Data<TLoader>> {
+    this.#cachedData ??= loadData({
+      loadDataOverride: this.#loadDataOverride,
+      loadDefault: () => this.loadData(),
+    }).pipe(this.#state.track(), shareReplay());
     return this.#cachedData;
   }
 }
