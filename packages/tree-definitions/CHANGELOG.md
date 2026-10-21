@@ -1,6 +1,6 @@
 # @itwin/presentation-tree-definitions
 
-## 0.1.4-alpha.0
+## 0.1.4
 
 ### Patch Changes
 
