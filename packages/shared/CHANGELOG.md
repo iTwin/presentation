@@ -1,5 +1,292 @@
 # @itwin/presentation-shared
 
+## 2.0.0
+
+### Major Changes
+
+- [#1222](https://github.com/iTwin/presentation/pull/1222): Enhance the `Props` type to only accept functions that have one object argument.
+  
+  The term "props" refers to a props object, meaning there should only be one argument. For cases when a function has multiple arguments, use TypeScript's `Parameters` utility type instead.
+- [#1445](https://github.com/iTwin/presentation/pull/1445): `EC.Class`: Added `getOwnProperties` method that returns only the properties defined directly on the class, excluding those inherited from base classes.
+- [#1446](https://github.com/iTwin/presentation/pull/1446): `EC.EntityClass`: Added `getMixins` method that returns the mixins applied directly to the entity class.
+- [#1200](https://github.com/iTwin/presentation/pull/1200): Made `EC.RelationshipConstraint.multiplicity` required.
+- [#1531](https://github.com/iTwin/presentation/pull/1531): `EC.RelationshipConstraintMultiplicity`: Changed `upperLimit` type from `number` to `number | "unbounded"`.
+  
+  Previously, `createECSchemaProvider` from `@itwin/presentation-core-interop` reported an unbounded (`*`) upper limit as `0`, which silently made the natural `upperLimit > 1` check treat many-valued relationships as single-valued. The limit is now an explicit `"unbounded"` value that consumers must handle:
+  
+  ```ts
+  const isManyValued = constraint.multiplicity.upperLimit === "unbounded" || constraint.multiplicity.upperLimit > 1;
+  ```
+- [#1360](https://github.com/iTwin/presentation/pull/1360): `createRelationshipPathJoinClause` now returns `{ joins: string; bindings?: Record<string, ECSqlBinding> }` instead of a plain `string`. Callers must be updated to read the SQL clause from the `joins` property:
+  
+  ```ts
+  // Before
+  const joinClause = await createRelationshipPathJoinClause({ schemaProvider, path });
+  
+  // After
+  const { joins: joinClause, bindings } = await createRelationshipPathJoinClause({ schemaProvider, path });
+  ```
+  
+  `RelationshipPathStep` now accepts an optional `instanceFilter` attribute. When provided, the resolved expression is appended as an `AND` condition to the relevant JOIN's `ON` clause. ECSQL parameter bindings declared in `instanceFilter.bindings` are collected across all steps and returned in the `bindings` field of the result.
+- [#1640](https://github.com/iTwin/presentation/pull/1640): `ECSqlBinding`: The `idset` binding's `value` is now `readonly Id64String[]` (previously `Id64String[]`). This is non-breaking for consumers who only define bindings, but breaking for code that reads `idset` binding values and passes them to APIs expecting a mutable array (e.g., custom `ECSqlQueryExecutor` implementations).
+  
+  Migration example:
+  
+  ```ts
+  // Before
+  binder.bindIdSet(key, OrderedId64Iterable.sortArray(binding.value));
+  
+  // After
+  binder.bindIdSet(key, OrderedId64Iterable.sortArray([...binding.value]));
+  ```
+- [#1606](https://github.com/iTwin/presentation/pull/1606): `ECSchemaProvider`: Add a required `getHiddenClassesTree` method, which returns a tree of classes, derived from the given class, whose visibility is changed through `CoreCustomAttributes.HiddenClass` or `CoreCustomAttributes.HiddenSchema` custom attributes. Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected to cache the result and refresh it when the iModel's schemas change.
+  
+  Additions:
+  
+  - `HiddenClassesTreeNode` describes a node of the tree. Root nodes are the outermost hidden derived classes, their children are derived classes that are explicitly shown, and so on. The selected class itself is always considered visible.
+  - `createHiddenClassesTree` builds the tree using the given schema provider. It doesn't cache the result, and is meant for implementing `ECSchemaProvider.getHiddenClassesTree`.
+  - `ECSql.createHiddenClassesFilter` creates a filter that excludes instances of classes, derived from the given base class and hidden through the above custom attributes. The tree is requested from the given schema provider once, and the filter's `createWhereClause` creates an ECSQL condition for the given class alias. The condition is an empty string when nothing needs to be excluded.
+  
+    ```ts
+    const filter = await ECSql.createHiddenClassesFilter({ schemaProvider, baseClassName: "BisCore.GeometricElement3d" });
+    const condition = filter.createWhereClause("e");
+    const ecsql = `SELECT e.ECInstanceId FROM BisCore.GeometricElement3d e ${condition ? `WHERE ${condition}` : ""}`;
+    ```
+  
+  Custom `ECSchemaProvider` implementations need to implement the new method. The one created by `createECSchemaProvider` from `@itwin/presentation-core-interop` already does that. Example of a custom implementation:
+  
+  ```ts
+  const hiddenClassesTrees = new Map<string, Promise<HiddenClassesTreeNode[]>>();
+  const schemaProvider: ECSchemaProvider = {
+    getSchema: async (schemaName) => getMySchema(schemaName),
+    classDerivesFrom: async (derivedClassName, baseClassName) => myClassDerivesFrom(derivedClassName, baseClassName),
+    getHiddenClassesTree: async (selectClassName) => {
+      let tree = hiddenClassesTrees.get(selectClassName);
+      if (!tree) {
+        tree = createHiddenClassesTree({ schemaProvider, selectClassName });
+        tree.catch(() => hiddenClassesTrees.delete(selectClassName));
+        hiddenClassesTrees.set(selectClassName, tree);
+      }
+      return tree;
+    },
+  };
+  ```
+- [#1454](https://github.com/iTwin/presentation/pull/1454): Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+- [#1350](https://github.com/iTwin/presentation/pull/1350): `ECSqlQueryDef.bindings` is now `ECSqlBinding[] | Record<string, ECSqlBinding>` (previously `ECSqlBinding[]`). This is non-breaking for consumers who only define queries, but breaking for code that reads or forwards bindings (e.g., custom `ECSqlQueryExecutor` implementations) because it must now handle both formats.
+  
+  Migration example:
+  
+  ```ts
+  // Before
+  function handleBindings(bindings: ECSqlBinding[]) {
+    bindings.forEach((b, i) => bind(i + 1, b));
+  }
+  
+  // After
+  function handleBindings(bindings: ECSqlBinding[] | Record<string, ECSqlBinding>) {
+    const entries: Array<[string | number, ECSqlBinding]> = Array.isArray(bindings)
+      ? bindings.map((b, i) => [i + 1, b])
+      : Object.entries(bindings);
+    for (const [key, b] of entries) {
+      bind(key, b);
+    }
+  }
+  ```
+  
+  Alternatively, update to the latest `@itwin/presentation-core-interop` which handles both binding formats out of the box.
+- [#1444](https://github.com/iTwin/presentation/pull/1444): `EC.Property`: Added `category` attribute that provides access to the property's `EC.PropertyCategory`. Also added a `description` attribute to `EC.SchemaItem`.
+- [#1503](https://github.com/iTwin/presentation/pull/1503): Full class and property names are now compared case-sensitively. Provide names using the casing defined by their EC schemas.
+- [#1493](https://github.com/iTwin/presentation/pull/1493): Expose access to enumerations, kind-of-quantities and property categories through `EC.Schema`, and extend `EC.KindOfQuantity` with `relativeError` and `persistenceUnit` attributes. Schemas returned by `createECSchemaProvider` now implement the new getters.
+  
+  - `EC.Schema` now requires `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` methods (mirroring the existing `getClass`). Consumers that only use `EC.Schema` are unaffected, but custom implementations of the interface must add these getters:
+  
+    ```ts
+    const schema: EC.Schema = {
+      name,
+      version,
+      isHidden,
+      getClass: (className) => classes.get(className),
+      // added:
+      getEnumeration: (enumName) => enumerations.get(enumName),
+      getKindOfQuantity: (koqName) => kindOfQuantities.get(koqName),
+      getPropertyCategory: (categoryName) => categories.get(categoryName),
+    };
+    ```
+  
+  - `EC.KindOfQuantity` now requires `relativeError` (`number`) and `persistenceUnit` (`string`) attributes. Custom implementations must provide them.
+  
+  - `createECSchemaProvider`: The `EC.Schema` returned by the provider now implements the new getters, giving access to enumerations, kind-of-quantities and property categories in addition to classes. Existing code keeps working without changes and can now read these additional schema items:
+  
+    ```ts
+    const schemaProvider = createECSchemaProvider(imodel);
+    const schema = await schemaProvider.getSchema("BisCore");
+    const enumeration = schema?.getEnumeration("MySchema.MyEnum");
+    const koq = schema?.getKindOfQuantity("MySchema.MyKoq");
+    const category = schema?.getPropertyCategory("MySchema.MyCategory");
+    ```
+- [#1491](https://github.com/iTwin/presentation/pull/1491): `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+  
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+  
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+  
+  // After:
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+  
+  **Breaking changes:**
+  
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+  
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+  
+      ```ts
+      // Before:
+      const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) });
+      createPredicateBasedHierarchyDefinition({ classHierarchyInspector, hierarchy });
+  
+      // After:
+      const imodelAccess = createECSchemaProvider(imodel);
+      createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+      ```
+- [#1363](https://github.com/iTwin/presentation/pull/1363): Add `version` property to `EC.Schema` interface. Any code that manually implements the `EC.Schema` interface must now provide a `version: { read: number; write: number; minor: number }` object matching the EC schema version format `"read.write.minor"`.
+  
+  Consumers who obtain `EC.Schema` objects exclusively through `createECSchemaProvider` from `@itwin/presentation-core-interop` are unaffected — upgrading to the latest `@itwin/presentation-core-interop` is sufficient.
+  
+  Migration example for custom `EC.Schema` implementations:
+  
+  ```ts
+  // Before
+  const schema: EC.Schema = {
+    name: "MySchema",
+    getClass: async () => undefined,
+  };
+  
+  // After
+  const schema: EC.Schema = {
+    name: "MySchema",
+    version: { read: 1, write: 0, minor: 0 },
+    getClass: async () => undefined,
+  };
+  ```
+- [#1250](https://github.com/iTwin/presentation/pull/1250): Use type-safe full class names.
+  
+  The full class names used in this package were defined as `string`, although we always expect them to be in specific format - either `Schema:Class` or `Schema.Class`. In many cases we rely on this format when parsing the name for compare or other purposes, so type safety for the format is highly beneficial. This change makes full class names type-safe(ier) through [TypeScript's template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html), so that we can be sure that they are always in correct format.
+  
+  ## Additions
+  
+  - Added 3 new types to the `EC` namespace:
+    - `FullClassNameColonNotation` - matches the format `Schema:Class`,
+    - `FullClassNameDotNotation` - matches the format `Schema.Class`,
+    - `FullClassName` - union of the above two.
+  
+  ## Non-breaking changes
+  
+  - Updated `normalizeFullClassName` to return `EC.FullClassNameDotNotation` instead of `string`. The returned value is still assignable to `string`, but it adds type safety for the expected format of the full class name.
+  
+  ## Breaking changes
+  
+  - Changed `EC.CustomAttribute.className` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `EC.CustomAttributeSet.get` argument to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `EC.SchemaItem.fullName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `createClassBasedInstanceLabelSelectClauseFactory` prop `clauses` to take objects with `{ className: EC.FullClassNameDotNotation }` arguments instead of `{ className: string }`.
+  - Changed `IInstanceLabelSelectClauseFactory.createSelectClause` prop `className` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `ECSql.createPrimitivePropertyValueSelectorProps` prop `propertyClassName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `ECSql.createRelationshipPathJoinClause` prop `path` to take class names (`relationshipName`, `sourceClassName` and `targetClassName`) of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `ECClassHierarchyInspector.classDerivesFrom` arguments to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed the second argument of `getClass` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `InstanceKey.className` to be of type `EC.FullClassNameDotNotation` instead of `string`. The value is now always in dot notation, so consumers no longer need to call `normalizeFullClassName` on it.
+  - Changed `RelationshipPathStep` class-name properties (`sourceClassName`, `targetClassName` and `relationshipName`) to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  - Changed `NavigationValueDescriptor.targetClassName` to be of type `EC.FullClassNameDotNotation` instead of `string`.
+  
+  In many cases migration will be seamless, as long as the input string matches the expected format. In some cases (e.g. when assigning a string variable to one of the affected properties), you may need to use `normalizeFullClassName` to ensure the value is of the correct type:
+  
+  ```ts
+  const myClassName: string = "MySchema.MyClass";
+  
+  // before
+  const myClass = getClass(schemaProvider, myClassName);
+  
+  // after
+  const myClass = getClass(schemaProvider, normalizeFullClassName(myClassName));
+  ```
+- [#1394](https://github.com/iTwin/presentation/pull/1394): `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+  
+  Additional changes:
+  
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an `isHidden: boolean` property to `EC.Schema`, `EC.Class` (optional) and `EC.Property`. The property represents the `HiddenSchema`, `HiddenClass` and `HiddenProperty` custom attributes.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+- [#954](https://github.com/iTwin/presentation/pull/954): Add additional `baseClass` and `getDerivedClassNames` members to the `EC.Class` objects, returned by `ECSchemaProvider`.
+  
+  - `baseClass: EC.Class | undefined`
+  - `getDerivedClassNames(props?: { onlyDirect?: boolean }): string[]`
+
+### Minor Changes
+
+- [#1379](https://github.com/iTwin/presentation/pull/1379): `ECSql.createClassSelector`: Add a utility that creates a bracket-quoted ECSQL class selector (`[SchemaName].[ClassName]`) from a full class name.
+- [#1654](https://github.com/iTwin/presentation/pull/1654): `ECSqlBinding`: Allow `idset` bindings to use mutable or readonly sets of IDs in addition to arrays.
+- [#1455](https://github.com/iTwin/presentation/pull/1455): Added `ECSqlBinding.create` for creating ECSQL bindings from typed primitive values.
+- [#1507](https://github.com/iTwin/presentation/pull/1507): Add `eachValueFrom` for consuming subscribable streams through async iteration.
+- [#1307](https://github.com/iTwin/presentation/pull/1307): Add `createIModelInstanceLabelSelectClauseFactory` — a new `IInstanceLabelSelectClauseFactory` implementation that applies `InstanceLabelOverride` rules stored in the iModel.
+  
+  Rules are read from `PresentationRules.Ruleset` elements (top-level `rules[]` only) by querying the iModel via `ECSqlQueryExecutor`. All `InstanceLabelOverride` value specification types are supported: `String`, `Property`, `ClassName`, `ClassLabel`, `BriefcaseId`, `LocalId`, and `Composite`. Path-based specs (`RelatedInstanceLabel`, `Property` with `propertySource`) degrade silently to the next available value.
+  
+  When the `PresentationRules` schema is not imported into the iModel, the factory falls back transparently to the provided `defaultClauseFactory` (defaults to `createBisInstanceLabelSelectClauseFactory`).
+- [#1595](https://github.com/iTwin/presentation/pull/1595): `PrimitiveValueDescriptor`: Add an `extendedType` property that carries a primitive property's `extendedTypeName` (e.g. `"Json"`, `"BeGuid"`), when set, so consumers can refine how a `type`-typed value should be interpreted without re-reading schema. `@itwin/presentation-content` now populates it for primitive properties.
+- [#1455](https://github.com/iTwin/presentation/pull/1455): Added exported `Point2dValue` and `Point3dValue` types for representing point primitive values.
+- [#1452](https://github.com/iTwin/presentation/pull/1452): `Props`: Added support for overloaded functions.
+  
+  When the given function has multiple overload signatures, `Props` now resolves to the union of the parameter types across all overloads instead of only reflecting the last signature.
+- [#1606](https://github.com/iTwin/presentation/pull/1606): Export `DeepReadonly` type for recursively marking all properties as readonly with no depth limit.
+- [#1452](https://github.com/iTwin/presentation/pull/1452): Add `ECSql.createRelationshipPathJoinInfo` that resolves a relationship path into a flat, structured list of join descriptors without producing ECSQL. The returned result lets callers inspect the resolved join structure — e.g. to count the number of join tables without re-reading the schema.
+  
+  In addition, add a sync `ECSql.createRelationshipPathJoinClause(info)` overload that renders a pre-resolved result of `ECSql.createRelationshipPathJoinInfo` into an ECSQL JOIN clause without any async schema access.
+- [#1361](https://github.com/iTwin/presentation/pull/1361): `TypedPrimitiveValue`: The `type` fields now use `Extract<PrimitiveValueType, ...>` to stay in sync with `PrimitiveValueType`. Additionally, the `koqName` property is now available for `"Integer"` and `"Long"` typed values, not just `"Double"`.
+- [#1455](https://github.com/iTwin/presentation/pull/1455): `TypedPrimitiveValue.create`: The return type is now narrowed based on the given `type` argument, so the result only exposes the properties valid for that type. For example, creating a value with type `"Point3d"` no longer exposes the `koqName` property.
+- [#1551](https://github.com/iTwin/presentation/pull/1551): Introduced `NavigationValue` for representing instances targeted by navigation properties.
+- [#1204](https://github.com/iTwin/presentation/pull/1204): Add a `RaisableEvent` interface, which extends `Event` with additional `raiseEvent` method.
+- [#1357](https://github.com/iTwin/presentation/pull/1357): Added new public APIs for describing and carrying property values:
+  
+  - `ValueDescriptor` — a discriminated union (`PrimitiveValueDescriptor | StructValueDescriptor | ArrayValueDescriptor | NavigationValueDescriptor`) that describes the shape of a value without carrying the value itself.
+  - `NavigationValueDescriptor` — describes a navigation property value (a reference to another EC instance). The runtime value stays the referenced instance's id, while this descriptor additionally carries the reference's target class name (`targetClassName`) as metadata.
+  - `PrimitiveValueDescriptor` now carries optional enumeration metadata (via `enumeration`) for enumeration-backed values. Only available on `String | Integer | Long`-typed descriptors, with the enumerator value type discriminated by `type` (`String` → `string`, `Integer | Long` → `number`). The runtime value stays the raw backing primitive, while the descriptor preserves the enumeration's name, strictness, and declared enumerators (value, label, optional description) so consumers can map raw values to display labels without re-reading schema.
+  - `StructValue` and `ArrayValue` — composite value types complementing the existing `PrimitiveValue`. `Value` is the new top-level union (`PrimitiveValue | StructValue | ArrayValue | undefined`) that represents any value that can be assigned to an EC instance property.
+
+### Patch Changes
+
+- [#1198](https://github.com/iTwin/presentation/pull/1198): Fix `Event` type to prohibit being assigned an event with no-argument listener (unless the target event uses a no-argument listener).
+  
+  Now TS will complain about the following assignment, which it previously allowed:
+  
+  ```ts
+  const noArg: Event<() => void> = {} as any;
+  const withArg: Event<(arg: number) => void> = noArg; // TS didn't complain, but it does
+  ```
+- [#1429](https://github.com/iTwin/presentation/pull/1429): `createRelationshipPathJoinClause`: The step `instanceFilter` alias placeholders are now substituted in both their bare (`this.`, `rel.`) and bracket-quoted (`[this].`, `[rel].`) forms.
+  
+  Previously only the bare form was replaced, so a bracket-quoted placeholder was left referencing a non-existent alias in the generated JOIN `ON` clause.
+- [#1128](https://github.com/iTwin/presentation/pull/1128): Fix `InstanceKey` methods `equals` and `compare` not handling different schema-class separators and casing.
+- [#985](https://github.com/iTwin/presentation/pull/985): Bump iTwin.js Core dependencies to `5.14.2`.
+
 ## 2.0.0-alpha.16
 
 ### Major Changes

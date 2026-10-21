@@ -1,5 +1,22 @@
 # @itwin/unified-selection
 
+## 2.0.0
+
+### Major Changes
+
+- 3c65fce84d12aafaaaf5379e1a62623eca46e62d: Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+  
+  This is a packaging change only — the public API is unchanged — so consumers already using the ESM build are not affected. For downstream packages depending on these:
+  
+  - If you list one of these packages as a `peerDependency`, widen the version range to include the new major version.
+  - If you have one of these packages as a `dependency` and re-expose it through your public API, you can safely bump to the new major version — the API is unchanged, so it will not break your API consumers.
+
+### Patch Changes
+
+- e77e4b44652b6a372c7c43f48709d19746e23c63: Avoid copying large ID sets when creating selection query bindings, reducing allocations for large selections.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0
+
 ## 2.0.0-alpha.4
 
 ### Patch Changes
