@@ -1,5 +1,12 @@
 # @itwin/presentation-tree-definitions
 
+## 0.1.4-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.22
+
 ## 0.1.3
 
 ### Patch Changes
