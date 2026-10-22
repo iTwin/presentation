@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/presentation-shared": "workspace:*",
+    "@itwin/presentation-shared": "workspace:^",
     "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
