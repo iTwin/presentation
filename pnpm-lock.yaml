@@ -892,10 +892,10 @@ importers:
         specifier: catalog:itwinui
         version: 2.1.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@itwin/presentation-core-interop':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core-interop
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       '@itwin/unified-selection':
         specifier: workspace:^
@@ -1031,7 +1031,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 5.14.3
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       rxjs:
         specifier: catalog:rxjs
@@ -1071,10 +1071,10 @@ importers:
         specifier: catalog:itwinjs-core
         version: 5.14.3
       '@itwin/presentation-content':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../content
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
     devDependencies:
       '@itwin/build-tools':
@@ -1117,7 +1117,7 @@ importers:
   packages/core-interop:
     dependencies:
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       rxjs:
         specifier: catalog:rxjs
@@ -1181,7 +1181,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 5.14.3
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       natural-compare-lite:
         specifier: ^1.4.1
@@ -1233,10 +1233,10 @@ importers:
         specifier: catalog:itwinjs-core
         version: 5.14.3
       '@itwin/presentation-hierarchies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../hierarchies
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       '@itwin/unified-selection':
         specifier: workspace:^
@@ -1490,10 +1490,10 @@ importers:
         specifier: catalog:itwinjs-core
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3)
       '@itwin/presentation-hierarchies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../hierarchies
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       rxjs:
         specifier: catalog:rxjs
@@ -1530,7 +1530,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 5.14.3
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       rxjs:
         specifier: catalog:rxjs
