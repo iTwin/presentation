@@ -7,7 +7,7 @@ import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay }
 import { Guid } from "@itwin/core-bentley";
 import { fromWithRelease } from "../Rxjs.js";
 import { getLoadDataOverride, getOrCreate, loadData } from "../Utils.js";
-import { DataStateTracker } from "./DataStateTracker.js";
+import { combineDataStates, DataStateTracker } from "./DataStateTracker.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
 import { SubModeledElementsProvider } from "./SubModeledElementsProvider.js";
@@ -337,7 +337,7 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
     },
     subModeledElements: {
       get state(): IdsProviderDataState {
-        return subModeledElementsState.state;
+        return combineDataStates([subModeledElementsState.state, elementModelCategoriesProvider.state]);
       },
       getData: (): Subscribable<SubModeledElementsData> => {
         return getSubModeledElementsData();
