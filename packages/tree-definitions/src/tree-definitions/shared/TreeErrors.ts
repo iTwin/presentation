@@ -27,12 +27,7 @@ export class SearchLimitExceededError extends Error {
 
 /** @internal */
 export function isBeSqliteInterruptError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    !!error &&
-    "name" in error &&
-    error.name === "BE_SQLITE_INTERRUPT"
-  );
+  return typeof error === "object" && !!error && "name" in error && error.name === "BE_SQLITE_INTERRUPT";
 }
 
 /** @internal */
