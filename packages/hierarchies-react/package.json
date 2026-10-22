@@ -63,8 +63,8 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/presentation-hierarchies": "workspace:*",
-    "@itwin/presentation-shared": "workspace:*",
+    "@itwin/presentation-hierarchies": "workspace:^",
+    "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "@stratakit/icons": "catalog:stratakit",
     "@stratakit/structures": "catalog:stratakit",
