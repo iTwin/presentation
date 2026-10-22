@@ -156,8 +156,9 @@ export interface RelatedPropertiesDeclaration {
    * the first step's `sourceClassName` (see `path`): a returned path starting at a base of it is
    * narrowed to it, and one starting at an unrelated class is rejected with an error.
    *
-   * The callback fully replaces default discovery, including its exclusion of hidden target subclasses.
-   * Callbacks that need that behavior must apply it themselves.
+   * The callback fully replaces default discovery, including its exclusion of hidden target subclasses, so
+   * a returned path may end at a hidden class. When loading, each step reaches only instances of its class
+   * and subclasses that aren't hidden relative to it, the same as for discovered paths.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;

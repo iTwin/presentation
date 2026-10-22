@@ -3,10 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  createContentProvider,
   createHiddenSchemaMembersDescriptorTransformer,
   defineIModelFieldsProvider,
+  resolveContentSources,
 } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
@@ -19,6 +22,7 @@ import {
   getPropertyFieldsByPath,
 } from "./Utils.js";
 
+import type { ContentConfiguration } from "@itwin/presentation-content";
 import type { RelationshipPath } from "@itwin/presentation-shared";
 
 describe("Content", () => {
@@ -349,6 +353,94 @@ describe("Content", () => {
       expect(getRelatedFieldsOf(explicit, setup.schema.items.HiddenSub.fullName)).toEqual(["Description", "P2"]);
       expect(getPropertyFieldByName(explicit, "P2").hidden).toBe(true);
       expect(getPropertyFieldByName(explicit, "Description").hidden).toBeUndefined();
+    });
+
+    it("excludes hidden subclass instances from related property values when their visible base class has instances too", async () => {
+      // A --AtoB--> B (visible, property PropB)
+      //               └─ HiddenB (HiddenClass)
+      // `mixed` is related to a `B` and a `HiddenB` instance, `hiddenOnly` - only to a `HiddenB` instance.
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="B">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="PropB" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="HiddenB">
+              <BaseClass>B</BaseClass>
+              <ECCustomAttributes>
+                <HiddenClass xmlns="CoreCustomAttributes.01.00.03" />
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                <Class class="B" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const mixed = builder.insertInstance(s.items.A.fullName, { propA: "mixed" });
+        const hiddenOnly = builder.insertInstance(s.items.A.fullName, { propA: "hidden-only" });
+        const visibleB = builder.insertInstance(s.items.B.fullName, { propB: "visible" });
+        const hiddenB1 = builder.insertInstance(s.items.HiddenB.fullName, { propB: "hidden" });
+        const hiddenB2 = builder.insertInstance(s.items.HiddenB.fullName, { propB: "hidden-only" });
+        builder.insertRelationship(s.items.AtoB.fullName, mixed.id, visibleB.id);
+        builder.insertRelationship(s.items.AtoB.fullName, mixed.id, hiddenB1.id);
+        builder.insertRelationship(s.items.AtoB.fullName, hiddenOnly.id, hiddenB2.id);
+        return { schema: s, mixed, hiddenOnly, visibleB };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const config: ContentConfiguration = {
+        imodelFieldsProviders: [
+          defineIModelFieldsProvider({
+            id: "provider_v1",
+            async getContribution() {
+              return {
+                relatedProperties: [
+                  {
+                    path: [
+                      {
+                        sourceClassName: setup.schema.items.A.fullName,
+                        targetClassName: setup.schema.items.B.fullName,
+                        relationshipName: setup.schema.items.AtoB.fullName,
+                      },
+                    ],
+                    cardinalityHint: "many",
+                  },
+                ],
+              };
+            },
+          }),
+        ],
+      };
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config,
+      });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+      const field = getPropertyFieldByName(await provider.getContentDescriptor(), "PropB");
+
+      const items = await collect(provider.getItems());
+      const byPrimary = new Map(items.map((item) => [item.primaryKey.id, item]));
+      const mixedItem = byPrimary.get(setup.mixed.id)!;
+      const hiddenOnlyItem = byPrimary.get(setup.hiddenOnly.id)!;
+      expect(mixedItem.getValue(field)).toEqual(["visible"]);
+      expect(mixedItem.getRelatedInstances(field).map(({ key }) => key)).toEqual([setup.visibleB]);
+      expect(hiddenOnlyItem.getValue(field)).toEqual([]);
+      expect(hiddenOnlyItem.getRelatedInstances(field)).toEqual([]);
     });
 
     it("hides a link-table relationship-class property marked HiddenProperty while a related target property stays visible", async () => {
