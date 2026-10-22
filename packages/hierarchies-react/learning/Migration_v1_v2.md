@@ -34,10 +34,9 @@ To migrate:
 - Keep importing hooks and utilities (`useTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`, localization helpers, etc.) from the root entry point.
 - Update peer dependencies in your application's `package.json`:
   - **Remove** `@itwin/itwinui-react` - this package no longer has optional dependency on it. Keep it if other parts of your application still use iTwinUI directly.
-  - **Add** `@mui/material` (`^9.4.0`), `@stratakit/mui`, and `@stratakit/foundations`. These are optional peer dependencies required only when using the delivered components.
+  - **Add** `@mui/material` (`^9.5.0`), `@stratakit/foundations` (`^1.0.4`), `@stratakit/icons` (`^0.4.7`), and `@stratakit/mui` (`^1.2.0`). These are optional peer dependencies required only when using the delivered components.
   - **Bump React** to `^18.0.0 || ^19.0.0` if you are still on React `17` — React `17` is no longer supported.
 - **Switch to ESM.** The package no longer ships a CommonJS build and is published as ES modules only. Make sure your application and bundler consume it as ESM; `require("@itwin/presentation-hierarchies-react")` no longer works.
-- **Configure your bundler for icons.** The delivered components use icons from `@stratakit/icons` (a direct dependency of this package), which are loaded as asset URLs. Your bundler must be configured to emit `.svg` files rather than inline them — follow the [StrataKit icons bundler configuration guide](https://github.com/iTwin/stratakit/blob/main/packages/icons#bundler-configuration) (Vite, Rsbuild, esbuild, etc.).
 
 ```tsx
 // before
