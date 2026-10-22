@@ -1,16 +1,34 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.22
+
+### Major Changes
+
+- [#1660](https://github.com/iTwin/presentation/pull/1660): `createMergedIModelHierarchyProvider`: The `getHierarchyDefinition` prop now receives a props object `{ imodelAccess }` instead of a positional `imodelAccess` argument, so more props can be added later.
+
+  Migration:
+
+  ```ts
+  const provider = createMergedIModelHierarchyProvider({
+    imodels,
+    // before
+    getHierarchyDefinition: (imodelAccess) => createMyHierarchyDefinition({ imodelAccess }),
+    // after
+    getHierarchyDefinition: ({ imodelAccess }) => createMyHierarchyDefinition({ imodelAccess }),
+  });
+  ```
+
 ## 2.0.0-alpha.21
 
 ### Major Changes
 
 - [#1627](https://github.com/iTwin/presentation/pull/1627): Adjust `HierarchyDefinition` and `createMergedIModelHierarchyProvider` APIs for better usability with hierarchy definitions that require iModel access outside of their `defineHierarchyLevel` method.
-  
+
   - `createMergedIModelHierarchyProvider`: Replaced `hierarchyDefinition` with `getHierarchyDefinition(imodelAccess)`, which creates a hierarchy definition for each iModel version. The latest version's definition handles pre-processing and post-processing of merged nodes.
   - Removed `imodelAccess` from `DefineHierarchyLevelProps`. Definitions that need iModel access must capture it when they are created instead of reading it from `defineHierarchyLevel` props.
-  
+
   Before:
-  
+
   ```ts
   createMergedIModelHierarchyProvider({
   	imodels,
@@ -21,9 +39,9 @@
   	},
   });
   ```
-  
+
   After:
-  
+
   ```ts
   createMergedIModelHierarchyProvider({
   	imodels,
@@ -35,7 +53,7 @@
   });
   ```
 - [#1654](https://github.com/iTwin/presentation/pull/1654): `HierarchySearchTree`: Accept deeply readonly paths and trees when building search trees. `HierarchySearchPath.normalize` also accepts readonly paths and now returns a deeply readonly result.
-  
+
   Accepting additional paths does not mutate options on previously accepted trees, including frozen inputs.
 
 ### Patch Changes
@@ -760,6 +778,14 @@
 
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
+
+## 1.7.23
+
+### Patch Changes
+
+- [#1650](https://github.com/iTwin/presentation/pull/1650): Update iTwin.js Core dependencies to `5.14.3`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.24
 
 ## 1.7.22
 

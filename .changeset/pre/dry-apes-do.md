@@ -6,7 +6,7 @@ Added ability to enter node rename mode programmatically through `StrataKitTreeR
 
 Example:
 ```tsx
-import { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react";
+import { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "@itwin/presentation-hierarchies-react/stratakit";
 
 function MyTree() {
   const treeRef = useRef<StrataKitTreeRendererAttributes>(null);

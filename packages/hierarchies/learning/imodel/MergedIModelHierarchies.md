@@ -63,7 +63,9 @@ async function createInstanceNodesQueryDefinition({
 
 // Create a simple hierarchy definition that uses `BisCore.PhysicalModel` for root nodes and
 // `BisCore.PhysicalElement` for each model's child nodes.
-const getHierarchyDefinition = (imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]) =>
+const getHierarchyDefinition: Props<typeof createMergedIModelHierarchyProvider>["getHierarchyDefinition"] = ({
+  imodelAccess,
+}) =>
   createPredicateBasedHierarchyDefinition({
     imodelAccess,
     hierarchy: {

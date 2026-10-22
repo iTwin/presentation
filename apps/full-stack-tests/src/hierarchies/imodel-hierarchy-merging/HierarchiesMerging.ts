@@ -259,7 +259,7 @@ export function createMergedHierarchyProvider(props: {
   }));
   return createMergedIModelHierarchyProvider({
     imodels,
-    getHierarchyDefinition: (imodelAccess) => props.createHierarchyDefinition({ imodelAccess }),
+    getHierarchyDefinition: ({ imodelAccess }) => props.createHierarchyDefinition({ imodelAccess }),
   });
 }
 
