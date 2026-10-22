@@ -42,6 +42,7 @@ type JoinRelationshipPath = Extract<
 >["path"];
 
 interface ResolutionQueryContext {
+  schemaProvider: ECSchemaProvider;
   target: ContentTarget;
   /**
    * The class the query selects primaries from: the target's class, or the declared source class when
@@ -49,7 +50,12 @@ interface ResolutionQueryContext {
    */
   primaryClassName: EC.FullClassNameDotNotation;
   joinPath: JoinRelationshipPath;
-  schemaProvider: ECSchemaProvider;
+  /**
+   * ECSQL condition on the instances of the join path's final step target (the "join target"), referring to
+   * its alias, or an empty string when there's nothing to apply. Strategies apply it as is. It currently
+   * excludes instances of classes hidden relative to the declared target class.
+   */
+  joinTargetInstanceFilter?: string;
 }
 
 interface ResolutionQueryStrategy {
@@ -70,6 +76,13 @@ function buildClassNameColumns(selectors: string[]): string {
 // string.
 function buildClassIdColumns(selectors: string[]): string {
   return selectors.join(", ");
+}
+
+function buildWhereClause(...conditions: (string | undefined)[]): string {
+  const nonEmpty = conditions.filter((condition): condition is string => condition !== undefined && condition !== "");
+  return nonEmpty.length === 0
+    ? ""
+    : `WHERE ${nonEmpty.map((condition) => (nonEmpty.length > 1 ? `(${condition})` : condition)).join(" AND ")}`;
 }
 
 // Resolves a relationship path into its JOIN clause plus the per-step concrete relationship/target
@@ -120,11 +133,11 @@ const originalStrategy: ResolutionQueryStrategy = {
     return true;
   },
   async buildQuery(ctx) {
-    const { target, primaryClassName, joinPath, schemaProvider } = ctx;
+    const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
     const targetFilter = buildTargetFilter(target);
-    const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+    const whereClause = buildWhereClause(targetFilter.where ?? "", joinTargetInstanceFilter);
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
@@ -147,7 +160,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
     return ctx.joinPath.length >= 2;
   },
   async buildQuery(ctx) {
-    const { target, primaryClassName, joinPath, schemaProvider } = ctx;
+    const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
     const targetFilter = buildTargetFilter(target);
 
     const [
@@ -187,6 +200,7 @@ const rewriteStrategy: ResolutionQueryStrategy = {
         ${instanceFilterClauses}
         GROUP BY [${firstHopAlias}].[ECInstanceId], [${PRIMARY_CLASS_ALIAS}].[ECClassId], ${firstStepRelSelector}
       ) [reachable] ON [reachable].[FirstHopInstanceId] = [${firstHopAlias}].[ECInstanceId]
+      ${buildWhereClause(joinTargetInstanceFilter)}
       GROUP BY  [reachable].[FirstStepRelClassId], ${buildClassIdColumns(classSelectors)}
     `;
 
@@ -204,12 +218,12 @@ const crossJoinStrategy: ResolutionQueryStrategy = {
     return ctx.joinPath.length >= 3;
   },
   async buildQuery(ctx) {
-    const { target, primaryClassName, joinPath, schemaProvider } = ctx;
+    const { target, primaryClassName, joinPath, schemaProvider, joinTargetInstanceFilter } = ctx;
     const { joins, bindings: joinBindings, selectors } = await resolveJoin(schemaProvider, joinPath);
     const classSelectors = selectors.flatMap((s) => [s.relationshipClassId, s.targetClassId]);
     const crossJoins = joins.replaceAll(/\bINNER\s+JOIN\b/gi, "CROSS JOIN");
     const targetFilter = buildTargetFilter(target);
-    const whereClause = targetFilter.where ? `WHERE ${targetFilter.where}` : "";
+    const whereClause = buildWhereClause(targetFilter.where ?? "", joinTargetInstanceFilter);
     const allBindings = { ...joinBindings, ...targetFilter.bindings };
     const ecsql = `
       SELECT GROUP_CONCAT(DISTINCT ec_classname([${PRIMARY_CLASS_ALIAS}].[ECClassId], 's.c')), ${buildClassNameColumns(classSelectors)}
@@ -341,11 +355,17 @@ async function resolveDeclarationPaths({
     relationshipAlias: `r${i}`,
     joinType: "inner" as const,
   }));
+  const finalStep = joinPath[joinPath.length - 1];
+  const hiddenClassesFilter = await ECSql.createHiddenClassesFilter({
+    schemaProvider: imodelAccess,
+    baseClassName: finalStep.targetClassName,
+  });
   const ctx: ResolutionQueryContext = {
+    schemaProvider: imodelAccess,
     target,
     primaryClassName: sourceClassName,
     joinPath,
-    schemaProvider: imodelAccess,
+    joinTargetInstanceFilter: hiddenClassesFilter.createWhereClause(finalStep.targetAlias),
   };
   const strategies = ALL_STRATEGIES.filter((s) => s.isApplicable(ctx));
   const queries = await Promise.all(strategies.map(async (s) => s.buildQuery(ctx)));

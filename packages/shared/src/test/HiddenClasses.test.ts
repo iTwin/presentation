@@ -147,51 +147,66 @@ describe("createHiddenClassesTree", () => {
     ]);
   });
 
-  it("treats explicitly selected hidden class as visible", async () => {
+  it("treats explicitly selected hidden class and its descendants as visible", async () => {
     const schemaProvider = createSchemaProvider();
     schemaProvider.addClass({ fullName: "s.x", isHidden: true });
     schemaProvider.addClass({ fullName: "s.y", baseClassName: "s.x" });
     schemaProvider.addClass({ fullName: "s.z", baseClassName: "s.x", isHidden: true });
     expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.x" })).toEqual([
-      { fullName: "s.y", state: "hide", children: [] },
       { fullName: "s.z", state: "hide", children: [] },
     ]);
   });
 
-  it.each(["class", "schema"])("preserves hiding inherited by the selected class from its base %s", async (source) => {
+  it.each([
+    { source: "class", attribute: "HiddenClass" },
+    { source: "schema", attribute: "HiddenSchema" },
+  ])("doesn't hide descendants of the selected class when its base is hidden by $attribute", async ({ source }) => {
     const schemaProvider = createSchemaProvider();
     schemaProvider.addClass({ fullName: "base.hidden", isHidden: source === "class" ? true : undefined });
     if (source === "schema") {
       schemaProvider.hideSchema("base");
     }
-    schemaProvider.addClass({ fullName: "s.selected", baseClassName: "base.hidden" });
+    schemaProvider.addClass({ fullName: "base.middle", baseClassName: "base.hidden" });
+    schemaProvider.addClass({ fullName: "s.selected", baseClassName: "base.middle" });
     schemaProvider.addClass({ fullName: "s.child", baseClassName: "s.selected" });
-    schemaProvider.addClass({ fullName: "s.shown", baseClassName: "s.child", isHidden: false });
-    schemaProvider.addClass({ fullName: "s.hiddenAgain", baseClassName: "s.shown", isHidden: true });
+    schemaProvider.addClass({ fullName: "s.hiddenChild", baseClassName: "s.child", isHidden: true });
+    schemaProvider.addClass({ fullName: "s.shown", baseClassName: "s.hiddenChild", isHidden: false });
 
     expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.selected" })).toEqual([
-      {
-        fullName: "s.child",
-        state: "hide",
-        children: [
-          {
-            fullName: "s.shown",
-            state: "show",
-            children: [{ fullName: "s.hiddenAgain", state: "hide", children: [] }],
-          },
-        ],
-      },
+      { fullName: "s.hiddenChild", state: "hide", children: [{ fullName: "s.shown", state: "show", children: [] }] },
     ]);
   });
 
-  it("preserves an explicit show override on the selected class", async () => {
+  it("applies hiding of a class below a broader selected class, but not of the selected class itself", async () => {
     const schemaProvider = createSchemaProvider();
-    schemaProvider.addClass({ fullName: "s.hidden", isHidden: true });
-    schemaProvider.addClass({ fullName: "s.selected", baseClassName: "s.hidden", isHidden: false });
+    schemaProvider.addClass({ fullName: "s.top" });
+    schemaProvider.addClass({ fullName: "s.root", baseClassName: "s.top", isHidden: true });
+    schemaProvider.addClass({ fullName: "s.target", baseClassName: "s.root" });
+    schemaProvider.addClass({ fullName: "s.derived", baseClassName: "s.target" });
+    schemaProvider.addClass({ fullName: "s.hiddenDerived", baseClassName: "s.target", isHidden: true });
+
+    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.top" })).toEqual([
+      { fullName: "s.root", state: "hide", children: [] },
+    ]);
+    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.target" })).toEqual([
+      { fullName: "s.hiddenDerived", state: "hide", children: [] },
+    ]);
+    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.root" })).toEqual([
+      { fullName: "s.hiddenDerived", state: "hide", children: [] },
+    ]);
+  });
+
+  it("hides descendants in a hidden schema, regardless of the selected class' own state", async () => {
+    const schemaProvider = createSchemaProvider();
+    schemaProvider.addClass({ fullName: "s.selected", isHidden: false });
+    schemaProvider.addClass({ fullName: "s.child", baseClassName: "s.selected" });
+    schemaProvider.addClass({ fullName: "s.shownChild", baseClassName: "s.selected", isHidden: false });
     schemaProvider.addClass({ fullName: "other.child", baseClassName: "s.selected" });
     schemaProvider.hideSchema("s");
 
-    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.selected" })).toEqual([]);
+    expect(await createHiddenClassesTree({ schemaProvider, selectClassName: "s.selected" })).toEqual([
+      { fullName: "s.child", state: "hide", children: [] },
+    ]);
   });
 
   it("throws when selected class is not found", async () => {

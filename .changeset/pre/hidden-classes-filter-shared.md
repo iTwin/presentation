@@ -6,7 +6,7 @@
 
 Additions:
 
-- `HiddenClassesTreeNode` describes a node of the tree. Root nodes are the outermost hidden derived classes, their children are derived classes that are explicitly shown, and so on. The selected class itself is always considered visible.
+- `HiddenClassesTreeNode` describes a node of the tree. Root nodes are the outermost hidden derived classes, their children are derived classes that are explicitly shown, and so on. The selected class is the visibility boundary: `HiddenClass` attributes on it and on its base classes are ignored, so it and its descendants are visible unless a descendant is hidden through its own `HiddenClass` attribute or the `HiddenSchema` attribute of its schema.
 - `createHiddenClassesTree` builds the tree using the given schema provider. It doesn't cache the result, and is meant for implementing `ECSchemaProvider.getHiddenClassesTree`.
 - `ECSql.createHiddenClassesFilter` creates a filter that excludes instances of classes, derived from the given base class and hidden through the above custom attributes. The tree is requested from the given schema provider once, and the filter's `createWhereClause` creates an ECSQL condition for the given class alias. The condition is an empty string when nothing needs to be excluded.
 
