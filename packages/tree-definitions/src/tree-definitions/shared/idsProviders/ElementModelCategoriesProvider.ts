@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { delay, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { delay, finalize, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
@@ -204,10 +204,8 @@ export class ElementModelCategoriesProvider<TLoader extends Loader = undefined> 
       loadDataOverride: this.#loadDataOverride,
       loadDefault: () => this.loadData(),
     }).pipe(
-      tap({
-        finalize: () => {
-          this.#subscriberBatches = [];
-        },
+      finalize(() => {
+        this.#subscriberBatches = [];
       }),
       this.#state.track(),
       shareReplay(),
