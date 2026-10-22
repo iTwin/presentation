@@ -180,19 +180,19 @@ catalogs:
       version: 1.0.0
   stratakit:
     '@mui/material':
-      specifier: ^9.4.0
+      specifier: ^9.5.0
       version: 9.5.0
     '@stratakit/foundations':
-      specifier: ^1.0.0
+      specifier: ^1.0.4
       version: 1.0.4
     '@stratakit/icons':
-      specifier: ^0.4.6
-      version: 0.4.6
+      specifier: ^0.4.7
+      version: 0.4.7
     '@stratakit/mui':
-      specifier: ^1.1.0
+      specifier: ^1.2.0
       version: 1.2.0
     '@stratakit/structures':
-      specifier: ^0.6.0
+      specifier: ^0.6.2
       version: 0.6.2
   test-tools:
     '@testing-library/dom':
@@ -443,7 +443,7 @@ importers:
         version: 9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@stratakit/icons':
         specifier: catalog:stratakit
-        version: 0.4.6
+        version: 0.4.7
       '@stratakit/mui':
         specifier: catalog:stratakit
         version: 1.2.0(@mui/material@9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stratakit/foundations@1.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
@@ -809,7 +809,7 @@ importers:
         version: 1.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@stratakit/icons':
         specifier: catalog:stratakit
-        version: 0.4.6
+        version: 0.4.7
       '@stratakit/mui':
         specifier: catalog:stratakit
         version: 1.2.0(@mui/material@9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stratakit/foundations@1.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
@@ -1242,8 +1242,8 @@ importers:
         specifier: workspace:^
         version: link:../unified-selection
       '@stratakit/icons':
-        specifier: catalog:stratakit
-        version: 0.4.6
+        specifier: ^0.4.7
+        version: 0.4.7
       '@stratakit/structures':
         specifier: catalog:stratakit
         version: 0.6.2(@stratakit/foundations@1.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(immer@10.2.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
@@ -3345,6 +3345,9 @@ packages:
 
   '@stratakit/icons@0.4.6':
     resolution: {integrity: sha512-VFKafaYh7ixHY0L5VU8mYDQ/ovGOlAyfYiVJ97ESm2ty4ijgmn5yV1LFF1HzwJypoS+0fHBA187R5OjtpWjI5g==}
+
+  '@stratakit/icons@0.4.7':
+    resolution: {integrity: sha512-cbhrToc4yQ2x3Zc5rx4ViyI1265E7w9nrc77inp16S1dmEfChI1nQ5S5jBOokaw4UZcDxzOZe45siFJ/h3d7EQ==}
 
   '@stratakit/internal-utils@0.2.1':
     resolution: {integrity: sha512-E8oDOJubxcB7Yr6zeb55PqKTvelJjsqjNHulcmOJr443wgZNvLEqEFmCUWZ7uW2xbMBRFgbVqoxdGtrkQkravQ==}
@@ -9082,6 +9085,8 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
 
   '@stratakit/icons@0.4.6': {}
+
+  '@stratakit/icons@0.4.7': {}
 
   '@stratakit/internal-utils@0.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
