@@ -15,6 +15,7 @@ import {
   buildDescriptor,
   createContentIModelAccess,
   getPropertyFieldByName,
+  getPropertyFields,
   getPropertyFieldsByPath,
 } from "./Utils.js";
 
@@ -256,6 +257,98 @@ describe("Content", () => {
       );
       expect(descriptionViaC).toBeDefined();
       expect(descriptionViaC!.hidden).toBeUndefined();
+    });
+
+    it("omits all fields of a hidden subclass discovered through a visible declared target class, including inherited ones", async () => {
+      // A --RelB--> RelatedBase (visible, property Description)
+      //               ├─ VisibleSub (own property P1)
+      //               └─ HiddenSub (HiddenClass, own property P2)
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="RelatedBase">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="Description" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="VisibleSub">
+              <BaseClass>RelatedBase</BaseClass>
+              <ECProperty propertyName="P1" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="HiddenSub">
+              <BaseClass>RelatedBase</BaseClass>
+              <ECCustomAttributes>
+                <HiddenClass xmlns="CoreCustomAttributes.01.00.03" />
+              </ECCustomAttributes>
+              <ECProperty propertyName="P2" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="RelB" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to related" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="related to a" polymorphic="true">
+                <Class class="RelatedBase" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+        const visible = builder.insertInstance(s.items.VisibleSub.fullName, { description: "visible", p1: "p1" });
+        const hidden = builder.insertInstance(s.items.HiddenSub.fullName, { description: "hidden", p2: "p2" });
+        builder.insertRelationship(s.items.RelB.fullName, a.id, visible.id);
+        builder.insertRelationship(s.items.RelB.fullName, a.id, hidden.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const pathTo = (targetClassName: typeof setup.schema.items.A.fullName): RelationshipPath => [
+        {
+          sourceClassName: setup.schema.items.A.fullName,
+          targetClassName,
+          relationshipName: setup.schema.items.RelB.fullName,
+        },
+      ];
+      const buildRelatedDescriptor = async (declaredTargetClassName: typeof setup.schema.items.A.fullName) =>
+        buildDescriptor({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: {
+            imodelFieldsProviders: [
+              defineIModelFieldsProvider({
+                id: "provider_v1",
+                async getContribution() {
+                  return { relatedProperties: [{ path: pathTo(declaredTargetClassName) }] };
+                },
+              }),
+            ],
+            descriptorTransformers: [createHiddenSchemaMembersDescriptorTransformer()],
+          },
+        });
+      const getRelatedFieldsOf = (descriptor: Awaited<ReturnType<typeof buildDescriptor>>, className: string) =>
+        getPropertyFields(descriptor)
+          .filter((f) => f.pathFromTarget.length > 0 && f.pathFromTarget.at(-1)!.targetClassName === className)
+          .map((f) => f.propertyName)
+          .sort();
+
+      // Declared through the visible base: the hidden subclass contributes no fields at all, even the
+      // inherited `Description`, which is declared by the visible base.
+      const viaBase = await buildRelatedDescriptor(setup.schema.items.RelatedBase.fullName);
+      expect(getRelatedFieldsOf(viaBase, setup.schema.items.HiddenSub.fullName)).toEqual([]);
+      expect(getRelatedFieldsOf(viaBase, setup.schema.items.VisibleSub.fullName)).toEqual(["Description", "P1"]);
+
+      // Declared explicitly: the hidden subclass is kept, its own property stays hidden and the
+      // inherited visible one remains visible.
+      const explicit = await buildRelatedDescriptor(setup.schema.items.HiddenSub.fullName);
+      expect(getRelatedFieldsOf(explicit, setup.schema.items.HiddenSub.fullName)).toEqual(["Description", "P2"]);
+      expect(getPropertyFieldByName(explicit, "P2").hidden).toBe(true);
+      expect(getPropertyFieldByName(explicit, "Description").hidden).toBeUndefined();
     });
 
     it("hides a link-table relationship-class property marked HiddenProperty while a related target property stays visible", async () => {

@@ -155,6 +155,9 @@ export interface RelatedPropertiesDeclaration {
    * The callback receives the original target, including its instance IDs and filter. It must honor
    * the first step's `sourceClassName` (see `path`): a returned path starting at a base of it is
    * narrowed to it, and one starting at an unrelated class is rejected with an error.
+   *
+   * The callback fully replaces default discovery, including its exclusion of hidden target subclasses.
+   * Callbacks that need that behavior must apply it themselves.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;

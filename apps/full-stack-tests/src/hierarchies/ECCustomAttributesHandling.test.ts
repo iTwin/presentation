@@ -64,7 +64,7 @@ describe("Hierarchies", () => {
     });
 
     describe("HiddenClass", () => {
-      it("preserves inherited hiding below explicitly selected hidden class", async () => {
+      it("ignores hiding of the explicitly selected class and its bases, but not of its descendants", async () => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const s = await importSchema(
             testName,
@@ -80,6 +80,9 @@ describe("Hierarchies", () => {
               </ECEntityClass>
               <ECEntityClass typeName="C">
                 <BaseClass>B</BaseClass>
+                <ECCustomAttributes>
+                  <HiddenClass xmlns="CoreCustomAttributes.01.00.01" />
+                </ECCustomAttributes>
               </ECEntityClass>
               <ECEntityClass typeName="D">
                 <BaseClass>C</BaseClass>
@@ -99,7 +102,12 @@ describe("Hierarchies", () => {
         });
         const { ecdb, schema, ...keys } = setup;
 
-        for (const selectedClass of ["A", "B"] as const) {
+        const cases = [
+          { selectedClass: "A", expectedKeys: [keys.a, keys.b, keys.d] },
+          { selectedClass: "B", expectedKeys: [keys.b, keys.d] },
+          { selectedClass: "C", expectedKeys: [keys.c, keys.d] },
+        ] as const;
+        for (const { selectedClass, expectedKeys } of cases) {
           const provider = createProvider({
             ecdb,
             hierarchy: (imodelAccess) =>
@@ -111,10 +119,9 @@ describe("Hierarchies", () => {
           });
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
-            expect: [
-              NodeValidators.createForInstanceNode({ instanceKeys: [selectedClass === "A" ? keys.a : keys.b] }),
-              NodeValidators.createForInstanceNode({ instanceKeys: [keys.d] }),
-            ],
+            expect: expectedKeys.map((instanceKey) =>
+              NodeValidators.createForInstanceNode({ instanceKeys: [instanceKey] }),
+            ),
           });
         }
       });
