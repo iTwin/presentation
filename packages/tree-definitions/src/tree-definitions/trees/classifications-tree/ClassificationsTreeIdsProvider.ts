@@ -259,9 +259,8 @@ export function createClassificationsTreeIdsProvider({
     getDirectChildClassifications(
       classificationOrTableIds: Id64Arg,
     ): Subscribable<Array<{ id: ClassificationId; hasChildClassifications: boolean }>> {
-      const result = new Array<{ id: ClassificationId; hasChildClassifications: boolean }>();
       if (Id64.sizeOf(classificationOrTableIds) === 0) {
-        return of(result);
+        return of([]);
       }
       return getData().pipe(
         mergeMap(({ classificationOrTableInfos }) =>
@@ -277,7 +276,7 @@ export function createClassificationsTreeIdsProvider({
                 );
               }
               return acc;
-            }, result),
+            }, new Array<{ id: ClassificationId; hasChildClassifications: boolean }>()),
           ),
         ),
       );
