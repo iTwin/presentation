@@ -1058,6 +1058,16 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.11.8
+
+### Patch Changes
+
+- [#1650](https://github.com/iTwin/presentation/pull/1650): Update iTwin.js Core dependencies to `5.14.3`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.23
+  - @itwin/presentation-shared@1.2.24
+  - @itwin/unified-selection@1.8.8
+
 ## 1.11.7
 
 ### Patch Changes

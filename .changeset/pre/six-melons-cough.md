@@ -7,7 +7,8 @@ Added a react hook `useNodeHighlighting` that helps create highlighted node labe
 Example usage:
 
 ```ts
-import { StrataKitTreeRenderer, useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+import { useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 
 type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 

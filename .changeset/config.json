@@ -5,13 +5,11 @@
   "fixed": [],
   "linked": [],
   "access": "public",
-  "baseBranch": "next",
+  "baseBranch": "master",
   "updateInternalDependencies": "patch",
   "bumpVersionsWithWorkspaceProtocolOnly": true,
   "privatePackages": {
     "version": false
   },
-  "ignore": [
-    "@itwin/presentation-components"
-  ]
+  "ignore": ["@itwin/presentation-components"]
 }
