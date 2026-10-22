@@ -39,7 +39,6 @@ import {
   getOptimalBatchSize,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
-  ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
@@ -55,7 +54,6 @@ import type {
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IModelInstanceKey,
-  InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
   NodePreProcessor,
@@ -67,12 +65,10 @@ import type {
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
-  Props,
 } from "@itwin/presentation-shared";
 import type { CategoryId } from "../../shared/Types.js";
 import type { DeepRequired, HiddenClassesFilter } from "../../shared/Utils.js";
 import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
-import type { CategoryNodeProps, ElementNodeProps } from "./ModelsTreeNodeInternal.js";
 
 /**
  * An element class grouping node that can be used as a search target.
@@ -343,73 +339,19 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
       return {
         ...node,
-        extendedData: { ...node.extendedData, modelIds: parseIdsSelectorResult(node.extendedData.modelIds) },
+        extendedData: {
+          ...node.extendedData,
+          modelIds: parseIdsSelectorResult(node.extendedData.modelIds),
+          ...(node.extendedData.parentElementIds !== undefined
+            ? { parentElementIds: parseIdsSelectorResult(node.extendedData.parentElementIds) }
+            : {}),
+        },
       };
     }
     return node;
   };
 
-  private static extendPathWithElement(elementNode: {
-    key: InstancesNodeKey;
-    extendedData: ElementNodeProps;
-  }): ParentElementsPath {
-    return ParentElementsPath.appendToPath({
-      path: elementNode.extendedData.parentElementsPath,
-      ids: elementNode.key.instanceKeys.map(({ id }) => id),
-      categoryId: elementNode.extendedData.categoryId,
-    });
-  }
-
-  private static getInheritedParentElementsPath(
-    parentNode: NonNullable<Props<NodePostProcessor>["parentNode"]>,
-  ): ParentElementsPath {
-    if (
-      ModelsTreeNodeInternal.isElementClassGroupingNode(parentNode) ||
-      ModelsTreeNodeInternal.isCategoryNode(parentNode)
-    ) {
-      return parentNode.extendedData.parentElementsPath;
-    }
-    throw new Error("Expected node's parent to be category, or class grouping node");
-  }
-
-  private assignParentElementsPath({
-    node,
-    parentNode,
-  }: Pick<Props<NodePostProcessor>, "node" | "parentNode">): ProcessedHierarchyNode {
-    if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
-      const modelIds: CategoryNodeProps["modelIds"] = node.extendedData.modelIds;
-      if (parentNode === undefined) {
-        // If subjects are not shown and model has PhysicalPartition.Model.Content or GraphicalPartition3d.Model.Content property,
-        // then such models are not shown and category might have no parent node
-        node.extendedData = { ...node.extendedData, parentElementsPath: [] };
-        return node;
-      }
-      // When the parent is an element that actually contains this category, the category continues the element path.
-      // Otherwise (parent is a model, or a sub-model boundary) the path is reset.
-      const parentIsContainingElement =
-        ModelsTreeNodeInternal.isElementNode(parentNode) &&
-        parentNode.key.instanceKeys.every(({ id }) => !modelIds.includes(id));
-      node.extendedData = {
-        ...node.extendedData,
-        parentElementsPath: parentIsContainingElement ? ModelsTreeDefinition.extendPathWithElement(parentNode) : [],
-      };
-      return node;
-    }
-    if (ModelsTreeNodeInternal.isRawElementNode(node) || ModelsTreeNodeInternal.isRawElementClassGroupingNode(node)) {
-      assert(parentNode !== undefined, "Expected node to have a parent node");
-      node.extendedData = {
-        ...node.extendedData,
-        parentElementsPath: ModelsTreeNodeInternal.isElementNode(parentNode)
-          ? ModelsTreeDefinition.extendPathWithElement(parentNode)
-          : ModelsTreeDefinition.getInheritedParentElementsPath(parentNode),
-      };
-      return node;
-    }
-    return node;
-  }
-
-  public postProcessNode: NodePostProcessor = async ({ node, parentNode }) => {
-    node = this.assignParentElementsPath({ node, parentNode });
+  public postProcessNode: NodePostProcessor = async ({ node }) => {
     if (!ProcessedHierarchyNode.isGroupingNode(node)) {
       return node;
     }
@@ -936,7 +878,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         baseClassName: this.#hierarchyConfig.elements.baseClass,
       }),
     ]);
-    const parentIds = ParentElementsPath.getLastParentIds(parentNode.extendedData.parentElementsPath);
+    const parentIds = parentNode.extendedData.parentElementIds;
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
       createSelectClause,
       elementsHiddenClassesFilter,
@@ -1048,7 +990,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           SELECT
             ${await this.createCategoryNodeSelectClause({
               createSelectClause,
-              extendedData: { modelIds: { selector: createIdsSelector([parentModelId]) } },
+              extendedData: {
+                modelIds: { selector: createIdsSelector([parentModelId]) },
+                parentElementIds: { selector: createIdsSelector(elementIds) },
+              },
             })}
           FROM ${categoryInstanceFilterClauses.from} this
           ${categoryInstanceFilterClauses.joins ? `${categoryInstanceFilterClauses.joins}` : ""}

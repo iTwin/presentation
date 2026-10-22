@@ -43,7 +43,6 @@ import {
   getOrCreate,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
-  ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
 import { CategoriesTreeNodeInternal } from "./CategoriesTreeNodeInternal.js";
@@ -59,7 +58,6 @@ import type {
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IModelInstanceKey,
-  InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
   NodePreProcessor,
@@ -70,12 +68,10 @@ import type {
   ECSqlBinding,
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
-  Props,
 } from "@itwin/presentation-shared";
 import type { CategoryId, DefinitionContainerId, ElementId, ModelId, SubCategoryId } from "../../shared/Types.js";
 import type { DeepRequired, HiddenClassesFilter } from "../../shared/Utils.js";
 import type { CachedCategoryInfo, CategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
-import type { CategoryNodeProps, ElementNodeProps } from "./CategoriesTreeNodeInternal.js";
 
 const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 
@@ -251,71 +247,19 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     if (CategoriesTreeNodeInternal.isRawCategoryNode(node)) {
       return {
         ...node,
-        extendedData: { ...node.extendedData, modelIds: parseIdsSelectorResult(node.extendedData.modelIds) },
+        extendedData: {
+          ...node.extendedData,
+          modelIds: parseIdsSelectorResult(node.extendedData.modelIds),
+          ...(node.extendedData.parentElementIds !== undefined
+            ? { parentElementIds: parseIdsSelectorResult(node.extendedData.parentElementIds) }
+            : {}),
+        },
       };
     }
     return node;
   };
 
-  private static extendPathWithElement(elementNode: {
-    key: InstancesNodeKey;
-    extendedData: ElementNodeProps;
-  }): ParentElementsPath {
-    return ParentElementsPath.appendToPath({
-      path: elementNode.extendedData.parentElementsPath,
-      ids: elementNode.key.instanceKeys.map(({ id }) => id),
-      categoryId: elementNode.extendedData.categoryId,
-    });
-  }
-
-  private static getInheritedParentElementsPath(
-    parentNode: NonNullable<Props<NodePostProcessor>["parentNode"]>,
-  ): ParentElementsPath {
-    if (
-      CategoriesTreeNodeInternal.isElementClassGroupingNode(parentNode) ||
-      CategoriesTreeNodeInternal.isCategoryNode(parentNode)
-    ) {
-      return parentNode.extendedData.parentElementsPath;
-    }
-    throw new Error("Expected node's parent to be category, or class grouping node");
-  }
-
-  private assignParentElementsPath({
-    node,
-    parentNode,
-  }: Pick<Props<NodePostProcessor>, "node" | "parentNode">): ProcessedHierarchyNode {
-    if (CategoriesTreeNodeInternal.isRawCategoryNode(node)) {
-      const modelIds: CategoryNodeProps["modelIds"] = node.extendedData.modelIds;
-      // When the parent is an element that actually contains this category, the category continues the element path.
-      // Otherwise (top-level category, or category of a sub-model) the path is reset.
-      const parentIsContainingElement =
-        parentNode !== undefined &&
-        CategoriesTreeNodeInternal.isElementNode(parentNode) &&
-        parentNode.key.instanceKeys.every(({ id }) => !modelIds.includes(id));
-      node.extendedData = {
-        ...node.extendedData,
-        parentElementsPath: parentIsContainingElement ? CategoriesTreeDefinition.extendPathWithElement(parentNode) : [],
-      };
-      return node;
-    }
-    if (
-      CategoriesTreeNodeInternal.isRawElementNode(node) ||
-      CategoriesTreeNodeInternal.isRawElementClassGroupingNode(node)
-    ) {
-      assert(parentNode !== undefined, "Expected node to have a parent node");
-      node.extendedData = {
-        ...node.extendedData,
-        parentElementsPath: CategoriesTreeNodeInternal.isElementNode(parentNode)
-          ? CategoriesTreeDefinition.extendPathWithElement(parentNode)
-          : CategoriesTreeDefinition.getInheritedParentElementsPath(parentNode),
-      };
-      return node;
-    }
-    return node;
-  }
-
-  public postProcessNode: NodePostProcessor = async ({ node, parentNode }) => {
-    node = this.assignParentElementsPath({ node, parentNode });
+  public postProcessNode: NodePostProcessor = async ({ node }) => {
     if (!ProcessedHierarchyNode.isGroupingNode(node)) {
       return node;
     }
@@ -360,7 +304,9 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
 
   private async getHierarchyDefinition(): Promise<HierarchyDefinition> {
     this.#impl ??= (async () => {
-      const isDefinitionContainerSupported = await this.#idsProvider.getIsDefinitionContainerSupported();
+      const isDefinitionContainerSupported = await firstValueFrom(
+        toObservable(this.#idsProvider.getIsDefinitionContainerSupported()),
+      );
       return createPredicateBasedHierarchyDefinition({
         imodelAccess: this.#iModelAccess,
         hierarchy: {
@@ -1245,7 +1191,6 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     assert(CategoriesTreeNodeInternal.isCategoryNode(parentNode), "Expected category node as parent");
-    const parentCategoryElementPath = parentNode.extendedData.parentElementsPath;
     const [instanceFilterClauses, allSubModels, elementsHiddenClassesFilter] = await Promise.all([
       createFilterClauses({
         filter: instanceFilter,
@@ -1285,7 +1230,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     if (modelIds && modelIds.length === 0) {
       return [];
     }
-    const parentIds = ParentElementsPath.getLastParentIds(parentCategoryElementPath);
+    const parentIds = parentNode.extendedData.parentElementIds;
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
       createSelectClause,
       elementsHiddenClassesFilter,
@@ -1392,7 +1337,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               ${await this.createCategoryNodeSelectClause({
                 createSelectClause,
                 hasChildren: true,
-                extendedData: { modelIds: { selector: createIdsSelector([parentNode.extendedData.modelId]) } },
+                extendedData: {
+                  modelIds: { selector: createIdsSelector([parentNode.extendedData.modelId]) },
+                  parentElementIds: { selector: createIdsSelector(elementIds) },
+                },
               })}
             FROM ${categoryInstanceFilterClauses.from} this
             ${categoryInstanceFilterClauses.joins ? `${categoryInstanceFilterClauses.joins}` : ""}

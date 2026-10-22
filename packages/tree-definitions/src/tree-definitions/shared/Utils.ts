@@ -12,7 +12,6 @@ import { toObservable } from "./Rxjs.js";
 import type { Observable } from "rxjs";
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { EC, ECSql, Subscribable } from "@itwin/presentation-shared";
-import type { CategoryId, ElementId } from "./Types.js";
 
 /** @internal */
 export function setDifference<T>(lhs: ReadonlySet<T>, rhs: ReadonlySet<T>): Set<T> {
@@ -168,48 +167,6 @@ export function groupingNodeDataFromChildren(
   }
 
   return { hasSearchTargetAncestor: false, hasDirectNonSearchTargets: false };
-}
-
-/**
- * Path describing a chain of parent elements, where each segment is one category + its elements.
- *
- * Structurally compatible with `ElementPathSegment[]` — can be spread directly into it.
- * The difference: this type uses exact single values (`Id64String`, `Id64Array`) because each
- * segment is known precisely, while `ElementPathSegment` uses `Id64Arg` to allow multi-value
- * cache lookups.
- * @internal
- */
-export type ParentElementsPath = Array<{
-  elementIds: Id64Array;
-  /** Single category ID. Named plural for structural compatibility with `ElementPathSegment.categoryIds`. */
-  categoryIds: Id64String;
-}>;
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace ParentElementsPath {
-  export function getSingleLastParentId(path: ParentElementsPath): ElementId | undefined {
-    const lastParentIds = ParentElementsPath.getLastParentIds(path);
-    assert(
-      () => lastParentIds === undefined || lastParentIds.length === 1,
-      `Expected exactly one parent id at end of path, got ${lastParentIds?.length ?? 0}. Path: ${JSON.stringify(path)}`,
-    );
-    return lastParentIds?.[0];
-  }
-  export function getLastParentIds(path: ParentElementsPath): Id64Array | undefined {
-    return path.length > 0 ? path[path.length - 1].elementIds : undefined;
-  }
-  export function appendToPath({
-    path,
-    ids,
-    categoryId,
-  }: {
-    path: ParentElementsPath;
-    ids: Id64Arg;
-    categoryId: CategoryId;
-  }): ParentElementsPath {
-    return [...path, { elementIds: getId64Array(ids), categoryIds: categoryId }];
-  }
 }
 
 /** @internal */

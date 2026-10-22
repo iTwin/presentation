@@ -21,19 +21,13 @@ import {
   switchMap,
   takeUntil,
 } from "rxjs";
-import { assert, Guid } from "@itwin/core-bentley";
+import { Guid } from "@itwin/core-bentley";
 import { createPredicateBasedHierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
-import {
-  createExcludedClassesClause,
-  createWhereClause,
-  getOptimalBatchSize,
-  ParentElementsPath,
-} from "../../shared/Utils.js";
-import { ClassificationsTreeNodeInternal } from "./ClassificationsTreeNodeInternal.js";
+import { createExcludedClassesClause, createWhereClause, getOptimalBatchSize } from "../../shared/Utils.js";
 
 import type { Observable, ObservedValueOf, OperatorFunction } from "rxjs";
 import type { GuidString, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -46,7 +40,6 @@ import type {
   HierarchyNodesDefinition,
   IModelInstanceKey,
   LimitingECSqlQueryExecutor,
-  NodePostProcessor,
 } from "@itwin/presentation-hierarchies";
 import type {
   EC,
@@ -210,28 +203,6 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
       },
     });
   }
-
-  public postProcessNode: NodePostProcessor = async ({ node, parentNode }) => {
-    if (!ClassificationsTreeNodeInternal.isGeometricElementNode(node)) {
-      return node;
-    }
-    assert(parentNode !== undefined);
-
-    if (ClassificationsTreeNodeInternal.isClassificationNode(parentNode)) {
-      node.extendedData = { ...node.extendedData, parentElementsPath: [] };
-      return node;
-    }
-    assert(ClassificationsTreeNodeInternal.isGeometricElementNode(parentNode));
-    node.extendedData = {
-      ...node.extendedData,
-      parentElementsPath: ParentElementsPath.appendToPath({
-        path: parentNode.extendedData.parentElementsPath,
-        ids: parentNode.key.instanceKeys.map(({ id }) => id),
-        categoryId: parentNode.extendedData.categoryId,
-      }),
-    };
-    return node;
-  };
 
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
     return this.#impl.defineHierarchyLevel(props);

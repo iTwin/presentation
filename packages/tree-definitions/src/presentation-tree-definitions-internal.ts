@@ -16,7 +16,6 @@ export { createModelsTreeIdsProvider } from "./tree-definitions/trees/models-tre
 export { toObservable } from "./tree-definitions/shared/Rxjs.js";
 
 export type { ElementId } from "./tree-definitions/shared/Types.js";
-export type { ParentElementsPath } from "./tree-definitions/shared/Utils.js";
 export type { CategoriesTreeHierarchyConfiguration } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 export type { ClassificationsTreeHierarchyConfiguration } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
 export type {
