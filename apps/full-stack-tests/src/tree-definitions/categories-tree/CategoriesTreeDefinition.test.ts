@@ -136,7 +136,7 @@ describe("Categories tree", () => {
 
         using provider = createMergedIModelHierarchyProvider({
           imodels,
-          getHierarchyDefinition: (imodelAccess) =>
+          getHierarchyDefinition: ({ imodelAccess }) =>
             trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
         });
         expect(await collect(provider.getNodes({ parentNode: undefined }))).toMatchObject([

@@ -521,6 +521,13 @@ type RequireNarrowedLoadDataOverrides<TDefaultOverrides, TOverrides extends TDef
 };
 
 // @beta
+export class SearchLimitExceededError extends Error {
+    constructor(
+    limit: number);
+    readonly limit: number;
+}
+
+// @beta
 export interface SharedIdsProvider<T1 extends ElementModelCategoriesProviderData = ElementModelCategoriesProviderData, T2 extends SubModeledElementsProviderData = SubModeledElementsProviderData, T3 extends SubCategoriesProviderData = SubCategoriesProviderData> {
     readonly categories: {
         readonly state: IdsProviderDataState;

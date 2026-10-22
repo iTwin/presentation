@@ -140,7 +140,7 @@ describe("Models tree", () => {
       const [baseTree, changedTree] = trees;
       using provider = createMergedIModelHierarchyProvider({
         imodels,
-        getHierarchyDefinition: (imodelAccess) =>
+        getHierarchyDefinition: ({ imodelAccess }) =>
           trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
       });
 

@@ -134,7 +134,7 @@ describe("Classifications tree", () => {
       }));
       using provider = createMergedIModelHierarchyProvider({
         imodels,
-        getHierarchyDefinition: (imodelAccess) =>
+        getHierarchyDefinition: ({ imodelAccess }) =>
           trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
       });
 
@@ -195,7 +195,7 @@ describe("Classifications tree", () => {
         }
         using provider = createMergedIModelHierarchyProvider({
           imodels,
-          getHierarchyDefinition: (imodelAccess) =>
+          getHierarchyDefinition: ({ imodelAccess }) =>
             trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
         });
         const tables = await collect(provider.getNodes({ parentNode: undefined }));
