@@ -26,7 +26,7 @@ import {
 } from "./Utils.js";
 
 import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
-import type { InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
+import type { EC, InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
 import type { ContentIModelAccess } from "./Utils.js";
 
 /** Builds a provider wired for the given targets/config (running both pipeline stages). */
@@ -1072,6 +1072,132 @@ describe("Content", () => {
       const items = await collect(provider.getItems());
       expect(items).toHaveLength(1);
       expect(getValues).not.toHaveBeenCalled();
+    });
+
+    describe("Hidden related classes", () => {
+      // A --AtoB--> B (visible)
+      //               └─ HiddenB (HiddenClass)
+      // `mixed` is related to a `B` and a `HiddenB` instance, `hiddenOnly` - only to a `HiddenB` instance.
+      let setup: Awaited<ReturnType<typeof createSetup>>;
+
+      beforeAll(async () => {
+        setup = await createSetup();
+        return () => setup[Symbol.dispose]();
+      });
+
+      async function createSetup() {
+        return buildTestECDb("Content Value population Hidden related classes", async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECCustomAttributes>
+                  <ClassMap xmlns="ECDbMap.02.00.01"><MapStrategy>TablePerHierarchy</MapStrategy></ClassMap>
+                </ECCustomAttributes>
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="HiddenB">
+                <BaseClass>B</BaseClass>
+                <ECCustomAttributes>
+                  <HiddenClass xmlns="CoreCustomAttributes.01.00.03" />
+                </ECCustomAttributes>
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const mixed = builder.insertInstance(s.items.A.fullName, { propA: "mixed" });
+          const hiddenOnly = builder.insertInstance(s.items.A.fullName, { propA: "hidden-only" });
+          const visibleB = builder.insertInstance(s.items.B.fullName, { propB: "visible" });
+          const hiddenB1 = builder.insertInstance(s.items.HiddenB.fullName, { propB: "hidden" });
+          const hiddenB2 = builder.insertInstance(s.items.HiddenB.fullName, { propB: "hidden-only" });
+          builder.insertRelationship(s.items.AtoB.fullName, mixed.id, visibleB.id);
+          builder.insertRelationship(s.items.AtoB.fullName, mixed.id, hiddenB1.id);
+          builder.insertRelationship(s.items.AtoB.fullName, hiddenOnly.id, hiddenB2.id);
+          return { schema: s, mixed, hiddenOnly };
+        });
+      }
+
+      /** Returns the related `PropB` values the external provider received, keyed by primary instance ID. */
+      async function getProviderInputValues(props: {
+        relatedClassName: EC.FullClassNameDotNotation;
+        target?: Partial<ContentTarget>;
+      }) {
+        const { items: classes } = setup.schema;
+        const getValues = vi.fn(async ({ items: batch }: { items: Array<{ inputValues: { values: string[] } }> }) =>
+          batch.map(() => ({ out: "" })),
+        );
+        const provider = await createProvider({
+          imodelAccess: createContentIModelAccess(setup.ecdb),
+          targets: [{ primaryClass: classes.A.fullName, ...props.target }],
+          config: {
+            externalFieldsProviders: [
+              defineExternalFieldsProvider({
+                id: "ext_v1",
+                fields: [{ id: "out", label: "Out", type: { kind: "primitive", type: "String" } }],
+                inputs: {
+                  values: {
+                    propertyClassName: props.relatedClassName,
+                    propertyName: "PropB",
+                    related: {
+                      path: [
+                        {
+                          sourceClassName: classes.A.fullName,
+                          targetClassName: props.relatedClassName,
+                          relationshipName: classes.AtoB.fullName,
+                        },
+                      ],
+                      cardinalityHint: "many",
+                    },
+                  },
+                },
+                getValues,
+              }),
+            ],
+          },
+        });
+        const items = await collect(provider.getItems());
+        const batchItems = getValues.mock.calls.flatMap(([{ items: batch }]) => batch);
+        return Object.fromEntries(
+          items.map((item, index) => [item.primaryKey.id, [...batchItems[index].inputValues.values].sort()]),
+        );
+      }
+
+      it("excludes values of hidden subclass instances when visible instances are related too", async () => {
+        const { items: classes } = setup.schema;
+        expect(await getProviderInputValues({ relatedClassName: classes.B.fullName })).toEqual({
+          [setup.mixed.id]: ["visible"],
+          [setup.hiddenOnly.id]: [],
+        });
+      });
+
+      it("excludes values of hidden subclass instances when only hidden instances are related", async () => {
+        const { items: classes } = setup.schema;
+        expect(
+          await getProviderInputValues({
+            relatedClassName: classes.B.fullName,
+            target: { instanceIds: [setup.hiddenOnly.id] },
+          }),
+        ).toEqual({ [setup.hiddenOnly.id]: [] });
+      });
+
+      it("includes values of hidden class instances when the input path targets the hidden class explicitly", async () => {
+        const { items: classes } = setup.schema;
+        expect(await getProviderInputValues({ relatedClassName: classes.HiddenB.fullName })).toEqual({
+          [setup.mixed.id]: ["hidden"],
+          [setup.hiddenOnly.id]: ["hidden-only"],
+        });
+      });
     });
   });
 });

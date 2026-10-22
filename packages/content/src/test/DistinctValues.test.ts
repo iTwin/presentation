@@ -56,6 +56,7 @@ const schemaProvider = {
   }),
   classDerivesFrom: async (derivedClassFullName: string, candidateBaseClassFullName: string) =>
     derivedClassFullName === candidateBaseClassFullName || candidateBaseClassFullName === "TestSchema.Primary",
+  getHiddenClassesTree: async () => [],
 } as unknown as ECSchemaProvider;
 
 /**
