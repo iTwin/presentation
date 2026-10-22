@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+export { SearchLimitExceededError } from "./tree-definitions/shared/TreeErrors.js";
 export { createSharedIdsProvider } from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 export type {
   SharedIdsProvider,
