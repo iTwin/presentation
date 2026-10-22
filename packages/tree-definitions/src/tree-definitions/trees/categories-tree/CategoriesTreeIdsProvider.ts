@@ -561,63 +561,69 @@ export function createCategoriesTreeIdsProvider({
     getAllDefinitionContainersAndCategories(props?: {
       includeEmpty?: boolean;
     }): Subscribable<{ categories: Array<CategoryId>; definitionContainers: Array<DefinitionContainerId> }> {
-      return forkJoin({
-        categories: forkJoin({
-          categoryData: getCategoryData(),
-          definitionContainersInfo: getDefinitionContainersInfo(),
-        }).pipe(
-          mergeMap(({ categoryData, definitionContainersInfo }) =>
-            [...categoryData.categoriesGroupedByModel].filter(
-              ([modelId, { parentDefinitionContainerExists }]) =>
-                !parentDefinitionContainerExists || definitionContainersInfo.has(modelId),
+      // `defer` so that every subscription gets its own reducer seeds instead of appending to shared arrays.
+      return defer(() =>
+        forkJoin({
+          categories: forkJoin({
+            categoryData: getCategoryData(),
+            definitionContainersInfo: getDefinitionContainersInfo(),
+          }).pipe(
+            mergeMap(({ categoryData, definitionContainersInfo }) =>
+              [...categoryData.categoriesGroupedByModel].filter(
+                ([modelId, { parentDefinitionContainerExists }]) =>
+                  !parentDefinitionContainerExists || definitionContainersInfo.has(modelId),
+              ),
             ),
+            reduce((acc, [, modelCategoriesInfo]) => {
+              applyElementsFilter(modelCategoriesInfo.childCategories, props?.includeEmpty).forEach((categoryInfo) =>
+                acc.push(categoryInfo.id),
+              );
+              return acc;
+            }, new Array<Id64String>()),
           ),
-          reduce((acc, [, modelCategoriesInfo]) => {
-            applyElementsFilter(modelCategoriesInfo.childCategories, props?.includeEmpty).forEach((categoryInfo) =>
-              acc.push(categoryInfo.id),
-            );
-            return acc;
-          }, new Array<Id64String>()),
-        ),
-        definitionContainers: getDefinitionContainersInfo().pipe(
-          mergeMap((definitionContainersInfo) => definitionContainersInfo.entries()),
-          reduce((acc, [definitionContainerId, definitionContainerInfo]) => {
-            if (!!props?.includeEmpty || definitionContainerInfo.hasElements) {
-              acc.push(definitionContainerId);
-            }
-            return acc;
-          }, new Array<Id64String>()),
-        ),
-      });
+          definitionContainers: getDefinitionContainersInfo().pipe(
+            mergeMap((definitionContainersInfo) => definitionContainersInfo.entries()),
+            reduce((acc, [definitionContainerId, definitionContainerInfo]) => {
+              if (!!props?.includeEmpty || definitionContainerInfo.hasElements) {
+                acc.push(definitionContainerId);
+              }
+              return acc;
+            }, new Array<Id64String>()),
+          ),
+        }),
+      );
     },
     getRootDefinitionContainersAndCategories(props?: {
       includeEmpty?: boolean;
     }): Subscribable<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }> {
-      return forkJoin({
-        categories: getCategoryData().pipe(
-          mergeMap(({ categoriesGroupedByModel }) => categoriesGroupedByModel.values()),
-          reduce((acc, modelCategoriesInfo) => {
-            if (!modelCategoriesInfo.parentDefinitionContainerExists) {
-              applyElementsFilter(modelCategoriesInfo.childCategories, props?.includeEmpty).forEach((categoryInfo) =>
-                acc.push(categoryInfo),
-              );
-            }
-            return acc;
-          }, new Array<CachedCategoryInfo>()),
-        ),
-        definitionContainers: getDefinitionContainersInfo().pipe(
-          mergeMap((definitionContainersInfo) => definitionContainersInfo.entries()),
-          reduce((acc, [definitionContainerId, definitionContainerInfo]) => {
-            if (
-              !definitionContainerInfo.parentDefinitionContainerExists &&
-              (!!props?.includeEmpty || definitionContainerInfo.hasElements)
-            ) {
-              acc.push(definitionContainerId);
-            }
-            return acc;
-          }, new Array<Id64String>()),
-        ),
-      });
+      // `defer` so that every subscription gets its own reducer seeds instead of appending to shared arrays.
+      return defer(() =>
+        forkJoin({
+          categories: getCategoryData().pipe(
+            mergeMap(({ categoriesGroupedByModel }) => categoriesGroupedByModel.values()),
+            reduce((acc, modelCategoriesInfo) => {
+              if (!modelCategoriesInfo.parentDefinitionContainerExists) {
+                applyElementsFilter(modelCategoriesInfo.childCategories, props?.includeEmpty).forEach((categoryInfo) =>
+                  acc.push(categoryInfo),
+                );
+              }
+              return acc;
+            }, new Array<CachedCategoryInfo>()),
+          ),
+          definitionContainers: getDefinitionContainersInfo().pipe(
+            mergeMap((definitionContainersInfo) => definitionContainersInfo.entries()),
+            reduce((acc, [definitionContainerId, definitionContainerInfo]) => {
+              if (
+                !definitionContainerInfo.parentDefinitionContainerExists &&
+                (!!props?.includeEmpty || definitionContainerInfo.hasElements)
+              ) {
+                acc.push(definitionContainerId);
+              }
+              return acc;
+            }, new Array<Id64String>()),
+          ),
+        }),
+      );
     },
     get state(): IdsProviderDataState {
       return combineDataStates([defContainersDataState.state, categoriesDataState.state]);
