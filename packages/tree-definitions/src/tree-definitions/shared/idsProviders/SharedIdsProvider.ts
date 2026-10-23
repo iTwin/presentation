@@ -221,7 +221,10 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
   >;
   type SubModeledElementsData = LoadedData<TOverrides["loadSubModeledElements"], SubModeledElementsProviderData>;
   type SubCategoriesData = LoadedData<TOverrides["loadSubCategories"], SubCategoriesProviderData>;
-  const config = createSharedIdsProviderConfig({ elementClassName, excludedElementClassNames: excludedClassOverrides });
+  const config = normalizeSharedIdsProviderConfig({
+    elementClassName,
+    excludedElementClassNames: excludedClassOverrides,
+  });
   const excludedElementClassNames = config.excludedElementClassNames;
   const componentId: GuidString = Guid.createValue();
   const subCategoriesProvider = new SubCategoriesProvider({
@@ -397,7 +400,7 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
 }
 
 /** @internal */
-export function createSharedIdsProviderConfig(config: SharedIdsProvider["config"]) {
+export function normalizeSharedIdsProviderConfig(config: SharedIdsProvider["config"]) {
   return {
     elementClassName: config.elementClassName,
     excludedElementClassNames: [...new Set(config.excludedElementClassNames ?? [])].sort(),

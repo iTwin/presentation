@@ -9,7 +9,7 @@ import { IModel } from "@itwin/core-common";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
-import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
+import { normalizeSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
@@ -125,8 +125,8 @@ export function createModelsTreeIdsProvider({
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
   const hierarchyConfig = createModelsTreeIdsProviderConfig(configOverrides);
   validateIdsProviderConfig(
-    createSharedIdsProviderConfig(sharedIdsProvider.config),
-    createSharedIdsProviderConfig({
+    normalizeSharedIdsProviderConfig(sharedIdsProvider.config),
+    normalizeSharedIdsProviderConfig({
       elementClassName: hierarchyConfig.elements.baseClass,
       excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
     }),

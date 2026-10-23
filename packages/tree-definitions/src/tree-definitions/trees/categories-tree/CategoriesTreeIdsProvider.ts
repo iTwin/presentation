@@ -8,7 +8,7 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
-import { createSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
+import { normalizeSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { fromWithRelease, toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getClassesByView, getOrCreate, validateIdsProviderConfig } from "../../shared/Utils.js";
@@ -170,8 +170,8 @@ export function createCategoriesTreeIdsProvider({
     excludedElementClassNames: sharedIdsProvider.config.excludedElementClassNames,
   });
   validateIdsProviderConfig(
-    createSharedIdsProviderConfig(sharedIdsProvider.config),
-    createSharedIdsProviderConfig(config),
+    normalizeSharedIdsProviderConfig(sharedIdsProvider.config),
+    normalizeSharedIdsProviderConfig(config),
     "Categories tree shared",
   );
   const cachedData: {
@@ -636,7 +636,7 @@ export function createCategoriesTreeIdsProvider({
 
 /** @internal */
 export function createCategoriesTreeIdsProviderConfig(config: CategoriesTreeIdsProvider["config"]) {
-  return { type: config.type, ...createSharedIdsProviderConfig(config) };
+  return { type: config.type, ...normalizeSharedIdsProviderConfig(config) };
 }
 
 function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], includeEmpty: boolean | undefined): T[] {
