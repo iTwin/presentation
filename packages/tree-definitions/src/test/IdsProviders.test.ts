@@ -13,17 +13,13 @@ import {
 } from "@itwin/presentation-shared";
 import { createSharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 import { SubModeledElementsProvider } from "../tree-definitions/shared/idsProviders/SubModeledElementsProvider.js";
-import { toObservable } from "../tree-definitions/shared/Rxjs.js";
+import { toPromise } from "../tree-definitions/shared/Rxjs.js";
 import { createCategoriesTreeIdsProvider } from "../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { createClassificationsTreeIdsProvider } from "../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 import { createModelsTreeIdsProvider } from "../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { SharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
-
-async function firstValue<T>(source: Subscribable<T>): Promise<T> {
-  return firstValueFrom(toObservable(source));
-}
 
 function createAccess(waitForQuery: (token: string) => Promise<void> = async () => {}) {
   return {
@@ -91,16 +87,16 @@ function createGate() {
 const baseDatasets = [
   {
     group: "categories",
-    load: async (base: SharedIdsProvider) => firstValue(base.categories.getAllCategoriesOfElements()),
+    load: async (base: SharedIdsProvider) => toPromise(base.categories.getAllCategoriesOfElements()),
   },
-  { group: "models", load: async (base: SharedIdsProvider) => firstValue(base.models.getAllModels()) },
+  { group: "models", load: async (base: SharedIdsProvider) => toPromise(base.models.getAllModels()) },
   {
     group: "subModeledElements",
-    load: async (base: SharedIdsProvider) => firstValue(base.subModeledElements.getAllSubModeledElements()),
+    load: async (base: SharedIdsProvider) => toPromise(base.subModeledElements.getAllSubModeledElements()),
   },
   {
     group: "subCategories",
-    load: async (base: SharedIdsProvider) => firstValue(base.subCategories.getCategorySubCategoriesMap()),
+    load: async (base: SharedIdsProvider) => toPromise(base.subCategories.getCategorySubCategoriesMap()),
   },
 ] as const;
 
@@ -114,20 +110,20 @@ describe("ID provider data states", () => {
     expect(provider.subCategories.state).toBe("not-requested");
     expect(access.createQueryReader).not.toHaveBeenCalled();
 
-    expect(await firstValue(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
     expect(provider.models.state).toBe("loaded");
     expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("loaded");
     expect(provider.subCategories.state).toBe("not-requested");
-    expect(await firstValue(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
+    expect(await toPromise(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
-    expect(await firstValue(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("loaded");
     expect(access.createQueryReader).toHaveBeenCalledTimes(2);
     expect(provider.subCategories.state).toBe("not-requested");
-    expect(await firstValue(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
+    expect(await toPromise(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
       new Map([["0x20", ["0x21"]]]),
     );
     expect(provider.subCategories.state).toBe("loaded");
@@ -175,8 +171,8 @@ describe("ID provider data states", () => {
       }
     });
     const provider = createBase(access);
-    await firstValue(provider.models.getAllModels());
-    const pending = firstValue(provider.subModeledElements.getAllSubModeledElements());
+    await toPromise(provider.models.getAllModels());
+    const pending = toPromise(provider.subModeledElements.getAllSubModeledElements());
     const failure = expect(pending).rejects.toThrow("modeled elements failed");
     expect(provider.subModeledElements.state).toBe("requested");
     expect(provider.models.state).toBe("loaded");
@@ -185,11 +181,11 @@ describe("ID provider data states", () => {
     expect(provider.subModeledElements.state).toBe("failed");
     expect(provider.models.state).toBe("loaded");
     expect(provider.categories.state).toBe("loaded");
-    expect(await firstValue(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
     expect(provider.subModeledElements.state).toBe("failed");
 
     failSubModeledElements = false;
-    const retry = firstValue(provider.subModeledElements.getAllSubModeledElements());
+    const retry = toPromise(provider.subModeledElements.getAllSubModeledElements());
     expect(provider.subModeledElements.state).toBe("requested");
     expect(provider.models.state).toBe("loaded");
     expect(await retry).toEqual(new Set(["0x10"]));
@@ -301,14 +297,14 @@ describe("ID provider data states", () => {
   it("loads independent shared datasets only when needed", async () => {
     const access = createAccess();
     const base = createBase(access);
-    await firstValue(base.models.getAllModels());
+    await toPromise(base.models.getAllModels());
     expect(base.categories.state).toBe("loaded");
     expect(base.models.state).toBe("loaded");
     expect(base.subModeledElements.state).toBe("not-requested");
     expect(base.subCategories.state).toBe("not-requested");
-    expect(await firstValue(base.models.getPlanProjectionModels())).toEqual(new Set(["0x10"]));
-    expect(await firstValue(base.categories.getAllCategoriesOfElements())).toEqual(new Set(["0x20"]));
-    expect(await firstValue(base.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
+    expect(await toPromise(base.models.getPlanProjectionModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(base.categories.getAllCategoriesOfElements())).toEqual(new Set(["0x20"]));
+    expect(await toPromise(base.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
   });
 
@@ -332,18 +328,18 @@ describe("ID provider data states", () => {
     expect(overrides.loadSubModeledElements).not.toHaveBeenCalled();
     expect(overrides.loadSubCategories).not.toHaveBeenCalled();
 
-    expect(await firstValue(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("not-requested");
     expect(overrides.loadElementModelCategories).not.toHaveBeenCalled();
 
-    expect(await firstValue(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
-    expect(await firstValue(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
-    expect(await firstValue(provider.models.getData())).toBe(await firstValue(source.models.getData()));
+    expect(await toPromise(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
+    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.models.getData())).toBe(await toPromise(source.models.getData()));
     expect(provider.models.state).toBe("loaded");
     expect(provider.categories.state).toBe("loaded");
 
-    expect(await firstValue(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
+    expect(await toPromise(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
       new Map([["0x20", ["0x21"]]]),
     );
     expect(provider.subCategories.state).toBe("loaded");
@@ -358,7 +354,7 @@ describe("ID provider data states", () => {
     {
       group: "models",
       overrideKey: "loadElementModelCategories",
-      load: async (base: SharedIdsProvider) => firstValue(base.models.getData()),
+      load: async (base: SharedIdsProvider) => toPromise(base.models.getData()),
       data: () => ({
         planProjectionModels: new Set<string>(),
         modelsCategoriesInfo: new Map(),
@@ -370,13 +366,13 @@ describe("ID provider data states", () => {
     {
       group: "subModeledElements",
       overrideKey: "loadSubModeledElements",
-      load: async (base: SharedIdsProvider) => firstValue(base.subModeledElements.getData()),
+      load: async (base: SharedIdsProvider) => toPromise(base.subModeledElements.getData()),
       data: () => ({ allSubModels: new Set(["0x99"]) }),
     },
     {
       group: "subCategories",
       overrideKey: "loadSubCategories",
-      load: async (base: SharedIdsProvider) => firstValue(base.subCategories.getData()),
+      load: async (base: SharedIdsProvider) => toPromise(base.subCategories.getData()),
       data: () => ({ subCategoryCategories: new Map(), categorySubCategories: new Map([["0x99", ["0x98"]]]) }),
     },
   ] as const)("$overrideKey data override", ({ group, overrideKey, load, data }) => {
@@ -419,14 +415,14 @@ describe("ID provider data states", () => {
       name: "models",
       create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
         const provider = createModelsTreeIdsProvider({ imodelAccess: access, sharedIdsProvider });
-        return { provider, load: async () => firstValue(provider.getParentSubjectIds()) };
+        return { provider, load: async () => toPromise(provider.getParentSubjectIds()) };
       },
     },
     {
       name: "categories",
       create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
         const provider = createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, type: "3d" });
-        return { provider, load: async () => firstValue(provider.getAllDefinitionContainersAndCategories()) };
+        return { provider, load: async () => toPromise(provider.getAllDefinitionContainersAndCategories()) };
       },
     },
     {
@@ -436,7 +432,7 @@ describe("ID provider data states", () => {
           imodelAccess: access,
           hierarchyConfig: { rootClassificationSystemCode: "test" },
         });
-        return { provider, load: async () => firstValue(provider.getAllClassifications()) };
+        return { provider, load: async () => toPromise(provider.getAllClassifications()) };
       },
     },
   ];

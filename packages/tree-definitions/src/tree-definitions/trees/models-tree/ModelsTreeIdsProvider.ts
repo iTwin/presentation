@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, firstValueFrom, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
+import { defer, filter, forkJoin, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { assert, Guid, Id64 } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
 import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
 import { normalizeSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
-import { toObservable } from "../../shared/Rxjs.js";
+import { toObservable, toPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
 import { createWhereClause, getOrCreate, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration } from "./ModelsTreeDefinition.js";
@@ -166,9 +166,7 @@ export function createModelsTreeIdsProvider({
       conditions.push(`${modelAlias}.ECInstanceId IN (SELECT id FROM IdSet(?))`);
       return {
         conditions,
-        bindings: [
-          { type: "idset", value: await firstValueFrom(toObservable(sharedIdsProvider.models.getAllModels())) },
-        ],
+        bindings: [{ type: "idset", value: await toPromise(sharedIdsProvider.models.getAllModels()) }],
       };
     }
 

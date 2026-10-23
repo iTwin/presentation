@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, concatAll, concatMap, delay, from, Observable, of } from "rxjs";
+import { bufferCount, concatAll, concatMap, delay, firstValueFrom, from, Observable, of } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 
 import type { Id64String } from "@itwin/core-bentley";
@@ -15,6 +15,15 @@ import type { ReadonlyId64Arg } from "./Types.js";
  */
 export function toObservable<T>(source: Subscribable<T>): Observable<T> {
   return source instanceof Observable ? source : new Observable<T>((subscriber) => source.subscribe(subscriber));
+}
+
+/**
+ * Returns a promise resolving with the first value emitted by the given `Subscribable`. Rejects if it completes without
+ * emitting any values.
+ * @internal
+ */
+export async function toPromise<T>(source: Subscribable<T>): Promise<T> {
+  return firstValueFrom(toObservable(source));
 }
 
 /**

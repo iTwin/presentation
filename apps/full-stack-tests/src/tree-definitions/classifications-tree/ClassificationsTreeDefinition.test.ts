@@ -8,14 +8,14 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { firstValueFrom, of } from "rxjs";
+import { of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { createClassificationsTree, createClassificationsTreeIdsProvider } from "@itwin/presentation-tree-definitions";
 import {
   type ClassificationsTreeHierarchyConfiguration,
-  toObservable,
+  toPromise,
 } from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -61,7 +61,7 @@ describe("Classifications tree", () => {
     const imodelAccess = createIModelAccess(imodel.imodelConnection);
     const hierarchyConfig = { rootClassificationSystemCode };
     const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
-    await firstValueFrom(toObservable(idsProvider.getAllClassifications()));
+    await toPromise(idsProvider.getAllClassifications());
     const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockReturnValue(of([]));
     const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockReturnValue(of([]));
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
@@ -121,9 +121,7 @@ describe("Classifications tree", () => {
       const [base, changed] = imodels;
       expect(versions.base.imodelConnection.iModelId).toBe(versions.changeset1.imodelConnection.iModelId);
       expect(base.imodelAccess.imodelKey).not.toBe(changed.imodelAccess.imodelKey);
-      await Promise.all(
-        imodels.map(async ({ idsProvider }) => firstValueFrom(toObservable(idsProvider.getAllClassifications()))),
-      );
+      await Promise.all(imodels.map(async ({ idsProvider }) => toPromise(idsProvider.getAllClassifications())));
       const childGetters = imodels.map(({ idsProvider }) => {
         expect(idsProvider.state).toBe("loaded");
         return vi.spyOn(idsProvider, "getDirectChildClassifications");

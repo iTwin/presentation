@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubCategory } from "presentation-test-utilities";
-import { firstValueFrom, of } from "rxjs";
+import { of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
@@ -14,7 +14,7 @@ import {
   createCategoriesTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
-import { CLASS_NAMES, toObservable } from "@itwin/presentation-tree-definitions/internal";
+import { CLASS_NAMES, toPromise } from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -59,7 +59,7 @@ describe("Categories tree", () => {
       type: "3d",
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
     });
-    await firstValueFrom(toObservable(idsProvider.getAllDefinitionContainersAndCategories()));
+    await toPromise(idsProvider.getAllDefinitionContainersAndCategories());
     const hierarchyGetter = vi
       .spyOn(idsProvider, "getRootDefinitionContainersAndCategories")
       .mockReturnValue(of({ categories: [], definitionContainers: [] }));

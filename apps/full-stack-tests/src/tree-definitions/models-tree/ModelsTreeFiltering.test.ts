@@ -11,7 +11,6 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { firstValueFrom } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
@@ -21,7 +20,7 @@ import {
   CLASS_NAMES,
   createModelsTree,
   SearchLimitExceededError,
-  toObservable,
+  toPromise,
 } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -473,19 +472,17 @@ describe("Models tree", () => {
         imodelConnection: setupResult.imodelConnection,
         hierarchyConfig: { elements: { excludedClasses: ["Generic.PhysicalObject"] } },
       });
-      expect(await firstValueFrom(toObservable(idsProvider.subModeledElements.getAllSubModeledElements()))).toEqual(
+      expect(await toPromise(idsProvider.subModeledElements.getAllSubModeledElements())).toEqual(
         new Set([setupResult.modeledElement.id]),
       );
       expect(
-        await firstValueFrom(
-          toObservable(idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true })),
+        await toPromise(
+          idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
         ),
       ).toEqual(new Set());
       expect(
-        await firstValueFrom(
-          toObservable(
-            idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: false }),
-          ),
+        await toPromise(
+          idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: false }),
         ),
       ).toEqual(new Set([setupResult.modeledElement.id]));
     });

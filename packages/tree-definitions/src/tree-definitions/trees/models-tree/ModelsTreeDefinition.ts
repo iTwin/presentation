@@ -30,7 +30,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable } from "../../shared/Rxjs.js";
+import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
@@ -476,7 +476,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({ conditions: [subjectFilterClauses.where] })}
           `,
           bindings: [
-            { type: "idset", value: await firstValueFrom(toObservable(this.#idsProvider.getParentSubjectIds())) },
+            { type: "idset", value: await toPromise(this.#idsProvider.getParentSubjectIds()) },
             { type: "idset", value: childSubjectIds },
           ],
         },
@@ -636,10 +636,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
       this.#idsProvider.subModeledElements.state === "loaded"
-        ? firstValueFrom(
-            toObservable(
-              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
-            ),
+        ? toPromise(
+            this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
           )
         : undefined,
       this.#idsProvider.categories.state === "loaded"
@@ -869,10 +867,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
       this.#idsProvider.subModeledElements.state === "loaded"
-        ? firstValueFrom(
-            toObservable(
-              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
-            ),
+        ? toPromise(
+            this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
           )
         : undefined,
       ECSql.createHiddenClassesFilter({
@@ -943,10 +939,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           contentClass: { fullName: CLASS_NAMES.SpatialCategory, alias: "this" },
         }),
         this.#idsProvider.subModeledElements.state === "loaded"
-          ? firstValueFrom(
-              toObservable(
-                this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
-              ),
+          ? toPromise(
+              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
             )
           : undefined,
         ECSql.createHiddenClassesFilter({

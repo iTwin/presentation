@@ -25,7 +25,7 @@ import { Guid } from "@itwin/core-bentley";
 import { createPredicateBasedHierarchyDefinition, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable } from "../../shared/Rxjs.js";
+import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import { createExcludedClassesClause, createWhereClause, getOptimalBatchSize } from "../../shared/Utils.js";
 
@@ -394,7 +394,7 @@ export class ClassificationsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: CLASS_NAMES.Classification, alias: "this" },
       }),
-      firstValueFrom(toObservable(idsProvider.getDirectChildClassifications(parentIds))),
+      toPromise(idsProvider.getDirectChildClassifications(parentIds)),
       this.#classificationHasElementsClause("this"),
       ECSql.createHiddenClassesFilter({
         schemaProvider: this.#props.imodelAccess,
@@ -734,7 +734,7 @@ function createInstanceKeyPathsFromInstanceLabelObs({
         schemaProvider: props.imodelAccess,
         baseClassName: CLASS_NAMES.GeometricElement3d,
       }),
-      firstValueFrom(toObservable(props.idsProvider.getAllClassifications())),
+      toPromise(props.idsProvider.getAllClassifications()),
     ]);
     const ctes = [
       `

@@ -32,7 +32,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable } from "../../shared/Rxjs.js";
+import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
@@ -304,9 +304,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
 
   private async getHierarchyDefinition(): Promise<HierarchyDefinition> {
     this.#impl ??= (async () => {
-      const isDefinitionContainerSupported = await firstValueFrom(
-        toObservable(this.#idsProvider.getIsDefinitionContainerSupported()),
-      );
+      const isDefinitionContainerSupported = await toPromise(this.#idsProvider.getIsDefinitionContainerSupported());
       return createPredicateBasedHierarchyDefinition({
         imodelAccess: this.#iModelAccess,
         hierarchy: {
@@ -567,10 +565,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
       this.#idsProvider.subModeledElements.state === "loaded"
-        ? firstValueFrom(
-            toObservable(
-              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
-            ),
+        ? toPromise(
+            this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
           )
         : undefined,
       ECSql.createHiddenClassesFilter({
@@ -616,17 +612,15 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     const parentNodeInstanceIds = "parentNodeInstanceIds" in props ? props.parentNodeInstanceIds : undefined;
     const values =
       this.#idsProvider.state === "loaded"
-        ? await firstValueFrom(
-            toObservable(
-              parentNodeInstanceIds === undefined
-                ? this.#idsProvider.getRootDefinitionContainersAndCategories({
-                    includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
-                  })
-                : this.#idsProvider.getDirectChildDefinitionContainersAndCategories({
-                    parentDefinitionContainerIds: parentNodeInstanceIds,
-                    includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
-                  }),
-            ),
+        ? await toPromise(
+            parentNodeInstanceIds === undefined
+              ? this.#idsProvider.getRootDefinitionContainersAndCategories({
+                  includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
+                })
+              : this.#idsProvider.getDirectChildDefinitionContainersAndCategories({
+                  parentDefinitionContainerIds: parentNodeInstanceIds,
+                  includeEmpty: this.#hierarchyConfig.categories.withoutElements === "include",
+                }),
           )
         : undefined;
     const { categories, definitionContainers } = values ?? {};
@@ -1200,10 +1194,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         contentClass: { fullName: this.#categoryElementClass, alias: "this" },
       }),
       this.#idsProvider.subModeledElements.state === "loaded"
-        ? firstValueFrom(
-            toObservable(
-              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
-            ),
+        ? toPromise(
+            this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
           )
         : undefined,
       ECSql.createHiddenClassesFilter({
@@ -1293,10 +1285,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         }),
         createFilterClauses({ filter: instanceFilter, contentClass: { fullName: this.#categoryClass, alias: "this" } }),
         this.#idsProvider.subModeledElements.state === "loaded"
-          ? firstValueFrom(
-              toObservable(
-                this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
-              ),
+          ? toPromise(
+              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
             )
           : undefined,
         ECSql.createHiddenClassesFilter({
