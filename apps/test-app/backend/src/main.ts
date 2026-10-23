@@ -2,8 +2,8 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable import/no-duplicates */
-/* eslint-disable @typescript-eslint/consistent-type-imports */
+/* oxlint-disable import/no-duplicates */
+/* oxlint-disable @typescript-eslint/consistent-type-imports */
 // cspell:disable
 
 import "./SampleRpcImpl.js"; // just to get the RPC implementation registered
@@ -96,5 +96,5 @@ void (async () => {
   Presentation.initialize(presentationBackendProps);
   // __PUBLISH_EXTRACT_END__
 
-  console.log(`Process ID: ${process.pid}`); // eslint-disable-line no-console
+  console.log(`Process ID: ${process.pid}`);
 })();

@@ -15,7 +15,7 @@ import type { IModelConnection } from "@itwin/core-frontend";
 import type { NavigationPropertyInfo } from "@itwin/presentation-common";
 import type { IContentDataProvider } from "../../common/ContentDataProvider.js";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 /**
  * A context providing necessary information for [[NavigationPropertyEditor]].

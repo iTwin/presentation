@@ -1,5 +1,169 @@
 # @itwin/presentation-core-interop
 
+## 2.0.0
+
+### Major Changes
+
+- 63df97973fe0ab171458f52052009ac154cabc76: Drop support for iTwin.js Core v4.
+- 5d2ee746b6514c50d88062db064367b3339fcd56: Changed `createECSchemaProvider` to take an object exposing the iModel's `getSchemaView` and `createQueryReader` functions instead of a `SchemaContext`. An `IModelDb` or `IModelConnection` satisfies this shape directly, so you can now pass the iModel itself; you can also pass any object that provides just those two functions.
+  
+  Typical migration:
+  
+  ```ts
+  const iModel: IModelDb | IModelConnection = ...;
+  
+  // previously:
+  const schemaProvider = createECSchemaProvider(iModel.schemaContext);
+  
+  // now (pass the iModel directly):
+  const schemaProvider = createECSchemaProvider(iModel);
+  
+  // or provide only the required functions:
+  const schemaProvider = createECSchemaProvider({
+    getSchemaView: iModel.getSchemaView.bind(iModel),
+    createQueryReader: iModel.createQueryReader.bind(iModel),
+  });
+  ```
+- 7de04f9138d0ffb6312cb75774a600cdedaa0a20: `EC.RelationshipConstraintMultiplicity`: Changed `upperLimit` type from `number` to `number | "unbounded"`.
+  
+  Previously, `createECSchemaProvider` from `@itwin/presentation-core-interop` reported an unbounded (`*`) upper limit as `0`, which silently made the natural `upperLimit > 1` check treat many-valued relationships as single-valued. The limit is now an explicit `"unbounded"` value that consumers must handle:
+  
+  ```ts
+  const isManyValued = constraint.multiplicity.upperLimit === "unbounded" || constraint.multiplicity.upperLimit > 1;
+  ```
+- 3c65fce84d12aafaaaf5379e1a62623eca46e62d: Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+- 5180ed9aadc18e389ce9710353460fb379570b40: `createValueFormatter`: Changed to take a `formatsProvider`, a `unitsProvider` and the iModel instead of a `SchemaContext`.
+  
+  `SchemaContext` is inefficient on iModels with large domain schemas, so the function no longer depends on it. Sourcing formats from a `FormatsProvider` also lets the consuming application register its own formatting overrides (per organization, per iModel, per user, etc.), achieving cohesive formatting across the whole application - something a bare `SchemaContext` couldn't provide.
+  
+  Additionally, when a kind of quantity can’t be resolved (e.g. missing schema/KoQ or an unsupported persistence unit name), `createValueFormatter` now falls back to the `baseFormatter` instead of throwing.
+  
+  Migration: the `schemaContext` prop is removed, provide `formatsProvider`, `unitsProvider` and `imodel` instead:
+  
+  ```ts
+  // previously:
+  const formatter = createValueFormatter({ schemaContext: imodel.schemaContext, unitSystem: "metric" });
+  
+  // now, on the frontend:
+  const formatter = createValueFormatter({
+    formatsProvider: IModelApp.formatsProvider,
+    unitsProvider: IModelApp.quantityFormatter,
+    imodel,
+    unitSystem: "metric",
+  });
+  ```
+  
+  On the backend, where there's no `IModelApp`, construct equivalent providers from the iModel's `SchemaContext`, e.g. `formatsProvider: new SchemaFormatsProvider(schemaContext)` and `unitsProvider: new SchemaUnitProvider(schemaContext)` from `@itwin/ecschema-metadata`, ideally caching them per iModel.
+- 5d2ee746b6514c50d88062db064367b3339fcd56: `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+  
+  Additional changes:
+  
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an `isHidden: boolean` property to `EC.Schema`, `EC.Class` (optional) and `EC.Property`. The property represents the `HiddenSchema`, `HiddenClass` and `HiddenProperty` custom attributes.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+
+### Minor Changes
+
+- a314751997baa89b117ed8d5331e5f1dabbda8db: `EC.Class`: Added `getOwnProperties` method that returns only the properties defined directly on the class, excluding those inherited from base classes.
+- b67a0f63a85022f2e95fcadfe44ff23cb0398020: `EC.EntityClass`: Added `getMixins` method that returns the mixins applied directly to the entity class.
+- 60a80f8d621df67369c7ca7ea6fee3e6981034b9: `createECSchemaProvider`: Implement `ECSchemaProvider.getHiddenClassesTree`.
+  
+  Trees are cached per selected class and shared between all callers, including concurrent ones. Failed computations aren't cached, so the next request retries them.
+  
+  The class hierarchy and hidden classes trees are cached for the provider's lifetime. Create one provider per iModel and share it between consumers. After schema changes, recreate the provider and consumers holding it.
+- 61b0c43b6c737786a8230c965c77d09b566e84d3: `createECSqlQueryExecutor`: Updated to handle both positional and named bindings when creating query readers.
+- 074b048a89eae7f9252252423dd7e4ff3b8abe6e: `EC.Property`: Added `category` attribute that provides access to the property's `EC.PropertyCategory`. Also added a `description` attribute to `EC.SchemaItem`.
+- b8ff3ed437cff9b357a6be6fcc2ff750cda4724a: Expose access to enumerations, kind-of-quantities and property categories through `EC.Schema`, and extend `EC.KindOfQuantity` with `relativeError` and `persistenceUnit` attributes. Schemas returned by `createECSchemaProvider` now implement the new getters.
+  
+  - `EC.Schema` now requires `getEnumeration`, `getKindOfQuantity` and `getPropertyCategory` methods (mirroring the existing `getClass`). Consumers that only use `EC.Schema` are unaffected, but custom implementations of the interface must add these getters:
+  
+    ```ts
+    const schema: EC.Schema = {
+      name,
+      version,
+      isHidden,
+      getClass: (className) => classes.get(className),
+      // added:
+      getEnumeration: (enumName) => enumerations.get(enumName),
+      getKindOfQuantity: (koqName) => kindOfQuantities.get(koqName),
+      getPropertyCategory: (categoryName) => categories.get(categoryName),
+    };
+    ```
+  
+  - `EC.KindOfQuantity` now requires `relativeError` (`number`) and `persistenceUnit` (`string`) attributes. Custom implementations must provide them.
+  
+  - `createECSchemaProvider`: The `EC.Schema` returned by the provider now implements the new getters, giving access to enumerations, kind-of-quantities and property categories in addition to classes. Existing code keeps working without changes and can now read these additional schema items:
+  
+    ```ts
+    const schemaProvider = createECSchemaProvider(imodel);
+    const schema = await schemaProvider.getSchema("BisCore");
+    const enumeration = schema?.getEnumeration("MySchema.MyEnum");
+    const koq = schema?.getKindOfQuantity("MySchema.MyKoq");
+    const category = schema?.getPropertyCategory("MySchema.MyCategory");
+    ```
+- fa1011be5a0a061505e8ba4aebb06e71395bc061: `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+  
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+  
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+  
+  // After:
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+  
+  **Breaking changes:**
+  
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+  
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+  
+      ```ts
+      // Before:
+      const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) });
+      createPredicateBasedHierarchyDefinition({ classHierarchyInspector, hierarchy });
+  
+      // After:
+      const imodelAccess = createECSchemaProvider(imodel);
+      createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+      ```
+- 23cefd3e636b75257d8c50a757f90c34c5fec5dc: `createECSchemaProvider`: Populate `version` property on `EC.Schema` objects from the underlying `@itwin/ecschema-metadata` schema version fields.
+- 1577715f1501b20139c0e28c656f642ca73d3100: Add additional `baseClass` and `getDerivedClassNames` members to the `EC.Class` objects, returned by `ECSchemaProvider`.
+  
+  - `baseClass: EC.Class | undefined`
+  - `getDerivedClassNames(props?: { onlyDirect?: boolean }): string[]`
+
+### Patch Changes
+
+- 3acdaa490b071032f4b18c3f47fc99aa491b5820: React to changes in `@itwin/presentation-shared`.
+- 76dc2ad8294433dd10023f1d04fe267369b30bc0: Fix `createECSchemaProvider` to set `EC.Property.class` to the class that declares or contributes the property (the base class for an inherited property, or the mixin for a mixin-contributed property), instead of the class the property was queried or enumerated through.
+- 50e5c75b3ade510b08a58d4e69937b86decb1e65: Bump iTwin.js Core dependencies to `5.14.2`.
+- fd2d3e6310d0cba43685310d439975a1142a33ee: Fixed a performance regression that made property grouping of large hierarchies dramatically slower.
+  
+  `createECSchemaProvider` now caches resolved schemas and the `EC.Class` objects built from them, so repeated `getSchema`/`getClass` calls and `EC.Property.class` accesses no longer trigger a new native schema view request or rebuild the class each time. Cached schemas are reused until the underlying schema view becomes outdated, at which point they are refreshed on next access. In addition, property grouping now resolves each properties class once instead of once per grouped node.
+- a398cc15bdbcf625565347c6fccf977d5dec3761: `createECSqlQueryExecutor`: queries are now automatically cancelled when consumers break out of iteration.
+- fb9ba02979d928fb866ef72d103e0ce28747b478: Fixed schema item labels (classes, properties, enumerations, enumerators, kind of quantities and property categories) not decoding EC name-escaping (e.g. `Foo__x0020__Bar`) when no explicit display label was set. Names containing escaped characters are now decoded into their unescaped form (e.g. `Foo Bar`), matching the behavior of the native `ECObjects` library.
+- 78635b664cf95d7d6abeb607df41c0e7bbe3ca5b: `createECSqlQueryExecutor`: No longer sorts the caller-supplied `idset` binding value array in place when binding it to a query.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0
+
 ## 2.0.0-alpha.7
 
 ### Minor Changes

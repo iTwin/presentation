@@ -81,7 +81,7 @@ describe("InstanceKeyValueRenderer", () => {
         });
       });
 
-      /* eslint-disable @typescript-eslint/no-deprecated */
+      /* oxlint-disable @typescript-eslint/no-deprecated */
       describe("with deprecated unified selection context", () => {
         beforeEach(() => {
           const selectionManager = new SelectionManager({ scopes: undefined as any });
@@ -113,7 +113,7 @@ describe("InstanceKeyValueRenderer", () => {
           await waitFor(() => expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).toBe(true));
         });
       });
-      /* eslint-enable @typescript-eslint/no-deprecated */
+      /* oxlint-enable @typescript-eslint/no-deprecated */
 
       describe("with unified selection context", () => {
         let selectionStorage: SelectionStorage;

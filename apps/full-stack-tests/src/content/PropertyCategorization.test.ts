@@ -501,6 +501,174 @@ describe("Content", () => {
       validateCategoryChain(descriptor, propB!, []);
     });
 
+    describe("classes selecting no properties", () => {
+      /** `A -[AtoB]-> B -[BtoC]-> C`, with labelled classes and relationships. */
+      async function buildChainSetup() {
+        return buildTestECDb("PropertyCategorization_classes_selecting_no_properties", async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B" displayLabel="Class B">
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C" displayLabel="Class C">
+                <ECProperty propertyName="PropC" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None" displayLabel="A To B">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+              <ECRelationshipClass typeName="BtoC" strength="referencing" modifier="None" displayLabel="B To C">
+                <Source multiplicity="(0..*)" roleLabel="b to c" polymorphic="true">
+                  <Class class="B" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="c to b" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+          const b = builder.insertInstance(s.items.B.fullName, { propB: "b" });
+          const c = builder.insertInstance(s.items.C.fullName, { propC: "c" });
+          builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
+          builder.insertRelationship(s.items.BtoC.fullName, b.id, c.id);
+          return { schema: s };
+        });
+      }
+
+      let setup: Awaited<ReturnType<typeof buildChainSetup>>;
+
+      beforeAll(async () => {
+        setup = await buildChainSetup();
+        return () => setup[Symbol.dispose]();
+      });
+
+      it.each([
+        { name: "step 0 not listed", properties: [{ stepIndex: 1, target: { select: "all" } }], expected: ["Class C"] },
+        {
+          name: "target class",
+          properties: [
+            { stepIndex: 0, target: { select: "none" } },
+            { stepIndex: 1, target: { select: "all" } },
+          ],
+          expected: ["Class B", "Class C"],
+        },
+        {
+          name: "relationship and target class",
+          properties: [
+            { stepIndex: 0, relationship: { select: "none" }, target: { select: "none" } },
+            { stepIndex: 1, target: { select: "all" } },
+          ],
+          expected: ["A To B", "Class B", "Class C"],
+        },
+        {
+          name: "last step relationship class",
+          properties: [{ stepIndex: 1, relationship: { select: "none" }, target: { select: "all" } }],
+          expected: ["B To C", "Class C"],
+        },
+      ] as const)(
+        "encloses fields of a multi-step path in classes selecting no properties: $name",
+        async ({ properties, expected }) => {
+          const { A, B, C, AtoB: aToB, BtoC: bToC } = setup.schema.items;
+          const provider = defineIModelFieldsProvider({
+            id: "provider_v1",
+            async getContribution() {
+              return {
+                relatedProperties: [
+                  {
+                    path: [
+                      { sourceClassName: A.fullName, targetClassName: B.fullName, relationshipName: aToB.fullName },
+                      { sourceClassName: B.fullName, targetClassName: C.fullName, relationshipName: bToC.fullName },
+                    ],
+                    properties: [...properties],
+                  },
+                ],
+              };
+            },
+          });
+          const descriptor = await buildDescriptor({
+            imodelAccess: createContentIModelAccess(setup.ecdb),
+            targets: [{ primaryClass: A.fullName }],
+            config: { imodelFieldsProviders: [provider] },
+          });
+
+          const fields = getRelatedPropertyFields(descriptor);
+          expect(fields.map((f) => f.propertyName)).toEqual(["PropC"]);
+          validateCategoryChain(descriptor, fields[0], [...expected]);
+        },
+      );
+
+      it.each([
+        { name: "none", relationship: { select: "none" }, expected: ["A To B"] },
+        { name: "omitted", relationship: undefined, expected: [] },
+      ] as const)(
+        "carries a parent's relationship category into recursively applied declarations: relationship selection $name",
+        async ({ relationship, expected }) => {
+          const { A, B, C, AtoB: aToB, BtoC: bToC } = setup.schema.items;
+          const parentProvider = defineIModelFieldsProvider({
+            id: "parent_v1",
+            async getContribution({ target }) {
+              return target.primaryClass === A.fullName
+                ? {
+                    relatedProperties: [
+                      {
+                        path: [
+                          { sourceClassName: A.fullName, targetClassName: B.fullName, relationshipName: aToB.fullName },
+                        ],
+                        properties: [{ stepIndex: 0, target: { select: "all" }, relationship }],
+                      },
+                    ],
+                  }
+                : undefined;
+            },
+          });
+          const nestedProvider = defineIModelFieldsProvider({
+            id: "nested_v1",
+            applyRecursively: true,
+            async getContribution({ target }) {
+              return target.primaryClass === B.fullName
+                ? {
+                    relatedProperties: [
+                      {
+                        path: [
+                          { sourceClassName: B.fullName, targetClassName: C.fullName, relationshipName: bToC.fullName },
+                        ],
+                      },
+                    ],
+                  }
+                : undefined;
+            },
+          });
+          const descriptor = await buildDescriptor({
+            imodelAccess: createContentIModelAccess(setup.ecdb),
+            targets: [{ primaryClass: A.fullName }],
+            config: { imodelFieldsProviders: [parentProvider, nestedProvider] },
+          });
+
+          const fields = getRelatedPropertyFields(descriptor);
+          validateCategoryChain(
+            descriptor,
+            fields.find((f) => f.propertyName === "PropB")!,
+            [...expected, "Class B"],
+          );
+          validateCategoryChain(
+            descriptor,
+            fields.find((f) => f.propertyName === "PropC")!,
+            [...expected, "Class B", "Class C"],
+          );
+        },
+      );
+    });
+
     describe("property category scope", () => {
       type Scope = "relatedClass" | "parent" | undefined;
 

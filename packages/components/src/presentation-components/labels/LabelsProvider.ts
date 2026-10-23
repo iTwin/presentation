@@ -56,7 +56,7 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
     return (await Presentation.presentation.getDisplayLabelDefinition({ imodel: this.imodel, key })).displayValue; // WIP
   }
 
-  // eslint-disable-next-line @typescript-eslint/unbound-method
+  // oxlint-disable-next-line @typescript-eslint/unbound-method
   private getMemoizedLabel = memoize(this.getLabelInternal, { isMatchingKey: areLabelRequestsEqual as any });
 
   /**
@@ -92,7 +92,7 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/unbound-method
+  // oxlint-disable-next-line @typescript-eslint/unbound-method
   private getMemoizedLabels = memoize(this.getLabelsInternal, { isMatchingKey: areLabelsRequestsEqual as any });
 
   /**

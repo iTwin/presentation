@@ -40,7 +40,7 @@ export interface FieldCategorization {
   /** The declaration's `propertyCategoryScope`; omitted means `"relatedClass"`. */
   propertyCategoryScope?: RelatedPropertiesDeclaration["propertyCategoryScope"];
   /** Ordered enclosing class categories; an empty context places the field's category at the root. */
-  categoryContext: CategoryContext;
+  categoryContext: Readonly<CategoryContext>;
 }
 
 /** A property field paired with the category facts the categorization pass needs. */

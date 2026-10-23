@@ -23,7 +23,7 @@ import type { TreeRendererProps } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { Ruleset } from "@itwin/presentation-common";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 describe("Learning snippets", () => {
   describe("Tree", () => {

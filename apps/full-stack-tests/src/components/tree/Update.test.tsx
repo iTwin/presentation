@@ -28,7 +28,7 @@ import type { IModelConnection } from "@itwin/core-frontend";
 import type { Ruleset } from "@itwin/presentation-common";
 import type { IPresentationTreeDataProvider, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 describe("Tree update", () => {
   let imodel: IModelConnection;

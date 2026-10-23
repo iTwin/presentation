@@ -111,7 +111,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
 
   if (info.koqName) {
     description.kindOfQuantityName = info.koqName;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     description.quantityType = info.koqName;
     description.editor = { name: QuantityEditorName, ...description.editor };
     description.renderer = { name: KOQ_RENDERER_NAME, ...description.renderer };
@@ -147,6 +147,7 @@ export interface FieldHierarchyRecord {
 }
 
 /** @internal */
+// oxlint-disable-next-line no-redeclare
 export interface IPropertiesAppender {
   append(record: FieldHierarchyRecord): void;
 }
@@ -169,7 +170,6 @@ export namespace IPropertiesAppender {
 }
 class StructMembersAppender implements INestedPropertiesAppender {
   private _members: { [name: string]: PropertyRecord } = {};
-  // eslint-disable-next-line @typescript-eslint/unbound-method
   private _labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
   constructor(
     private _parentAppender: IPropertiesAppender,

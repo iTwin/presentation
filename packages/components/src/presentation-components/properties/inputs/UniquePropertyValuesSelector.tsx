@@ -82,6 +82,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   }, [isLoading]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
     setSearchInput("");
   }, [descriptor, property]);
@@ -140,6 +141,7 @@ function useUniquePropertyValuesRuleset(
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
     if (descriptorRuleset) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setRuleset(descriptorRuleset);
       return;
     }

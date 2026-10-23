@@ -5,7 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { ECSql, getClass } from "@itwin/presentation-shared";
-import { ECSQL_PREFIX, mergeBindings, PRIMARY_CLASS_ALIAS } from "../InternalUtils.js";
+import { ECSQL_PREFIX, getOrCreate, mergeBindings, PRIMARY_CLASS_ALIAS } from "../InternalUtils.js";
 import { serializeRelationshipPath, toSortedUniqueClassNames } from "../model/Utils.js";
 import { classifyPathCardinality } from "../PathCardinality.js";
 import {
@@ -875,6 +875,12 @@ function createPrefixKeyResolver(): (path: ReadonlyRelationshipPath) => readonly
  * Creates a memoized per-(path, join type) join-info resolver. `createRelationshipPathJoinInfo` reads
  * the schema once per entry; the memoized result can then serve both a JOIN-table budget count and the
  * rendered SQL without re-reading the schema.
+ *
+ * Every step's join excludes instances of classes hidden relative to the step's target class (see
+ * `ECSql.createHiddenClassesFilter`). Resolved paths name concrete classes found in the data, but join them
+ * polymorphically, which would otherwise also reach instances of hidden subclasses that source resolution
+ * excluded. The exclusion depends only on the step itself, so a prefix shared by multiple paths joins the
+ * same way for all of them.
  */
 function createPathInfoResolver(props: {
   schemaProvider: ECSchemaProvider;
@@ -885,6 +891,13 @@ function createPathInfoResolver(props: {
 }): (path: ReadonlyRelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo> {
   const { schemaProvider, primaryClassName, relatedClassAliases, getPrefixKeys } = props;
   const infoCache = new Map<string, RelationshipPathJoinInfo>();
+  const hiddenClassesFilters = new Map<EC.FullClassNameDotNotation, Promise<HiddenClassesFilter>>();
+  const getHiddenClassesFilter = async (baseClassName: EC.FullClassNameDotNotation) =>
+    getOrCreate({
+      map: hiddenClassesFilters,
+      key: baseClassName,
+      createFunc: async () => ECSql.createHiddenClassesFilter({ schemaProvider, baseClassName }),
+    });
   return async (path, joinType) => {
     const prefixKeys = getPrefixKeys(path);
     const cacheKey = `${joinType}:${prefixKeys.length > 0 ? prefixKeys[prefixKeys.length - 1] : ""}`;
@@ -892,15 +905,21 @@ function createPathInfoResolver(props: {
     if (!info) {
       info = await ECSql.createRelationshipPathJoinInfo({
         schemaProvider,
-        path: path.map((step, index) => ({
-          ...step,
-          // Joins are typed against the queried primary class, which exposes every property the path needs.
-          ...(index === 0 ? { sourceClassName: primaryClassName } : undefined),
-          sourceAlias: index === 0 ? PRIMARY_CLASS_ALIAS : relatedClassAliases.get(prefixKeys[index - 1])!.target,
-          targetAlias: relatedClassAliases.get(prefixKeys[index])!.target,
-          relationshipAlias: relatedClassAliases.get(prefixKeys[index])!.relationship,
-          joinType,
-        })),
+        path: await Promise.all(
+          path.map(async (step, index) => ({
+            ...step,
+            // Joins are typed against the queried primary class, which exposes every property the path needs.
+            ...(index === 0 ? { sourceClassName: primaryClassName } : undefined),
+            sourceAlias: index === 0 ? PRIMARY_CLASS_ALIAS : relatedClassAliases.get(prefixKeys[index - 1])!.target,
+            targetAlias: relatedClassAliases.get(prefixKeys[index])!.target,
+            relationshipAlias: relatedClassAliases.get(prefixKeys[index])!.relationship,
+            joinType,
+            instanceFilter: excludeHiddenClasses(
+              step.instanceFilter,
+              await getHiddenClassesFilter(step.targetClassName),
+            ),
+          })),
+        ),
       });
       // A path starting at a class narrower than the queried one only applies to that class's instances.
       const declaredSource = path.length > 0 ? path[0].sourceClassName : undefined;
@@ -915,6 +934,23 @@ function createPathInfoResolver(props: {
     }
     return info;
   };
+}
+
+type HiddenClassesFilter = Awaited<ReturnType<typeof ECSql.createHiddenClassesFilter>>;
+
+/** Adds the exclusion of hidden classes to a step's own instance filter, using the filter's target alias placeholder. */
+function excludeHiddenClasses(
+  instanceFilter: RelationshipPath[number]["instanceFilter"],
+  hiddenClassesFilter: HiddenClassesFilter,
+): RelationshipPath[number]["instanceFilter"] {
+  const condition = hiddenClassesFilter.createWhereClause(instanceFilter?.targetAlias ?? "this");
+  if (!condition) {
+    return instanceFilter;
+  }
+  if (!instanceFilter) {
+    return { expression: condition };
+  }
+  return { ...instanceFilter, expression: `(${instanceFilter.expression}) AND (${condition})` };
 }
 
 /**

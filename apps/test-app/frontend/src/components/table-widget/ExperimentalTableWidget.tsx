@@ -63,6 +63,7 @@ function PresentationTable(props: PresentationTableProps) {
     setRowSelection(selection);
   }, [selectedRows]);
 
+  // oxlint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns: visibleColumns ?? [],

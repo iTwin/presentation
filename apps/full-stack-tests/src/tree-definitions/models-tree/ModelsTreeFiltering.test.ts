@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import {
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
@@ -41,6 +39,7 @@ import type {
 } from "@itwin/presentation-tree-definitions/internal";
 import type { ExpectedHierarchyDef } from "../HierarchyValidation.js";
 
+// oxlint-disable-next-line no-redeclare
 interface TreeSearchTestCaseDefinition<TIModelSetupResult extends object> {
   name: string;
   only?: boolean;

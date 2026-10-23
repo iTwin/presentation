@@ -9,7 +9,7 @@ import { createTestLabelDefinition } from "./LabelDefinition.js";
 
 import type { ECClassGroupingNodeKey, ECInstancesNodeKey, Node, NodePathElement } from "@itwin/presentation-common";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 export function createTestECInstancesNodeKey(key?: Partial<ECInstancesNodeKey>): ECInstancesNodeKey {
   return {

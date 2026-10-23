@@ -12,7 +12,7 @@ import {
 } from "@itwin/presentation-shared";
 import { abortable } from "./Utils.js";
 
-import type { ReadonlyCalculatedField, ReadonlyPropertyField } from "@itwin/presentation-content";
+import type { ReadonlyCalculatedField, ReadonlyField, ReadonlyPropertyField } from "@itwin/presentation-content";
 import type {
   ECSchemaProvider,
   ECSqlQueryExecutor,
@@ -156,7 +156,7 @@ export async function groupUniqueFieldValues(props: {
  */
 async function formatDistinctValue(props: {
   value: Value;
-  type: ReadonlyPropertyField["type"] | ReadonlyCalculatedField["type"];
+  type: ReadonlyField["type"];
   isNavigation: boolean;
   valueFormatter: IPrimitiveValueFormatter;
 }): Promise<string> {

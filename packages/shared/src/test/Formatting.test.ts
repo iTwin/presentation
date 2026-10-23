@@ -77,7 +77,7 @@ describe("createDefaultValueFormatter", () => {
 });
 
 describe("formatConcatenatedValue", () => {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  // oxlint-disable-next-line @typescript-eslint/no-base-to-string
   const valueFormatter = vi.fn(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
 
   it("returns formatted string", async () => {

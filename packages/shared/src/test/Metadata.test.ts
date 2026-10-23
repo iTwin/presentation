@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCachingECClassHierarchyInspector, getClass } from "../shared/Metadata.js";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 describe("createCachingECClassHierarchyInspector", () => {
   const schemaProvider = { getSchema: vi.fn(), classDerivesFrom: vi.fn(), getHiddenClassesTree: vi.fn() };
 
@@ -88,7 +88,7 @@ describe("createCachingECClassHierarchyInspector", () => {
     expect(getClassStub).toHaveBeenCalledWith("b");
   });
 });
-/* eslint-enable @typescript-eslint/no-deprecated */
+/* oxlint-enable @typescript-eslint/no-deprecated */
 
 describe("getClass", () => {
   const schemaProvider = { getSchema: vi.fn(), classDerivesFrom: vi.fn() };

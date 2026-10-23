@@ -18,10 +18,10 @@ import type { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey.js";
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeIdentifier {
   /** Checks whether the given identifier is an instance node identifier */
   export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey {

@@ -178,6 +178,7 @@ describe("createFilterRuleValidator", () => {
     name: "quantity-prop",
     typename: StandardTypeNames.Double,
     kindOfQuantityName: "TestKOQ",
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     quantityType: "TestKOQ",
   };
 

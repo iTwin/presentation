@@ -31,7 +31,7 @@ import type { PresentationManager } from "@itwin/presentation-frontend";
 import type { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider.js";
 import type { NavigationPropertyEditorContextProviderProps } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {

@@ -44,6 +44,7 @@ import type { UniqueValue } from "../common/Utils.js";
  * one filter condition or group of filter conditions joined by logical operator.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition;
 
 /**
@@ -71,7 +72,6 @@ export interface PresentationInstanceFilterCondition {
 }
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PresentationInstanceFilter {
   /**
    * Converts filter built by [usePropertyFilterBuilder]($components-react) into presentation specific format.

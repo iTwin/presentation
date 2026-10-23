@@ -59,7 +59,7 @@ export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwn
  *
  * @internal
  */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+// oxlint-disable-next-line @typescript-eslint/no-deprecated
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
     const {
@@ -156,13 +156,12 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 );
 
 export const PlaceholderNode: FC<
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  // oxlint-disable-next-line @typescript-eslint/no-deprecated
   PropsWithRef<
     Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & RefAttributes<HTMLElement>
   >
 > = memo(
   forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     function PlaceholderNode({ ...props }, forwardedRef) {
       const translate = useTranslation();
       return (

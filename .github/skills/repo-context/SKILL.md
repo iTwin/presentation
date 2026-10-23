@@ -16,7 +16,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 | Language | TypeScript (strict, ES2022, dual CJS/ESM builds) |
 | UI | React 18, iTwinUI components, SCSS |
 | Testing | Vitest |
-| Linting | ESLint 9 (flat config), oxfmt for formatting |
+| Linting | oxlint (type-aware, config in `.oxlintrc.json`); ESLint only for `@itwin/eslint-plugin` rules (`eslint.config.js`); oxfmt for formatting |
 | Platform | iTwin.js (iModels, ECSQL, Presentation APIs) |
 | Reactive | RxJS |
 | API docs | `@itwin/build-tools` (extract-api, docs) |
@@ -59,12 +59,17 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
   ```
 - User-visible changes to released packages require a changeset (`pnpm change`); packages with `"private": true` do not require a changeset.
 - Build order is managed by Lage (`lage build`, dependencies via `^build`)
+- Linting is split between two tools that are always run separately:
+  - `lint` runs oxlint with the root `.oxlintrc.json` (default rules, type-aware, plus the `react` plugin for packages that depend on React). Editors use oxlint too.
+  - `lint:no-internal` runs ESLint with only `@itwin/no-internal` and `@itwin/no-internal-barrel-imports`, which oxlint can't run. It is never run implicitly; run it explicitly or rely on CI.
+  - Suppress oxlint findings with `// oxlint-disable-next-line <rule>`; use `// eslint-disable-next-line @itwin/<rule>` only for the `@itwin` rules.
+  - When adding a package that depends on React, add it to the `react` override in `.oxlintrc.json`.
 
 ## Common Commands
 
-| Scope | Build | Test | Lint | Format |
-|-------|-------|------|------|--------|
-| All (repo root) | `pnpm build:all` | `pnpm cover:all` | `pnpm lint:all` | `pnpm format` |
-| Single package | `pnpm build` | `pnpm test` | `pnpm lint` | `pnpm -w exec oxfmt --check .` |
-| Scoped build | `pnpm lage build --to <package>` | — | — | — |
-| Format fix | `pnpm format:fix` | — | — | — |
+| Scope | Build | Test | Lint | `@itwin` ESLint rules | Format |
+|-------|-------|------|------|------|--------|
+| All (repo root) | `pnpm build:all` | `pnpm cover:all` | `pnpm lint:all` | `pnpm lint:no-internal:all` | `pnpm format` |
+| Single package | `pnpm build` | `pnpm test` | `pnpm lint` | `pnpm lint:no-internal` | `pnpm -w exec oxfmt --check .` |
+| Scoped build | `pnpm lage build --to <package>` | — | — | — | — |
+| Format fix | `pnpm format:fix` | — | — | — | — |

@@ -1,6 +1,6 @@
 {
   "name": "@itwin/unified-selection",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0",
   "description": "Package for managing unified selection in iTwin.js applications.",
   "license": "MIT",
   "repository": {
@@ -39,7 +39,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf lib build",
     "cover": "vitest run --coverage",
-    "lint": "eslint \"./src/**/*.ts\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=lib/unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
@@ -56,12 +57,10 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/node": "catalog:build-tools",
     "@typescript/native": "catalog:build-tools",
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
-    "eslint": "catalog:build-tools",
     "presentation-test-utilities": "workspace:*",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools",

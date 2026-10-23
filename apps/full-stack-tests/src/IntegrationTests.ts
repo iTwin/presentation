@@ -73,7 +73,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
     workerThreadsCount: 1,
     caching: {
       hierarchies: {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        // oxlint-disable-next-line @typescript-eslint/no-deprecated
         mode: HierarchyCacheMode.Memory,
       },
     },
@@ -150,7 +150,6 @@ function createTestLocalization(): ITwinLocalization {
         } else {
           // TODO: remove the type assertion when we drop support for itwinjs-core 4.x. It's
           // currently needed for 4.x regression tests to pass, because in 4.x `resp` is nullable.
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
           new Backend().options.request!(options, url, payload, (err, resp) => callback(err, resp!));
         }
       },

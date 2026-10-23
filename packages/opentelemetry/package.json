@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-opentelemetry",
-  "version": "5.0.0-alpha.0",
+  "version": "5.0.0",
   "description": "Utilities to enable OpenTelemetry tracing of Presentation requests",
   "license": "MIT",
   "repository": {
@@ -39,7 +39,8 @@
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-opentelemetry",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-opentelemetry/file.json --tsIndexFile=presentation-opentelemetry.ts --onlyJson",
     "docs:extract": "betools extract --fileExt=ts --extractFrom=./src/test --recursive --out=./build/docs/extract",
-    "lint": "eslint \"./src/**/*.ts\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "extract-api": "betools extract-api --entry=lib/presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
@@ -51,7 +52,6 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@opentelemetry/api": "^1.9.1",
     "@types/node": "catalog:build-tools",
@@ -59,7 +59,6 @@
     "@vitest/coverage-v8": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "cross-env": "catalog:build-tools",
-    "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools",
     "vitest": "catalog:test-tools"

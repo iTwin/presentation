@@ -16,6 +16,7 @@ import type { RelationshipPath } from "@itwin/presentation-shared";
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export interface CategoryDefinition {
   /** Stable identity for deduplication and cross-provider sharing. */
   id: string;

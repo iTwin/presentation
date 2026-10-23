@@ -1,0 +1,73 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "ignorePatterns": ["**/lib/**", "**/build/**"],
+  "rules": {
+    "import/no-duplicates": "error",
+    "no-shadow": ["error", { "hoist": "all", "allow": ["T", "args"] }],
+    "no-redeclare": "error",
+    "typescript/no-deprecated": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/promise-function-async": "error",
+    "typescript/prefer-promise-reject-errors": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/no-unnecessary-condition": ["error", { "allowConstantLoopConditions": "only-allowed-literals" }],
+    "typescript/explicit-member-accessibility": [
+      "error",
+      { "accessibility": "explicit", "overrides": { "constructors": "off" } }
+    ],
+    "typescript/no-empty-object-type": ["error", { "allowObjectTypes": "always" }]
+  },
+  "overrides": [
+    // Packages and apps that use React
+    {
+      "files": [
+        "packages/components/**",
+        "packages/content-react/**",
+        "packages/hierarchies-react/**",
+        "packages/unified-selection-react/**",
+        "apps/full-stack-tests/**",
+        "apps/test-app/frontend/**"
+      ],
+      "plugins": ["react"],
+      "rules": {
+        "react/exhaustive-deps": "error",
+        "react/rules-of-hooks": "error",
+        "react/error-boundaries": "error",
+        "react/globals": "error",
+        "react/immutability": "error",
+        "react/incompatible-library": "error",
+        "react/preserve-manual-memoization": "error",
+        "react/purity": "error",
+        "react/refs": "error",
+        "react/set-state-in-effect": "error",
+        "react/set-state-in-render": "error",
+        "react/static-components": "error",
+        "react/unsupported-syntax": "error",
+        "react/use-memo": "error"
+      }
+    },
+    {
+      "files": ["packages/**"],
+      "rules": {
+        "no-console": "error"
+      }
+    },
+    {
+      "files": ["**/learning-snippets/**"],
+      "rules": {
+        "import/no-duplicates": "off",
+        "typescript/consistent-type-imports": "off"
+      }
+    },
+    {
+      "files": ["**/src/test/**", "**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    }
+  ]
+}

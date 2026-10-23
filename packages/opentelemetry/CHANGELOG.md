@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-opentelemetry
 
+## 5.0.0
+
+### Major Changes
+
+- 3c65fce84d12aafaaaf5379e1a62623eca46e62d: Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+  
+  This is a packaging change only — the public API is unchanged — so consumers already using the ESM build are not affected. For downstream packages depending on these:
+  
+  - If you list one of these packages as a `peerDependency`, widen the version range to include the new major version.
+  - If you have one of these packages as a `dependency` and re-expose it through your public API, you can safely bump to the new major version — the API is unchanged, so it will not break your API consumers.
+
 ## 5.0.0-alpha.0
 
 ### Major Changes

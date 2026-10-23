@@ -33,16 +33,15 @@ catalogs:
     '@itwin/build-tools': ^5.14.3
     '@itwin/eslint-plugin': ^6.1.1
     '@rolldown/plugin-babel': ^0.2.3
-    '@stylistic/eslint-plugin': ^5.10.0
     '@types/node': ^24.19.2
     '@vitejs/plugin-react': ^6.1.2
     babel-plugin-react-compiler: ^1.0.0
     cpx2: ^7.0.2
     cross-env: ^7.0.3
     eslint: ^9.39.5
-    eslint-plugin-react: ^7.37.5
-    eslint-plugin-unused-imports: ^4.4.1
     fast-glob: ^3.3.3
+    oxlint: ^1.89.0
+    oxlint-tsgolint: ^7.0.2004
     rimraf: ^6.1.3
     tsdown: ^0.22.13
     vite-plugin-static-copy: ^4.1.0

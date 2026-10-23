@@ -70,11 +70,11 @@ export interface HierarchySearchPathOptions {
  * A path of hierarchy node identifiers for search the hierarchy with additional options.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type HierarchySearchPath =
   | HierarchyNodeIdentifiersPath
   | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
   /**
    * Normalizes a readonly hierarchy search path to the object form without copying or modifying it.
@@ -156,6 +156,7 @@ export namespace HierarchySearchPath {
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export interface HierarchySearchTree {
   /** Identifier of the hierarchy node this tree entry represents. */
   identifier: HierarchyNodeIdentifier;

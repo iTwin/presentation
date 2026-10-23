@@ -18,7 +18,7 @@ export async function collect<T>(obs: ObservableInput<T>): Promise<Array<T>> {
         resolve(arr);
       },
       error(reason) {
-        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        // oxlint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
         reject(reason);
       },
     });

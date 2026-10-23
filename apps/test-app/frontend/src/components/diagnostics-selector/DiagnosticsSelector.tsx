@@ -35,7 +35,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   useEffect(() => {
     onDiagnosticsOptionsChanged(result);
     // note: intentionally empty dependency list - we only want `onDiagnosticsOptionsChanged` to be called on first render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMeasurePerformanceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

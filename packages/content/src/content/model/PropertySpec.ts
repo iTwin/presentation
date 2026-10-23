@@ -13,13 +13,15 @@ export interface StepPropertySpec {
   /** 0-based position in the path. */
   stepIndex: number;
   /**
-   * Properties to load from the step's target class. Omit to load no properties from the target
-   * class at this step.
+   * Properties to load from the step's target class. When present, the class also gets a category
+   * that encloses fields from later steps, even if it selects no properties. Omit to exclude the
+   * class entirely.
    */
   target?: ClassPropertySpec;
   /**
-   * Properties to load from the step's relationship class. Omit to load no properties from the
-   * relationship class at this step.
+   * Properties to load from the step's relationship class. When present, the class also gets a
+   * category that encloses the step's target-class fields and fields from later steps, even if it
+   * selects no properties. Omit to exclude the class entirely.
    *
    * Relationship-class fields are grouped under a dedicated **relationship category** (labelled by
    * the relationship class), with the step's target-class category nested beneath it. A category

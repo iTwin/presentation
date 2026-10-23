@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
-  "version": "2.0.0-alpha.71",
+  "version": "2.0.0",
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
   "author": {
@@ -48,7 +48,8 @@
     "copy:assets": "cpx \"./src/public/**/*\" \"./lib/public\"",
     "clean": "rimraf lib build",
     "cover": "npm -s test",
-    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.{ts,tsx}\"",
     "test": "vitest run --project hierarchies-react-unit",
     "test:watch": "vitest --project hierarchies-react-unit",
     "test:components": "vitest run --project hierarchies-react-components",
@@ -98,7 +99,6 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@mui/material": "catalog:stratakit",
     "@rolldown/plugin-babel": "catalog:build-tools",
     "@stratakit/foundations": "catalog:stratakit",
@@ -115,9 +115,6 @@
     "@vitest/coverage-v8": "catalog:test-tools",
     "axe-core": "catalog:test-tools",
     "babel-plugin-react-compiler": "catalog:build-tools",
-    "eslint": "catalog:build-tools",
-    "eslint-plugin-react": "catalog:build-tools",
-    "eslint-plugin-react-hooks": "^7.1.1",
     "happy-dom": "catalog:test-tools",
     "playwright": "catalog:test-tools",
     "presentation-test-utilities": "workspace:*",

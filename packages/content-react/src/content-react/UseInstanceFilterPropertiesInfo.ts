@@ -46,6 +46,7 @@ export function useInstanceFilterPropertiesInfo({
 }: UseInstanceFilterPropertiesInfoProps): InstanceFilterPropertiesInfo {
   const initialSelectedClassNamesRef = useRef(initialSelectedClasses);
   const { classes, properties } = useMemo(() => createInstanceFilterProperties({ descriptor }), [descriptor]);
+  // oxlint-disable-next-line react/refs
   const [selectedClasses, setSelectedClasses] = useState(initialSelectedClassNamesRef.current ?? []);
   useEffect(() => {
     setSelectedClasses(initialSelectedClassNamesRef.current ?? []);

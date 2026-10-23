@@ -33,7 +33,8 @@
     "build": "npm run -s typecheck && tsc -p tsconfig.build.json",
     "clean": "rimraf lib",
     "extract-api": "betools extract-api --entry=lib/presentation-content-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
-    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.{ts,tsx}\"",
     "cover": "npm -s test",
     "test": "vitest run",
     "typecheck": "tsc"
@@ -48,11 +49,8 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/react": "catalog:react",
     "@testing-library/react": "catalog:test-tools",
-    "eslint": "catalog:build-tools",
-    "eslint-plugin-react": "catalog:build-tools",
     "happy-dom": "catalog:test-tools",
     "react": "catalog:react",
     "rimraf": "catalog:build-tools",

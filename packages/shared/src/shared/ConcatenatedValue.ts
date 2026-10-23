@@ -15,10 +15,10 @@ import type { TypedPrimitiveValue } from "./Values.js";
  * @see `ConcatenatedValue`
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type ConcatenatedValuePart = ConcatenatedValue | TypedPrimitiveValue | string;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ConcatenatedValuePart {
   /** @public */
   export function isString(part: ConcatenatedValuePart): part is string {
@@ -42,10 +42,10 @@ export namespace ConcatenatedValuePart {
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type ConcatenatedValue = ConcatenatedValuePart[];
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ConcatenatedValue {
   /**
    * Serialize given `ConcatenatedValue` to string using a formatter function. The parts are

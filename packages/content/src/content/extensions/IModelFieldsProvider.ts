@@ -130,16 +130,22 @@ export interface RelatedPropertiesDeclaration {
   cardinalityHint?: CardinalityHint;
 
   /**
-   * Where the EC property categories of this declaration's properties are placed.
+   * Where the categories of this declaration's properties are placed.
    *
-   * - `"relatedClass"` (default): the related class's category is the context, so a property with
-   *   property category `Geometry` of class `B` appears under `B > Geometry`.
-   * - `"parent"`: property categories attach to the category context enclosing this declaration — the
-   *   top level for a declaration applied to the content target, or the inherited context for a
-   *   declaration applied recursively (see `IModelFieldsProvider.applyRecursively`).
+   * - `"relatedClass"` (default): each property appears under its own class's category, nested under
+   *   the categories of the classes named at earlier steps of this declaration. A property with
+   *   property category `Geometry` of class `C`, on a path `A > B > C` whose step specs name `B`,
+   *   appears under `B > C > Geometry`.
+   * - `"parent"`: categories attach to the category context enclosing this declaration — the top level
+   *   for a declaration applied to the content target, or the inherited context for a declaration
+   *   applied recursively (see `IModelFieldsProvider.applyRecursively`). A property with a property
+   *   category appears directly under that context (`Geometry` in the example above). A property
+   *   without one still appears under its own class's category, but classes at earlier steps no longer
+   *   enclose it (`C`). A target-class property remains under its own step's relationship class
+   *   category when that relationship class is named. Declarations applied recursively on this
+   *   declaration's classes inherit the enclosing context, without this declaration's classes.
    *
-   * Properties without a property category always appear under the related class's category. A
-   * property's explicit category override takes precedence over both modes. The setting affects only
+   * A property's explicit category override takes precedence over both modes. The setting affects only
    * category placement — not property selection, values or cardinality.
    */
   propertyCategoryScope?: "relatedClass" | "parent";
@@ -155,6 +161,10 @@ export interface RelatedPropertiesDeclaration {
    * The callback receives the original target, including its instance IDs and filter. It must honor
    * the first step's `sourceClassName` (see `path`): a returned path starting at a base of it is
    * narrowed to it, and one starting at an unrelated class is rejected with an error.
+   *
+   * The callback fully replaces default discovery, including its exclusion of hidden target subclasses, so
+   * a returned path may end at a hidden class. When loading, each step reaches only instances of its class
+   * and subclasses that aren't hidden relative to it, the same as for discovered paths.
    */
   resolve?(props: {
     imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;

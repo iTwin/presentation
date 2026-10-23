@@ -114,7 +114,6 @@ async function createIModelInstanceLabelSelectClauseFactoryImpl(
   return innerFactory;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const CLASS_NAME_PresentationRules = "PresentationRules.Ruleset";
 
 async function loadOverrideRules(executor: ECSqlQueryExecutor): Promise<InstanceLabelOverride[]> {

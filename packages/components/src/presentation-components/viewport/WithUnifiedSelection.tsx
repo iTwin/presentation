@@ -20,7 +20,7 @@ import type { ViewportProps } from "@itwin/imodel-components-react";
  * @public
  * @deprecated in 5.3. This interface is empty.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// oxlint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ViewWithUnifiedSelectionProps {}
 
 const ViewportSelectionHandlerContext = createContext<ViewportSelectionHandler | undefined>(undefined);
@@ -61,6 +61,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
     useEffect(() => {
       if (selectionHandler) {
         selectionHandler.applyCurrentSelection();
+        // oxlint-disable-next-line react/set-state-in-effect
         setViewportSelectionHandler(selectionHandler);
         return;
       }
@@ -78,6 +79,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
       if (!viewportSelectionHandler) {
         return;
       }
+      // oxlint-disable-next-line react/immutability
       viewportSelectionHandler.imodel = imodel;
     }, [viewportSelectionHandler, imodel]);
 

@@ -34,6 +34,7 @@ import type { IPresentationDataProvider } from "./IPresentationDataProvider.js";
  * Properties for invalidating content cache.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export interface CacheInvalidationProps {
   /**
    * Invalidate content descriptor. Should be set when invalidating

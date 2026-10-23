@@ -88,10 +88,10 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
  * A data structure that represents a single hierarchy node.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNode {
   /** Checks whether the given node is a generic node */
   export function isGeneric<TNode extends { key: HierarchyNodeKey }>(

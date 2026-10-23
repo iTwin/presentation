@@ -7,7 +7,6 @@ import { NOOP_LOGGER } from "@itwin/presentation-shared";
 
 import type { ILogger } from "@itwin/presentation-shared";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 let g_logger: ILogger = NOOP_LOGGER;
 
 /**
