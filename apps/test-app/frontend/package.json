@@ -7,7 +7,8 @@
     "build": "tsc --noEmit",
     "build:app": "vite build",
     "clean": "rimraf build",
-    "lint": "eslint \"./src/**/*.{ts,tsx}\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.{ts,tsx}\"",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "devDependencies": {
@@ -26,7 +27,6 @@
     "@itwin/core-react": "catalog:appui",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core-dev",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/imodel-components-react": "catalog:appui",
     "@itwin/itwinui-icons-react": "catalog:itwinui",
     "@itwin/itwinui-react": "catalog:itwinui",
@@ -56,8 +56,6 @@
     "@typescript/native": "catalog:build-tools",
     "@vitejs/plugin-react": "catalog:build-tools",
     "classnames": "catalog:react",
-    "eslint": "catalog:build-tools",
-    "eslint-plugin-react": "catalog:build-tools",
     "fast-xml-parser": "catalog:miscellaneous",
     "immer": "^10.2.0",
     "react": "catalog:react",

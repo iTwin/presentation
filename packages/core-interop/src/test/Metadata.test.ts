@@ -756,7 +756,7 @@ describe("createECClassFromSchemaView", () => {
     const cls = ecSchema.getClass("EntityA");
     assert(cls !== undefined);
     expect(cls.getDerivedClassNames()).toEqual(["ClassSchema.EntityB", "NotLoadedSchema.EntityC"]);
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(mockContext.classHierarchyResolver.getDerivedClassNames).toHaveBeenCalledWith(
       "ClassSchema.EntityA",
       undefined,

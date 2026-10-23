@@ -29,7 +29,7 @@ import type { ElementProps } from "@itwin/core-common";
 import type { IModelConnection, ViewManager, ViewState3d } from "@itwin/core-frontend";
 import type { HiliteSet, SelectionChangeEventArgs, SelectionManager } from "@itwin/presentation-frontend";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 

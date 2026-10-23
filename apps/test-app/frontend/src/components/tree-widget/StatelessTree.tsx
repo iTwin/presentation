@@ -57,6 +57,7 @@ export function StatelessTreeV2({
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
     const schemaProvider = createECSchemaProvider(imodel);
+    // oxlint-disable-next-line react-hooks/set-state-in-effect
     setIModelAccess({
       imodelKey: imodel.key,
       ...schemaProvider,
@@ -125,7 +126,6 @@ function Tree({
       ];
     }, []),
     onPerformanceMeasured: useCallback((action, duration) => {
-      // eslint-disable-next-line no-console
       console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
     }, []),
   });

@@ -57,7 +57,7 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
   const stringValue = useAsyncValue(convertRecordToString(props.record));
   const valueElement = stringValue ?? props.context?.defaultValue;
 
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  // oxlint-disable-next-line @typescript-eslint/no-deprecated
   const deprecatedSelectionContext = useDeprecatedUnifiedSelectionContext();
   const selectionContext = useOptionalUnifiedSelectionContext();
 

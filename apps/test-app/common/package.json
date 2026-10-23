@@ -15,7 +15,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf lib build",
-    "lint": "eslint \"./src/**/*.ts\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.ts\"",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "devDependencies": {
@@ -23,10 +24,8 @@
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core-dev",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@typescript/native": "catalog:build-tools",
-    "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }

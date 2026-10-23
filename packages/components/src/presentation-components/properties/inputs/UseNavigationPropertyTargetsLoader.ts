@@ -161,13 +161,13 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
   };
   const items = await new Promise<Item[]>((resolve, reject) => {
     // note: `getContentIterator` may not be available in older versions of core
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (Presentation.presentation.getContentIterator
       ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
           mergeMap((result) => (result ? result.items : EMPTY)),
           toArray(),
         )
-      : // eslint-disable-next-line @typescript-eslint/no-deprecated
+      : // oxlint-disable-next-line @typescript-eslint/no-deprecated
         from(Presentation.presentation.getContent(requestProps)).pipe(
           map((content) => (content ? content.contentSet : [])),
         )

@@ -158,10 +158,10 @@ export type IModelHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
  * A key that uniquely identifies a node in a hierarchy level.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type HierarchyNodeKey = IModelHierarchyNodeKey | GenericNodeKey;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeKey {
   /** Checks whether the given node key is a generic node key. */
   export function isGeneric(key: HierarchyNodeKey): key is GenericNodeKey {

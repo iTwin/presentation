@@ -32,6 +32,7 @@ export interface TreeModelHierarchyNode {
 }
 
 /** @internal */
+// oxlint-disable-next-line no-redeclare
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
   idToNode: Map<string, TreeModelHierarchyNode>;

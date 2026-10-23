@@ -42,6 +42,7 @@ interface BaseField {
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export interface PropertyField extends BaseField {
   kind: "property";
   /**

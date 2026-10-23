@@ -18,7 +18,7 @@ import type { PropertyEditorAttributes } from "../editors/Common.js";
 import type { UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
 
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+// oxlint-disable-next-line @typescript-eslint/no-deprecated
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
   propertyRecord: PropertyRecord;
 }
@@ -29,17 +29,17 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
     const schemaMetadataContext = useSchemaMetadataContext();
 
     if (
-      /* eslint-disable-next-line @typescript-eslint/no-deprecated */
+      /* oxlint-disable-next-line @typescript-eslint/no-deprecated */
       (!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) ||
       !schemaMetadataContext
     ) {
       return <NumericPropertyInput {...props} ref={ref} />;
     }
-    /* eslint-disable-next-line @typescript-eslint/no-deprecated */
+    /* oxlint-disable-next-line @typescript-eslint/no-deprecated */
     const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
     assert(koqName !== undefined);
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
     const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number | undefined;
     return (
       <QuantityPropertyValueInput

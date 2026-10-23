@@ -1,0 +1,78 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "ignorePatterns": ["**/lib/**", "**/build/**"],
+  "rules": {
+    "import/no-duplicates": "error",
+    "no-shadow": ["error", { "hoist": "all", "allow": ["T", "args"] }],
+    "no-redeclare": "error",
+    "no-throw-literal": "error",
+    "typescript/no-deprecated": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/promise-function-async": "error",
+    "typescript/prefer-promise-reject-errors": "error",
+    "typescript/only-throw-error": "error",
+    "typescript/no-unnecessary-condition": ["error", { "allowConstantLoopConditions": "only-allowed-literals" }],
+    "typescript/explicit-member-accessibility": [
+      "error",
+      { "accessibility": "explicit", "overrides": { "constructors": "off" } }
+    ],
+    "typescript/no-empty-object-type": ["error", { "allowObjectTypes": "always" }]
+  },
+  "overrides": [
+    // Packages and apps that use React
+    {
+      "files": [
+        "packages/components/**",
+        "packages/content-react/**",
+        "packages/hierarchies-react/**",
+        "packages/unified-selection-react/**",
+        "apps/full-stack-tests/**",
+        "apps/test-app/frontend/**"
+      ],
+      "plugins": ["react"],
+      "rules": {
+        "react/exhaustive-deps": "error",
+        "react/rules-of-hooks": "error"
+      }
+    },
+    // React Compiler rules: only for packages and apps built with the React Compiler
+    // (`reactCompilerPreset` in their tsdown / Vite config), as these rules check code the compiler can optimize.
+    {
+      "files": ["packages/hierarchies-react/**", "apps/test-app/frontend/**"],
+      "plugins": ["react"],
+      "rules": {
+        "react/error-boundaries": "error",
+        "react/globals": "error",
+        "react/immutability": "error",
+        "react/incompatible-library": "error",
+        "react/preserve-manual-memoization": "error",
+        "react/purity": "error",
+        "react/refs": "error",
+        "react/set-state-in-effect": "error",
+        "react/set-state-in-render": "error",
+        "react/static-components": "error",
+        "react/unsupported-syntax": "error",
+        "react/use-memo": "error"
+      }
+    },
+    // Libraries shouldn't write to the console; apps may
+    {
+      "files": ["packages/**"],
+      "rules": {
+        "no-console": "error"
+      }
+    },
+    // Learning snippets are extracted into documentation, keep their imports as they are
+    {
+      "files": ["**/learning-snippets/**"],
+      "rules": {
+        "import/no-duplicates": "off",
+        "typescript/consistent-type-imports": "off"
+      }
+    }
+  ]
+}

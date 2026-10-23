@@ -31,10 +31,10 @@ type TypedPrimitiveValueSelectorProps = {
  * A union of prop types for selecting a value and its metadata in ECSQL query.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type TypedValueSelectClauseProps = TypedPrimitiveValue | TypedPrimitiveValueSelectorProps;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedValueSelectClauseProps {
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
     return "value" in props;

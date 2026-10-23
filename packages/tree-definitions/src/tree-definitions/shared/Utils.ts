@@ -176,6 +176,7 @@ export function groupingNodeDataFromChildren(
  * cache lookups.
  * @internal
  */
+// oxlint-disable-next-line no-redeclare
 export type ParentElementsPath = Array<{
   elementIds: Id64Array;
   /** Single category ID. Named plural for structural compatibility with `ElementPathSegment.categoryIds`. */
@@ -183,7 +184,6 @@ export type ParentElementsPath = Array<{
 }>;
 
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ParentElementsPath {
   export function getSingleLastParentId(path: ParentElementsPath): ElementId | undefined {
     const lastParentIds = ParentElementsPath.getLastParentIds(path);

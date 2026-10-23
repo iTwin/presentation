@@ -22,6 +22,7 @@ export default function ViewDefinitionSelector(props: ViewDefinitionSelectorProp
     Array<{ id: Id64String; class: string; label: string }> | undefined
   >();
   useEffect(() => {
+    // oxlint-disable-next-line react-hooks/set-state-in-effect
     setAvailableViewDefinitions([]);
     void MyAppFrontend.getViewDefinitions(props.imodel).then(setAvailableViewDefinitions);
   }, [props.imodel]);

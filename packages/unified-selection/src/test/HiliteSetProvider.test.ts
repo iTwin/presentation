@@ -40,7 +40,7 @@ describe("HiliteSetProvider", () => {
     async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
       rows: (TRow | Promise<TRow>)[],
     ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
-      // eslint-disable-next-line @typescript-eslint/await-thenable
+      // oxlint-disable-next-line @typescript-eslint/await-thenable
       for await (const row of rows) {
         yield row;
       }
@@ -52,7 +52,7 @@ describe("HiliteSetProvider", () => {
       elementKeys: (string | Promise<string>)[],
       functionalElementKeys: (string | Promise<string>)[] = [],
     ) {
-      // eslint-disable-next-line @typescript-eslint/promise-function-async
+      // oxlint-disable-next-line @typescript-eslint/promise-function-async
       const toQueryResponse = (k: string | Promise<string>) => {
         if (typeof k === "string") {
           return { ["ECInstanceId"]: k };

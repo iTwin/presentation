@@ -18,7 +18,14 @@ module.exports = {
     lint: {
       dependsOn: ["build"],
       outputs: [],
-      inputs: ["src/**", "eslint.config.cjs"],
+      inputs: ["src/**", "tsconfig*.json"],
+      environmentGlob: [".oxlintrc.json", "pnpm-workspace.yaml"],
+    },
+    "lint:no-internal": {
+      dependsOn: ["build"],
+      outputs: [],
+      inputs: ["src/**", "tsconfig*.json"],
+      environmentGlob: ["eslint.config.js", "pnpm-workspace.yaml"],
     },
     docs: {
       dependsOn: ["build"],

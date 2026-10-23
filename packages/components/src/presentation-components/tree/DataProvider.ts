@@ -2,7 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -290,7 +290,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         this._onHierarchyLimitExceeded,
       );
     },
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
   );
 
@@ -401,7 +401,7 @@ async function createNodesAndCountResult(
         }
       }
 
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.error(`Error creating nodes: ${e.toString()}`);
     }
     return createStatusNodeResult(parentNode, "tree.unknown-error");

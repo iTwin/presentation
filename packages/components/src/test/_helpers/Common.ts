@@ -199,7 +199,7 @@ export class TestErrorBoundary extends Component<TestErrorBoundaryProps, TestErr
     super(props);
     this.state = {};
   }
-  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  // oxlint-disable-next-line @typescript-eslint/explicit-member-accessibility
   static getDerivedStateFromError(): TestErrorBoundaryState {
     return { hasError: true };
   }

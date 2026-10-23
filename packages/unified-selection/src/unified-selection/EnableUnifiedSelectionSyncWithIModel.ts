@@ -101,9 +101,9 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * @deprecated in 1.5. Use `imodelHiliteSetProvider` prop instead.
    */
   cachingHiliteSetProvider?:
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     | CachingHiliteSetProvider
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
 }
 
@@ -151,7 +151,7 @@ export class IModelSelectionHandler {
         return [props.imodelHiliteSetProvider, () => {}];
       }
 
-      /* eslint-disable @typescript-eslint/no-deprecated */
+      /* oxlint-disable @typescript-eslint/no-deprecated */
       /* v8 ignore else -- @preserve */
       if (props.cachingHiliteSetProvider) {
         return [
@@ -164,7 +164,7 @@ export class IModelSelectionHandler {
           () => {},
         ];
       }
-      /* eslint-enable @typescript-eslint/no-deprecated */
+      /* oxlint-enable @typescript-eslint/no-deprecated */
 
       /* v8 ignore start */
       const internalProvider = createIModelHiliteSetProvider({

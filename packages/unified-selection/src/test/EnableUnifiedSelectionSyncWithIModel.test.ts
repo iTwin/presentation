@@ -61,6 +61,7 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
       imodelAccess: imodelAccess as unknown as EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"],
       selectionStorage: selectionStorage as unknown as SelectionStorage,
       activeScopeProvider: () => "element",
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       cachingHiliteSetProvider: hiliteSetProvider,
     });
 
@@ -230,7 +231,7 @@ describe("IModelSelectionHandler", () => {
     async function* createFakeQueryReader<TRow extends object = ECSqlQueryRow>(
       rows: (TRow | Promise<TRow>)[],
     ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
-      // eslint-disable-next-line @typescript-eslint/await-thenable
+      // oxlint-disable-next-line @typescript-eslint/await-thenable
       for await (const row of rows) {
         yield row;
       }
@@ -256,6 +257,7 @@ describe("IModelSelectionHandler", () => {
           storage: selectionStorageStub,
           changeType: selectionChangeType,
           imodelKey: "test",
+          // oxlint-disable-next-line @typescript-eslint/no-deprecated
           iModelKey: "test",
           source: "",
           level: 0,
@@ -522,6 +524,7 @@ describe("IModelSelectionHandler", () => {
       selectionStorageStub.replaceSelection.mockImplementation((args) => {
         selectionStorageStub.selectionChangeEvent.emit({
           imodelKey: imodelAccess.key,
+          // oxlint-disable-next-line @typescript-eslint/no-deprecated
           iModelKey: imodelAccess.key,
           changeType: "replace",
           source: "Tool",

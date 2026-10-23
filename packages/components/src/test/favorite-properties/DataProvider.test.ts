@@ -48,12 +48,12 @@ describe("FavoritePropertiesDataProvider", () => {
 
   describe("constructor", () => {
     it("[deprecated] sets `includeFieldsWithNoValues` to true", () => {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       expect(provider.includeFieldsWithNoValues).toBe(true);
     });
 
     it("[deprecated] sets `includeFieldsWithCompositeValues` to true", () => {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       expect(provider.includeFieldsWithCompositeValues).toBe(true);
     });
   });

@@ -69,7 +69,7 @@ describe("exportDiagnostics", () => {
       ctx,
       expect.any(Function),
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.end).toHaveBeenCalledExactlyOnceWith([13, 456000000]);
   });
 
@@ -128,7 +128,7 @@ describe("exportDiagnostics", () => {
       ctx,
       expect.any(Function),
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.addEvent).toHaveBeenCalledExactlyOnceWith(
       "test message",
       { devSeverity: "error", editorSeverity: "info", category: "test category" },
@@ -158,7 +158,7 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.setStatus).not.toHaveBeenCalled();
   });
 
@@ -190,7 +190,7 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.setStatus).toHaveBeenCalledExactlyOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
   });
 
@@ -229,7 +229,7 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.setStatus).toHaveBeenCalledExactlyOnceWith({ code: SpanStatusCode.ERROR, message: "dev error" });
   });
 
@@ -280,7 +280,7 @@ describe("exportDiagnostics", () => {
       },
       ctx,
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     expect(spanStub.addEvent).toHaveBeenCalledExactlyOnceWith(
       "test message",
       { category: "test category" },

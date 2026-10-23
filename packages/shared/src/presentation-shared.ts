@@ -23,7 +23,7 @@ export type { ArrayElement, DeepReadonly, OmitOverUnion, Props } from "./shared/
 export type {
   ArrayValueDescriptor,
   EC,
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  // oxlint-disable-next-line @typescript-eslint/no-deprecated
   ECClassHierarchyInspector,
   ECSchemaProvider,
   HiddenClassesTreeNode,
@@ -35,7 +35,7 @@ export type {
   ValueDescriptor,
 } from "./shared/Metadata.js";
 export {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  // oxlint-disable-next-line @typescript-eslint/no-deprecated
   createCachingECClassHierarchyInspector,
   getClass,
 } from "./shared/Metadata.js";

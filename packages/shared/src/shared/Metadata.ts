@@ -110,7 +110,7 @@ export function createCachingECClassHierarchyInspector(props: {
   schemaProvider: ECSchemaProvider;
   /** Optional cache size, describing the number of derived/base class combinations to store in cache. Defaults to `0`, which means no caching. */
   cacheSize?: number;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  // oxlint-disable-next-line @typescript-eslint/no-deprecated
 }): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
   function createCacheKey(derivedClassName: EC.FullClassNameDotNotation, baseClassName: EC.FullClassNameDotNotation) {

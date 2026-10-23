@@ -12,7 +12,7 @@ import type { AbstractTreeNodeLoaderWithProvider } from "@itwin/components-react
 import type { Node } from "@itwin/presentation-common";
 import type { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 describe("useControlledPresentationTreeFiltering", () => {
   const getFilteredNodePathsStub = vi.fn<IPresentationTreeDataProvider["getFilteredNodePaths"]>();

@@ -178,7 +178,7 @@ function useFormatterAndParser(
       IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser),
     ];
     // note: `IModelApp.formatsProvider` may not be available in older versions of core
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (IModelApp.formatsProvider) {
       listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
     }

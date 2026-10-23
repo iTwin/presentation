@@ -3,21 +3,19 @@
   "editor.tabSize": 2,
   "editor.trimAutoWhitespace": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "file",
+  // Formatting runs as a save code action below
+  "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit",
+    "source.fixAll.oxc": "always",
     "source.format.oxc": "always",
   },
+  "oxc.enable.oxlint": true,
+  "oxc.configPath": ".oxlintrc.json",
+  "oxc.lint.run": "onSave",
   "oxc.enable.oxfmt": true,
   "oxc.fmt.configPath": ".oxfmtrc.json",
-
-  "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
+  // ESLint is only used for `@itwin` rules through `pnpm lint:no-internal`, not in the editor
+  "eslint.enable": false,
 
   "files.associations": {
     ".nycrc": "json"

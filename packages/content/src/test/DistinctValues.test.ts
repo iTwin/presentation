@@ -141,7 +141,6 @@ describe("getDistinctFieldValues", () => {
 
   it("converts point row values from the reader's uppercase-coordinate shape to `Point2dValue`/`Point3dValue`", async () => {
     const point2dAccess = createMockIModelAccess({
-      // eslint-disable-next-line @typescript-eslint/naming-convention -- mirrors the reader's row shape
       rowsByMarker: new Map([["ClassA", [{ 0: { X: 1, Y: 2 } }, { 0: undefined }]]]),
     });
     const point2dField = makePropertyField({
@@ -155,7 +154,6 @@ describe("getDistinctFieldValues", () => {
     ]);
 
     const point3dAccess = createMockIModelAccess({
-      // eslint-disable-next-line @typescript-eslint/naming-convention -- mirrors the reader's row shape
       rowsByMarker: new Map([["ClassA", [{ 0: { X: 1, Y: 2, Z: 3 } }]]]),
     });
     const point3dField = makePropertyField({

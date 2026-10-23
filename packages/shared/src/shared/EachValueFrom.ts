@@ -65,13 +65,13 @@ export async function* eachValueFrom<T>(source: Subscribable<T>): AsyncIterableI
         yield values.pop() as T;
         continue;
       }
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (completed) {
         return;
       }
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (error) {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        // oxlint-disable-next-line @typescript-eslint/only-throw-error
         throw error;
       }
       const result = await new Promise<IteratorResult<T>>((resolve, reject) => {

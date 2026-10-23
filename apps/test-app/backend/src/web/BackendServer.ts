@@ -33,6 +33,5 @@ export async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
 
   // __PUBLISH_EXTRACT_END__
 
-  /* eslint-disable no-console */
   console.log(`Web backend for presentation-test-app listening on port ${port}`);
 }

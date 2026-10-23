@@ -30,7 +30,6 @@ vi.mock("@itwin/presentation-shared", async (importOriginal) => {
   const FIXED_JOINS = `INNER JOIN [TestSchema].[TestRel] [r0] ON [r0].[SourceECInstanceId] = [this].[ECInstanceId] INNER JOIN [TestSchema].[TestTarget] [s0] ON [s0].[ECInstanceId] = [r0].[TargetECInstanceId]`;
   return {
     ...actual,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     ECSql: {
       ...actual.ECSql,
       createRelationshipPathJoinInfo: async ({

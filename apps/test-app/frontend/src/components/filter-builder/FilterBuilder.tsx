@@ -58,6 +58,7 @@ function ContentFilterBuilder({ imodel }: { imodel: IModelConnection }) {
 
   useEffect(() => {
     let disposed = false;
+    // oxlint-disable-next-line react-hooks/set-state-in-effect
     setState({});
 
     void loadContent(imodel).then(

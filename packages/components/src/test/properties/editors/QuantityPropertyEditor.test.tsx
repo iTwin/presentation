@@ -30,6 +30,7 @@ const createRecord = ({
 }) => {
   return createTestPropertyRecord(
     { value: initialValue, displayValue: undefined },
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     { typename: StandardTypeNames.Double, kindOfQuantityName, quantityType, editor: { name: QuantityEditorName } },
   );
 };
