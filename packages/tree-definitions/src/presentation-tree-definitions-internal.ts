@@ -6,7 +6,7 @@
 export { CLASS_NAMES } from "./tree-definitions/shared/ClassNameDefinitions.js";
 export { createSharedIdsProvider } from "./tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 export { SearchLimitExceededError } from "./tree-definitions/shared/TreeErrors.js";
-export { getClassesByView, mergeWithDefaults } from "./tree-definitions/shared/Utils.js";
+export { getClassesByPerspective, mergeWithDefaults } from "./tree-definitions/shared/Utils.js";
 export { defaultHierarchyConfiguration as defaultCategoriesTreeHierarchyConfiguration } from "./tree-definitions/trees/categories-tree/CategoriesTreeDefinition.js";
 export { createCategoriesTreeIdsProvider } from "./tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 export { createClassificationsTreeIdsProvider } from "./tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";

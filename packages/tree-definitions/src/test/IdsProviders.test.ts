@@ -421,7 +421,11 @@ describe("ID provider data states", () => {
     {
       name: "categories",
       create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
-        const provider = createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, type: "3d" });
+        const provider = createCategoriesTreeIdsProvider({
+          imodelAccess: access,
+          sharedIdsProvider,
+          perspective: "3d",
+        });
         return { provider, load: async () => toPromise(provider.getAllDefinitionContainersAndCategories()) };
       },
     },

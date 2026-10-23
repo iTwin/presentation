@@ -50,7 +50,7 @@ interface CategoriesTreeHierarchyConfiguration {
 export interface CategoriesTreeIdsProvider {
     readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
     readonly config: Readonly<SharedIdsProvider["config"] & {
-        type: "2d" | "3d";
+        perspective: "2d" | "3d";
     }>;
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
@@ -90,6 +90,7 @@ export interface CategoriesTreeIdsProvider {
 interface CategoriesTreeIdsProviderProps {
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    perspective: "2d" | "3d";
     sharedIdsProvider: {
         config: SharedIdsProvider["config"];
         models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
@@ -97,8 +98,6 @@ interface CategoriesTreeIdsProviderProps {
         categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements">;
         subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
     };
-    // (undocumented)
-    type: "2d" | "3d";
 }
 
 // @beta
@@ -153,9 +152,8 @@ interface CategoriesTreeProps {
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
         imodelKey: string;
     };
+    perspective: "2d" | "3d";
     uniqueId?: GuidString;
-    // (undocumented)
-    viewType: "2d" | "3d";
 }
 
 // @beta

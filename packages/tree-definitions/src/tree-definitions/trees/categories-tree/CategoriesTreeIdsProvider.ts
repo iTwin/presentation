@@ -11,7 +11,12 @@ import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/D
 import { normalizeSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { fromWithRelease, toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getClassesByView, getOrCreate, validateIdsProviderConfig } from "../../shared/Utils.js";
+import {
+  createWhereClause,
+  getClassesByPerspective,
+  getOrCreate,
+  validateIdsProviderConfig,
+} from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
@@ -50,7 +55,7 @@ export interface CachedCategoryInfo {
 }
 
 /**
- * Query access and view type for a categories-tree ID provider.
+ * Query access and perspective for a categories-tree ID provider.
  * @beta
  */
 interface CategoriesTreeIdsProviderProps {
@@ -66,7 +71,11 @@ interface CategoriesTreeIdsProviderProps {
     >;
     subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
   };
-  type: "2d" | "3d";
+  /**
+   * Modeling perspective of the tree: `"3d"` for spatial categories, models, and elements, or `"2d"` for drawing
+   * categories and 2D models and elements.
+   */
+  perspective: "2d" | "3d";
 }
 
 type DefinitionContainersData = Map<DefinitionContainerId, DefinitionContainerInfo>;
@@ -87,8 +96,8 @@ export interface CategoriesTreeIdsProvider {
    * together with shared category and sub-category data, but not sub-modeled elements.
    */
   readonly state: IdsProviderDataState;
-  /** Readonly snapshot of the view type and element filters used to create this provider, including resolved defaults. */
-  readonly config: Readonly<SharedIdsProvider["config"] & { type: "2d" | "3d" }>;
+  /** Readonly snapshot of the perspective and element filters used to create this provider, including resolved defaults. */
+  readonly config: Readonly<SharedIdsProvider["config"] & { perspective: "2d" | "3d" }>;
   /** Shared model lookups and their loading state. */
   readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
   /** Shared sub-modeled element lookups and their loading state. */
@@ -150,23 +159,23 @@ export interface CategoriesTreeIdsProvider {
 }
 
 /**
- * Creates a cached category tree ID provider for the specified view type using the supplied shared provider.
+ * Creates a cached category tree ID provider for the specified perspective using the supplied shared provider.
  *
  * Element presence comes from the hidden-classes-aware base provider. Category and definition container identities
  * remain cached even when they have no visible elements, so callers can include empty categories.
  *
  * Recreate it together with its shared provider after relevant iModel or configuration changes.
- * @throws An error if the shared provider's element class does not match the view type.
+ * @throws An error if the shared provider's element class does not match the perspective.
  * @beta
  */
 export function createCategoriesTreeIdsProvider({
   imodelAccess,
-  type,
+  perspective,
   sharedIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
   const config = createCategoriesTreeIdsProviderConfig({
-    type,
-    elementClassName: getClassesByView(type).elementClass,
+    perspective,
+    elementClassName: getClassesByPerspective(perspective).elementClass,
     excludedElementClassNames: sharedIdsProvider.config.excludedElementClassNames,
   });
   validateIdsProviderConfig(
@@ -183,7 +192,7 @@ export function createCategoriesTreeIdsProvider({
     DefinitionContainerId,
     Observable<CategoriesTreeSearchPath>
   > = new Map();
-  const { categoryClass } = getClassesByView(type);
+  const { categoryClass } = getClassesByPerspective(perspective);
   const defContainersDataState = new DataStateTracker();
   const categoriesDataState = new DataStateTracker();
   const componentId: GuidString = Guid.createValue();
@@ -636,7 +645,7 @@ export function createCategoriesTreeIdsProvider({
 
 /** @internal */
 export function createCategoriesTreeIdsProviderConfig(config: CategoriesTreeIdsProvider["config"]) {
-  return { type: config.type, ...normalizeSharedIdsProviderConfig(config) };
+  return { perspective: config.perspective, ...normalizeSharedIdsProviderConfig(config) };
 }
 
 function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], includeEmpty: boolean | undefined): T[] {

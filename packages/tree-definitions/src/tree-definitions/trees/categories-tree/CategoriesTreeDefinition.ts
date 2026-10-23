@@ -38,7 +38,7 @@ import {
   createExcludedClassesClause,
   createIdsSelector,
   createWhereClause,
-  getClassesByView,
+  getClassesByPerspective,
   getOptimalBatchSize,
   getOrCreate,
   groupingNodeDataFromChildren,
@@ -79,7 +79,7 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 interface CategoriesTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: CategoriesTreeIdsProvider;
-  viewType: "2d" | "3d";
+  perspective: "2d" | "3d";
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
   uniqueId?: GuidString;
 }
@@ -235,7 +235,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
       defaults: defaultHierarchyConfiguration,
       overrides: props.hierarchyConfig,
     });
-    const { categoryClass, elementClass, modelClass } = getClassesByView(props.viewType);
+    const { categoryClass, elementClass, modelClass } = getClassesByPerspective(props.perspective);
     this.#categoryClass = categoryClass;
     this.#categoryElementClass = elementClass;
     this.#categoryModelClass = modelClass;
@@ -1439,9 +1439,18 @@ function createInstanceKeyPathsFromInstanceLabel(
     componentName: string;
   },
 ): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
-  const { idsProvider, label, viewType, labelsFactory, limit, imodelAccess, uniqueId, componentName, hierarchyConfig } =
-    props;
-  const { categoryClass, elementClass } = getClassesByView(viewType);
+  const {
+    idsProvider,
+    label,
+    perspective,
+    labelsFactory,
+    limit,
+    imodelAccess,
+    uniqueId,
+    componentName,
+    hierarchyConfig,
+  } = props;
+  const { categoryClass, elementClass } = getClassesByPerspective(perspective);
 
   const adjustedLabel = label.replace(/[%_\\]/g, "\\$&");
 
@@ -1718,7 +1727,7 @@ function createSearchPathsForDifferentTypes(
             uniqueId,
             componentName,
             idsProvider,
-            viewType: props.viewType,
+            perspective: props.perspective,
             elements: props.hierarchyConfig.elements.nodes,
             excludedElementClassNames:
               props.hierarchyConfig.elements.nodes === "include"
@@ -1739,7 +1748,7 @@ function createSearchPathsForDifferentTypes(
                     createGeometricElementInstanceKeyPaths({
                       imodelAccess,
                       idsProvider,
-                      viewType: props.viewType,
+                      perspective: props.perspective,
                       targetItems: block,
                       chunkIndex,
                       uniqueId,
@@ -1762,7 +1771,7 @@ function createSearchPathsForDifferentTypes(
 export function createGeometricElementInstanceKeyPaths(props: {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: CategoriesTreeIdsProvider;
-  viewType: "2d" | "3d";
+  perspective: "2d" | "3d";
   targetItems: Id64Array;
   uniqueId: GuidString;
   componentName: string;
@@ -1777,10 +1786,10 @@ export function createGeometricElementInstanceKeyPaths(props: {
     componentName,
     idsProvider,
     imodelAccess,
-    viewType,
+    perspective,
     excludedElementClassNames,
   } = props;
-  const { categoryClass, elementClass, modelClass } = getClassesByView(viewType);
+  const { categoryClass, elementClass, modelClass } = getClassesByPerspective(perspective);
   if (targetItems.length === 0) {
     return EMPTY;
   }
@@ -1900,7 +1909,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
 export function createCategoriesSearchPaths(props: {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: CategoriesTreeIdsProvider;
-  viewType: "2d" | "3d";
+  perspective: "2d" | "3d";
   targetCategoryIds: Id64Array;
   uniqueId: GuidString;
   componentName: string;
@@ -1908,9 +1917,16 @@ export function createCategoriesSearchPaths(props: {
   excludedElementClassNames?: Array<EC.FullClassNameDotNotation>;
 }): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
   const separator = ";";
-  const { targetCategoryIds, uniqueId, componentName, idsProvider, imodelAccess, viewType, excludedElementClassNames } =
-    props;
-  const { categoryClass, elementClass, modelClass } = getClassesByView(viewType);
+  const {
+    targetCategoryIds,
+    uniqueId,
+    componentName,
+    idsProvider,
+    imodelAccess,
+    perspective,
+    excludedElementClassNames,
+  } = props;
+  const { categoryClass, elementClass, modelClass } = getClassesByPerspective(perspective);
   if (targetCategoryIds.length === 0) {
     return EMPTY;
   }

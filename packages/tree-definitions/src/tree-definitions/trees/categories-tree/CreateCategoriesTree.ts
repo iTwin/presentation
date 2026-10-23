@@ -5,7 +5,7 @@
 
 import { Guid } from "@itwin/core-bentley";
 import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
-import { getClassesByView, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
+import { getClassesByPerspective, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { CategoriesTreeDefinition, defaultHierarchyConfiguration } from "./CategoriesTreeDefinition.js";
 import { createCategoriesTreeIdsProvider, createCategoriesTreeIdsProviderConfig } from "./CategoriesTreeIdsProvider.js";
 
@@ -16,18 +16,22 @@ import type { CategoriesTreeHierarchyConfiguration, CategoriesTreeSearchOptions 
 import type { CategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
 
 /**
- * iModel access, ID provider, view type, and configuration for a categories hierarchy.
+ * iModel access, ID provider, perspective, and configuration for a categories hierarchy.
  * @beta
  */
 interface CategoriesTreeProps {
   /** Schema and query access for the iModel used by the hierarchy definition and searches. */
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
   /**
-   * ID provider for the iModel accessed through `imodelAccess`, with matching view type and element filters.
+   * ID provider for the iModel accessed through `imodelAccess`, with matching perspective and element filters.
    * Created internally when omitted. Throws if its configuration does not match the tree configuration.
    */
   idsProvider?: CategoriesTreeIdsProvider;
-  viewType: "2d" | "3d";
+  /**
+   * Modeling perspective of the tree: `"3d"` for spatial categories, models, and elements, or `"2d"` for drawing
+   * categories and 2D models and elements.
+   */
+  perspective: "2d" | "3d";
   /** Hierarchy options. Omitted properties use the documented defaults. */
   hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
@@ -58,8 +62,8 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     overrides: props.hierarchyConfig,
   });
   const idsProviderConfig = createCategoriesTreeIdsProviderConfig({
-    type: props.viewType,
-    elementClassName: getClassesByView(props.viewType).elementClass,
+    perspective: props.perspective,
+    elementClassName: getClassesByPerspective(props.perspective).elementClass,
     excludedElementClassNames:
       hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
   });
@@ -73,7 +77,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     props.idsProvider ??
     createCategoriesTreeIdsProvider({
       imodelAccess: props.imodelAccess,
-      type: props.viewType,
+      perspective: props.perspective,
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess: props.imodelAccess, ...idsProviderConfig }),
     });
   validateIdsProviderConfig(
@@ -84,7 +88,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
   const uniqueId = props.uniqueId ?? Guid.createValue();
   const hierarchyDefinition: HierarchyDefinition = new CategoriesTreeDefinition({
     imodelAccess: props.imodelAccess,
-    viewType: props.viewType,
+    perspective: props.perspective,
     hierarchyConfig,
     idsProvider,
     uniqueId,
@@ -99,7 +103,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) =>
       CategoriesTreeDefinition.createInstanceKeyPaths({
         ...searchProps,
-        viewType: props.viewType,
+        perspective: props.perspective,
         hierarchyConfig,
         idsProvider,
         uniqueId,
@@ -112,7 +116,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     createSearchTree: async (searchProps: CategoriesTreeSearchProps & { revealTargets?: boolean }) =>
       CategoriesTreeDefinition.createSearchTree({
         ...searchProps,
-        viewType: props.viewType,
+        perspective: props.perspective,
         hierarchyConfig,
         idsProvider,
         uniqueId,

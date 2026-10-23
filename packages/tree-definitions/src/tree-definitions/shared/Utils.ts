@@ -130,8 +130,8 @@ export function parseIdsSelectorResult(selectorResult: any): Id64Array {
 }
 
 /** @internal */
-export function getClassesByView(viewType: "2d" | "3d") {
-  return viewType === "2d"
+export function getClassesByPerspective(perspective: "2d" | "3d") {
+  return perspective === "2d"
     ? ({
         categoryClass: CLASS_NAMES.DrawingCategory,
         elementClass: CLASS_NAMES.GeometricElement2d,

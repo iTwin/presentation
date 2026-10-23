@@ -26,57 +26,71 @@ function createAccess() {
 describe("categories provider configuration", () => {
   it.each<{
     name: string;
-    providerType: "2d" | "3d";
-    treeType: "2d" | "3d";
+    providerPerspective: "2d" | "3d";
+    treePerspective: "2d" | "3d";
     providerExclusions?: EC.FullClassNameDotNotation[];
     treeExclusions?: EC.FullClassNameDotNotation[];
     shouldThrow: boolean;
   }>([
-    { name: "accepts matching 2d views", providerType: "2d", treeType: "2d", shouldThrow: false },
-    { name: "accepts matching 3d views", providerType: "3d", treeType: "3d", shouldThrow: false },
-    { name: "rejects a 2d provider for a 3d tree", providerType: "2d", treeType: "3d", shouldThrow: true },
-    { name: "rejects a 3d provider for a 2d tree", providerType: "3d", treeType: "2d", shouldThrow: true },
+    { name: "accepts matching 2d perspectives", providerPerspective: "2d", treePerspective: "2d", shouldThrow: false },
+    { name: "accepts matching 3d perspectives", providerPerspective: "3d", treePerspective: "3d", shouldThrow: false },
+    {
+      name: "rejects a 2d provider for a 3d tree",
+      providerPerspective: "2d",
+      treePerspective: "3d",
+      shouldThrow: true,
+    },
+    {
+      name: "rejects a 3d provider for a 2d tree",
+      providerPerspective: "3d",
+      treePerspective: "2d",
+      shouldThrow: true,
+    },
     {
       name: "rejects exclusions present only in the tree",
-      providerType: "3d",
-      treeType: "3d",
+      providerPerspective: "3d",
+      treePerspective: "3d",
       treeExclusions: ["Generic.PhysicalObject"],
       shouldThrow: true,
     },
     {
       name: "rejects exclusions present only in the provider",
-      providerType: "3d",
-      treeType: "3d",
+      providerPerspective: "3d",
+      treePerspective: "3d",
       providerExclusions: ["Generic.PhysicalObject"],
       shouldThrow: true,
     },
     {
       name: "accepts omitted and empty exclusions",
-      providerType: "3d",
-      treeType: "3d",
+      providerPerspective: "3d",
+      treePerspective: "3d",
       treeExclusions: [],
       shouldThrow: false,
     },
     {
       name: "accepts reordered and duplicated exclusions",
-      providerType: "3d",
-      treeType: "3d",
+      providerPerspective: "3d",
+      treePerspective: "3d",
       providerExclusions: ["Generic.PhysicalObject", "BisCore.PhysicalElement", "Generic.PhysicalObject"],
       treeExclusions: ["BisCore.PhysicalElement", "Generic.PhysicalObject"],
       shouldThrow: false,
     },
-  ])("$name", ({ providerType, treeType, providerExclusions, treeExclusions, shouldThrow }) => {
+  ])("$name", ({ providerPerspective, treePerspective, providerExclusions, treeExclusions, shouldThrow }) => {
     const access = createAccess();
     const sharedIdsProvider = createSharedIdsProvider({
       imodelAccess: access,
-      elementClassName: providerType === "2d" ? "BisCore.GeometricElement2d" : "BisCore.GeometricElement3d",
+      elementClassName: providerPerspective === "2d" ? "BisCore.GeometricElement2d" : "BisCore.GeometricElement3d",
       excludedElementClassNames: providerExclusions,
     });
-    const provider = createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, type: providerType });
+    const provider = createCategoriesTreeIdsProvider({
+      imodelAccess: access,
+      sharedIdsProvider,
+      perspective: providerPerspective,
+    });
     const createTree = () =>
       createCategoriesTree({
         imodelAccess: access,
-        viewType: treeType,
+        perspective: treePerspective,
         hierarchyConfig: { elements: { nodes: "include", excludedClasses: treeExclusions } },
         idsProvider: provider,
       });
@@ -91,12 +105,12 @@ describe("categories provider configuration", () => {
     { elementClassName: "BisCore.GeometricElement3d", shouldThrow: false },
     { elementClassName: "BisCore.GeometricElement2d", shouldThrow: true },
   ])(
-    "shared provider class $elementClassName with a 3d view (throws: $shouldThrow)",
+    "shared provider class $elementClassName with a 3d perspective (throws: $shouldThrow)",
     ({ elementClassName, shouldThrow }) => {
       const access = createAccess();
       const sharedIdsProvider = createSharedIdsProvider({ imodelAccess: access, elementClassName });
       const createProvider = () =>
-        createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, type: "3d" });
+        createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, perspective: "3d" });
       if (shouldThrow) {
         expect(createProvider).toThrow("ID provider configuration does not match");
       } else {
