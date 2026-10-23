@@ -59,6 +59,25 @@ function createBase(imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor)
   return createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" });
 }
 
+function createModelsProviderStub(modelIds: string[]) {
+  return {
+    state: "loaded" as const,
+    getData: () =>
+      of({
+        planProjectionModels: new Set<string>(),
+        modelsCategoriesInfo: new Map(
+          modelIds.map((id) => [
+            id,
+            { categoriesOfTopMostNonExcludedElements: new Set<string>(), hasNonExcludedElements: true },
+          ]),
+        ),
+        categoriesContainingNonExcludedElements: new Set<string>(),
+        categoryModelsInfo: new Map(),
+        allCategories: new Set<string>(),
+      }),
+  };
+}
+
 function createGate() {
   let resolve!: () => void;
   let reject!: (reason: Error) => void;
@@ -193,7 +212,7 @@ describe("ID provider data states", () => {
       queryExecutor,
       componentId: "00000000-0000-0000-0000-000000000001",
       elementClassName: "BisCore.GeometricElement3d",
-      nonEmptyModelIds: new Set(["0x10", "0x20"]),
+      elementModelCategoriesProvider: createModelsProviderStub(["0x10", "0x20"]),
     });
     const cached = provider.getData();
 
@@ -203,6 +222,20 @@ describe("ID provider data states", () => {
 
     expect(attempts).toBe(2);
     expect([...result.allSubModels]).toEqual(["0x20"]);
+  });
+
+  it("doesn't query sub-modeled elements when there are no models with elements", async () => {
+    const queryExecutor = { createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>() };
+    const provider = new SubModeledElementsProvider({
+      queryExecutor,
+      componentId: "00000000-0000-0000-0000-000000000001",
+      elementClassName: "BisCore.GeometricElement3d",
+      elementModelCategoriesProvider: createModelsProviderStub([]),
+    });
+
+    expect(await firstValueFrom(provider.getData())).toEqual({ allSubModels: new Set() });
+    expect(provider.state).toBe("loaded");
+    expect(queryExecutor.createQueryReader).not.toHaveBeenCalled();
   });
 
   describe.each(baseDatasets)("$group", ({ group, load }) => {

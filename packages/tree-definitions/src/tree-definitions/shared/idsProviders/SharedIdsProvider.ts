@@ -7,9 +7,8 @@ import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay }
 import { Guid } from "@itwin/core-bentley";
 import { fromWithRelease } from "../Rxjs.js";
 import { getOrCreate } from "../Utils.js";
-import { combineDataStates, DataStateTracker } from "./DataStateTracker.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
-import { getLoadDataOverride, loadData } from "./LoadedData.js";
+import { getLoadDataOverride } from "./LoadedData.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
 import { SubModeledElementsProvider } from "./SubModeledElementsProvider.js";
 
@@ -230,7 +229,6 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
     componentId,
     loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadSubCategories"),
   });
-  let subModeledElementsData: Observable<SubModeledElementsData> | undefined;
   const elementModelCategoriesProvider = new ElementModelCategoriesProvider({
     imodelAccess,
     componentId,
@@ -238,7 +236,13 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
     excludedElementClassNames,
     loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadElementModelCategories"),
   });
-  const subModeledElementsState = new DataStateTracker();
+  const subModeledElementsProvider = new SubModeledElementsProvider({
+    queryExecutor: imodelAccess,
+    componentId,
+    elementClassName,
+    elementModelCategoriesProvider,
+    loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadSubModeledElements"),
+  });
   let subModelsWithNonExcludedElements: Observable<Set<ModelId>> | undefined;
 
   function getAllModels(): Observable<ReadonlySet<ModelId>> {
@@ -246,29 +250,12 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
       .getData()
       .pipe(map(({ modelsCategoriesInfo }) => new Set(modelsCategoriesInfo.keys())));
   }
-  function getSubModeledElementsData(): Observable<SubModeledElementsData> {
-    subModeledElementsData ??= loadData({
-      loadDataOverride: getLoadDataOverride(loadDataOverrides, "loadSubModeledElements"),
-      loadDefault: () =>
-        getAllModels().pipe(
-          mergeMap((allModels) =>
-            new SubModeledElementsProvider({
-              queryExecutor: imodelAccess,
-              componentId,
-              elementClassName,
-              nonEmptyModelIds: allModels,
-            }).getData(),
-          ),
-        ),
-    }).pipe(subModeledElementsState.track(), shareReplay());
-    return subModeledElementsData;
-  }
 
   function getAllSubModeledElements(props?: { excludeIfOnlyExcludedClasses?: boolean }): Observable<Id64Set> {
     if (!props?.excludeIfOnlyExcludedClasses) {
-      return getSubModeledElementsData().pipe(map(({ allSubModels }) => allSubModels));
+      return subModeledElementsProvider.getData().pipe(map(({ allSubModels }) => allSubModels));
     }
-    subModelsWithNonExcludedElements ??= getSubModeledElementsData().pipe(
+    subModelsWithNonExcludedElements ??= subModeledElementsProvider.getData().pipe(
       mergeMap(({ allSubModels }) => {
         if (allSubModels.size === 0) {
           return of(allSubModels);
@@ -338,10 +325,10 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
     },
     subModeledElements: {
       get state(): IdsProviderDataState {
-        return combineDataStates([subModeledElementsState.state, elementModelCategoriesProvider.state]);
+        return subModeledElementsProvider.state;
       },
       getData: (): Subscribable<SubModeledElementsData> => {
-        return getSubModeledElementsData();
+        return subModeledElementsProvider.getData();
       },
       getAllSubModeledElements: (props?: { excludeIfOnlyExcludedClasses?: boolean }): Subscribable<Set<ElementId>> => {
         return getAllSubModeledElements(props);

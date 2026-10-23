@@ -3,20 +3,36 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, map, reduce, shareReplay } from "rxjs";
+import { defer, EMPTY, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
+import { combineDataStates, DataStateTracker } from "./DataStateTracker.js";
+import { loadData } from "./LoadedData.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ElementId, ModelId } from "../Types.js";
+import type { ElementModelCategoriesProviderData } from "./ElementModelCategoriesProvider.js";
+import type { LoadedData } from "./LoadedData.js";
+import type { IdsProviderDataState, LoadDataOverrides } from "./SharedIdsProvider.js";
 
-interface SubModeledElementsProviderProps {
+/** Loader replacing the default iModel query of `SubModeledElementsProvider`. */
+type Loader = LoadDataOverrides["loadSubModeledElements"];
+
+interface SubModeledElementsProviderProps<TLoader extends Loader> {
   queryExecutor: LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: string;
-  nonEmptyModelIds: ReadonlySet<ModelId>;
+  /** Provides models containing elements. Used only when `loadDataOverride` isn't provided. */
+  elementModelCategoriesProvider: {
+    readonly state: IdsProviderDataState;
+    getData(): Observable<ElementModelCategoriesProviderData>;
+  };
+  loadDataOverride?: TLoader;
 }
+
+/** Data produced by `SubModeledElementsProvider` with the given loader. */
+type Data<TLoader extends Loader> = LoadedData<TLoader, SubModeledElementsProviderData>;
 
 /**
  * Sub-modeled element data used by `SharedIdsProvider.subModeledElements`.
@@ -28,25 +44,27 @@ export interface SubModeledElementsProviderData {
 }
 
 /** @internal */
-export class SubModeledElementsProvider {
+export class SubModeledElementsProvider<TLoader extends Loader = undefined> {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: string;
-  #nonEmptyModelIds: ReadonlySet<ModelId>;
-  // ElementId here is also a ModelId, since those elements are sub models.
-  #cachedData: Observable<SubModeledElementsProviderData> | undefined;
+  #elementModelCategoriesProvider: SubModeledElementsProviderProps<TLoader>["elementModelCategoriesProvider"];
+  #cachedData: Observable<Data<TLoader>> | undefined;
+  #state = new DataStateTracker();
+  #loadDataOverride?: TLoader;
 
-  constructor(props: SubModeledElementsProviderProps) {
+  constructor(props: SubModeledElementsProviderProps<TLoader>) {
     this.#queryExecutor = props.queryExecutor;
     this.#componentId = props.componentId;
     this.#elementClassName = props.elementClassName;
     this.#componentName = "SubModeledElementsProvider";
-    this.#nonEmptyModelIds = props.nonEmptyModelIds;
+    this.#elementModelCategoriesProvider = props.elementModelCategoriesProvider;
+    this.#loadDataOverride = props.loadDataOverride;
   }
 
-  private querySubModeledElements(): Observable<ElementId> {
-    if (this.#nonEmptyModelIds.size === 0) {
+  private querySubModeledElements(nonEmptyModelIds: ReadonlySet<ModelId>): Observable<ElementId> {
+    if (nonEmptyModelIds.size === 0) {
       return EMPTY;
     }
     return defer(() => {
@@ -56,7 +74,7 @@ export class SubModeledElementsProvider {
         JOIN IdSet(?) modelIdSet ON modelIdSet.id = me.ECInstanceId
       `;
       return this.#queryExecutor.createQueryReader(
-        { ecsql: query, bindings: [{ type: "idset", value: this.#nonEmptyModelIds }] },
+        { ecsql: query, bindings: [{ type: "idset", value: nonEmptyModelIds }] },
         {
           rowFormat: "ECSqlPropertyNames",
           limit: "unbounded",
@@ -69,18 +87,32 @@ export class SubModeledElementsProvider {
     );
   }
 
-  public getData(): Observable<SubModeledElementsProviderData> {
-    this.#cachedData ??= defer(() =>
-      this.querySubModeledElements().pipe(
-        reduce(
-          (acc, subModeledElementId) => {
-            acc.allSubModels.add(subModeledElementId);
-            return acc;
-          },
-          { allSubModels: new Set<ElementId>() },
-        ),
+  public get state(): IdsProviderDataState {
+    if (this.#loadDataOverride) {
+      return this.#state.state;
+    }
+    // Default loading depends on models data, so its failures also make this data failed.
+    return combineDataStates([this.#state.state, this.#elementModelCategoriesProvider.state]);
+  }
+
+  private loadData(): Observable<SubModeledElementsProviderData> {
+    return this.#elementModelCategoriesProvider.getData().pipe(
+      mergeMap(({ modelsCategoriesInfo }) => this.querySubModeledElements(new Set(modelsCategoriesInfo.keys()))),
+      reduce(
+        (acc, subModeledElementId) => {
+          acc.allSubModels.add(subModeledElementId);
+          return acc;
+        },
+        { allSubModels: new Set<ElementId>() },
       ),
-    ).pipe(shareReplay());
+    );
+  }
+
+  public getData(): Observable<Data<TLoader>> {
+    this.#cachedData ??= loadData({
+      loadDataOverride: this.#loadDataOverride,
+      loadDefault: () => this.loadData(),
+    }).pipe(this.#state.track(), shareReplay());
     return this.#cachedData;
   }
 }
