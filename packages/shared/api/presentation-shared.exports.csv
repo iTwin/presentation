@@ -59,6 +59,7 @@ public;type;RelationshipPath
 public;function;releaseMainThread
 public;interface;StructValue
 public;interface;StructValueDescriptor
+public;interface;Subscribable
 public;function;trimWhitespace
 public;function;trimWhitespace
 public;type;TypedPrimitiveValue

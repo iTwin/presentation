@@ -99,8 +99,9 @@ describe("Classifications tree", () => {
           });
         });
         const { imodelConnection, ...keys } = buildIModelResult;
+        const imodelAccess = createIModelAccess(imodelConnection);
         const { createInstanceKeyPaths } = createClassificationsTree({
-          imodelAccess: createIModelAccess(imodelConnection),
+          imodelAccess,
           hierarchyConfig: defaultHierarchyConfiguration,
         });
         const paths = await collect(
@@ -186,8 +187,9 @@ describe("Classifications tree", () => {
         });
       });
       const { imodelConnection, ...keys } = buildIModelResult;
+      const imodelAccess = createIModelAccess(imodelConnection);
       const { createInstanceKeyPaths } = createClassificationsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
+        imodelAccess,
         hierarchyConfig: defaultHierarchyConfiguration,
       });
       expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
@@ -281,7 +283,7 @@ describe("Classifications tree", () => {
         await setup[Symbol.asyncDispose]();
       });
 
-      async function search(props: Parameters<ReturnType<typeof createClassificationsTree>["createSearchTree"]>[0]) {
+      async function search(props: { label: string; limit?: number } | { targetItems: InstanceKey[] }) {
         return createClassificationsTree({
           imodelAccess: createIModelAccess(setup.imodelConnection),
           hierarchyConfig: defaultHierarchyConfiguration,
@@ -435,12 +437,12 @@ describe("Classifications tree", () => {
       it.each([undefined, "classifications-tree-test"])("shares factory inputs with unique ID %s", async (uniqueId) => {
         const imodelAccess = createIModelAccess(imodelConnection);
         const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-        const { definition, createInstanceKeyPaths, createSearchTree } = createClassificationsTree({
+        const { hierarchyDefinition, createInstanceKeyPaths, createSearchTree } = createClassificationsTree({
           imodelAccess,
           hierarchyConfig: defaultHierarchyConfiguration,
           uniqueId,
         });
-        using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
+        using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
         const roots = await collect(provider.getNodes({ parentNode: undefined }));
         expect(roots).toHaveLength(1);
         expect(roots[0].key).toMatchObject({ type: "instances", instanceKeys: [keys.table] });
@@ -482,8 +484,9 @@ describe("Classifications tree", () => {
         { limit: 103, expectedError: undefined },
         { limit: "unbounded" as const, expectedError: undefined },
       ])("honors label search limit $limit with 103 matches", async ({ limit, expectedError }) => {
+        const imodelAccess = createIModelAccess(imodelConnection);
         const { createSearchTree } = createClassificationsTree({
-          imodelAccess: createIModelAccess(imodelConnection),
+          imodelAccess,
           hierarchyConfig: defaultHierarchyConfiguration,
         });
         if (expectedError) {
@@ -567,7 +570,7 @@ describe("Classifications tree", () => {
           imodelAccess: createIModelAccess(imodelConnection),
           hierarchyConfig: defaultHierarchyConfiguration,
         });
-        expect(await collect(createInstanceKeyPaths(search))).toEqual([
+        expect(await collect(createInstanceKeyPaths({ ...search }))).toEqual([
           {
             path: [keys.table, keys.classification, { id: keys.element.id, className: CLASS_NAMES.GeometricElement3d }],
             target: keys.element.id,
@@ -1468,8 +1471,9 @@ describe("Classifications tree", () => {
         }),
       );
       const { imodelConnection, ...ids } = buildIModelResult;
+      const imodelAccess = createIModelAccess(imodelConnection);
       const { createSearchTree } = createClassificationsTree({
-        imodelAccess: createIModelAccess(imodelConnection),
+        imodelAccess,
         hierarchyConfig: defaultHierarchyConfiguration,
       });
 

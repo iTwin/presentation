@@ -3,13 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { defer } from "rxjs";
 import { assert, Id64 } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "@itwin/presentation-hierarchies";
 import { CLASS_NAMES } from "./ClassNameDefinitions.js";
+import { toObservable } from "./Rxjs.js";
 
+import type { Observable } from "rxjs";
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
-import type { EC, ECSql } from "@itwin/presentation-shared";
-import type { CategoryId, ElementId } from "./Types.js";
+import type { EC, ECSql, Subscribable } from "@itwin/presentation-shared";
 
 /** @internal */
 export function setDifference<T>(lhs: ReadonlySet<T>, rhs: ReadonlySet<T>): Set<T> {
@@ -167,48 +169,6 @@ export function groupingNodeDataFromChildren(
   return { hasSearchTargetAncestor: false, hasDirectNonSearchTargets: false };
 }
 
-/**
- * Path describing a chain of parent elements, where each segment is one category + its elements.
- *
- * Structurally compatible with `ElementPathSegment[]` — can be spread directly into it.
- * The difference: this type uses exact single values (`Id64String`, `Id64Array`) because each
- * segment is known precisely, while `ElementPathSegment` uses `Id64Arg` to allow multi-value
- * cache lookups.
- * @internal
- */
-export type ParentElementsPath = Array<{
-  elementIds: Id64Array;
-  /** Single category ID. Named plural for structural compatibility with `ElementPathSegment.categoryIds`. */
-  categoryIds: Id64String;
-}>;
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace ParentElementsPath {
-  export function getSingleLastParentId(path: ParentElementsPath): ElementId | undefined {
-    const lastParentIds = ParentElementsPath.getLastParentIds(path);
-    assert(
-      () => lastParentIds === undefined || lastParentIds.length === 1,
-      `Expected exactly one parent id at end of path, got ${lastParentIds?.length ?? 0}. Path: ${JSON.stringify(path)}`,
-    );
-    return lastParentIds?.[0];
-  }
-  export function getLastParentIds(path: ParentElementsPath): Id64Array | undefined {
-    return path.length > 0 ? path[path.length - 1].elementIds : undefined;
-  }
-  export function appendToPath({
-    path,
-    ids,
-    categoryId,
-  }: {
-    path: ParentElementsPath;
-    ids: Id64Arg;
-    categoryId: CategoryId;
-  }): ParentElementsPath {
-    return [...path, { elementIds: getId64Array(ids), categoryIds: categoryId }];
-  }
-}
-
 /** @internal */
 export function getOrCreate<TKey, TValue>({
   map,
@@ -309,6 +269,13 @@ type DeepOptional<T> = T extends (...args: any[]) => any
       : T;
 
 /** @internal */
+export function validateIdsProviderConfig(actual: unknown, expected: unknown, treeName: string): void {
+  if (stableStringify(actual) !== stableStringify(expected)) {
+    throw new Error(`${treeName} ID provider configuration does not match the tree configuration.`);
+  }
+}
+
+/** @internal */
 export function stableStringify(value: unknown): string {
   if (value === undefined) {
     return "undefined";
@@ -334,4 +301,53 @@ export function stableStringify(value: unknown): string {
     .filter((entry): entry is string => !!entry);
 
   return `{${entries.join(",")}}`;
+}
+
+/**
+ * Data type produced by a loader, or `TDefault` when the loader isn't provided.
+ * @beta
+ */
+export type LoadedData<TLoader, TDefault> =
+  NonNullable<TLoader> extends () => Subscribable<infer TData extends TDefault> ? TData : TDefault;
+
+/**
+ * Makes `loadDataOverrides` required when `TOverrides` is narrower than `TDefaultOverrides`, since only overrides can
+ * produce narrowed data.
+ * @beta
+ */
+export type RequireNarrowedLoadDataOverrides<
+  TDefaultOverrides,
+  TOverrides extends TDefaultOverrides,
+> = TDefaultOverrides extends TOverrides ? unknown : { loadDataOverrides: TOverrides };
+
+/**
+ * Returns the `key` loader of `loadDataOverrides`, preserving its exact type so that the data type it produces can be
+ * derived with `LoadedData`.
+ * @internal
+ */
+export function getLoadDataOverride<TOverrides extends Partial<Record<TKey, unknown>>, TKey extends string>(
+  loadDataOverrides: TOverrides | undefined,
+  key: TKey,
+): TOverrides[TKey] | undefined {
+  return loadDataOverrides === undefined ? undefined : loadDataOverrides[key];
+}
+
+/**
+ * Lazily loads data with `loadDataOverride` when it's provided, or with `loadDefault` otherwise. The loader is invoked
+ * on every subscription, so retries after failures call it again.
+ *
+ * Only an override can produce data narrower than `TDefault`, so without one `loadDefault` yields exactly the
+ * resulting type. TypeScript can't follow that through the conditional type, so the implementation is typed loosely.
+ * @internal
+ */
+export function loadData<TLoader extends (() => Subscribable<TDefault>) | undefined, TDefault>(props: {
+  loadDataOverride: TLoader;
+  loadDefault: () => Observable<TDefault>;
+}): Observable<LoadedData<TLoader, TDefault>>;
+export function loadData(props: {
+  loadDataOverride: (() => Subscribable<unknown>) | undefined;
+  loadDefault: () => Observable<unknown>;
+}): Observable<unknown> {
+  const { loadDataOverride, loadDefault } = props;
+  return defer(() => (loadDataOverride ? toObservable(loadDataOverride()) : loadDefault()));
 }

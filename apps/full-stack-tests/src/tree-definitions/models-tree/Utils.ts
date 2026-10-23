@@ -7,9 +7,9 @@ import { Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   CLASS_NAMES,
-  createBaseIdsProvider,
   createModelsTree,
   createModelsTreeIdsProvider,
+  createSharedIdsProvider,
   defaultModelsTreeHierarchyConfiguration as defaultHierarchyConfiguration,
   mergeWithDefaults,
 } from "@itwin/presentation-tree-definitions/internal";
@@ -23,10 +23,7 @@ import type {
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import type { EC, InstanceKey, Props } from "@itwin/presentation-shared";
-import type {
-  ModelsTreeHierarchyConfiguration,
-  ParentElementsPath,
-} from "@itwin/presentation-tree-definitions/internal";
+import type { ModelsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 export async function createModelsTreeProvider(
   props: Omit<Props<typeof createModelsTree>, "imodelAccess"> & {
@@ -45,7 +42,7 @@ export async function createModelsTreeProvider(
     // Label search populates the same ID cache used by the hierarchy definition.
     await collect(tree.createInstanceKeyPaths({ label: "", limit: "unbounded" }));
   }
-  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.definition });
+  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
 }
 
 export function createSubjectHierarchyNode(props?: {
@@ -93,14 +90,12 @@ export function createCategoryHierarchyNode({
   hasChildren,
   parentKeys,
   search,
-  parentElementsPath,
 }: {
   modelId?: Id64String;
   categoryId?: Id64Arg;
   hasChildren?: boolean;
   parentKeys?: Array<InstanceKey | ClassGroupingNodeKey>;
   search?: NonGroupingHierarchyNode["search"];
-  parentElementsPath?: ParentElementsPath;
 }): NonGroupingHierarchyNode {
   return {
     key: {
@@ -118,7 +113,7 @@ export function createCategoryHierarchyNode({
         )
       : [],
     search,
-    extendedData: { type: "category", modelIds: [modelId ?? "0x1"], parentElementsPath: parentElementsPath ?? [] },
+    extendedData: { type: "category", modelIds: [modelId ?? "0x1"] },
   };
 }
 export function createElementHierarchyNode(props: {
@@ -128,7 +123,6 @@ export function createElementHierarchyNode(props: {
   elementId?: Id64String;
   parentKeys?: Array<InstanceKey | ClassGroupingNodeKey>;
   search?: NonGroupingHierarchyNode["search"];
-  parentElementsPath?: ParentElementsPath;
   className?: EC.FullClassNameDotNotation;
 }): NonGroupingHierarchyNode {
   return {
@@ -144,12 +138,7 @@ export function createElementHierarchyNode(props: {
           "type" in parentKey ? parentKey : { type: "instances", instanceKeys: [parentKey] },
         )
       : [],
-    extendedData: {
-      type: "element",
-      modelId: props.modelId,
-      categoryId: props.categoryId,
-      parentElementsPath: props.parentElementsPath ?? [],
-    },
+    extendedData: { type: "element", modelId: props.modelId, categoryId: props.categoryId },
   };
 }
 export function createClassGroupingHierarchyNode({
@@ -166,7 +155,6 @@ export function createClassGroupingHierarchyNode({
   categoryId: Id64String;
   hasDirectNonSearchTargets?: boolean;
   hasSearchTargetAncestor?: boolean;
-  parentElementsPath?: ParentElementsPath;
   childrenWhichAreParents?: Set<Id64String>;
 }): GroupingHierarchyNode & { key: ClassGroupingNodeKey } {
   const className = props.className ?? CLASS_NAMES.Element;
@@ -183,7 +171,6 @@ export function createClassGroupingHierarchyNode({
     extendedData: {
       categoryId,
       modelId,
-      parentElementsPath: props.parentElementsPath ?? [],
       childrenWhichAreParents: props.childrenWhichAreParents ?? new Set(),
       ...(props.hasDirectNonSearchTargets ? { hasDirectNonSearchTargets: props.hasDirectNonSearchTargets } : {}),
       ...(props.hasSearchTargetAncestor ? { hasSearchTargetAncestor: props.hasSearchTargetAncestor } : {}),
@@ -203,11 +190,11 @@ export function createAccessAndIdsProvider({
     defaults: defaultHierarchyConfiguration,
     overrides: hierarchyConfig,
   });
-  const baseIdsProvider = createBaseIdsProvider({
+  const sharedIdsProvider = createSharedIdsProvider({
     imodelAccess,
     elementClassName: requiredHierarchyConfig.elements.baseClass,
     excludedElementClassNames: requiredHierarchyConfig.elements.excludedClasses,
   });
-  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, baseIdsProvider });
+  const idsProvider = createModelsTreeIdsProvider({ imodelAccess, hierarchyConfig, sharedIdsProvider });
   return { imodelAccess, idsProvider, hierarchyConfig: requiredHierarchyConfig };
 }

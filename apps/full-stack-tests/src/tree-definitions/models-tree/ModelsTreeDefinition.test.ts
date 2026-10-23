@@ -13,11 +13,20 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { firstValueFrom, of } from "rxjs";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import {
+  createModelsTree,
+  createModelsTreeIdsProvider,
+  createSharedIdsProvider,
+} from "@itwin/presentation-tree-definitions";
+import { CLASS_NAMES, toObservable } from "@itwin/presentation-tree-definitions/internal";
+import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import {
   buildIModel,
@@ -30,6 +39,10 @@ import { createModelsTreeProvider } from "./Utils.js";
 import type { InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Models tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     await initialize();
   });
@@ -37,6 +50,142 @@ describe("Models tree", () => {
   afterAll(async () => {
     await terminate();
   });
+
+  it("uses the supplied models provider for hierarchy and search", async () => {
+    await using imodel = await buildIModel(async (db) =>
+      withEditTxn(db, (txn) => {
+        const subject = insertSubject({ txn, codeValue: "subject", parentId: IModel.rootSubjectId });
+        const model = insertPhysicalModelWithPartition({ txn, codeValue: "model", partitionParentId: subject.id });
+        const category = insertSpatialCategory({ txn, codeValue: "category" });
+        insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+        return { subject };
+      }),
+    );
+    const imodelAccess = createIModelAccess(imodel.imodelConnection);
+    const hierarchyConfig = { subjects: { root: "exclude" as const } };
+    const idsProvider = createModelsTreeIdsProvider({
+      imodelAccess,
+      hierarchyConfig,
+      sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
+    });
+    await firstValueFrom(toObservable(idsProvider.getParentSubjectIds()));
+    const hierarchyGetter = vi.spyOn(idsProvider, "getChildSubjectIds").mockReturnValue(of([]));
+    vi.spyOn(idsProvider, "getChildSubjectModelIds").mockReturnValue(of([]));
+    const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockReturnValue(of([]));
+    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
+    const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
+    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
+
+    await validateHierarchy({ provider, expect: [] });
+    expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
+    expect(await tree.createSearchTree({ targetItems: [imodel.subject] })).toEqual([]);
+    expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
+    expect(queryReader).not.toHaveBeenCalled();
+  });
+
+  it.each(["default", "custom"] as const)(
+    "uses iModel-specific definitions in a merged hierarchy with %s ID providers",
+    async (providerType) => {
+      await using versions = await createChangedIModels(
+        async (db) =>
+          withEditTxn(db, (txn) => {
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: "base model",
+              partitionParentId: IModel.rootSubjectId,
+            });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const element = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+            return { model, category, element };
+          }),
+        async (db, baseKeys) =>
+          withEditTxn(db, (txn) => {
+            txn.deleteElement(baseKeys.element.id);
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: "new model",
+              partitionParentId: IModel.rootSubjectId,
+            });
+            const element = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: baseKeys.category.id,
+              userLabel: "new element",
+            });
+            return { model, category: baseKeys.category, element };
+          }),
+      );
+      const hierarchyConfig = { subjects: { root: "exclude" as const } };
+      const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => ({
+        imodelAccess: createIModelAccess(imodelConnection),
+      }));
+      const [base, changed] = imodels;
+      const schemaChecks = imodels.map(({ imodelAccess }) => vi.spyOn(imodelAccess, "classDerivesFrom"));
+      const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
+      const changedQueryReader = vi.spyOn(changed.imodelAccess, "createQueryReader");
+      const trees = imodels.map(({ imodelAccess }) => {
+        const idsProvider =
+          providerType === "custom"
+            ? createModelsTreeIdsProvider({
+                imodelAccess,
+                hierarchyConfig,
+                sharedIdsProvider: createSharedIdsProvider({
+                  imodelAccess,
+                  elementClassName: "BisCore.GeometricElement3d",
+                }),
+              })
+            : undefined;
+        return { imodelAccess, tree: createModelsTree({ imodelAccess, hierarchyConfig, idsProvider }) };
+      });
+      const [baseTree, changedTree] = trees;
+      using provider = createMergedIModelHierarchyProvider({
+        imodels,
+        getHierarchyDefinition: ({ imodelAccess }) =>
+          trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
+      });
+
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toMatchObject([
+        {
+          label: "base model",
+          key: { instanceKeys: [{ ...versions.base.model, imodelKey: base.imodelAccess.imodelKey }] },
+        },
+        {
+          label: "new model",
+          key: { instanceKeys: [{ ...versions.changeset1.model, imodelKey: changed.imodelAccess.imodelKey }] },
+        },
+      ]);
+      for (const schemaCheck of schemaChecks) {
+        expect(schemaCheck).toHaveBeenCalledWith(CLASS_NAMES.GeometricElement3d, CLASS_NAMES.GeometricElement3d);
+      }
+
+      baseQueryReader.mockClear();
+      changedQueryReader.mockClear();
+      expect(await changedTree.tree.createSearchTree({ label: "new element" })).toMatchObject([
+        {
+          identifier: { id: versions.changeset1.model.id },
+          children: [
+            {
+              identifier: versions.changeset1.category,
+              children: [{ identifier: { id: versions.changeset1.element.id } }],
+            },
+          ],
+        },
+      ]);
+      expect(baseQueryReader).not.toHaveBeenCalled();
+      expect(changedQueryReader).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
+      );
+
+      changedQueryReader.mockClear();
+      expect(await collect(baseTree.tree.createInstanceKeyPaths({ label: "new element" }))).toEqual([]);
+      expect(changedQueryReader).not.toHaveBeenCalled();
+      expect(baseQueryReader).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
+      );
+    },
+  );
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createProvider(props: Omit<Props<typeof createModelsTreeProvider>, "cacheState">) {

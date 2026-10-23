@@ -3,57 +3,88 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { delay, from, map, mergeMap, reduce, shareReplay, tap } from "rxjs";
+import { delay, finalize, from, map, mergeMap, reduce, shareReplay } from "rxjs";
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate, loadData } from "../Utils.js";
+import { DataStateTracker } from "./DataStateTracker.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
+import type { LoadedData } from "../Utils.js";
+import type { IdsProviderDataState, LoadDataOverrides } from "./SharedIdsProvider.js";
 
-interface ElementModelCategoriesProviderProps {
+/** Loader replacing the default iModel query of `ElementModelCategoriesProvider`. */
+type Loader = LoadDataOverrides["loadElementModelCategories"];
+
+interface ElementModelCategoriesProviderProps<TLoader extends Loader> {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: EC.FullClassNameDotNotation;
   excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
+  loadDataOverride?: TLoader;
 }
+
+/** Data produced by `ElementModelCategoriesProvider` with the given loader. */
+type Data<TLoader extends Loader> = LoadedData<TLoader, ElementModelCategoriesProviderData>;
+
+/**
+ * Category information of a single model.
+ * @beta
+ */
 interface ModelsCategoriesInfoEntry {
+  /** Categories containing top-level elements that aren't of excluded classes. */
   categoriesOfTopMostNonExcludedElements: Set<CategoryId>;
+  /** Whether the model contains elements that aren't of excluded classes. */
   hasNonExcludedElements: boolean;
 }
 
-interface ElementModelCategoriesProviderData {
+/**
+ * Model and category data used by `SharedIdsProvider.models` and `SharedIdsProvider.categories`.
+ * @beta
+ */
+export interface ElementModelCategoriesProviderData {
+  /** Plan projection models containing elements. */
   planProjectionModels: Set<ModelId>;
+  /** Category information of all models containing elements, including models with only excluded elements. */
   modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
+  /** Categories containing elements that aren't of excluded classes. */
   categoriesContainingNonExcludedElements: Set<CategoryId>;
+  /**
+   * Models containing elements of each category, with flags telling whether the category contains top-level elements
+   * and top-level elements that aren't of excluded classes in that model.
+   */
   categoryModelsInfo: Map<
     CategoryId,
     Array<{ id: ModelId; categoryIsOfTopMostElement: boolean; hasNonExcludedTopMostElements: boolean }>
   >;
+  /** Categories of all elements, including those of excluded classes. */
   allCategories: Set<CategoryId>;
 }
 
 /** @internal */
-export class ElementModelCategoriesProvider {
+export class ElementModelCategoriesProvider<TLoader extends Loader = undefined> {
   #imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: EC.FullClassNameDotNotation;
   #excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
-  #cachedData: Observable<ElementModelCategoriesProviderData> | undefined;
-  #dataLoaded = false;
-  #subscriberBatches: Array<{ obs: Observable<ElementModelCategoriesProviderData>; subscriberCount: number }> = [];
+  #cachedData: Observable<Data<TLoader>> | undefined;
+  #state = new DataStateTracker();
+  #subscriberBatches: Array<{ obs: Observable<Data<TLoader>>; subscriberCount: number }> = [];
+  #loadDataOverride?: TLoader;
 
-  constructor(props: ElementModelCategoriesProviderProps) {
+  constructor(props: ElementModelCategoriesProviderProps<TLoader>) {
     this.#imodelAccess = props.imodelAccess;
     this.#elementClassName = props.elementClassName;
     this.#excludedElementClassNames = props.excludedElementClassNames;
     this.#componentId = props.componentId;
     this.#componentName = "ElementModelCategoriesProvider";
+    this.#loadDataOverride = props.loadDataOverride;
   }
 
   private queryElementModelCategories(): Observable<{
@@ -114,16 +145,12 @@ export class ElementModelCategoriesProvider {
     );
   }
 
-  public get isDataLoaded(): boolean {
-    return !!this.#dataLoaded;
+  public get state(): IdsProviderDataState {
+    return this.#state.state;
   }
 
-  public get isDataDefined(): boolean {
-    return this.#cachedData !== undefined;
-  }
-
-  public getData(): Observable<ElementModelCategoriesProviderData> {
-    this.#cachedData ??= this.queryElementModelCategories().pipe(
+  private loadData(): Observable<ElementModelCategoriesProviderData> {
+    return this.queryElementModelCategories().pipe(
       reduce(
         (acc, queriedCategory) => {
           acc.allCategories.add(queriedCategory.categoryId);
@@ -169,15 +196,23 @@ export class ElementModelCategoriesProvider {
           >(),
         },
       ),
-      tap(() => {
-        this.#dataLoaded = true;
+    );
+  }
+
+  public getData(): Observable<Data<TLoader>> {
+    this.#cachedData ??= loadData({
+      loadDataOverride: this.#loadDataOverride,
+      loadDefault: () => this.loadData(),
+    }).pipe(
+      finalize(() => {
         this.#subscriberBatches = [];
       }),
+      this.#state.track(),
       shareReplay(),
     );
 
     // Once the data is loaded, every subscriber gets a synchronous replay, so batching is no longer needed.
-    if (this.#dataLoaded) {
+    if (this.#state.state === "loaded") {
       return this.#cachedData;
     }
 

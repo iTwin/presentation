@@ -783,7 +783,7 @@ export interface StructValueDescriptor {
 }
 
 // @public
-interface Subscribable<T> {
+export interface Subscribable<T> {
     subscribe(observer: {
         next: (value: T) => void;
         error: (reason: unknown) => void;

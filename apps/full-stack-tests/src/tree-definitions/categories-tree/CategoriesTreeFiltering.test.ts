@@ -8,11 +8,12 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { withEditTxn } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { createCategoriesTree } from "@itwin/presentation-tree-definitions";
 import {
   CLASS_NAMES,
-  createBaseIdsProvider,
   createCategoriesTreeIdsProvider,
+  createSharedIdsProvider,
   getClassesByView,
   SearchLimitExceededError,
 } from "@itwin/presentation-tree-definitions/internal";
@@ -28,9 +29,11 @@ import {
 } from "./Utils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { CategoriesTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
+import type {
+  CategoriesTreeHierarchyConfiguration,
+  CategoriesTreeSearchPath,
+} from "@itwin/presentation-tree-definitions/internal";
 
 // cspell:words egory
 // cspell complains about Cat_egory and Cat%egory
@@ -182,10 +185,8 @@ describe("Categories tree", () => {
         });
       });
       const { imodelConnection, ...keys } = setupResult;
-      const { createInstanceKeyPaths } = createCategoriesTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        viewType: "3d",
-      });
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const { createInstanceKeyPaths } = createCategoriesTree({ imodelAccess, viewType: "3d" });
       expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
         { path: [keys.definitionContainer], target: keys.definitionContainer.id },
       ]);
@@ -241,10 +242,8 @@ describe("Categories tree", () => {
         });
       });
       const { imodelConnection, ...keys } = setupResult;
-      const { createInstanceKeyPaths } = createCategoriesTree({
-        imodelAccess: createIModelAccess(imodelConnection),
-        viewType: "3d",
-      });
+      const imodelAccess = createIModelAccess(imodelConnection);
+      const { createInstanceKeyPaths } = createCategoriesTree({ imodelAccess, viewType: "3d" });
       expect(await collect(createInstanceKeyPaths({ label: "matching", limit: 1 }))).toEqual([
         { path: [keys.category], target: keys.category.id },
       ]);
@@ -357,7 +356,9 @@ describe("Categories tree", () => {
 
           const { elementClass } = getClassesByView(viewType);
 
-          async function search(props: Parameters<ReturnType<typeof createCategoriesTree>["createSearchTree"]>[0]) {
+          async function search(
+            props: Omit<Parameters<ReturnType<typeof createCategoriesTree>["createSearchTree"]>[0], "imodelAccess">,
+          ) {
             return createCategoriesTree({
               imodelAccess: createIModelAccess(setup.imodelConnection),
               viewType,
@@ -494,15 +495,17 @@ describe("Categories tree", () => {
           const idsProvider = createCategoriesTreeIdsProvider({
             imodelAccess,
             type: viewType,
-            baseIdsProvider: createBaseIdsProvider({
+            sharedIdsProvider: createSharedIdsProvider({
               imodelAccess,
               elementClassName: getClassesByView(viewType).elementClass,
             }),
           });
           const defaultSubCategoryId = getDefaultSubCategoryId(keys.category.id);
 
-          const paths = new Array<HierarchyNodeIdentifiersPath>();
-          for await (const path of idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId })) {
+          const paths = new Array<CategoriesTreeSearchPath>();
+          for await (const path of eachValueFrom(
+            idsProvider.getSubCategoriesSearchPaths({ subCategoryIds: defaultSubCategoryId }),
+          )) {
             paths.push(path);
           }
           expect(paths).toEqual([]);
@@ -1628,7 +1631,11 @@ describe("Categories tree", () => {
             const hierarchyConfig = {
               elements: { ...showElementsConfig.elements, excludedClasses: [elementClassName] },
             };
-            const { definition, createSearchTree } = createCategoriesTree({ imodelAccess, viewType, hierarchyConfig });
+            const { hierarchyDefinition, createSearchTree } = createCategoriesTree({
+              imodelAccess,
+              viewType,
+              hierarchyConfig,
+            });
             const searchPaths = await createSearchTree({
               label: "matching",
               revealTargets: true,
@@ -1636,7 +1643,7 @@ describe("Categories tree", () => {
             });
             using provider = createIModelHierarchyProvider({
               imodelAccess,
-              hierarchyDefinition: definition,
+              hierarchyDefinition,
               search: { paths: searchPaths },
             });
             await validateHierarchy({

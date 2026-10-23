@@ -5,6 +5,7 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
+import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
@@ -13,12 +14,21 @@ import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import type { Id64Array } from '@itwin/core-bentley';
-import type { Id64String } from '@itwin/core-bentley';
+import { Id64String } from '@itwin/core-bentley';
 import type { IModelInstanceKey } from '@itwin/presentation-hierarchies';
 import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { Subscribable } from '@itwin/presentation-shared';
+
+// @beta
+interface CachedCategoryInfo {
+    hasElements: boolean;
+    hasElementsFromNonExcludedClasses: boolean;
+    id: Id64String;
+    subCategoryChildCount: number;
+}
 
 // @beta
 interface CategoriesTreeHierarchyConfiguration {
@@ -34,6 +44,61 @@ interface CategoriesTreeHierarchyConfiguration {
     subCategories?: {
         nodes?: "include" | "exclude";
     };
+}
+
+// @beta
+export interface CategoriesTreeIdsProvider {
+    readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+    readonly config: Readonly<SharedIdsProvider["config"] & {
+        type: "2d" | "3d";
+    }>;
+    getAllDefinitionContainersAndCategories(props?: {
+        includeEmpty?: boolean;
+    }): Subscribable<{
+        categories: ReadonlyArray<CategoryId>;
+        definitionContainers: ReadonlyArray<DefinitionContainerId>;
+    }>;
+    getDefinitionContainersSearchPaths(props: {
+        definitionContainerIds: ReadonlyId64Arg;
+    }): Subscribable<CategoriesTreeSearchPath>;
+    getDirectChildDefinitionContainersAndCategories(props: {
+        parentDefinitionContainerIds: ReadonlyId64Arg;
+        includeEmpty?: boolean;
+    }): Subscribable<{
+        categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+        definitionContainers: ReadonlyArray<DefinitionContainerId>;
+    }>;
+    getIsDefinitionContainerSupported(): Subscribable<boolean>;
+    getRootDefinitionContainersAndCategories(props?: {
+        includeEmpty?: boolean;
+    }): Subscribable<{
+        categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+        definitionContainers: ReadonlyArray<DefinitionContainerId>;
+    }>;
+    getSearchPathsUpToRootCategory(props: {
+        categoryId: Id64String;
+    }): Subscribable<CategoriesTreeSearchPath>;
+    getSubCategoriesSearchPaths(props: {
+        subCategoryIds: ReadonlyId64Arg;
+    }): Subscribable<CategoriesTreeSearchPath>;
+    readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
+    readonly state: IdsProviderDataState;
+    readonly subModeledElements: SharedIdsProvider["subModeledElements"];
+}
+
+// @beta
+interface CategoriesTreeIdsProviderProps {
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    sharedIdsProvider: {
+        config: SharedIdsProvider["config"];
+        models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
+        subModeledElements: SharedIdsProvider["subModeledElements"];
+        categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements">;
+        subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
+    };
+    // (undocumented)
+    type: "2d" | "3d";
 }
 
 // @beta
@@ -84,15 +149,23 @@ export namespace CategoriesTreeNode {
 // @beta
 interface CategoriesTreeProps {
     hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
-    // (undocumented)
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    idsProvider?: CategoriesTreeIdsProvider;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
     // (undocumented)
     viewType: "2d" | "3d";
 }
 
 // @beta
-type CategoriesTreeSearchPath = CategoriesTreeSearchPathKey[];
+interface CategoriesTreeSearchOptions {
+    abortSignal?: AbortSignal;
+    limit?: number | "unbounded";
+}
+
+// @beta
+type CategoriesTreeSearchPath = ReadonlyArray<Readonly<CategoriesTreeSearchPathKey>>;
 
 // @beta
 type CategoriesTreeSearchPathClasses = "BisCore.DefinitionContainer" | "BisCore.SpatialCategory" | "BisCore.DrawingCategory" | "BisCore.SubCategory" | "BisCore.GeometricModel3d" | "BisCore.GeometricModel2d" | "BisCore.GeometricElement3d" | "BisCore.GeometricElement2d";
@@ -103,10 +176,8 @@ type CategoriesTreeSearchPathKey = IModelInstanceKey & {
 };
 
 // @beta
-interface CategoriesTreeSearchProps {
-    abortSignal?: AbortSignal;
+interface CategoriesTreeSearchProps extends CategoriesTreeSearchOptions {
     label: string;
-    limit?: number | "unbounded";
 }
 
 // @beta
@@ -116,16 +187,42 @@ interface CategoriesTreeSearchTree extends Omit<HierarchySearchTree, "identifier
 }
 
 // @beta
+type CategoryId = Id64String;
+
+// @beta
 type ClassGroupingHierarchyNode = GroupingHierarchyNode & {
     key: ClassGroupingNodeKey;
 };
 
 // @beta
+type ClassificationId = Id64String;
+
+// @beta
 interface ClassificationsTreeHierarchyConfiguration {
     elements?: {
-        excludedClasses?: EC.FullClassNameDotNotation[];
+        excludedClasses?: ReadonlyArray<EC.FullClassNameDotNotation>;
     };
     rootClassificationSystemCode: string;
+}
+
+// @beta
+export interface ClassificationsTreeIdsProvider {
+    readonly config: DeepReadonly<Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">>;
+    getAllClassifications(): Subscribable<ReadonlyArray<ClassificationId>>;
+    getClassificationsPath(classificationOrTableIds: ReadonlyId64Arg): Subscribable<ClassificationsTreeSearchPath>;
+    getDirectChildClassifications(classificationOrTableIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<Readonly<{
+        id: ClassificationId;
+        hasChildClassifications: boolean;
+    }>>>;
+    readonly state: IdsProviderDataState;
+}
+
+// @beta
+interface ClassificationsTreeIdsProviderProps {
+    // (undocumented)
+    hierarchyConfig: Pick<ClassificationsTreeHierarchyConfiguration, "rootClassificationSystemCode">;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
 }
 
 // @beta
@@ -149,9 +246,8 @@ export namespace ClassificationsTreeNode {
 
 // @beta
 interface ClassificationsTreeProps {
-    // (undocumented)
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
-    // (undocumented)
+    idsProvider?: ClassificationsTreeIdsProvider;
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
         imodelKey: string;
     };
@@ -165,7 +261,7 @@ interface ClassificationsTreeSearchOptions {
 }
 
 // @beta
-type ClassificationsTreeSearchPath = ClassificationsTreeSearchPathKey[];
+type ClassificationsTreeSearchPath = ReadonlyArray<Readonly<ClassificationsTreeSearchPathKey>>;
 
 // @beta
 type ClassificationsTreeSearchPathClasses = "ClassificationSystems.Classification" | "ClassificationSystems.ClassificationTable" | "BisCore.GeometricElement3d";
@@ -190,7 +286,7 @@ interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "ident
 
 // @beta
 export function createCategoriesTree(props: CategoriesTreeProps): {
-    definition: HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) => AsyncIterableIterator<{
         path: CategoriesTreeSearchPath;
         target: Id64String;
@@ -201,8 +297,11 @@ export function createCategoriesTree(props: CategoriesTreeProps): {
 };
 
 // @beta
+export function createCategoriesTreeIdsProvider(input: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider;
+
+// @beta
 export function createClassificationsTree(props: ClassificationsTreeProps): {
-    definition: HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) => AsyncIterableIterator<{
         path: ClassificationsTreeSearchPath;
         target: Id64String;
@@ -213,8 +312,11 @@ export function createClassificationsTree(props: ClassificationsTreeProps): {
 };
 
 // @beta
+export function createClassificationsTreeIdsProvider(input: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider;
+
+// @beta
 export function createModelsTree(props: ModelsTreeProps): {
-    definition: HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition;
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
         path: ModelsTreeSearchPath;
         target: Id64String | ElementsGroupInfo;
@@ -223,6 +325,31 @@ export function createModelsTree(props: ModelsTreeProps): {
         revealTargets?: boolean;
     }) => Promise<ModelsTreeSearchTree[]>;
 };
+
+// @beta
+export function createModelsTreeIdsProvider(input: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider;
+
+// @beta
+export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = LoadDataOverrides>(input: SharedIdsProviderProps<TOverrides> & RequireNarrowedLoadDataOverrides<LoadDataOverrides, TOverrides>): SharedIdsProvider<LoadedData<TOverrides["loadElementModelCategories"], ElementModelCategoriesProviderData>, LoadedData<TOverrides["loadSubModeledElements"], SubModeledElementsProviderData>, LoadedData<TOverrides["loadSubCategories"], SubCategoriesProviderData>>;
+
+// @beta
+type DefinitionContainerId = Id64String;
+
+// @beta
+type ElementId = Id64String;
+
+// @beta
+interface ElementModelCategoriesProviderData {
+    allCategories: Set<CategoryId>;
+    categoriesContainingNonExcludedElements: Set<CategoryId>;
+    categoryModelsInfo: Map<CategoryId, Array<{
+        id: ModelId;
+        categoryIsOfTopMostElement: boolean;
+        hasNonExcludedTopMostElements: boolean;
+    }>>;
+    modelsCategoriesInfo: Map<ModelId, ModelsCategoriesInfoEntry>;
+    planProjectionModels: Set<ModelId>;
+}
 
 // @beta
 interface ElementsGroupInfo {
@@ -237,6 +364,28 @@ interface ElementsGroupInfo {
         modelIds: Id64String[];
         type: "category";
     };
+}
+
+// @beta
+export type IdsProviderDataState = "not-requested" | "requested" | "loaded" | "failed";
+
+// @beta
+interface LoadDataOverrides {
+    loadElementModelCategories?: () => Subscribable<ElementModelCategoriesProviderData>;
+    loadSubCategories?: () => Subscribable<SubCategoriesProviderData>;
+    loadSubModeledElements?: () => Subscribable<SubModeledElementsProviderData>;
+}
+
+// @beta
+type LoadedData<TLoader, TDefault> = NonNullable<TLoader> extends () => Subscribable<infer TData extends TDefault> ? TData : TDefault;
+
+// @beta
+type ModelId = Id64String;
+
+// @beta
+interface ModelsCategoriesInfoEntry {
+    categoriesOfTopMostNonExcludedElements: Set<CategoryId>;
+    hasNonExcludedElements: boolean;
 }
 
 // @beta
@@ -257,6 +406,34 @@ interface ModelsTreeHierarchyConfiguration {
     subjects?: {
         root?: "include" | "exclude";
         labelMerging?: "enable" | "disable";
+    };
+}
+
+// @beta
+export interface ModelsTreeIdsProvider {
+    readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+    readonly config: DeepReadonly<Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">>;
+    createSubjectInstanceKeysPath(targetSubjectId: Id64String): Subscribable<ModelsTreeSearchPath>;
+    createUpToModelInstanceKeyPaths(modelId: Id64String): Subscribable<ModelsTreeSearchPath>;
+    getChildSubjectIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<Id64String>>;
+    getChildSubjectModelIds(parentSubjectIds: ReadonlyId64Arg): Subscribable<ReadonlyArray<ModelId>>;
+    getHiddenModelIds(): Subscribable<ReadonlySet<ModelId>>;
+    getParentSubjectIds(): Subscribable<ReadonlyArray<Id64String>>;
+    getSearchPathsUpToRootCategory(categoryId: Id64String): Subscribable<ModelsTreeSearchPath>;
+    readonly state: IdsProviderDataState;
+    readonly subModeledElements: SharedIdsProvider["subModeledElements"];
+}
+
+// @beta
+interface ModelsTreeIdsProviderProps {
+    hierarchyConfig?: Pick<ModelsTreeHierarchyConfiguration, "elements" | "subjects" | "models">;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    sharedIdsProvider: {
+        config: SharedIdsProvider["config"];
+        models: Pick<SharedIdsProvider["models"], "state" | "getModels" | "getAllModels">;
+        subModeledElements: SharedIdsProvider["subModeledElements"];
+        categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
     };
 }
 
@@ -297,8 +474,10 @@ export namespace ModelsTreeNode {
 // @beta
 interface ModelsTreeProps {
     hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-    // (undocumented)
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    idsProvider?: ModelsTreeIdsProvider;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
+        imodelKey: string;
+    };
     uniqueId?: GuidString;
 }
 
@@ -310,7 +489,7 @@ interface ModelsTreeSearchOptions {
 }
 
 // @beta
-type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+type ModelsTreeSearchPath = ReadonlyArray<Readonly<ModelsTreeSearchPathKey>>;
 
 // @beta
 type ModelsTreeSearchPathClasses = "BisCore.Subject" | "BisCore.GeometricModel3d" | "BisCore.SpatialCategory" | "BisCore.GeometricElement3d";
@@ -331,6 +510,87 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
 interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {
     children?: ModelsTreeSearchTree[];
     identifier: ModelsTreeSearchPathKey;
+}
+
+// @beta
+type ReadonlyId64Arg = Id64String | ReadonlyArray<Id64String> | ReadonlySet<Id64String>;
+
+// @beta
+type RequireNarrowedLoadDataOverrides<TDefaultOverrides, TOverrides extends TDefaultOverrides> = TDefaultOverrides extends TOverrides ? unknown : {
+    loadDataOverrides: TOverrides;
+};
+
+// @beta
+export class SearchLimitExceededError extends Error {
+    constructor(
+    limit: number);
+    readonly limit: number;
+}
+
+// @beta
+export interface SharedIdsProvider<T1 extends ElementModelCategoriesProviderData = ElementModelCategoriesProviderData, T2 extends SubModeledElementsProviderData = SubModeledElementsProviderData, T3 extends SubCategoriesProviderData = SubCategoriesProviderData> {
+    readonly categories: {
+        readonly state: IdsProviderDataState;
+        getData(): Subscribable<T1>;
+        getCategories(props: {
+            modelId: Id64String;
+        }): Subscribable<ReadonlySet<CategoryId>>;
+        getCategoriesContainingNonExcludedElements(): Subscribable<ReadonlySet<CategoryId>>;
+        getAllCategoriesOfElements(): Subscribable<ReadonlySet<CategoryId>>;
+    };
+    readonly config: Readonly<Pick<SharedIdsProviderProps, "elementClassName" | "excludedElementClassNames">>;
+    readonly models: {
+        readonly state: IdsProviderDataState;
+        getData(): Subscribable<T1>;
+        getAllModels(): Subscribable<ReadonlySet<ModelId>>;
+        getPlanProjectionModels(): Subscribable<ReadonlySet<ModelId>>;
+        getModels(props: {
+            categoryId: Id64String;
+            excludedSubModels?: ReadonlySet<ModelId>;
+            includeOnlyTopMostElementCategory?: boolean;
+            excludeIfOnlyExcludedClasses?: boolean;
+        }): Subscribable<ModelId>;
+    };
+    readonly subCategories: {
+        readonly state: IdsProviderDataState;
+        getData(): Subscribable<T3>;
+        getCategorySubCategoriesMap(): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+        getSubCategoryCategories(props: {
+            subCategoryIds: ReadonlyId64Arg;
+        }): Subscribable<ReadonlyMap<CategoryId, ReadonlyArray<SubCategoryId>>>;
+    };
+    readonly subModeledElements: {
+        readonly state: IdsProviderDataState;
+        getData(): Subscribable<T2>;
+        getAllSubModeledElements(props?: {
+            excludeIfOnlyExcludedClasses?: boolean;
+        }): Subscribable<ReadonlySet<Id64String>>;
+    };
+}
+
+// @beta
+interface SharedIdsProviderProps<TOverrides extends LoadDataOverrides = LoadDataOverrides> {
+    // (undocumented)
+    elementClassName: EC.FullClassNameDotNotation;
+    // (undocumented)
+    excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
+    // (undocumented)
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+    loadDataOverrides?: TOverrides;
+}
+
+// @beta
+interface SubCategoriesProviderData {
+    categorySubCategories: Map<CategoryId, Array<SubCategoryId>>;
+    subCategoryCategories: Map<SubCategoryId, CategoryId>;
+}
+
+// @beta
+type SubCategoryId = Id64String;
+
+// @beta
+interface SubModeledElementsProviderData {
+    allSubModels: Set<ElementId>;
 }
 
 // (No @packageDocumentation comment for this package)

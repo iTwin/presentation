@@ -11,42 +11,47 @@ import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { ElementId, ModelId } from "../Types.js";
 
-interface ModeledElementsProviderProps {
+interface SubModeledElementsProviderProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   componentId: GuidString;
   elementClassName: string;
-  nonEmptyModelIds: Array<ModelId>;
+  nonEmptyModelIds: ReadonlySet<ModelId>;
 }
 
-interface ModeledElementsProviderData {
+/**
+ * Sub-modeled element data used by `SharedIdsProvider.subModeledElements`.
+ * @beta
+ */
+export interface SubModeledElementsProviderData {
+  /** Elements that are modeled by models containing elements. Their IDs are also IDs of the sub-models. */
   allSubModels: Set<ElementId>;
 }
 
 /** @internal */
-export class ModeledElementsProvider {
+export class SubModeledElementsProvider {
   #queryExecutor: LimitingECSqlQueryExecutor;
   #componentId: GuidString;
   #componentName: string;
   #elementClassName: string;
-  #nonEmptyModelIds: Array<ModelId>;
+  #nonEmptyModelIds: ReadonlySet<ModelId>;
   // ElementId here is also a ModelId, since those elements are sub models.
-  #cachedData: Observable<ModeledElementsProviderData> | undefined;
+  #cachedData: Observable<SubModeledElementsProviderData> | undefined;
 
-  constructor(props: ModeledElementsProviderProps) {
+  constructor(props: SubModeledElementsProviderProps) {
     this.#queryExecutor = props.queryExecutor;
     this.#componentId = props.componentId;
     this.#elementClassName = props.elementClassName;
-    this.#componentName = "ModeledElementsProvider";
+    this.#componentName = "SubModeledElementsProvider";
     this.#nonEmptyModelIds = props.nonEmptyModelIds;
   }
 
-  private queryModeledElements(): Observable<ElementId> {
-    if (this.#nonEmptyModelIds.length === 0) {
+  private querySubModeledElements(): Observable<ElementId> {
+    if (this.#nonEmptyModelIds.size === 0) {
       return EMPTY;
     }
     return defer(() => {
       const query = `
-        SELECT me.ECInstanceId modeledElementId
+        SELECT me.ECInstanceId subModeledElementId
         FROM ${this.#elementClassName} me
         JOIN IdSet(?) modelIdSet ON modelIdSet.id = me.ECInstanceId
       `;
@@ -55,26 +60,27 @@ export class ModeledElementsProvider {
         {
           rowFormat: "ECSqlPropertyNames",
           limit: "unbounded",
-          restartToken: `${this.#componentName}/${this.#componentId}/modeled-elements`,
+          restartToken: `${this.#componentName}/${this.#componentId}/sub-modeled-elements`,
         },
       );
     }).pipe(
       catchBeSQLiteInterrupts,
-      map((row) => row.modeledElementId),
+      map((row) => row.subModeledElementId),
     );
   }
 
-  public getData(): Observable<ModeledElementsProviderData> {
-    this.#cachedData ??= this.queryModeledElements().pipe(
-      reduce(
-        (acc, modeledElementId) => {
-          acc.allSubModels.add(modeledElementId);
-          return acc;
-        },
-        { allSubModels: new Set<ElementId>() },
+  public getData(): Observable<SubModeledElementsProviderData> {
+    this.#cachedData ??= defer(() =>
+      this.querySubModeledElements().pipe(
+        reduce(
+          (acc, subModeledElementId) => {
+            acc.allSubModels.add(subModeledElementId);
+            return acc;
+          },
+          { allSubModels: new Set<ElementId>() },
+        ),
       ),
-      shareReplay(),
-    );
+    ).pipe(shareReplay());
     return this.#cachedData;
   }
 }
