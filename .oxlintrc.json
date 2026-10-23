@@ -9,7 +9,6 @@
     "import/no-duplicates": "error",
     "no-shadow": ["error", { "hoist": "all", "allow": ["T", "args"] }],
     "no-redeclare": "error",
-    "no-throw-literal": "error",
     "typescript/no-deprecated": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/promise-function-async": "error",
