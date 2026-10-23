@@ -82,6 +82,11 @@ interface CategoriesData {
  * @beta
  */
 export interface CategoriesTreeIdsProvider {
+  /**
+   * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
+   * together with shared category and sub-category data, but not sub-modeled elements.
+   */
+  readonly state: IdsProviderDataState;
   /** Readonly snapshot of the view type and element filters used to create this provider, including resolved defaults. */
   readonly config: Readonly<SharedIdsProvider["config"] & { type: "2d" | "3d" }>;
   /** Shared model lookups and their loading state. */
@@ -136,11 +141,6 @@ export interface CategoriesTreeIdsProvider {
     categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
     definitionContainers: ReadonlyArray<DefinitionContainerId>;
   }>;
-  /**
-   * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
-   * together with shared category and sub-category data, but not sub-modeled elements.
-   */
-  readonly state: IdsProviderDataState;
   /**
    * Indicates whether the iModel schema supports definition containers.
    *
@@ -494,6 +494,9 @@ export function createCategoriesTreeIdsProvider({
   }
 
   return {
+    get state(): IdsProviderDataState {
+      return combineDataStates([defContainersDataState.state, categoriesDataState.state]);
+    },
     config,
     models: sharedIdsProvider.models,
     subModeledElements: sharedIdsProvider.subModeledElements,
@@ -624,9 +627,6 @@ export function createCategoriesTreeIdsProvider({
           ),
         }),
       );
-    },
-    get state(): IdsProviderDataState {
-      return combineDataStates([defContainersDataState.state, categoriesDataState.state]);
     },
     getIsDefinitionContainerSupported: (): Subscribable<boolean> => {
       return getIsDefinitionContainerSupported();
