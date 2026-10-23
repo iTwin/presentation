@@ -45,7 +45,7 @@ const isGeometricElement = await schemaProvider.classDerivesFrom("MySchema.MyCla
 
 Classes may be hidden from users through `CoreCustomAttributes.HiddenClass` and `CoreCustomAttributes.HiddenSchema` custom attributes. Instances of such classes shouldn't be shown in the UI, unless their class is selected explicitly.
 
-- `ECSchemaProvider.getHiddenClassesTree` returns a `HiddenClassesTreeNode` tree of classes, derived from the given class, whose visibility differs from their base class. The tree includes both hidden classes and their explicitly shown descendants. Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected to cache the result. The provider created by `createECSchemaProvider` from `@itwin/presentation-core-interop` caches it for the provider's lifetime. Create one provider per iModel and share it between consumers; after schema changes, recreate the provider and consumers holding it.
+- `ECSchemaProvider.getHiddenClassesTree` returns a `HiddenClassesTreeNode` tree of classes, derived from the given class, whose visibility differs from their base class. The given class is the visibility boundary: `HiddenClass` attributes on it and on its base classes are ignored. The tree includes both hidden classes and their explicitly shown descendants. Building the tree requires traversing the whole derived classes' hierarchy, so implementations are expected to cache the result. The provider created by `createECSchemaProvider` from `@itwin/presentation-core-interop` caches it for the provider's lifetime. Create one provider per iModel and share it between consumers; after schema changes, recreate the provider and consumers holding it.
 
 - `createHiddenClassesTree` builds the tree for `ECSchemaProvider.getHiddenClassesTree` implementations. It doesn't cache the result.
 
@@ -266,7 +266,7 @@ The ECSql utilities group contains a number of functions to help create complex 
   // `
   ```
 
-- `createHiddenClassesFilter` - creates a filter that excludes instances of classes, derived from the given base class and hidden through `HiddenClass` or `HiddenSchema` custom attributes. The base class itself is never excluded, and classes outside its hierarchy are not affected. The hidden classes tree is requested from the schema provider once (see `ECSchemaProvider.getHiddenClassesTree`), and the filter can create conditions for multiple class aliases. Each condition is an empty string when nothing needs to be excluded.
+- `createHiddenClassesFilter` - creates a filter that excludes instances of classes, derived from the given base class and hidden through `HiddenClass` or `HiddenSchema` custom attributes. The base class is the visibility boundary: it's never excluded, `HiddenClass` attributes on it and on its base classes are ignored, and classes outside its hierarchy are not affected. The hidden classes tree is requested from the schema provider once (see `ECSchemaProvider.getHiddenClassesTree`), and the filter can create conditions for multiple class aliases. Each condition is an empty string when nothing needs to be excluded.
 
   Example usage:
 

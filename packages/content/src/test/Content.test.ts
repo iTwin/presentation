@@ -244,6 +244,23 @@ describe("resolveContentSources", () => {
         resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } }),
       ).rejects.toThrow(queryError);
     });
+
+    it("propagates error when hidden classes of the declared final target can't be determined", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const treeError = new Error("hidden classes tree lookup failed");
+      const imodelAccess = createMockIModelAccess();
+      vi.mocked(imodelAccess.getHiddenClassesTree).mockRejectedValue(treeError);
+      await expect(
+        resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } }),
+      ).rejects.toThrow(treeError);
+    });
   });
 
   describe("single-step path resolution", () => {
@@ -932,6 +949,32 @@ describe("resolveContentSources", () => {
       const query = call[0];
       expect(query.ecsql).to.include("[this].Area > :minArea");
       expect(query.bindings).to.deep.equal({ minArea: { type: "double", value: 100.0 } });
+    });
+
+    it("groups the instance filter before excluding hidden classes of the final target", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = createMockIModelAccess();
+      vi.mocked(imodelAccess.getHiddenClassesTree).mockResolvedValue([
+        { fullName: "TestSchema.HiddenB", state: "hide", children: [] },
+      ]);
+
+      await resolveContentSources({
+        imodelAccess,
+        targets: [{ ...targetA, instanceFilter: { expression: "this.Prop = 1 OR this.Prop = 2" } }],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
+      expect(query.ecsql.replace(/\s+/g, " ")).toContain(
+        "WHERE ([this].Prop = 1 OR [this].Prop = 2) AND ([s0].[ECClassId] IS NOT ([TestSchema].[HiddenB]))",
+      );
     });
 
     it("replaces custom primaryClassAlias in expression", async () => {

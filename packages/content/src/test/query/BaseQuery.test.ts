@@ -29,6 +29,7 @@ const schemaProvider = {
       target: { multiplicity: { lowerLimit: 0, upperLimit: className.includes("Many") ? 2 : 1 } },
     }),
   }),
+  getHiddenClassesTree: async () => [],
 } as unknown as ECSchemaProvider;
 const primaryClass: EC.FullClassNameDotNotation = "TestSchema.Primary";
 
@@ -330,6 +331,54 @@ describe("buildBaseQuery", () => {
       });
 
       expect(result.anchor.parts.bindings).to.deep.equal({ stepBinding: { type: "int", value: 1 } });
+    });
+
+    it("excludes hidden subclasses of every step's target class from its join", async () => {
+      const path = [
+        makeStep(primaryClass, "TestSchema.Rel1", "TestSchema.Mid"),
+        makeStep("TestSchema.Mid", "TestSchema.Rel2", "TestSchema.Target"),
+      ];
+      const hiddenProvider = {
+        ...schemaProvider,
+        getHiddenClassesTree: async (className: string) => [
+          { fullName: `${className}Hidden`, state: "hide" as const, children: [] },
+        ],
+      } as ECSchemaProvider;
+
+      const result = await buildBaseQuery({
+        schemaProvider: hiddenProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
+
+      const joins = result.anchor.parts.joins.replace(/\s+/g, " ");
+      expect(joins).toContain("[ECClassId] IS NOT ([TestSchema].[MidHidden])");
+      expect(joins).toContain("[ECClassId] IS NOT ([TestSchema].[TargetHidden])");
+    });
+
+    it("combines the exclusion of hidden subclasses with the step's own instance filter", async () => {
+      const path = [
+        makeStep(primaryClass, "TestSchema.Rel", "TestSchema.Target", {
+          instanceFilter: { expression: "x.Prop = 1 OR x.Prop = 2", targetAlias: "x" },
+        }),
+      ];
+      const hiddenProvider = {
+        ...schemaProvider,
+        getHiddenClassesTree: async () => [{ fullName: "TestSchema.Hidden", state: "hide" as const, children: [] }],
+      } as ECSchemaProvider;
+
+      const result = await buildBaseQuery({
+        schemaProvider: hiddenProvider,
+        source: makeSource([path]),
+        includeRelatedJoins: true,
+        propertySelectorPaths: [path],
+      });
+
+      const target = result.anchor.parts.relatedClassAliases.values().next().value!.target;
+      expect(result.anchor.parts.joins.replace(/\s+/g, " ")).toContain(
+        `AND (([${target}].Prop = 1 OR [${target}].Prop = 2) AND ([${target}].[ECClassId] IS NOT ([TestSchema].[Hidden])))`,
+      );
     });
 
     it("collects a shared-prefix instance-filter binding only once", async () => {
@@ -1769,6 +1818,7 @@ describe("buildBaseQuery", () => {
       ]);
       const navSchemaProvider = {
         getSchema: async () => ({ getClass: (className: string) => navClasses.get(className) }),
+        getHiddenClassesTree: async () => [],
       } as unknown as ECSchemaProvider;
 
       const path = [makeStep(primaryClass, "TestSchema.RelManyNav", "TestSchema.ManyNav")];

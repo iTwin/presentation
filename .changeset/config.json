@@ -10,6 +10,5 @@
   "bumpVersionsWithWorkspaceProtocolOnly": true,
   "privatePackages": {
     "version": false
-  },
-  "ignore": ["@itwin/presentation-components"]
+  }
 }
