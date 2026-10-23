@@ -36,6 +36,7 @@ export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsRes
   const [options, setOptions] = useState<TableOptions>({});
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setOptions({});
   }, [columns]);
 

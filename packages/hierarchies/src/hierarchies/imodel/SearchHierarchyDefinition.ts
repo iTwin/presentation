@@ -258,11 +258,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
 }
 
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_SearchECInstanceId = "SearchECInstanceId";
 
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_SearchClassName = "SearchClassName";
 
 function getClassECInstanceIds(targetInstanceKeys: InstanceKey[]) {

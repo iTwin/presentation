@@ -12,6 +12,7 @@ export function useOptionalDisposable<TDisposable extends Disposable>(
 
   useEffect(() => {
     const disposable = createDisposable();
+    // oxlint-disable-next-line react/set-state-in-effect
     setValue(disposable);
     return () => {
       disposable && disposable[Symbol.dispose]();

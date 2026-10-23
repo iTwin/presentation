@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-console */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateECSqlQueryExecutor.Imports

@@ -111,7 +111,7 @@ describe("Category renderer customization", () => {
               setInstanceKeys(await Promise.all(instanceKeys));
             })();
           },
-          // eslint-disable-next-line react-hooks/exhaustive-deps
+          // oxlint-disable-next-line react-hooks/exhaustive-deps
           [],
         );
         // __PUBLISH_EXTRACT_END__

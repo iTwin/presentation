@@ -13,6 +13,7 @@ import type { EC, PrimitiveValueType } from "./Metadata.js";
  * A data structure uniquely identifying an ECInstance in an iModel.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export interface InstanceKey {
   /** Full class name in format `SchemaName.ClassName` */
   className: EC.FullClassNameDotNotation;
@@ -68,10 +69,10 @@ export interface Point3dValue {
  * A union for all supported primitive value types.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PrimitiveValue {
   /**
    * Checks whether the given value is a `Point2dValue`.
@@ -102,6 +103,7 @@ export namespace PrimitiveValue {
  * @note Use `TypedPrimitiveValue.create` to create an instance of this type.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type TypedPrimitiveValue = (
   | { value: number; type: Extract<PrimitiveValueType, "Double">; koqName?: string }
   | { value: number; type: Extract<PrimitiveValueType, "Integer">; koqName?: string }
@@ -118,7 +120,6 @@ export type TypedPrimitiveValue = (
 ) & { extendedType?: string };
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedPrimitiveValue {
   /**
    * A function for a creating a `TypedPrimitiveValue` object.

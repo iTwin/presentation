@@ -119,9 +119,7 @@ export default class TestReporter implements Reporter {
         .map(([key, val]) => `${key}: ${(key === "count" ? val : val?.toFixed(2)) ?? "N/A"}`)
         .join(", ");
 
-      /* eslint-disable @typescript-eslint/naming-convention */
       return { Status: `${symbol} ${state}`, Test: fullName, Duration: `${duration} ms`, Blocks: blockingInfo };
-      /* eslint-enable @typescript-eslint/naming-convention */
     });
 
     console.log();

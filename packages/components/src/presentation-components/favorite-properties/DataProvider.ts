@@ -73,9 +73,9 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
   /** Constructor. */
   constructor(props: FavoritePropertiesDataProviderProps) {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithNoValues = true;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = props.ruleset;
     /* v8 ignore start -- @preserve */
@@ -91,9 +91,9 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     if (elementIds instanceof KeySet) {
       using propertyDataProvider = this.createPropertyDataProvider(imodel, this._customRuleset);
       propertyDataProvider.keys = elementIds;
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       propertyDataProvider.includeFieldsWithCompositeValues = this.includeFieldsWithCompositeValues;
       const propertyData = await propertyDataProvider.getData();
 

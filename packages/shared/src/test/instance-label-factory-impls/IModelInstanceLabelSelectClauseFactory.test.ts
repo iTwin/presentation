@@ -143,7 +143,7 @@ describe("createIModelInstanceLabelSelectClauseFactory", () => {
     it("falls back to default when query throws a non-Error value", async () => {
       createQueryReaderMock.mockReturnValue(
         (async function* () {
-          // eslint-disable-next-line @typescript-eslint/only-throw-error, no-throw-literal
+          // oxlint-disable-next-line @typescript-eslint/only-throw-error
           throw "string error";
         })() as ReturnType<ECSqlQueryExecutor["createQueryReader"]>,
       );

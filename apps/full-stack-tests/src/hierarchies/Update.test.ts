@@ -96,6 +96,7 @@ describe("Hierarchies", () => {
       }
       db = StandaloneDb.createEmpty(filePath, {
         rootSubject: { name: fileName },
+        // oxlint-disable-next-line @typescript-eslint/no-deprecated
         allowEdit: JSON.stringify({ txns: true }),
       });
       db.close();

@@ -160,7 +160,7 @@ function useTreeInternal({
   const getTreeNodeErrorsRef = useLatest(getTreeNodeErrors);
 
   const [actions] = useState<TreeActions>(
-    // eslint-disable-next-line react-hooks/refs
+    // oxlint-disable-next-line react-hooks/refs
     () =>
       new TreeActions(
         (model) => {
@@ -186,7 +186,7 @@ function useTreeInternal({
       actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
     });
     actions.setHierarchyProvider(provider);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react-hooks/set-state-in-effect
     setHierarchyProvider(provider);
     return () => {
       removeHierarchyChangedListener();

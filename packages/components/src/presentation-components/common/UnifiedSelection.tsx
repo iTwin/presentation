@@ -20,7 +20,7 @@ export function useOptionalUnifiedSelectionContext(): ReturnType<typeof useUnifi
   }, []);
   // `contextGetter` internally calls `useContext`, so if we don't have it (yet), call `useContext` with a no-op
   // context to avoid React complaints about conditional hooks usage.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // oxlint-disable-next-line react-hooks/rules-of-hooks
   return contextGetter ? contextGetter() : useContext(noopContext);
 }
 

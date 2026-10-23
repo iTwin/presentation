@@ -27,7 +27,7 @@ export class RulesetRegistrationHelper implements Disposable {
   public constructor(ruleset: Ruleset | string) {
     this._rulesetId = typeof ruleset === "string" ? ruleset : ruleset.id;
     if (typeof ruleset === "object") {
-      this.registerRuleset(ruleset); // eslint-disable-line @typescript-eslint/no-floating-promises
+      this.registerRuleset(ruleset); // oxlint-disable-line @typescript-eslint/no-floating-promises
     }
   }
 

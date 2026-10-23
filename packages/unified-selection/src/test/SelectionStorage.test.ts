@@ -84,16 +84,19 @@ describe("SelectionStorage", () => {
 
     it("returns available selection levels with deprecated `iModelKey` prop", () => {
       selectionStorage.addToSelection({
+        // oxlint-disable-next-line @typescript-eslint/no-deprecated
         iModelKey: imodelKey,
         source: "",
         selectables: [createSelectableInstanceKey(1, "schema.class1")],
       });
       selectionStorage.addToSelection({
+        // oxlint-disable-next-line @typescript-eslint/no-deprecated
         iModelKey: imodelKey,
         source: "",
         selectables: [createSelectableInstanceKey(2, "schema.class2")],
         level: 3,
       });
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       expect(selectionStorage.getSelectionLevels({ iModelKey: imodelKey })).toEqual([0, 3]);
     });
   });

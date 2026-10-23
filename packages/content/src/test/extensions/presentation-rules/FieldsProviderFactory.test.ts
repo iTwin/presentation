@@ -470,7 +470,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           label: "Full Name",
           sourceClassName: "TestSchema.TestElement",
           expression: "[this].[FirstName] || :pres_expr0 || [this].[LastName]",
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           bindings: { pres_expr0: { type: "string", value: " " } },
           type: { kind: "primitive", type: "String" },
           categoryId: undefined,
@@ -873,7 +872,6 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       const result = await provider.getContribution({ imodelAccess, target: createTarget() });
       expect(result!.relatedProperties![0].path[0].instanceFilter).toEqual({
         expression: "[this].[Name] = :pres_expr0",
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         bindings: { pres_expr0: { type: "string", value: "abc" } },
       });
     });

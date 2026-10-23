@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { describe, expect, it } from "vitest";
 import { trimWhitespace } from "@itwin/presentation-shared";
 import { convertECExpressionToECSql } from "../../../content/extensions/ecexpressions/ECExpressionToECSql.js";

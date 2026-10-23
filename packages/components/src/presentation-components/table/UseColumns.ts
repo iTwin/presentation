@@ -31,6 +31,7 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
   useEffect(() => {
     let disposed = false as boolean;
     if (keys.isEmpty) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setColumns([]);
       return;
     }

@@ -39,6 +39,7 @@ async function initializeApp() {
     await ElectronApp.startup({
       iModelApp: {
         ...iModelAppOpts,
+        // oxlint-disable-next-line @typescript-eslint/no-deprecated
         rpcInterfaces, // docs say we shouldn't use this but the alternative doesn't work...
       },
     });
@@ -61,6 +62,7 @@ async function initializeApp() {
 }
 
 async function initializePresentation() {
+  /* oxlint-disable @typescript-eslint/no-deprecated */
   // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Initialization
   await Presentation.initialize({
     presentation: {
@@ -77,6 +79,7 @@ async function initializePresentation() {
     },
   });
   // __PUBLISH_EXTRACT_END__
+  /* oxlint-enable @typescript-eslint/no-deprecated */
 
   // clear selection storage when iModel is closed
   IModelConnection.onClose.addListener((imodel) => {

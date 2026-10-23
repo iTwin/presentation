@@ -59,7 +59,7 @@ export class MainThreadBlocksDetector {
         if (lateAmount > threshold) {
           log(() => `${lateAmount} ms, ${lastTime.toISOString()} - ${currentTime.toISOString()}`);
           this._samples.insert(lateAmount);
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
         } else if (ENABLE_PINGS) {
           log(() => `[${currentTime.toISOString()}] Ping`);
         }

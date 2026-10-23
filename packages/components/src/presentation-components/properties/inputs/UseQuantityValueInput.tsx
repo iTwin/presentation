@@ -55,6 +55,7 @@ export function useQuantityValueInput({
     placeholder: string;
   }
   const initialRawValueRef = useRef(initialRawValue);
+  // oxlint-disable-next-line react/refs
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
       rawValue: initialRawValueRef.current,
@@ -98,6 +99,7 @@ export function useQuantityValueInput({
     });
   });
 
+  // oxlint-disable-next-line react/refs
   const useFormatterAndParserResult = useFormatterAndParser(koqName, schemaContext, onFormatterLoad.current);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -178,7 +180,7 @@ function useFormatterAndParser(
       IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser),
     ];
     // note: `IModelApp.formatsProvider` may not be available in older versions of core
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (IModelApp.formatsProvider) {
       listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
     }

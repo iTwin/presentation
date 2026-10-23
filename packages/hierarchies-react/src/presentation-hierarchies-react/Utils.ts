@@ -34,7 +34,7 @@ export function useEvent<TCallback extends (...args: any[]) => void>(callback: T
 
 /* c8 ignore start */
 /** @internal */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+// oxlint-disable-next-line @typescript-eslint/no-deprecated
 export function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
   return useCallback(
     (instance: T | null) => {
@@ -45,7 +45,7 @@ export function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | 
           ref.current = instance;
         }
       });
-    }, // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
+    }, // oxlint-disable-next-line react-hooks/exhaustive-deps
     [...refs],
   );
 }

@@ -6,7 +6,7 @@
  * @module Core
  */
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import type { PropsWithChildren } from "react";
 import type { IModelConnection } from "@itwin/core-frontend";
@@ -43,13 +43,8 @@ export function SchemaMetadataContextProvider({
   imodel,
   children,
 }: PropsWithChildren<SchemaMetadataContextProviderProps>) {
-  const [state, setState] = useState<SchemaMetadataContext>(() => ({ schemaContext: schemaContextProvider(imodel) }));
-
-  useEffect(() => {
-    setState({ schemaContext: schemaContextProvider(imodel) });
-  }, [imodel, schemaContextProvider]);
-
-  return <schemaMetadataContext.Provider value={state}>{children}</schemaMetadataContext.Provider>;
+  const value = useMemo(() => ({ schemaContext: schemaContextProvider(imodel) }), [imodel, schemaContextProvider]);
+  return <schemaMetadataContext.Provider value={value}>{children}</schemaMetadataContext.Provider>;
 }
 
 /**

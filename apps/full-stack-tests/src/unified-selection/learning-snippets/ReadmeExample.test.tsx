@@ -2,8 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
-/* eslint-disable no-console */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -215,6 +213,7 @@ describe("Unified selection", () => {
             });
           });
 
+          /* oxlint-disable @typescript-eslint/no-deprecated */
           // __PUBLISH_EXTRACT_START__ Presentation.LegacySelectionManagerSelectionSync.Example
           const selectionStorage = createStorage();
 
@@ -222,10 +221,11 @@ describe("Unified selection", () => {
           // use the same underlying selection store.
           await Presentation.initialize({ selection: { selectionStorage } });
           // __PUBLISH_EXTRACT_END__
+          /* oxlint-enable @typescript-eslint/no-deprecated */
 
           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodelConnection.key }))).toBe(true);
 
-          // eslint-disable-next-line @typescript-eslint/no-deprecated
+          // oxlint-disable-next-line @typescript-eslint/no-deprecated
           Presentation.selection.addToSelection("test", imodelConnection, new KeySet([keys.elementKey]));
           await waitFor(() => {
             expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodelConnection.key }))).toBe(1);

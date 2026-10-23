@@ -28,9 +28,6 @@ catalogs:
     '@rolldown/plugin-babel':
       specifier: ^0.2.3
       version: 0.2.4
-    '@stylistic/eslint-plugin':
-      specifier: ^5.10.0
-      version: 5.10.0
     '@types/node':
       specifier: ^24.19.2
       version: 24.19.2
@@ -52,12 +49,12 @@ catalogs:
     eslint:
       specifier: ^9.39.5
       version: 9.39.5
-    eslint-plugin-react:
-      specifier: ^7.37.5
-      version: 7.37.5
-    eslint-plugin-unused-imports:
-      specifier: ^4.4.1
-      version: 4.4.1
+    oxlint:
+      specifier: ^1.89.0
+      version: 1.89.0
+    oxlint-tsgolint:
+      specifier: ^7.0.2004
+      version: 7.0.2004
     rimraf:
       specifier: ^6.1.3
       version: 6.1.3
@@ -251,9 +248,9 @@ importers:
       '@changesets/get-github-info':
         specifier: ^1.0.1
         version: 1.0.1
-      '@stylistic/eslint-plugin':
+      '@itwin/eslint-plugin':
         specifier: catalog:build-tools
-        version: 5.10.0(eslint@9.39.5(supports-color@8.1.1))
+        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2(supports-color@8.1.1)
@@ -263,12 +260,6 @@ importers:
       eslint:
         specifier: catalog:build-tools
         version: 9.39.5(supports-color@8.1.1)
-      eslint-config-prettier:
-        specifier: ^9.1.2
-        version: 9.1.2(eslint@9.39.5(supports-color@8.1.1))
-      eslint-plugin-unused-imports:
-        specifier: catalog:build-tools
-        version: 4.4.1(@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.5(supports-color@8.1.1))
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -284,9 +275,18 @@ importers:
       oxfmt:
         specifier: ^0.72.0
         version: 0.72.0
+      oxlint:
+        specifier: catalog:build-tools
+        version: 1.89.0(oxlint-tsgolint@7.0.2004)
+      oxlint-tsgolint:
+        specifier: catalog:build-tools
+        version: 7.0.2004
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
+      typescript:
+        specifier: catalog:build-tools
+        version: '@typescript/typescript6@6.0.2'
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
@@ -324,18 +324,12 @@ importers:
         specifier: catalog:rxjs
         version: 7.8.2
     devDependencies:
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@types/node':
         specifier: catalog:build-tools
         version: 24.19.2
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -396,9 +390,6 @@ importers:
       '@itwin/ecschema-rpcinterface-impl':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-backend@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))(@itwin/ecschema-rpcinterface-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
         version: 5.35.1(cfed1324ea2af24dcbfbba1880214508)
@@ -489,12 +480,6 @@ importers:
       deep-equal-in-any-order:
         specifier: catalog:test-tools
         version: 2.2.0
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
-      eslint-plugin-react:
-        specifier: catalog:build-tools
-        version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       fast-xml-parser:
         specifier: catalog:miscellaneous
         version: 5.11.2
@@ -555,9 +540,6 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop
@@ -585,9 +567,6 @@ importers:
       cross-env:
         specifier: catalog:build-tools
         version: 7.0.3
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../../packages/test-utilities
@@ -608,7 +587,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.14.3(@types/node@26.6.5)(supports-color@8.1.1)
+        version: 5.14.3(supports-color@8.1.1)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
@@ -624,9 +603,6 @@ importers:
       '@itwin/ecschema-rpcinterface-impl':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-backend@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))(@itwin/ecschema-rpcinterface-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/express-server':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-backend@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))(@opentelemetry/api@1.9.1)(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1))(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(supports-color@8.1.1)
@@ -663,9 +639,6 @@ importers:
       electron:
         specifier: ^43.8.0
         version: 43.8.0(supports-color@8.1.1)
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -677,7 +650,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.14.3(@types/node@26.6.5)(supports-color@8.1.1)
+        version: 5.14.3(supports-color@8.1.1)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3
@@ -687,18 +660,12 @@ importers:
       '@itwin/ecschema-rpcinterface-common':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -753,9 +720,6 @@ importers:
       '@itwin/ecschema-rpcinterface-common':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-geometry@5.14.3)(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
         version: 5.35.1(cfed1324ea2af24dcbfbba1880214508)
@@ -843,12 +807,6 @@ importers:
       classnames:
         specifier: catalog:react
         version: 2.5.1
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
-      eslint-plugin-react:
-        specifier: catalog:build-tools
-        version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       fast-xml-parser:
         specifier: catalog:miscellaneous
         version: 5.11.2
@@ -952,9 +910,6 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
         version: 5.35.1(cfed1324ea2af24dcbfbba1880214508)
@@ -1000,12 +955,6 @@ importers:
       cross-env:
         specifier: catalog:build-tools
         version: 7.0.3
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
-      eslint-plugin-react:
-        specifier: catalog:build-tools
-        version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       happy-dom:
         specifier: catalog:test-tools
         version: 20.14.6
@@ -1043,18 +992,12 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@26.6.5)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
         version: 4.1.12(@vitest/browser@4.1.12)(vitest@4.1.12)
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       presentation-test-utilities:
         specifier: workspace:*
         version: link:../test-utilities
@@ -1083,9 +1026,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@26.6.5)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@testing-library/react':
         specifier: catalog:test-tools
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1095,12 +1035,6 @@ importers:
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
-      eslint-plugin-react:
-        specifier: catalog:build-tools
-        version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       happy-dom:
         specifier: catalog:test-tools
         version: 20.14.6
@@ -1144,9 +1078,6 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
@@ -1156,9 +1087,6 @@ importers:
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2(supports-color@8.1.1)
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -1196,9 +1124,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@24.19.2)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@types/natural-compare-lite':
         specifier: ^1.4.2
         version: 1.4.2
@@ -1214,9 +1139,6 @@ importers:
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2(supports-color@8.1.1)
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       presentation-test-utilities:
         specifier: workspace:*
         version: link:../test-utilities
@@ -1272,9 +1194,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@24.19.2)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@mui/material':
         specifier: catalog:stratakit
         version: 9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1323,15 +1242,6 @@ importers:
       babel-plugin-react-compiler:
         specifier: catalog:build-tools
         version: 1.0.0
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
-      eslint-plugin-react:
-        specifier: catalog:build-tools
-        version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
-      eslint-plugin-react-hooks:
-        specifier: ^7.1.1
-        version: 7.1.1(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       happy-dom:
         specifier: catalog:test-tools
         version: 20.14.6
@@ -1368,9 +1278,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@24.19.2)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-common@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-geometry@5.14.3))(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))(@itwin/ecschema-metadata@5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3)))
@@ -1392,9 +1299,6 @@ importers:
       cross-env:
         specifier: catalog:build-tools
         version: 7.0.3
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -1417,9 +1321,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@24.19.2)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@types/node':
         specifier: catalog:build-tools
         version: 24.19.2
@@ -1429,9 +1330,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: catalog:test-tools
         version: 4.1.12(@vitest/browser@4.1.12)(vitest@4.1.12)
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       presentation-test-utilities:
         specifier: workspace:*
         version: link:../test-utilities
@@ -1462,18 +1360,12 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core-dev
         version: 5.14.3(@itwin/core-bentley@5.14.3)(@itwin/core-quantity@5.14.3(@itwin/core-bentley@5.14.3))
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@types/node':
         specifier: catalog:build-tools
         version: 24.19.2
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -1505,18 +1397,12 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@24.19.2)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@types/node':
         specifier: catalog:build-tools
         version: 24.19.2
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3
@@ -1545,9 +1431,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@24.19.2)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@types/node':
         specifier: catalog:build-tools
         version: 24.19.2
@@ -1560,9 +1443,6 @@ importers:
       cpx2:
         specifier: catalog:build-tools
         version: 7.0.2(supports-color@8.1.1)
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
       presentation-test-utilities:
         specifier: workspace:*
         version: link:../test-utilities
@@ -1581,9 +1461,6 @@ importers:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.14.3(@types/node@26.6.5)(supports-color@8.1.1)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 6.1.1(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)
       '@itwin/unified-selection':
         specifier: workspace:^
         version: link:../unified-selection
@@ -1605,12 +1482,6 @@ importers:
       cross-env:
         specifier: catalog:build-tools
         version: 7.0.3
-      eslint:
-        specifier: catalog:build-tools
-        version: 9.39.5(supports-color@8.1.1)
-      eslint-plugin-react:
-        specifier: catalog:build-tools
-        version: 7.37.5(eslint@9.39.5(supports-color@8.1.1))
       happy-dom:
         specifier: catalog:test-tools
         version: 20.14.6
@@ -3035,6 +2906,158 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@oxlint-tsgolint/darwin-arm64@7.0.2004':
+    resolution: {integrity: sha512-uJk3ttju7Lz+Nv8WG4CsLyewoL1qf/Ny8S8OksJ7Bm/F14Tc9gMfW6arM1PCc57IzH/X/I79YsCWTgxX1FKibQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oxlint-tsgolint/darwin-x64@7.0.2004':
+    resolution: {integrity: sha512-0BFfHTzDxNDFPcu0UZAXT6CyCJHAXM0dZveyDb4KEHa2qF/DSnOKOrmvK/wFuFol9kvijbGM9JfuOsor+zWXRw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oxlint-tsgolint/linux-arm64@7.0.2004':
+    resolution: {integrity: sha512-TAehQc+qdRXyDN3nl/r/3/oPrBVrbtrDeGMkFyG6mf+XphpoJ2lAMVFLclyvrVZCw02RbKROjyw8h72XwQQHcw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oxlint-tsgolint/linux-x64@7.0.2004':
+    resolution: {integrity: sha512-LPunZvm6ZbWPfHMAyfZf9ci3HHvNEzLejO8zdqO3GoVGoSEHqqufHUD7+OgeatVSaJP7uXDJ2HaNOHIoH7go4Q==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oxlint-tsgolint/win32-arm64@7.0.2004':
+    resolution: {integrity: sha512-FVWplzDImWhiuawnIZVETaQecv4GWom6Jv4Fx2xj7hhXXDZ5okEgiw1gTCImHTIQsi2ycC5oSxVwrn69bMh7iw==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@oxlint-tsgolint/win32-x64@7.0.2004':
+    resolution: {integrity: sha512-7PsxuUx11Ry9DYTWcljTzRbmZY9B6O9fFFfZV+aodQEMy6pfRT3fhoQRv9PtGN/89z1pPz3nFKrsFm6WqNtX7w==}
+    cpu: [x64]
+    os: [win32]
+
+  '@oxlint/binding-android-arm-eabi@1.89.0':
+    resolution: {integrity: sha512-Pflpba5F3gRAQ12sWglRxvWTHEdAusNDvmi4Y5N1T5SY1AGkM7AixOnET8qkrnLJ/F32qAlNokO6eCknT8tmnw==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm]
+    os: [android]
+
+  '@oxlint/binding-android-arm64@1.89.0':
+    resolution: {integrity: sha512-dYmyD1x7LaPlb79vZWUcpTShk8dI9z1I+IubtqrBxWNJaDhQdPHwcsvg7q5StTU4xWyd9AwPfLaTYFZY8NZgtQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm64]
+    os: [android]
+
+  '@oxlint/binding-darwin-arm64@1.89.0':
+    resolution: {integrity: sha512-Z/oxOPiIqiS7fItRdxaaOEC+6GD3OpGi0IxoR0dMefzQHolsKLzScw2DNcu/5gUPok3tv+G9mslvYB5bo3i0qg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oxlint/binding-darwin-x64@1.89.0':
+    resolution: {integrity: sha512-eAjTkHSjAxrdCPJxO6y5sPQL5pYLKb2kvxZz9UU7tXnOZk9I/HLtkvx9S7GHY883k+AmL/eC7mqFt+w7WCwk0w==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oxlint/binding-freebsd-x64@1.89.0':
+    resolution: {integrity: sha512-0lNCA9Tl1n1FKpqy2/9ckp0kIuSrtJ/l9bMRgaEhOtM7TsOHshFuwOcvW8oA9teXLMOJT61LjEKWiaHDFGxF/w==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@oxlint/binding-linux-arm-gnueabihf@1.89.0':
+    resolution: {integrity: sha512-OTFEvi9W+JczaZD1Caj17SGCoW8H7TE+fvx0D7ATEWa1Lohn91UMxFQ6r145SiGy/yCxeIwptMys/RAM7gSVSQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm]
+    os: [linux]
+
+  '@oxlint/binding-linux-arm-musleabihf@1.89.0':
+    resolution: {integrity: sha512-fRxgNHvBLswj6MrhW2uBq5UDhPRQlCbHeq/Nf8yuG9zOxhDsXqX/mi2PX1axgsQxMm88el7HLiJAzglAnflYxw==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm]
+    os: [linux]
+
+  '@oxlint/binding-linux-arm64-gnu@1.89.0':
+    resolution: {integrity: sha512-v9ENzHvwrQoYSWTtviH1pOYc7R9UovDxVofnck50cNmPihRRTcrg5X0UlRbLOZ7IVtxPOlh2hb7kDO+FpE8SfQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@oxlint/binding-linux-arm64-musl@1.89.0':
+    resolution: {integrity: sha512-vfffe8mQ484AzVadlUOFpgL+JDwhvs9hrzxTgQP1FVfi4ZEUUYeffXlzC9dFV7Dgnu5s/KrNKvfmG6HxBd/ISQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@oxlint/binding-linux-ppc64-gnu@1.89.0':
+    resolution: {integrity: sha512-Buonlp4hVS7RGNP5M7bPpGNQrenyzA2C64JcO/oz9C1c6dGOXJ7VEAnaiAMY7voou0JYyCJdvDVlFQc5DZX3DQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [ppc64]
+    os: [linux]
+    libc: [glibc]
+
+  '@oxlint/binding-linux-riscv64-gnu@1.89.0':
+    resolution: {integrity: sha512-1eVwJJrJ3lYIPT+cm7BcBBZZXY6IQZP/oyonaruTor/MrVyWOpvnwt1oD5CLdsHg5aVBIxXodQSvt+1gK6ck5w==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [glibc]
+
+  '@oxlint/binding-linux-riscv64-musl@1.89.0':
+    resolution: {integrity: sha512-fRQQsKUGShdEL5Fl9o9uhj3grkZbeXKLv0icQ5tspUCNYSDy8wzzEcP1WC2bKdTQ0rSszbKlO3iiHORxV22DLg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [musl]
+
+  '@oxlint/binding-linux-s390x-gnu@1.89.0':
+    resolution: {integrity: sha512-dEtYjIy6+fHcjKklsmtmMkZRhwHr2UbzjmpvuPtQYSeN9awQ2hx5JLms5Wvri+8P/NZtD8v5hfgHALUql+/Ycg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [s390x]
+    os: [linux]
+    libc: [glibc]
+
+  '@oxlint/binding-linux-x64-gnu@1.89.0':
+    resolution: {integrity: sha512-hqjwIj5KOYM8Wjef/p7IruNi1iByLhSzbMBk62y22P/E8q7Jj0Pp+DeUTKTRYyZYCDtU1wEGlnWOnttHbyNIww==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@oxlint/binding-linux-x64-musl@1.89.0':
+    resolution: {integrity: sha512-iAQN3e6o9UgUCcdGwqRx/jYcKbG3HK7ur3rH6lTqVcQeNGZ85AeWIg6cgn/edwFQ0ofEZZItMwkzyCVTahnvEA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@oxlint/binding-openharmony-arm64@1.89.0':
+    resolution: {integrity: sha512-MNxjEByz3N/7Q4qFQuPWvc14TpN9LoD3pECEDsJTZbP/wyB7U+hduUXEl7QAbbgVezFwsb9sWtNUO6XVBndOhg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm64]
+    os: [openharmony]
+
+  '@oxlint/binding-win32-arm64-msvc@1.89.0':
+    resolution: {integrity: sha512-xxe+i9wfuFso/VnoL4mfj0UlzE+cfCFiUB06vkXCMyQdgVVmItF5FfAF4tATAktSU6uHruWR+FjqvAT9cHZZzg==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [arm64]
+    os: [win32]
+
+  '@oxlint/binding-win32-ia32-msvc@1.89.0':
+    resolution: {integrity: sha512-saFy07cO94E664glwgLmKLI40HgTL1PY86y4T6+ud4niX4H0Kdqjcmqmjps7mQNdBytV5guGbXDdyQtRfeLbLA==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [ia32]
+    os: [win32]
+
+  '@oxlint/binding-win32-x64-msvc@1.89.0':
+    resolution: {integrity: sha512-hLFJ/o0f/dTJh/EW0vmcbREYSQO9tYgfiAAlsOkiLFiJuRRWvYtFELUXN5o2ijpSo/tlO1n+YlWN58tZwPG18A==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    cpu: [x64]
+    os: [win32]
+
   '@parcel/watcher-android-arm64@2.6.0':
     resolution: {integrity: sha512-trgpLSCKRC/huFjXX/Smh+0sWe4+YtKfktIToiMl59ghz7z+qkH6kMvNnUbLyRs9N11t8l4svSCs1+5B3rOAhA==}
     engines: {node: '>= 10.0.0'}
@@ -3354,9 +3377,6 @@ packages:
       react-dom:
         optional: true
 
-  '@stratakit/icons@0.4.6':
-    resolution: {integrity: sha512-VFKafaYh7ixHY0L5VU8mYDQ/ovGOlAyfYiVJ97ESm2ty4ijgmn5yV1LFF1HzwJypoS+0fHBA187R5OjtpWjI5g==}
-
   '@stratakit/icons@0.4.7':
     resolution: {integrity: sha512-cbhrToc4yQ2x3Zc5rx4ViyI1265E7w9nrc77inp16S1dmEfChI1nQ5S5jBOokaw4UZcDxzOZe45siFJ/h3d7EQ==}
 
@@ -3380,12 +3400,6 @@ packages:
       '@stratakit/foundations': ^1.0.3
       react: ^19.0.0
       react-dom: ^19.0.0
-
-  '@stylistic/eslint-plugin@5.10.0':
-    resolution: {integrity: sha512-nPK52ZHvot8Ju/0A4ucSX1dcPV2/1clx0kLcH5wDmrE4naKso7TUC/voUyU1O9OTKTrR6MYip6LP0ogEMQ9jPQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: ^9.0.0 || ^10.0.0
 
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
@@ -4627,12 +4641,6 @@ packages:
     engines: {node: '>=6.0'}
     hasBin: true
 
-  eslint-config-prettier@9.1.2:
-    resolution: {integrity: sha512-iI1f+D2ViGn+uvv5HuHVUamg8ll4tN+JRHGc6IJi4TP9Kl976C57fzPXgseXNs8v0iA8aSJpHsTWjDb9QJamGQ==}
-    hasBin: true
-    peerDependencies:
-      eslint: '>=7.0.0'
-
   eslint-formatter-visualstudio@8.40.0:
     resolution: {integrity: sha512-TsbZJpvu0wclOoy5MEhETzxrVWMPDg5sejowvQfbqw9e0ooozbnX/1STGiGaO/fH1JWLQvqQ4qAmai2u/Kep1g==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
@@ -4698,26 +4706,11 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
 
-  eslint-plugin-react-hooks@7.1.1:
-    resolution: {integrity: sha512-f2I7Gw6JbvCexzIInuSbZpfdQ44D7iqdWX01FKLvrPgqxoE7oMj8clOfto8U6vYiz4yd5oKu39rRSVOe1zRu0g==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
-
   eslint-plugin-react@7.37.5:
     resolution: {integrity: sha512-Qteup0SqU15kdocexFNAJMvCJEfa2xUKNV4CC1xsVMrIIqEy3SQ/rqyxCWNzfrd3/ldy6HMlD2e0JDVpDg2qIA==}
     engines: {node: '>=4'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7
-
-  eslint-plugin-unused-imports@4.4.1:
-    resolution: {integrity: sha512-oZGYUz1X3sRMGUB+0cZyK2VcvRX5lm/vB56PgNNcU+7ficUCKm66oZWKUubXWnOuPjQ8PvmXtCViXBMONPe7tQ==}
-    peerDependencies:
-      '@typescript-eslint/eslint-plugin': ^8.0.0-0 || ^7.0.0 || ^6.0.0 || ^5.0.0
-      eslint: ^10.0.0 || ^9.0.0 || ^8.0.0
-    peerDependenciesMeta:
-      '@typescript-eslint/eslint-plugin':
-        optional: true
 
   eslint-scope@8.4.0:
     resolution: {integrity: sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg==}
@@ -5085,12 +5078,6 @@ packages:
   hasown@2.0.4:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
-
-  hermes-estree@0.25.1:
-    resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
-
-  hermes-parser@0.25.1:
-    resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
@@ -5842,6 +5829,23 @@ packages:
       vite-plus: '*'
     peerDependenciesMeta:
       svelte:
+        optional: true
+      vite-plus:
+        optional: true
+
+  oxlint-tsgolint@7.0.2004:
+    resolution: {integrity: sha512-vQ9WDF3fiZJvRdSDosNOflerOCOpwol6vWzVDxW76RcU19cjTh7engvkHLvmv+tzedR8fAiJUVUGr6IVZdkzXQ==}
+    hasBin: true
+
+  oxlint@1.89.0:
+    resolution: {integrity: sha512-a25hkfo61okGPvJz432fRIPoxlKtNnOVy9w4rzrmGgNm4iVTPwpSQlmdqNWnp6p9QyyPVfAZRgnf5XvSBZFk/A==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    hasBin: true
+    peerDependencies:
+      oxlint-tsgolint: '>=7.0.2003'
+      vite-plus: '*'
+    peerDependenciesMeta:
+      oxlint-tsgolint:
         optional: true
       vite-plus:
         optional: true
@@ -6971,15 +6975,6 @@ packages:
   yuku-parser@0.8.7:
     resolution: {integrity: sha512-vRD9nwt4L3aYpxNqeSC4WqLv58xrXef0Ong1Mc45CTXTIpvLafx7JO05sczmQZwdLEZvywrLOGdNC5+Rp5N1BQ==}
 
-  zod-validation-error@4.0.2:
-    resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      zod: ^3.25.0 || ^4.0.0
-
-  zod@4.6.7:
-    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
-
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
     engines: {node: '>=12.7.0'}
@@ -7915,6 +7910,25 @@ snapshots:
       - '@types/node'
       - supports-color
 
+  '@itwin/build-tools@5.14.3(supports-color@8.1.1)':
+    dependencies:
+      '@microsoft/api-extractor': 7.58.13
+      chalk: 3.0.0
+      cpx2: 8.0.2
+      cross-spawn: 7.0.6
+      fs-extra: 8.1.0
+      mocha-junit-reporter: 2.2.1(supports-color@8.1.1)
+      rimraf: 6.1.3
+      tree-kill: 1.2.2
+      typedoc: 0.28.20(typescript@5.6.3)
+      typedoc-plugin-merge-modules: 7.0.0(typedoc@0.28.20(typescript@5.6.3))
+      typescript: 5.6.3
+      wtfnode: 0.9.4
+      yargs: 17.7.3
+    transitivePeerDependencies:
+      - '@types/node'
+      - supports-color
+
   '@itwin/cloud-agnostic-core@3.1.3': {}
 
   '@itwin/components-react@5.35.1(31d1415ef7ccfdf5de1c202b98d7456b)':
@@ -8274,6 +8288,14 @@ snapshots:
 
   '@math.gl/types@4.1.0': {}
 
+  '@microsoft/api-extractor-model@7.33.11':
+    dependencies:
+      '@microsoft/tsdoc': 0.16.0
+      '@microsoft/tsdoc-config': 0.18.3
+      '@rushstack/node-core-library': 5.24.0
+    transitivePeerDependencies:
+      - '@types/node'
+
   '@microsoft/api-extractor-model@7.33.11(@types/node@24.19.2)':
     dependencies:
       '@microsoft/tsdoc': 0.16.0
@@ -8287,6 +8309,24 @@ snapshots:
       '@microsoft/tsdoc': 0.16.0
       '@microsoft/tsdoc-config': 0.18.3
       '@rushstack/node-core-library': 5.24.0(@types/node@26.6.5)
+    transitivePeerDependencies:
+      - '@types/node'
+
+  '@microsoft/api-extractor@7.58.13':
+    dependencies:
+      '@microsoft/api-extractor-model': 7.33.11
+      '@microsoft/tsdoc': 0.16.0
+      '@microsoft/tsdoc-config': 0.18.3
+      '@rushstack/node-core-library': 5.24.0
+      '@rushstack/rig-package': 0.7.3
+      '@rushstack/terminal': 0.24.3
+      '@rushstack/ts-command-line': 5.3.13
+      diff: 8.0.4
+      minimatch: 10.2.3
+      resolve: 1.22.13
+      semver: 7.7.4
+      source-map: 0.6.1
+      typescript: 5.9.3
     transitivePeerDependencies:
       - '@types/node'
 
@@ -8761,6 +8801,81 @@ snapshots:
   '@oxfmt/binding-win32-x64-msvc@0.72.0':
     optional: true
 
+  '@oxlint-tsgolint/darwin-arm64@7.0.2004':
+    optional: true
+
+  '@oxlint-tsgolint/darwin-x64@7.0.2004':
+    optional: true
+
+  '@oxlint-tsgolint/linux-arm64@7.0.2004':
+    optional: true
+
+  '@oxlint-tsgolint/linux-x64@7.0.2004':
+    optional: true
+
+  '@oxlint-tsgolint/win32-arm64@7.0.2004':
+    optional: true
+
+  '@oxlint-tsgolint/win32-x64@7.0.2004':
+    optional: true
+
+  '@oxlint/binding-android-arm-eabi@1.89.0':
+    optional: true
+
+  '@oxlint/binding-android-arm64@1.89.0':
+    optional: true
+
+  '@oxlint/binding-darwin-arm64@1.89.0':
+    optional: true
+
+  '@oxlint/binding-darwin-x64@1.89.0':
+    optional: true
+
+  '@oxlint/binding-freebsd-x64@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-arm-gnueabihf@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-arm-musleabihf@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-arm64-gnu@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-arm64-musl@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-ppc64-gnu@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-riscv64-gnu@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-riscv64-musl@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-s390x-gnu@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-x64-gnu@1.89.0':
+    optional: true
+
+  '@oxlint/binding-linux-x64-musl@1.89.0':
+    optional: true
+
+  '@oxlint/binding-openharmony-arm64@1.89.0':
+    optional: true
+
+  '@oxlint/binding-win32-arm64-msvc@1.89.0':
+    optional: true
+
+  '@oxlint/binding-win32-ia32-msvc@1.89.0':
+    optional: true
+
+  '@oxlint/binding-win32-x64-msvc@1.89.0':
+    optional: true
+
   '@parcel/watcher-android-arm64@2.6.0':
     optional: true
 
@@ -8914,6 +9029,17 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
+  '@rushstack/node-core-library@5.24.0':
+    dependencies:
+      ajv: 8.20.0
+      ajv-draft-04: 1.0.0(ajv@8.20.0)
+      ajv-formats: 3.0.1(ajv@8.20.0)
+      fs-extra: 11.3.6
+      import-lazy: 4.0.0
+      jju: 1.4.0
+      resolve: 1.22.13
+      semver: 7.7.4
+
   '@rushstack/node-core-library@5.24.0(@types/node@24.19.2)':
     dependencies:
       ajv: 8.20.0
@@ -8940,6 +9066,8 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.6.5
 
+  '@rushstack/problem-matcher@0.2.1': {}
+
   '@rushstack/problem-matcher@0.2.1(@types/node@24.19.2)':
     optionalDependencies:
       '@types/node': 24.19.2
@@ -8952,6 +9080,12 @@ snapshots:
     dependencies:
       jju: 1.4.0
       resolve: 1.22.13
+
+  '@rushstack/terminal@0.24.3':
+    dependencies:
+      '@rushstack/node-core-library': 5.24.0
+      '@rushstack/problem-matcher': 0.2.1
+      supports-color: 8.1.1
 
   '@rushstack/terminal@0.24.3(@types/node@24.19.2)':
     dependencies:
@@ -8968,6 +9102,15 @@ snapshots:
       supports-color: 8.1.1
     optionalDependencies:
       '@types/node': 26.6.5
+
+  '@rushstack/ts-command-line@5.3.13':
+    dependencies:
+      '@rushstack/terminal': 0.24.3
+      '@types/argparse': 1.0.38
+      argparse: 1.0.10
+      string-argv: 0.3.2
+    transitivePeerDependencies:
+      - '@types/node'
 
   '@rushstack/ts-command-line@5.3.13(@types/node@24.19.2)':
     dependencies:
@@ -9029,8 +9172,6 @@ snapshots:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
 
-  '@stratakit/icons@0.4.6': {}
-
   '@stratakit/icons@0.4.7': {}
 
   '@stratakit/internal-utils@0.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
@@ -9047,7 +9188,7 @@ snapshots:
       '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1)
       '@mui/material': 9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@stratakit/foundations': 1.0.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@stratakit/icons': 0.4.6
+      '@stratakit/icons': 0.4.7
       '@stratakit/internal-utils': 0.2.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       classnames: 2.5.1
       react: 19.3.1
@@ -9072,16 +9213,6 @@ snapshots:
       - '@types/react'
       - immer
       - use-sync-external-store
-
-  '@stylistic/eslint-plugin@5.10.0(eslint@9.39.5(supports-color@8.1.1))':
-    dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@9.39.5(supports-color@8.1.1))
-      '@typescript-eslint/types': 8.71.2
-      eslint: 9.39.5(supports-color@8.1.1)
-      eslint-visitor-keys: 4.2.1
-      espree: 10.4.0
-      estraverse: 5.3.0
-      picomatch: 4.0.7
 
   '@swc/helpers@0.5.23':
     dependencies:
@@ -9139,7 +9270,7 @@ snapshots:
 
   '@types/cpx@1.5.5':
     dependencies:
-      '@types/node': 24.19.2
+      '@types/node': 26.6.5
 
   '@types/deep-eql@4.0.2': {}
 
@@ -9218,23 +9349,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
-      '@typescript-eslint/scope-manager': 8.71.2
-      '@typescript-eslint/type-utils': 8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
-      '@typescript-eslint/utils': 8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
-      '@typescript-eslint/visitor-keys': 8.71.2
-      eslint: 9.39.5(supports-color@8.1.1)
-      ignore: 7.0.12
-      natural-compare: 1.4.0
-      ts-api-utils: 2.5.0(typescript@6.0.3)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   '@typescript-eslint/parser@8.71.2(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.71.2
@@ -9247,19 +9361,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@typescript-eslint/scope-manager': 8.71.2
-      '@typescript-eslint/types': 8.71.2
-      '@typescript-eslint/typescript-estree': 8.71.2(supports-color@8.1.1)(typescript@6.0.3)
-      '@typescript-eslint/visitor-keys': 8.71.2
-      debug: 4.4.3(supports-color@8.1.1)
-      eslint: 9.39.5(supports-color@8.1.1)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   '@typescript-eslint/project-service@8.71.2(@typescript/typescript6@6.0.2)(supports-color@8.1.1)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.71.2(@typescript/typescript6@6.0.2)
@@ -9269,16 +9370,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.71.2(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.71.2(typescript@6.0.3)
-      '@typescript-eslint/types': 8.71.2
-      debug: 4.4.3(supports-color@8.1.1)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   '@typescript-eslint/scope-manager@8.71.2':
     dependencies:
       '@typescript-eslint/types': 8.71.2
@@ -9287,11 +9378,6 @@ snapshots:
   '@typescript-eslint/tsconfig-utils@8.71.2(@typescript/typescript6@6.0.2)':
     dependencies:
       typescript: '@typescript/typescript6@6.0.2'
-
-  '@typescript-eslint/tsconfig-utils@8.71.2(typescript@6.0.3)':
-    dependencies:
-      typescript: 6.0.3
-    optional: true
 
   '@typescript-eslint/type-utils@8.71.2(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
@@ -9304,19 +9390,6 @@ snapshots:
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
-
-  '@typescript-eslint/type-utils@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@typescript-eslint/types': 8.71.2
-      '@typescript-eslint/typescript-estree': 8.71.2(supports-color@8.1.1)(typescript@6.0.3)
-      '@typescript-eslint/utils': 8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
-      debug: 4.4.3(supports-color@8.1.1)
-      eslint: 9.39.5(supports-color@8.1.1)
-      ts-api-utils: 2.5.0(typescript@6.0.3)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   '@typescript-eslint/types@8.71.2': {}
 
@@ -9335,22 +9408,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/typescript-estree@8.71.2(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@typescript-eslint/project-service': 8.71.2(supports-color@8.1.1)(typescript@6.0.3)
-      '@typescript-eslint/tsconfig-utils': 8.71.2(typescript@6.0.3)
-      '@typescript-eslint/types': 8.71.2
-      '@typescript-eslint/visitor-keys': 8.71.2
-      debug: 4.4.3(supports-color@8.1.1)
-      minimatch: 10.2.6
-      semver: 7.8.5
-      tinyglobby: 0.2.17
-      ts-api-utils: 2.5.0(typescript@6.0.3)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
-
   '@typescript-eslint/utils@8.71.2(@typescript/typescript6@6.0.2)(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@eslint-community/eslint-utils': 4.10.1(eslint@9.39.5(supports-color@8.1.1))
@@ -9361,18 +9418,6 @@ snapshots:
       typescript: '@typescript/typescript6@6.0.2'
     transitivePeerDependencies:
       - supports-color
-
-  '@typescript-eslint/utils@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@9.39.5(supports-color@8.1.1))
-      '@typescript-eslint/scope-manager': 8.71.2
-      '@typescript-eslint/types': 8.71.2
-      '@typescript-eslint/typescript-estree': 8.71.2(supports-color@8.1.1)(typescript@6.0.3)
-      eslint: 9.39.5(supports-color@8.1.1)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   '@typescript-eslint/visitor-keys@8.71.2':
     dependencies:
@@ -10535,10 +10580,6 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-prettier@9.1.2(eslint@9.39.5(supports-color@8.1.1)):
-    dependencies:
-      eslint: 9.39.5(supports-color@8.1.1)
-
   eslint-formatter-visualstudio@8.40.0: {}
 
   eslint-import-resolver-node@0.3.10(supports-color@8.1.1):
@@ -10637,17 +10678,6 @@ snapshots:
     dependencies:
       eslint: 9.39.5(supports-color@8.1.1)
 
-  eslint-plugin-react-hooks@7.1.1(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1):
-    dependencies:
-      '@babel/core': 7.29.7(supports-color@8.1.1)
-      '@babel/parser': 7.29.9
-      eslint: 9.39.5(supports-color@8.1.1)
-      hermes-parser: 0.25.1
-      zod: 4.6.7
-      zod-validation-error: 4.0.2(zod@4.6.7)
-    transitivePeerDependencies:
-      - supports-color
-
   eslint-plugin-react@7.37.5(eslint@9.39.5(supports-color@8.1.1)):
     dependencies:
       array-includes: 3.2.0
@@ -10669,12 +10699,6 @@ snapshots:
       semver: 6.3.1
       string.prototype.matchall: 4.1.0
       string.prototype.repeat: 1.0.0
-
-  eslint-plugin-unused-imports@4.4.1(@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.5(supports-color@8.1.1)):
-    dependencies:
-      eslint: 9.39.5(supports-color@8.1.1)
-    optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@9.39.5(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
 
   eslint-scope@8.4.0:
     dependencies:
@@ -11091,12 +11115,6 @@ snapshots:
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
-
-  hermes-estree@0.25.1: {}
-
-  hermes-parser@0.25.1:
-    dependencies:
-      hermes-estree: 0.25.1
 
   hoist-non-react-statics@3.3.2:
     dependencies:
@@ -11844,6 +11862,38 @@ snapshots:
       '@oxfmt/binding-win32-ia32-msvc': 0.72.0
       '@oxfmt/binding-win32-x64-msvc': 0.72.0
 
+  oxlint-tsgolint@7.0.2004:
+    optionalDependencies:
+      '@oxlint-tsgolint/darwin-arm64': 7.0.2004
+      '@oxlint-tsgolint/darwin-x64': 7.0.2004
+      '@oxlint-tsgolint/linux-arm64': 7.0.2004
+      '@oxlint-tsgolint/linux-x64': 7.0.2004
+      '@oxlint-tsgolint/win32-arm64': 7.0.2004
+      '@oxlint-tsgolint/win32-x64': 7.0.2004
+
+  oxlint@1.89.0(oxlint-tsgolint@7.0.2004):
+    optionalDependencies:
+      '@oxlint/binding-android-arm-eabi': 1.89.0
+      '@oxlint/binding-android-arm64': 1.89.0
+      '@oxlint/binding-darwin-arm64': 1.89.0
+      '@oxlint/binding-darwin-x64': 1.89.0
+      '@oxlint/binding-freebsd-x64': 1.89.0
+      '@oxlint/binding-linux-arm-gnueabihf': 1.89.0
+      '@oxlint/binding-linux-arm-musleabihf': 1.89.0
+      '@oxlint/binding-linux-arm64-gnu': 1.89.0
+      '@oxlint/binding-linux-arm64-musl': 1.89.0
+      '@oxlint/binding-linux-ppc64-gnu': 1.89.0
+      '@oxlint/binding-linux-riscv64-gnu': 1.89.0
+      '@oxlint/binding-linux-riscv64-musl': 1.89.0
+      '@oxlint/binding-linux-s390x-gnu': 1.89.0
+      '@oxlint/binding-linux-x64-gnu': 1.89.0
+      '@oxlint/binding-linux-x64-musl': 1.89.0
+      '@oxlint/binding-openharmony-arm64': 1.89.0
+      '@oxlint/binding-win32-arm64-msvc': 1.89.0
+      '@oxlint/binding-win32-ia32-msvc': 1.89.0
+      '@oxlint/binding-win32-x64-msvc': 1.89.0
+      oxlint-tsgolint: 7.0.2004
+
   p-limit@3.1.0:
     dependencies:
       yocto-queue: 0.1.0
@@ -12568,11 +12618,6 @@ snapshots:
     dependencies:
       typescript: '@typescript/typescript6@6.0.2'
 
-  ts-api-utils@2.5.0(typescript@6.0.3):
-    dependencies:
-      typescript: 6.0.3
-    optional: true
-
   ts-key-enum@2.0.13: {}
 
   tsconfig-paths@3.15.0:
@@ -13038,12 +13083,6 @@ snapshots:
       '@yuku-parser/binding-linux-x64-musl': 0.8.7
       '@yuku-parser/binding-win32-arm64': 0.8.7
       '@yuku-parser/binding-win32-x64': 0.8.7
-
-  zod-validation-error@4.0.2(zod@4.6.7):
-    dependencies:
-      zod: 4.6.7
-
-  zod@4.6.7: {}
 
   zustand@4.5.7(@types/react@19.3.0)(immer@10.2.0)(react@19.3.1):
     dependencies:

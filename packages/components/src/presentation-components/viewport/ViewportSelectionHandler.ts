@@ -13,7 +13,7 @@ import type { IModelConnection } from "@itwin/core-frontend";
 import type { KeySet } from "@itwin/presentation-common";
 import type { HiliteSet, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 
 /** @internal */
 export interface ViewportSelectionHandlerProps {
