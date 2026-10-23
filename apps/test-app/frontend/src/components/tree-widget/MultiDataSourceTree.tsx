@@ -55,6 +55,7 @@ export function MultiDataSourceTree({
   treeLabel: string;
 }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
+  // oxlint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setIModelAccess(createIModelAccess(imodel)), [imodel]);
 
   if (!imodelAccess) {
@@ -142,7 +143,6 @@ function Tree({
     ),
     getSearchPaths,
     onHierarchyLoadError: (props) => {
-      // eslint-disable-next-line no-console
       console.error(props.error);
     },
   });

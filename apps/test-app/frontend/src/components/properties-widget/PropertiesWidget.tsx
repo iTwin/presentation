@@ -165,6 +165,7 @@ function PropertyGrid(props: PropertyGridProps) {
   useEffect(() => {
     const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
     provider.isNestedPropertyCategoryGroupingEnabled = true;
+    // oxlint-disable-next-line react-hooks/set-state-in-effect
     setDataProvider(provider);
     return () => {
       provider[Symbol.dispose]();
@@ -220,6 +221,7 @@ function FilterablePropertyGrid({
     filteringDataProv.onDataChanged.addListener(() => {
       setFilteringProvDataChanged({});
     });
+    // oxlint-disable-next-line react-hooks/set-state-in-effect
     setFilteringDataProvider(filteringDataProv);
     return () => {
       filteringDataProv[Symbol.dispose]();
@@ -229,7 +231,7 @@ function FilterablePropertyGrid({
   const { value: filteringResult } = useDebouncedAsyncValue(
     useCallback(async () => {
       return filteringDataProvider?.getData();
-    }, [filteringDataProvider, filteringProvDataChanged]), // eslint-disable-line react-hooks/exhaustive-deps
+    }, [filteringDataProvider, filteringProvDataChanged]), // oxlint-disable-line react-hooks/exhaustive-deps
   );
   useEffect(() => {
     onFilteringStateChanged(filteringResult);
@@ -290,7 +292,7 @@ function FilterablePropertyGrid({
         }
         isPropertyEditingEnabled={true}
         onPropertyUpdated={async ({ newValue }) => {
-          console.log(`Updated new value`, newValue); // eslint-disable-line no-console
+          console.log(`Updated new value`, newValue);
           return true;
         }}
         editorSystem="new"
@@ -373,7 +375,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
   }
 
   return (
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    // oxlint-disable-next-line @typescript-eslint/no-deprecated
     <GlobalContextMenu
       opened={true}
       onOutsideClick={onCloseContextMenu}

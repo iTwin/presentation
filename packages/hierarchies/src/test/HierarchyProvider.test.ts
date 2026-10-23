@@ -110,7 +110,7 @@ describe("createHierarchyProvider", () => {
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }), label: "root" }),
     ]);
 
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
+    // oxlint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
     provider.setFormatter(async (value) => `formatted ${value.value}`);
     expect(await collect(provider.getNodes({ parentNode: undefined }))).to.deep.eq([
       createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }), label: "formatted root" }),

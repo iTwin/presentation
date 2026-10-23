@@ -68,9 +68,7 @@ const MAX_READABLE_FORK_KEY_LENGTH = 100;
 export function hashString(value: string): string {
   // FNV-1a 32-bit: start from the FNV offset basis, then for each char XOR it in and
   // multiply by the FNV prime (`Math.imul` keeps the multiply in 32-bit space).
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   const FNV_OffsetBasis = 0x811c9dc5;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   const FNV_Prime = 0x01000193;
 
   let hash = FNV_OffsetBasis;

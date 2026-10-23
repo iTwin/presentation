@@ -46,9 +46,9 @@ export interface InstanceNodesQueryDefinition {
  * A definition of nodes included in a hierarchy level.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type HierarchyNodesDefinition = GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition;
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodesDefinition {
   export function isGenericNode(def: HierarchyNodesDefinition): def is GenericHierarchyNodeDefinition {
     return !!(def as GenericHierarchyNodeDefinition).node;

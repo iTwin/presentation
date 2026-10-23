@@ -10,7 +10,7 @@ import { createContext } from "react";
 
 import type { PropsWithChildren } from "react";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+/* oxlint-disable @typescript-eslint/no-deprecated */
 /* v8 ignore start -- @preserve */
 
 /**

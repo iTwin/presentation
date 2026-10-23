@@ -53,7 +53,6 @@ import type { CacheInvalidationProps, IContentDataProvider } from "../common/Con
 import type { DiagnosticsProps } from "../common/Diagnostics.js";
 import type { WithIModelKey } from "../common/Utils.js";
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
 /**
@@ -272,7 +271,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this.invalidateCache({ descriptorConfiguration: true });
   }
 
-  /* eslint-disable @typescript-eslint/no-deprecated */
+  /* oxlint-disable @typescript-eslint/no-deprecated */
   /**
    * Should the specified field be included in the favorites category.
    * @deprecated in 5.2. Use `isFieldFavoriteAsync` instead.
@@ -293,7 +292,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     return this.isFieldFavorite(field);
   }
-  /* eslint-enable @typescript-eslint/no-deprecated */
+  /* oxlint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Sorts the specified list of categories by priority. May be overridden
@@ -303,7 +302,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     inPlaceSort(categories).by([{ desc: (c) => c.priority }, { asc: (c) => c.label, comparer: labelsComparer }]);
   }
 
-  /* eslint-disable @typescript-eslint/no-deprecated */
+  /* oxlint-disable @typescript-eslint/no-deprecated */
   /**
    * Sorts the specified list of fields by priority. May be overridden to supply a different sorting algorithm.
    * @deprecated in 5.2. Use `sortFieldsAsync` instead.
@@ -332,7 +331,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     this.sortFields(category, fields);
   }
-  /* eslint-enable @typescript-eslint/no-deprecated */
+  /* oxlint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Returns property data.
@@ -355,9 +354,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     const builder = await PropertyDataBuilder.create({
       imodel: this.imodel,
       descriptor: content.descriptor,
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       includeWithNoValues: this.includeFieldsWithNoValues,
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       includeWithCompositeValues: this.includeFieldsWithCompositeValues,
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
@@ -807,7 +806,7 @@ function shouldDestructureArrayField(field: Field) {
   return (
     field.isNestedContentField() ||
     /* This is only needed for pre-5.8.1 iTwin.js core */
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (field.parent && (!field.isPropertiesField() || !field.isArrayPropertiesField?.()))
   );
 }
@@ -859,7 +858,7 @@ function destructureStructArrayItems(items: PropertyRecord[], fieldHierarchy: Fi
     items.forEach((item) => {
       assert(item.value.valueFormat === UiPropertyValueFormat.Struct);
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (item.value.members[nestedFieldHierarchy.field.name] === undefined) {
         // the member may not exist at all if we decided to skip it beforehand
         return;
@@ -913,7 +912,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
           const fieldHierarchy =
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
             entry.fieldHierarchy.field.isPropertiesField() && entry.fieldHierarchy.field.isArrayPropertiesField?.()
               ? { ...entry.fieldHierarchy, field: entry.fieldHierarchy.field.itemsField }
               : entry.fieldHierarchy;
@@ -930,7 +929,7 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       // destructure structs by replacing them with their member records
       const members = entry.fieldHierarchy.childFields.reduce((list, nestedFieldHierarchy) => {
         assert(entry.record.value.valueFormat === UiPropertyValueFormat.Struct);
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition
         assert(entry.record.value.members[nestedFieldHierarchy.field.name] !== undefined);
         const member = {
           fieldHierarchy: nestedFieldHierarchy,

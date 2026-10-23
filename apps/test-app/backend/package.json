@@ -8,7 +8,8 @@
     "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
     "build": "tsc",
     "clean": "rimraf lib build",
-    "lint": "eslint \"./src/**/*.ts\"",
+    "lint": "oxlint src",
+    "lint:no-internal": "eslint \"./src/**/*.ts\"",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "devDependencies": {
@@ -18,7 +19,6 @@
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/core-electron": "catalog:itwinjs-core-dev",
     "@itwin/ecschema-rpcinterface-impl": "catalog:itwinjs-core-dev",
-    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/express-server": "catalog:itwinjs-core-dev",
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-opentelemetry": "workspace:*",
@@ -31,7 +31,6 @@
     "@typescript/native": "catalog:build-tools",
     "cross-env": "catalog:build-tools",
     "electron": "^43.8.0",
-    "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }

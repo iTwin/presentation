@@ -56,6 +56,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   const loaderRef = useRef<RowsLoader>(noopRowsLoader);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setState((prev) => ({ ...prev, rows: [], total: 0 }));
     const { observable, ...loader } = createRowsLoader({
       imodel,

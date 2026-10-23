@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { StandaloneDb, withEditTxn } from "@itwin/core-backend";
 import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -30,6 +29,7 @@ describe("Core interop", () => {
       it("triggers given callback on iModel changes", async function () {
         const testIModel = StandaloneDb.createEmpty(
           setupOutputFileLocation(`${createFileNameFromString(getTestName())}.bim`),
+          // oxlint-disable-next-line @typescript-eslint/no-deprecated
           { rootSubject: { name: "Test iModel" }, allowEdit: JSON.stringify({ txns: true }) },
         );
         function getIModel() {

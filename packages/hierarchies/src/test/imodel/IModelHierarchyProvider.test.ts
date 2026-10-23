@@ -744,7 +744,7 @@ describe("createIModelHierarchyProvider", () => {
 
   describe("Labels formatting", () => {
     it("returns formatted label", async () => {
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      // oxlint-disable-next-line @typescript-eslint/no-base-to-string
       const formatter = vi.fn().mockImplementation(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
       using provider = createIModelHierarchyProvider({
         imodelAccess,
@@ -1828,7 +1828,7 @@ describe("createIModelHierarchyProvider", () => {
         expect.arrayContaining([expect.objectContaining({ label: "test label" })]),
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      // oxlint-disable-next-line @typescript-eslint/no-base-to-string
       provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${val.value.toString()}`);
       expect(await collect(provider.getNodes({ parentNode: undefined }))).toEqual(
         expect.arrayContaining([expect.objectContaining({ label: "_formatted_test label" })]),

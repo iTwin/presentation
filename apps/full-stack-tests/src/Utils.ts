@@ -53,7 +53,7 @@ export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | 
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated
+// oxlint-disable-next-line @typescript-eslint/no-deprecated
 type GetNodesRequestOptions = HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable> &
   ClientDiagnosticsAttribute;
 type GetContentRequestOptions = ContentRequestOptions<

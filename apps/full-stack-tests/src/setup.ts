@@ -13,7 +13,6 @@ global.ResizeObserver = class ResizeObserver {
   public disconnect() {}
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
   if (typeof globalThis !== "undefined") {
     return globalThis;

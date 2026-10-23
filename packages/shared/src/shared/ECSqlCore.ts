@@ -12,6 +12,7 @@ import type { TypedPrimitiveValue } from "./Values.js";
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type ECSqlBinding =
   | { type: "boolean"; value?: boolean }
   | { type: "double" | "int" | "long"; value?: number }
@@ -25,7 +26,6 @@ export type ECSqlBinding =
  * Helpers for creating ECSQL bindings.
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ECSqlBinding {
   /** Creates an ECSQL binding for the supplied typed primitive value. */
   export function create({ value, type }: TypedPrimitiveValue): ECSqlBinding {

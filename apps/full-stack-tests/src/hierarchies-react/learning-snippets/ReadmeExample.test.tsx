@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
@@ -27,6 +26,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { Root } from "@stratakit/mui";
+
+// oxlint-disable react/set-state-in-effect
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 function createIModelAccess(imodel: IModelConnection) {

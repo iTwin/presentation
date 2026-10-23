@@ -49,6 +49,7 @@ export function useUniquePropertyValuesLoader({
 
   // Get initial loader and values
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setLoadedOptions({ options: [], isLoading: false });
     if (!ruleset || !field) {
       return;

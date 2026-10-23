@@ -30,7 +30,6 @@ describe("SelectionScope", () => {
       queryExecutor.createQueryReader.mockImplementation((query) => {
         if (query.ecsql.includes(targetECSqlContent)) {
           return createFakeQueryReader<ECSqlQueryRow>(
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className })),
           );
         }

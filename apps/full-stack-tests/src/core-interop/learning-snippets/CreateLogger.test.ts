@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { LogLevel } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.CoreInterop.CreateLogger.Imports

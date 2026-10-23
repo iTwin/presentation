@@ -162,12 +162,10 @@ function createLinksContribution(
           target: {
             select: { include: ["Url", "UserLabel"] },
             // EC property names are PascalCase; disable the naming-convention rule for these keys.
-            /* eslint-disable @typescript-eslint/naming-convention */
             overrides: {
               Url: { label: "Path", categoryId: MODEL_SOURCE_CATEGORY_ID },
               UserLabel: { label: "Name", categoryId: MODEL_SOURCE_CATEGORY_ID },
             },
-            /* eslint-enable @typescript-eslint/naming-convention */
           },
         },
       ],
@@ -256,7 +254,6 @@ async function createExternalSourceContribution(
           target: {
             select: { include: ["Identifier"] },
             // EC property names are PascalCase; disable the naming-convention rule for this key.
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             overrides: { Identifier: { label: "Source Element ID", categoryId: SOURCE_INFORMATION_CATEGORY_ID } },
           },
         },
@@ -294,9 +291,7 @@ async function createExternalSourceContribution(
             select: "all",
             defaultOverrides: { categoryId: DOCUMENT_LINK_CATEGORY_ID },
             // EC property names are PascalCase; disable the naming-convention rule for these keys.
-            /* eslint-disable @typescript-eslint/naming-convention */
             overrides: { UserLabel: { label: "Name" }, Url: { label: "Path" }, Model: { hidden: true } },
-            /* eslint-enable @typescript-eslint/naming-convention */
           },
         },
       ],
@@ -329,12 +324,10 @@ async function createExternalSourceContribution(
           target: {
             select: { include: ["UserLabel", "Url"] },
             // EC property names are PascalCase; disable the naming-convention rule for these keys.
-            /* eslint-disable @typescript-eslint/naming-convention */
             overrides: {
               UserLabel: { label: "Name", categoryId: SECONDARY_SOURCES_CATEGORY_ID },
               Url: { label: "Path", categoryId: SECONDARY_SOURCES_CATEGORY_ID },
             },
-            /* eslint-enable @typescript-eslint/naming-convention */
           },
         },
       ],

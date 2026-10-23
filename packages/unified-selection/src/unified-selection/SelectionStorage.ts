@@ -231,6 +231,7 @@ class SelectionStorageImpl implements SelectionStorage {
       source,
       level,
       imodelKey,
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated
       iModelKey: imodelKey,
       changeType,
       selectables: selected,
@@ -242,7 +243,7 @@ class SelectionStorageImpl implements SelectionStorage {
 }
 
 function getIModelKey(props: IModelKeyProp): string {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  // oxlint-disable-next-line @typescript-eslint/no-deprecated
   return ("imodelKey" in props ? props.imodelKey : props.iModelKey) ?? "";
 }
 

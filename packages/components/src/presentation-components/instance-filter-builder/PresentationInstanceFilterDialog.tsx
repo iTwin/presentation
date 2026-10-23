@@ -242,7 +242,6 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   );
 
   const handleReset = () => {
-    filteringProps.selectedClasses = [];
     filteringProps.onSelectedClassesChanged([]);
     actions.removeAllItems();
     onReset && onReset();
@@ -322,6 +321,7 @@ function useInitialFilter(
       filterInfo: typeof initialFilter === "function" ? initialFilter(descriptor) : initialFilter,
     };
   }
+  // oxlint-disable-next-line react/refs
   return initializedFilter.current.filterInfo;
 }
 

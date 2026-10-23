@@ -257,6 +257,7 @@ function IModelComponents(props: IModelComponentsProps) {
         contents: [
           {
             id: "primaryContent",
+            // oxlint-disable-next-line @typescript-eslint/no-deprecated
             classId: "",
             content: (
               <ViewportContentControl

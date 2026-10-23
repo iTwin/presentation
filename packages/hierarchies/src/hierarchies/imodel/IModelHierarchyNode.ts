@@ -224,13 +224,13 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
  *
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type ProcessedHierarchyNode =
   | ProcessedGenericHierarchyNode
   | ProcessedInstanceHierarchyNode
   | ProcessedGroupingHierarchyNode;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ProcessedHierarchyNode {
   /** Checks whether the given node is a generic node */
   export function isGeneric(node: ProcessedHierarchyNode): node is ProcessedGenericHierarchyNode {

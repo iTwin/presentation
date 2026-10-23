@@ -49,6 +49,7 @@ export interface CustomSelectable {
  * A single selectable that identifies something that can be selected in an iTwin.js application.
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
 /**
@@ -58,7 +59,6 @@ export type Selectable = SelectableInstanceKey | CustomSelectable;
 export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
 
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace Selectable {
   /** Check if the supplied selectable is a `SelectableInstanceKey` */
   export function isInstanceKey(selectable: Selectable | SelectableIdentifier): selectable is SelectableInstanceKey {
@@ -76,6 +76,7 @@ export namespace Selectable {
  * A collection of selectables that identify something that can be selected in an iTwin.js application
  * @public
  */
+// oxlint-disable-next-line no-redeclare
 export interface Selectables {
   /**
    * A map between `SelectableInstanceKey.className` and a set of selected instance IDs.

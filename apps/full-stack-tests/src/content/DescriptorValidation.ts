@@ -69,6 +69,7 @@ export interface PropertyFieldExpectations {
 }
 
 /** A single property field expectation, matched against one actual field by `validateVisibleFieldsAtPath`. */
+// oxlint-disable-next-line no-redeclare
 export interface PropertyFieldValidator {
   /** Throws when `field` doesn't match this validator's expectations. */
   validate: (descriptor: Descriptor, field: PropertyField) => void;
