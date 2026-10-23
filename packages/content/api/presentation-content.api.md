@@ -70,9 +70,9 @@ interface CalculatedFieldDeclaration {
 type CardinalityHint = "one" | "many";
 
 // @public
-type CategoryContext = readonly {
-    readonly stepIndex: number;
-    readonly kind: "targetClass" | "relationshipClass";
+type CategoryContext = {
+    stepIndex: number;
+    kind: "targetClass" | "relationshipClass";
 }[];
 
 // @public

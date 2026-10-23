@@ -50,8 +50,9 @@ export interface ECSchemaProvider {
  * their parent's. Visibility is defined through `CoreCustomAttributes.HiddenClass` and `CoreCustomAttributes.HiddenSchema`
  * custom attributes.
  *
- * The tree is relative to the selected class, which is always considered visible - even if it's hidden itself:
- * This exception applies only to the selected class; its descendants still inherit its schema-defined hidden state.
+ * The tree is relative to the selected class, which is the visibility boundary: `HiddenClass` attributes on the selected
+ * class and on its base classes are ignored, so the selected class and its descendants are visible unless a descendant
+ * is hidden through its own `HiddenClass` attribute or the `HiddenSchema` attribute of its schema.
  *
  * - Root nodes are the outermost derived classes that are hidden (`state: "hide"`).
  * - Children of a `"hide"` node are its derived classes that are explicitly shown (`state: "show"`), overriding

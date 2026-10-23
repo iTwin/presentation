@@ -50,7 +50,7 @@
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",
     "@itwin/core-geometry": "catalog:itwinjs-core",
-    "@itwin/presentation-shared": "workspace:*",
+    "@itwin/presentation-shared": "workspace:^",
     "natural-compare-lite": "^1.4.1",
     "rxjs": "catalog:rxjs"
   },

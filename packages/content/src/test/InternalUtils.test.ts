@@ -21,15 +21,19 @@ import { createEntityClass, createSchemaAccess } from "./MetadataStubs.js";
 import type { ECSqlBinding } from "@itwin/presentation-shared";
 
 describe("buildCategoryContext", () => {
-  it("orders local anchors after inherited ancestry without mutating either input", () => {
+  const includeAll = () => true;
+
+  it("appends offset step spec classes after inherited ancestry without mutating either input", () => {
     const inheritedContext = Object.freeze([{ stepIndex: 0, kind: "targetClass" }] as const);
-    const localAnchors = Object.freeze([
-      { stepIndex: 2, kind: "targetClass" },
-      { stepIndex: 1, kind: "targetClass" },
-      { stepIndex: 1, kind: "relationshipClass" },
+    const properties = Object.freeze([
+      { stepIndex: 1, target: { select: "all" } },
+      { stepIndex: 0, target: { select: "none" }, relationship: { select: "none" } },
+      { stepIndex: 2 },
     ] as const);
 
-    expect(buildCategoryContext({ inheritedContext, localAnchors })).to.deep.equal([
+    expect(
+      buildCategoryContext({ inheritedContext, properties, stepIndexOffset: 1, include: includeAll }),
+    ).to.deep.equal([
       { stepIndex: 0, kind: "targetClass" },
       { stepIndex: 1, kind: "relationshipClass" },
       { stepIndex: 1, kind: "targetClass" },
@@ -37,22 +41,40 @@ describe("buildCategoryContext", () => {
     ]);
   });
 
+  it("keeps only classes accepted by the filter", () => {
+    const properties = [
+      { stepIndex: 0, target: { select: "all" }, relationship: { select: "all" } },
+      { stepIndex: 1, target: { select: "all" } },
+    ] as const;
+
+    expect(
+      buildCategoryContext({
+        inheritedContext: [],
+        properties,
+        stepIndexOffset: 0,
+        include: (entry) => entry.stepIndex === 0 && entry.kind === "targetClass",
+      }),
+    ).to.deep.equal([{ stepIndex: 0, kind: "targetClass" }]);
+  });
+
   it.each([
     { name: "root", inheritedContext: [] },
     { name: "inherited", inheritedContext: [{ stepIndex: 0, kind: "targetClass" }] },
-  ] as const)("preserves the $name context when no local anchors are selected", ({ inheritedContext }) => {
-    expect(buildCategoryContext({ inheritedContext, localAnchors: [] })).to.deep.equal(inheritedContext);
+  ] as const)("preserves the $name context when no step specs are given", ({ inheritedContext }) => {
+    expect(
+      buildCategoryContext({ inheritedContext, properties: [], stepIndexOffset: 0, include: includeAll }),
+    ).to.deep.equal(inheritedContext);
   });
 
-  it.each([false, true])("deduplicates anchors by step and class kind with reversed input: %s", (reverse) => {
-    const expected = [
+  it("deduplicates classes named by repeated step specs", () => {
+    const spec = { stepIndex: 0, target: { select: "none" }, relationship: { select: "all" } } as const;
+
+    expect(
+      buildCategoryContext({ inheritedContext: [], properties: [spec, spec], stepIndexOffset: 0, include: includeAll }),
+    ).to.deep.equal([
       { stepIndex: 0, kind: "relationshipClass" },
       { stepIndex: 0, kind: "targetClass" },
-    ] as const;
-    const repeated = [...expected, ...expected];
-    const localAnchors = Object.freeze(reverse ? repeated.reverse() : repeated);
-
-    expect(buildCategoryContext({ inheritedContext: [], localAnchors })).to.deep.equal(expected);
+    ]);
   });
 });
 

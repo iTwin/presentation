@@ -182,27 +182,6 @@ async function createFieldsForPath(props: {
     ),
   );
   const fields = perStep.flat();
-  assignCategoryContexts({ fields, propertyCategoryScope, categoryContext: props.categoryContext });
-  return fields;
-}
-
-function assignCategoryContexts(props: {
-  fields: CategorizedField[];
-  propertyCategoryScope: RelatedPropertiesDeclaration["propertyCategoryScope"];
-  categoryContext: CategoryContext;
-}): void {
-  const { fields, propertyCategoryScope } = props;
-  const localAnchors: CategoryContext[number][] = [];
-  for (const { field, categorization } of fields) {
-    if (
-      categorization.anchor === "none" ||
-      categorization.category?.source === "override" ||
-      (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory")
-    ) {
-      continue;
-    }
-    localAnchors.push({ stepIndex: field.pathFromTarget.length - 1, kind: categorization.anchor });
-  }
   for (const { field, categorization } of fields) {
     if (propertyCategoryScope === "parent" && categorization.category?.source === "propertyCategory") {
       continue;
@@ -210,15 +189,19 @@ function assignCategoryContexts(props: {
     const stepIndex = field.pathFromTarget.length - 1;
     categorization.categoryContext = buildCategoryContext({
       inheritedContext: props.categoryContext,
-      localAnchors: localAnchors.filter(
-        (context) =>
-          (propertyCategoryScope !== "parent" && context.stepIndex < stepIndex) ||
-          (context.stepIndex === stepIndex &&
-            context.kind === "relationshipClass" &&
-            categorization.anchor === "targetClass"),
-      ),
+      properties,
+      stepIndexOffset,
+      include: (entry) => {
+        if (entry.stepIndex === stepIndex) {
+          // A step's relationship class encloses that step's target-class fields.
+          return entry.kind === "relationshipClass" && categorization.anchor === "targetClass";
+        }
+        // Earlier steps enclose later ones, unless categories attach to the parent context.
+        return entry.stepIndex < stepIndex && propertyCategoryScope !== "parent";
+      },
     });
   }
+  return fields;
 }
 
 /** Enumerates the target-class and relationship-class fields opted in by a single `StepPropertySpec`. */
