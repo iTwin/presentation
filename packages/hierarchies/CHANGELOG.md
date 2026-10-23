@@ -1,5 +1,545 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0
+
+### Major Changes
+
+- 7b2a618172ad2d3a02dc8923f3454ccda6e75807: Change `HierarchyProvider.hierarchyChanged` argument to be required.
+  
+  This simplifies the API for users of `HierarchyProvider`, as they no longer need to check for `undefined` when handling hierarchy changes.
+  
+  For implementors of custom `HierarchyProvider`, this change means that they must always provide an even argument when raising the `hierarchyChanged` event. Since all members of the argument type are optional, it's okay to raise the even with an empty object, e.g.: `this.hierarchyChanged.raiseEvent({})`.
+- 198da124c5547b23494769ea5e8aab694f39d073: Adjust `HierarchyDefinition` and `createMergedIModelHierarchyProvider` APIs for better usability with hierarchy definitions that require iModel access outside of their `defineHierarchyLevel` method.
+  
+  - `createMergedIModelHierarchyProvider`: Replaced `hierarchyDefinition` with `getHierarchyDefinition(imodelAccess)`, which creates a hierarchy definition for each iModel version. The latest version's definition handles pre-processing and post-processing of merged nodes.
+  - Removed `imodelAccess` from `DefineHierarchyLevelProps`. Definitions that need iModel access must capture it when they are created instead of reading it from `defineHierarchyLevel` props.
+  
+  Before:
+  
+  ```ts
+  createMergedIModelHierarchyProvider({
+  	imodels,
+  	hierarchyDefinition: {
+  		async defineHierarchyLevel({ imodelAccess, parentNode }) {
+  			return parentNode ? [] : [{ node: { key: "imodel", label: imodelAccess.imodelKey } }];
+  		},
+  	},
+  });
+  ```
+  
+  After:
+  
+  ```ts
+  createMergedIModelHierarchyProvider({
+  	imodels,
+  	getHierarchyDefinition: (imodelAccess) => ({
+  		async defineHierarchyLevel({ parentNode }) {
+  			return parentNode ? [] : [{ node: { key: "imodel", label: imodelAccess.imodelKey } }];
+  		},
+  	}),
+  });
+  ```
+- 71b2f0e279cc9f9fda9c46aa8785dce85bbe47fc: Removed `createNodesQueryClauseFactory` and `NodeSelectClauseColumnNames` from the public API.
+  
+  The `NodesQueryClauseFactory` is now created internally by `createIModelHierarchyProvider` and its methods (`createSelectClause`, `createFilterClauses`) are passed directly as props to `HierarchyDefinition.defineHierarchyLevel`.
+  
+  - Added `instanceLabelSelectClauseFactory` option to `createIModelHierarchyProvider` and `createMergedIModelHierarchyProvider` props, allowing consumers to override the default instance label select clause factory. Defaults to the result of `createIModelInstanceLabelSelectClauseFactory`.
+  
+  - Added `{ of: ... }` variant to `NodeSelectClauseProps.nodeLabel`, which delegates label select clause creation to the `IInstanceLabelSelectClauseFactory` used by the provided `createSelectClause` function. This replaces the previous pattern of manually calling `instanceLabelSelectClauseFactory.createSelectClause()` and wrapping the result in a selector.
+  
+  Before:
+  
+  ```ts
+  const labelSelectClauseFactory = createIModelInstanceLabelSelectClauseFactory({ imodelAccess });
+  const nodeSelectClauseFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelSelectClauseFactory });
+  const hierarchyDefinition: HierarchyDefinition = {
+    async defineHierarchyLevel() {
+      return [
+        {
+          fullClassName: "SomeClass",
+          query: {
+            ecsql: `
+              SELECT ${await nodeSelectClauseFactory.createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: await labelSelectClauseFactory.createSelectClause({ classAlias: "this", className: "SomeClass" }) },
+              })}
+              FROM SomeClass this
+            `,
+          },
+        },
+      ];
+    },
+  };
+  ```
+  
+  After:
+  
+  ```ts
+  // Note: if a custom `IInstanceLabelSelectClauseFactory` is needed, it should be supplied to `createIModelHierarchyProvider`
+  // and will be used by the `createSelectClause` function provided to `defineHierarchyLevel`.
+  const hierarchyDefinition: HierarchyDefinition = {
+    async defineHierarchyLevel({ createSelectClause }) {
+      return [
+        {
+          fullClassName: "SomeClass",
+          query: {
+            ecsql: `
+              SELECT ${await createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                // Use `{ of: ... }` to delegate label creation to the instance label select clause factory
+                nodeLabel: { of: { classAlias: "this", className: "SomeClass" } },
+              })}
+              FROM SomeClass this
+            `,
+          },
+        },
+      ];
+    },
+  };
+  ```
+- 7fb81ddd57acfc5f31790f19e79bba8b6cf10859: `createMergedIModelHierarchyProvider`: The `getHierarchyDefinition` prop now receives a props object `{ imodelAccess }` instead of a positional `imodelAccess` argument, so more props can be added later.
+  
+  Migration:
+  
+  ```ts
+  const provider = createMergedIModelHierarchyProvider({
+    imodels,
+    // before
+    getHierarchyDefinition: (imodelAccess) => createMyHierarchyDefinition({ imodelAccess }),
+    // after
+    getHierarchyDefinition: ({ imodelAccess }) => createMyHierarchyDefinition({ imodelAccess }),
+  });
+  ```
+- e06a48b2877a1c93df51d7037fd8cca701af47a8: Support creating ECSQL query definitions based on instance filters, containing schema items that don't exist in the _current_ iModel.
+  
+  To support that, the `NodesQueryClauseFactory` created by `createNodesQueryClauseFactory` returns a query-disabling result when it encounters such schema items. To ensure that's possible,
+  the `createNodesQueryClauseFactory` function should be called with `imodelAccess` that is passed to `HierarchyDefinition.defineHierarchyLevel`.
+  
+  **Breaking changes:**
+  
+  - `DefineHierarchyLevelProps.imodelKey` was replaced with `imodelAccess`. If needed, the key can be accessed using `imodelAccess.imodelKey`. This affects the following APIs:
+    - `HierarchyDefinition.defineHierarchyLevel` (function that uses these props),
+    - `DefineRootHierarchyLevelProps` (extends the props type),
+    - `DefineInstanceNodeChildHierarchyLevelProps` (extends the props type).
+- db0bef7d84e641214e2c376cf6e98539a3094856: Fix hierarchy search only handling a single (latest) iModel results when searching multi-iModel hierarchies.
+  
+  Notable API changes:
+  
+  - **BREAKING:** `NodeParser` (type of `HierarchyDefinition.parseNode` function) now gets a single props argument instead of multiple arguments. In addition, the props object now also contains an imodel key argument.
+  
+    ```ts
+    // old:
+    function myParser(row: [columnName: string]: any, parentNode?: HierarchyDefinitionParentNode) {
+      // implementation...
+    }
+    // new:
+    function myParser(props: { row: [columnName: string]: any; parentNode?: HierarchyDefinitionParentNode; imodelKey: string; }) {
+      // implementation...
+    }
+    ```
+  
+  - Exposed `IModelInstanceKey` type, which extends `InstanceKey` with an optional `imodelKey` prop. This type is used in iModel-based instance nodes and is useful outside of this package, too.
+  
+  - Props for `HierarchyDefinition.defineHierarchyLevel` now include an `imodelKey` prop, identifying the iModel for which the hierarchy level is being requested. This change extends into `createPredicateBasedHierarchyDefinition` - it's props for defining root and child nodes also get the new prop.
+- 3c65fce84d12aafaaaf5379e1a62623eca46e62d: Dropped CommonJS support. These packages are now published as ES modules (ESM) only.
+- 6a00754233e6d1b8956a5fc7680829562156d659: Fixed a bug causing `HierarchyNode.autoExpand` flag to be set on non-grouping nodes, when `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` points to a grouping node whose child non-grouping node is not a filter target.
+  
+  **Breaking changes:**
+  
+  - `GroupingHierarchyNode` no longer contains `filtering` attribute. This was always the case, but now the types have been updated to match it.
+  - Changed return type of `createHierarchyFilteringHelper`:
+    - Removed `createChildNodePropsAsync` - it became an overload of `createChildNodeProps`, whose path matching is done through `asyncPathMatcher` callback.
+    - `createChildNodeProps` now has multiple overloads and returns different types based on provided props. `autoExpand` flag is only returned when `parentKeys` are provided.
+  - Renamed `HierarchyFilteringPathOptions.autoExpand` -> `HierarchyFilteringPathOptions.reveal` to match intent.
+  - Changed `HierarchyFilteringPathOptions.reveal.depthInHierarchy` and `depthInPath` to use 0-based indexing instead of 1-based indexing.
+  - Changed `HierarchyFilteringPathOptions.reveal.depthInHierarchy` to not set `autoExpand` flag on the node that is at the `depthInHierarchy` position.
+- 61b0c43b6c737786a8230c965c77d09b566e84d3: `createInstanceKeysFilteredQuery` now correctly appends `IdSet` bindings in both positional and named binding formats, using the `IdSet` virtual table instead of `InVirtualSet`.
+  
+  Consumers that provide their own `LimitingECSqlQueryExecutor` or `imodelAccess` may now receive named bindings (`Record<string, ECSqlBinding>`) through the public `createQueryReader` path.
+  
+  To migrate, update custom query reader / executor implementations to handle both positional bindings (`ECSqlBinding[]`) and named bindings (`Record<string, ECSqlBinding>`), or use the default implementation provided by the `@itwin/presentation-core-interop` package, `createECSqlQueryExecutor` function.
+- 3acdaa490b071032f4b18c3f47fc99aa491b5820: Use type-safe full class names.
+  
+  The full class names used in this package were defined as `string`, although we always expect them to be in specific format - either `Schema:Class` or `Schema.Class`. In many cases we rely on this format when parsing the name for compare or other purposes, so type safety for the format is highly beneficial. This change makes full class names type-safe(ier) through [TypeScript's template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html), so that we can be sure that they are always in correct format.
+  
+  ## Breaking changes
+  
+  - `ClassGroupingNodeKey.className` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `PropertyOtherValuesGroupingNodeKey.properties[number].className` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `PropertyValueGroupingNodeKey.propertyClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `PropertyValueRangeGroupingNodeKey.propertyClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - A hierarchy node's `processingParams.grouping.byBaseClasses.fullClassNames` is now of type `EC.FullClassNameDotNotation[]` instead of `string[]`.
+  - A hierarchy node's `processingParams.grouping.byProperties.propertiesClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `NodesQueryClauseFactory.createSelectClause` prop `grouping.byBaseClasses.fullClassNames` is now of type `EC.FullClassNameDotNotation[]` instead of `string[]`.
+  - `NodesQueryClauseFactory.createSelectClause` prop `grouping.byProperties.propertiesClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `NodesQueryClauseFactory.createFilterClauses` prop `contentClass.fullName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `HierarchyNodesDefinition.fullClassName` is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  - `createPredicateBasedHierarchyDefinition` prop `hierarchies.childNodes[number].parentInstancesNodePredicate` now accepts `EC.FullClassNameDotNotation` instead of `string`.
+  - `DefineInstanceNodeChildHierarchyLevelProps.parentNodeClassName` (provided to `HierarchyDefinition.defineHierarchyLevel`) is now of type `EC.FullClassNameDotNotation` instead of `string`.
+  
+  In many cases migration will be seamless, as long as the input string matches the expected format. In some cases (e.g. when assigning a string variable to one of the affected properties), you may need to use `normalizeFullClassName` from `@itwin/presentation-shared` to ensure the value is of the correct type:
+  
+  ```ts
+  const myClassName: string = "MySchema.MyClass";
+  
+  // before
+  const myClassGroupingNodeKey: ClassGroupingNodeKey = {
+    type: "class-grouping",
+    className: myClassName,
+  };
+  
+  // after
+  const myClassGroupingNodeKey: ClassGroupingNodeKey = {
+    type: "class-grouping",
+    // assigning `MySchema.MyClass` directly wouldn't require using `normalizeFullClassName` as the type would be correctly inferred, but if the class name is stored in a variable of type `string`, you need to use `normalizeFullClassName` to ensure it's of the correct type
+    className: normalizeFullClassName(myClassName),
+  };
+  ```
+- 3e0aa76008c3da102dd9ffdc46982eb1f2da9faa: Rename full‑hierarchy "filtering" to "search" across the package.
+  
+  Properties and APIs were renamed accordingly to clarify the distinction and avoid confusion between hierarchy‑wide search and per-hierarchy‑level filtering.
+  
+  **Breaking changes:**
+  
+  - Removed deprecated `extractFilteringProps`.
+  - Removed deprecated `HierarchyNodeFilteringProps.create`.
+  - Renamed `createHierarchyFilteringHelper` to `createHierarchySearchHelper`. It's return type was also adjusted for the rename:
+    - `hasFilter` renamed to `hasSearch`,
+    - `hasFilterTargetAncestor` renamed to `hasSearchTargetAncestor`,
+    - `getChildNodeFilteringIdentifiers` renamed to `getChildNodeSearchIdentifiers`.
+  - Renamed `HierarchyChangedEventArgs.filterChange` to `searchChange`.
+  - Renamed `HierarchyProvider.setHierarchyFilter` to `setHierarchySearch`.
+  - Renamed `createMergedIModelHierarchyProvider` prop `filtering` to `search`.
+  - Renamed `HierarchyFilteringPath` to `HierarchySearchPath`.
+  - Renamed `HierarchyFilteringPathOptions` to `HierarchySearchPathOptions`.
+  - Renamed `NonGroupingHierarchyNode.filtering` to `search`. It's type was also adjusted for the rename:
+    - `hasFilterTargetAncestor` renamed to `hasSearchTargetAncestor`,
+    - `filteredChildrenIdentifierPaths` renamed to `childrenTargetPaths`,
+    - `isFilterTarget` renamed to `isSearchTarget`,
+    - `filterTargetOptions` renamed to `searchTargetOptions`.
+- e77e4b44652b6a372c7c43f48709d19746e23c63: `HierarchySearchTree`: Accept deeply readonly paths and trees when building search trees. `HierarchySearchPath.normalize` also accepts readonly paths and now returns a deeply readonly result.
+  
+  Accepting additional paths does not mutate options on previously accepted trees, including frozen inputs.
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: The hierarchy provider returned by `mergeProviders` doesn't have the deprecated `dispose` method anymore. Use `[Symbol.dispose]` instead.
+- 6ddae6ab5720e8900662497300256d520e543dfc: Full class and property names are now compared case-sensitively. Provide names using the casing defined by their EC schemas.
+- fa1011be5a0a061505e8ba4aebb06e71395bc061: `ECSchemaProvider`: Added a `classDerivesFrom` method for checking whether one ECClass is the same as, or derives from, another. `createECSchemaProvider` (in `@itwin/presentation-core-interop`) implements it using the class hierarchy information it already loads, so the answer is returned synchronously once the hierarchy has been loaded and no additional round-trips to the iModel are needed.
+  
+  Also, `ECClassHierarchyInspector` and `createCachingECClassHierarchyInspector` have been deprecated. Because `ECSchemaProvider` now exposes `classDerivesFrom` directly, a separate class hierarchy inspector is no longer needed when setting up iModel access:
+  
+  ```ts
+  // Before:
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  
+  const schemaProvider = createECSchemaProvider(imodel);
+  const imodelAccess = {
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
+    ...createECSqlQueryExecutor(imodel),
+  };
+  
+  // After:
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  
+  const imodelAccess = {
+    ...createECSchemaProvider(imodel), // now also provides `classDerivesFrom`
+    ...createECSqlQueryExecutor(imodel),
+  };
+  ```
+  
+  **Breaking changes:**
+  
+  - `ECSchemaProvider` now requires a `classDerivesFrom` method. Objects created via `createECSchemaProvider` get it automatically, so most consumers don't need to change anything. Only custom, hand-written `ECSchemaProvider` implementations need to add the method.
+  
+  - Renamed the `classHierarchyInspector` prop to `imodelAccess` on `createClassBasedInstanceLabelSelectClauseFactory`, `createBisInstanceLabelSelectClauseFactory` (both in `@itwin/presentation-shared`) and `createPredicateBasedHierarchyDefinition` (in `@itwin/presentation-hierarchies`). The prop's type is unchanged, so the value passed to it doesn't need to change - only the prop name:
+  
+      ```ts
+      // Before:
+      const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodel) });
+      createPredicateBasedHierarchyDefinition({ classHierarchyInspector, hierarchy });
+  
+      // After:
+      const imodelAccess = createECSchemaProvider(imodel);
+      createPredicateBasedHierarchyDefinition({ imodelAccess, hierarchy });
+      ```
+- 5d2ee746b6514c50d88062db064367b3339fcd56: `EC` namespace interfaces in `@itwin/presentation-shared` no longer use `Promise` wrappers — once a schema is loaded via the still-async `ECSchemaProvider.getSchema`, all further navigation (`baseClass`, `is()`, `getProperty()`, `getProperties()`, `kindOfQuantity`, `relationshipClass`, `enumeration`, `abstractConstraint`) is synchronous.
+  
+  Additional changes:
+  
+  - Added an `EC.Class.getOwnProperties()` method that returns only the properties defined on the class itself, without inherited properties.
+  - Added an `EC.EntityClass.getMixins()` method that returns all mixins applied to the entity class.
+  - Added an `isHidden: boolean` property to `EC.Schema`, `EC.Class` (optional) and `EC.Property`. The property represents the `HiddenSchema`, `HiddenClass` and `HiddenProperty` custom attributes.
+  - Added an optional `EC.Property.category` attribute.
+  - Added a required `EC.RelationshipConstraint.constraintClasses` attribute.
+  - Added missing optional `description` attributes to `EC.Schema` and `EC.Property`.
+- 1577715f1501b20139c0e28c656f642ca73d3100: Add additional `baseClass` and `getDerivedClassNames` members to the `EC.Class` objects, returned by `ECSchemaProvider`.
+  
+  - `baseClass: EC.Class | undefined`
+  - `getDerivedClassNames(props?: { onlyDirect?: boolean }): string[]`
+- a3d12518b05b062c9bc08203100d13388a21cc91: Start using tree structure for defining hierarchy search paths.
+  
+  **Additions:**
+  
+  - `HierarchySearchTree` type that represents a tree structure of hierarchy search paths and is now used for hierarchy search implementation in `HierarchyProvider`.
+  
+    In addition to the type, there's also a namespace with the same name, providing utility functions for working with the tree structure:
+    - `HierarchySearchTree.createBuilder` function to create a builder for hierarchy search trees, which can be used to create a tree from individual paths or to merge multiple trees together:
+  
+      ```ts
+      const builder = HierarchySearchTree.createBuilder();
+      builder.accept({ path: searchPath1 });
+      builder.accept({ path: searchPath2 });
+      builder.accept({ tree: partialSearchTree });
+      const tree: HierarchySearchTree = builder.getTree();
+      ```
+  
+      This is the preferred way to create a `HierarchySearchTree`, as it allows to create a tree without having to create an array first, as opposed to `HierarchySearchTree.createFromPathsList` function described below.
+  
+    - `HierarchySearchTree.createFromPathsList` function to create a hierarchy search tree from a list of hierarchy search paths. This is a quick & easy way to migrate from the old `HierarchySearchPath[]` structure to `HierarchySearchTree[]`, but it's' less efficient than using the builder if you need to create a tree from a large number of paths, as it needs to create an intermediate array.
+  
+      The recommended way to handle multiple search paths is to use the builder and call `accept` for each path, as it allows to create a tree without having to create an array first:
+  
+      ```ts
+      // Instead of doing this:
+      const searchPaths: HierarchySearchPath[] = [];
+      for (const item of items) {
+        searchPaths.push(createSearchPathForItem(item));
+      }
+      const tree: HierarchySearchTree = HierarchySearchTree.createFromPathsList(searchPaths);
+  
+      // Do this:
+      const builder = HierarchySearchTree.createBuilder();
+      for (const item of items) {
+        builder.accept({ path: createSearchPathForItem(item) });
+      }
+      const tree: HierarchySearchTree = builder.getTree();
+      ```
+  
+    - `HierarchySearchTree.mergeOptions` function to merge options of two hierarchy search trees. Used internally to merge options of the same nodes when creating a tree from a list of paths.
+  
+  - `HierarchyNode.getGroupingNodeLevel` utility function to get the level of a grouping node in the hierarchy. Convenient for specifying the `groupingLevel` prop in `HierarchySearchPath.options.reveal` and `HierarchySearchTree.options.autoExpand`.
+  
+  - `HierarchyNodeIdentifier.compare` static function to compare two `HierarchyNodeIdentifier` objects. Useful when using `HierarchyNodeIdentifier` as a key in a dictionary sorted set.
+  
+  **Breaking changes:**
+  
+  - `HierarchySearchPathOptions.reveal` type `{ depthInHierarchy: number }` was replaced with `{ groupingLevel: number }`.
+  
+    The `depthInHierarchy` option was only useful when revealing grouping nodes, the rename makes the intent more explicit. In addition, the `groupingLevel` option is only handled in the scope of one specific `InstancesNode` node that the options are supplied for, so handling this option is more efficient - we only need to handle it for grouping nodes, and look only as deep as the next grouped `InstancesNode` node.
+  
+    Migration:
+  
+    ```ts
+    const groupingNode = getMyGroupingNode();
+    const searchPath: HierarchySearchPath = {
+      // ...
+      options: {
+        // before
+        reveal: { depthInHierarchy: groupingNode.parentKeys.length },
+  
+        // after
+        reveal: { groupingLevel: HierarchyNode.getGroupingNodeLevel(groupingNode) },
+      },
+    };
+    ```
+  
+  - `HierarchyProvider.setHierarchySearch` now takes `{ paths: HierarchySearchTree[] }` instead of `{ paths: HierarchySearchPath[] }`.
+  
+    Migration:
+  
+    ```ts
+    const provider: HierarchyProvider = getMyHierarchyProvider();
+    const searchPaths: HierarchySearchPath[] = getMySearchPaths();
+    provider.setHierarchySearch({
+      // before
+      paths: searchPaths,
+  
+      // after
+      // - see `HierarchySearchTree.createFromPathsList` description above for more efficient way to do this
+      // - quick migration:
+      paths: await HierarchySearchTree.createFromPathsList(searchPaths),
+    });
+    ```
+  
+  - `createIModelHierarchyProvider` and `createMergedIModelHierarchyProvider` functions' `search` prop now takes `{ paths: HierarchySearchTree[] }` instead of `{ paths: HierarchySearchPath[] }`. Use `HierarchySearchTree.createFromPathsList` to do the conversion.
+  
+    Migration:
+  
+    ```ts
+    const searchPaths: HierarchySearchPath[] = getMySearchPaths();
+    const provider = createIModelHierarchyProvider({
+      // ...
+      search: {
+        // before
+        paths: searchPaths,
+  
+        // after
+        // - see `HierarchySearchTree.createFromPathsList` description above for more efficient way to do this
+        // - quick migration:
+        paths: await HierarchySearchTree.createFromPathsList(searchPaths),
+      },
+    });
+    ```
+  
+  - `HierarchyNode.search` changes:
+    - Type of `childrenTargetPaths` has been changed from `HierarchySearchPath[]` to `HierarchySearchTree[]`.
+    - `searchTargetOptions` was replaced with `options`, which is available not only for nodes with `isSearchTarget: true`, but all of them.
+  
+    The changes of this attribute are taken care of by the `createHierarchySearchHelper` changes described below.
+  
+  - `createHierarchySearchHelper` changes:
+    - The first argument is now `HierarchySearchTree[]` instead of `HierarchySearchPath[]`.
+    - The `createChildNodeProps` function of returned result no longer requires the `parentKeys` prop, but instead always requires the `nodeKey` prop.
+  
+    Migration:
+  
+    ```ts
+    // Somewhere in `HierarchyProvider.getNodes` implementation...
+  
+    // Type of the first argument has changed, but it also changed on `HierarchyProvider`, so likely no changes are needed here. If the
+    // type of `rootSearch.paths` is still `HierarchySearchPath[]` - use `HierarchySearchTree.createFromPathsList` to do the conversion.
+    const helper = createHierarchySearchHelper(rootSearch?.paths, parentNode);
+    for (const book of books) {
+      const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
+      yield {
+        key: nodeKey,
+        label: book.title,
+        children: false,
+        parentKeys: [...parentNode.parentKeys, parentNode.key],
+        // before
+        ...searchHelper?.createChildNodeProps({ nodeKey, parentKeys }),
+        // after
+        ...searchHelper?.createChildNodeProps({ nodeKey }),
+      };
+    }
+    ```
+- d6174e069f47e5c98a88336631c63d2d9fbc7cc9: Change `NodePreProcessor` and `NodePostProcessor` function types to take a props object instead of a node.
+  
+  In addition, the props object now contains the `parentNode` property, which provides access to the parent node of the current node being processed. This allows for more context-aware processing of nodes within the hierarchy.
+  
+  The change breaks consumers that have `HierarchyDefinition` implementations with `preProcessNode` or `postProcessNode` functions defined. Reacting to the change is straightforward:
+  
+  ```ts
+  const myHierarchyDefinition: HierarchyDefinition = {
+    // Before:
+    preProcessNode: async (node) => {
+      // process node
+    },
+    postProcessNode: async (node) => {
+      // process node
+    },
+  
+    // After:
+    preProcessNode: async ({ node, parentNode }) => {
+      // process node with access to parentNode
+    },
+    postProcessNode: async ({ node, parentNode }) => {
+      // process node with access to parentNode
+    },
+  
+    // ... the rest of implementation
+  };
+  ```
+
+### Minor Changes
+
+- e9e42c3a513cb7d594351ee2244c7efe67cc4385: Added `HierarchyFilteringPathOptions.autoExpand` option to enable auto-expanding of filter target nodes.
+- 60a1fb42a209cd6816c8d78e48573b0183294a1b: Add `createHierarchyProvider` utility function.
+  
+  This function simplifies the creation of custom hierarchy providers by allowing developers to define only the necessary methods, while providing default implementations for the rest. This enhancement improves developer experience and reduces boilerplate code when working with custom hierarchy providers in the `@itwin/presentation-hierarchies` package.
+  
+  **Before:**
+  
+  ```ts
+  const beforeAsPlainObject: HierarchyProvider = {
+    hierarchyChanged: new BeEvent(),
+    async *getNodes({ parentNode }) {
+      // yield nodes...
+    },
+    async *getNodeInstanceKeys() {},
+    setFormatter() {},
+    setHierarchySearch() {},
+  };
+  
+  const beforeAsClassObject = new (class implements HierarchyProvider {
+    public hierarchyChanged: new BeEvent(),
+    public async *getNodes({ parentNode }) {
+      // yield nodes...
+    },
+    public async *getNodeInstanceKeys() {},
+    public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+      // set formatter...
+      hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+    },
+    public setHierarchySearch() {},
+  })();
+  ```
+  
+  **After:**
+  
+  ```ts
+  const afterAsPlainObject = createHierarchyProvider(() => ({
+    async *getNodes({ parentNode }) {
+      // yield nodes...
+    },
+  }));
+  
+  // or, provide implementation as a class instance:
+  const afterAsClassObject = createHierarchyProvider(
+    ({ hierarchyChanged }) =>
+      new (class implements Pick<HierarchyProvider, "getNodes" | "setFormatter"> {
+        public async *getNodes({ parentNode }): ReturnType<HierarchyProvider["getNodes"]> {
+          // yield nodes...
+        }
+        public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+          // set formatter...
+          hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: formatter } });
+        }
+      })(),
+  );
+  ```
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: Add `createMergedIModelHierarchyProvider` for creating a hierarchy from multiple versions of the same iModel.
+- bd68316f86bcec9cc5fb7af668e3c302adb5d172: Enhance `HierarchySearchTree.createBuilder()` by allowing it to process resulting hierarchy.
+  
+  Example:
+  
+  ```ts
+  const builder = HierarchySearchTree.createBuilder<{ heat?: number }>();
+  builder.accept({
+    tree: subTree,
+    handler: {
+      onEntryHandled: ({ treeEntry, parentEntries }) => {
+        // Assign some extra information to the entry and its ancestors. This will allow us to test
+        // that we can use that information in `getTree` method to filter out entries.
+        [...parentEntries, treeEntry].forEach((entry) => {
+          entry.extras.heat ? entry.extras.heat++ : (entry.extras.heat = 1);
+        });
+      },
+    },
+  });
+  const tree = builder.getTree({
+    // Only include branches with heat > 5
+    processEntry: ({ treeEntry }) => ((treeEntry.extras.heat ?? 0) > 5 ? treeEntry : undefined),
+  });
+  ```
+
+### Patch Changes
+
+- 76dc2ad8294433dd10023f1d04fe267369b30bc0: Fix nested property grouping for inherited properties by consistently using their declaring class.
+- 9fae43cda09fc8a46ffb8848aa4426461e7b9b2f: Removed deprecated `FilterTargetGroupingNodeInfo` interface.
+- 3fe271f35285bb8e620ed25919621246b727ebeb: Improved hierarchy load performance by memoizing the hidden-classes tree per selected class, avoiding repeated traversal of large derived-class hierarchies (notably improving the models tree).
+  
+  The memoization persists for the lifetime of the hierarchy provider's query factories. When iModel schemas may have changed, `createIModelHierarchyProvider` now re-creates its per-iModel factories in response to the `imodelChanged` event.
+- 50e5c75b3ade510b08a58d4e69937b86decb1e65: Bump iTwin.js Core dependencies to `5.14.2`.
+- fd2d3e6310d0cba43685310d439975a1142a33ee: Fixed a performance regression that made property grouping of large hierarchies dramatically slower.
+  
+  `createECSchemaProvider` now caches resolved schemas and the `EC.Class` objects built from them, so repeated `getSchema`/`getClass` calls and `EC.Property.class` accesses no longer trigger a new native schema view request or rebuild the class each time. Cached schemas are reused until the underlying schema view becomes outdated, at which point they are refreshed on next access. In addition, property grouping now resolves each properties class once instead of once per grouped node.
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: Fix `HierarchyNodeKey` methods `equals` and `compare` not handling different schema-class separators and casing.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0
+
 ## 2.0.0-alpha.22
 
 ### Major Changes
