@@ -308,7 +308,7 @@ export function createModelsTreeIdsProvider({
             return acc;
           }, new Map<SubjectId, SubjectInfo>()),
           map((subjectInfos) => {
-            for (const [subjectId, { parentSubjectId: parentSubjectId }] of subjectInfos) {
+            for (const [subjectId, { parentSubjectId }] of subjectInfos) {
               if (parentSubjectId) {
                 const parentSubjectInfo = subjectInfos.get(parentSubjectId);
                 assert(!!parentSubjectInfo);
@@ -406,7 +406,7 @@ export function createModelsTreeIdsProvider({
       createFunc: () =>
         getSubjectInfos().pipe(
           mergeMap((subjectInfos) => subjectInfos.entries()),
-          filter(([_, subjectInfo]) => subjectInfo.childModelIds.has(modelId)),
+          filter(([, subjectInfo]) => subjectInfo.childModelIds.has(modelId)),
           mergeMap(([modelSubjectId]) => createSubjectInstanceKeysPath(modelSubjectId)),
           shareReplay(),
         ),

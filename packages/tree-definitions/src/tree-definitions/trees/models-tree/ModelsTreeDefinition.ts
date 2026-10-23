@@ -438,7 +438,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         )
       : { childSubjectIds: [IModel.rootSubjectId], childModelIds: [] };
     const defs = new Array<HierarchyNodesDefinition>();
-    childSubjectIds.length &&
+    if (childSubjectIds.length) {
       defs.push({
         fullClassName: CLASS_NAMES.Subject,
         query: {
@@ -481,7 +481,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           ],
         },
       });
-    childModelIds.length &&
+    }
+    if (childModelIds.length) {
       defs.push({
         fullClassName: CLASS_NAMES.GeometricModel3d,
         query: {
@@ -550,6 +551,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           bindings: [{ type: "idset", value: childModelIds }],
         },
       });
+    }
     return defs;
   }
 

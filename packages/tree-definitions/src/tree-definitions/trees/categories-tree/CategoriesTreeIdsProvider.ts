@@ -666,12 +666,15 @@ function excludeDefinitionContainers(
             DefinitionContainerId,
             { id: DefinitionContainerId; modelId: Id64String; isExcluded: boolean }
           >(),
+          // oxlint-disable-next-line typescript/no-duplicate-type-constituents
           parentChildrenMap: new Map<DefinitionContainerId | ModelId, DefinitionContainerId[]>(),
+          // oxlint-disable-next-line typescript/no-duplicate-type-constituents
           parentContainers: new Set<DefinitionContainerId | ModelId>(),
         },
       ),
       mergeMap(({ containersMap, parentChildrenMap, parentContainers }) => {
         const nonExcludedContainers: Array<{ id: DefinitionContainerId; modelId: Id64String }> = [];
+        // oxlint-disable-next-line typescript/no-duplicate-type-constituents
         const collectNonExcludedChildren = (id: DefinitionContainerId | ModelId) => {
           const children = parentChildrenMap.get(id);
           if (!children?.length) {

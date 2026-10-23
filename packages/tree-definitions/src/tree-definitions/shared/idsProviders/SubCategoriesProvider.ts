@@ -7,14 +7,15 @@ import { defer, EMPTY, expand, map, reduce, shareReplay } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import { createWhereClause, getOrCreate, loadData } from "../Utils.js";
+import { createWhereClause, getOrCreate } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
+import { loadData } from "./LoadedData.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { CategoryId, SubCategoryId } from "../Types.js";
-import type { LoadedData } from "../Utils.js";
+import type { LoadedData } from "./LoadedData.js";
 import type { IdsProviderDataState, LoadDataOverrides } from "./SharedIdsProvider.js";
 
 /** Loader replacing the default iModel query of `SubCategoriesProvider`. */

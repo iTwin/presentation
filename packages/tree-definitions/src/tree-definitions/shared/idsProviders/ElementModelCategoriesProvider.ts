@@ -7,15 +7,16 @@ import { delay, finalize, from, map, mergeMap, reduce, shareReplay } from "rxjs"
 import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../ClassNameDefinitions.js";
 import { catchBeSQLiteInterrupts } from "../TreeErrors.js";
-import { createExcludedClassesClause, createWhereClause, getOrCreate, loadData } from "../Utils.js";
+import { createExcludedClassesClause, createWhereClause, getOrCreate } from "../Utils.js";
 import { DataStateTracker } from "./DataStateTracker.js";
+import { loadData } from "./LoadedData.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoryId, ModelId } from "../Types.js";
-import type { LoadedData } from "../Utils.js";
+import type { LoadedData } from "./LoadedData.js";
 import type { IdsProviderDataState, LoadDataOverrides } from "./SharedIdsProvider.js";
 
 /** Loader replacing the default iModel query of `ElementModelCategoriesProvider`. */

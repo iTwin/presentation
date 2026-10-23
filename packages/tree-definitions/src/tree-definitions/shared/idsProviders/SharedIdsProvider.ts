@@ -6,9 +6,10 @@
 import { EMPTY, filter, from, identity, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { fromWithRelease } from "../Rxjs.js";
-import { getLoadDataOverride, getOrCreate, loadData } from "../Utils.js";
+import { getOrCreate } from "../Utils.js";
 import { combineDataStates, DataStateTracker } from "./DataStateTracker.js";
 import { ElementModelCategoriesProvider } from "./ElementModelCategoriesProvider.js";
+import { getLoadDataOverride, loadData } from "./LoadedData.js";
 import { SubCategoriesProvider } from "./SubCategoriesProvider.js";
 import { SubModeledElementsProvider } from "./SubModeledElementsProvider.js";
 
@@ -17,8 +18,8 @@ import type { GuidString, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
 import type { CategoryId, ElementId, ModelId, ReadonlyId64Arg, SubCategoryId } from "../Types.js";
-import type { LoadedData, RequireNarrowedLoadDataOverrides } from "../Utils.js";
 import type { ElementModelCategoriesProviderData } from "./ElementModelCategoriesProvider.js";
+import type { LoadedData, RequireNarrowedLoadDataOverrides } from "./LoadedData.js";
 import type { SubCategoriesProviderData } from "./SubCategoriesProvider.js";
 import type { SubModeledElementsProviderData } from "./SubModeledElementsProvider.js";
 
@@ -243,7 +244,7 @@ export function createSharedIdsProvider<TOverrides extends LoadDataOverrides = L
   function getAllModels(): Observable<ReadonlySet<ModelId>> {
     return elementModelCategoriesProvider
       .getData()
-      .pipe(map(({ modelsCategoriesInfo }) => new Set([...modelsCategoriesInfo.keys()])));
+      .pipe(map(({ modelsCategoriesInfo }) => new Set(modelsCategoriesInfo.keys())));
   }
   function getSubModeledElementsData(): Observable<SubModeledElementsData> {
     subModeledElementsData ??= loadData({

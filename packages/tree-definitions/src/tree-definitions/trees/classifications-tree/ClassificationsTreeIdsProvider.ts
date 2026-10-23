@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { defer, EMPTY, expand, filter, forkJoin, from, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { ECSql } from "@itwin/presentation-shared";
@@ -26,6 +25,7 @@ import type {
 } from "./ClassificationsTreeDefinition.js";
 
 interface ClassificationOrTableInfo {
+  // oxlint-disable-next-line typescript/no-duplicate-type-constituents
   parentClassificationOrTableId: ClassificationId | ClassificationTableId | undefined;
   childClassificationIds: ClassificationId[];
 }
@@ -40,6 +40,7 @@ interface ClassificationsTreeIdsProviderProps {
 }
 
 interface ClassificationsTreeIdsProviderData {
+  // oxlint-disable-next-line typescript/no-duplicate-type-constituents
   classificationOrTableInfos: Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>;
 }
 
@@ -243,6 +244,7 @@ export function createClassificationsTreeIdsProvider({
             return acc;
           },
           {
+            // oxlint-disable-next-line typescript/no-duplicate-type-constituents
             classificationOrTableInfos: new Map<ClassificationId | ClassificationTableId, ClassificationOrTableInfo>(),
           },
         ),
