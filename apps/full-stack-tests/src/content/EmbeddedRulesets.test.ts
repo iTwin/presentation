@@ -8,6 +8,7 @@ import { createIModelContentConfiguration } from "@itwin/presentation-content";
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
+import { validateCategoryChain } from "./DescriptorValidation.js";
 import {
   buildDescriptor,
   createContentIModelAccess,
@@ -443,6 +444,233 @@ describe("Content", () => {
         relationshipName: setup.schema.items.BtoC.fullName,
       });
     });
+
+    it("categorizes related properties under the concrete class of the related instance", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="PropA" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="Base" displayLabel="Base Label">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01"><MapStrategy>TablePerHierarchy</MapStrategy></ClassMap>
+              </ECCustomAttributes>
+              <ECProperty propertyName="PropBase" typeName="string" />
+            </ECEntityClass>
+            <ECEntityClass typeName="Derived" displayLabel="Derived Label">
+              <BaseClass>Base</BaseClass>
+            </ECEntityClass>
+            <ECRelationshipClass typeName="AtoBase" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="a to base" polymorphic="true">
+                <Class class="A" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="base to a" polymorphic="true">
+                <Class class="Base" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        await insertEmbeddedRuleset(builder, {
+          id: "test",
+          supplementationInfo: { supplementationPurpose: "test" },
+          rules: [
+            {
+              ruleType: "ContentModifier",
+              class: { schemaName: s.schemaName, className: "A" },
+              relatedProperties: [
+                {
+                  propertiesSource: [
+                    { relationship: { schemaName: s.schemaName, className: "AtoBase" }, direction: "Forward" },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+        const derived = builder.insertInstance(s.items.Derived.fullName, { propBase: "x" });
+        builder.insertRelationship(s.items.AtoBase.fullName, a.id, derived.id);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const config = await createIModelContentConfiguration({ imodelAccess });
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+        config,
+      });
+
+      const propBase = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropBase");
+      expect(propBase).toBeDefined();
+      validateCategoryChain(descriptor, propBase!, ["Derived Label"]);
+    });
+
+    it.each([
+      { forceCreateRelationshipCategory: false, relationshipProperties: undefined, expectedCategories: ["Class B"] },
+      {
+        forceCreateRelationshipCategory: true,
+        relationshipProperties: undefined,
+        expectedCategories: ["A To B", "Class B"],
+      },
+      {
+        forceCreateRelationshipCategory: false,
+        relationshipProperties: "*",
+        expectedCategories: ["A To B", "Class B"],
+      },
+      { forceCreateRelationshipCategory: true, relationshipProperties: "*", expectedCategories: ["A To B", "Class B"] },
+    ] as const)(
+      "places the related class category under a relationship without properties when forced or selected (forceCreateRelationshipCategory=$forceCreateRelationshipCategory, relationshipProperties=$relationshipProperties)",
+      async ({ forceCreateRelationshipCategory, relationshipProperties, expectedCategories }) => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B" displayLabel="Class B">
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None" displayLabel="A To B">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          await insertEmbeddedRuleset(builder, {
+            id: "test",
+            supplementationInfo: { supplementationPurpose: "test" },
+            rules: [
+              {
+                ruleType: "ContentModifier",
+                class: { schemaName: s.schemaName, className: "A" },
+                relatedProperties: [
+                  {
+                    propertiesSource: [
+                      { relationship: { schemaName: s.schemaName, className: "AtoB" }, direction: "Forward" },
+                    ],
+                    properties: "*",
+                    forceCreateRelationshipCategory,
+                    relationshipProperties,
+                  },
+                ],
+              },
+            ],
+          });
+          const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+          const b = builder.insertInstance(s.items.B.fullName, { propB: "b" });
+          builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
+          return { schema: s };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const config = await createIModelContentConfiguration({ imodelAccess });
+        const descriptor = await buildDescriptor({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+
+        const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
+        expect(propB).toBeDefined();
+        validateCategoryChain(descriptor, propB!, [...expectedCategories]);
+      },
+    );
+
+    it.each([
+      { forceCreateRelationshipCategory: false, expectedCategories: ["Class B", "Class C"] },
+      { forceCreateRelationshipCategory: true, expectedCategories: ["A To B", "Class B", "Class C"] },
+    ])(
+      "keeps enclosing categories of nested related properties when the parent selects none (forceCreateRelationshipCategory=$forceCreateRelationshipCategory)",
+      async ({ forceCreateRelationshipCategory, expectedCategories }) => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const s = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="PropA" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B" displayLabel="Class B">
+                <ECProperty propertyName="PropB" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="C" displayLabel="Class C">
+                <ECProperty propertyName="PropC" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None" displayLabel="A To B">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true">
+                  <Class class="A" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true">
+                  <Class class="B" />
+                </Target>
+              </ECRelationshipClass>
+              <ECRelationshipClass typeName="BtoC" strength="referencing" modifier="None" displayLabel="B To C">
+                <Source multiplicity="(0..*)" roleLabel="b to c" polymorphic="true">
+                  <Class class="B" />
+                </Source>
+                <Target multiplicity="(0..*)" roleLabel="c to b" polymorphic="true">
+                  <Class class="C" />
+                </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          await insertEmbeddedRuleset(builder, {
+            id: "test",
+            supplementationInfo: { supplementationPurpose: "test" },
+            rules: [
+              {
+                ruleType: "ContentModifier",
+                class: { schemaName: s.schemaName, className: "A" },
+                relatedProperties: [
+                  {
+                    propertiesSource: [
+                      { relationship: { schemaName: s.schemaName, className: "AtoB" }, direction: "Forward" },
+                    ],
+                    properties: "_none_",
+                    forceCreateRelationshipCategory,
+                    nestedRelatedProperties: [
+                      {
+                        propertiesSource: [
+                          { relationship: { schemaName: s.schemaName, className: "BtoC" }, direction: "Forward" },
+                        ],
+                        properties: "*",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          });
+          const a = builder.insertInstance(s.items.A.fullName, { propA: "a" });
+          const b = builder.insertInstance(s.items.B.fullName, { propB: "b" });
+          const c = builder.insertInstance(s.items.C.fullName, { propC: "c" });
+          builder.insertRelationship(s.items.AtoB.fullName, a.id, b.id);
+          builder.insertRelationship(s.items.BtoC.fullName, b.id, c.id);
+          return { schema: s };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const config = await createIModelContentConfiguration({ imodelAccess });
+        const descriptor = await buildDescriptor({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config,
+        });
+
+        const relatedFields = getRelatedPropertyFields(descriptor);
+        expect(relatedFields.find((f) => f.propertyName === "PropB")).toBeUndefined();
+        const propC = relatedFields.find((f) => f.propertyName === "PropC");
+        expect(propC).toBeDefined();
+        validateCategoryChain(descriptor, propC!, expectedCategories);
+      },
+    );
 
     it("ignores a non-supplemental ruleset", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {

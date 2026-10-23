@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { getClass } from "@itwin/presentation-shared";
-import { getClassLabel, resolveEffectiveSourceClass, stableStringify } from "../../InternalUtils.js";
-import { CategoryDefinition } from "../../model/Category.js";
+import { resolveEffectiveSourceClass, stableStringify } from "../../InternalUtils.js";
 import { hashString } from "../../model/Utils.js";
 import { convertECExpressionToECSql } from "../ecexpressions/ECExpressionToECSql.js";
 import { checkRequiredSchemas, mapPropertyCategories, resolveCategoryId } from "./Utils.js";
@@ -17,6 +16,7 @@ import type {
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
+import type { CategoryDefinition } from "../../model/Category.js";
 import type { ClassPropertySpec, StepPropertySpec } from "../../model/PropertySpec.js";
 import type { IModelFieldsProvider } from "../IModelFieldsProvider.js";
 import type * as PresentationRules from "./PresentationRules.js";
@@ -87,13 +87,11 @@ export function createFieldsProviderFromContentModifierRule(
 
       let relatedProperties: RelatedPropertiesDeclaration[] | undefined;
       if (rule.relatedProperties && rule.relatedProperties.length > 0) {
-        const result = await flattenRelatedPropertiesSpecs({
+        relatedProperties = await flattenRelatedPropertiesSpecs({
           imodelAccess,
           specs: rule.relatedProperties,
           sourceClassName,
         });
-        relatedProperties = result.declarations;
-        Object.assign(categories, result.categories);
       }
 
       let calculatedFields: CalculatedFieldDeclaration[] | undefined;
@@ -157,7 +155,6 @@ function normalizePropertyNames(
  */
 function mapPropertiesForStep(
   props: PresentationRules.RelatedPropertiesSpecification["properties"],
-  forceCategoryId: CategoryDefinition["id"] | undefined,
 ): StepPropertySpec["target"] {
   const overrides: ClassPropertySpec["overrides"] = {};
   let select: ClassPropertySpec["select"] | undefined;
@@ -213,24 +210,13 @@ function mapPropertiesForStep(
     }
   }
 
-  if (
-    select === undefined &&
-    !forceCategoryId &&
-    !defaultOverridesFromWildcard &&
-    Object.keys(overrides).length === 0
-  ) {
+  if (select === undefined) {
     return undefined;
   }
 
-  // Merge wildcard overrides with forceCategoryId into defaultOverrides.
-  let defaultOverrides: (typeof overrides)[string] | undefined;
-  if (forceCategoryId !== undefined) {
-    defaultOverrides = { ...defaultOverridesFromWildcard, categoryId: forceCategoryId };
-  }
-
   return {
-    select: select ?? "all",
-    defaultOverrides,
+    select,
+    defaultOverrides: defaultOverridesFromWildcard,
     overrides: Object.keys(overrides).length > 0 ? overrides : undefined,
   };
 }
@@ -252,27 +238,18 @@ interface NormalizedRelatedPropertiesSpec {
 
 /**
  * Maps a single `NormalizedRelatedPropertiesSpec` (excluding its `nestedRelatedProperties`, which are
- * handled by `flattenRelatedPropertiesSpecs`) to a `RelatedPropertiesDeclaration` and the
- * `CategoryDefinition`s it produces: a target category for the last step's target class, plus a
- * relationship category when `forceCreateRelationshipCategory` is set or relationship properties are
- * requested.
+ * handled by `flattenRelatedPropertiesSpecs`) to a declaration. Class categories are generated from
+ * resolved paths rather than from the declared base classes.
  */
 async function mapRelatedPropertiesSpec(props: {
   imodelAccess: ECSchemaProvider;
   spec: NormalizedRelatedPropertiesSpec;
   /** Full class name of the source for the first path step */
   sourceClassName: EC.FullClassNameDotNotation;
-  /** Category of the parent scope, used when flattening nested specs */
-  parentCategoryId?: CategoryDefinition["id"];
-}): Promise<{
-  declaration: RelatedPropertiesDeclaration;
-  categories: Record<CategoryDefinition["id"], CategoryDefinition>;
-  targetCategoryId: CategoryDefinition["id"];
-}> {
-  const { imodelAccess, spec, sourceClassName, parentCategoryId } = props;
+}): Promise<RelatedPropertiesDeclaration> {
+  const { imodelAccess, spec, sourceClassName } = props;
   const steps = Array.isArray(spec.propertiesSource) ? spec.propertiesSource : [spec.propertiesSource];
   const path: RelationshipPath = [];
-  const categories: Record<CategoryDefinition["id"], CategoryDefinition> = {};
   let currentSourceClassName = sourceClassName;
 
   for (let i = 0; i < steps.length; i++) {
@@ -314,47 +291,20 @@ async function mapRelatedPropertiesSpec(props: {
     currentSourceClassName = targetClassName;
   }
 
-  // Always create a target category for the last step's target class.
-  const baseId = CategoryDefinition.computeId({ path });
-  const targetCategory: CategoryDefinition = {
-    id: `${baseId}/target`,
-    label: await getClassLabel({ imodelAccess, className: currentSourceClassName }),
-    parentId: parentCategoryId,
-  };
-  categories[targetCategory.id] = targetCategory;
-
-  // Create a relationship category when explicitly requested or when relationship properties are actually requested.
   const hasRelationshipProperties =
     spec.relationshipProperties !== undefined &&
     spec.relationshipProperties !== "_none_" &&
     !(Array.isArray(spec.relationshipProperties) && spec.relationshipProperties.length === 0);
-  let relationshipCategoryId: CategoryDefinition["id"] | undefined;
-  if (spec.forceCreateRelationshipCategory || hasRelationshipProperties) {
-    const lastStep = steps[steps.length - 1];
-    const relationshipCategory: CategoryDefinition = {
-      id: `${baseId}/rel`,
-      label: await getClassLabel({
-        imodelAccess,
-        className: `${lastStep.relationship.schemaName}.${lastStep.relationship.className}`,
-      }),
-      parentId: parentCategoryId,
-    };
-    categories[relationshipCategory.id] = relationshipCategory;
-    targetCategory.parentId = relationshipCategory.id;
-    relationshipCategoryId = relationshipCategory.id;
-  }
-
-  const targetSpec = mapPropertiesForStep(
-    spec.properties ?? normalizePropertyNames(spec.propertyNames),
-    targetCategory.id,
-  );
-  const relSpec = mapPropertiesForStep(spec.relationshipProperties, relationshipCategoryId);
-
-  return {
-    declaration: { path, properties: [{ stepIndex: steps.length - 1, target: targetSpec, relationship: relSpec }] },
-    categories,
-    targetCategoryId: targetCategory.id,
+  const targetSpec = mapPropertiesForStep(spec.properties ?? normalizePropertyNames(spec.propertyNames)) ?? {
+    select: "all",
   };
+  const relSpec: StepPropertySpec["relationship"] = hasRelationshipProperties
+    ? mapPropertiesForStep(spec.relationshipProperties)
+    : spec.forceCreateRelationshipCategory
+      ? { select: "none" }
+      : undefined;
+
+  return { path, properties: [{ stepIndex: steps.length - 1, target: targetSpec, relationship: relSpec }] };
 }
 
 /**
@@ -366,55 +316,47 @@ async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
   specs: PresentationRules.RelatedPropertiesSpecification[];
   sourceClassName: EC.FullClassNameDotNotation;
-  parentCategoryId?: CategoryDefinition["id"];
-}): Promise<{
-  declarations: RelatedPropertiesDeclaration[];
-  categories: Record<CategoryDefinition["id"], CategoryDefinition>;
-}> {
-  const { imodelAccess, specs, sourceClassName, parentCategoryId } = props;
+}): Promise<RelatedPropertiesDeclaration[]> {
+  const { imodelAccess, specs, sourceClassName } = props;
   const declarations: RelatedPropertiesDeclaration[] = [];
-  const categories: Record<CategoryDefinition["id"], CategoryDefinition> = {};
 
   for (const spec of specs) {
     for (const normalizedSpec of normalizeRelatedPropertiesSpec(spec)) {
-      const result = await mapRelatedPropertiesSpec({
-        imodelAccess,
-        spec: normalizedSpec,
-        sourceClassName,
-        parentCategoryId,
-      });
-      Object.assign(categories, result.categories);
-      declarations.push(result.declaration);
+      const result = await mapRelatedPropertiesSpec({ imodelAccess, spec: normalizedSpec, sourceClassName });
+      declarations.push(result);
 
       // Recursively flatten nestedRelatedProperties.
       if (normalizedSpec.nestedRelatedProperties && normalizedSpec.nestedRelatedProperties.length > 0) {
         // The nested specs start from where this spec's path ends.
-        const lastTargetClassName = result.declaration.path[result.declaration.path.length - 1].targetClassName;
+        const lastTargetClassName = result.path[result.path.length - 1].targetClassName;
 
         const nested = await flattenRelatedPropertiesSpecs({
           imodelAccess,
           specs: normalizedSpec.nestedRelatedProperties,
           sourceClassName: lastTargetClassName,
-          parentCategoryId: result.targetCategoryId,
         });
-        Object.assign(categories, nested.categories);
 
-        // Prepend the parent's path to each nested declaration.
-        for (const nestedDecl of nested.declarations) {
+        const offset = result.path.length;
+        for (const nestedDecl of nested) {
           declarations.push({
             ...nestedDecl,
-            path: [...result.declaration.path, ...nestedDecl.path],
-            properties: nestedDecl.properties.map((step) => ({
-              ...step,
-              stepIndex: result.declaration.path.length + step.stepIndex,
-            })),
+            path: [...result.path, ...nestedDecl.path],
+            properties: [
+              // The parent declaration already loads these classes' properties; keep only their categories.
+              ...result.properties.map((step): StepPropertySpec => ({
+                stepIndex: step.stepIndex,
+                target: { select: "none" },
+                ...(step.relationship ? { relationship: { select: "none" } } : undefined),
+              })),
+              ...nestedDecl.properties.map((step) => ({ ...step, stepIndex: offset + step.stepIndex })),
+            ],
           });
         }
       }
     }
   }
 
-  return { declarations, categories };
+  return declarations;
 }
 
 /**

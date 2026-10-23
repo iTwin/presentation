@@ -5,25 +5,38 @@
 
 import { getClass } from "@itwin/presentation-shared";
 
-import type { EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
+import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
 import type { CategoryContext } from "./ContentTarget.js";
+import type { StepPropertySpec } from "./model/PropertySpec.js";
 
 /**
- * Appends selected local class anchors to inherited ancestry, ordered by path step with relationship
- * classes before target classes at the same step. Local anchors are deduplicated by step and class
- * kind. Neither input is modified.
+ * Appends the classes named by step specs to inherited ancestry. Every `target` and `relationship` spec
+ * counts, whether or not it selects properties, if `include` accepts it. Classes are ordered by path
+ * step with relationship classes first, deduplicated, and offset by `stepIndexOffset` into full-path
+ * indexes. Inputs are not modified.
  */
 export function buildCategoryContext(props: {
-  inheritedContext: CategoryContext;
-  localAnchors: CategoryContext;
+  inheritedContext: Readonly<CategoryContext>;
+  properties: DeepReadonly<StepPropertySpec[]>;
+  stepIndexOffset: number;
+  include: (entry: CategoryContext[number]) => boolean;
 }): CategoryContext {
-  const orderedAnchors = [...props.localAnchors].sort(
-    (first, second) =>
-      first.stepIndex - second.stepIndex ||
-      (first.kind === second.kind ? 0 : first.kind === "relationshipClass" ? -1 : 1),
-  );
-  const uniqueAnchors = new Map(orderedAnchors.map((anchor) => [`${anchor.stepIndex}:${anchor.kind}`, anchor]));
-  return [...props.inheritedContext, ...uniqueAnchors.values()];
+  const entries = props.properties
+    .flatMap((spec): CategoryContext => {
+      const stepIndex = props.stepIndexOffset + spec.stepIndex;
+      return [
+        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const }] : []),
+        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const }] : []),
+      ];
+    })
+    .filter(props.include)
+    .sort(
+      (first, second) =>
+        first.stepIndex - second.stepIndex ||
+        (first.kind === second.kind ? 0 : first.kind === "relationshipClass" ? -1 : 1),
+    );
+  const uniqueEntries = new Map(entries.map((entry) => [`${entry.stepIndex}:${entry.kind}`, entry]));
+  return [...props.inheritedContext, ...uniqueEntries.values()];
 }
 
 /**

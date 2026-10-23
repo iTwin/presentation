@@ -9,6 +9,7 @@ import { PropertyField } from "../../content/model/Field.js";
 
 import type { EC } from "@itwin/presentation-shared";
 import type { CategoryContext } from "../../content/ContentTarget.js";
+import type { FieldCategorization } from "../../content/definition-building/ClassPropertyFields.js";
 
 function createField(props: {
   propertyClassName: EC.FullClassNameDotNotation;
@@ -307,6 +308,65 @@ describe("mergePropertyFieldsByIdentity", () => {
     ).to.throw(/divergent metadata/);
   });
 
+  it.each<{ name: string; placement: Partial<FieldCategorization> }>([
+    { name: "ancestry", placement: { categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }] } },
+    { name: "scope", placement: { propertyCategoryScope: "parent" } },
+    { name: "anchor", placement: { anchor: "relationshipClass" } },
+  ])("merges identical explicit category overrides with different $name", ({ placement }) => {
+    const field = createField({
+      propertyClassName: "Stuff.Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff.Thing"],
+      pathFromTarget: [
+        { sourceClassName: "Stuff.Source", relationshipName: "Stuff.HasThing", targetClassName: "Stuff.Thing" },
+      ],
+    });
+    const categorization: FieldCategorization = {
+      anchor: "targetClass",
+      categoryContext: [],
+      category: { source: "override", id: "custom" },
+    };
+    const provider = { id: "provider_v1" } as const;
+    const candidates = [
+      { field, provider, categorization },
+      { field, provider, categorization: { ...categorization, ...placement } },
+    ];
+
+    for (const ordered of [candidates, [...candidates].reverse()]) {
+      expect(mergePropertyFieldsByIdentity(ordered)).to.deep.equal([
+        { field, categorization: ordered[0].categorization },
+      ]);
+    }
+  });
+
+  it.each<{ name: string; category: FieldCategorization["category"] }>([
+    { name: "no category", category: undefined },
+    {
+      name: "a property category with the same ID",
+      category: { source: "propertyCategory", id: "Stuff.Custom", label: "Custom" },
+    },
+  ])("rejects an explicit category override combined with $name", ({ category }) => {
+    const field = createField({
+      propertyClassName: "Stuff.Thing",
+      propertyName: "Height",
+      valueClassNames: ["Stuff.Thing"],
+    });
+    const categorization: FieldCategorization = {
+      anchor: "targetClass",
+      categoryContext: [],
+      category: { source: "override", id: "Stuff.Custom" },
+    };
+    const provider = { id: "provider_v1" } as const;
+    const candidates = [
+      { field, provider, categorization },
+      { field, provider, categorization: { ...categorization, category } },
+    ];
+
+    for (const ordered of [candidates, [...candidates].reverse()]) {
+      expect(() => mergePropertyFieldsByIdentity(ordered)).to.throw(/divergent metadata/);
+    }
+  });
+
   describe("category placement", () => {
     const outerContext = [{ stepIndex: 0, kind: "targetClass" }] as const;
     const innerContext = [...outerContext, { stepIndex: 1, kind: "targetClass" }] as const;
@@ -315,7 +375,7 @@ describe("mergePropertyFieldsByIdentity", () => {
     const placementOf = (
       candidates: Array<{
         scope?: "relatedClass" | "parent";
-        context?: CategoryContext;
+        context?: Readonly<CategoryContext>;
         providerId: `${string}_v${number}`;
         priority?: number;
       }>,
