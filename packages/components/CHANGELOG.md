@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-components
 
+## 6.0.1
+
+### Patch Changes
+
+- [#1668](https://github.com/iTwin/presentation/pull/1668): Bump dependencies
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0
+  - @itwin/presentation-core-interop@2.0.0
+  - @itwin/unified-selection@2.0.0
+  - @itwin/unified-selection-react@2.0.0
+
 ## 6.0.0
 
 ### Major Changes
