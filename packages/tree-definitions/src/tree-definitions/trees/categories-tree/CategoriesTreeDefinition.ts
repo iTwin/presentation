@@ -311,7 +311,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
         imodelAccess: this.#iModelAccess,
         hierarchy: {
           rootNodes: async (requestProps: DefineRootHierarchyLevelProps) =>
-            this.createDefinitionContainersAndCategoriesQuery(requestProps),
+            this.createDefinitionContainersAndCategoriesQuery({ ...requestProps, isDefinitionContainerSupported }),
           childNodes: [
             ...(this.#hierarchyConfig.elements.nodes === "include"
               ? [
@@ -348,7 +348,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                   {
                     parentInstancesNodePredicate: CLASS_NAMES.DefinitionContainer,
                     definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) =>
-                      this.createDefinitionContainersAndCategoriesQuery(requestProps),
+                      this.createDefinitionContainersAndCategoriesQuery({
+                        ...requestProps,
+                        isDefinitionContainerSupported,
+                      }),
                   },
                 ]
               : []),
@@ -605,13 +608,15 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   }
 
   private async createDefinitionContainersAndCategoriesQuery(
-    props: DefineRootHierarchyLevelProps | DefineInstanceNodeChildHierarchyLevelProps,
+    props: (DefineRootHierarchyLevelProps | DefineInstanceNodeChildHierarchyLevelProps) & {
+      isDefinitionContainerSupported: boolean;
+    },
   ): Promise<HierarchyLevelDefinition> {
-    const { instanceFilter, createSelectClause, createFilterClauses } = props;
+    const { instanceFilter, createSelectClause, createFilterClauses, isDefinitionContainerSupported } = props;
     const parentNodeInstanceIds = "parentNodeInstanceIds" in props ? props.parentNodeInstanceIds : undefined;
-    const [values, isDefinitionContainerSupported] = await Promise.all([
+    const values =
       this.#idsProvider.state === "loaded"
-        ? firstValueFrom(
+        ? await firstValueFrom(
             toObservable(
               parentNodeInstanceIds === undefined
                 ? this.#idsProvider.getRootDefinitionContainersAndCategories({
@@ -623,9 +628,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                   }),
             ),
           )
-        : undefined,
-      firstValueFrom(toObservable(this.#idsProvider.getIsDefinitionContainerSupported())),
-    ]);
+        : undefined;
     const { categories, definitionContainers } = values ?? {};
     const hierarchyDefinitionPromises = new Array<Promise<HierarchyNodesDefinition>>();
     if (!categories || categories.length > 0) {
