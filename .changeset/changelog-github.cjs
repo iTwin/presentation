@@ -13,6 +13,9 @@ module.exports = {
     const prOrCommit = await (async () => {
       try {
         const { getCommitInfo } = await import("@changesets/get-github-info");
+        if (!commit) {
+          throw new Error("no commit associated with the changeset found");
+        }
         const info = await getCommitInfo({ commit, repo: options.repo });
         if (!info?.pull) {
           throw new Error("no pull request associated with the commit found");
