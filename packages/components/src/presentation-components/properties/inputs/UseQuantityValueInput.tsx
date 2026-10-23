@@ -55,6 +55,7 @@ export function useQuantityValueInput({
     placeholder: string;
   }
   const initialRawValueRef = useRef(initialRawValue);
+  // oxlint-disable-next-line react/refs
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
       rawValue: initialRawValueRef.current,
@@ -98,6 +99,7 @@ export function useQuantityValueInput({
     });
   });
 
+  // oxlint-disable-next-line react/refs
   const useFormatterAndParserResult = useFormatterAndParser(koqName, schemaContext, onFormatterLoad.current);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {

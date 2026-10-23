@@ -70,6 +70,7 @@ export const NavigationPropertyTargetSelector = forwardRef<
   ]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     setSelectedTarget(getNavigationTargetFromPropertyRecord(propertyRecord));
   }, [propertyRecord]);
 

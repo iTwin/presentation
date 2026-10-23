@@ -36,15 +36,7 @@
       "plugins": ["react"],
       "rules": {
         "react/exhaustive-deps": "error",
-        "react/rules-of-hooks": "error"
-      }
-    },
-    // React Compiler rules: only for packages and apps built with the React Compiler
-    // (`reactCompilerPreset` in their tsdown / Vite config), as these rules check code the compiler can optimize.
-    {
-      "files": ["packages/hierarchies-react/**", "apps/test-app/frontend/**"],
-      "plugins": ["react"],
-      "rules": {
+        "react/rules-of-hooks": "error",
         "react/error-boundaries": "error",
         "react/globals": "error",
         "react/immutability": "error",
@@ -59,19 +51,23 @@
         "react/use-memo": "error"
       }
     },
-    // Libraries shouldn't write to the console; apps may
     {
       "files": ["packages/**"],
       "rules": {
         "no-console": "error"
       }
     },
-    // Learning snippets are extracted into documentation, keep their imports as they are
     {
       "files": ["**/learning-snippets/**"],
       "rules": {
         "import/no-duplicates": "off",
         "typescript/consistent-type-imports": "off"
+      }
+    },
+    {
+      "files": ["**/src/test/**", "**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "typescript/unbound-method": "off"
       }
     }
   ]

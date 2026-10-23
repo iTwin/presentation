@@ -61,6 +61,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
     useEffect(() => {
       if (selectionHandler) {
         selectionHandler.applyCurrentSelection();
+        // oxlint-disable-next-line react/set-state-in-effect
         setViewportSelectionHandler(selectionHandler);
         return;
       }
@@ -78,6 +79,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
       if (!viewportSelectionHandler) {
         return;
       }
+      // oxlint-disable-next-line react/immutability
       viewportSelectionHandler.imodel = imodel;
     }, [viewportSelectionHandler, imodel]);
 

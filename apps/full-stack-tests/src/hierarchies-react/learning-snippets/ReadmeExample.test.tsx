@@ -27,6 +27,8 @@ import { withEditTxn } from "@itwin/core-backend";
 import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { Root } from "@stratakit/mui";
 
+// oxlint-disable react/set-state-in-effect
+
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(imodel);

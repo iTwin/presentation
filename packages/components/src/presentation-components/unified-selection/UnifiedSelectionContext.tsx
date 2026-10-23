@@ -86,7 +86,9 @@ export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextPr
   const selectionLevel = props.selectionLevel ?? 0;
 
   const contextRef = useRef<UnifiedSelectionContext | undefined>(undefined);
+  // oxlint-disable-next-line react/refs
   if (contextRef.current?.imodel !== props.imodel || contextRef.current.selectionLevel !== selectionLevel) {
+    // oxlint-disable-next-line react/refs
     contextRef.current = createSelectionContext(props.imodel, selectionLevel);
   }
 
@@ -106,6 +108,7 @@ export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextPr
   }, [props.imodel, selectionLevel]);
 
   return (
+    // oxlint-disable-next-line react/refs
     <unifiedSelectionContext.Provider value={contextRef.current}>{props.children}</unifiedSelectionContext.Provider>
   );
 }

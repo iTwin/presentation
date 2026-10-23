@@ -163,7 +163,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
   const firstRenderRef = useRef(true);
   const treeStateProps = useMemo(
     (): TreeStateProps => ({ ...dataProviderProps, treeModel: firstRenderRef.current ? seedTreeModel : undefined }),
-    Object.values(dataProviderProps), // oxlint-disable-line react-hooks/exhaustive-deps
+    Object.values(dataProviderProps), // oxlint-disable-line react-hooks/exhaustive-deps react/use-memo
   );
 
   const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded, onHierarchyLimitExceeded });
@@ -190,6 +190,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
   const activeNodeLoader = filteredTree?.filteredNodeLoader ?? state?.nodeLoader;
   const eventHandler = useEventHandler(eventHandlerFactory, activeNodeLoader);
 
+  // oxlint-disable-next-line react/refs
   firstRenderRef.current = false;
   if (!activeNodeLoader || !eventHandler) {
     return undefined;
@@ -272,6 +273,7 @@ function useEventHandler<TEventHandler extends TreeEventHandler>(
     }
     const params: PresentationTreeEventHandlerProps = { modelSource: nodeLoader.modelSource, nodeLoader };
     const newHandler = factory ? factory(params) : new TreeEventHandler(params);
+    // oxlint-disable-next-line react/set-state-in-effect
     setState(newHandler as TEventHandler);
 
     return () => {
