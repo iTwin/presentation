@@ -36,10 +36,7 @@ jobs:
       - name: Build, Lint, Test
         env:
           NODE_ENV: "development"
-        run: pnpm lage build lint cover
-
-      - name: Lint with @itwin ESLint rules
-        run: pnpm lint:no-internal:all
+        run: pnpm lage build lint lint:no-internal cover
 
       - name: Run component tests
         run: pnpm lage test:components
