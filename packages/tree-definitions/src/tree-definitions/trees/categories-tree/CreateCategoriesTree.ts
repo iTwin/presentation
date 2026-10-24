@@ -5,8 +5,8 @@
 
 import { Guid } from "@itwin/core-bentley";
 import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
-import { getClassesByPerspective, mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
-import { CategoriesTreeDefinition, defaultHierarchyConfiguration } from "./CategoriesTreeDefinition.js";
+import { getClassesByPerspective, validateIdsProviderConfig } from "../../shared/Utils.js";
+import { CategoriesTreeDefinition, mergeWithDefaultHierarchyConfiguration } from "./CategoriesTreeDefinition.js";
 import { createCategoriesTreeIdsProvider, createCategoriesTreeIdsProviderConfig } from "./CategoriesTreeIdsProvider.js";
 
 import type { GuidString } from "@itwin/core-bentley";
@@ -16,7 +16,7 @@ import type { CategoriesTreeHierarchyConfiguration, CategoriesTreeSearchOptions 
 import type { CategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
 
 /**
- * iModel access, ID provider, perspective, and configuration for a categories hierarchy.
+ * iModel access, ID provider, and configuration for a categories hierarchy.
  * @beta
  */
 interface CategoriesTreeProps {
@@ -27,13 +27,8 @@ interface CategoriesTreeProps {
    * Created internally when omitted. Throws if its configuration does not match the tree configuration.
    */
   idsProvider?: CategoriesTreeIdsProvider;
-  /**
-   * Modeling perspective of the tree: `"3d"` for spatial categories, models, and elements, or `"2d"` for drawing
-   * categories and 2D models and elements.
-   */
-  perspective: "2d" | "3d";
-  /** Hierarchy options. Omitted properties use the documented defaults. */
-  hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+  /** Hierarchy options. Omitted optional properties use the documented defaults. */
+  hierarchyConfig: CategoriesTreeHierarchyConfiguration;
   /** Identifier used in query restart tokens. Defaults to a generated GUID. */
   uniqueId?: GuidString;
 }
@@ -57,13 +52,10 @@ interface CategoriesTreeSearchProps extends CategoriesTreeSearchOptions {
  * @beta
  */
 export function createCategoriesTree(props: CategoriesTreeProps) {
-  const hierarchyConfig = mergeWithDefaults({
-    defaults: defaultHierarchyConfiguration,
-    overrides: props.hierarchyConfig,
-  });
+  const hierarchyConfig = mergeWithDefaultHierarchyConfiguration(props.hierarchyConfig);
   const idsProviderConfig = createCategoriesTreeIdsProviderConfig({
-    perspective: props.perspective,
-    elementClassName: getClassesByPerspective(props.perspective).elementClass,
+    perspective: hierarchyConfig.perspective,
+    elementClassName: getClassesByPerspective(hierarchyConfig.perspective).elementClass,
     excludedElementClassNames:
       hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
   });
@@ -77,7 +69,7 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     props.idsProvider ??
     createCategoriesTreeIdsProvider({
       imodelAccess: props.imodelAccess,
-      perspective: props.perspective,
+      hierarchyConfig: { perspective: hierarchyConfig.perspective },
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess: props.imodelAccess, ...idsProviderConfig }),
     });
   validateIdsProviderConfig(
@@ -88,7 +80,6 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
   const uniqueId = props.uniqueId ?? Guid.createValue();
   const hierarchyDefinition: HierarchyDefinition = new CategoriesTreeDefinition({
     imodelAccess: props.imodelAccess,
-    perspective: props.perspective,
     hierarchyConfig,
     idsProvider,
     uniqueId,
@@ -103,7 +94,6 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) =>
       CategoriesTreeDefinition.createInstanceKeyPaths({
         ...searchProps,
-        perspective: props.perspective,
         hierarchyConfig,
         idsProvider,
         uniqueId,
@@ -116,7 +106,6 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     createSearchTree: async (searchProps: CategoriesTreeSearchProps & { revealTargets?: boolean }) =>
       CategoriesTreeDefinition.createSearchTree({
         ...searchProps,
-        perspective: props.perspective,
         hierarchyConfig,
         idsProvider,
         uniqueId,

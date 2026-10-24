@@ -56,7 +56,7 @@ describe("Categories tree", () => {
     const imodelAccess = createIModelAccess(imodel.imodelConnection);
     const idsProvider = createCategoriesTreeIdsProvider({
       imodelAccess,
-      perspective: "3d",
+      hierarchyConfig: { perspective: "3d" },
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
     });
     await toPromise(idsProvider.getAllDefinitionContainersAndCategories());
@@ -67,7 +67,7 @@ describe("Categories tree", () => {
       .spyOn(idsProvider, "getAllDefinitionContainersAndCategories")
       .mockReturnValue(of({ categories: [], definitionContainers: [] }));
     const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createCategoriesTree({ imodelAccess, perspective: "3d", idsProvider });
+    const tree = createCategoriesTree({ imodelAccess, hierarchyConfig: { perspective: "3d" }, idsProvider });
     using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
 
     await validateHierarchy({ provider, expect: [] });
@@ -107,7 +107,7 @@ describe("Categories tree", () => {
             providerType === "custom"
               ? createCategoriesTreeIdsProvider({
                   imodelAccess,
-                  perspective,
+                  hierarchyConfig: { perspective },
                   sharedIdsProvider: createSharedIdsProvider({
                     imodelAccess,
                     elementClassName:
@@ -117,9 +117,8 @@ describe("Categories tree", () => {
               : undefined;
           const tree = createCategoriesTree({
             imodelAccess,
-            perspective,
             idsProvider,
-            hierarchyConfig: { subCategories: { nodes: "exclude" } },
+            hierarchyConfig: { perspective, subCategories: { nodes: "exclude" } },
           });
           return { imodelAccess, tree };
         });
@@ -166,10 +165,10 @@ describe("Categories tree", () => {
     async function createCategoryTreeProvider(
       imodelConnection: IModelConnection,
       perspective: "2d" | "3d",
-      hierarchyConfig?: CategoriesTreeHierarchyConfiguration,
+      hierarchyConfig?: Omit<CategoriesTreeHierarchyConfiguration, "perspective">,
     ) {
       const imodelAccess = createIModelAccess(imodelConnection);
-      const tree = await createTree({ imodelAccess, perspective, hierarchyConfig });
+      const tree = await createTree({ imodelAccess, hierarchyConfig: { ...hierarchyConfig, perspective } });
       return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
     }
 
@@ -2323,8 +2322,8 @@ describe("Categories tree", () => {
               const imodelAccess = createIModelAccess(imodelConnection);
               const { createInstanceKeyPaths } = await createTree({
                 imodelAccess,
-                perspective,
                 hierarchyConfig: {
+                  perspective,
                   subCategories: { nodes: "include" },
                   categories: { withoutElements: "include" },
                   elements: { nodes: "include", excludedClasses: [] },

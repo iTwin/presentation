@@ -79,8 +79,7 @@ const MAX_SEARCH_INSTANCE_KEY_COUNT = 100;
 interface CategoriesTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: CategoriesTreeIdsProvider;
-  perspective: "2d" | "3d";
-  hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+  hierarchyConfig: CategoriesTreeHierarchyConfiguration;
   uniqueId?: GuidString;
 }
 
@@ -105,10 +104,15 @@ type CategoriesTreeInstanceKeyPathsBaseProps = CategoriesTreeDefinitionProps & C
 type CategoriesTreeInstanceKeyPathsFromInstanceLabelProps = CategoriesTreeInstanceKeyPathsBaseProps & { label: string };
 
 /**
- * Configures category, sub-category, and element nodes produced by `createCategoriesTree`.
+ * Configures the modeling perspective and category, sub-category, and element nodes produced by `createCategoriesTree`.
  * @beta
  */
 export interface CategoriesTreeHierarchyConfiguration {
+  /**
+   * Modeling perspective of the hierarchy: `"3d"` for spatial categories, models, and elements, or `"2d"` for drawing
+   * categories and 2D models and elements.
+   */
+  perspective: "2d" | "3d";
   /**
    * Element node's configuration options.
    *
@@ -169,11 +173,27 @@ export interface CategoriesTreeHierarchyConfiguration {
 export type RequiredCategoriesTreeHierarchyConfiguration = DeepRequired<CategoriesTreeHierarchyConfiguration>;
 
 /** @internal */
-export const defaultHierarchyConfiguration: RequiredCategoriesTreeHierarchyConfiguration = {
+export const defaultHierarchyConfiguration: Omit<RequiredCategoriesTreeHierarchyConfiguration, "perspective"> = {
   elements: { nodes: "exclude" },
   categories: { withoutElements: "exclude" },
   subCategories: { nodes: "include" },
 };
+
+/**
+ * Fills omitted options of the given hierarchy configuration with defaults.
+ * @internal
+ */
+export function mergeWithDefaultHierarchyConfiguration(
+  config: CategoriesTreeHierarchyConfiguration,
+): RequiredCategoriesTreeHierarchyConfiguration {
+  return {
+    ...mergeWithDefaults<Omit<CategoriesTreeHierarchyConfiguration, "perspective">>({
+      defaults: defaultHierarchyConfiguration,
+      overrides: config,
+    }),
+    perspective: config.perspective,
+  };
+}
 
 /**
  * Full class names of instances that may appear in a categories hierarchy search path.
@@ -231,11 +251,8 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   public constructor(props: CategoriesTreeDefinitionProps) {
     this.#iModelAccess = props.imodelAccess;
     this.#idsProvider = props.idsProvider;
-    this.#hierarchyConfig = mergeWithDefaults({
-      defaults: defaultHierarchyConfiguration,
-      overrides: props.hierarchyConfig,
-    });
-    const { categoryClass, elementClass, modelClass } = getClassesByPerspective(props.perspective);
+    this.#hierarchyConfig = mergeWithDefaultHierarchyConfiguration(props.hierarchyConfig);
+    const { categoryClass, elementClass, modelClass } = getClassesByPerspective(this.#hierarchyConfig.perspective);
     this.#categoryClass = categoryClass;
     this.#categoryElementClass = elementClass;
     this.#categoryModelClass = modelClass;
@@ -1369,10 +1386,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
     props: CategoriesTreeInstanceKeyPathsFromInstanceLabelProps,
   ): AsyncIterableIterator<{ path: CategoriesTreeSearchPath; target: Id64String }> {
     const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
-    const hierarchyConfig = mergeWithDefaults({
-      defaults: defaultHierarchyConfiguration,
-      overrides: props.hierarchyConfig,
-    });
+    const hierarchyConfig = mergeWithDefaultHierarchyConfiguration(props.hierarchyConfig);
     return eachValueFrom(
       createInstanceKeyPathsFromInstanceLabel({
         ...props,
@@ -1393,10 +1407,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
   ): Promise<CategoriesTreeSearchTree[]> {
     const builder = HierarchySearchTree.createBuilder();
     const labelsFactory = createBisInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess });
-    const hierarchyConfig = mergeWithDefaults({
-      defaults: defaultHierarchyConfiguration,
-      overrides: props.hierarchyConfig,
-    });
+    const hierarchyConfig = mergeWithDefaultHierarchyConfiguration(props.hierarchyConfig);
     await firstValueFrom(
       createInstanceKeyPathsFromInstanceLabel({
         ...props,
@@ -1439,18 +1450,8 @@ function createInstanceKeyPathsFromInstanceLabel(
     componentName: string;
   },
 ): Observable<{ path: CategoriesTreeSearchPath; target: Id64String }> {
-  const {
-    idsProvider,
-    label,
-    perspective,
-    labelsFactory,
-    limit,
-    imodelAccess,
-    uniqueId,
-    componentName,
-    hierarchyConfig,
-  } = props;
-  const { categoryClass, elementClass } = getClassesByPerspective(perspective);
+  const { idsProvider, label, labelsFactory, limit, imodelAccess, uniqueId, componentName, hierarchyConfig } = props;
+  const { categoryClass, elementClass } = getClassesByPerspective(hierarchyConfig.perspective);
 
   const adjustedLabel = label.replace(/[%_\\]/g, "\\$&");
 
@@ -1727,7 +1728,7 @@ function createSearchPathsForDifferentTypes(
             uniqueId,
             componentName,
             idsProvider,
-            perspective: props.perspective,
+            perspective: props.hierarchyConfig.perspective,
             elements: props.hierarchyConfig.elements.nodes,
             excludedElementClassNames:
               props.hierarchyConfig.elements.nodes === "include"
@@ -1748,7 +1749,7 @@ function createSearchPathsForDifferentTypes(
                     createGeometricElementInstanceKeyPaths({
                       imodelAccess,
                       idsProvider,
-                      perspective: props.perspective,
+                      perspective: props.hierarchyConfig.perspective,
                       targetItems: block,
                       chunkIndex,
                       uniqueId,

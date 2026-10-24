@@ -41,6 +41,7 @@ interface CategoriesTreeHierarchyConfiguration {
         nodes: "include";
         excludedClasses?: EC.FullClassNameDotNotation[];
     };
+    perspective: "2d" | "3d";
     subCategories?: {
         nodes?: "include" | "exclude";
     };
@@ -49,9 +50,7 @@ interface CategoriesTreeHierarchyConfiguration {
 // @beta
 export interface CategoriesTreeIdsProvider {
     readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
-    readonly config: Readonly<SharedIdsProvider["config"] & {
-        perspective: "2d" | "3d";
-    }>;
+    readonly config: Readonly<SharedIdsProvider["config"] & Pick<CategoriesTreeHierarchyConfiguration, "perspective">>;
     getAllDefinitionContainersAndCategories(props?: {
         includeEmpty?: boolean;
     }): Subscribable<{
@@ -88,9 +87,9 @@ export interface CategoriesTreeIdsProvider {
 
 // @beta
 interface CategoriesTreeIdsProviderProps {
+    hierarchyConfig: Pick<CategoriesTreeHierarchyConfiguration, "perspective">;
     // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-    perspective: "2d" | "3d";
     sharedIdsProvider: {
         config: SharedIdsProvider["config"];
         models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
@@ -147,12 +146,11 @@ export namespace CategoriesTreeNode {
 
 // @beta
 interface CategoriesTreeProps {
-    hierarchyConfig?: CategoriesTreeHierarchyConfiguration;
+    hierarchyConfig: CategoriesTreeHierarchyConfiguration;
     idsProvider?: CategoriesTreeIdsProvider;
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
         imodelKey: string;
     };
-    perspective: "2d" | "3d";
     uniqueId?: GuidString;
 }
 

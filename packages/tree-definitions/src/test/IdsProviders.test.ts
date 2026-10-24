@@ -424,7 +424,7 @@ describe("ID provider data states", () => {
         const provider = createCategoriesTreeIdsProvider({
           imodelAccess: access,
           sharedIdsProvider,
-          perspective: "3d",
+          hierarchyConfig: { perspective: "3d" },
         });
         return { provider, load: async () => toPromise(provider.getAllDefinitionContainersAndCategories()) };
       },

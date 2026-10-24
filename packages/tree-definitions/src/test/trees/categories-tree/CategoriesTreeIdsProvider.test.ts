@@ -85,13 +85,15 @@ describe("categories provider configuration", () => {
     const provider = createCategoriesTreeIdsProvider({
       imodelAccess: access,
       sharedIdsProvider,
-      perspective: providerPerspective,
+      hierarchyConfig: { perspective: providerPerspective },
     });
     const createTree = () =>
       createCategoriesTree({
         imodelAccess: access,
-        perspective: treePerspective,
-        hierarchyConfig: { elements: { nodes: "include", excludedClasses: treeExclusions } },
+        hierarchyConfig: {
+          perspective: treePerspective,
+          elements: { nodes: "include", excludedClasses: treeExclusions },
+        },
         idsProvider: provider,
       });
     if (shouldThrow) {
@@ -110,7 +112,11 @@ describe("categories provider configuration", () => {
       const access = createAccess();
       const sharedIdsProvider = createSharedIdsProvider({ imodelAccess: access, elementClassName });
       const createProvider = () =>
-        createCategoriesTreeIdsProvider({ imodelAccess: access, sharedIdsProvider, perspective: "3d" });
+        createCategoriesTreeIdsProvider({
+          imodelAccess: access,
+          sharedIdsProvider,
+          hierarchyConfig: { perspective: "3d" },
+        });
       if (shouldThrow) {
         expect(createProvider).toThrow("ID provider configuration does not match");
       } else {

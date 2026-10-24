@@ -24,7 +24,7 @@ import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies
 import type { ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
 import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import type { CategoryId, DefinitionContainerId, ModelId, ReadonlyId64Arg } from "../../shared/Types.js";
-import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
+import type { CategoriesTreeHierarchyConfiguration, CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
 interface DefinitionContainerInfo {
   modelId: Id64String;
@@ -55,11 +55,13 @@ export interface CachedCategoryInfo {
 }
 
 /**
- * Query access and perspective for a categories-tree ID provider.
+ * Query access and hierarchy configuration for a categories-tree ID provider.
  * @beta
  */
 interface CategoriesTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
+  /** Hierarchy options affecting the provided IDs. */
+  hierarchyConfig: Pick<CategoriesTreeHierarchyConfiguration, "perspective">;
   /** Shared provider with matching element class and exclusions for the target tree. */
   sharedIdsProvider: {
     config: SharedIdsProvider["config"];
@@ -71,11 +73,6 @@ interface CategoriesTreeIdsProviderProps {
     >;
     subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
   };
-  /**
-   * Modeling perspective of the tree: `"3d"` for spatial categories, models, and elements, or `"2d"` for drawing
-   * categories and 2D models and elements.
-   */
-  perspective: "2d" | "3d";
 }
 
 type DefinitionContainersData = Map<DefinitionContainerId, DefinitionContainerInfo>;
@@ -97,7 +94,7 @@ export interface CategoriesTreeIdsProvider {
    */
   readonly state: IdsProviderDataState;
   /** Readonly snapshot of the perspective and element filters used to create this provider, including resolved defaults. */
-  readonly config: Readonly<SharedIdsProvider["config"] & { perspective: "2d" | "3d" }>;
+  readonly config: Readonly<SharedIdsProvider["config"] & Pick<CategoriesTreeHierarchyConfiguration, "perspective">>;
   /** Shared model lookups and their loading state. */
   readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
   /** Shared sub-modeled element lookups and their loading state. */
@@ -170,12 +167,12 @@ export interface CategoriesTreeIdsProvider {
  */
 export function createCategoriesTreeIdsProvider({
   imodelAccess,
-  perspective,
+  hierarchyConfig,
   sharedIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
   const config = createCategoriesTreeIdsProviderConfig({
-    perspective,
-    elementClassName: getClassesByPerspective(perspective).elementClass,
+    perspective: hierarchyConfig.perspective,
+    elementClassName: getClassesByPerspective(hierarchyConfig.perspective).elementClass,
     excludedElementClassNames: sharedIdsProvider.config.excludedElementClassNames,
   });
   validateIdsProviderConfig(
@@ -192,7 +189,7 @@ export function createCategoriesTreeIdsProvider({
     DefinitionContainerId,
     Observable<CategoriesTreeSearchPath>
   > = new Map();
-  const { categoryClass } = getClassesByPerspective(perspective);
+  const { categoryClass } = getClassesByPerspective(hierarchyConfig.perspective);
   const defContainersDataState = new DataStateTracker();
   const categoriesDataState = new DataStateTracker();
   const componentId: GuidString = Guid.createValue();
