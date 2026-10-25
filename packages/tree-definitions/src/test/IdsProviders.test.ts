@@ -21,23 +21,35 @@ import { createModelsTreeIdsProvider } from "../tree-definitions/trees/models-tr
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { SharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 
+// IDs of instances returned by the iModel queries mocked in `createAccess`.
+/** Model containing an element of `CATEGORY_ID`. Also returned as a sub-modeled element, i.e. it models an element. */
+const MODEL_ID = "0x10";
+const CATEGORY_ID = "0x20";
+const SUB_CATEGORY_ID = "0x21";
+/** Model containing `CATEGORY_ID`. */
+const CATEGORY_MODEL_ID = "0x1";
+const CLASSIFICATION_ID = "0x30";
+const CLASSIFICATION_TABLE_ID = "0x31";
+/** ID that isn't returned by any mocked query. */
+const UNRELATED_SUB_MODEL_ID = "0x99";
+
 function createAccess(waitForQuery: (token: string) => Promise<void> = async () => {}) {
   return {
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* (_query, options) {
       const token = options?.restartToken ?? "";
       await waitForQuery(token);
       const rows: ECSqlQueryRow[] = token.endsWith("/element-models-and-categories")
-        ? [{ modelId: "0x10", categoryId: "0x20", isTopMostElementCategory: true, isPlanProjectionModel: true }]
+        ? [{ modelId: MODEL_ID, categoryId: CATEGORY_ID, isTopMostElementCategory: true, isPlanProjectionModel: true }]
         : token.endsWith("/sub-modeled-elements")
-          ? [{ subModeledElementId: "0x10" }]
+          ? [{ subModeledElementId: MODEL_ID }]
           : token.includes("/sub-categories/")
-            ? [{ id: "0x21", categoryId: "0x20" }]
+            ? [{ id: SUB_CATEGORY_ID, categoryId: CATEGORY_ID }]
             : token.endsWith("/categories")
-              ? [{ id: "0x20", modelId: "0x1", parentDefinitionContainerExists: false }]
+              ? [{ id: CATEGORY_ID, modelId: CATEGORY_MODEL_ID, parentDefinitionContainerExists: false }]
               : token.includes("/classifications/")
                 ? [
-                    { type: "cl", id: "0x30", tableId: "0x31" },
-                    { type: "ct", id: "0x31" },
+                    { type: "cl", id: CLASSIFICATION_ID, tableId: CLASSIFICATION_TABLE_ID },
+                    { type: "ct", id: CLASSIFICATION_TABLE_ID },
                   ]
                 : [];
       yield* rows;
@@ -109,21 +121,21 @@ describe("ID provider data states", () => {
     expect(provider.subCategories.state).toBe("not-requested");
     expect(access.createQueryReader).not.toHaveBeenCalled();
 
-    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set([MODEL_ID]));
     expect(provider.models.state).toBe("loaded");
     expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("loaded");
     expect(provider.subCategories.state).toBe("not-requested");
-    expect(await toPromise(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
+    expect(await toPromise(provider.categories.getCategories({ modelId: MODEL_ID }))).toEqual(new Set([CATEGORY_ID]));
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
-    expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set([MODEL_ID]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("loaded");
     expect(access.createQueryReader).toHaveBeenCalledTimes(2);
     expect(provider.subCategories.state).toBe("not-requested");
     expect(await toPromise(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
-      new Map([["0x20", ["0x21"]]]),
+      new Map([[CATEGORY_ID, [SUB_CATEGORY_ID]]]),
     );
     expect(provider.subCategories.state).toBe("loaded");
   });
@@ -132,16 +144,16 @@ describe("ID provider data states", () => {
     const access = createAccess();
     const provider = createBase(access);
     const allModels = [];
-    for await (const modelId of eachValueFrom(provider.models.getModels({ categoryId: "0x20" }))) {
+    for await (const modelId of eachValueFrom(provider.models.getModels({ categoryId: CATEGORY_ID }))) {
       allModels.push(modelId);
     }
-    expect(allModels).toEqual(["0x10"]);
+    expect(allModels).toEqual([MODEL_ID]);
     expect(provider.models.state).toBe("loaded");
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
     const modelsWithoutSubModels = [];
     for await (const modelId of eachValueFrom(
-      provider.models.getModels({ categoryId: "0x20", excludedSubModels: new Set(["0x10"]) }),
+      provider.models.getModels({ categoryId: CATEGORY_ID, excludedSubModels: new Set([MODEL_ID]) }),
     )) {
       modelsWithoutSubModels.push(modelId);
     }
@@ -149,11 +161,11 @@ describe("ID provider data states", () => {
 
     const modelsWithoutOtherSubModels = [];
     for await (const modelId of eachValueFrom(
-      provider.models.getModels({ categoryId: "0x20", excludedSubModels: new Set(["0x99"]) }),
+      provider.models.getModels({ categoryId: CATEGORY_ID, excludedSubModels: new Set([UNRELATED_SUB_MODEL_ID]) }),
     )) {
       modelsWithoutOtherSubModels.push(modelId);
     }
-    expect(modelsWithoutOtherSubModels).toEqual(["0x10"]);
+    expect(modelsWithoutOtherSubModels).toEqual([MODEL_ID]);
     expect(provider.subModeledElements.state).toBe("not-requested");
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
   });
@@ -180,34 +192,36 @@ describe("ID provider data states", () => {
     expect(provider.subModeledElements.state).toBe("failed");
     expect(provider.models.state).toBe("loaded");
     expect(provider.categories.state).toBe("loaded");
-    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set([MODEL_ID]));
     expect(provider.subModeledElements.state).toBe("failed");
 
     failSubModeledElements = false;
     const retry = toPromise(provider.subModeledElements.getAllSubModeledElements());
     expect(provider.subModeledElements.state).toBe("requested");
     expect(provider.models.state).toBe("loaded");
-    expect(await retry).toEqual(new Set(["0x10"]));
+    expect(await retry).toEqual(new Set([MODEL_ID]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("loaded");
   });
 
   it("discards failed rows when the same sub-modeled elements provider is subscribed again", async () => {
+    const failedAttemptSubModelId = "0x10";
+    const retrySubModelId = "0x20";
     let attempts = 0;
     const queryExecutor: LimitingECSqlQueryExecutor = {
       async *createQueryReader() {
         if (++attempts === 1) {
-          yield { subModeledElementId: "0x10" };
+          yield { subModeledElementId: failedAttemptSubModelId };
           throw new Error("Query interrupted by a connection failure");
         }
-        yield { subModeledElementId: "0x20" };
+        yield { subModeledElementId: retrySubModelId };
       },
     };
     const provider = new SubModeledElementsProvider({
       queryExecutor,
       componentId: "00000000-0000-0000-0000-000000000001",
       elementClassName: "BisCore.GeometricElement3d",
-      elementModelCategoriesProvider: createModelsProviderStub(["0x10", "0x20"]),
+      elementModelCategoriesProvider: createModelsProviderStub([failedAttemptSubModelId, retrySubModelId]),
     });
     const cached = provider.getData();
 
@@ -216,7 +230,7 @@ describe("ID provider data states", () => {
     const result = await firstValueFrom(cached);
 
     expect(attempts).toBe(2);
-    expect([...result.allSubModels]).toEqual(["0x20"]);
+    expect([...result.allSubModels]).toEqual([retrySubModelId]);
   });
 
   it("doesn't query sub-modeled elements when there are no models with elements", async () => {
@@ -301,9 +315,9 @@ describe("ID provider data states", () => {
     expect(base.models.state).toBe("loaded");
     expect(base.subModeledElements.state).toBe("not-requested");
     expect(base.subCategories.state).toBe("not-requested");
-    expect(await toPromise(base.models.getPlanProjectionModels())).toEqual(new Set(["0x10"]));
-    expect(await toPromise(base.categories.getAllCategoriesOfElements())).toEqual(new Set(["0x20"]));
-    expect(await toPromise(base.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
+    expect(await toPromise(base.models.getPlanProjectionModels())).toEqual(new Set([MODEL_ID]));
+    expect(await toPromise(base.categories.getAllCategoriesOfElements())).toEqual(new Set([CATEGORY_ID]));
+    expect(await toPromise(base.categories.getCategories({ modelId: MODEL_ID }))).toEqual(new Set([CATEGORY_ID]));
     expect(access.createQueryReader).toHaveBeenCalledTimes(1);
   });
 
@@ -327,19 +341,19 @@ describe("ID provider data states", () => {
     expect(overrides.loadSubModeledElements).not.toHaveBeenCalled();
     expect(overrides.loadSubCategories).not.toHaveBeenCalled();
 
-    expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set([MODEL_ID]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("not-requested");
     expect(overrides.loadElementModelCategories).not.toHaveBeenCalled();
 
-    expect(await toPromise(provider.categories.getCategories({ modelId: "0x10" }))).toEqual(new Set(["0x20"]));
-    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set(["0x10"]));
+    expect(await toPromise(provider.categories.getCategories({ modelId: MODEL_ID }))).toEqual(new Set([CATEGORY_ID]));
+    expect(await toPromise(provider.models.getAllModels())).toEqual(new Set([MODEL_ID]));
     expect(await toPromise(provider.models.getData())).toBe(await toPromise(source.models.getData()));
     expect(provider.models.state).toBe("loaded");
     expect(provider.categories.state).toBe("loaded");
 
     expect(await toPromise(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
-      new Map([["0x20", ["0x21"]]]),
+      new Map([[CATEGORY_ID, [SUB_CATEGORY_ID]]]),
     );
     expect(provider.subCategories.state).toBe("loaded");
 
