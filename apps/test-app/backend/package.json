@@ -22,7 +22,7 @@
     "@itwin/express-server": "catalog:itwinjs-core-dev",
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
     "@itwin/presentation-opentelemetry": "workspace:*",
-    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-node": "^0.220.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
@@ -30,7 +30,7 @@
     "@test-app/common": "workspace:*",
     "@typescript/native": "catalog:build-tools",
     "cross-env": "catalog:build-tools",
-    "electron": "^43.8.0",
+    "electron": "^43.8.3",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
