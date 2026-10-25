@@ -354,9 +354,7 @@ describe("Categories tree", () => {
 
           const { elementClass } = getClassesByPerspective(perspective);
 
-          async function search(
-            props: Omit<Parameters<ReturnType<typeof createCategoriesTree>["createSearchTree"]>[0], "imodelAccess">,
-          ) {
+          async function search(props: Parameters<ReturnType<typeof createCategoriesTree>["createSearchTree"]>[0]) {
             return createCategoriesTree({
               imodelAccess: createIModelAccess(setup.imodelConnection),
               hierarchyConfig: { perspective, elements: { nodes: "include" }, subCategories: { nodes: "exclude" } },
