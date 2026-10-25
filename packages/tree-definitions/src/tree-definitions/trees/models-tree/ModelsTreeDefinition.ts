@@ -429,14 +429,15 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           baseClassName: this.#hierarchyConfig.elements.baseClass,
         }),
       ]);
-    const { childSubjectIds, childModelIds } = parentSubjectIds.length
+    const { childSubjectIds, childModelIds, subjectWhichAreParents } = parentSubjectIds.length
       ? await firstValueFrom(
           forkJoin({
             childSubjectIds: toObservable(this.#idsProvider.getChildSubjectIds(parentSubjectIds)),
             childModelIds: toObservable(this.#idsProvider.getChildSubjectModelIds(parentSubjectIds)),
+            subjectWhichAreParents: toObservable(this.#idsProvider.getParentSubjectIds()),
           }),
         )
-      : { childSubjectIds: [IModel.rootSubjectId], childModelIds: [] };
+      : { childSubjectIds: [IModel.rootSubjectId], childModelIds: [], subjectWhichAreParents: [IModel.rootSubjectId] };
     const defs = new Array<HierarchyNodesDefinition>();
     if (childSubjectIds.length) {
       defs.push({
@@ -476,7 +477,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({ conditions: [subjectFilterClauses.where] })}
           `,
           bindings: [
-            { type: "idset", value: await toPromise(this.#idsProvider.getParentSubjectIds()) },
+            { type: "idset", value: subjectWhichAreParents },
             { type: "idset", value: childSubjectIds },
           ],
         },
