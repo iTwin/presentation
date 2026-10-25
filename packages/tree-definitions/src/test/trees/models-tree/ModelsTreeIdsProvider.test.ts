@@ -3,17 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { of } from "rxjs";
+import { EMPTY, of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import { IModel } from "@itwin/core-common";
 import { createSharedIdsProvider } from "../../../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
-import { toPromise } from "../../../tree-definitions/shared/Rxjs.js";
 import { createModelsTree } from "../../../tree-definitions/trees/models-tree/CreateModelsTree.js";
-import { createModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
+import {
+  createModelsTreeIdsProvider,
+  normalizeModelsTreeIdsProviderConfig,
+} from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ModelsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
+import type { ModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
 function createAccess() {
   return {
@@ -155,19 +158,25 @@ describe("createModelsTree", () => {
   it("uses the supplied ID provider for hierarchy and search", async () => {
     const access = createAccess();
     const hierarchyConfig = { subjects: { root: "exclude" as const } };
-    const idsProvider = createModelsTreeIdsProvider({
-      imodelAccess: access,
-      hierarchyConfig,
-      sharedIdsProvider: createSharedIdsProvider({
-        imodelAccess: access,
-        elementClassName: "BisCore.GeometricElement3d",
-      }),
-    });
-    await toPromise(idsProvider.getParentSubjectIds());
-    access.createQueryReader.mockClear();
-    const hierarchyGetter = vi.spyOn(idsProvider, "getChildSubjectIds").mockReturnValue(of([]));
-    vi.spyOn(idsProvider, "getChildSubjectModelIds").mockReturnValue(of([]));
-    const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockReturnValue(of([]));
+    const getChildSubjectIds = vi.fn(() => of([]));
+    const createSubjectInstanceKeysPath = vi.fn(() => of([]));
+    const idsProvider: ModelsTreeIdsProvider = {
+      state: "loaded",
+      config: normalizeModelsTreeIdsProviderConfig(hierarchyConfig),
+      subModeledElements: {
+        state: "loaded",
+        getData: () => of({ allSubModels: new Set<string>() }),
+        getAllSubModeledElements: () => of(new Set<string>()),
+      },
+      categories: { state: "loaded", getCategories: () => of(new Set<string>()) },
+      getChildSubjectIds,
+      getChildSubjectModelIds: () => of([]),
+      createSubjectInstanceKeysPath,
+      getParentSubjectIds: () => of([]),
+      getHiddenModelIds: () => of(new Set<string>()),
+      createUpToModelInstanceKeyPaths: () => EMPTY,
+      getSearchPathsUpToRootCategory: () => EMPTY,
+    };
     const tree = createModelsTree({ imodelAccess: access, hierarchyConfig, idsProvider });
     const subject = { className: "BisCore.Subject" as const, id: "0x10" };
 
@@ -178,9 +187,9 @@ describe("createModelsTree", () => {
         createFilterClauses: async () => ({ from: "", where: "", joins: "" }),
       }),
     ).toEqual([]);
-    expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
+    expect(getChildSubjectIds).toHaveBeenCalledWith([IModel.rootSubjectId]);
     expect(await tree.createSearchTree({ targetItems: [subject] })).toEqual([]);
-    expect(searchGetter).toHaveBeenCalledWith(subject.id);
+    expect(createSubjectInstanceKeysPath).toHaveBeenCalledWith(subject.id);
     expect(access.createQueryReader).not.toHaveBeenCalled();
   });
 });
