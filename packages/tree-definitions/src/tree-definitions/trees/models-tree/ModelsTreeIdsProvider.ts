@@ -123,15 +123,16 @@ export function createModelsTreeIdsProvider({
   hierarchyConfig: configOverrides,
   sharedIdsProvider,
 }: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider {
-  const hierarchyConfig = createModelsTreeIdsProviderConfig(configOverrides);
-  validateIdsProviderConfig(
-    normalizeSharedIdsProviderConfig(sharedIdsProvider.config),
-    normalizeSharedIdsProviderConfig({
+  const hierarchyConfig = normalizeModelsTreeIdsProviderConfig(configOverrides);
+  validateIdsProviderConfig({
+    name: "Models tree shared",
+    normalizer: normalizeSharedIdsProviderConfig,
+    expected: {
       elementClassName: hierarchyConfig.elements.baseClass,
       excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
-    }),
-    "Models tree shared",
-  );
+    },
+    actual: sharedIdsProvider.config,
+  });
   const cachedData: {
     subjectInfos: Observable<Map<SubjectId, SubjectInfo>> | undefined;
     modelInfos: Observable<Map<ModelId, ModelInfo>> | undefined;
@@ -524,7 +525,7 @@ export function createModelsTreeIdsProvider({
 }
 
 /** @internal */
-export function createModelsTreeIdsProviderConfig(overrides?: ModelsTreeIdsProvider["config"]) {
+export function normalizeModelsTreeIdsProviderConfig(overrides?: ModelsTreeIdsProvider["config"]) {
   const config = mergeWithDefaults<ModelsTreeHierarchyConfiguration>({
     defaults: defaultHierarchyConfiguration,
     overrides: {

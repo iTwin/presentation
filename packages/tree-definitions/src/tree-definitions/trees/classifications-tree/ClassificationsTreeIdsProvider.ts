@@ -89,7 +89,7 @@ export function createClassificationsTreeIdsProvider({
   hierarchyConfig: configOverrides,
   imodelAccess,
 }: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider {
-  const hierarchyConfig = createClassificationsTreeIdsProviderConfig(configOverrides);
+  const hierarchyConfig = normalizeClassificationsTreeIdsProviderConfig(configOverrides);
   let cachedData: Observable<ClassificationsTreeIdsProviderData> | undefined;
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
@@ -323,6 +323,6 @@ export function createClassificationsTreeIdsProvider({
 }
 
 /** @internal */
-export function createClassificationsTreeIdsProviderConfig(config: ClassificationsTreeHierarchyConfiguration) {
+export function normalizeClassificationsTreeIdsProviderConfig(config: ClassificationsTreeHierarchyConfiguration) {
   return { rootClassificationSystemCode: config.rootClassificationSystemCode };
 }

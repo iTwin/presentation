@@ -170,16 +170,17 @@ export function createCategoriesTreeIdsProvider({
   hierarchyConfig,
   sharedIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
-  const config = createCategoriesTreeIdsProviderConfig({
+  const config = normalizeCategoriesTreeIdsProviderConfig({
     perspective: hierarchyConfig.perspective,
     elementClassName: getClassesByPerspective(hierarchyConfig.perspective).elementClass,
     excludedElementClassNames: sharedIdsProvider.config.excludedElementClassNames,
   });
-  validateIdsProviderConfig(
-    normalizeSharedIdsProviderConfig(sharedIdsProvider.config),
-    normalizeSharedIdsProviderConfig(config),
-    "Categories tree shared",
-  );
+  validateIdsProviderConfig({
+    name: "Categories tree shared",
+    normalizer: normalizeSharedIdsProviderConfig,
+    expected: config,
+    actual: sharedIdsProvider.config,
+  });
   const cachedData: {
     definitionContainersData: Observable<DefinitionContainersData> | undefined;
     categoriesData: Observable<CategoriesData> | undefined;
@@ -641,7 +642,7 @@ export function createCategoriesTreeIdsProvider({
 }
 
 /** @internal */
-export function createCategoriesTreeIdsProviderConfig(config: CategoriesTreeIdsProvider["config"]) {
+export function normalizeCategoriesTreeIdsProviderConfig(config: CategoriesTreeIdsProvider["config"]) {
   return { perspective: config.perspective, ...normalizeSharedIdsProviderConfig(config) };
 }
 

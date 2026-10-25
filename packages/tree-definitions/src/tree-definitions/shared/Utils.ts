@@ -265,10 +265,23 @@ type DeepOptional<T> = T extends (...args: any[]) => any
       ? { [K in keyof T]?: DeepOptional<T[K]> | undefined }
       : T;
 
-/** @internal */
-export function validateIdsProviderConfig(actual: unknown, expected: unknown, treeName: string): void {
-  if (stableStringify(actual) !== stableStringify(expected)) {
-    throw new Error(`${treeName} ID provider configuration does not match the tree configuration.`);
+/**
+ * Throws if `actual` and `expected` configurations differ after being normalized with `normalizer`.
+ * @internal
+ */
+export function validateIdsProviderConfig<TConfig>({
+  name,
+  normalizer,
+  expected,
+  actual,
+}: {
+  name: string;
+  normalizer: (config: TConfig) => unknown;
+  expected: NoInfer<TConfig>;
+  actual: NoInfer<TConfig>;
+}): void {
+  if (stableStringify(normalizer(actual)) !== stableStringify(normalizer(expected))) {
+    throw new Error(`${name} ID provider configuration does not match the tree configuration.`);
   }
 }
 

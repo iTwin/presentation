@@ -8,7 +8,7 @@ import { validateIdsProviderConfig } from "../../shared/Utils.js";
 import { ClassificationsTreeDefinition } from "./ClassificationsTreeDefinition.js";
 import {
   createClassificationsTreeIdsProvider,
-  createClassificationsTreeIdsProviderConfig,
+  normalizeClassificationsTreeIdsProviderConfig,
 } from "./ClassificationsTreeIdsProvider.js";
 
 import type { GuidString } from "@itwin/core-bentley";
@@ -59,14 +59,14 @@ export function createClassificationsTree(props: ClassificationsTreeProps) {
     ...props.hierarchyConfig,
     elements: { excludedClasses: [...new Set(props.hierarchyConfig.elements?.excludedClasses ?? [])].sort() },
   };
-  const idsProviderConfig = createClassificationsTreeIdsProviderConfig(hierarchyConfig);
   const idsProvider =
     props.idsProvider ?? createClassificationsTreeIdsProvider({ imodelAccess: props.imodelAccess, hierarchyConfig });
-  validateIdsProviderConfig(
-    createClassificationsTreeIdsProviderConfig(idsProvider.config),
-    idsProviderConfig,
-    "Classifications tree",
-  );
+  validateIdsProviderConfig({
+    name: "Classifications tree",
+    normalizer: normalizeClassificationsTreeIdsProviderConfig,
+    expected: hierarchyConfig,
+    actual: idsProvider.config,
+  });
   const uniqueId = props.uniqueId ?? Guid.createValue();
   const hierarchyDefinition: HierarchyDefinition = new ClassificationsTreeDefinition({
     imodelAccess: props.imodelAccess,

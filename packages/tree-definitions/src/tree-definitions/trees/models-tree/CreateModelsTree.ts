@@ -7,7 +7,7 @@ import { Guid } from "@itwin/core-bentley";
 import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
-import { createModelsTreeIdsProvider, createModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
+import { createModelsTreeIdsProvider, normalizeModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
 
 import type { GuidString } from "@itwin/core-bentley";
 import type { HierarchyDefinition, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
@@ -62,7 +62,6 @@ export function createModelsTree(props: ModelsTreeProps) {
     ...hierarchyConfig.elements,
     excludedClasses: [...hierarchyConfig.elements.excludedClasses],
   };
-  const idsProviderConfig = createModelsTreeIdsProviderConfig(hierarchyConfig);
   const idsProvider =
     props.idsProvider ??
     createModelsTreeIdsProvider({
@@ -74,7 +73,12 @@ export function createModelsTree(props: ModelsTreeProps) {
         excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
       }),
     });
-  validateIdsProviderConfig(createModelsTreeIdsProviderConfig(idsProvider.config), idsProviderConfig, "Models tree");
+  validateIdsProviderConfig({
+    name: "Models tree",
+    normalizer: normalizeModelsTreeIdsProviderConfig,
+    expected: hierarchyConfig,
+    actual: idsProvider.config,
+  });
   const uniqueId = props.uniqueId ?? Guid.createValue();
   const hierarchyDefinition: HierarchyDefinition = new ModelsTreeDefinition({
     imodelAccess: props.imodelAccess,

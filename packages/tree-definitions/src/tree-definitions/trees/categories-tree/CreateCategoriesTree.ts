@@ -7,7 +7,10 @@ import { Guid } from "@itwin/core-bentley";
 import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
 import { getClassesByPerspective, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { CategoriesTreeDefinition, mergeWithDefaultHierarchyConfiguration } from "./CategoriesTreeDefinition.js";
-import { createCategoriesTreeIdsProvider, createCategoriesTreeIdsProviderConfig } from "./CategoriesTreeIdsProvider.js";
+import {
+  createCategoriesTreeIdsProvider,
+  normalizeCategoriesTreeIdsProviderConfig,
+} from "./CategoriesTreeIdsProvider.js";
 
 import type { GuidString } from "@itwin/core-bentley";
 import type { HierarchyDefinition, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
@@ -53,7 +56,7 @@ interface CategoriesTreeSearchProps extends CategoriesTreeSearchOptions {
  */
 export function createCategoriesTree(props: CategoriesTreeProps) {
   const hierarchyConfig = mergeWithDefaultHierarchyConfiguration(props.hierarchyConfig);
-  const idsProviderConfig = createCategoriesTreeIdsProviderConfig({
+  const idsProviderConfig = normalizeCategoriesTreeIdsProviderConfig({
     perspective: hierarchyConfig.perspective,
     elementClassName: getClassesByPerspective(hierarchyConfig.perspective).elementClass,
     excludedElementClassNames:
@@ -72,11 +75,12 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
       hierarchyConfig: { perspective: hierarchyConfig.perspective },
       sharedIdsProvider: createSharedIdsProvider({ imodelAccess: props.imodelAccess, ...idsProviderConfig }),
     });
-  validateIdsProviderConfig(
-    createCategoriesTreeIdsProviderConfig(idsProvider.config),
-    idsProviderConfig,
-    "Categories tree",
-  );
+  validateIdsProviderConfig({
+    name: "Categories tree",
+    normalizer: normalizeCategoriesTreeIdsProviderConfig,
+    expected: idsProviderConfig,
+    actual: idsProvider.config,
+  });
   const uniqueId = props.uniqueId ?? Guid.createValue();
   const hierarchyDefinition: HierarchyDefinition = new CategoriesTreeDefinition({
     imodelAccess: props.imodelAccess,
