@@ -1275,7 +1275,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of child element is set to true when child element has subModel that contains children", async () => {
+      it("marks child element as having children when its sub-model contains elements", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1359,7 +1359,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("child elements have no children when their subModels are private or template", async () => {
+      it("marks child elements as having no children when their sub-models are private or template", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1430,7 +1430,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of child element is set to false when it's subModel has no children", async () => {
+      it("marks child element as having no children when its sub-model is empty", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1497,7 +1497,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of element is set to true when element has subModel that contains children", async () => {
+      it("marks element as having children when its sub-model contains elements", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1563,7 +1563,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("elements have no children when their subModels are private or template", async () => {
+      it("marks elements as having no children when their sub-models are private or template", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1616,7 +1616,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of element is set to false when it's subModel has no children", async () => {
+      it("marks element as having no children when its sub-model is empty", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };

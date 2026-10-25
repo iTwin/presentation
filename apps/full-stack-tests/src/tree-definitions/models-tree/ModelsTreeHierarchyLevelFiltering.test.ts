@@ -52,7 +52,7 @@ describe("Models tree", () => {
   });
 
   describe("Hierarchy level filtering", () => {
-    it("can filter root level", async () => {
+    it("filters root level", async () => {
       await using imodelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
@@ -122,7 +122,7 @@ describe("Models tree", () => {
       });
     });
 
-    it("can filter Subject children level", async () => {
+    it("filters Subject children level", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
@@ -281,7 +281,7 @@ describe("Models tree", () => {
       });
     });
 
-    it("can filter Model children level", async () => {
+    it("filters Model children level", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
@@ -344,7 +344,7 @@ describe("Models tree", () => {
       });
     });
 
-    it("can filter Category children level", async () => {
+    it("filters Category children level", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
@@ -421,7 +421,7 @@ describe("Models tree", () => {
       });
     });
 
-    it("can filter Element children level with child elements", async () => {
+    it("filters Element children level with child elements", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
@@ -506,7 +506,7 @@ describe("Models tree", () => {
       });
     });
 
-    it("can filter Element children level with modeling elements", async () => {
+    it("filters Element children level with modeling elements", async () => {
       await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };

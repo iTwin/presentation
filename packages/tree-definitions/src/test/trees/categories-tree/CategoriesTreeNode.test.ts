@@ -33,7 +33,7 @@ describe("CategoriesTreeNode", () => {
     extendedData: {},
   };
 
-  it("isCategoryNode", () => {
+  it("identifies category nodes", () => {
     expect(CategoriesTreeNode.isCategoryNode(unknownNode)).toBe(false);
     expect(CategoriesTreeNode.isCategoryNode(categoryNode)).toBe(true);
     expect(CategoriesTreeNode.isCategoryNode(subCategoryNode)).toBe(false);
@@ -41,7 +41,7 @@ describe("CategoriesTreeNode", () => {
     expect(CategoriesTreeNode.isCategoryNode(classGroupingNode)).toBe(false);
   });
 
-  it("isSubCategoryNode", () => {
+  it("identifies sub-category nodes", () => {
     expect(CategoriesTreeNode.isSubCategoryNode(unknownNode)).toBe(false);
     expect(CategoriesTreeNode.isSubCategoryNode(categoryNode)).toBe(false);
     expect(CategoriesTreeNode.isSubCategoryNode(subCategoryNode)).toBe(true);
@@ -49,7 +49,7 @@ describe("CategoriesTreeNode", () => {
     expect(CategoriesTreeNode.isSubCategoryNode(classGroupingNode)).toBe(false);
   });
 
-  it("isDefinitionContainerNode", () => {
+  it("identifies definition container nodes", () => {
     expect(CategoriesTreeNode.isDefinitionContainerNode(unknownNode)).toBe(false);
     expect(CategoriesTreeNode.isDefinitionContainerNode(categoryNode)).toBe(false);
     expect(CategoriesTreeNode.isDefinitionContainerNode(subCategoryNode)).toBe(false);
@@ -57,7 +57,7 @@ describe("CategoriesTreeNode", () => {
     expect(CategoriesTreeNode.isDefinitionContainerNode(classGroupingNode)).toBe(false);
   });
 
-  it("isModelNode", () => {
+  it("identifies model nodes", () => {
     expect(CategoriesTreeNode.isModelNode(unknownNode)).toBe(false);
     expect(CategoriesTreeNode.isModelNode(categoryNode)).toBe(false);
     expect(CategoriesTreeNode.isModelNode(modelNode)).toBe(true);
@@ -65,7 +65,7 @@ describe("CategoriesTreeNode", () => {
     expect(CategoriesTreeNode.isModelNode(classGroupingNode)).toBe(false);
   });
 
-  it("isElementNode", () => {
+  it("identifies element nodes", () => {
     expect(CategoriesTreeNode.isElementNode(unknownNode)).toBe(false);
     expect(CategoriesTreeNode.isElementNode(categoryNode)).toBe(false);
     expect(CategoriesTreeNode.isElementNode(modelNode)).toBe(false);
@@ -73,13 +73,13 @@ describe("CategoriesTreeNode", () => {
     expect(CategoriesTreeNode.isElementNode(classGroupingNode)).toBe(false);
   });
 
-  it("isElementClassGroupingNode", () => {
+  it("identifies element class grouping nodes", () => {
     expect(CategoriesTreeNode.isElementClassGroupingNode(unknownNode)).toBe(false);
     expect(CategoriesTreeNode.isElementClassGroupingNode(categoryNode)).toBe(false);
     expect(CategoriesTreeNode.isElementClassGroupingNode(classGroupingNode)).toBe(true);
   });
 
-  it("getType returns the matching type", () => {
+  it("returns the type of tree nodes and `undefined` for unknown nodes", () => {
     expect(CategoriesTreeNode.getType(categoryNode)).toBe("category");
     expect(CategoriesTreeNode.getType(subCategoryNode)).toBe("sub-category");
     expect(CategoriesTreeNode.getType(definitionContainerNode)).toBe("definition-container");

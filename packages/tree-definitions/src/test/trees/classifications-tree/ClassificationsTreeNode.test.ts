@@ -22,28 +22,28 @@ describe("ClassificationsTreeNode", () => {
   const classificationNode = createNode("classification");
   const elementNode = createNode("element");
 
-  it("isClassificationTableNode", () => {
+  it("identifies classification table nodes", () => {
     expect(ClassificationsTreeNode.isClassificationTableNode(unknownNode)).toBe(false);
     expect(ClassificationsTreeNode.isClassificationTableNode(classificationTableNode)).toBe(true);
     expect(ClassificationsTreeNode.isClassificationTableNode(classificationNode)).toBe(false);
     expect(ClassificationsTreeNode.isClassificationTableNode(elementNode)).toBe(false);
   });
 
-  it("isClassificationNode", () => {
+  it("identifies classification nodes", () => {
     expect(ClassificationsTreeNode.isClassificationNode(unknownNode)).toBe(false);
     expect(ClassificationsTreeNode.isClassificationNode(classificationTableNode)).toBe(false);
     expect(ClassificationsTreeNode.isClassificationNode(classificationNode)).toBe(true);
     expect(ClassificationsTreeNode.isClassificationNode(elementNode)).toBe(false);
   });
 
-  it("isGeometricElementNode", () => {
+  it("identifies geometric element nodes", () => {
     expect(ClassificationsTreeNode.isGeometricElementNode(unknownNode)).toBe(false);
     expect(ClassificationsTreeNode.isGeometricElementNode(classificationTableNode)).toBe(false);
     expect(ClassificationsTreeNode.isGeometricElementNode(classificationNode)).toBe(false);
     expect(ClassificationsTreeNode.isGeometricElementNode(elementNode)).toBe(true);
   });
 
-  it("getType returns the matching type", () => {
+  it("returns the type of tree nodes and `undefined` for unknown nodes", () => {
     expect(ClassificationsTreeNode.getType(classificationTableNode)).toBe("classification-table");
     expect(ClassificationsTreeNode.getType(classificationNode)).toBe("classification");
     expect(ClassificationsTreeNode.getType(elementNode)).toBe("element");

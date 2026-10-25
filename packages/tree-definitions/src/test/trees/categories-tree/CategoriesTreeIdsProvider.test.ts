@@ -106,7 +106,7 @@ describe("categories provider configuration", () => {
     { elementClassName: "BisCore.GeometricElement3d", shouldThrow: false },
     { elementClassName: "BisCore.GeometricElement2d", shouldThrow: true },
   ])(
-    "shared provider class $elementClassName with a 3d perspective (throws: $shouldThrow)",
+    "validates that a shared provider with $elementClassName elements matches a 3d perspective (throws: $shouldThrow)",
     ({ elementClassName, shouldThrow }) => {
       const access = createAccess();
       const sharedIdsProvider = createSharedIdsProvider({ imodelAccess: access, elementClassName });

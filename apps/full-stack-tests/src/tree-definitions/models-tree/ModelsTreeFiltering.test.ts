@@ -3529,7 +3529,7 @@ describe("Models tree", () => {
       expect(searchPaths).toEqual(expectedPaths);
     });
 
-    it("search by label aborts when abort signal fires", async () => {
+    it("aborts search by label when abort signal fires", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
@@ -3577,7 +3577,7 @@ describe("Models tree", () => {
       ]);
     });
 
-    it("search by target items aborts when abort signal fires", async () => {
+    it("aborts search by target items when abort signal fires", async () => {
       await using buildIModelResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
