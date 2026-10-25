@@ -148,9 +148,7 @@ export namespace CategoriesTreeNode {
 interface CategoriesTreeProps {
     hierarchyConfig: CategoriesTreeHierarchyConfiguration;
     idsProvider?: CategoriesTreeIdsProvider;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
-        imodelKey: string;
-    };
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     uniqueId?: GuidString;
 }
 
@@ -244,9 +242,7 @@ export namespace ClassificationsTreeNode {
 interface ClassificationsTreeProps {
     hierarchyConfig: ClassificationsTreeHierarchyConfiguration;
     idsProvider?: ClassificationsTreeIdsProvider;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
-        imodelKey: string;
-    };
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     uniqueId?: GuidString;
 }
 
@@ -471,9 +467,7 @@ export namespace ModelsTreeNode {
 interface ModelsTreeProps {
     hierarchyConfig?: ModelsTreeHierarchyConfiguration;
     idsProvider?: ModelsTreeIdsProvider;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & {
-        imodelKey: string;
-    };
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
     uniqueId?: GuidString;
 }
 

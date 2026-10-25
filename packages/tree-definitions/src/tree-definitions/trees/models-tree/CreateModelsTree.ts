@@ -25,7 +25,7 @@ import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
  */
 interface ModelsTreeProps {
   /** Schema and query access for the iModel used by the hierarchy definition and searches. */
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /**
    * ID provider for the iModel accessed through `imodelAccess`, with matching element filters and hierarchy configuration.
    * Created internally when omitted. Throws if its configuration does not match the tree configuration.

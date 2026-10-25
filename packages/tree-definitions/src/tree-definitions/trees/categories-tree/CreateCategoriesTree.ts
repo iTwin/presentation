@@ -21,7 +21,7 @@ import type { CategoriesTreeIdsProvider } from "./CategoriesTreeIdsProvider.js";
  */
 interface CategoriesTreeProps {
   /** Schema and query access for the iModel used by the hierarchy definition and searches. */
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & { imodelKey: string };
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   /**
    * ID provider for the iModel accessed through `imodelAccess`, with matching perspective and element filters.
    * Created internally when omitted. Throws if its configuration does not match the tree configuration.

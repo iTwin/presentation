@@ -13,7 +13,6 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 
 function createAccess() {
   return {
-    imodelKey: "test-imodel",
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
     getHiddenClassesTree: vi.fn<ECSchemaProvider["getHiddenClassesTree"]>().mockResolvedValue([]),

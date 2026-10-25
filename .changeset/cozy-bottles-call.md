@@ -6,7 +6,7 @@ Expose `createSharedIdsProvider`, `createModelsTreeIdsProvider`, `createCategori
 
 Renamed the `modeledElements` group to `subModeledElements` and its `getAllModeledElements` method to `getAllSubModeledElements` on shared, models-tree, and categories-tree ID providers.
 
-`createModelsTree`, `createCategoriesTree`, and `createClassificationsTree` now accept an optional `idsProvider`, created for the same iModel as the supplied `imodelAccess`, to share cached ID data between trees. The supplied `imodelAccess` must include `imodelKey`. The returned `definition` has been renamed to `hierarchyDefinition`. Provider getters support explicit retries after failures without retaining failed partial results.
+`createModelsTree`, `createCategoriesTree`, and `createClassificationsTree` now accept an optional `idsProvider`, created for the same iModel as the supplied `imodelAccess`, to share cached ID data between trees. `createClassificationsTree` no longer requires the supplied `imodelAccess` to include `imodelKey`. The returned `definition` has been renamed to `hierarchyDefinition`. Provider getters support explicit retries after failures without retaining failed partial results.
 
 `createCategoriesTree`: Replaced the `viewType` prop with a required `hierarchyConfig.perspective` property, following BIS modeling perspective terminology. The accepted values (`"2d"` and `"3d"`) are unchanged, and `hierarchyConfig` is now required. `createCategoriesTreeIdsProvider` accepts the same `hierarchyConfig.perspective` and exposes it through `config.perspective`.
 

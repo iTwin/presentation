@@ -23,7 +23,6 @@ import type { SharedIdsProvider } from "../tree-definitions/shared/idsProviders/
 
 function createAccess(waitForQuery: (token: string) => Promise<void> = async () => {}) {
   return {
-    imodelKey: "test-imodel",
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* (_query, options) {
       const token = options?.restartToken ?? "";
       await waitForQuery(token);
