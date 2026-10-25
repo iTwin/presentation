@@ -9,16 +9,21 @@ module.exports = {
 
     const [firstLine, ...futureLines] = summary.split("\n").map((l) => l.trimEnd());
 
-    // make API call to find PR number associated with the commit
+    // find PR number associated with the commit; `getCommitInfo` batches concurrent lookups into GraphQL requests of up to 50 commits
     const prOrCommit = await (async () => {
       try {
-        const { number } = (await fetch(`https://api.github.com/repos/${options.repo}/commits/${commit}/pulls`).then((r) => r.json())).find((r) =>
-          r.merge_commit_sha.includes(commit),
-        );
-
-        return `[#${number}](https://github.com/${options.repo}/pull/${number})`;
-      } catch {
+        const { getCommitInfo } = await import("@changesets/get-github-info");
+        if (!commit) {
+          throw new Error("no commit associated with the changeset found");
+        }
+        const info = await getCommitInfo({ commit, repo: options.repo });
+        if (!info?.pull) {
+          throw new Error("no pull request associated with the commit found");
+        }
+        return info.pull.markdownLink;
+      } catch (e) {
         // fallback to commit sha if API call fails for some reason
+        console.warn(`Failed to find PR for commit ${commit}, using commit sha instead: ${e instanceof Error ? e.message : e}`);
         return commit;
       }
     })();
