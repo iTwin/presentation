@@ -47,7 +47,7 @@ export class SubCategoriesProvider<TLoader extends Loader = undefined> {
   #componentId: GuidString;
   #componentName: string;
   #cachedData: Observable<Data<TLoader>> | undefined;
-  #state = new DataStateTracker();
+  #stateTracker = new DataStateTracker();
   #rowLimit = 7500;
   #loadDataOverride?: TLoader;
 
@@ -96,7 +96,7 @@ export class SubCategoriesProvider<TLoader extends Loader = undefined> {
   }
 
   public get state(): IdsProviderDataState {
-    return this.#state.state;
+    return this.#stateTracker.state;
   }
 
   private loadData(): Observable<SubCategoriesProviderData> {
@@ -124,7 +124,7 @@ export class SubCategoriesProvider<TLoader extends Loader = undefined> {
     this.#cachedData ??= loadData({
       loadDataOverride: this.#loadDataOverride,
       loadDefault: () => this.loadData(),
-    }).pipe(this.#state.track(), shareReplay());
+    }).pipe(this.#stateTracker.track(), shareReplay());
     return this.#cachedData;
   }
 }

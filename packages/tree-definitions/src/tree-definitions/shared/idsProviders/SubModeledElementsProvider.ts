@@ -51,7 +51,7 @@ export class SubModeledElementsProvider<TLoader extends Loader = undefined> {
   #elementClassName: string;
   #elementModelCategoriesProvider: SubModeledElementsProviderProps<TLoader>["elementModelCategoriesProvider"];
   #cachedData: Observable<Data<TLoader>> | undefined;
-  #state = new DataStateTracker();
+  #stateTracker = new DataStateTracker();
   #loadDataOverride?: TLoader;
 
   constructor(props: SubModeledElementsProviderProps<TLoader>) {
@@ -89,10 +89,10 @@ export class SubModeledElementsProvider<TLoader extends Loader = undefined> {
 
   public get state(): IdsProviderDataState {
     if (this.#loadDataOverride) {
-      return this.#state.state;
+      return this.#stateTracker.state;
     }
     // Default loading depends on models data, so its failures also make this data failed.
-    return combineDataStates([this.#state.state, this.#elementModelCategoriesProvider.state]);
+    return combineDataStates([this.#stateTracker.state, this.#elementModelCategoriesProvider.state]);
   }
 
   private loadData(): Observable<SubModeledElementsProviderData> {
@@ -112,7 +112,7 @@ export class SubModeledElementsProvider<TLoader extends Loader = undefined> {
     this.#cachedData ??= loadData({
       loadDataOverride: this.#loadDataOverride,
       loadDefault: () => this.loadData(),
-    }).pipe(this.#state.track(), shareReplay());
+    }).pipe(this.#stateTracker.track(), shareReplay());
     return this.#cachedData;
   }
 }

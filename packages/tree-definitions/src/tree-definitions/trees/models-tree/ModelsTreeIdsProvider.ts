@@ -147,8 +147,8 @@ export function createModelsTreeIdsProvider({
   };
   const componentId = Guid.createValue();
   const componentName = "ModelsTreeIdsProvider";
-  const subjectInfosState = new DataStateTracker();
-  const modelInfosState = new DataStateTracker();
+  const subjectInfosStateTracker = new DataStateTracker();
+  const modelInfosStateTracker = new DataStateTracker();
 
   async function createModelsFilter(modelAlias: string): Promise<{ conditions: string[]; bindings?: ECSqlBinding[] }> {
     const conditions = new Array<string>();
@@ -284,7 +284,7 @@ export function createModelsTreeIdsProvider({
           return acc;
         }, new Map<ModelId, ModelInfo>()),
       ),
-    ).pipe(modelInfosState.track(), shareReplay());
+    ).pipe(modelInfosStateTracker.track(), shareReplay());
     return cachedData.modelInfos;
   }
 
@@ -329,7 +329,7 @@ export function createModelsTreeIdsProvider({
         }
         return subjectInfos;
       }),
-      subjectInfosState.track(),
+      subjectInfosStateTracker.track(),
       shareReplay(),
     );
     return cachedData.subjectInfos;
@@ -415,7 +415,7 @@ export function createModelsTreeIdsProvider({
     subModeledElements: sharedIdsProvider.subModeledElements,
     categories: sharedIdsProvider.categories,
     get state(): IdsProviderDataState {
-      return combineDataStates([subjectInfosState.state, modelInfosState.state]);
+      return combineDataStates([subjectInfosStateTracker.state, modelInfosStateTracker.state]);
     },
     getHiddenModelIds(): Subscribable<Set<ModelId>> {
       cachedData.hiddenModelIds ??= getModelInfos().pipe(

@@ -190,8 +190,8 @@ export function createCategoriesTreeIdsProvider({
     Observable<CategoriesTreeSearchPath>
   > = new Map();
   const { categoryClass } = getClassesByPerspective(hierarchyConfig.perspective);
-  const defContainersDataState = new DataStateTracker();
-  const categoriesDataState = new DataStateTracker();
+  const defContainersStateTracker = new DataStateTracker();
+  const categoriesStateTracker = new DataStateTracker();
   const componentId: GuidString = Guid.createValue();
   const componentName: string = "CategoriesTreeIdsProvider";
 
@@ -351,7 +351,7 @@ export function createCategoriesTreeIdsProvider({
           },
         ),
       ),
-    ).pipe(categoriesDataState.track(), shareReplay());
+    ).pipe(categoriesStateTracker.track(), shareReplay());
     return cachedData.categoriesData;
   }
 
@@ -403,7 +403,7 @@ export function createCategoriesTreeIdsProvider({
           );
         }),
       )
-      .pipe(defContainersDataState.track(), shareReplay());
+      .pipe(defContainersStateTracker.track(), shareReplay());
     return cachedData.definitionContainersData;
   }
 
@@ -501,7 +501,7 @@ export function createCategoriesTreeIdsProvider({
 
   return {
     get state(): IdsProviderDataState {
-      return combineDataStates([defContainersDataState.state, categoriesDataState.state]);
+      return combineDataStates([defContainersStateTracker.state, categoriesStateTracker.state]);
     },
     config,
     models: sharedIdsProvider.models,

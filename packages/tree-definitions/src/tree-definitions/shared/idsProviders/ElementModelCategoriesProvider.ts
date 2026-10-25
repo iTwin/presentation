@@ -75,7 +75,7 @@ export class ElementModelCategoriesProvider<TLoader extends Loader = undefined> 
   #elementClassName: EC.FullClassNameDotNotation;
   #excludedElementClassNames?: ReadonlyArray<EC.FullClassNameDotNotation>;
   #cachedData: Observable<Data<TLoader>> | undefined;
-  #state = new DataStateTracker();
+  #stateTracker = new DataStateTracker();
   #subscriberBatches: Array<{ obs: Observable<Data<TLoader>>; subscriberCount: number }> = [];
   #loadDataOverride?: TLoader;
 
@@ -147,7 +147,7 @@ export class ElementModelCategoriesProvider<TLoader extends Loader = undefined> 
   }
 
   public get state(): IdsProviderDataState {
-    return this.#state.state;
+    return this.#stateTracker.state;
   }
 
   private loadData(): Observable<ElementModelCategoriesProviderData> {
@@ -208,12 +208,12 @@ export class ElementModelCategoriesProvider<TLoader extends Loader = undefined> 
       finalize(() => {
         this.#subscriberBatches = [];
       }),
-      this.#state.track(),
+      this.#stateTracker.track(),
       shareReplay(),
     );
 
     // Once the data is loaded, every subscriber gets a synchronous replay, so batching is no longer needed.
-    if (this.#state.state === "loaded") {
+    if (this.#stateTracker.state === "loaded") {
       return this.#cachedData;
     }
 

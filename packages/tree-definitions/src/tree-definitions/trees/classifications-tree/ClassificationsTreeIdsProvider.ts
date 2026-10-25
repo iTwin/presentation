@@ -94,7 +94,7 @@ export function createClassificationsTreeIdsProvider({
   const componentId = Guid.createValue();
   const componentName = "ClassificationsTreeIdsProvider";
   const rowLimit = 7500;
-  const state = new DataStateTracker();
+  const stateTracker = new DataStateTracker();
 
   function queryClassificationsAndTables(): Observable<
     | { type: "table"; id: ClassificationTableId }
@@ -249,14 +249,14 @@ export function createClassificationsTreeIdsProvider({
           },
         ),
       ),
-    ).pipe(state.track(), shareReplay());
+    ).pipe(stateTracker.track(), shareReplay());
     return cachedData;
   }
 
   return {
     config: hierarchyConfig,
     get state(): IdsProviderDataState {
-      return state.state;
+      return stateTracker.state;
     },
     getDirectChildClassifications(
       classificationOrTableIds: Id64Arg,
