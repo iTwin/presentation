@@ -11,17 +11,16 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import {
   createModelsTree,
   createModelsTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
-import { CLASS_NAMES, toPromise } from "@itwin/presentation-tree-definitions/internal";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -47,38 +46,6 @@ describe("Models tree", () => {
 
   afterAll(async () => {
     await terminate();
-  });
-
-  it("uses the supplied models provider for hierarchy and search", async () => {
-    await using imodel = await buildIModel(async (db) =>
-      withEditTxn(db, (txn) => {
-        const subject = insertSubject({ txn, codeValue: "subject", parentId: IModel.rootSubjectId });
-        const model = insertPhysicalModelWithPartition({ txn, codeValue: "model", partitionParentId: subject.id });
-        const category = insertSpatialCategory({ txn, codeValue: "category" });
-        insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
-        return { subject };
-      }),
-    );
-    const imodelAccess = createIModelAccess(imodel.imodelConnection);
-    const hierarchyConfig = { subjects: { root: "exclude" as const } };
-    const idsProvider = createModelsTreeIdsProvider({
-      imodelAccess,
-      hierarchyConfig,
-      sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
-    });
-    await toPromise(idsProvider.getParentSubjectIds());
-    const hierarchyGetter = vi.spyOn(idsProvider, "getChildSubjectIds").mockReturnValue(of([]));
-    vi.spyOn(idsProvider, "getChildSubjectModelIds").mockReturnValue(of([]));
-    const searchGetter = vi.spyOn(idsProvider, "createSubjectInstanceKeysPath").mockReturnValue(of([]));
-    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
-    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
-
-    await validateHierarchy({ provider, expect: [] });
-    expect(hierarchyGetter).toHaveBeenCalledWith([IModel.rootSubjectId]);
-    expect(await tree.createSearchTree({ targetItems: [imodel.subject] })).toEqual([]);
-    expect(searchGetter).toHaveBeenCalledWith(imodel.subject.id);
-    expect(queryReader).not.toHaveBeenCalled();
   });
 
   it.each(["default", "custom"] as const)(

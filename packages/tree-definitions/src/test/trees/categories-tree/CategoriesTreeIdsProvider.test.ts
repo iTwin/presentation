@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import { createSharedIdsProvider } from "../../../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
+import { toPromise } from "../../../tree-definitions/shared/Rxjs.js";
 import { createCategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 import { createCategoriesTree } from "../../../tree-definitions/trees/categories-tree/CreateCategoriesTree.js";
 
@@ -13,7 +15,7 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 
 function createAccess() {
   return {
-    createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(),
+    createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* () {}),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
     getHiddenClassesTree: vi.fn<ECSchemaProvider["getHiddenClassesTree"]>().mockResolvedValue([]),
     classDerivesFrom: vi
@@ -123,4 +125,39 @@ describe("categories provider configuration", () => {
       }
     },
   );
+});
+
+describe("createCategoriesTree", () => {
+  it("uses the supplied ID provider for hierarchy and search", async () => {
+    const access = createAccess();
+    const idsProvider = createCategoriesTreeIdsProvider({
+      imodelAccess: access,
+      hierarchyConfig: { perspective: "3d" },
+      sharedIdsProvider: createSharedIdsProvider({
+        imodelAccess: access,
+        elementClassName: "BisCore.GeometricElement3d",
+      }),
+    });
+    await toPromise(idsProvider.getAllDefinitionContainersAndCategories());
+    access.createQueryReader.mockClear();
+    const hierarchyGetter = vi
+      .spyOn(idsProvider, "getRootDefinitionContainersAndCategories")
+      .mockReturnValue(of({ categories: [], definitionContainers: [] }));
+    const searchGetter = vi
+      .spyOn(idsProvider, "getAllDefinitionContainersAndCategories")
+      .mockReturnValue(of({ categories: [], definitionContainers: [] }));
+    const tree = createCategoriesTree({ imodelAccess: access, hierarchyConfig: { perspective: "3d" }, idsProvider });
+
+    expect(
+      await tree.hierarchyDefinition.defineHierarchyLevel({
+        parentNode: undefined,
+        createSelectClause: async () => "",
+        createFilterClauses: async () => ({ from: "", where: "", joins: "" }),
+      }),
+    ).toEqual([]);
+    expect(hierarchyGetter).toHaveBeenCalled();
+    expect(await tree.createSearchTree({ label: "category" })).toEqual([]);
+    expect(searchGetter).toHaveBeenCalled();
+    expect(access.createQueryReader).not.toHaveBeenCalled();
+  });
 });

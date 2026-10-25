@@ -8,7 +8,6 @@ import {
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
 } from "presentation-test-utilities";
-import { of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -46,37 +45,6 @@ describe("Classifications tree", () => {
 
   afterAll(async () => {
     await terminate();
-  });
-
-  it("uses the supplied classifications provider for hierarchy and search", async () => {
-    await using imodel = await buildIModel(async (db) =>
-      withEditTxn(db, async (txn) => {
-        await importClassificationSchema(db);
-        const system = insertClassificationSystem({ txn, codeValue: rootClassificationSystemCode });
-        const table = insertClassificationTable({ txn, parentId: system.id, codeValue: "table" });
-        insertClassification({ txn, modelId: table.id, codeValue: "classification" });
-        return { table };
-      }),
-    );
-    const imodelAccess = createIModelAccess(imodel.imodelConnection);
-    const hierarchyConfig = { rootClassificationSystemCode };
-    const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig });
-    await toPromise(idsProvider.getAllClassifications());
-    const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockReturnValue(of([]));
-    const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockReturnValue(of([]));
-    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createClassificationsTree({ imodelAccess, hierarchyConfig, idsProvider });
-    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
-
-    const [tableNode] = await collect(provider.getNodes({ parentNode: undefined }));
-    expect(tableNode).toBeDefined();
-    expect(await collect(provider.getNodes({ parentNode: tableNode }))).toEqual([]);
-    expect(hierarchyGetter).toHaveBeenCalledWith([imodel.table.id]);
-    expect(await tree.createSearchTree({ label: "classification" })).toEqual([]);
-    expect(searchGetter).toHaveBeenCalled();
-    expect(queryReader.mock.calls.map(([, options]) => options?.restartToken)).not.toContainEqual(
-      expect.stringMatching(/^(ClassificationsTreeIdsProvider|ElementModelCategoriesProvider)\//),
-    );
   });
 
   describe("two iModel versions", () => {

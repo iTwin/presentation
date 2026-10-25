@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { insertSubCategory } from "presentation-test-utilities";
-import { of } from "rxjs";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
@@ -14,7 +13,7 @@ import {
   createCategoriesTreeIdsProvider,
   createSharedIdsProvider,
 } from "@itwin/presentation-tree-definitions";
-import { CLASS_NAMES, toPromise } from "@itwin/presentation-tree-definitions/internal";
+import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
 import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { collect, createIModelAccess } from "../Common.js";
@@ -42,39 +41,6 @@ describe("Categories tree", () => {
 
   afterAll(async () => {
     await terminate();
-  });
-
-  it("uses the supplied categories provider for hierarchy and search", async () => {
-    const { insertCategory, insertElement, insertElementsModel } = getInsertFunctionByPerspective("3d");
-    await using imodel = await buildIModel(async (db) =>
-      withEditTxn(db, (txn) => {
-        const model = insertElementsModel({ txn, codeValue: "model" });
-        const category = insertCategory({ txn, codeValue: "category" });
-        insertElement({ txn, modelId: model.id, categoryId: category.id });
-      }),
-    );
-    const imodelAccess = createIModelAccess(imodel.imodelConnection);
-    const idsProvider = createCategoriesTreeIdsProvider({
-      imodelAccess,
-      hierarchyConfig: { perspective: "3d" },
-      sharedIdsProvider: createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" }),
-    });
-    await toPromise(idsProvider.getAllDefinitionContainersAndCategories());
-    const hierarchyGetter = vi
-      .spyOn(idsProvider, "getRootDefinitionContainersAndCategories")
-      .mockReturnValue(of({ categories: [], definitionContainers: [] }));
-    const searchGetter = vi
-      .spyOn(idsProvider, "getAllDefinitionContainersAndCategories")
-      .mockReturnValue(of({ categories: [], definitionContainers: [] }));
-    const queryReader = vi.spyOn(imodelAccess, "createQueryReader");
-    const tree = createCategoriesTree({ imodelAccess, hierarchyConfig: { perspective: "3d" }, idsProvider });
-    using provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
-
-    await validateHierarchy({ provider, expect: [] });
-    expect(hierarchyGetter).toHaveBeenCalled();
-    expect(await tree.createSearchTree({ label: "category" })).toEqual([]);
-    expect(searchGetter).toHaveBeenCalled();
-    expect(queryReader).not.toHaveBeenCalled();
   });
 
   describe.each(["2d", "3d"] as const)("two iModel versions (%s)", (perspective) => {

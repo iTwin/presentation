@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
+import { toPromise } from "../../../tree-definitions/shared/Rxjs.js";
 import { createClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 import { createClassificationsTree } from "../../../tree-definitions/trees/classifications-tree/CreateClassificationsTree.js";
 
@@ -13,7 +15,7 @@ import type { ClassificationsTreeHierarchyConfiguration } from "../../../tree-de
 
 function createAccess() {
   return {
-    createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(),
+    createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* () {}),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
     getHiddenClassesTree: vi.fn<ECSchemaProvider["getHiddenClassesTree"]>().mockResolvedValue([]),
     classDerivesFrom: vi
@@ -70,5 +72,41 @@ describe("classifications provider configuration", () => {
     } else {
       expect(createTree).not.toThrow();
     }
+  });
+});
+
+describe("createClassificationsTree", () => {
+  it("uses the supplied ID provider for hierarchy and search", async () => {
+    const access = createAccess();
+    const hierarchyConfig = { rootClassificationSystemCode: "SystemA" };
+    const idsProvider = createClassificationsTreeIdsProvider({ imodelAccess: access, hierarchyConfig });
+    await toPromise(idsProvider.getAllClassifications());
+    access.createQueryReader.mockClear();
+    const hierarchyGetter = vi.spyOn(idsProvider, "getDirectChildClassifications").mockReturnValue(of([]));
+    const searchGetter = vi.spyOn(idsProvider, "getAllClassifications").mockReturnValue(of([]));
+    const tree = createClassificationsTree({ imodelAccess: access, hierarchyConfig, idsProvider });
+    const tableId = "0x10";
+
+    expect(
+      await tree.hierarchyDefinition.defineHierarchyLevel({
+        parentNode: {
+          key: {
+            type: "instances",
+            instanceKeys: [{ className: "ClassificationSystems.ClassificationTable", id: tableId }],
+          },
+          parentKeys: [],
+          label: "table",
+        },
+        createSelectClause: async () => "",
+        createFilterClauses: async () => ({ from: "", where: "", joins: "" }),
+      }),
+    ).toEqual([]);
+    expect(hierarchyGetter).toHaveBeenCalledWith([tableId]);
+    expect(await tree.createSearchTree({ label: "classification" })).toEqual([]);
+    expect(searchGetter).toHaveBeenCalled();
+    // label search queries the iModel directly, but ID data must come from the supplied provider
+    expect(access.createQueryReader.mock.calls.map(([, options]) => options?.restartToken)).not.toContainEqual(
+      expect.stringMatching(/^ClassificationsTreeIdsProvider\//),
+    );
   });
 });
