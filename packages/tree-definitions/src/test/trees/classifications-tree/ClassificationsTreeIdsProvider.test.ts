@@ -13,7 +13,7 @@ import type { ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ClassificationsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeDefinition.js";
 import type { ClassificationsTreeIdsProvider } from "../../../tree-definitions/trees/classifications-tree/ClassificationsTreeIdsProvider.js";
 
-function createAccess() {
+function createIModelAccess() {
   return {
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* () {}),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
@@ -63,10 +63,10 @@ describe("classifications provider configuration", () => {
       shouldThrow: false,
     },
   ])("$name", ({ providerConfig = { rootClassificationSystemCode: "SystemA" }, treeConfig, shouldThrow }) => {
-    const access = createAccess();
-    const provider = createClassificationsTreeIdsProvider({ imodelAccess: access, hierarchyConfig: providerConfig });
+    const imodelAccess = createIModelAccess();
+    const provider = createClassificationsTreeIdsProvider({ imodelAccess, hierarchyConfig: providerConfig });
     const createTree = () =>
-      createClassificationsTree({ imodelAccess: access, hierarchyConfig: treeConfig, idsProvider: provider });
+      createClassificationsTree({ imodelAccess, hierarchyConfig: treeConfig, idsProvider: provider });
     if (shouldThrow) {
       expect(createTree).toThrow("Classifications tree ID provider configuration does not match");
     } else {
@@ -77,7 +77,7 @@ describe("classifications provider configuration", () => {
 
 describe("createClassificationsTree", () => {
   it("uses the supplied ID provider for hierarchy and search", async () => {
-    const access = createAccess();
+    const imodelAccess = createIModelAccess();
     const hierarchyConfig = { rootClassificationSystemCode: "SystemA" };
     const getDirectChildClassifications = vi.fn(() => of([]));
     const getAllClassifications = vi.fn(() => of([]));
@@ -88,7 +88,7 @@ describe("createClassificationsTree", () => {
       getAllClassifications,
       getClassificationsPath: () => EMPTY,
     };
-    const tree = createClassificationsTree({ imodelAccess: access, hierarchyConfig, idsProvider });
+    const tree = createClassificationsTree({ imodelAccess, hierarchyConfig, idsProvider });
     const tableId = "0x10";
 
     expect(

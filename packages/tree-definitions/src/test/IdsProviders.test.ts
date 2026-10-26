@@ -22,7 +22,7 @@ import { createModelsTreeIdsProvider } from "../tree-definitions/trees/models-tr
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import type { SharedIdsProvider } from "../tree-definitions/shared/idsProviders/SharedIdsProvider.js";
 
-// IDs of instances returned by the iModel queries mocked in `createAccess`.
+// IDs of instances returned by the iModel queries mocked in `createIModelAccess`.
 /** Model containing an element of `CATEGORY_ID`. Also returned as a sub-modeled element, i.e. it models an element. */
 const MODEL_ID = "0x10";
 const CATEGORY_ID = "0x20";
@@ -34,7 +34,7 @@ const CLASSIFICATION_TABLE_ID = "0x31";
 /** ID that isn't returned by any mocked query. */
 const UNRELATED_SUB_MODEL_ID = "0x99";
 
-function createAccess(waitForQuery: (token: string) => Promise<void> = async () => {}) {
+function createIModelAccess(waitForQuery: (token: string) => Promise<void> = async () => {}) {
   return {
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* (_query, options) {
       const token = options?.restartToken ?? "";
@@ -104,13 +104,13 @@ const baseDatasets = [
 
 describe("ID provider data states", () => {
   it("exposes live state beside grouped methods without eagerly loading unused data", async () => {
-    const access = createAccess();
-    const provider = createSharedIdsProvider({ imodelAccess: access, elementClassName: "BisCore.GeometricElement3d" });
+    const imodelAccess = createIModelAccess();
+    const provider = createSharedIdsProvider({ imodelAccess, elementClassName: "BisCore.GeometricElement3d" });
     expect(provider.models.state).toBe("not-requested");
     expect(provider.subModeledElements.state).toBe("not-requested");
     expect(provider.categories.state).toBe("not-requested");
     expect(provider.subCategories.state).toBe("not-requested");
-    expect(access.createQueryReader).not.toHaveBeenCalled();
+    expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
 
     expect(await toPromise(provider.models.getAllModels())).toEqual(new Set([MODEL_ID]));
     expect(provider.models.state).toBe("loaded");
@@ -118,12 +118,12 @@ describe("ID provider data states", () => {
     expect(provider.categories.state).toBe("loaded");
     expect(provider.subCategories.state).toBe("not-requested");
     expect(await toPromise(provider.categories.getCategories({ modelId: MODEL_ID }))).toEqual(new Set([CATEGORY_ID]));
-    expect(access.createQueryReader).toHaveBeenCalledTimes(1);
+    expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
 
     expect(await toPromise(provider.subModeledElements.getAllSubModeledElements())).toEqual(new Set([MODEL_ID]));
     expect(provider.subModeledElements.state).toBe("loaded");
     expect(provider.models.state).toBe("loaded");
-    expect(access.createQueryReader).toHaveBeenCalledTimes(2);
+    expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
     expect(provider.subCategories.state).toBe("not-requested");
     expect(await toPromise(provider.subCategories.getCategorySubCategoriesMap())).toEqual(
       new Map([[CATEGORY_ID, [SUB_CATEGORY_ID]]]),
@@ -132,15 +132,15 @@ describe("ID provider data states", () => {
   });
 
   it("omits supplied sub-models from model lookups without loading sub-modeled elements", async () => {
-    const access = createAccess();
-    const provider = createBase(access);
+    const imodelAccess = createIModelAccess();
+    const provider = createBase(imodelAccess);
     const allModels = [];
     for await (const modelId of eachValueFrom(provider.models.getModels({ categoryId: CATEGORY_ID }))) {
       allModels.push(modelId);
     }
     expect(allModels).toEqual([MODEL_ID]);
     expect(provider.models.state).toBe("loaded");
-    expect(access.createQueryReader).toHaveBeenCalledTimes(1);
+    expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
 
     const modelsWithoutSubModels = [];
     for await (const modelId of eachValueFrom(
@@ -158,13 +158,13 @@ describe("ID provider data states", () => {
     }
     expect(modelsWithoutOtherSubModels).toEqual([MODEL_ID]);
     expect(provider.subModeledElements.state).toBe("not-requested");
-    expect(access.createQueryReader).toHaveBeenCalledTimes(1);
+    expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
   });
 
   it("keeps sub-modeled element loading and failures separate from loaded model data", async () => {
     const gate = new ResolvablePromise<void>();
     let failSubModeledElements = true;
-    const access = createAccess(async (token) => {
+    const imodelAccess = createIModelAccess(async (token) => {
       if (token.endsWith("/sub-modeled-elements")) {
         await gate;
         if (failSubModeledElements) {
@@ -172,7 +172,7 @@ describe("ID provider data states", () => {
         }
       }
     });
-    const provider = createBase(access);
+    const provider = createBase(imodelAccess);
     await toPromise(provider.models.getAllModels());
     const pending = toPromise(provider.subModeledElements.getAllSubModeledElements());
     const failure = expect(pending).rejects.toThrow("modeled elements failed");
@@ -242,34 +242,34 @@ describe("ID provider data states", () => {
     it("is lazy, shares pending work, and becomes loaded after success", async () => {
       const gate = new ResolvablePromise<void>();
       const started = new ResolvablePromise<void>();
-      const access = createAccess(async () => {
+      const imodelAccess = createIModelAccess(async () => {
         started.resolveSync();
         await gate;
       });
-      const base = createBase(access);
+      const base = createBase(imodelAccess);
       expect(base[group].state).toBe("not-requested");
-      expect(access.createQueryReader).not.toHaveBeenCalled();
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
 
       const first = load(base);
       expect(base[group].state).toBe("requested");
       const second = load(base);
       await started;
-      expect(access.createQueryReader).toHaveBeenCalledTimes(1);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
 
       gate.resolveSync();
       expect(await first).toEqual(await second);
       expect(base[group].state).toBe("loaded");
-      const queries = access.createQueryReader.mock.calls.length;
+      const queries = imodelAccess.createQueryReader.mock.calls.length;
       await load(base);
-      expect(access.createQueryReader).toHaveBeenCalledTimes(queries);
-      expect(createBase(access)[group].state).toBe("not-requested");
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(queries);
+      expect(createBase(imodelAccess)[group].state).toBe("not-requested");
     });
 
     it("reports failures and marks an explicit retry as requested until it loads", async () => {
       const gate = new ResolvablePromise<void>();
       const retryGate = new ResolvablePromise<void>();
-      const access = createAccess(vi.fn().mockReturnValueOnce(gate).mockReturnValue(retryGate));
-      const base = createBase(access);
+      const imodelAccess = createIModelAccess(vi.fn().mockReturnValueOnce(gate).mockReturnValue(retryGate));
+      const base = createBase(imodelAccess);
       const pending = load(base);
       const failure = expect(pending).rejects.toThrow("query failed");
       gate.rejectSync(new Error("query failed"));
@@ -277,30 +277,30 @@ describe("ID provider data states", () => {
       expect(base[group].state).toBe("failed");
       const retry = load(base);
       expect(base[group].state).toBe("requested");
-      const queries = access.createQueryReader.mock.calls.length;
+      const queries = imodelAccess.createQueryReader.mock.calls.length;
       const concurrent = load(base);
-      expect(access.createQueryReader).toHaveBeenCalledTimes(queries);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(queries);
       retryGate.resolveSync();
       expect(await retry).toEqual(await concurrent);
       expect(base[group].state).toBe("loaded");
     });
 
     it("allows preloading", async () => {
-      const access = createAccess();
-      const base = createBase(access);
+      const imodelAccess = createIModelAccess();
+      const base = createBase(imodelAccess);
       void load(base);
       expect(base[group].state).toBe("requested");
       await vi.waitFor(() => expect(base[group].state).toBe("loaded"));
-      const queries = access.createQueryReader.mock.calls.length;
+      const queries = imodelAccess.createQueryReader.mock.calls.length;
 
       await load(base);
-      expect(access.createQueryReader).toHaveBeenCalledTimes(queries);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(queries);
     });
   });
 
   it("loads independent shared datasets only when needed", async () => {
-    const access = createAccess();
-    const base = createBase(access);
+    const imodelAccess = createIModelAccess();
+    const base = createBase(imodelAccess);
     await toPromise(base.models.getAllModels());
     expect(base.categories.state).toBe("loaded");
     expect(base.models.state).toBe("loaded");
@@ -309,19 +309,19 @@ describe("ID provider data states", () => {
     expect(await toPromise(base.models.getPlanProjectionModels())).toEqual(new Set([MODEL_ID]));
     expect(await toPromise(base.categories.getAllCategoriesOfElements())).toEqual(new Set([CATEGORY_ID]));
     expect(await toPromise(base.categories.getCategories({ modelId: MODEL_ID }))).toEqual(new Set([CATEGORY_ID]));
-    expect(access.createQueryReader).toHaveBeenCalledTimes(1);
+    expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(1);
   });
 
   it("exposes loaded data that can override another provider's queries", async () => {
-    const source = createBase(createAccess());
-    const access = createAccess();
+    const source = createBase(createIModelAccess());
+    const imodelAccess = createIModelAccess();
     const overrides = {
       loadElementModelCategories: vi.fn(() => source.models.getData()),
       loadSubModeledElements: vi.fn(() => source.subModeledElements.getData()),
       loadSubCategories: vi.fn(() => source.subCategories.getData()),
     };
     const provider = createSharedIdsProvider({
-      imodelAccess: access,
+      imodelAccess,
       elementClassName: "BisCore.GeometricElement3d",
       loadDataOverrides: overrides,
     });
@@ -351,7 +351,7 @@ describe("ID provider data states", () => {
     expect(overrides.loadElementModelCategories).toHaveBeenCalledTimes(1);
     expect(overrides.loadSubModeledElements).toHaveBeenCalledTimes(1);
     expect(overrides.loadSubCategories).toHaveBeenCalledTimes(1);
-    expect(access.createQueryReader).not.toHaveBeenCalled();
+    expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
   });
 
   describe.each([
@@ -384,9 +384,9 @@ describe("ID provider data states", () => {
       const gate = new ResolvablePromise<void>();
       const expected = data();
       const override = vi.fn<() => Subscribable<any>>().mockReturnValueOnce(from(gate)).mockReturnValue(of(expected));
-      const access = createAccess();
+      const imodelAccess = createIModelAccess();
       const provider = createSharedIdsProvider({
-        imodelAccess: access,
+        imodelAccess,
         elementClassName: "BisCore.GeometricElement3d",
         loadDataOverrides: { [overrideKey]: override },
       });
@@ -407,23 +407,23 @@ describe("ID provider data states", () => {
       expect(provider[group].state).toBe("loaded");
       expect(await load(provider)).toBe(expected);
       expect(override).toHaveBeenCalledTimes(2);
-      expect(access.createQueryReader).not.toHaveBeenCalled();
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
     });
   });
 
   const treeFactories = [
     {
       name: "models",
-      create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
-        const provider = createModelsTreeIdsProvider({ imodelAccess: access, sharedIdsProvider });
+      create: (imodelAccess: ReturnType<typeof createIModelAccess>, sharedIdsProvider: SharedIdsProvider) => {
+        const provider = createModelsTreeIdsProvider({ imodelAccess, sharedIdsProvider });
         return { provider, load: async () => toPromise(provider.getParentSubjectIds()) };
       },
     },
     {
       name: "categories",
-      create: (access: ReturnType<typeof createAccess>, sharedIdsProvider: SharedIdsProvider) => {
+      create: (imodelAccess: ReturnType<typeof createIModelAccess>, sharedIdsProvider: SharedIdsProvider) => {
         const provider = createCategoriesTreeIdsProvider({
-          imodelAccess: access,
+          imodelAccess,
           sharedIdsProvider,
           hierarchyConfig: { perspective: "3d" },
         });
@@ -432,9 +432,9 @@ describe("ID provider data states", () => {
     },
     {
       name: "classifications",
-      create: (access: ReturnType<typeof createAccess>, _sharedIdsProvider: SharedIdsProvider) => {
+      create: (imodelAccess: ReturnType<typeof createIModelAccess>, _sharedIdsProvider: SharedIdsProvider) => {
         const provider = createClassificationsTreeIdsProvider({
-          imodelAccess: access,
+          imodelAccess,
           hierarchyConfig: { rootClassificationSystemCode: "test" },
         });
         return { provider, load: async () => toPromise(provider.getAllClassifications()) };
@@ -445,34 +445,34 @@ describe("ID provider data states", () => {
   describe.each(treeFactories)("$name", ({ name, create }) => {
     it("tracks requests, shares queries, and loads only its dependencies", async () => {
       const gate = new ResolvablePromise<void>();
-      const access = createAccess(async () => gate);
-      const base = createBase(access);
-      const { provider, load } = create(access, base);
+      const imodelAccess = createIModelAccess(async () => gate);
+      const base = createBase(imodelAccess);
+      const { provider, load } = create(imodelAccess, base);
       if ("subModeledElements" in provider) {
         expect(provider.subModeledElements).toBe(base.subModeledElements);
         expect(provider.categories).toBe(base.categories);
       }
       expect(provider.state).toBe("not-requested");
-      expect(access.createQueryReader).not.toHaveBeenCalled();
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
       const pending = load();
       expect(provider.state).toBe("requested");
       const concurrent = load();
       gate.resolveSync();
       expect(await pending).toEqual(await concurrent);
       expect(provider.state).toBe("loaded");
-      const tokens = access.createQueryReader.mock.calls.map(([, options]) => options?.restartToken);
+      const tokens = imodelAccess.createQueryReader.mock.calls.map(([, options]) => options?.restartToken);
       expect(new Set(tokens).size).toBe(tokens.length);
       expect(base.categories.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.subCategories.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.models.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.subModeledElements.state).toBe("not-requested");
-      expect(create(access, base).provider.state).toBe("not-requested");
+      expect(create(imodelAccess, base).provider.state).toBe("not-requested");
     });
 
     it("reports query failures and allows retry", async () => {
       let gate = new ResolvablePromise<void>();
       const started = new ResolvablePromise<void>();
-      const access = createAccess(async (token) => {
+      const imodelAccess = createIModelAccess(async (token) => {
         if (
           (name === "models" && token.endsWith("/subjects")) ||
           (name === "categories" && token.endsWith("/categories")) ||
@@ -482,8 +482,8 @@ describe("ID provider data states", () => {
           await gate;
         }
       });
-      const base = createBase(access);
-      const { provider, load } = create(access, base);
+      const base = createBase(imodelAccess);
+      const { provider, load } = create(imodelAccess, base);
       const failure = expect(load()).rejects.toThrow("tree query failed");
       await started;
       expect(provider.state).toBe("requested");

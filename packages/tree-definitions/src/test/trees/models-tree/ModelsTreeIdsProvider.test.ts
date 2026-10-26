@@ -18,7 +18,7 @@ import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { ModelsTreeHierarchyConfiguration } from "../../../tree-definitions/trees/models-tree/ModelsTreeDefinition.js";
 import type { ModelsTreeIdsProvider } from "../../../tree-definitions/trees/models-tree/ModelsTreeIdsProvider.js";
 
-function createAccess() {
+function createIModelAccess() {
   return {
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* () {}),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
@@ -96,19 +96,14 @@ describe("models provider configuration", () => {
       shouldThrow: false,
     },
   ])("$name", ({ providerConfig, treeConfig, shouldThrow }) => {
-    const access = createAccess();
+    const imodelAccess = createIModelAccess();
     const sharedIdsProvider = createSharedIdsProvider({
-      imodelAccess: access,
+      imodelAccess,
       elementClassName: providerConfig?.elements?.baseClass ?? "BisCore.GeometricElement3d",
       excludedElementClassNames: providerConfig?.elements?.excludedClasses,
     });
-    const provider = createModelsTreeIdsProvider({
-      imodelAccess: access,
-      sharedIdsProvider,
-      hierarchyConfig: providerConfig,
-    });
-    const createTree = () =>
-      createModelsTree({ imodelAccess: access, hierarchyConfig: treeConfig, idsProvider: provider });
+    const provider = createModelsTreeIdsProvider({ imodelAccess, sharedIdsProvider, hierarchyConfig: providerConfig });
+    const createTree = () => createModelsTree({ imodelAccess, hierarchyConfig: treeConfig, idsProvider: provider });
     if (shouldThrow) {
       expect(createTree).toThrow("Models tree ID provider configuration does not match");
     } else {
@@ -139,13 +134,13 @@ describe("models provider configuration", () => {
       shouldThrow: true,
     },
   ])("$name", ({ elementClassName, excludedClasses, shouldThrow }) => {
-    const access = createAccess();
+    const imodelAccess = createIModelAccess();
     const sharedIdsProvider = createSharedIdsProvider({
-      imodelAccess: access,
+      imodelAccess,
       elementClassName,
       excludedElementClassNames: excludedClasses,
     });
-    const createProvider = () => createModelsTreeIdsProvider({ imodelAccess: access, sharedIdsProvider });
+    const createProvider = () => createModelsTreeIdsProvider({ imodelAccess, sharedIdsProvider });
     if (shouldThrow) {
       expect(createProvider).toThrow("ID provider configuration does not match");
     } else {
@@ -156,7 +151,7 @@ describe("models provider configuration", () => {
 
 describe("createModelsTree", () => {
   it("uses the supplied ID provider for hierarchy and search", async () => {
-    const access = createAccess();
+    const imodelAccess = createIModelAccess();
     const hierarchyConfig = { subjects: { root: "exclude" as const } };
     const getChildSubjectIds = vi.fn(() => of([]));
     const createSubjectInstanceKeysPath = vi.fn(() => of([]));
@@ -177,7 +172,7 @@ describe("createModelsTree", () => {
       createUpToModelInstanceKeyPaths: () => EMPTY,
       getSearchPathsUpToRootCategory: () => EMPTY,
     };
-    const tree = createModelsTree({ imodelAccess: access, hierarchyConfig, idsProvider });
+    const tree = createModelsTree({ imodelAccess, hierarchyConfig, idsProvider });
     const subject = { className: "BisCore.Subject" as const, id: "0x10" };
 
     expect(
@@ -190,6 +185,6 @@ describe("createModelsTree", () => {
     expect(getChildSubjectIds).toHaveBeenCalledWith([IModel.rootSubjectId]);
     expect(await tree.createSearchTree({ targetItems: [subject] })).toEqual([]);
     expect(createSubjectInstanceKeysPath).toHaveBeenCalledWith(subject.id);
-    expect(access.createQueryReader).not.toHaveBeenCalled();
+    expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
   });
 });

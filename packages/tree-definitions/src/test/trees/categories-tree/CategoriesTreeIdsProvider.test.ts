@@ -16,7 +16,7 @@ import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies
 import type { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { CategoriesTreeIdsProvider } from "../../../tree-definitions/trees/categories-tree/CategoriesTreeIdsProvider.js";
 
-function createAccess() {
+function createIModelAccess() {
   return {
     createQueryReader: vi.fn<LimitingECSqlQueryExecutor["createQueryReader"]>(async function* () {}),
     getSchema: vi.fn<ECSchemaProvider["getSchema"]>().mockResolvedValue(undefined),
@@ -80,20 +80,20 @@ describe("categories provider configuration", () => {
       shouldThrow: false,
     },
   ])("$name", ({ providerPerspective, treePerspective, providerExclusions, treeExclusions, shouldThrow }) => {
-    const access = createAccess();
+    const imodelAccess = createIModelAccess();
     const sharedIdsProvider = createSharedIdsProvider({
-      imodelAccess: access,
+      imodelAccess,
       elementClassName: providerPerspective === "2d" ? "BisCore.GeometricElement2d" : "BisCore.GeometricElement3d",
       excludedElementClassNames: providerExclusions,
     });
     const provider = createCategoriesTreeIdsProvider({
-      imodelAccess: access,
+      imodelAccess,
       sharedIdsProvider,
       hierarchyConfig: { perspective: providerPerspective },
     });
     const createTree = () =>
       createCategoriesTree({
-        imodelAccess: access,
+        imodelAccess,
         hierarchyConfig: {
           perspective: treePerspective,
           elements: { nodes: "include", excludedClasses: treeExclusions },
@@ -113,14 +113,10 @@ describe("categories provider configuration", () => {
   ])(
     "validates that a shared provider with $elementClassName elements matches a 3d perspective (throws: $shouldThrow)",
     ({ elementClassName, shouldThrow }) => {
-      const access = createAccess();
-      const sharedIdsProvider = createSharedIdsProvider({ imodelAccess: access, elementClassName });
+      const imodelAccess = createIModelAccess();
+      const sharedIdsProvider = createSharedIdsProvider({ imodelAccess, elementClassName });
       const createProvider = () =>
-        createCategoriesTreeIdsProvider({
-          imodelAccess: access,
-          sharedIdsProvider,
-          hierarchyConfig: { perspective: "3d" },
-        });
+        createCategoriesTreeIdsProvider({ imodelAccess, sharedIdsProvider, hierarchyConfig: { perspective: "3d" } });
       if (shouldThrow) {
         expect(createProvider).toThrow("ID provider configuration does not match");
       } else {
@@ -132,7 +128,7 @@ describe("categories provider configuration", () => {
 
 describe("createCategoriesTree", () => {
   it("uses the supplied ID provider for hierarchy and search", async () => {
-    const access = createAccess();
+    const imodelAccess = createIModelAccess();
     const emptyIds = { categories: [], definitionContainers: [] };
     const getRootDefinitionContainersAndCategories = vi.fn(() => of(emptyIds));
     const getAllDefinitionContainersAndCategories = vi.fn(() => of(emptyIds));
@@ -157,7 +153,7 @@ describe("createCategoriesTree", () => {
       getSearchPathsUpToRootCategory: () => of([]),
       getIsDefinitionContainerSupported: () => of(false),
     };
-    const tree = createCategoriesTree({ imodelAccess: access, hierarchyConfig: { perspective: "3d" }, idsProvider });
+    const tree = createCategoriesTree({ imodelAccess, hierarchyConfig: { perspective: "3d" }, idsProvider });
 
     expect(
       await tree.hierarchyDefinition.defineHierarchyLevel({
@@ -169,6 +165,6 @@ describe("createCategoriesTree", () => {
     expect(getRootDefinitionContainersAndCategories).toHaveBeenCalled();
     expect(await tree.createSearchTree({ label: "category" })).toEqual([]);
     expect(getAllDefinitionContainersAndCategories).toHaveBeenCalled();
-    expect(access.createQueryReader).not.toHaveBeenCalled();
+    expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
   });
 });
