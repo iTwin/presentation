@@ -43,17 +43,18 @@ stages:
               "apps/test-app/*",
               "apps/full-stack-tests/src/components/*"
             )
-            $sourceBranch = "origin/$(System.PullRequest.SourceBranch)"
-            $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
+            # PR builds check out the PR merge commit: 1st parent is the target branch, 2nd is the PR head
+            $targetCommit = "HEAD^1"
+            $prCommit = "HEAD^2"
 
-            Write-Host "Comparing changes between $sourceBranch and $targetBranch branches"
+            Write-Host "Comparing changes between $prCommit and $targetCommit"
             # Run git diff command to ensure it does not fail
-            git diff --name-only $(git merge-base $targetBranch $sourceBranch) | out-null
+            git diff --name-only $(git merge-base $targetCommit $prCommit) | out-null
             if (-not $?) {
               exit 1
             }
 
-            $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
+            $diff=$(git diff --name-only $(git merge-base $targetCommit $prCommit))
             $files=$diff -split ' '
             Write-Host "Changed files:"
             foreach ($file in $files) {
