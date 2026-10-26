@@ -253,8 +253,8 @@ function getRenameOverlayTarget({
     return undefined;
   }
 
-  const levelPadding = `var(--stratakit-space-x2) + (var(--stratakit-space-x1) + var(--stratakit-space-x05)) * ${item.level - 1}`;
-  const expanderWidth = `1.5rem + var(--stratakit-space-x1)`;
+  const levelPadding = `var(--stratakit-space-200) + (var(--stratakit-space-100) + var(--stratakit-space-50)) * ${item.level - 1}`;
+  const expanderWidth = `1.5rem + var(--stratakit-space-100)`;
   return {
     node: item.node,
     style: {

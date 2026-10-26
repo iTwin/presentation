@@ -34,10 +34,10 @@ function createDefaultProps(overrides?: Partial<StrataKitTreeRendererProps>): St
 async function renderTree(
   props: StrataKitTreeRendererProps,
   colorScheme: "light" | "dark",
-  options?: { height?: number },
+  options?: { height?: number; width?: number },
 ) {
   return renderWithTheme(
-    <div style={{ height: options?.height ?? 100, width: 300 }}>
+    <div style={{ height: options?.height ?? 100, width: options?.width ?? 300 }}>
       <StrataKitTreeRenderer {...props} />
     </div>,
     { colorScheme },
@@ -218,6 +218,34 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       });
       const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Filtered Node")).toBeVisible();
+      await validateSnapshot(locator);
+    });
+
+    it("renders label editor for nested node", async () => {
+      // the editor is 300px wide - make sure there's enough space for it to not be shifted from its anchor
+      await page.viewport(400, 150);
+      const props = createDefaultProps({
+        rootNodes: [
+          createTreeNode({
+            id: "parent",
+            label: "Parent Node",
+            isExpanded: true,
+            children: [
+              createTreeNode({ id: "child-1", label: "Renaming Node" }),
+              createTreeNode({ id: "child-2", label: "Child 2" }),
+            ],
+          }),
+        ],
+        getEditingProps: () => ({ onLabelChanged: vi.fn() }),
+        getMenuActions: ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
+      });
+      const { locator } = await renderTree(props, colorScheme, { height: 150, width: 400 });
+      const node = locator.getByRole("treeitem", { name: "Renaming Node" });
+      await expect.element(node).toBeVisible();
+      await node.hover();
+      await node.getByRole("button", { name: "More" }).click();
+      await page.getByText("Rename", { exact: true }).click();
+      await expect.element(page.getByRole("textbox", { name: "New label" })).toBeVisible();
       await validateSnapshot(locator);
     });
 
