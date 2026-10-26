@@ -1,5 +1,15 @@
 # @itwin/presentation-shared
 
+## 2.1.0
+
+### Minor Changes
+
+- [#1621](https://github.com/iTwin/presentation/pull/1621): Exported the `Subscribable<T>` interface, previously only used as the parameter type of `eachValueFrom`. It describes a lazy stream of values that starts producing them when subscribed to.
+
+### Patch Changes
+
+- [#1672](https://github.com/iTwin/presentation/pull/1672): Bump iTwin.js Core dependencies to `5.14.4`.
+
 ## 2.0.0
 
 ### Major Changes
