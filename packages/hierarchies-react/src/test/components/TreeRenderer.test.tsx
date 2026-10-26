@@ -34,10 +34,10 @@ function createDefaultProps(overrides?: Partial<StrataKitTreeRendererProps>): St
 async function renderTree(
   props: StrataKitTreeRendererProps,
   colorScheme: "light" | "dark",
-  options?: { height?: number },
+  options?: { height?: number; width?: number },
 ) {
   return renderWithTheme(
-    <div style={{ height: options?.height ?? 100, width: 400 }}>
+    <div style={{ height: options?.height ?? 100, width: options?.width ?? 300 }}>
       <StrataKitTreeRenderer {...props} />
     </div>,
     { colorScheme },
@@ -222,6 +222,8 @@ COLOR_SCHEMES.forEach((colorScheme) => {
     });
 
     it("renders label editor for nested node", async () => {
+      // the editor is 300px wide - make sure there's enough space for it to not be shifted from its anchor
+      await page.viewport(400, 150);
       const props = createDefaultProps({
         rootNodes: [
           createTreeNode({
@@ -237,7 +239,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         getEditingProps: () => ({ onLabelChanged: vi.fn() }),
         getMenuActions: ({ targetNode }) => [<TreeNodeRenameAction key="rename" node={targetNode} />],
       });
-      const { locator } = await renderTree(props, colorScheme, { height: 150 });
+      const { locator } = await renderTree(props, colorScheme, { height: 150, width: 400 });
       const node = locator.getByRole("treeitem", { name: "Renaming Node" });
       await expect.element(node).toBeVisible();
       await node.hover();
