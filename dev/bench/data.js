@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792767157624,
+  "lastUpdate": 1793012016046,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Unified selection benchmark": [
@@ -27639,6 +27639,217 @@ window.BENCHMARK_DATA = {
             "value": 31,
             "unit": "ms",
             "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d1e1b0c9b7e4aaf9e9ccf3f506dd450ef3ec9159",
+          "message": "[Tree definitions]: expose `IdsProviders` (#1621)\n\n* [Tree definitions]: expose `IdsProviders`\n\n* Add usage tests\n\n* Make providers return types readonly\n\n* Make set readonly\n\n* Allow idSet to be readonly array or readonly set\n\n* Make HierarchySearchPath readonly\n\n* Add getIdsProvider\n\n* Fix binding test issue\n\n* rename dataState to state\n\n* Fix ids provider wording\n\n* Rename base ids provider to shared\n\n* Group by type the idsProvider exposed functions\n\n* Fix issues\n\n* Fix failing tests\n\n* Fix failing tests\n\n* Fix test failure\n\n* Return `getHierarchyDefinition`\n\n* Fix tests\n\n* remove readonly word\n\n* use deepReadonly\n\n* Rename to subModeled elements\n\n* Runtime config validation\n\n* Fix comments\n\n* Make tree DeepReadonly\n\n* add readonly set\n\n* Remove redundant casting\n\n* Add comment\n\n* Change to readonly set\n\n* Add comment explaining the behavior\n\n* Remove readonly from direct members of returned object\n\n* ReadonlyId64Arg and move create*Tree to a separate file\n\n* Add correct state check\n\n* move reduce to the defer\n\n* Remove excludedClasses from classifications tree ids provider config\n\n* clear batches on finalize\n\n* Fix combineDataStates\n\n* getIdsProvider uses imodelAccess\n\n* use hierarchy config\n\n* Fix failing tests\n\n* remove spell change\n\n* format\n\n* Extend core-bentley Id64 namespace to accept readonly things\n\n* get imodelAccess in the create*Tree\n\n* Fix d.ts issue\n\n* Make ids providers return Subscribable instead of Promise\n\n* Add option to override ids providers data\n\n* Add excludedSubModels prop\n\n* Make idsProvider return getData based on generics\n\n* expose search limit error\n\n* remove parent elements path\n\n* Extract api, api fixes\n\n* Format\n\n* Changeset for shared\n\n* Use finalize\n\n* combine states\n\n* defer for multiple subscribers\n\n* create array on reduce\n\n* Add loaded data file & lint\n\n* Allow overriding subModeledElements\n\n* rename to normalizeConfig\n\n* pass isDefContainer supported via props\n\n* Add toPromise\n\n* move state to the top\n\n* Rename to perspective\n\n* add perspective to hierarchyConfig\n\n* remove imodelKey\n\n* Rename to stateTracker\n\n* Adjust the shape of validateIdsProviderConfig\n\n* move to forkJoin\n\n* rename tests to does something\n\n* mark ids as consts\n\n* move non full stack tests out of full stack tests folder\n\n* create simple mock ids providers\n\n* Remove omit of imodelAccess\n\n* changeset fixes\n\n* Readme fixes\n\n* Excluded classes fix\n\n* Changeset shorten\n\n* Use resolvable promise\n\n* rename to createIModelAccess",
+          "timestamp": "2026-10-26T12:50:42+02:00",
+          "tree_id": "8a8d5036ebafc7981584b038569f59c2a5ea8449",
+          "url": "https://github.com/iTwin/presentation/commit/d1e1b0c9b7e4aaf9e9ccf3f506dd450ef3ec9159"
+        },
+        "date": 1793012013908,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "compute selection for 50k elements",
+            "value": 246,
+            "unit": "ms"
+          },
+          {
+            "name": "compute selection for 50k elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute parent selection for 50k elements",
+            "value": 271,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent selection for 50k elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute top ancestor selection for 50k elements",
+            "value": 439,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute category selection for 50k elements",
+            "value": 85,
+            "unit": "ms"
+          },
+          {
+            "name": "compute category selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute model selection for 50k elements",
+            "value": 69,
+            "unit": "ms"
+          },
+          {
+            "name": "compute model selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute functional selection for 50k 3D elements",
+            "value": 322,
+            "unit": "ms"
+          },
+          {
+            "name": "compute functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute parent functional selection for 50k 3D elements",
+            "value": 359,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 3D elements",
+            "value": 952,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute functional selection for 50k 2D elements",
+            "value": 2463,
+            "unit": "ms"
+          },
+          {
+            "name": "compute functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute parent functional selection for 50k 2D elements",
+            "value": 2436,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 2D elements",
+            "value": 2494,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "hilite 50k elements",
+            "value": 909,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 31\np95: 31\nmedian: 29.5"
+          },
+          {
+            "name": "hilite 50k group elements",
+            "value": 171,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k group elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 31\np95: 31\nmedian: 30"
+          },
+          {
+            "name": "hilite 1k subjects",
+            "value": 480,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 1k subjects (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "hilite 50k subcategories",
+            "value": 175,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k subcategories (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 31\np95: 31\nmedian: 30.5"
+          },
+          {
+            "name": "hilite 50k functional 3D elements",
+            "value": 23059,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k functional 3D elements (P95 of main thread blocks)",
+            "value": 42,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 42\np95: 42\nmedian: 28"
+          },
+          {
+            "name": "hilite 50k functional 2D elements",
+            "value": 5139,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k functional 2D elements (P95 of main thread blocks)",
+            "value": 43,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 43\np95: 43\nmedian: 30"
           }
         ]
       }
