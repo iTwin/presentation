@@ -25,7 +25,7 @@ import { context } from "@opentelemetry/api";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.SdkImports
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import * as opentelemetry from "@opentelemetry/sdk-node";
-import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base";
+import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
