@@ -32,7 +32,7 @@ describe("ModelsTreeNode", () => {
     extendedData: {},
   };
 
-  it("isSubjectNode", () => {
+  it("identifies subject nodes", () => {
     expect(ModelsTreeNode.isSubjectNode(unknownNode)).toBe(false);
     expect(ModelsTreeNode.isSubjectNode(subjectNode)).toBe(true);
     expect(ModelsTreeNode.isSubjectNode(modelNode)).toBe(false);
@@ -41,7 +41,7 @@ describe("ModelsTreeNode", () => {
     expect(ModelsTreeNode.isSubjectNode(classGroupingNode)).toBe(false);
   });
 
-  it("isModelNode", () => {
+  it("identifies model nodes", () => {
     expect(ModelsTreeNode.isModelNode(unknownNode)).toBe(false);
     expect(ModelsTreeNode.isModelNode(subjectNode)).toBe(false);
     expect(ModelsTreeNode.isModelNode(modelNode)).toBe(true);
@@ -50,7 +50,7 @@ describe("ModelsTreeNode", () => {
     expect(ModelsTreeNode.isModelNode(classGroupingNode)).toBe(false);
   });
 
-  it("isCategoryNode", () => {
+  it("identifies category nodes", () => {
     expect(ModelsTreeNode.isCategoryNode(unknownNode)).toBe(false);
     expect(ModelsTreeNode.isCategoryNode(subjectNode)).toBe(false);
     expect(ModelsTreeNode.isCategoryNode(modelNode)).toBe(false);
@@ -59,7 +59,7 @@ describe("ModelsTreeNode", () => {
     expect(ModelsTreeNode.isCategoryNode(classGroupingNode)).toBe(false);
   });
 
-  it("isElementNode", () => {
+  it("identifies element nodes", () => {
     expect(ModelsTreeNode.isElementNode(unknownNode)).toBe(false);
     expect(ModelsTreeNode.isElementNode(subjectNode)).toBe(false);
     expect(ModelsTreeNode.isElementNode(modelNode)).toBe(false);
@@ -68,13 +68,13 @@ describe("ModelsTreeNode", () => {
     expect(ModelsTreeNode.isElementNode(classGroupingNode)).toBe(false);
   });
 
-  it("isElementClassGroupingNode", () => {
+  it("identifies element class grouping nodes", () => {
     expect(ModelsTreeNode.isElementClassGroupingNode(unknownNode)).toBe(false);
     expect(ModelsTreeNode.isElementClassGroupingNode(subjectNode)).toBe(false);
     expect(ModelsTreeNode.isElementClassGroupingNode(classGroupingNode)).toBe(true);
   });
 
-  it("getType returns the matching type", () => {
+  it("returns the type of tree nodes and `undefined` for unknown nodes", () => {
     expect(ModelsTreeNode.getType(subjectNode)).toBe("subject");
     expect(ModelsTreeNode.getType(modelNode)).toBe("model");
     expect(ModelsTreeNode.getType(categoryNode)).toBe("category");

@@ -11,11 +11,19 @@ import {
   insertSpatialCategory,
   insertSubject,
 } from "presentation-test-utilities";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
+import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+import {
+  createModelsTree,
+  createModelsTreeIdsProvider,
+  createSharedIdsProvider,
+} from "@itwin/presentation-tree-definitions";
 import { CLASS_NAMES } from "@itwin/presentation-tree-definitions/internal";
+import { createChangedIModels } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { collect, createIModelAccess } from "../Common.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
 import {
   buildIModel,
@@ -28,6 +36,10 @@ import { createModelsTreeProvider } from "./Utils.js";
 import type { InstanceKey, Props } from "@itwin/presentation-shared";
 
 describe("Models tree", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeAll(async () => {
     await initialize();
   });
@@ -35,6 +47,110 @@ describe("Models tree", () => {
   afterAll(async () => {
     await terminate();
   });
+
+  it.each(["default", "custom"] as const)(
+    "uses iModel-specific definitions in a merged hierarchy with %s ID providers",
+    async (providerType) => {
+      await using versions = await createChangedIModels(
+        async (db) =>
+          withEditTxn(db, (txn) => {
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: "base model",
+              partitionParentId: IModel.rootSubjectId,
+            });
+            const category = insertSpatialCategory({ txn, codeValue: "category" });
+            const element = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+            return { model, category, element };
+          }),
+        async (db, baseKeys) =>
+          withEditTxn(db, (txn) => {
+            txn.deleteElement(baseKeys.element.id);
+            const model = insertPhysicalModelWithPartition({
+              txn,
+              codeValue: "new model",
+              partitionParentId: IModel.rootSubjectId,
+            });
+            const element = insertPhysicalElement({
+              txn,
+              modelId: model.id,
+              categoryId: baseKeys.category.id,
+              userLabel: "new element",
+            });
+            return { model, category: baseKeys.category, element };
+          }),
+      );
+      const hierarchyConfig = { subjects: { root: "exclude" as const } };
+      const imodels = [versions.base, versions.changeset1].map(({ imodelConnection }) => ({
+        imodelAccess: createIModelAccess(imodelConnection),
+      }));
+      const [base, changed] = imodels;
+      const schemaChecks = imodels.map(({ imodelAccess }) => vi.spyOn(imodelAccess, "classDerivesFrom"));
+      const baseQueryReader = vi.spyOn(base.imodelAccess, "createQueryReader");
+      const changedQueryReader = vi.spyOn(changed.imodelAccess, "createQueryReader");
+      const trees = imodels.map(({ imodelAccess }) => {
+        const idsProvider =
+          providerType === "custom"
+            ? createModelsTreeIdsProvider({
+                imodelAccess,
+                hierarchyConfig,
+                sharedIdsProvider: createSharedIdsProvider({
+                  imodelAccess,
+                  elementClassName: "BisCore.GeometricElement3d",
+                }),
+              })
+            : undefined;
+        return { imodelAccess, tree: createModelsTree({ imodelAccess, hierarchyConfig, idsProvider }) };
+      });
+      const [baseTree, changedTree] = trees;
+      using provider = createMergedIModelHierarchyProvider({
+        imodels,
+        getHierarchyDefinition: ({ imodelAccess }) =>
+          trees.find((entry) => entry.imodelAccess === imodelAccess)!.tree.hierarchyDefinition,
+      });
+
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toMatchObject([
+        {
+          label: "base model",
+          key: { instanceKeys: [{ ...versions.base.model, imodelKey: base.imodelAccess.imodelKey }] },
+        },
+        {
+          label: "new model",
+          key: { instanceKeys: [{ ...versions.changeset1.model, imodelKey: changed.imodelAccess.imodelKey }] },
+        },
+      ]);
+      for (const schemaCheck of schemaChecks) {
+        expect(schemaCheck).toHaveBeenCalledWith(CLASS_NAMES.GeometricElement3d, CLASS_NAMES.GeometricElement3d);
+      }
+
+      baseQueryReader.mockClear();
+      changedQueryReader.mockClear();
+      expect(await changedTree.tree.createSearchTree({ label: "new element" })).toMatchObject([
+        {
+          identifier: { id: versions.changeset1.model.id },
+          children: [
+            {
+              identifier: versions.changeset1.category,
+              children: [{ identifier: { id: versions.changeset1.element.id } }],
+            },
+          ],
+        },
+      ]);
+      expect(baseQueryReader).not.toHaveBeenCalled();
+      expect(changedQueryReader).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
+      );
+
+      changedQueryReader.mockClear();
+      expect(await collect(baseTree.tree.createInstanceKeyPaths({ label: "new element" }))).toEqual([]);
+      expect(changedQueryReader).not.toHaveBeenCalled();
+      expect(baseQueryReader).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ restartToken: expect.stringMatching(/\/filter-by-label$/) }),
+      );
+    },
+  );
 
   describe.each(["cold", "warm"] as const)("Hierarchy definition (%s cache)", (cacheState) => {
     async function createProvider(props: Omit<Props<typeof createModelsTreeProvider>, "cacheState">) {
@@ -1126,7 +1242,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of child element is set to true when child element has subModel that contains children", async () => {
+      it("marks child element as having children when its sub-model contains elements", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1210,7 +1326,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("child elements have no children when their subModels are private or template", async () => {
+      it("marks child elements as having no children when their sub-models are private or template", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1281,7 +1397,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of child element is set to false when it's subModel has no children", async () => {
+      it("marks child element as having no children when its sub-model is empty", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1348,7 +1464,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of element is set to true when element has subModel that contains children", async () => {
+      it("marks element as having children when its sub-model contains elements", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1414,7 +1530,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("elements have no children when their subModels are private or template", async () => {
+      it("marks elements as having no children when their sub-models are private or template", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };
@@ -1467,7 +1583,7 @@ describe("Models tree", () => {
         });
       });
 
-      it("children of element is set to false when it's subModel has no children", async () => {
+      it("marks element as having no children when its sub-model is empty", async () => {
         await using buildIModelResult = await buildIModel(async (imodel, testSchema) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject: InstanceKey = { className: CLASS_NAMES.Subject, id: IModel.rootSubjectId };

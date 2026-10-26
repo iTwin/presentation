@@ -14,7 +14,6 @@ import type {
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import type { ElementId } from "../../shared/Types.js";
-import type { ParentElementsPath } from "../../shared/Utils.js";
 
 /**
  * Contains utility functions for working with Models Tree nodes.
@@ -71,7 +70,7 @@ export namespace ModelsTreeNodeInternal {
  * @internal
  */
 export interface CategoryNodeProps {
-  parentElementsPath: ParentElementsPath;
+  parentElementIds?: Id64Array;
   modelIds: Id64Array;
 }
 
@@ -81,7 +80,6 @@ export interface CategoryNodeProps {
 export interface ElementNodeProps {
   modelId: Id64String;
   categoryId: Id64String;
-  parentElementsPath: ParentElementsPath;
 }
 
 /**
@@ -90,7 +88,6 @@ export interface ElementNodeProps {
 export interface ElementClassGroupingNodeProps {
   modelId: Id64String;
   categoryId: Id64String;
-  parentElementsPath: ParentElementsPath;
   childrenWhichAreParents: Set<ElementId>;
   hasDirectNonSearchTargets?: boolean;
   hasSearchTargetAncestor?: boolean;
