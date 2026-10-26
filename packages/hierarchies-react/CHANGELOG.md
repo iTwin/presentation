@@ -1,5 +1,17 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.1
+
+### Patch Changes
+
+- [#1672](https://github.com/iTwin/presentation/pull/1672): Bump `@tanstack/react-virtual` dependency to `3.14.22`.
+- [#1672](https://github.com/iTwin/presentation/pull/1672): Bump iTwin.js Core dependencies to `5.14.4`.
+- [#1675](https://github.com/iTwin/presentation/pull/1675): `StrataKitTreeRenderer`: Fixed the node label editor being positioned incorrectly due to usage of spacing tokens that were removed in `@stratakit/foundations@1.0.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.1.0
+  - @itwin/presentation-hierarchies@2.0.1
+  - @itwin/unified-selection@2.0.1
+
 ## 2.0.0
 
 ### Major Changes
