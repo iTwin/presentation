@@ -62,12 +62,6 @@ export function createCategoriesTree(props: CategoriesTreeProps) {
     excludedElementClassNames:
       hierarchyConfig.elements.nodes === "include" ? hierarchyConfig.elements.excludedClasses : undefined,
   });
-  if (hierarchyConfig.elements.nodes === "include") {
-    hierarchyConfig.elements = {
-      ...hierarchyConfig.elements,
-      excludedClasses: [...idsProviderConfig.excludedElementClassNames],
-    };
-  }
   const idsProvider =
     props.idsProvider ??
     createCategoriesTreeIdsProvider({

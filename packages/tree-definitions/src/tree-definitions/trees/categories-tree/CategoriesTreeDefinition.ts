@@ -180,19 +180,21 @@ export const defaultHierarchyConfiguration: Omit<RequiredCategoriesTreeHierarchy
 };
 
 /**
- * Fills omitted options of the given hierarchy configuration with defaults.
+ * Fills omitted options of the given hierarchy configuration with defaults. Copies `elements.excludedClasses`, so later
+ * changes to the given configuration don't affect the result.
  * @internal
  */
 export function mergeWithDefaultHierarchyConfiguration(
   config: CategoriesTreeHierarchyConfiguration,
 ): RequiredCategoriesTreeHierarchyConfiguration {
-  return {
-    ...mergeWithDefaults<Omit<CategoriesTreeHierarchyConfiguration, "perspective">>({
-      defaults: defaultHierarchyConfiguration,
-      overrides: config,
-    }),
-    perspective: config.perspective,
-  };
+  const merged = mergeWithDefaults<Omit<CategoriesTreeHierarchyConfiguration, "perspective">>({
+    defaults: defaultHierarchyConfiguration,
+    overrides: config,
+  });
+  if (config.elements?.nodes === "include") {
+    merged.elements = { nodes: "include", excludedClasses: [...(config.elements.excludedClasses ?? [])] };
+  }
+  return { ...merged, perspective: config.perspective };
 }
 
 /**
