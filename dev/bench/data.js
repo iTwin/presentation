@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793012016046,
+  "lastUpdate": 1793012147271,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Unified selection benchmark": [
@@ -53582,6 +53582,162 @@ window.BENCHMARK_DATA = {
             "value": 66,
             "unit": "ms",
             "extra": "count: 20\nmax: 66\np95: 66\nmedian: 31.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d1e1b0c9b7e4aaf9e9ccf3f506dd450ef3ec9159",
+          "message": "[Tree definitions]: expose `IdsProviders` (#1621)\n\n* [Tree definitions]: expose `IdsProviders`\n\n* Add usage tests\n\n* Make providers return types readonly\n\n* Make set readonly\n\n* Allow idSet to be readonly array or readonly set\n\n* Make HierarchySearchPath readonly\n\n* Add getIdsProvider\n\n* Fix binding test issue\n\n* rename dataState to state\n\n* Fix ids provider wording\n\n* Rename base ids provider to shared\n\n* Group by type the idsProvider exposed functions\n\n* Fix issues\n\n* Fix failing tests\n\n* Fix failing tests\n\n* Fix test failure\n\n* Return `getHierarchyDefinition`\n\n* Fix tests\n\n* remove readonly word\n\n* use deepReadonly\n\n* Rename to subModeled elements\n\n* Runtime config validation\n\n* Fix comments\n\n* Make tree DeepReadonly\n\n* add readonly set\n\n* Remove redundant casting\n\n* Add comment\n\n* Change to readonly set\n\n* Add comment explaining the behavior\n\n* Remove readonly from direct members of returned object\n\n* ReadonlyId64Arg and move create*Tree to a separate file\n\n* Add correct state check\n\n* move reduce to the defer\n\n* Remove excludedClasses from classifications tree ids provider config\n\n* clear batches on finalize\n\n* Fix combineDataStates\n\n* getIdsProvider uses imodelAccess\n\n* use hierarchy config\n\n* Fix failing tests\n\n* remove spell change\n\n* format\n\n* Extend core-bentley Id64 namespace to accept readonly things\n\n* get imodelAccess in the create*Tree\n\n* Fix d.ts issue\n\n* Make ids providers return Subscribable instead of Promise\n\n* Add option to override ids providers data\n\n* Add excludedSubModels prop\n\n* Make idsProvider return getData based on generics\n\n* expose search limit error\n\n* remove parent elements path\n\n* Extract api, api fixes\n\n* Format\n\n* Changeset for shared\n\n* Use finalize\n\n* combine states\n\n* defer for multiple subscribers\n\n* create array on reduce\n\n* Add loaded data file & lint\n\n* Allow overriding subModeledElements\n\n* rename to normalizeConfig\n\n* pass isDefContainer supported via props\n\n* Add toPromise\n\n* move state to the top\n\n* Rename to perspective\n\n* add perspective to hierarchyConfig\n\n* remove imodelKey\n\n* Rename to stateTracker\n\n* Adjust the shape of validateIdsProviderConfig\n\n* move to forkJoin\n\n* rename tests to does something\n\n* mark ids as consts\n\n* move non full stack tests out of full stack tests folder\n\n* create simple mock ids providers\n\n* Remove omit of imodelAccess\n\n* changeset fixes\n\n* Readme fixes\n\n* Excluded classes fix\n\n* Changeset shorten\n\n* Use resolvable promise\n\n* rename to createIModelAccess",
+          "timestamp": "2026-10-26T12:50:42+02:00",
+          "tree_id": "8a8d5036ebafc7981584b038569f59c2a5ea8449",
+          "url": "https://github.com/iTwin/presentation/commit/d1e1b0c9b7e4aaf9e9ccf3f506dd450ef3ec9159"
+        },
+        "date": 1793012145707,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "search searches with 50000 paths",
+            "value": 5672,
+            "unit": "ms"
+          },
+          {
+            "name": "search searches with 50000 paths (P95 of main thread blocks)",
+            "value": 30,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 30\np95: 30\nmedian: 25.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 29162,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 25,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 25\np95: 25\nmedian: 24"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 133,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 36,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 8062,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2037,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 113,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 113\np95: 113\nmedian: 26"
+          },
+          {
+            "name": "grouping by label",
+            "value": 4480,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 42,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 42\np95: 42\nmedian: 32"
+          },
+          {
+            "name": "grouping by class",
+            "value": 4656,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 40,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 40\np95: 40\nmedian: 34"
+          },
+          {
+            "name": "grouping by property",
+            "value": 5903,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 64,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 64\np95: 64\nmedian: 34"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6200,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 86,
+            "unit": "ms",
+            "extra": "count: 18\nmax: 86\np95: 86\nmedian: 30.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 11631,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 72,
+            "unit": "ms",
+            "extra": "count: 14\nmax: 72\np95: 72\nmedian: 34.5"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 3800,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 56,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 56\np95: 56\nmedian: 30"
           }
         ]
       }
