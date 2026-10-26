@@ -1403,6 +1403,9 @@ importers:
       '@typescript/native':
         specifier: catalog:build-tools
         version: typescript@7.0.2
+      presentation-test-utilities:
+        specifier: workspace:*
+        version: link:../test-utilities
       rimraf:
         specifier: catalog:build-tools
         version: 6.1.3

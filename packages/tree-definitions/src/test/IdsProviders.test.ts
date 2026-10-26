@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResolvablePromise } from "presentation-test-utilities";
 import { firstValueFrom, from, of } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -85,16 +86,6 @@ function createModelsProviderStub(modelIds: string[]) {
   };
 }
 
-function createGate() {
-  let resolve!: () => void;
-  let reject!: (reason: Error) => void;
-  const promise = new Promise<void>((resolvePromise, rejectPromise) => {
-    resolve = resolvePromise;
-    reject = rejectPromise;
-  });
-  return { promise, resolve, reject };
-}
-
 const baseDatasets = [
   {
     group: "categories",
@@ -171,11 +162,11 @@ describe("ID provider data states", () => {
   });
 
   it("keeps sub-modeled element loading and failures separate from loaded model data", async () => {
-    const gate = createGate();
+    const gate = new ResolvablePromise<void>();
     let failSubModeledElements = true;
     const access = createAccess(async (token) => {
       if (token.endsWith("/sub-modeled-elements")) {
-        await gate.promise;
+        await gate;
         if (failSubModeledElements) {
           throw new Error("modeled elements failed");
         }
@@ -187,7 +178,7 @@ describe("ID provider data states", () => {
     const failure = expect(pending).rejects.toThrow("modeled elements failed");
     expect(provider.subModeledElements.state).toBe("requested");
     expect(provider.models.state).toBe("loaded");
-    gate.resolve();
+    gate.resolveSync();
     await failure;
     expect(provider.subModeledElements.state).toBe("failed");
     expect(provider.models.state).toBe("loaded");
@@ -249,11 +240,11 @@ describe("ID provider data states", () => {
 
   describe.each(baseDatasets)("$group", ({ group, load }) => {
     it("is lazy, shares pending work, and becomes loaded after success", async () => {
-      const gate = createGate();
-      const started = createGate();
+      const gate = new ResolvablePromise<void>();
+      const started = new ResolvablePromise<void>();
       const access = createAccess(async () => {
-        started.resolve();
-        await gate.promise;
+        started.resolveSync();
+        await gate;
       });
       const base = createBase(access);
       expect(base[group].state).toBe("not-requested");
@@ -262,10 +253,10 @@ describe("ID provider data states", () => {
       const first = load(base);
       expect(base[group].state).toBe("requested");
       const second = load(base);
-      await started.promise;
+      await started;
       expect(access.createQueryReader).toHaveBeenCalledTimes(1);
 
-      gate.resolve();
+      gate.resolveSync();
       expect(await first).toEqual(await second);
       expect(base[group].state).toBe("loaded");
       const queries = access.createQueryReader.mock.calls.length;
@@ -275,13 +266,13 @@ describe("ID provider data states", () => {
     });
 
     it("reports failures and marks an explicit retry as requested until it loads", async () => {
-      const gate = createGate();
-      const retryGate = createGate();
-      const access = createAccess(vi.fn().mockReturnValueOnce(gate.promise).mockReturnValue(retryGate.promise));
+      const gate = new ResolvablePromise<void>();
+      const retryGate = new ResolvablePromise<void>();
+      const access = createAccess(vi.fn().mockReturnValueOnce(gate).mockReturnValue(retryGate));
       const base = createBase(access);
       const pending = load(base);
       const failure = expect(pending).rejects.toThrow("query failed");
-      gate.reject(new Error("query failed"));
+      gate.rejectSync(new Error("query failed"));
       await failure;
       expect(base[group].state).toBe("failed");
       const retry = load(base);
@@ -289,7 +280,7 @@ describe("ID provider data states", () => {
       const queries = access.createQueryReader.mock.calls.length;
       const concurrent = load(base);
       expect(access.createQueryReader).toHaveBeenCalledTimes(queries);
-      retryGate.resolve();
+      retryGate.resolveSync();
       expect(await retry).toEqual(await concurrent);
       expect(base[group].state).toBe("loaded");
     });
@@ -390,12 +381,9 @@ describe("ID provider data states", () => {
     },
   ] as const)("$overrideKey data override", ({ group, overrideKey, load, data }) => {
     it("tracks state, shares results, and is called again on retry after failure", async () => {
-      const gate = createGate();
+      const gate = new ResolvablePromise<void>();
       const expected = data();
-      const override = vi
-        .fn<() => Subscribable<any>>()
-        .mockReturnValueOnce(from(gate.promise))
-        .mockReturnValue(of(expected));
+      const override = vi.fn<() => Subscribable<any>>().mockReturnValueOnce(from(gate)).mockReturnValue(of(expected));
       const access = createAccess();
       const provider = createSharedIdsProvider({
         imodelAccess: access,
@@ -411,7 +399,7 @@ describe("ID provider data states", () => {
         expect(pending).rejects.toThrow("override failed"),
         expect(concurrent).rejects.toThrow("override failed"),
       ]);
-      gate.reject(new Error("override failed"));
+      gate.rejectSync(new Error("override failed"));
       await failures;
       expect(provider[group].state).toBe("failed");
 
@@ -456,8 +444,8 @@ describe("ID provider data states", () => {
 
   describe.each(treeFactories)("$name", ({ name, create }) => {
     it("tracks requests, shares queries, and loads only its dependencies", async () => {
-      const gate = createGate();
-      const access = createAccess(async () => gate.promise);
+      const gate = new ResolvablePromise<void>();
+      const access = createAccess(async () => gate);
       const base = createBase(access);
       const { provider, load } = create(access, base);
       if ("subModeledElements" in provider) {
@@ -469,7 +457,7 @@ describe("ID provider data states", () => {
       const pending = load();
       expect(provider.state).toBe("requested");
       const concurrent = load();
-      gate.resolve();
+      gate.resolveSync();
       expect(await pending).toEqual(await concurrent);
       expect(provider.state).toBe("loaded");
       const tokens = access.createQueryReader.mock.calls.map(([, options]) => options?.restartToken);
@@ -482,24 +470,24 @@ describe("ID provider data states", () => {
     });
 
     it("reports query failures and allows retry", async () => {
-      let gate = createGate();
-      const started = createGate();
+      let gate = new ResolvablePromise<void>();
+      const started = new ResolvablePromise<void>();
       const access = createAccess(async (token) => {
         if (
           (name === "models" && token.endsWith("/subjects")) ||
           (name === "categories" && token.endsWith("/categories")) ||
           (name === "classifications" && token.includes("/classifications/"))
         ) {
-          started.resolve();
-          await gate.promise;
+          started.resolveSync();
+          await gate;
         }
       });
       const base = createBase(access);
       const { provider, load } = create(access, base);
       const failure = expect(load()).rejects.toThrow("tree query failed");
-      await started.promise;
+      await started;
       expect(provider.state).toBe("requested");
-      gate.reject(new Error("tree query failed"));
+      gate.rejectSync(new Error("tree query failed"));
       await failure;
       expect(provider.state).toBe("failed");
       expect(base.categories.state).toBe(name === "categories" ? "loaded" : "not-requested");
@@ -507,10 +495,10 @@ describe("ID provider data states", () => {
       expect(base.models.state).toBe(name === "categories" ? "loaded" : "not-requested");
       expect(base.subModeledElements.state).toBe("not-requested");
 
-      gate = createGate();
+      gate = new ResolvablePromise<void>();
       const retry = load();
       expect(provider.state).toBe("requested");
-      gate.resolve();
+      gate.resolveSync();
       await retry;
       expect(provider.state).toBe("loaded");
     });
