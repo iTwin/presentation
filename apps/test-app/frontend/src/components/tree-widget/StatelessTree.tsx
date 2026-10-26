@@ -118,7 +118,7 @@ function Tree({
     imodelAccess,
     imodelChanged,
     getSearchPaths,
-    getHierarchyDefinition: useCallback(() => modelsTree.definition, [modelsTree]),
+    getHierarchyDefinition: useCallback(() => modelsTree.hierarchyDefinition, [modelsTree]),
     getTreeNodeErrors: useCallback((node) => {
       return [
         { type: "Generic", id: `${node.label}-error-1`, message: `test error node`, isNodeExpandable: true },

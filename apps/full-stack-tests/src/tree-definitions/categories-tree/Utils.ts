@@ -64,12 +64,12 @@ export function insertSubModel(
   return { className: classFullName, id };
 }
 
-export function getInsertFunctionByViewType(viewType: "2d" | "3d") {
-  const insertCategory = viewType === "3d" ? insertSpatialCategory : insertDrawingCategory;
-  const insertElement = viewType === "3d" ? insertPhysicalElement : insertDrawingGraphic;
-  const insertElementsModel = viewType === "3d" ? insertPhysicalModelWithPartition : insertDrawingModelWithPartition;
+export function getInsertFunctionByPerspective(perspective: "2d" | "3d") {
+  const insertCategory = perspective === "3d" ? insertSpatialCategory : insertDrawingCategory;
+  const insertElement = perspective === "3d" ? insertPhysicalElement : insertDrawingGraphic;
+  const insertElementsModel = perspective === "3d" ? insertPhysicalModelWithPartition : insertDrawingModelWithPartition;
   const insertElementsSubModel =
-    viewType === "3d"
+    perspective === "3d"
       ? insertPhysicalSubModel
       : (props: { txn: EditTxn; modeledElementId: string }) =>
           insertDrawingSubModel({ ...props, classFullName: `${TestSchema.name}.${TestSchema.subModel2dClassName}` });
@@ -82,7 +82,7 @@ export function getInsertFunctionByViewType(viewType: "2d" | "3d") {
   }): InstanceKey =>
     insertElement({
       ...props,
-      classFullName: `${TestSchema.name}.${viewType === "3d" ? TestSchema.modeledElement3dClassName : TestSchema.modeledElement2dClassName}`,
+      classFullName: `${TestSchema.name}.${perspective === "3d" ? TestSchema.modeledElement3dClassName : TestSchema.modeledElement2dClassName}`,
     });
   return { insertCategory, insertElement, insertElementsModel, insertElementsSubModel, insertModeledElement };
 }

@@ -30,8 +30,7 @@ import {
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, eachValueFrom, ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { createBaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
-import { fromWithRelease, releaseMainThreadOnItemsCount } from "../../shared/Rxjs.js";
+import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
@@ -40,10 +39,8 @@ import {
   getOptimalBatchSize,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
-  ParentElementsPath,
   parseIdsSelectorResult,
 } from "../../shared/Utils.js";
-import { createModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
 import type { Observable, OperatorFunction } from "rxjs";
@@ -57,7 +54,6 @@ import type {
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IModelInstanceKey,
-  InstancesNodeKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
   NodePreProcessor,
@@ -69,12 +65,10 @@ import type {
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
-  Props,
 } from "@itwin/presentation-shared";
 import type { CategoryId } from "../../shared/Types.js";
 import type { DeepRequired, HiddenClassesFilter } from "../../shared/Utils.js";
 import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
-import type { CategoryNodeProps, ElementNodeProps } from "./ModelsTreeNodeInternal.js";
 
 /**
  * An element class grouping node that can be used as a search target.
@@ -189,18 +183,6 @@ export const defaultHierarchyConfiguration: RequiredModelsTreeHierarchyConfigura
 };
 
 /**
- * Data access and configuration for a models hierarchy.
- * @beta
- */
-interface ModelsTreeProps {
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  /** Hierarchy options. Omitted properties use the documented defaults. */
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-  /** Identifier used in query restart tokens. Defaults to a generated GUID. */
-  uniqueId?: GuidString;
-}
-
-/**
  * Full class names of instances that may appear in a models hierarchy search path.
  * @beta
  */
@@ -220,7 +202,7 @@ export type ModelsTreeSearchPathKey = IModelInstanceKey & { className: ModelsTre
  * A path of instance keys from a root node to a search target in a models hierarchy.
  * @beta
  */
-export type ModelsTreeSearchPath = ModelsTreeSearchPathKey[];
+export type ModelsTreeSearchPath = ReadonlyArray<Readonly<ModelsTreeSearchPathKey>>;
 
 /**
  * A `HierarchySearchTree` whose entries identify only the instance classes that a models hierarchy search can return.
@@ -234,8 +216,11 @@ export interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identif
 }
 
 /** @internal */
-interface ModelsTreeDefinitionProps extends ModelsTreeProps {
+interface ModelsTreeDefinitionProps {
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
   idsProvider: ModelsTreeIdsProvider;
+  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+  uniqueId?: GuidString;
 }
 
 /**
@@ -251,7 +236,7 @@ export interface ElementsGroupInfo {
  * Visibility, limits, and cancellation options for models hierarchy searches.
  * @beta
  */
-interface ModelsTreeSearchOptions {
+export interface ModelsTreeSearchOptions {
   /** Maximum number of matching instances. Defaults to 100; use `"unbounded"` to disable the limit. */
   limit?: number | "unbounded";
   /**
@@ -290,57 +275,6 @@ type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = { label: string } & Mode
 type ModelsTreeInstanceKeyPathsProps =
   | ModelsTreeInstanceKeyPathsFromTargetItemsProps
   | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
-
-/**
- * Search-specific options for a models tree with shared data access and configuration.
- * @beta
- */
-type ModelsTreeSearchProps = ModelsTreeSearchOptions &
-  ({ targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string });
-
-/**
- * Creates a models hierarchy definition and search helpers that share data access, hierarchy configuration, and a unique ID.
- * Creates and shares cached ID providers using the resolved hierarchy configuration.
- * Pass the returned `definition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
- * @beta
- */
-export function createModelsTree(props: ModelsTreeProps) {
-  const hierarchyConfig = mergeWithDefaults({
-    defaults: defaultHierarchyConfiguration,
-    overrides: props.hierarchyConfig,
-  });
-  const idsProvider = createModelsTreeIdsProvider({
-    imodelAccess: props.imodelAccess,
-    hierarchyConfig,
-    baseIdsProvider: createBaseIdsProvider({
-      imodelAccess: props.imodelAccess,
-      elementClassName: hierarchyConfig.elements.baseClass,
-      excludedElementClassNames: hierarchyConfig.elements.excludedClasses,
-    }),
-  });
-  const sharedProps = {
-    imodelAccess: props.imodelAccess,
-    idsProvider,
-    hierarchyConfig,
-    uniqueId: props.uniqueId ?? Guid.createValue(),
-  };
-  const definition: HierarchyDefinition = new ModelsTreeDefinition(sharedProps);
-  return {
-    definition,
-    /**
-     * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
-     * @throws An error if the configured search limit is exceeded.
-     */
-    createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) =>
-      ModelsTreeDefinition.createInstanceKeyPaths({ ...searchProps, ...sharedProps }),
-    /**
-     * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
-     * @throws An error if the configured search limit is exceeded.
-     */
-    createSearchTree: async (searchProps: ModelsTreeSearchProps & { revealTargets?: boolean }) =>
-      ModelsTreeDefinition.createSearchTree({ ...searchProps, ...sharedProps }),
-  };
-}
 
 /**
  * Defines a configurable hierarchy of subjects, models, categories, and geometric elements.
@@ -405,73 +339,19 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
       return {
         ...node,
-        extendedData: { ...node.extendedData, modelIds: parseIdsSelectorResult(node.extendedData.modelIds) },
+        extendedData: {
+          ...node.extendedData,
+          modelIds: parseIdsSelectorResult(node.extendedData.modelIds),
+          ...(node.extendedData.parentElementIds !== undefined
+            ? { parentElementIds: parseIdsSelectorResult(node.extendedData.parentElementIds) }
+            : {}),
+        },
       };
     }
     return node;
   };
 
-  private static extendPathWithElement(elementNode: {
-    key: InstancesNodeKey;
-    extendedData: ElementNodeProps;
-  }): ParentElementsPath {
-    return ParentElementsPath.appendToPath({
-      path: elementNode.extendedData.parentElementsPath,
-      ids: elementNode.key.instanceKeys.map(({ id }) => id),
-      categoryId: elementNode.extendedData.categoryId,
-    });
-  }
-
-  private static getInheritedParentElementsPath(
-    parentNode: NonNullable<Props<NodePostProcessor>["parentNode"]>,
-  ): ParentElementsPath {
-    if (
-      ModelsTreeNodeInternal.isElementClassGroupingNode(parentNode) ||
-      ModelsTreeNodeInternal.isCategoryNode(parentNode)
-    ) {
-      return parentNode.extendedData.parentElementsPath;
-    }
-    throw new Error("Expected node's parent to be category, or class grouping node");
-  }
-
-  private assignParentElementsPath({
-    node,
-    parentNode,
-  }: Pick<Props<NodePostProcessor>, "node" | "parentNode">): ProcessedHierarchyNode {
-    if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
-      const modelIds: CategoryNodeProps["modelIds"] = node.extendedData.modelIds;
-      if (parentNode === undefined) {
-        // If subjects are not shown and model has PhysicalPartition.Model.Content or GraphicalPartition3d.Model.Content property,
-        // then such models are not shown and category might have no parent node
-        node.extendedData = { ...node.extendedData, parentElementsPath: [] };
-        return node;
-      }
-      // When the parent is an element that actually contains this category, the category continues the element path.
-      // Otherwise (parent is a model, or a sub-model boundary) the path is reset.
-      const parentIsContainingElement =
-        ModelsTreeNodeInternal.isElementNode(parentNode) &&
-        parentNode.key.instanceKeys.every(({ id }) => !modelIds.includes(id));
-      node.extendedData = {
-        ...node.extendedData,
-        parentElementsPath: parentIsContainingElement ? ModelsTreeDefinition.extendPathWithElement(parentNode) : [],
-      };
-      return node;
-    }
-    if (ModelsTreeNodeInternal.isRawElementNode(node) || ModelsTreeNodeInternal.isRawElementClassGroupingNode(node)) {
-      assert(parentNode !== undefined, "Expected node to have a parent node");
-      node.extendedData = {
-        ...node.extendedData,
-        parentElementsPath: ModelsTreeNodeInternal.isElementNode(parentNode)
-          ? ModelsTreeDefinition.extendPathWithElement(parentNode)
-          : ModelsTreeDefinition.getInheritedParentElementsPath(parentNode),
-      };
-      return node;
-    }
-    return node;
-  }
-
-  public postProcessNode: NodePostProcessor = async ({ node, parentNode }) => {
-    node = this.assignParentElementsPath({ node, parentNode });
+  public postProcessNode: NodePostProcessor = async ({ node }) => {
     if (!ProcessedHierarchyNode.isGroupingNode(node)) {
       return node;
     }
@@ -549,16 +429,17 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           baseClassName: this.#hierarchyConfig.elements.baseClass,
         }),
       ]);
-    const { childSubjectIds, childModelIds } = parentSubjectIds.length
+    const { childSubjectIds, childModelIds, subjectWhichAreParents } = parentSubjectIds.length
       ? await firstValueFrom(
           forkJoin({
-            childSubjectIds: this.#idsProvider.getChildSubjectIds(parentSubjectIds),
-            childModelIds: this.#idsProvider.getChildSubjectModelIds(parentSubjectIds),
+            childSubjectIds: toObservable(this.#idsProvider.getChildSubjectIds(parentSubjectIds)),
+            childModelIds: toObservable(this.#idsProvider.getChildSubjectModelIds(parentSubjectIds)),
+            subjectWhichAreParents: toObservable(this.#idsProvider.getParentSubjectIds()),
           }),
         )
-      : { childSubjectIds: [IModel.rootSubjectId], childModelIds: [] };
+      : { childSubjectIds: [IModel.rootSubjectId], childModelIds: [], subjectWhichAreParents: [IModel.rootSubjectId] };
     const defs = new Array<HierarchyNodesDefinition>();
-    childSubjectIds.length &&
+    if (childSubjectIds.length) {
       defs.push({
         fullClassName: CLASS_NAMES.Subject,
         query: {
@@ -596,12 +477,13 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({ conditions: [subjectFilterClauses.where] })}
           `,
           bindings: [
-            { type: "idset", value: await this.#idsProvider.getParentSubjectIds() },
+            { type: "idset", value: subjectWhichAreParents },
             { type: "idset", value: childSubjectIds },
           ],
         },
       });
-    childModelIds.length &&
+    }
+    if (childModelIds.length) {
       defs.push({
         fullClassName: CLASS_NAMES.GeometricModel3d,
         query: {
@@ -670,6 +552,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           bindings: [{ type: "idset", value: childModelIds }],
         },
       });
+    }
     return defs;
   }
 
@@ -699,7 +582,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                 hasChildren: true,
                 extendedData: {
                   type: "model",
-                  modeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
+                  subModeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
                 },
               })}
             FROM ${CLASS_NAMES.GeometricModel3d} this
@@ -737,7 +620,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     createSelectClause,
     createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const modeledElementCategory = parentNode.extendedData?.modeledElementCategory;
+    const subModeledElementCategory = parentNode.extendedData?.subModeledElementCategory;
     const [
       categoryInstanceFilterClauses,
       elementInstanceFilterClauses,
@@ -753,13 +636,15 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.subModeledElements.state === "loaded"
+        ? toPromise(
+            this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
+          )
         : undefined,
-      this.#idsProvider.elementModelCategoriesLoaded()
+      this.#idsProvider.categories.state === "loaded"
         ? firstValueFrom(
             from(modelIds).pipe(
-              mergeMap(async (modelId) => this.#idsProvider.getCategories({ modelId })),
+              mergeMap((modelId) => toObservable(this.#idsProvider.categories.getCategories({ modelId }))),
               reduce((acc, modelCategories) => {
                 for (const categoryId of modelCategories) {
                   acc.add(categoryId);
@@ -783,9 +668,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     // that don't match the sub-model element's category as intermediate category nodes - the elements matching
     // that category are shown directly (see below).
     const categoriesToShow =
-      modeledElementCategory === undefined
+      subModeledElementCategory === undefined
         ? categoryIds
-        : categoryIds?.filter((categoryId) => categoryId !== modeledElementCategory);
+        : categoryIds?.filter((categoryId) => categoryId !== subModeledElementCategory);
     const hasElementsWithTheSameCategory = categoriesToShow?.length !== categoryIds?.length;
     const definitions: HierarchyLevelDefinition = [];
     if (!categoriesToShow || categoriesToShow.length > 0) {
@@ -819,8 +704,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   }),
                 !categoriesToShow && elementsHiddenClassesFilter.createWhereClause("ce"),
                 !categoriesToShow &&
-                  modeledElementCategory !== undefined &&
-                  `this.ECInstanceId <> ${modeledElementCategory}`,
+                  subModeledElementCategory !== undefined &&
+                  `this.ECInstanceId <> ${subModeledElementCategory}`,
               ],
             })}
           `,
@@ -829,11 +714,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       });
     }
     // Show elements which match the sub-model element's category directly under the (hidden) sub-model node.
-    if (modeledElementCategory !== undefined && (!cachedDataExists || hasElementsWithTheSameCategory)) {
+    if (subModeledElementCategory !== undefined && (!cachedDataExists || hasElementsWithTheSameCategory)) {
       const { selectClause, bindings } = await this.createElementNodeSelectClause({
         createSelectClause,
         elementsHiddenClassesFilter,
-        // allSubModels are defined when modeledElementCategory is defined
+        // allSubModels are defined when subModeledElementCategory is defined
         allSubModels: allSubModels ? [...allSubModels] : undefined,
       });
       definitions.push({
@@ -848,7 +733,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({
               conditions: [
                 "this.Parent.Id IS NULL",
-                `this.Category.Id = ${modeledElementCategory}`,
+                `this.Category.Id = ${subModeledElementCategory}`,
                 createExcludedClassesClause({
                   alias: "this",
                   excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -982,15 +867,17 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         filter: instanceFilter,
         contentClass: { fullName: this.#hierarchyConfig.elements.baseClass, alias: "this" },
       }),
-      this.#idsProvider.modeledElementsLoaded()
-        ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+      this.#idsProvider.subModeledElements.state === "loaded"
+        ? toPromise(
+            this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
+          )
         : undefined,
       ECSql.createHiddenClassesFilter({
         schemaProvider: this.#schemaProvider,
         baseClassName: this.#hierarchyConfig.elements.baseClass,
       }),
     ]);
-    const parentIds = ParentElementsPath.getLastParentIds(parentNode.extendedData.parentElementsPath);
+    const parentIds = parentNode.extendedData.parentElementIds;
     const { selectClause, bindings } = await this.createElementNodeSelectClause({
       createSelectClause,
       elementsHiddenClassesFilter,
@@ -1052,8 +939,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           filter: instanceFilter,
           contentClass: { fullName: CLASS_NAMES.SpatialCategory, alias: "this" },
         }),
-        this.#idsProvider.modeledElementsLoaded()
-          ? this.#idsProvider.getAllModeledElements({ excludeIfOnlyExcludedClasses: true })
+        this.#idsProvider.subModeledElements.state === "loaded"
+          ? toPromise(
+              this.#idsProvider.subModeledElements.getAllSubModeledElements({ excludeIfOnlyExcludedClasses: true }),
+            )
           : undefined,
         ECSql.createHiddenClassesFilter({
           schemaProvider: this.#schemaProvider,
@@ -1098,7 +987,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           SELECT
             ${await this.createCategoryNodeSelectClause({
               createSelectClause,
-              extendedData: { modelIds: { selector: createIdsSelector([parentModelId]) } },
+              extendedData: {
+                modelIds: { selector: createIdsSelector([parentModelId]) },
+                parentElementIds: { selector: createIdsSelector(elementIds) },
+              },
             })}
           FROM ${categoryInstanceFilterClauses.from} this
           ${categoryInstanceFilterClauses.joins ? `${categoryInstanceFilterClauses.joins}` : ""}
@@ -1371,7 +1263,7 @@ export function createGeometricElementInstanceKeyPaths(props: {
     releaseMainThreadOnItemsCount(300),
     map((row) => parseElementsQueryRow({ row, groupInfos, separator })),
     mergeMap(({ elementHierarchyPath, groupingInfo }) =>
-      from(idsProvider.createUpToModelInstanceKeyPaths(elementHierarchyPath[0].id)).pipe(
+      toObservable(idsProvider.createUpToModelInstanceKeyPaths(elementHierarchyPath[0].id)).pipe(
         map((modelPath) => {
           const path = [...modelPath, ...elementHierarchyPath];
           return { path, target: groupingInfo ?? elementHierarchyPath[elementHierarchyPath.length - 1].id };
@@ -1421,7 +1313,7 @@ export function createCategoriesSearchPaths(props: {
   return merge(
     fromWithRelease({ source: targetCategoryIds, releaseOnCount: 300 }).pipe(
       mergeMap((categoryId) =>
-        from(idsProvider.getSearchPathsUpToRootCategory(categoryId)).pipe(
+        toObservable(idsProvider.getSearchPathsUpToRootCategory(categoryId)).pipe(
           map((path) => ({
             path: [...path, { id: categoryId, className: CLASS_NAMES.SpatialCategory }],
             target: categoryId,
@@ -1430,7 +1322,7 @@ export function createCategoriesSearchPaths(props: {
       ),
     ),
     forkJoin({
-      subModelIds: from(props.idsProvider.getAllModeledElements()),
+      subModelIds: toObservable(props.idsProvider.subModeledElements.getAllSubModeledElements()),
       elementsHiddenClassesFilter: from(
         ECSql.createHiddenClassesFilter({ schemaProvider: imodelAccess, baseClassName: elementClassName }),
       ),
@@ -1528,7 +1420,7 @@ export function createCategoriesSearchPaths(props: {
             ecsql,
             bindings: [
               { type: "idset", value: targetCategoryIds },
-              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: [...subModelIds] }] : []),
+              ...(subModelIds.size > 0 ? [{ type: "idset" as const, value: subModelIds }] : []),
             ],
           },
           { rowFormat: "Indexes", limit: "unbounded", restartToken: `${componentName}/${uniqueId}/categories-paths` },
@@ -1538,7 +1430,7 @@ export function createCategoriesSearchPaths(props: {
       targetCategoryIds.length > 300 ? releaseMainThreadOnItemsCount(300) : identity,
       map((row) => parseQueriedPath({ queriedPathRaw: row[0], separator })),
       mergeMap((categoryHierarchyPath) =>
-        from(idsProvider.createUpToModelInstanceKeyPaths(categoryHierarchyPath[0].id)).pipe(
+        toObservable(idsProvider.createUpToModelInstanceKeyPaths(categoryHierarchyPath[0].id)).pipe(
           map((pathUpToCategory) => {
             const path = [...pathUpToCategory, ...categoryHierarchyPath];
             return { path, target: categoryHierarchyPath[categoryHierarchyPath.length - 1].id };
@@ -1556,7 +1448,7 @@ function parseQueriedPath({
   queriedPathRaw: string;
   separator: string;
 }): ModelsTreeSearchPath {
-  const path: ModelsTreeSearchPath = [];
+  const path: ModelsTreeSearchPathKey[] = [];
   const queriedPath: string[] = queriedPathRaw.split(separator);
   for (let i = 0; i < queriedPath.length; i += 2) {
     switch (queriedPath[i]) {
@@ -1656,7 +1548,7 @@ function createSearchPathsForDifferentTypes(
         return merge(
           from(ids.subjectIds).pipe(
             mergeMap((id) =>
-              from(idsProvider.createSubjectInstanceKeysPath(id)).pipe(
+              toObservable(idsProvider.createSubjectInstanceKeysPath(id)).pipe(
                 filter((path) => path.length > 0),
                 map((path) => ({ path, target: id })),
               ),
@@ -1664,7 +1556,7 @@ function createSearchPathsForDifferentTypes(
           ),
           from(ids.modelIds).pipe(
             mergeMap((id) =>
-              from(idsProvider.createUpToModelInstanceKeyPaths(id)).pipe(
+              toObservable(idsProvider.createUpToModelInstanceKeyPaths(id)).pipe(
                 map((path) => ({ path: [...path, { className: CLASS_NAMES.GeometricModel3d, id }], target: id })),
               ),
             ),
@@ -1702,7 +1594,7 @@ function createSearchPathsForDifferentTypes(
     if (!props.includeOnlyVisibleNodeInstanceKeys) {
       return paths;
     }
-    return defer(async () => props.idsProvider.getHiddenModelIds()).pipe(
+    return defer(() => toObservable(props.idsProvider.getHiddenModelIds())).pipe(
       switchMap((hiddenModelIds) =>
         paths.pipe(
           map(({ path, target }) => {

@@ -3,34 +3,28 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  defaultIfEmpty,
-  defer,
-  EMPTY,
-  firstValueFrom,
-  forkJoin,
-  from,
-  map,
-  mergeMap,
-  of,
-  reduce,
-  shareReplay,
-  tap,
-} from "rxjs";
+import { defaultIfEmpty, defer, EMPTY, forkJoin, from, map, mergeMap, of, reduce, shareReplay } from "rxjs";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { eachValueFrom, ECSql } from "@itwin/presentation-shared";
+import { ECSql } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
-import { fromWithRelease, toVoidPromise } from "../../shared/Rxjs.js";
+import { combineDataStates, DataStateTracker } from "../../shared/idsProviders/DataStateTracker.js";
+import { normalizeSharedIdsProviderConfig } from "../../shared/idsProviders/SharedIdsProvider.js";
+import { fromWithRelease, toObservable } from "../../shared/Rxjs.js";
 import { catchBeSQLiteInterrupts } from "../../shared/TreeErrors.js";
-import { createWhereClause, getClassesByView, getOrCreate } from "../../shared/Utils.js";
+import {
+  createWhereClause,
+  getClassesByPerspective,
+  getOrCreate,
+  validateIdsProviderConfig,
+} from "../../shared/Utils.js";
 
 import type { Observable } from "rxjs";
 import type { GuidString, Id64Arg, Id64Array, Id64String } from "@itwin/core-bentley";
 import type { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { ECSchemaProvider } from "@itwin/presentation-shared";
-import type { BaseIdsProvider } from "../../shared/idsProviders/BaseIdsProvider.js";
-import type { CategoryId, DefinitionContainerId, ModelId } from "../../shared/Types.js";
-import type { CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
+import type { ECSchemaProvider, Subscribable } from "@itwin/presentation-shared";
+import type { IdsProviderDataState, SharedIdsProvider } from "../../shared/idsProviders/SharedIdsProvider.js";
+import type { CategoryId, DefinitionContainerId, ModelId, ReadonlyId64Arg } from "../../shared/Types.js";
+import type { CategoriesTreeHierarchyConfiguration, CategoriesTreeSearchPath } from "./CategoriesTreeDefinition.js";
 
 interface DefinitionContainerInfo {
   modelId: Id64String;
@@ -47,7 +41,7 @@ interface CategoriesInfo {
 
 /**
  * Category metadata used to determine which child nodes are available in the hierarchy.
- * @internal
+ * @beta
  */
 export interface CachedCategoryInfo {
   /** The category's element ID. */
@@ -61,13 +55,24 @@ export interface CachedCategoryInfo {
 }
 
 /**
- * Query access and view type for a categories-tree ID provider.
- * @internal
+ * Query access and hierarchy configuration for a categories-tree ID provider.
+ * @beta
  */
 interface CategoriesTreeIdsProviderProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
-  baseIdsProvider: BaseIdsProvider;
-  type: "2d" | "3d";
+  /** Hierarchy options affecting the provided IDs. */
+  hierarchyConfig: Pick<CategoriesTreeHierarchyConfiguration, "perspective">;
+  /** Shared provider with matching element class and exclusions for the target tree. */
+  sharedIdsProvider: {
+    config: SharedIdsProvider["config"];
+    models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
+    subModeledElements: SharedIdsProvider["subModeledElements"];
+    categories: Pick<
+      SharedIdsProvider["categories"],
+      "state" | "getCategories" | "getCategoriesContainingNonExcludedElements" | "getAllCategoriesOfElements"
+    >;
+    subCategories: Pick<SharedIdsProvider["subCategories"], "getCategorySubCategoriesMap" | "getSubCategoryCategories">;
+  };
 }
 
 type DefinitionContainersData = Map<DefinitionContainerId, DefinitionContainerInfo>;
@@ -79,49 +84,103 @@ interface CategoriesData {
 
 /**
  * Provides category and definition container IDs and search paths for category tree hierarchies.
- * @internal
+ * Getters load data on demand, reuse cached results, and reject on failure.
+ * @beta
  */
-export interface CategoriesTreeIdsProvider extends BaseIdsProvider {
-  /** Starts loading definition container and category data if not already requested. Loading errors are ignored. */
-  preloadDefinitionContainers(): Promise<void>;
-  /** Returns direct child categories and definition container IDs, excluding empty entries unless requested. */
+export interface CategoriesTreeIdsProvider {
+  /**
+   * State of category and definition container data. `getAllDefinitionContainersAndCategories` loads this
+   * together with shared category and sub-category data, but not sub-modeled elements.
+   */
+  readonly state: IdsProviderDataState;
+  /** Readonly snapshot of the perspective and element filters used to create this provider, including resolved defaults. */
+  readonly config: Readonly<SharedIdsProvider["config"] & Pick<CategoriesTreeHierarchyConfiguration, "perspective">>;
+  /** Shared model lookups and their loading state. */
+  readonly models: Pick<SharedIdsProvider["models"], "state" | "getModels">;
+  /** Shared sub-modeled element lookups and their loading state. */
+  readonly subModeledElements: SharedIdsProvider["subModeledElements"];
+  /** Shared category lookups and their loading state. */
+  readonly categories: Pick<SharedIdsProvider["categories"], "state" | "getCategories">;
+  /**
+   * Returns direct child categories and definition container IDs, excluding empty entries unless requested.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
   getDirectChildDefinitionContainersAndCategories(props: {
-    parentDefinitionContainerIds: Id64Arg;
+    parentDefinitionContainerIds: ReadonlyId64Arg;
     includeEmpty?: boolean;
-  }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
-  /** Yields root-to-sub-category paths, omitting sub-categories whose parent category has only one sub-category. */
-  getSubCategoriesSearchPaths(props: { subCategoryIds: Id64Arg }): AsyncIterableIterator<CategoriesTreeSearchPath>;
-  /** Yields root-to-definition-container paths, including each container itself. Unknown IDs yield empty paths. */
+  }): Subscribable<{
+    categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+    definitionContainers: ReadonlyArray<DefinitionContainerId>;
+  }>;
+  /** Emits a stream of root-to-sub-category paths, one value per path, omitting sub-categories whose parent category has only one sub-category. */
+  getSubCategoriesSearchPaths(props: { subCategoryIds: ReadonlyId64Arg }): Subscribable<CategoriesTreeSearchPath>;
+  /** Emits a stream of root-to-definition-container paths, one value per supplied container, including the container itself. Unknown IDs emit empty paths. */
   getDefinitionContainersSearchPaths(props: {
-    definitionContainerIds: Id64Arg;
-  }): AsyncIterableIterator<CategoriesTreeSearchPath>;
-  /** Returns the category's ancestor path, excluding the category itself. Returns an empty path for root or unknown categories. */
-  getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Promise<CategoriesTreeSearchPath>;
-  /** Returns all category and definition container IDs, excluding empty entries unless requested. */
+    definitionContainerIds: ReadonlyId64Arg;
+  }): Subscribable<CategoriesTreeSearchPath>;
+  /**
+   * Returns the category's ancestor path, excluding the category itself. Returns an empty path for root or unknown categories.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
+  getSearchPathsUpToRootCategory(props: { categoryId: Id64String }): Subscribable<CategoriesTreeSearchPath>;
+  /**
+   * Returns all category and definition container IDs, excluding empty entries unless requested.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
   getAllDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
-  }): Promise<{ categories: Array<CategoryId>; definitionContainers: Array<DefinitionContainerId> }>;
-  /** Returns root categories and definition container IDs, excluding empty entries unless requested. */
+  }): Subscribable<{
+    categories: ReadonlyArray<CategoryId>;
+    definitionContainers: ReadonlyArray<DefinitionContainerId>;
+  }>;
+  /**
+   * Returns root categories and definition container IDs, excluding empty entries unless requested.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
   getRootDefinitionContainersAndCategories(props?: {
     includeEmpty?: boolean;
-  }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }>;
-  /** Indicates whether definition container and category data has finished loading. */
-  readonly isDataLoaded: boolean;
-  /** Indicates whether the iModel schema supports definition containers. */
-  getIsDefinitionContainerSupported(): Promise<boolean>;
+  }): Subscribable<{
+    categories: ReadonlyArray<Readonly<CachedCategoryInfo>>;
+    definitionContainers: ReadonlyArray<DefinitionContainerId>;
+  }>;
+  /**
+   * Indicates whether the iModel schema supports definition containers.
+   *
+   * **NOTE:** This subscribable emits a single value and completes.
+   */
+  getIsDefinitionContainerSupported(): Subscribable<boolean>;
 }
 
 /**
- * Creates a cached category tree ID provider for the specified view type using the supplied base provider.
+ * Creates a cached category tree ID provider for the specified perspective using the supplied shared provider.
+ *
  * Element presence comes from the hidden-classes-aware base provider. Category and definition container identities
  * remain cached even when they have no visible elements, so callers can include empty categories.
- * @internal
+ *
+ * Recreate it together with its shared provider after relevant iModel or configuration changes.
+ * @throws An error if the shared provider's element class does not match the perspective.
+ * @beta
  */
 export function createCategoriesTreeIdsProvider({
   imodelAccess,
-  type,
-  baseIdsProvider,
+  hierarchyConfig,
+  sharedIdsProvider,
 }: CategoriesTreeIdsProviderProps): CategoriesTreeIdsProvider {
+  const config = normalizeCategoriesTreeIdsProviderConfig({
+    perspective: hierarchyConfig.perspective,
+    elementClassName: getClassesByPerspective(hierarchyConfig.perspective).elementClass,
+    excludedElementClassNames: sharedIdsProvider.config.excludedElementClassNames,
+  });
+  validateIdsProviderConfig({
+    name: "Categories tree shared",
+    normalizer: normalizeSharedIdsProviderConfig,
+    expected: config,
+    actual: sharedIdsProvider.config,
+  });
   const cachedData: {
     definitionContainersData: Observable<DefinitionContainersData> | undefined;
     categoriesData: Observable<CategoriesData> | undefined;
@@ -131,9 +190,9 @@ export function createCategoriesTreeIdsProvider({
     DefinitionContainerId,
     Observable<CategoriesTreeSearchPath>
   > = new Map();
-  const { categoryClass } = getClassesByView(type);
-  let defContainersDataLoaded = false;
-  let categoriesDataLoaded = false;
+  const { categoryClass } = getClassesByPerspective(hierarchyConfig.perspective);
+  const defContainersStateTracker = new DataStateTracker();
+  const categoriesStateTracker = new DataStateTracker();
   const componentId: GuidString = Guid.createValue();
   const componentName: string = "CategoriesTreeIdsProvider";
 
@@ -245,12 +304,14 @@ export function createCategoriesTreeIdsProvider({
   }
 
   function getCategoryData() {
-    cachedData.categoriesData ??= forkJoin({
-      categoriesContainingNonExcludedElements: baseIdsProvider.getCategoriesContainingNonExcludedElements(),
-      allCategories: baseIdsProvider.getAllCategoriesOfElements(),
-      categorySubCategoriesMap: baseIdsProvider.getCategorySubCategoriesMap(),
-    })
-      .pipe(
+    cachedData.categoriesData ??= defer(() =>
+      forkJoin({
+        categoriesContainingNonExcludedElements: toObservable(
+          sharedIdsProvider.categories.getCategoriesContainingNonExcludedElements(),
+        ),
+        allCategories: toObservable(sharedIdsProvider.categories.getAllCategoriesOfElements()),
+        categorySubCategoriesMap: toObservable(sharedIdsProvider.subCategories.getCategorySubCategoriesMap()),
+      }).pipe(
         mergeMap(({ categoriesContainingNonExcludedElements, allCategories, categorySubCategoriesMap }) =>
           queryCategories().pipe(
             map((queriedCategory) => ({
@@ -290,13 +351,8 @@ export function createCategoriesTreeIdsProvider({
             categoriesWithModel: new Map<CategoryId, { modelId: ModelId; isDefinitionContainer: boolean }>(),
           },
         ),
-      )
-      .pipe(
-        tap(() => {
-          categoriesDataLoaded = true;
-        }),
-        shareReplay(),
-      );
+      ),
+    ).pipe(categoriesStateTracker.track(), shareReplay());
     return cachedData.categoriesData;
   }
 
@@ -348,12 +404,7 @@ export function createCategoriesTreeIdsProvider({
           );
         }),
       )
-      .pipe(
-        tap(() => {
-          defContainersDataLoaded = true;
-        }),
-        shareReplay(),
-      );
+      .pipe(defContainersStateTracker.track(), shareReplay());
     return cachedData.definitionContainersData;
   }
 
@@ -381,7 +432,7 @@ export function createCategoriesTreeIdsProvider({
   function getDefinitionContainersSearchPaths({
     definitionContainerIds,
   }: {
-    definitionContainerIds: Id64Arg;
+    definitionContainerIds: ReadonlyId64Arg;
   }): Observable<CategoriesTreeSearchPath> {
     return getDefinitionContainersInfo().pipe(
       mergeMap((definitionContainersInfo) =>
@@ -450,41 +501,37 @@ export function createCategoriesTreeIdsProvider({
   }
 
   return {
-    ...baseIdsProvider,
-    async preloadDefinitionContainers(): Promise<void> {
-      if (cachedData.definitionContainersData !== undefined) {
-        return;
-      }
-      try {
-        await toVoidPromise(getDefinitionContainersInfo());
-      } catch {}
+    get state(): IdsProviderDataState {
+      return combineDataStates([defContainersStateTracker.state, categoriesStateTracker.state]);
     },
-    async getDirectChildDefinitionContainersAndCategories({
+    config,
+    models: sharedIdsProvider.models,
+    subModeledElements: sharedIdsProvider.subModeledElements,
+    categories: sharedIdsProvider.categories,
+    getDirectChildDefinitionContainersAndCategories({
       parentDefinitionContainerIds,
       includeEmpty,
     }: {
       parentDefinitionContainerIds: Id64Arg;
       includeEmpty?: boolean;
-    }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }> {
-      return firstValueFrom(
-        getDefinitionContainersInfo().pipe(
-          mergeMap((definitionContainersInfo) =>
-            from(Id64.iterable(parentDefinitionContainerIds)).pipe(
-              reduce(
-                (acc, parentDefinitionContainerId) => {
-                  const parentDefinitionContainerInfo = definitionContainersInfo.get(parentDefinitionContainerId);
-                  if (parentDefinitionContainerInfo !== undefined) {
-                    applyElementsFilter(parentDefinitionContainerInfo.childDefinitionContainers, includeEmpty).forEach(
-                      (dc) => acc.definitionContainers.push(dc.id),
-                    );
-                    applyElementsFilter(parentDefinitionContainerInfo.childCategories, includeEmpty).forEach(
-                      (category) => acc.categories.push(category),
-                    );
-                  }
-                  return acc;
-                },
-                { definitionContainers: new Array<Id64String>(), categories: new Array<CachedCategoryInfo>() },
-              ),
+    }): Subscribable<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }> {
+      return getDefinitionContainersInfo().pipe(
+        mergeMap((definitionContainersInfo) =>
+          from(Id64.iterable(parentDefinitionContainerIds)).pipe(
+            reduce(
+              (acc, parentDefinitionContainerId) => {
+                const parentDefinitionContainerInfo = definitionContainersInfo.get(parentDefinitionContainerId);
+                if (parentDefinitionContainerInfo !== undefined) {
+                  applyElementsFilter(parentDefinitionContainerInfo.childDefinitionContainers, includeEmpty).forEach(
+                    (dc) => acc.definitionContainers.push(dc.id),
+                  );
+                  applyElementsFilter(parentDefinitionContainerInfo.childCategories, includeEmpty).forEach((category) =>
+                    acc.categories.push(category),
+                  );
+                }
+                return acc;
+              },
+              { definitionContainers: new Array<Id64String>(), categories: new Array<CachedCategoryInfo>() },
             ),
           ),
         ),
@@ -494,36 +541,38 @@ export function createCategoriesTreeIdsProvider({
       subCategoryIds,
     }: {
       subCategoryIds: Id64Arg;
-    }): AsyncIterableIterator<CategoriesTreeSearchPath> {
+    }): Subscribable<CategoriesTreeSearchPath> {
       if (Id64.sizeOf(subCategoryIds) === 0) {
-        return (async function* () {})();
+        return of();
       }
-      return eachValueFrom(
-        from(baseIdsProvider.getSubCategoryCategories({ subCategoryIds })).pipe(
-          mergeMap((categorySubCategories) => categorySubCategories.entries()),
-          mergeMap(([categoryId, categorySubCategories]) => {
-            return getSearchPathsUpToRootCategory({ categoryId }).pipe(
-              mergeMap((pathsUpToCategory) =>
-                fromWithRelease({ source: categorySubCategories, releaseOnCount: 300 }).pipe(
-                  map((subCategoryId) => [
-                    ...pathsUpToCategory,
-                    { id: categoryId, className: categoryClass },
-                    { id: subCategoryId, className: CLASS_NAMES.SubCategory },
-                  ]),
-                ),
+      return toObservable(sharedIdsProvider.subCategories.getSubCategoryCategories({ subCategoryIds })).pipe(
+        mergeMap((categorySubCategories) => categorySubCategories.entries()),
+        mergeMap(([categoryId, categorySubCategories]) => {
+          return getSearchPathsUpToRootCategory({ categoryId }).pipe(
+            mergeMap((pathsUpToCategory) =>
+              fromWithRelease({ source: categorySubCategories, releaseOnCount: 300 }).pipe(
+                map((subCategoryId) => [
+                  ...pathsUpToCategory,
+                  { id: categoryId, className: categoryClass },
+                  { id: subCategoryId, className: CLASS_NAMES.SubCategory },
+                ]),
               ),
-            );
-          }),
-        ),
+            ),
+          );
+        }),
       );
     },
-    getDefinitionContainersSearchPaths: (props) => eachValueFrom(getDefinitionContainersSearchPaths(props)),
-    getSearchPathsUpToRootCategory: async (props) =>
-      firstValueFrom(getSearchPathsUpToRootCategory(props).pipe(defaultIfEmpty([]))),
-    async getAllDefinitionContainersAndCategories(props?: {
+    getDefinitionContainersSearchPaths: (props): Subscribable<CategoriesTreeSearchPath> => {
+      return getDefinitionContainersSearchPaths(props);
+    },
+    getSearchPathsUpToRootCategory: (props): Subscribable<CategoriesTreeSearchPath> => {
+      return getSearchPathsUpToRootCategory(props).pipe(defaultIfEmpty([]));
+    },
+    getAllDefinitionContainersAndCategories(props?: {
       includeEmpty?: boolean;
-    }): Promise<{ categories: Array<CategoryId>; definitionContainers: Array<DefinitionContainerId> }> {
-      return firstValueFrom(
+    }): Subscribable<{ categories: Array<CategoryId>; definitionContainers: Array<DefinitionContainerId> }> {
+      // `defer` so that every subscription gets its own reducer seeds instead of appending to shared arrays.
+      return defer(() =>
         forkJoin({
           categories: forkJoin({
             categoryData: getCategoryData(),
@@ -554,10 +603,11 @@ export function createCategoriesTreeIdsProvider({
         }),
       );
     },
-    async getRootDefinitionContainersAndCategories(props?: {
+    getRootDefinitionContainersAndCategories(props?: {
       includeEmpty?: boolean;
-    }): Promise<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }> {
-      return firstValueFrom(
+    }): Subscribable<{ categories: CachedCategoryInfo[]; definitionContainers: Array<DefinitionContainerId> }> {
+      // `defer` so that every subscription gets its own reducer seeds instead of appending to shared arrays.
+      return defer(() =>
         forkJoin({
           categories: getCategoryData().pipe(
             mergeMap(({ categoriesGroupedByModel }) => categoriesGroupedByModel.values()),
@@ -585,11 +635,15 @@ export function createCategoriesTreeIdsProvider({
         }),
       );
     },
-    get isDataLoaded(): boolean {
-      return defContainersDataLoaded && categoriesDataLoaded;
+    getIsDefinitionContainerSupported: (): Subscribable<boolean> => {
+      return getIsDefinitionContainerSupported();
     },
-    getIsDefinitionContainerSupported: async () => firstValueFrom(getIsDefinitionContainerSupported()),
   };
+}
+
+/** @internal */
+export function normalizeCategoriesTreeIdsProviderConfig(config: CategoriesTreeIdsProvider["config"]) {
+  return { perspective: config.perspective, ...normalizeSharedIdsProviderConfig(config) };
 }
 
 function applyElementsFilter<T extends { hasElements: boolean }>(list: T[], includeEmpty: boolean | undefined): T[] {
@@ -619,12 +673,15 @@ function excludeDefinitionContainers(
             DefinitionContainerId,
             { id: DefinitionContainerId; modelId: Id64String; isExcluded: boolean }
           >(),
+          // oxlint-disable-next-line typescript/no-duplicate-type-constituents
           parentChildrenMap: new Map<DefinitionContainerId | ModelId, DefinitionContainerId[]>(),
+          // oxlint-disable-next-line typescript/no-duplicate-type-constituents
           parentContainers: new Set<DefinitionContainerId | ModelId>(),
         },
       ),
       mergeMap(({ containersMap, parentChildrenMap, parentContainers }) => {
         const nonExcludedContainers: Array<{ id: DefinitionContainerId; modelId: Id64String }> = [];
+        // oxlint-disable-next-line typescript/no-duplicate-type-constituents
         const collectNonExcludedChildren = (id: DefinitionContainerId | ModelId) => {
           const children = parentChildrenMap.get(id);
           if (!children?.length) {

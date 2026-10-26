@@ -7,7 +7,6 @@ import { ClassificationsTreeNode } from "./ClassificationsTreeNode.js";
 
 import type { Id64String } from "@itwin/core-bentley";
 import type { HierarchyNode, InstancesNodeKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import type { ParentElementsPath } from "../../shared/Utils.js";
 
 /**
  * Contains utility functions for working with Classifications Tree nodes.
@@ -32,5 +31,4 @@ export namespace ClassificationsTreeNodeInternal {
 export interface ElementNodeProps {
   modelId: Id64String;
   categoryId: Id64String;
-  parentElementsPath: ParentElementsPath;
 }

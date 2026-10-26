@@ -9,7 +9,6 @@ import { CLASS_NAMES } from "./ClassNameDefinitions.js";
 
 import type { Id64Arg, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import type { EC, ECSql } from "@itwin/presentation-shared";
-import type { CategoryId, ElementId } from "./Types.js";
 
 /** @internal */
 export function setDifference<T>(lhs: ReadonlySet<T>, rhs: ReadonlySet<T>): Set<T> {
@@ -131,8 +130,8 @@ export function parseIdsSelectorResult(selectorResult: any): Id64Array {
 }
 
 /** @internal */
-export function getClassesByView(viewType: "2d" | "3d") {
-  return viewType === "2d"
+export function getClassesByPerspective(perspective: "2d" | "3d") {
+  return perspective === "2d"
     ? ({
         categoryClass: CLASS_NAMES.DrawingCategory,
         elementClass: CLASS_NAMES.GeometricElement2d,
@@ -165,48 +164,6 @@ export function groupingNodeDataFromChildren(
   }
 
   return { hasSearchTargetAncestor: false, hasDirectNonSearchTargets: false };
-}
-
-/**
- * Path describing a chain of parent elements, where each segment is one category + its elements.
- *
- * Structurally compatible with `ElementPathSegment[]` — can be spread directly into it.
- * The difference: this type uses exact single values (`Id64String`, `Id64Array`) because each
- * segment is known precisely, while `ElementPathSegment` uses `Id64Arg` to allow multi-value
- * cache lookups.
- * @internal
- */
-// oxlint-disable-next-line no-redeclare
-export type ParentElementsPath = Array<{
-  elementIds: Id64Array;
-  /** Single category ID. Named plural for structural compatibility with `ElementPathSegment.categoryIds`. */
-  categoryIds: Id64String;
-}>;
-
-/** @internal */
-export namespace ParentElementsPath {
-  export function getSingleLastParentId(path: ParentElementsPath): ElementId | undefined {
-    const lastParentIds = ParentElementsPath.getLastParentIds(path);
-    assert(
-      () => lastParentIds === undefined || lastParentIds.length === 1,
-      `Expected exactly one parent id at end of path, got ${lastParentIds?.length ?? 0}. Path: ${JSON.stringify(path)}`,
-    );
-    return lastParentIds?.[0];
-  }
-  export function getLastParentIds(path: ParentElementsPath): Id64Array | undefined {
-    return path.length > 0 ? path[path.length - 1].elementIds : undefined;
-  }
-  export function appendToPath({
-    path,
-    ids,
-    categoryId,
-  }: {
-    path: ParentElementsPath;
-    ids: Id64Arg;
-    categoryId: CategoryId;
-  }): ParentElementsPath {
-    return [...path, { elementIds: getId64Array(ids), categoryIds: categoryId }];
-  }
 }
 
 /** @internal */
@@ -307,6 +264,26 @@ type DeepOptional<T> = T extends (...args: any[]) => any
     : T extends object
       ? { [K in keyof T]?: DeepOptional<T[K]> | undefined }
       : T;
+
+/**
+ * Throws if `actual` and `expected` configurations differ after being normalized with `normalizer`.
+ * @internal
+ */
+export function validateIdsProviderConfig<TConfig>({
+  name,
+  normalizer,
+  expected,
+  actual,
+}: {
+  name: string;
+  normalizer: (config: TConfig) => unknown;
+  expected: NoInfer<TConfig>;
+  actual: NoInfer<TConfig>;
+}): void {
+  if (stableStringify(normalizer(actual)) !== stableStringify(normalizer(expected))) {
+    throw new Error(`${name} ID provider configuration does not match the tree configuration.`);
+  }
+}
 
 /** @internal */
 export function stableStringify(value: unknown): string {

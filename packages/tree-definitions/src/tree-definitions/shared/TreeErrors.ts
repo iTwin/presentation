@@ -8,11 +8,19 @@ import { catchError, EMPTY } from "rxjs";
 import type { Observable } from "rxjs";
 
 /**
- * Error that is thrown when too many matches are found while searching the tree.
+ * Error thrown by tree search functions when the number of matching instances exceeds the configured limit.
+ * The default limit is 100; a different one can be specified through the `limit` search option.
  * @beta
  */
 export class SearchLimitExceededError extends Error {
-  public constructor(public readonly limit: number) {
+  /**
+   * @param limit The maximum number of matching instances that was in effect when the search failed, whether the
+   * default or the value supplied through the `limit` search option.
+   */
+  public constructor(
+    /** The maximum number of matching instances that was exceeded. */
+    public readonly limit: number,
+  ) {
     super("Too many search matches");
   }
 }

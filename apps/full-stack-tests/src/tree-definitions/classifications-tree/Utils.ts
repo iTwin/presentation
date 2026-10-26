@@ -36,8 +36,8 @@ export function createClassificationsTreeProvider(
   hierarchyConfig: ClassificationsTreeHierarchyConfiguration,
 ): HierarchyProvider & Disposable {
   const imodelAccess = createIModelAccess(imodel);
-  const { definition } = createClassificationsTree({ imodelAccess, hierarchyConfig });
-  const hierarchyProvider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: definition });
+  const { hierarchyDefinition } = createClassificationsTree({ imodelAccess, hierarchyConfig });
+  const hierarchyProvider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
   return {
     hierarchyChanged: hierarchyProvider.hierarchyChanged,
     getNodes: (props) => hierarchyProvider.getNodes(props),

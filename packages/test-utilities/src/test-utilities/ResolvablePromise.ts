@@ -9,7 +9,7 @@
 export class ResolvablePromise<T> implements Promise<T> {
   private _wrapped: Promise<T>;
   private _resolve!: (value: T) => void;
-  private _reject!: (msg?: string) => void;
+  private _reject!: (reason?: unknown) => void;
 
   public [Symbol.toStringTag] = "ResolvablePromise";
 
@@ -52,12 +52,12 @@ export class ResolvablePromise<T> implements Promise<T> {
     });
   }
 
-  public rejectSync(msg?: string) {
-    this._reject(msg);
+  public rejectSync(reason?: unknown) {
+    this._reject(reason);
   }
 
-  public async reject(msg?: string) {
-    this.rejectSync(msg);
+  public async reject(reason?: unknown) {
+    this.rejectSync(reason);
     await new Promise<void>((resolve: () => void) => {
       setImmediate(resolve);
     });
