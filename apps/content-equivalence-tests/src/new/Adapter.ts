@@ -88,11 +88,18 @@ export async function captureNew(props: {
   const { imodel, onDiagnostics, ...captureProps } = props;
   const scope = new QueryScope(props.signal);
   const imodelAccess = { ...createECSchemaProvider(imodel), ...scope.wrap(createECSqlQueryExecutor(imodel)) };
+  const cancelReason = (error: unknown) =>
+    new Error("Canceled after an earlier failure in the same capture.", { cause: error });
   try {
-    return await captureContent({ ...captureProps, imodelAccess });
+    return await captureContent({
+      ...captureProps,
+      imodelAccess,
+      onItemFailure: (error) => scope.abort(cancelReason(error)),
+    });
   } catch (error) {
     // A failing pipeline may stop awaiting its other queries, so settle them before the caller closes the iModel.
-    await scope.cancelAll(new Error("Canceled after an earlier failure in the same capture.", { cause: error }));
+    scope.abort(cancelReason(error));
+    await scope.settle();
     throw error;
   } finally {
     const report = scope.getReport();
@@ -108,6 +115,8 @@ async function captureContent(props: {
   scenario: Scenario;
   implementationFingerprint: string;
   imodelFingerprint: string;
+  /** Called when a sampled item fails, so queries of items still running can be canceled. */
+  onItemFailure: (error: unknown) => void;
 }): Promise<NewCapture> {
   const { imodelAccess, signal, scenario } = props;
   const config = await runInQueryContext({ phase: "configuration" }, async () =>
@@ -118,27 +127,32 @@ async function captureContent(props: {
       items: scenario.keys,
       concurrency: SAMPLED_ITEM_CONCURRENCY,
       callback: async (key) => {
-        const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
-        const itemSources = await runInQueryContext({ phase: "resolve-sources", instanceKey: key }, async () =>
-          resolveContentSources({ imodelAccess, targets: itemTargets, config }),
-        );
-        const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
-        const itemDescriptor = await runInQueryContext({ phase: "descriptor", instanceKey: key }, async () =>
-          itemProvider.getContentDescriptor(),
-        );
-        const capturedItems = await runInQueryContext({ phase: "items", instanceKey: key }, async () => {
-          const result: CapturedNewItem[] = [];
-          for await (const item of itemProvider.getItems()) {
-            result.push(captureNewItem(item, itemDescriptor));
-          }
-          return result;
-        });
-        if (capturedItems.length !== 1) {
-          throw new Error(
-            `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
+        try {
+          const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
+          const itemSources = await runInQueryContext({ phase: "resolve-sources", instanceKey: key }, async () =>
+            resolveContentSources({ imodelAccess, targets: itemTargets, config }),
           );
+          const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
+          const itemDescriptor = await runInQueryContext({ phase: "descriptor", instanceKey: key }, async () =>
+            itemProvider.getContentDescriptor(),
+          );
+          const capturedItems = await runInQueryContext({ phase: "items", instanceKey: key }, async () => {
+            const result: CapturedNewItem[] = [];
+            for await (const item of itemProvider.getItems()) {
+              result.push(captureNewItem(item, itemDescriptor));
+            }
+            return result;
+          });
+          if (capturedItems.length !== 1) {
+            throw new Error(
+              `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
+            );
+          }
+          return capturedItems[0];
+        } catch (error) {
+          props.onItemFailure(error);
+          throw error;
         }
-        return capturedItems[0];
       },
       signal,
     });

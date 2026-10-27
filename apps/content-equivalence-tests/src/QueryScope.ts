@@ -170,8 +170,8 @@ async function waitWithAbort<T>(promise: Promise<T>, signal: AbortSignal): Promi
 
 /**
  * Owns the ECSQL queries started through executors it wraps: records them for the report, cancels running ones
- * when the given signal is aborted or `cancelAll` is called, and waits for canceled ones to settle, so callers can
- * close the iModel afterwards without leaving work running against it.
+ * when the given signal is aborted or `abort` is called, and lets callers `settle` canceled ones before closing
+ * the iModel, so no work is left running against it.
  */
 export class QueryScope {
   private _nextId = 1;
@@ -220,21 +220,25 @@ export class QueryScope {
     };
   }
 
-  /**
-   * Cancels every query still running, including ones whose consumers stopped reading after a failure,
-   * and waits for them to settle. Readers left open without a pending read are reported as abandoned.
-   */
-  public async cancelAll(reason: Error): Promise<void> {
+  /** Cancels every running query, including ones whose consumers stopped reading, without waiting for them. */
+  public abort(reason: Error): void {
     if (!this._controller.signal.aborted) {
       this._controller.abort(reason);
     }
-    await Promise.all([...this._pending]);
-    for (const record of [...this._active]) {
+  }
+
+  /**
+   * Waits for reads in progress to settle, then reports readers still left open as abandoned. Call after `abort`,
+   * once the consumers are done, so no work is left running against the iModel.
+   */
+  public async settle(): Promise<void> {
+    await Promise.all(this._pending);
+    for (const record of this._active) {
       this.finish(record, "abandoned");
     }
   }
 
-  /** Registers a read in progress, so `cancelAll` can wait for it to settle. */
+  /** Registers a read in progress, so `settle` can wait for it. */
   public addPendingRead(promise: Promise<unknown>): void {
     const settled = promise.then(
       () => undefined,
@@ -357,12 +361,12 @@ class ScopedQueryReader implements AsyncIterableIterator<ECSqlQueryRow> {
   }
 
   private async cancel(pending: Promise<unknown> | undefined): Promise<void> {
-    if (this._record.status !== "running") {
-      return;
+    if (this._record.status === "running") {
+      this._scope.finish(this._record, "canceled", this._signal.reason);
+      // Closing the reader cancels the native query through its restart token.
+      await this._inner.return?.();
     }
-    this._scope.finish(this._record, "canceled", this._signal.reason);
-    // Closing the reader cancels the native query through its restart token.
-    await this._inner.return?.();
+    // A reader closed by `return()` may still have a native read in progress.
     if (!pending) {
       return;
     }
