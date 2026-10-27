@@ -317,6 +317,245 @@ describe("Content", () => {
       expect(nestedGroup!.paths[0].path).toHaveLength(2);
     });
 
+    it("discovers nested paths of many concrete anchor classes without a query for each of them", async () => {
+      // Every concrete type class used by a wall is a nested anchor. Discovering nested paths for each of
+      // them separately would start a very large set of queries at once, possibly failing with "query too long
+      // to execute or server is too busy". Nested content is anchored on the declared `WallType` class instead.
+      const typeClassCount = 100;
+      const typeNumbersWithAspects = [3, 77];
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const schema = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="Wall" />
+            <ECEntityClass typeName="WallType" modifier="Abstract">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            ${Array.from(
+              { length: typeClassCount },
+              (_, i) => `<ECEntityClass typeName="WallType${i + 1}"><BaseClass>WallType</BaseClass></ECEntityClass>`,
+            ).join("")}
+            <ECEntityClass typeName="WallTypeAspect">
+              <ECProperty propertyName="AspectProp" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="HasPhysicalType" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="wall has type" polymorphic="true">
+                <Class class="Wall" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="type of wall" polymorphic="true">
+                <Class class="WallType" />
+              </Target>
+            </ECRelationshipClass>
+            <ECRelationshipClass typeName="HasAspect" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="wall type has aspect" polymorphic="true">
+                <Class class="WallType" />
+              </Source>
+              <Target multiplicity="(0..*)" roleLabel="aspect of wall type" polymorphic="true">
+                <Class class="WallTypeAspect" />
+              </Target>
+            </ECRelationshipClass>
+          `,
+        );
+        for (let n = 1; n <= typeClassCount; ++n) {
+          const wall = builder.insertInstance(schema.items.Wall.fullName);
+          const wallType = builder.insertInstance(schema.items[`WallType${n}`].fullName);
+          builder.insertRelationship(schema.items.HasPhysicalType.fullName, wall.id, wallType.id);
+          if (typeNumbersWithAspects.includes(n)) {
+            const aspect = builder.insertInstance(schema.items.WallTypeAspect.fullName, { aspectProp: `${n}` });
+            builder.insertRelationship(schema.items.HasAspect.fullName, wallType.id, aspect.id);
+          }
+        }
+        return { schema };
+      });
+      const { items: classes } = setup.schema;
+
+      const ecdbAccess = createContentIModelAccess(setup.ecdb);
+      let queryCount = 0;
+      const imodelAccess: typeof ecdbAccess = {
+        ...ecdbAccess,
+        createQueryReader: (...args) => {
+          ++queryCount;
+          return ecdbAccess.createQueryReader(...args);
+        },
+      };
+
+      const wallToTypeProvider = defineIModelFieldsProvider({
+        id: "wallToType_v1",
+        async getContribution({ target }) {
+          return target.primaryClass === classes.Wall.fullName
+            ? {
+                relatedProperties: [
+                  {
+                    path: [
+                      {
+                        sourceClassName: classes.Wall.fullName,
+                        targetClassName: classes.WallType.fullName,
+                        relationshipName: classes.HasPhysicalType.fullName,
+                      },
+                    ],
+                  },
+                ],
+              }
+            : undefined;
+        },
+      });
+      const typeToAspectProvider = defineIModelFieldsProvider({
+        id: "typeToAspect_v1",
+        applyRecursively: true,
+        async getContribution({ imodelAccess: schemaProvider, target }) {
+          if (!(await schemaProvider.classDerivesFrom(target.primaryClass, classes.WallType.fullName))) {
+            return undefined;
+          }
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: target.primaryClass,
+                    targetClassName: classes.WallTypeAspect.fullName,
+                    relationshipName: classes.HasAspect.fullName,
+                  },
+                ],
+              },
+            ],
+          };
+        },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: classes.Wall.fullName }],
+        config: { imodelFieldsProviders: [wallToTypeProvider, typeToAspectProvider] },
+      });
+
+      const nestedGroups = source.resolvedDeclarations.filter((group) => group.nested);
+      expect(nestedGroups.map((group) => group.nested!.anchorClassName)).toEqual([classes.WallType.fullName]);
+      expect(nestedGroups[0].paths.map(({ path }) => path[0].targetClassName).sort()).toEqual(
+        typeNumbersWithAspects.map((n) => classes[`WallType${n}`].fullName).sort(),
+      );
+      // Discovering each type class separately would take at least one query per type class.
+      expect(queryCount).toBeLessThan(typeClassCount);
+    });
+
+    it("expands an intermediate anchor only through concrete classes its declaration resolved", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const schema = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A" />
+            <ECEntityClass typeName="B" modifier="Abstract">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="B1"><BaseClass>B</BaseClass></ECEntityClass>
+            <ECEntityClass typeName="B2"><BaseClass>B</BaseClass></ECEntityClass>
+            <ECEntityClass typeName="C" />
+            <ECEntityClass typeName="D">
+              <ECProperty propertyName="NestedProp" typeName="string" />
+            </ECEntityClass>
+            ${[
+              ["AB", "A", "B"],
+              ["BC", "B", "C"],
+              ["BD", "B", "D"],
+            ]
+              .map(
+                ([name, sourceClass, targetClass]) => `
+                  <ECRelationshipClass typeName="${name}" strength="referencing" modifier="None">
+                    <Source multiplicity="(0..*)" roleLabel="source" polymorphic="true"><Class class="${sourceClass}" /></Source>
+                    <Target multiplicity="(0..*)" roleLabel="target" polymorphic="true"><Class class="${targetClass}" /></Target>
+                  </ECRelationshipClass>
+                `,
+              )
+              .join("")}
+          `,
+        );
+        const { items } = schema;
+        const a = builder.insertInstance(items.A.fullName);
+        const b1 = builder.insertInstance(items.B1.fullName);
+        const b2 = builder.insertInstance(items.B2.fullName);
+        const c = builder.insertInstance(items.C.fullName);
+        const d = builder.insertInstance(items.D.fullName, { nestedProp: "reached through B2 only" });
+        builder.insertRelationship(items.AB.fullName, a.id, b1.id);
+        builder.insertRelationship(items.AB.fullName, a.id, b2.id);
+        builder.insertRelationship(items.BC.fullName, b1.id, c.id);
+        builder.insertRelationship(items.BD.fullName, b2.id, d.id);
+        return { schema };
+      });
+      const { items: classes } = setup.schema;
+
+      // `A -> B -> C` loads all properties of the intermediate `B`, but resolves only through `B1`.
+      const parentProvider = defineIModelFieldsProvider({
+        id: "parent_v1",
+        async getContribution() {
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: classes.A.fullName,
+                    targetClassName: classes.B.fullName,
+                    relationshipName: classes.AB.fullName,
+                  },
+                  {
+                    sourceClassName: classes.B.fullName,
+                    targetClassName: classes.C.fullName,
+                    relationshipName: classes.BC.fullName,
+                  },
+                ],
+                properties: [{ stepIndex: 0, target: { select: "all" } }],
+              },
+            ],
+          };
+        },
+      });
+      const nestedProvider = defineIModelFieldsProvider({
+        id: "nested_v1",
+        applyRecursively: true,
+        async getContribution({ imodelAccess, target }) {
+          if (
+            target.primaryClass !== classes.B.fullName &&
+            !(await imodelAccess.classDerivesFrom(target.primaryClass, classes.B.fullName))
+          ) {
+            return undefined;
+          }
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: target.primaryClass,
+                    targetClassName: classes.D.fullName,
+                    relationshipName: classes.BD.fullName,
+                  },
+                ],
+              },
+            ],
+          };
+        },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess: createContentIModelAccess(setup.ecdb),
+        targets: [{ primaryClass: classes.A.fullName }],
+        config: { imodelFieldsProviders: [parentProvider, nestedProvider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths.map(({ path }) => path[0].targetClassName)).toEqual([
+        classes.B1.fullName,
+      ]);
+      // `D` is only reachable through `B2`, which the parent declaration doesn't reach.
+      expect(source.resolvedDeclarations.filter((group) => group.nested)).toEqual([]);
+    });
+
     describe("category placement", () => {
       type Scope = "relatedClass" | "parent" | undefined;
       let setup: ChainSetup;
