@@ -242,7 +242,9 @@ interface ResolvedDeclarationGroup {
    */
   nested?: {
     /**
-     * The concrete anchor class the contribution was applied on. Stage 2 re-fetches the declaration
+     * The anchor class the contribution was applied on: the target class of the declared step that
+     * surfaced the related instance, which may be a base class of the concrete classes in `paths` (or a
+     * concrete class, below a declaration with a custom `resolve`). Stage 2 re-fetches the declaration
      * by calling `getContribution` with a synthesized `{ primaryClass: anchorClassName }` target
      * (no `instanceIds` / `instanceFilter`).
      */
