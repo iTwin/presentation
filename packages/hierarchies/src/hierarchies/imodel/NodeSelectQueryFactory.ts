@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from "@itwin/core-bentley";
+import { assert, Id64 } from "@itwin/core-bentley";
 import { GenericInstanceFilter, GenericInstanceFilterRuleValue } from "@itwin/core-common";
 import {
   ECSql,
@@ -245,7 +245,8 @@ export interface NodesQueryClauseFactory {
    * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
    * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
    * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
-   * `filter.filterClassNames` and by properties as described by `filter.rules`.
+   * `filter.filterClassNames` and by properties as described by `filter.rules`. In addition to class properties, rules may
+   * reference the `ECInstanceId` system property, in which case the rule value is expected to be an `Id64String`.
    *
    * Special cases:
    * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
@@ -685,6 +686,10 @@ async function createWhereClause(
   if (!propertyClass) {
     throw new Error(`Class with alias "${sourceAlias}" not found.`);
   }
+  // cspell:disable-next-line
+  if (rule.propertyName.toLowerCase() === "ecinstanceid") {
+    return createECInstanceIdWhereClause(sourceAlias, rule);
+  }
   const property = propertyClass.getProperty(rule.propertyName);
   if (!property) {
     throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
@@ -758,6 +763,30 @@ async function createWhereClause(
     }
   }
   throw new Error("Struct and array properties are not supported for filtering");
+}
+
+/** `ECInstanceId` is a system property that isn't returned by `EC.Class.getProperty`, so it needs special handling. */
+function createECInstanceIdWhereClause(sourceAlias: string, rule: GenericInstanceFilterRule): string {
+  const propertyValueSelector = ECSql.createRawPropertyValueSelector(sourceAlias, "ECInstanceId");
+  switch (rule.operator) {
+    case "is-null":
+      return `${propertyValueSelector} IS NULL`;
+    case "is-not-null":
+      return `${propertyValueSelector} IS NOT NULL`;
+    case "is-true":
+    case "is-false":
+    case "like":
+      throw new Error(`Operator "${rule.operator}" is not supported for "ECInstanceId" filtering.`);
+  }
+  const ecsqlOperator = getECSqlComparisonOperator(rule.operator);
+  if (rule.value === undefined) {
+    throw new Error(`Rule "${rule.propertyName}" ${ecsqlOperator} is missing value.`);
+  }
+  const value = rule.value.rawValue;
+  if (typeof value !== "string" || !Id64.isId64(value)) {
+    throw new Error(`Rule "${rule.propertyName}" ${ecsqlOperator} expects an \`Id64String\` value.`);
+  }
+  return `${propertyValueSelector} ${ecsqlOperator} ${value}`;
 }
 
 function createFloatingPointEqualityClause(
