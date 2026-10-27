@@ -151,14 +151,14 @@ async function mapConcurrently<TItem, TResult>(
   signal?: AbortSignal,
 ): Promise<TResult[]> {
   signal?.throwIfAborted();
-  const stopped$ = new ReplaySubject<void>(1);
+  const stop = new ReplaySubject<void>(1);
   return lastValueFrom(
     from(items).pipe(
       mergeMap(
         (item, index) =>
           of(item).pipe(
             // Gate callbacks before mergeMap so stopping doesn't unsubscribe from running promises.
-            takeUntil(stopped$),
+            takeUntil(stop),
             mergeMap(async (value) => {
               signal?.throwIfAborted();
               return callback(value);
@@ -167,7 +167,7 @@ async function mapConcurrently<TItem, TResult>(
             filter((notification) => notification.kind !== "C"),
             tap((notification) => {
               if (notification.kind === "E") {
-                stopped$.next();
+                stop.next();
               }
             }),
             map((notification) => ({ index, notification })),
