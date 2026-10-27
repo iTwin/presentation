@@ -442,6 +442,120 @@ describe("Content", () => {
       expect(queryCount).toBeLessThan(typeClassCount);
     });
 
+    it("expands an intermediate anchor only through concrete classes its declaration resolved", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const schema = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A" />
+            <ECEntityClass typeName="B" modifier="Abstract">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="B1"><BaseClass>B</BaseClass></ECEntityClass>
+            <ECEntityClass typeName="B2"><BaseClass>B</BaseClass></ECEntityClass>
+            <ECEntityClass typeName="C" />
+            <ECEntityClass typeName="D">
+              <ECProperty propertyName="NestedProp" typeName="string" />
+            </ECEntityClass>
+            ${[
+              ["AB", "A", "B"],
+              ["BC", "B", "C"],
+              ["BD", "B", "D"],
+            ]
+              .map(
+                ([name, sourceClass, targetClass]) => `
+                  <ECRelationshipClass typeName="${name}" strength="referencing" modifier="None">
+                    <Source multiplicity="(0..*)" roleLabel="source" polymorphic="true"><Class class="${sourceClass}" /></Source>
+                    <Target multiplicity="(0..*)" roleLabel="target" polymorphic="true"><Class class="${targetClass}" /></Target>
+                  </ECRelationshipClass>
+                `,
+              )
+              .join("")}
+          `,
+        );
+        const { items } = schema;
+        const a = builder.insertInstance(items.A.fullName);
+        const b1 = builder.insertInstance(items.B1.fullName);
+        const b2 = builder.insertInstance(items.B2.fullName);
+        const c = builder.insertInstance(items.C.fullName);
+        const d = builder.insertInstance(items.D.fullName, { nestedProp: "reached through B2 only" });
+        builder.insertRelationship(items.AB.fullName, a.id, b1.id);
+        builder.insertRelationship(items.AB.fullName, a.id, b2.id);
+        builder.insertRelationship(items.BC.fullName, b1.id, c.id);
+        builder.insertRelationship(items.BD.fullName, b2.id, d.id);
+        return { schema };
+      });
+      const { items: classes } = setup.schema;
+
+      // `A -> B -> C` loads all properties of the intermediate `B`, but resolves only through `B1`.
+      const parentProvider = defineIModelFieldsProvider({
+        id: "parent_v1",
+        async getContribution() {
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: classes.A.fullName,
+                    targetClassName: classes.B.fullName,
+                    relationshipName: classes.AB.fullName,
+                  },
+                  {
+                    sourceClassName: classes.B.fullName,
+                    targetClassName: classes.C.fullName,
+                    relationshipName: classes.BC.fullName,
+                  },
+                ],
+                properties: [{ stepIndex: 0, target: { select: "all" } }],
+              },
+            ],
+          };
+        },
+      });
+      const nestedProvider = defineIModelFieldsProvider({
+        id: "nested_v1",
+        applyRecursively: true,
+        async getContribution({ imodelAccess, target }) {
+          if (
+            target.primaryClass !== classes.B.fullName &&
+            !(await imodelAccess.classDerivesFrom(target.primaryClass, classes.B.fullName))
+          ) {
+            return undefined;
+          }
+          return {
+            relatedProperties: [
+              {
+                path: [
+                  {
+                    sourceClassName: target.primaryClass,
+                    targetClassName: classes.D.fullName,
+                    relationshipName: classes.BD.fullName,
+                  },
+                ],
+              },
+            ],
+          };
+        },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess: createContentIModelAccess(setup.ecdb),
+        targets: [{ primaryClass: classes.A.fullName }],
+        config: { imodelFieldsProviders: [parentProvider, nestedProvider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths.map(({ path }) => path[0].targetClassName)).toEqual([
+        classes.B1.fullName,
+      ]);
+      // `D` is only reachable through `B2`, which the parent declaration doesn't reach.
+      expect(source.resolvedDeclarations.filter((group) => group.nested)).toEqual([]);
+    });
+
     describe("category placement", () => {
       type Scope = "relatedClass" | "parent" | undefined;
       let setup: ChainSetup;
