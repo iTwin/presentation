@@ -72,6 +72,16 @@ From this directory:
 pnpm test
 ```
 
+Each iModel runs as a separate, sequential test with no test timeout. The verbose
+reporter shows per-iModel progress and results. A failing iModel does not prevent
+the remaining iModels from running.
+
+To run a specific iModel, filter by its name:
+
+```sh
+pnpm test -t building
+```
+
 `CONTENT_EQUIVALENCE_OUTPUT` changes the output directory. It defaults to
 `./output`.
 
@@ -112,7 +122,7 @@ output/cache/imodel-a7d50df05561/sampling/sampling-053e9ed8114f.json
 
 The capture files retain complete fingerprints and validate them when loaded.
 
-`output/runs` contains one report directory per invocation. Each report includes:
+`output/runs` contains one report directory per iModel test. Each report includes:
 
 - run configuration and implementation fingerprints;
 - sampled keys and candidate counts;

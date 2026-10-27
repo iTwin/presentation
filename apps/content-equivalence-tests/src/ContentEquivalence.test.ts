@@ -3,11 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { loadRuntimeConfiguration } from "./Configuration.js";
 import { runEquivalence } from "./Runner.js";
 
-it("produces equivalent legacy and new content", async () => {
-  const summaries = await runEquivalence(loadRuntimeConfiguration());
-  expect(summaries.length).toBeGreaterThan(0);
+const config = loadRuntimeConfiguration();
+
+describe("content equivalence", { concurrent: false }, () => {
+  it.for(config.imodels)("produces equivalent legacy and new content for $name", async (imodel) => {
+    const summaries = await runEquivalence({ ...config, imodels: [imodel] });
+    expect(summaries.length).toBeGreaterThan(0);
+  });
 });
