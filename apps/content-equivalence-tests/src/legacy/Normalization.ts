@@ -274,29 +274,44 @@ function createCanonicalDescriptor({
     if (properties.length === 0) {
       return;
     }
-    const canonicalField = createCanonicalField({
-      field: { ...field, properties },
-      sourcePath,
-      path: relationshipPath,
-      categories,
-      classes,
-      constraints,
-    });
+    // Legacy can merge schema-local enum names whose choices differ. Normalize each property
+    // independently before grouping, rather than applying the first property's type to them all.
+    const propertyFields = new Map<string, CanonicalField>();
+    for (const property of properties) {
+      const canonicalField = createCanonicalField({
+        field: { ...field, properties: [property] },
+        sourcePath,
+        path: relationshipPath,
+        categories,
+        classes,
+        constraints,
+      });
+      const existing = propertyFields.get(canonicalField.key);
+      if (existing) {
+        existing.propertyClassNames = [
+          ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
+        ].sort();
+      } else {
+        propertyFields.set(canonicalField.key, canonicalField);
+      }
+    }
     // Consolidated legacy descriptors can contain several related-content fields that normalize to the same
     // canonical identity. While merging related-content paths, native `RelatedClass::Unify` widens the target
     // selection to polymorphic when two paths differ only by SQL alias. `EndsWithSameRelatedClass` then rejects
     // later paths whose target is still non-polymorphic, so a field is created per source-class path instead
     // of one. Merge them here.
-    const existing = fieldsByKey.get(canonicalField.key);
-    if (existing) {
-      existing.propertyClassNames = [
-        ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
-      ].sort();
-      existing.sourcePaths.push(...canonicalField.sourcePaths);
-    } else {
-      fieldsByKey.set(canonicalField.key, canonicalField);
+    for (const canonicalField of propertyFields.values()) {
+      const existing = fieldsByKey.get(canonicalField.key);
+      if (existing) {
+        existing.propertyClassNames = [
+          ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
+        ].sort();
+        existing.sourcePaths.push(...canonicalField.sourcePaths);
+      } else {
+        fieldsByKey.set(canonicalField.key, canonicalField);
+      }
+      fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
     }
-    fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
   };
   descriptor.fields.forEach((field) => visit(field, [], undefined));
   const fields = [...fieldsByKey.values()];
@@ -428,7 +443,16 @@ function createCanonicalItem({
 }): CanonicalItem {
   const { descriptor, fieldMappings } = createCanonicalDescriptor({ descriptor: sourceDescriptor, context });
   const sourcePathsByCanonicalKey = new Map<string, string[]>();
+  const canonicalKeysBySourcePath = new Map<string, string>();
   for (const { canonicalKey, sourcePath } of fieldMappings) {
+    const sourcePathKey = stableStringify(sourcePath);
+    const previousCanonicalKey = canonicalKeysBySourcePath.get(sourcePathKey);
+    if (previousCanonicalKey !== undefined && previousCanonicalKey !== canonicalKey) {
+      throw new Error(
+        `Legacy item field '${sourcePath.join(".")}' contains incompatible property types; its value cannot be assigned to a canonical field unambiguously.`,
+      );
+    }
+    canonicalKeysBySourcePath.set(sourcePathKey, canonicalKey);
     const previousSourcePath = sourcePathsByCanonicalKey.get(canonicalKey);
     if (previousSourcePath) {
       const itemIdentity = item.primaryKeys
