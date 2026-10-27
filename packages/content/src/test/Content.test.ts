@@ -1626,7 +1626,7 @@ describe("resolveContentSources", () => {
 
     // Builds a single mock query row: column 0 is the (concrete, `GROUP_CONCAT`-aggregated) near-end
     // class, followed by one [relationshipClassName, targetClassName] pair per path step.
-    function row(nearEndClass: string, ...stepClassNames: string[]): ECSqlQueryRow {
+    function row(nearEndClass: string, ...stepClassNames: EC.FullClassNameDotNotation[]): ECSqlQueryRow {
       const result: ECSqlQueryRow = { 0: nearEndClass };
       stepClassNames.forEach((className, i) => {
         result[i + 1] = className;
@@ -2152,7 +2152,8 @@ describe("resolveContentSources", () => {
         const imodelAccess = createRoutedIModelAccess({
           classDerivesFrom: async (derived, base) => derived === "TestSchema.NarrowB" && base === "TestSchema.ClassB",
           routeRows: routeByStepCount({
-            1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.ClassB")]],
+            // The related instance's concrete class is `NarrowB`, for both the parent and the nested path.
+            1: [[row("TestSchema.ClassA", "TestSchema.RelAB", "TestSchema.NarrowB")]],
             2: [
               [
                 row(
@@ -2838,6 +2839,199 @@ describe("resolveContentSources", () => {
         expect(nestedToD).to.have.length(1);
         expect(nestedToD[0].nested!.anchorClassName).to.equal("TestSchema.ClassC");
         expect(nestedToD[0].paths).to.have.length(anchorCount);
+      });
+
+      describe("intermediate anchors", () => {
+        // Loads all properties of the intermediate `ClassB`, which makes it a nested anchor.
+        const parentDeclaration: RelatedPropertiesDeclaration = {
+          path: [aToB, bToC, cToD],
+          properties: [{ stepIndex: 0, target: { select: "all" } }],
+        };
+        const providerBToD: IModelFieldsProvider = {
+          id: "providerBToD_v1",
+          applyRecursively: true,
+          async getContribution({ target }) {
+            return target.primaryClass === "TestSchema.ClassB" ? { relatedProperties: [{ path: [bToD] }] } : undefined;
+          },
+        };
+
+        it("doesn't expand through concrete classes the parent declaration didn't reach", async () => {
+          const imodelAccess = createRoutedIModelAccess({
+            routeRows: (ecsql) =>
+              countSteps(ecsql) === 3
+                ? // The parent path `A -> B -> C -> D` resolves only through `B1`...
+                  [
+                    row(
+                      "TestSchema.ClassA",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBC",
+                      "TestSchema.ClassC",
+                      "TestSchema.RelCD",
+                      "TestSchema.ClassD",
+                    ),
+                  ]
+                : // ...but the nested path `A -> B -> D` resolves through both `B1` and `B2`.
+                  [
+                    row(
+                      "TestSchema.ClassA",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBD",
+                      "TestSchema.ClassD",
+                    ),
+                    row(
+                      "TestSchema.ClassA",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB2",
+                      "TestSchema.RelBD",
+                      "TestSchema.ClassD",
+                    ),
+                  ],
+          });
+
+          const [result] = await resolveContentSources({
+            imodelAccess,
+            targets: [targetA],
+            config: {
+              imodelFieldsProviders: [
+                createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [parentDeclaration] }),
+                providerBToD,
+              ],
+            },
+          });
+
+          expect(result.resolvedDeclarations.filter((group) => group.nested).map((group) => group.paths)).to.deep.equal(
+            [
+              [
+                {
+                  path: [
+                    { ...aToB, targetClassName: "TestSchema.ClassB1" },
+                    { ...bToD, sourceClassName: "TestSchema.ClassB1" },
+                  ],
+                  targetClassNames: ["TestSchema.ClassA"],
+                },
+              ],
+            ],
+          );
+        });
+
+        it("narrows nested paths to the primary classes that reached the parent's prefix", async () => {
+          const imodelAccess = createRoutedIModelAccess({
+            routeRows: (ecsql) =>
+              countSteps(ecsql) === 3
+                ? // Only `A1` instances reach `B1` through the parent path...
+                  [
+                    row(
+                      "TestSchema.ClassA1",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBC",
+                      "TestSchema.ClassC",
+                      "TestSchema.RelCD",
+                      "TestSchema.ClassD",
+                    ),
+                  ]
+                : // ...but both `A1` and `A2` instances reach `D` through `B1`.
+                  [
+                    row(
+                      "TestSchema.ClassA1,TestSchema.ClassA2",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBD",
+                      "TestSchema.ClassD",
+                    ),
+                  ],
+          });
+
+          const [result] = await resolveContentSources({
+            imodelAccess,
+            targets: [targetA],
+            config: {
+              imodelFieldsProviders: [
+                createMockIModelFieldsProvider("providerA_v1", { relatedProperties: [parentDeclaration] }),
+                providerBToD,
+              ],
+            },
+          });
+
+          const nestedPaths = result.resolvedDeclarations
+            .filter((group) => group.nested)
+            .flatMap((group) => group.paths);
+          expect(nestedPaths.map((path) => path.targetClassNames)).to.deep.equal([["TestSchema.ClassA1"]]);
+        });
+
+        it("merges primary classes of a nested path reached through different parent declarations", async () => {
+          const dToE: RelationshipPath[number] = {
+            sourceClassName: "TestSchema.ClassD",
+            targetClassName: "TestSchema.ClassE",
+            relationshipName: "TestSchema.RelDE",
+          };
+          // A second parent declaration, one step longer so its query can be told apart.
+          const longerParentDeclaration = { ...parentDeclaration, path: [...parentDeclaration.path, dToE] };
+          const imodelAccess = createRoutedIModelAccess({
+            routeRows: (ecsql) => {
+              switch (countSteps(ecsql)) {
+                case 3: // `parentDeclaration` reaches `B1` from `A1`.
+                  return [
+                    row(
+                      "TestSchema.ClassA1",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBC",
+                      "TestSchema.ClassC",
+                      "TestSchema.RelCD",
+                      "TestSchema.ClassD",
+                    ),
+                  ];
+                case 4: // `longerParentDeclaration` reaches `B1` from `A2`.
+                  return [
+                    row(
+                      "TestSchema.ClassA2",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBC",
+                      "TestSchema.ClassC",
+                      "TestSchema.RelCD",
+                      "TestSchema.ClassD",
+                      "TestSchema.RelDE",
+                      "TestSchema.ClassE",
+                    ),
+                  ];
+                default: // The nested `A -> B -> D` path is reached from `A1`, `A2` and `A3`.
+                  return [
+                    row(
+                      "TestSchema.ClassA1,TestSchema.ClassA2,TestSchema.ClassA3",
+                      "TestSchema.RelAB",
+                      "TestSchema.ClassB1",
+                      "TestSchema.RelBD",
+                      "TestSchema.ClassD",
+                    ),
+                  ];
+              }
+            },
+          });
+
+          const [result] = await resolveContentSources({
+            imodelAccess,
+            targets: [targetA],
+            config: {
+              imodelFieldsProviders: [
+                createMockIModelFieldsProvider("providerA_v1", {
+                  relatedProperties: [parentDeclaration, longerParentDeclaration],
+                }),
+                providerBToD,
+              ],
+            },
+          });
+
+          const nestedPaths = result.resolvedDeclarations
+            .filter((group) => group.nested)
+            .flatMap((group) => group.paths);
+          expect(nestedPaths.map((path) => path.targetClassNames)).to.deep.equal([
+            ["TestSchema.ClassA1", "TestSchema.ClassA2"],
+          ]);
+        });
       });
     });
   });
