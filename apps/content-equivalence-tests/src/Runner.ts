@@ -28,7 +28,13 @@ import { selectSample } from "./Sampling.js";
 import type { ResolvedIModelEntry, RuntimeConfiguration } from "./Configuration.js";
 import type { LegacyCapture } from "./legacy/Adapter.js";
 import type { NewCapture } from "./new/Adapter.js";
-import type { CaptureEnvelope, CaptureMetadata, ImplementationName, Scenario } from "./Persistence.js";
+import type {
+  CaptureDiagnostics,
+  CaptureEnvelope,
+  CaptureMetadata,
+  ImplementationName,
+  Scenario,
+} from "./Persistence.js";
 import type { Sample } from "./Sampling.js";
 
 export interface RunScenarioSummary {
@@ -144,9 +150,12 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
   implementationFingerprint: string;
   scenario: Scenario;
   signal: AbortSignal;
+  /** Collects diagnostics reported by `createCapture`, keyed by implementation. */
+  diagnostics: Map<ImplementationName, CaptureDiagnostics>;
   createCapture: (props: {
     imodel: SnapshotDb;
     signal: AbortSignal;
+    onDiagnostics?: (diagnostics: CaptureDiagnostics) => void;
     scenario: Scenario;
     implementationFingerprint: string;
     imodelFingerprint: string;
@@ -181,6 +190,7 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
     const capture = await props.createCapture({
       imodel: imodelDb,
       signal: props.signal,
+      onDiagnostics: (diagnostics) => props.diagnostics.set(implementation, diagnostics),
       scenario,
       implementationFingerprint,
       imodelFingerprint,
@@ -250,10 +260,11 @@ export async function runEquivalence(
       const timer =
         scenarioTimeoutMs !== undefined
           ? setTimeout(() => {
-              logProgress(scenarioContext, "Time limit reached; stopping the scenario.");
+              logProgress(scenarioContext, "Time limit reached; canceling running work.");
               controller.abort(new ScenarioTimeoutError(scenarioTimeoutMs));
             }, scenarioTimeoutMs)
           : undefined;
+      const diagnostics = new Map<ImplementationName, CaptureDiagnostics>();
       try {
         const legacy = await loadOrCreateCapture<LegacyCapture>({
           config,
@@ -263,6 +274,7 @@ export async function runEquivalence(
           implementationFingerprint: fingerprints.legacy,
           scenario,
           signal: controller.signal,
+          diagnostics,
           createCapture: captureLegacy,
         });
         const current = await loadOrCreateCapture<NewCapture>({
@@ -273,6 +285,7 @@ export async function runEquivalence(
           implementationFingerprint: fingerprints.new,
           scenario,
           signal: controller.signal,
+          diagnostics,
           createCapture: captureNew,
         });
         controller.signal.throwIfAborted();
@@ -328,12 +341,15 @@ export async function runEquivalence(
         const failure = controller.signal.aborted ? controller.signal.reason : error;
         const message = `${imodel.name}/${scenario.id}: ${
           failure instanceof Error ? (failure.stack ?? failure.message) : String(failure)
-        }`;
+        }${[...diagnostics.values()].map(({ failureSummary }) => (failureSummary ? `\n${failureSummary}` : "")).join("")}`;
         console.error(message);
         errors.push(message);
         writeJson(path.join(scenarioDirectory, "error.json"), { message });
       } finally {
         clearTimeout(timer);
+        for (const [implementation, { details }] of diagnostics) {
+          writeJson(path.join(scenarioDirectory, `${implementation}.diagnostics.json`), details);
+        }
       }
     }
   } catch (error) {
