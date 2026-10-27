@@ -45,6 +45,13 @@ function openIModel(filePath: string): SnapshotDb {
   return SnapshotDb.openFile(filePath);
 }
 
+class ScenarioTimeoutError extends Error {
+  public constructor(timeoutMs: number) {
+    super(`Scenario exceeded its time limit of ${timeoutMs / 60_000} minute(s).`);
+    this.name = "ScenarioTimeoutError";
+  }
+}
+
 function shouldRefresh(config: RuntimeConfiguration, implementation: ImplementationName): boolean {
   return config.refresh === "all" || config.refresh === implementation;
 }
@@ -136,8 +143,10 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
   implementation: TCapture["implementation"];
   implementationFingerprint: string;
   scenario: Scenario;
+  signal: AbortSignal;
   createCapture: (props: {
     imodel: SnapshotDb;
+    signal: AbortSignal;
     scenario: Scenario;
     implementationFingerprint: string;
     imodelFingerprint: string;
@@ -165,10 +174,13 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
     logProgress(context, "Refresh requested; generating content.");
   }
 
+  props.signal.throwIfAborted();
   const imodelDb = openIModel(props.imodel.path);
   try {
+    // The capture must settle before the iModel closes, so time limits only stop work cooperatively.
     const capture = await props.createCapture({
       imodel: imodelDb,
+      signal: props.signal,
       scenario,
       implementationFingerprint,
       imodelFingerprint,
@@ -233,6 +245,15 @@ export async function runEquivalence(
     for (const scenario of scenarios) {
       const scenarioContext = `${imodel.name}/${scenario.id}`;
       const scenarioDirectory = path.join(imodelDirectory, scenario.id);
+      const controller = new AbortController();
+      const { scenarioTimeoutMs } = config;
+      const timer =
+        scenarioTimeoutMs !== undefined
+          ? setTimeout(() => {
+              logProgress(scenarioContext, "Time limit reached; stopping the scenario.");
+              controller.abort(new ScenarioTimeoutError(scenarioTimeoutMs));
+            }, scenarioTimeoutMs)
+          : undefined;
       try {
         const legacy = await loadOrCreateCapture<LegacyCapture>({
           config,
@@ -241,6 +262,7 @@ export async function runEquivalence(
           implementation: "legacy",
           implementationFingerprint: fingerprints.legacy,
           scenario,
+          signal: controller.signal,
           createCapture: captureLegacy,
         });
         const current = await loadOrCreateCapture<NewCapture>({
@@ -250,15 +272,19 @@ export async function runEquivalence(
           implementation: "new",
           implementationFingerprint: fingerprints.new,
           scenario,
+          signal: controller.signal,
           createCapture: captureNew,
         });
+        controller.signal.throwIfAborted();
         logProgress(scenarioContext, "Normalizing legacy and new captures.");
         const imodelDb = openIModel(imodel.path);
         let normalizedLegacy, normalizedNew;
         try {
           const imodelAccess = { ...createECSchemaProvider(imodelDb), ...createECSqlQueryExecutor(imodelDb) };
           normalizedLegacy = await normalizeLegacyCapture(legacy.capture, imodelAccess);
+          controller.signal.throwIfAborted();
           normalizedNew = await normalizeNewCapture(current.capture, imodelAccess, imodelDb.schemaContext);
+          controller.signal.throwIfAborted();
         } finally {
           imodelDb.close();
         }
@@ -299,12 +325,15 @@ export async function runEquivalence(
           reportDirectory: scenarioDirectory,
         });
       } catch (error) {
+        const failure = controller.signal.aborted ? controller.signal.reason : error;
         const message = `${imodel.name}/${scenario.id}: ${
-          error instanceof Error ? (error.stack ?? error.message) : String(error)
+          failure instanceof Error ? (failure.stack ?? failure.message) : String(failure)
         }`;
         console.error(message);
         errors.push(message);
         writeJson(path.join(scenarioDirectory, "error.json"), { message });
+      } finally {
+        clearTimeout(timer);
       }
     }
   } catch (error) {

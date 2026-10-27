@@ -12,6 +12,7 @@ import type { EC, InstanceKey } from "@itwin/presentation-shared";
 const DEFAULT_OUTPUT_DIRECTORY = "output";
 const MANIFEST_FILE_NAME = "imodels.json";
 const REFRESH_MODES = new Set<RefreshMode>(["none", "legacy", "new", "all"]);
+const DEFAULT_SCENARIO_TIMEOUT_MINUTES = 30;
 
 type RefreshMode = "legacy" | "new" | "all" | "none";
 
@@ -39,6 +40,8 @@ export interface RuntimeConfiguration {
   manifestPath: string;
   outputDirectory: string;
   refresh: RefreshMode;
+  /** Time limit for capturing and comparing a single scenario. `undefined` means no limit. */
+  scenarioTimeoutMs: number | undefined;
   manifest: EquivalenceManifest;
   imodels: ResolvedIModelEntry[];
 }
@@ -147,12 +150,20 @@ export function loadRuntimeConfiguration(): RuntimeConfiguration {
     throw new Error("CONTENT_EQUIVALENCE_REFRESH must be one of: none, legacy, new, all.");
   }
 
+  const scenarioTimeoutMinutes = Number(
+    process.env.CONTENT_EQUIVALENCE_SCENARIO_TIMEOUT_MINUTES ?? DEFAULT_SCENARIO_TIMEOUT_MINUTES,
+  );
+  if (!Number.isFinite(scenarioTimeoutMinutes) || scenarioTimeoutMinutes < 0) {
+    throw new Error("CONTENT_EQUIVALENCE_SCENARIO_TIMEOUT_MINUTES must be a non-negative number.");
+  }
+
   return {
     manifestPath,
     outputDirectory: path.resolve(
       process.env.CONTENT_EQUIVALENCE_OUTPUT ?? path.join(import.meta.dirname, "..", DEFAULT_OUTPUT_DIRECTORY),
     ),
     refresh,
+    scenarioTimeoutMs: scenarioTimeoutMinutes > 0 ? scenarioTimeoutMinutes * 60 * 1000 : undefined,
     manifest,
     imodels,
   };

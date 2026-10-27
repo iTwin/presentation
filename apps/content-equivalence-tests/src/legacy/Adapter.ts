@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { firstValueFrom, from, mergeMap, toArray } from "rxjs";
 import { Presentation } from "@itwin/presentation-backend";
 import {
   ContentFlags,
@@ -12,6 +11,7 @@ import {
   KeySet,
   RuleTypes,
 } from "@itwin/presentation-common";
+import { mapConcurrently } from "../Concurrency.js";
 import { CAPTURE_FORMAT_VERSION } from "../Persistence.js";
 
 import type { IModelDb } from "@itwin/core-backend";
@@ -92,9 +92,11 @@ async function createConsolidatedContentDescriptor({ imodel }: { imodel: IModelD
 async function createSelectedInstancesContent({
   imodel,
   instanceKeys,
+  signal,
 }: {
   imodel: IModelDb;
   instanceKeys: InstanceKey[];
+  signal: AbortSignal;
 }) {
   const ruleset: Ruleset = {
     id: `${RULESET_ID}-selected-instances`,
@@ -103,30 +105,30 @@ async function createSelectedInstancesContent({
       { ruleType: RuleTypes.Content, specifications: [{ specType: "SelectedNodeInstances" }] },
     ],
   };
-  return firstValueFrom(
-    from(instanceKeys).pipe(
-      mergeMap(async (instanceKey) => {
-        const content = await Presentation.getManager().getContent({
-          imodel,
-          rulesetOrId: ruleset,
-          descriptor: { displayType: DefaultContentDisplayTypes.Grid },
-          keys: new KeySet([toLegacyKey(instanceKey)]),
-          omitFormattedValues: true,
-          diagnostics: DIAGNOSTICS_OPTIONS,
-        });
-        if (!content) {
-          throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
-        }
-        if (content.contentSet.length !== 1) {
-          throw new Error(
-            `Expected one legacy content item for '${instanceKey.className}:${instanceKey.id}', found ${content.contentSet.length}.`,
-          );
-        }
-        return { descriptor: content.descriptor.toJSON(), item: content.contentSet[0].toJSON() };
-      }, 4),
-      toArray(),
-    ),
-  );
+  return mapConcurrently({
+    items: instanceKeys,
+    concurrency: 4,
+    callback: async (instanceKey) => {
+      const content = await Presentation.getManager().getContent({
+        imodel,
+        rulesetOrId: ruleset,
+        descriptor: { displayType: DefaultContentDisplayTypes.Grid },
+        keys: new KeySet([toLegacyKey(instanceKey)]),
+        omitFormattedValues: true,
+        diagnostics: DIAGNOSTICS_OPTIONS,
+      });
+      if (!content) {
+        throw new Error(`Legacy content returned no content for '${instanceKey.className}:${instanceKey.id}'.`);
+      }
+      if (content.contentSet.length !== 1) {
+        throw new Error(
+          `Expected one legacy content item for '${instanceKey.className}:${instanceKey.id}', found ${content.contentSet.length}.`,
+        );
+      }
+      return { descriptor: content.descriptor.toJSON(), item: content.contentSet[0].toJSON() };
+    },
+    signal,
+  });
 }
 
 const DIAGNOSTICS_OPTIONS: BackendDiagnosticsOptions | undefined = process.env.ENABLE_DIAGNOSTICS
@@ -151,11 +153,12 @@ const DIAGNOSTICS_OPTIONS: BackendDiagnosticsOptions | undefined = process.env.E
 
 export async function captureLegacy(props: {
   imodel: IModelDb;
+  signal: AbortSignal;
   scenario: Scenario;
   implementationFingerprint: string;
   imodelFingerprint: string;
 }): Promise<LegacyCapture> {
-  const { imodel, scenario } = props;
+  const { imodel, signal, scenario } = props;
   const envelope = {
     captureFormatVersion: CAPTURE_FORMAT_VERSION,
     implementation: "legacy",
@@ -169,6 +172,6 @@ export async function captureLegacy(props: {
   return {
     ...envelope,
     scenario,
-    items: await createSelectedInstancesContent({ imodel, instanceKeys: scenario.keys }),
+    items: await createSelectedInstancesContent({ imodel, instanceKeys: scenario.keys, signal }),
   };
 }
