@@ -4,25 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  dematerialize,
-  filter,
-  from,
-  lastValueFrom,
-  map,
-  materialize,
-  mergeMap,
-  of,
-  ReplaySubject,
-  takeUntil,
-  tap,
-  toArray,
-} from "rxjs";
-import {
   createContentProvider,
   createIModelContentConfiguration,
   resolveContentSources,
 } from "@itwin/presentation-content";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { mapConcurrently } from "../Concurrency.js";
 import { CAPTURE_FORMAT_VERSION, stableStringify } from "../Persistence.js";
 
 import type { IModelDb } from "@itwin/core-backend";
@@ -102,10 +89,10 @@ export async function captureNew(props: {
   const imodelAccess = createIModelAccess(imodel);
   const config = await createIModelContentConfiguration({ imodelAccess });
   if (scenario.id === "sampled-elements") {
-    const items = await mapConcurrently(
-      scenario.keys,
-      SAMPLED_ITEM_CONCURRENCY,
-      async (key) => {
+    const items = await mapConcurrently({
+      items: scenario.keys,
+      concurrency: SAMPLED_ITEM_CONCURRENCY,
+      callback: async (key) => {
         const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
         const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
         const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
@@ -122,7 +109,7 @@ export async function captureNew(props: {
         return capturedItems[0];
       },
       signal,
-    );
+    });
     return {
       captureFormatVersion: CAPTURE_FORMAT_VERSION,
       implementation: "new",
@@ -147,48 +134,4 @@ export async function captureNew(props: {
     createdAt: new Date().toISOString(),
     descriptor: allElementDescriptor,
   };
-}
-
-/** Stops starting work on failure or abort, but drains running promises before rejecting. */
-async function mapConcurrently<TItem, TResult>(
-  items: readonly TItem[],
-  concurrency: number,
-  callback: (item: TItem) => Promise<TResult>,
-  signal?: AbortSignal,
-): Promise<TResult[]> {
-  signal?.throwIfAborted();
-  const stop = new ReplaySubject<void>(1);
-  return lastValueFrom(
-    from(items).pipe(
-      mergeMap(
-        (item, index) =>
-          of(item).pipe(
-            // Gate callbacks before mergeMap so stopping doesn't unsubscribe from running promises.
-            takeUntil(stop),
-            mergeMap(async (value) => {
-              signal?.throwIfAborted();
-              return callback(value);
-            }),
-            materialize(),
-            filter((notification) => notification.kind !== "C"),
-            tap((notification) => {
-              if (notification.kind === "E") {
-                stop.next();
-              }
-            }),
-            map((notification) => ({ index, notification })),
-          ),
-        concurrency,
-      ),
-      toArray(),
-      mergeMap((outcomes) => {
-        signal?.throwIfAborted();
-        const failure = outcomes.find(({ notification }) => notification.kind === "E");
-        return from(failure ? [failure] : outcomes.sort((a, b) => a.index - b.index));
-      }),
-      map(({ notification }) => notification),
-      dematerialize(),
-      toArray(),
-    ),
-  );
 }
