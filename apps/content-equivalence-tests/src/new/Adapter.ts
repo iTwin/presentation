@@ -3,7 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { firstValueFrom, from, map, mergeMap, toArray } from "rxjs";
+import {
+  dematerialize,
+  filter,
+  from,
+  lastValueFrom,
+  map,
+  materialize,
+  mergeMap,
+  of,
+  ReplaySubject,
+  takeUntil,
+  tap,
+  toArray,
+} from "rxjs";
 import {
   createContentProvider,
   createIModelContentConfiguration,
@@ -21,6 +34,8 @@ import type {
   SampledElementsScenario,
   Scenario,
 } from "../Persistence.js";
+
+const SAMPLED_ITEM_CONCURRENCY = 4;
 
 function createIModelAccess(imodel: IModelDb) {
   return { ...createECSchemaProvider(imodel), ...createECSqlQueryExecutor(imodel) };
@@ -86,36 +101,31 @@ export async function captureNew(props: {
   const imodelAccess = createIModelAccess(imodel);
   const config = await createIModelContentConfiguration({ imodelAccess });
   if (scenario.id === "sampled-elements") {
-    return firstValueFrom(
-      from(scenario.keys).pipe(
-        mergeMap(async (key) => {
-          const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
-          const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
-          const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
-          const itemDescriptor = await itemProvider.getContentDescriptor();
-          const items: CapturedNewItem[] = [];
-          for await (const item of itemProvider.getItems()) {
-            items.push(captureNewItem(item, itemDescriptor));
-          }
-          if (items.length !== 1) {
-            throw new Error(
-              `Expected one new-generation content item for '${key.className}:${key.id}', found ${items.length}.`,
-            );
-          }
-          return items[0];
-        }, 4),
-        toArray(),
-        map((items) => ({
-          captureFormatVersion: CAPTURE_FORMAT_VERSION,
-          implementation: "new",
-          implementationFingerprint: props.implementationFingerprint,
-          imodelFingerprint: props.imodelFingerprint,
-          scenario,
-          createdAt: new Date().toISOString(),
-          items,
-        })),
-      ),
-    );
+    const items = await mapConcurrently(scenario.keys, SAMPLED_ITEM_CONCURRENCY, async (key) => {
+      const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
+      const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
+      const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
+      const itemDescriptor = await itemProvider.getContentDescriptor();
+      const capturedItems: CapturedNewItem[] = [];
+      for await (const item of itemProvider.getItems()) {
+        capturedItems.push(captureNewItem(item, itemDescriptor));
+      }
+      if (capturedItems.length !== 1) {
+        throw new Error(
+          `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
+        );
+      }
+      return capturedItems[0];
+    });
+    return {
+      captureFormatVersion: CAPTURE_FORMAT_VERSION,
+      implementation: "new",
+      implementationFingerprint: props.implementationFingerprint,
+      imodelFingerprint: props.imodelFingerprint,
+      scenario,
+      createdAt: new Date().toISOString(),
+      items,
+    };
   }
 
   const allElementTargets: ContentTarget[] = [{ primaryClass: "BisCore.GeometricElement3d" as const }];
@@ -131,4 +141,48 @@ export async function captureNew(props: {
     createdAt: new Date().toISOString(),
     descriptor: allElementDescriptor,
   };
+}
+
+/** Stops starting work on failure or abort, but drains running promises before rejecting. */
+async function mapConcurrently<TItem, TResult>(
+  items: readonly TItem[],
+  concurrency: number,
+  callback: (item: TItem) => Promise<TResult>,
+  signal?: AbortSignal,
+): Promise<TResult[]> {
+  signal?.throwIfAborted();
+  const stop = new ReplaySubject<void>(1);
+  return lastValueFrom(
+    from(items).pipe(
+      mergeMap(
+        (item, index) =>
+          of(item).pipe(
+            // Gate callbacks before mergeMap so stopping doesn't unsubscribe from running promises.
+            takeUntil(stop),
+            mergeMap(async (value) => {
+              signal?.throwIfAborted();
+              return callback(value);
+            }),
+            materialize(),
+            filter((notification) => notification.kind !== "C"),
+            tap((notification) => {
+              if (notification.kind === "E") {
+                stop.next();
+              }
+            }),
+            map((notification) => ({ index, notification })),
+          ),
+        concurrency,
+      ),
+      toArray(),
+      mergeMap((outcomes) => {
+        signal?.throwIfAborted();
+        const failure = outcomes.find(({ notification }) => notification.kind === "E");
+        return from(failure ? [failure] : outcomes.sort((a, b) => a.index - b.index));
+      }),
+      map(({ notification }) => notification),
+      dematerialize(),
+      toArray(),
+    ),
+  );
 }
