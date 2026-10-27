@@ -110,6 +110,7 @@ export function summarizeCanceledQueries(report: QueryReport): string | undefine
     )
     .join(", ");
   const remaining = total - Math.min(total, SUMMARIZED_CANCELED_QUERY_LIMIT);
+  // cspell:words quer
   return `Canceled ${total} quer${total === 1 ? "y" : "ies"}: ${listed}${remaining > 0 ? `, and ${remaining} more` : ""}`;
 }
 
