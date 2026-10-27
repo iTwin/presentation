@@ -5,8 +5,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { IModelHost, SnapshotDb } from "@itwin/core-backend";
-import { Presentation } from "@itwin/presentation-backend";
+import { SnapshotDb } from "@itwin/core-backend";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { getImplementationFingerprints, getSamplingImplementationFingerprint } from "./Fingerprints.js";
 import { captureLegacy } from "./legacy/Adapter.js";
@@ -101,26 +100,6 @@ function readSample(filePath: string): Sample | undefined {
   }
 }
 
-class BackendLifecycle {
-  private constructor() {}
-
-  public static async start(): Promise<BackendLifecycle> {
-    const lifecycle = new BackendLifecycle();
-    await lifecycle.start();
-    return lifecycle;
-  }
-
-  private async start() {
-    await IModelHost.startup({ profileName: "presentation-content-equivalence-tests" });
-    Presentation.initialize();
-  }
-
-  public async [Symbol.asyncDispose](): Promise<void> {
-    Presentation.terminate();
-    await IModelHost.shutdown();
-  }
-}
-
 async function loadOrCreateSample(props: {
   config: RuntimeConfiguration;
   imodel: ResolvedIModelEntry;
@@ -202,44 +181,35 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
   }
 }
 
-function createRunDirectory(outputDirectory: string): string {
+export function createEquivalenceRun(config: RuntimeConfiguration) {
   const timestamp = new Date().toISOString().replaceAll(":", "-");
-  const runDirectory = path.join(outputDirectory, "runs", `${timestamp}-${process.pid}`);
+  const runDirectory = path.join(config.outputDirectory, "runs", `${timestamp}-${process.pid}`);
   fs.mkdirSync(runDirectory, { recursive: true });
-  return runDirectory;
-}
-
-export async function runEquivalence(config: RuntimeConfiguration): Promise<RunScenarioSummary[]> {
-  const context = config.imodels.map((imodel) => imodel.name).join(", ");
-  logProgress(context, "Starting backend.");
-  await using _init = await BackendLifecycle.start();
-  logProgress(context, "Computing implementation fingerprints.");
   const fingerprints = getImplementationFingerprints();
-  const runDirectory = createRunDirectory(config.outputDirectory);
-  logProgress(context, `Writing reports to '${runDirectory}'.`);
-  const summaries: RunScenarioSummary[] = [];
-  const errors: string[] = [];
-
   writeJson(path.join(runDirectory, "run.json"), {
     manifestPath: config.manifestPath,
     manifest: config.manifest,
     refresh: config.refresh,
     implementationFingerprints: fingerprints,
   });
+  return { runDirectory, fingerprints, summaries: [] as RunScenarioSummary[], errors: [] as string[] };
+}
 
-  for (const imodel of config.imodels) {
-    const imodelDirectory = path.join(runDirectory, imodel.name);
-    let imodelFingerprint: string;
-    try {
-      logProgress(imodel.name, "Hashing iModel file.");
-      imodelFingerprint = await hashFile(imodel.path);
-    } catch (error) {
-      const message = `${imodel.name}: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`;
-      console.error(message);
-      errors.push(message);
-      writeJson(path.join(imodelDirectory, "error.json"), { message });
-      continue;
-    }
+export async function runEquivalence(
+  config: RuntimeConfiguration,
+  imodel: ResolvedIModelEntry,
+  run: ReturnType<typeof createEquivalenceRun>,
+): Promise<RunScenarioSummary[]> {
+  const context = imodel.name;
+  const { runDirectory, fingerprints } = run;
+  logProgress(context, `Writing reports to '${runDirectory}'.`);
+  const summaries: RunScenarioSummary[] = [];
+  const errors: string[] = [];
+  const imodelDirectory = path.join(runDirectory, imodel.name);
+
+  try {
+    logProgress(imodel.name, "Hashing iModel file.");
+    const imodelFingerprint = await hashFile(imodel.path);
 
     // Sampling failure only rules out the "sampled-elements" scenario; the descriptor scenario needs no sample.
     let sample: Sample | undefined;
@@ -337,9 +307,16 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
         writeJson(path.join(scenarioDirectory, "error.json"), { message });
       }
     }
+  } catch (error) {
+    const message = `${imodel.name}: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`;
+    console.error(message);
+    errors.push(message);
+    writeJson(path.join(imodelDirectory, "error.json"), { message });
   }
 
-  writeJson(path.join(runDirectory, "summary.json"), { summaries, errors });
+  run.summaries.push(...summaries);
+  run.errors.push(...errors);
+  writeJson(path.join(runDirectory, "summary.json"), { summaries: run.summaries, errors: run.errors });
   const mismatchCount = summaries.reduce(
     (sum, summary) => sum + summary.descriptorDifferences + summary.valueDifferences,
     0,
