@@ -50,6 +50,10 @@ function shouldRefresh(config: RuntimeConfiguration, implementation: Implementat
   return config.refresh === "all" || config.refresh === implementation;
 }
 
+function logProgress(context: string, message: string): void {
+  console.info(`[${new Date().toISOString()}] [${context}] ${message}`);
+}
+
 function readReusableCapture<TCapture extends CaptureEnvelope>(
   filePath: string,
   expected: CaptureMetadata<TCapture["implementation"]>,
@@ -122,11 +126,15 @@ async function loadOrCreateSample(props: {
   imodel: ResolvedIModelEntry;
   imodelFingerprint: string;
 }): Promise<Sample> {
+  const context = `${props.imodel.name}/sampling`;
   const filePath = sampleCachePath(props.config, props.imodelFingerprint, props.imodel);
+  logProgress(context, "Checking sample cache.");
   const cached = readSample(filePath);
   if (cached) {
+    logProgress(context, `Using cached sample with ${cached.keys.length} keys from '${filePath}'.`);
     return cached;
   }
+  logProgress(context, "No valid cached sample; selecting instance keys.");
   const imodelDb = openIModel(props.imodel.path);
   try {
     const sample = await selectSample({
@@ -135,6 +143,7 @@ async function loadOrCreateSample(props: {
       explicitKeys: props.imodel.instanceKeys,
     });
     writeJson(filePath, sample);
+    logProgress(context, `Saved sample with ${sample.keys.length} keys to '${filePath}'.`);
     return sample;
   } finally {
     imodelDb.close();
@@ -156,6 +165,7 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
   }) => Promise<TCapture>;
 }): Promise<{ capture: TCapture; cacheHit: boolean; filePath: string }> {
   const { config, implementation, implementationFingerprint, imodelFingerprint, scenario } = props;
+  const context = `${props.imodel.name}/${scenario.id}/${implementation}`;
   const filePath = cachePath({ config, imodelFingerprint, implementation, implementationFingerprint, scenario });
   const expected = {
     captureFormatVersion: CAPTURE_FORMAT_VERSION,
@@ -165,10 +175,15 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
     scenario,
   };
   if (!shouldRefresh(config, implementation)) {
+    logProgress(context, "Checking capture cache.");
     const capture = readReusableCapture<TCapture>(filePath, expected);
     if (capture) {
+      logProgress(context, `Using cached capture from '${filePath}'.`);
       return { capture, cacheHit: true, filePath };
     }
+    logProgress(context, "No valid cached capture; generating content.");
+  } else {
+    logProgress(context, "Refresh requested; generating content.");
   }
 
   const imodelDb = openIModel(props.imodel.path);
@@ -180,6 +195,7 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
       imodelFingerprint,
     });
     writeJson(filePath, capture);
+    logProgress(context, `Saved generated capture to '${filePath}'.`);
     return { capture, cacheHit: false, filePath };
   } finally {
     imodelDb.close();
@@ -194,9 +210,13 @@ function createRunDirectory(outputDirectory: string): string {
 }
 
 export async function runEquivalence(config: RuntimeConfiguration): Promise<RunScenarioSummary[]> {
+  const context = config.imodels.map((imodel) => imodel.name).join(", ");
+  logProgress(context, "Starting backend.");
   await using _init = await BackendLifecycle.start();
+  logProgress(context, "Computing implementation fingerprints.");
   const fingerprints = getImplementationFingerprints();
   const runDirectory = createRunDirectory(config.outputDirectory);
+  logProgress(context, `Writing reports to '${runDirectory}'.`);
   const summaries: RunScenarioSummary[] = [];
   const errors: string[] = [];
 
@@ -211,9 +231,11 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
     const imodelDirectory = path.join(runDirectory, imodel.name);
     let imodelFingerprint: string;
     try {
+      logProgress(imodel.name, "Hashing iModel file.");
       imodelFingerprint = await hashFile(imodel.path);
     } catch (error) {
       const message = `${imodel.name}: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`;
+      console.error(message);
       errors.push(message);
       writeJson(path.join(imodelDirectory, "error.json"), { message });
       continue;
@@ -228,6 +250,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
       const message = `${imodel.name}/sampling: ${
         error instanceof Error ? (error.stack ?? error.message) : String(error)
       }`;
+      console.error(message);
       errors.push(message);
       writeJson(path.join(imodelDirectory, "sampling-error.json"), { message });
     }
@@ -238,6 +261,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
     ];
 
     for (const scenario of scenarios) {
+      const scenarioContext = `${imodel.name}/${scenario.id}`;
       const scenarioDirectory = path.join(imodelDirectory, scenario.id);
       try {
         const legacy = await loadOrCreateCapture<LegacyCapture>({
@@ -258,6 +282,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           scenario,
           createCapture: captureNew,
         });
+        logProgress(scenarioContext, "Normalizing legacy and new captures.");
         const imodelDb = openIModel(imodel.path);
         let normalizedLegacy, normalizedNew;
         try {
@@ -268,6 +293,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           imodelDb.close();
         }
 
+        logProgress(scenarioContext, "Comparing normalized content.");
         let differences;
         if (scenario.id === "all-elements-descriptor") {
           if (normalizedLegacy.descriptor === undefined || normalizedNew.descriptor === undefined) {
@@ -289,6 +315,10 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           new: { path: current.filePath, cacheHit: current.cacheHit },
         });
 
+        logProgress(
+          scenarioContext,
+          `Comparison complete: ${differences.descriptorDifferences.length} descriptor difference(s), ${differences.valueDifferences.length} value difference(s).`,
+        );
         summaries.push({
           imodel: imodel.name,
           scenario: scenario.id,
@@ -302,6 +332,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
         const message = `${imodel.name}/${scenario.id}: ${
           error instanceof Error ? (error.stack ?? error.message) : String(error)
         }`;
+        console.error(message);
         errors.push(message);
         writeJson(path.join(scenarioDirectory, "error.json"), { message });
       }
@@ -312,6 +343,10 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
   const mismatchCount = summaries.reduce(
     (sum, summary) => sum + summary.descriptorDifferences + summary.valueDifferences,
     0,
+  );
+  logProgress(
+    context,
+    `Finished ${summaries.length} scenario(s) with ${errors.length} execution error(s) and ${mismatchCount} difference(s). Reports: '${runDirectory}'.`,
   );
   if (errors.length > 0 || mismatchCount > 0) {
     throw new Error(
