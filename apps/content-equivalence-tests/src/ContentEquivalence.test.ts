@@ -10,10 +10,8 @@ import { runEquivalence } from "./Runner.js";
 const config = loadRuntimeConfiguration();
 
 describe("content equivalence", { concurrent: false }, () => {
-  for (const imodel of config.imodels) {
-    it(`produces equivalent legacy and new content for ${imodel.name}`, async () => {
-      const summaries = await runEquivalence({ ...config, imodels: [imodel] });
-      expect(summaries.length).toBeGreaterThan(0);
-    });
-  }
+  it.for(config.imodels)("produces equivalent legacy and new content for $name", async (imodel) => {
+    const summaries = await runEquivalence({ ...config, imodels: [imodel] });
+    expect(summaries.length).toBeGreaterThan(0);
+  });
 });
