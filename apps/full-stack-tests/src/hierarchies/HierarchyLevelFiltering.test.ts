@@ -454,6 +454,86 @@ describe("Hierarchies", () => {
       });
     });
 
+    it("filters by ECInstanceId", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="X" />
+          `,
+        );
+        const x1 = builder.insertInstance(s.items.X.fullName);
+        const x2 = builder.insertInstance(s.items.X.fullName);
+        return { schema: s, x1, x2 };
+      });
+      const { ecdb, schema, ...keys } = setup;
+      const hierarchy: HierarchyDefinition = {
+        async defineHierarchyLevel({ instanceFilter, createSelectClause, createFilterClauses }) {
+          const filterClauses = await createFilterClauses({
+            filter: instanceFilter,
+            contentClass: { fullName: schema.items.X.fullName, alias: "this" },
+          });
+          return [
+            {
+              fullClassName: schema.items.X.fullName,
+              query: {
+                ecsql: `
+                  SELECT ${await createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
+                  })}
+                  FROM ${filterClauses.from} AS this
+                  ${filterClauses.joins}
+                  ${filterClauses.where ? `WHERE ${filterClauses.where}` : ""}
+                `,
+              },
+            },
+          ];
+        },
+      };
+      const provider = createProvider({ ecdb, hierarchy });
+      validateHierarchyLevel({
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+            instanceFilter: {
+              propertyClassNames: [schema.items.X.fullName],
+              relatedInstances: [],
+              rules: {
+                sourceAlias: "this",
+                propertyName: "ECInstanceId",
+                operator: "is-equal",
+                propertyTypeName: "long",
+                value: { rawValue: keys.x2.id, displayValue: keys.x2.id },
+              },
+            },
+          }),
+        ),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x2] })],
+      });
+      validateHierarchyLevel({
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+            instanceFilter: {
+              propertyClassNames: [schema.items.X.fullName],
+              relatedInstances: [],
+              rules: {
+                sourceAlias: "this",
+                propertyName: "ECInstanceId",
+                operator: "is-not-equal",
+                propertyTypeName: "long",
+                value: { rawValue: keys.x2.id, displayValue: keys.x2.id },
+              },
+            },
+          }),
+        ),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.x1] })],
+      });
+    });
+
     it("filters by related property", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(

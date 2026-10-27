@@ -17,6 +17,7 @@ import type {
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
+  GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
 import type { EC } from "@itwin/presentation-shared";
 import type { NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
@@ -692,6 +693,166 @@ describe("createNodesQueryClauseFactory", () => {
               value: { rawValue: { className: "a.b", id: "0x123" }, displayValue: "a.b" },
             },
             expectedECSql: `[x].[p].[Id] = 0x123`,
+          });
+        });
+
+        describe("ECInstanceId", () => {
+          it(`creates filters with id values`, async () => {
+            const { fullName } = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            const createProps = (operator: GenericInstanceFilterRuleOperator, expectedECSql: string) => ({
+              className: fullName,
+              classAlias: "x",
+              rule: {
+                sourceAlias: "x",
+                propertyName: "ECInstanceId",
+                operator,
+                propertyTypeName: "long",
+                value: { rawValue: "0x123", displayValue: "0x123" },
+              },
+              expectedECSql,
+            });
+            await testPropertyFilter(createProps("is-equal", `[x].[ECInstanceId] = 0x123`));
+            await testPropertyFilter(createProps("is-not-equal", `[x].[ECInstanceId] <> 0x123`));
+            await testPropertyFilter(createProps("less", `[x].[ECInstanceId] < 0x123`));
+            await testPropertyFilter(createProps("less-or-equal", `[x].[ECInstanceId] <= 0x123`));
+            await testPropertyFilter(createProps("greater", `[x].[ECInstanceId] > 0x123`));
+            await testPropertyFilter(createProps("greater-or-equal", `[x].[ECInstanceId] >= 0x123`));
+          });
+
+          it(`matches property name case-insensitively and defaults to content class alias`, async () => {
+            const { fullName } = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            await testPropertyFilter({
+              className: fullName,
+              classAlias: "x",
+              rule: {
+                sourceAlias: "",
+                // cspell:disable-next-line
+                propertyName: "ecinstanceid",
+                operator: "is-equal",
+                propertyTypeName: "long",
+                value: { rawValue: "0x123", displayValue: "0x123" },
+              },
+              expectedECSql: `[x].[ECInstanceId] = 0x123`,
+            });
+          });
+
+          it(`creates "is null" and "is not null" filters`, async () => {
+            const { fullName } = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            const createProps = (operator: GenericInstanceFilterRuleOperator, expectedECSql: string) => ({
+              className: fullName,
+              classAlias: "x",
+              rule: { sourceAlias: "x", propertyName: "ECInstanceId", operator, propertyTypeName: "long" },
+              expectedECSql,
+            });
+            await testPropertyFilter(createProps("is-null", `[x].[ECInstanceId] IS NULL`));
+            await testPropertyFilter(createProps("is-not-null", `[x].[ECInstanceId] IS NOT NULL`));
+          });
+
+          it(`creates related instance filter`, async () => {
+            const contentClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            const targetClass = imodelAccess.stubEntityClass({ schemaName: "x", className: "target" });
+            const relationship = imodelAccess.stubRelationshipClass({
+              schemaName: "x",
+              className: "rel",
+              source: {
+                polymorphic: false,
+                abstractConstraint: contentClass,
+                constraintClasses: [contentClass],
+                multiplicity: { lowerLimit: 0, upperLimit: 1 },
+              },
+              target: {
+                polymorphic: false,
+                abstractConstraint: targetClass,
+                constraintClasses: [targetClass],
+                multiplicity: { lowerLimit: 0, upperLimit: 1 },
+              },
+            });
+            await testPropertyFilter({
+              className: contentClass.fullName,
+              classAlias: "x",
+              relatedInstances: [
+                {
+                  path: [
+                    {
+                      sourceClassName: contentClass.fullName,
+                      relationshipClassName: relationship.fullName,
+                      targetClassName: targetClass.fullName,
+                      isForwardRelationship: true,
+                    },
+                  ],
+                  alias: "r",
+                },
+              ],
+              rule: {
+                sourceAlias: "r",
+                propertyName: "ECInstanceId",
+                operator: "is-equal",
+                propertyTypeName: "long",
+                value: { rawValue: "0x123", displayValue: "0x123" },
+              },
+              expectedECSql: `[r].[ECInstanceId] = 0x123`,
+            });
+          });
+
+          it(`throws on unsupported operators`, async () => {
+            const { fullName } = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            for (const operator of ["is-true", "is-false", "like"] as const) {
+              await expect(
+                testPropertyFilter({
+                  className: fullName,
+                  classAlias: "x",
+                  rule: {
+                    sourceAlias: "x",
+                    propertyName: "ECInstanceId",
+                    operator,
+                    propertyTypeName: "long",
+                    value: { rawValue: "0x123", displayValue: "0x123" },
+                  },
+                  expectedECSql: ``,
+                }),
+              ).rejects.toThrow(`Operator "${operator}" is not supported`);
+            }
+          });
+
+          it(`throws on binary rules without value`, async () => {
+            const { fullName } = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            await expect(
+              testPropertyFilter({
+                className: fullName,
+                classAlias: "x",
+                rule: {
+                  sourceAlias: "x",
+                  propertyName: "ECInstanceId",
+                  operator: "is-equal",
+                  propertyTypeName: "long",
+                },
+                expectedECSql: ``,
+              }),
+            ).rejects.toThrow("is missing value");
+          });
+
+          it(`throws on non-id values`, async () => {
+            const { fullName } = imodelAccess.stubEntityClass({ schemaName: "s", className: "c" });
+            for (const value of [
+              { rawValue: "abc", displayValue: "abc" },
+              { rawValue: 123, displayValue: "123" },
+              { rawValue: { className: "s.c", id: "0x123" }, displayValue: "0x123" },
+            ] satisfies GenericInstanceFilterRuleValue[]) {
+              await expect(
+                testPropertyFilter({
+                  className: fullName,
+                  classAlias: "x",
+                  rule: {
+                    sourceAlias: "x",
+                    propertyName: "ECInstanceId",
+                    operator: "is-equal",
+                    propertyTypeName: "long",
+                    value,
+                  },
+                  expectedECSql: ``,
+                }),
+              ).rejects.toThrow("expects an `Id64String` value");
+            }
           });
         });
 
