@@ -53,6 +53,10 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
    * provider that checks `classDerivesFrom(target.primaryClass, "BisCore.Element")` contributes nothing for
    * it. Anchors of a declaration with a custom `resolve` are the concrete classes it returns.
    *
+   * To guarantee termination, a provider is applied at most once per anchor class along a chain of nested
+   * anchors. E.g. a `B -> B` declaration expands one level below the first `B` anchor, whichever concrete
+   * `B` subclasses the data contains.
+   *
    * Calculated fields and declarations with a custom `resolve` aren't applied recursively.
    */
   applyRecursively?: boolean;

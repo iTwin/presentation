@@ -687,8 +687,10 @@ const EMPTY_APPLIED_PAIRS: ReadonlySet<string> = new Set();
 /**
  * Applies `applyRecursively` providers on the anchors of `baseGroups`, recursively and breadth-first.
  * Expansion stops when a nested declaration resolves to no instances or the `(provider, anchor class)` cycle
- * guard detects a repeated branch. Nested declarations are resolved as a full path (`prefixSteps +
- * declaration.path`) from the original target, so its instance IDs and filter scope every nested level.
+ * guard detects a repeated branch. The guard uses declared anchor classes, so distinct concrete subclasses
+ * below the same declared step don't count as distinct anchors. Nested declarations are resolved as a full
+ * path (`prefixSteps + declaration.path`) from the original target, so its instance IDs and filter scope
+ * every nested level.
  */
 async function resolveNestedGroups({
   imodelAccess,
