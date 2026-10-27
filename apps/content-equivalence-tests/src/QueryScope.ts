@@ -330,7 +330,7 @@ class ScopedQueryReader implements AsyncIterableIterator<ECSqlQueryRow> {
       result = await waitWithAbort(pending, this._signal);
     } catch (error) {
       // The `aborted` flag may change while we wait for `pending`
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      // oxlint-disable-next-line typescript/no-unnecessary-condition
       if (this._signal.aborted) {
         await this.cancel(pending);
         throw this._signal.reason;
