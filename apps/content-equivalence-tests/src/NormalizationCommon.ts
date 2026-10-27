@@ -84,8 +84,8 @@ export async function getRelationshipConstraints(
 
 /**
  * A single relationship hop from the content target class to a related class, expressed through the
- * relationship selected by the path's declaration (rather than the concrete relationship subclass found
- * in the data) and that relationship's schema constraint classes at each end. Only the last step's
+ * normalized relationship and that relationship's schema constraint classes at each end. New captures
+ * retain declared relationships for navigation-backed steps and concrete relationships otherwise. Only the last step's
  * target stays concrete: it's the class the field's properties are read from. `instanceFilter` is
  * omitted, since legacy captures no equivalent.
  */
