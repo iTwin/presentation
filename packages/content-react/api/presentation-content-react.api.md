@@ -4,14 +4,25 @@
 
 ```ts
 
+import type { ContentConfiguration } from '@itwin/presentation-content';
+import type { ContentItem } from '@itwin/presentation-content';
+import type { ContentTarget } from '@itwin/presentation-content';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
+import type { Event as Event_2 } from '@itwin/presentation-shared';
 import type { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import type { ReadonlyCalculatedField } from '@itwin/presentation-content';
 import type { ReadonlyContentDescriptor } from '@itwin/presentation-content';
 import type { ReadonlyPropertyField } from '@itwin/presentation-content';
+import type { SelectionStorage } from '@itwin/unified-selection';
 import type { Value } from '@itwin/presentation-shared';
+
+// @public
+export interface Content {
+    descriptor: ReadonlyContentDescriptor;
+    items: ContentItem[];
+}
 
 // @public
 export function createInstanceFilterProperties(input: CreateInstanceFilterPropertiesProps): InstanceFilterProperties;
@@ -19,6 +30,19 @@ export function createInstanceFilterProperties(input: CreateInstanceFilterProper
 // @public
 interface CreateInstanceFilterPropertiesProps {
     descriptor: ReadonlyContentDescriptor;
+}
+
+// @public
+export function getContent(props: GetContentProps): Promise<Content>;
+
+// @public
+interface GetContentProps {
+    abortSignal?: AbortSignal;
+    getContentConfiguration: (props: {
+        imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    }) => Promise<ContentConfiguration>;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    targets: ContentTarget[];
 }
 
 // @public
@@ -64,11 +88,50 @@ interface UniqueFieldValuesResult {
 }
 
 // @public
+export function useContent(props: UseContentProps): UseContentResult;
+
+// @public
+interface UseContentProps {
+    getContentConfiguration?: (props: {
+        imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    }) => Promise<ContentConfiguration>;
+    imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
+    imodelChanged?: Event_2<() => void>;
+    targets: ContentTarget[] | undefined;
+}
+
+// @public
+interface UseContentResult {
+    content: Content | undefined;
+    error?: unknown;
+    isLoading: boolean;
+    reload: () => void;
+}
+
+// @public
 export function useInstanceFilterPropertiesInfo(input: UseInstanceFilterPropertiesInfoProps): InstanceFilterPropertiesInfo;
 
 // @public
 interface UseInstanceFilterPropertiesInfoProps extends CreateInstanceFilterPropertiesProps {
     initialSelectedClasses?: EC.FullClassNameDotNotation[];
+}
+
+// @public
+export function useUnifiedSelectionContent(props: UseUnifiedSelectionContentProps): UseUnifiedSelectionContentResult;
+
+// @public
+interface UseUnifiedSelectionContentProps extends Omit<UseContentProps, "targets" | "imodelAccess"> {
+    imodelAccess: UseContentProps["imodelAccess"] & {
+        imodelKey: string;
+    };
+    instancesLimit?: number;
+    selectionStorage: SelectionStorage;
+}
+
+// @public
+interface UseUnifiedSelectionContentResult extends UseContentResult {
+    isOverLimit: boolean;
+    selectedInstancesCount: number;
 }
 
 // @public

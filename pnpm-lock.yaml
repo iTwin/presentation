@@ -1038,6 +1038,9 @@ importers:
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
+      '@itwin/unified-selection':
+        specifier: workspace:^
+        version: link:../unified-selection
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
