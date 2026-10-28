@@ -11,7 +11,6 @@ import { createRoot } from "react-dom/client";
 import { UiFramework } from "@itwin/appui-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
-import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
@@ -35,7 +34,8 @@ Logger.setLevelDefault(LogLevel.Warning);
 async function initializeApp() {
   const iModelAppOpts: IModelAppOptions = { localization: new ITwinLocalization({ initOptions: { lng: "en" } }) };
 
-  if (ProcessDetector.isElectronAppFrontend) {
+  if (isElectronAppFrontend()) {
+    const { ElectronApp } = await import("@itwin/core-electron/lib/cjs/ElectronFrontend");
     await ElectronApp.startup({
       iModelApp: {
         ...iModelAppOpts,
@@ -59,6 +59,14 @@ async function initializeApp() {
     UiFramework.initialize(),
     IModelApp.quantityFormatter.setActiveUnitSystem("metric"),
   ]);
+}
+
+/**
+ * Whether the app runs as the frontend of its Electron app. Browsers built on Electron (e.g. the VS Code integrated
+ * browser) also report "Electron" in their user agent, so check for the API exposed by the app's preload script too.
+ */
+function isElectronAppFrontend() {
+  return ProcessDetector.isElectronAppFrontend && "itwinjs" in window;
 }
 
 async function initializePresentation() {
