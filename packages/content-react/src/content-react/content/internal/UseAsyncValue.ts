@@ -42,6 +42,7 @@ export function useAsyncValue<T>(
   const [state, setState] = useState<AsyncValueState<T>>();
   useEffect(() => {
     if (!load) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setState(undefined);
       return undefined;
     }

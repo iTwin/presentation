@@ -136,6 +136,7 @@ function usePropertyData({
   const [state, setState] = useState<{ data?: PropertyData; error?: unknown }>({});
   useEffect(() => {
     if (!content) {
+      // oxlint-disable-next-line react/set-state-in-effect
       setState({});
       return undefined;
     }

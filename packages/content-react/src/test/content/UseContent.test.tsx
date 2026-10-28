@@ -5,12 +5,12 @@
 
 import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BeEvent } from "@itwin/core-bentley";
 import {
   createContentProvider,
   createIModelContentConfiguration,
   resolveContentSources,
 } from "@itwin/presentation-content";
-import { BeEvent } from "@itwin/core-bentley";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useContent } from "../../content-react/content/UseContent.js";
 import { classA } from "../Helpers.js";
