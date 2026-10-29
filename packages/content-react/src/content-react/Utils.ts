@@ -28,7 +28,8 @@ export function abortableIterable<T>(items: AsyncIterable<T>, signal: AbortSigna
       const release = () => {
         if (!released) {
           released = true;
-          void source.return?.();
+          // Nobody waits for the release, so ignore its errors rather than leaving them unhandled.
+          source.return?.().catch(() => {});
         }
       };
       return {
