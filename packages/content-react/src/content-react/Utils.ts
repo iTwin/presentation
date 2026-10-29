@@ -4,25 +4,39 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Wraps an async iterable so that `for await` over it stops as soon as `signal` aborts, even while a
- * value is still pending.
- *
- * A plain `for await` only gets control between values, so an abort during a slow value takes effect
- * only once that value arrives. It also awaits `return()` when the loop exits early, and an async
- * generator suspended on a pending value queues that `return()` behind it, stalling the caller. This
- * wrapper races each `next()` against the signal and releases the inner iterator without awaiting it.
+ * Runs `load`, rejecting with the signal's reason as soon as the signal is aborted, without waiting for `load` to
+ * complete. Use for loaders that don't accept an abort signal themselves: their work keeps running, but its result is
+ * dropped.
  */
-export function abortable<T>(iterable: AsyncIterable<T>, signal: AbortSignal | undefined): AsyncIterable<T> {
+export async function abortable<T>(load: () => Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+  return withAbort(load, signal);
+}
+
+/**
+ * Yields items of the given iterable, rejecting with the signal's reason as soon as the signal is aborted, even
+ * while an item is still being read.
+ *
+ * A plain `for await` only gets control between items, and awaits the source's `return()` when the loop exits early,
+ * which an async generator suspended on a pending item queues behind that item. So this wrapper races every read
+ * against the signal, and releases the source without waiting for it.
+ */
+export function abortableIterable<T>(items: AsyncIterable<T>, signal: AbortSignal | undefined): AsyncIterable<T> {
   return {
     [Symbol.asyncIterator]() {
-      const inner = iterable[Symbol.asyncIterator]();
-      const release = () => void inner.return?.();
+      const source = items[Symbol.asyncIterator]();
+      let released = false;
+      const release = () => {
+        if (!released) {
+          released = true;
+          void source.return?.();
+        }
+      };
       return {
         async next() {
           try {
-            return await withAbort(inner.next(), signal);
+            return await withAbort(async () => source.next(), signal);
           } catch (e) {
-            // `for await` doesn't call `return()` when `next()` rejects, so release the inner iterator here.
+            // `for await` doesn't call `return()` when `next()` rejects, so release the source here.
             release();
             throw e;
           }
@@ -36,29 +50,36 @@ export function abortable<T>(iterable: AsyncIterable<T>, signal: AbortSignal | u
   };
 }
 
-/** Rejects as soon as `signal` aborts, rather than waiting for `promise` to settle first. */
-async function withAbort<T>(promise: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+/**
+ * Starts `start` unless the signal is already aborted, and settles like the started promise, but rejects with the
+ * signal's reason as soon as the signal is aborted, including when `start` itself aborts it.
+ */
+async function withAbort<T>(start: () => Promise<T>, signal: AbortSignal | undefined): Promise<T> {
   if (!signal) {
-    return promise;
+    return start();
   }
   signal.throwIfAborted();
-  let onAbort: (() => void) | undefined;
+  const promise = start();
+  let removeAbortListener: (() => void) | undefined;
   try {
-    return await Promise.race([
+    const result = await Promise.race([
       promise,
       new Promise<never>((_resolve, reject) => {
-        onAbort = () =>
-          reject(
-            signal.reason instanceof Error
-              ? signal.reason
-              : new Error(`Operation was aborted: ${String(signal.reason)}`, { cause: signal.reason }),
-          );
+        // oxlint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        const onAbort = () => reject(signal.reason);
+        // `start` may have aborted the signal, in which case the `abort` event has already been raised.
+        if (signal.aborted) {
+          onAbort();
+          return;
+        }
         signal.addEventListener("abort", onAbort, { once: true });
+        removeAbortListener = () => signal.removeEventListener("abort", onAbort);
       }),
     ]);
+    // The signal may have been aborted after `promise` settled, but before this continuation ran.
+    signal.throwIfAborted();
+    return result;
   } finally {
-    if (onAbort) {
-      signal.removeEventListener("abort", onAbort);
-    }
+    removeAbortListener?.();
   }
 }

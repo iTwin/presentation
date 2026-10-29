@@ -84,6 +84,43 @@ describe("getContent", () => {
     controller.abort(new Error("aborted"));
 
     await expect(promise).rejects.toThrow("aborted");
-    expect(onItemsIterationFinished).toHaveBeenCalledOnce();
+    // The provider releases its iterator once the item it's reading is ready.
+    await vi.waitFor(() => expect(onItemsIterationFinished).toHaveBeenCalledOnce());
+  });
+
+  it("rejects with the signal's reason without waiting for pending content source resolution", async () => {
+    const controller = new AbortController();
+    vi.mocked(resolveContentSources).mockReturnValue(new Promise(() => {}));
+    const promise = getContent({ imodelAccess, targets, getContentConfiguration, abortSignal: controller.signal });
+    await vi.waitFor(() => expect(resolveContentSources).toHaveBeenCalled());
+    controller.abort("reason");
+
+    await expect(promise).rejects.toBe("reason");
+    expect(createContentProvider).not.toHaveBeenCalled();
+  });
+
+  it("rejects without waiting for a pending item", async () => {
+    const controller = new AbortController();
+    const reason = new Error("aborted");
+    let returned = false;
+    vi.mocked(createContentProvider).mockReturnValue({
+      ...createProvider({ descriptor, items }),
+      getItems: () => ({
+        [Symbol.asyncIterator]: () => ({
+          next: async () => new Promise<never>(() => {}),
+          return: async () => {
+            returned = true;
+            return { done: true, value: undefined };
+          },
+        }),
+      }),
+    });
+    const promise = getContent({ imodelAccess, targets, getContentConfiguration, abortSignal: controller.signal });
+    await vi.waitFor(() => expect(createContentProvider).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.abort(reason);
+
+    await expect(promise).rejects.toBe(reason);
+    expect(returned).toBe(true);
   });
 });

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
-import { abortable, abortableIterable } from "./internal/Utils.js";
+import { abortable, abortableIterable } from "../Utils.js";
 
 import type {
   ContentConfiguration,
@@ -54,8 +54,9 @@ interface GetContentProps {
  *
  * Use `useContent` to load content in React components. It keeps content up to date and tracks loading state.
  *
- * Stops reading items as soon as `abortSignal` is aborted. Resolving content sources and building the
- * descriptor run to completion, because `@itwin/presentation-content` doesn't accept an abort signal yet.
+ * The returned promise rejects with the signal's reason as soon as `abortSignal` is aborted, and reading items stops.
+ * Resolving content sources and building the descriptor keep running in the background until they complete, because
+ * `@itwin/presentation-content` doesn't accept an abort signal yet.
  *
  * @public
  */
