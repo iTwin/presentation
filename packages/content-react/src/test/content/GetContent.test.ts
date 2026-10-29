@@ -4,7 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
+import {
+  createContentProvider,
+  createIModelContentConfiguration,
+  resolveContentSources,
+} from "@itwin/presentation-content";
 import { getContent } from "../../content-react/content/GetContent.js";
 import { classA } from "../Helpers.js";
 import { createDescriptor, createField, createItem, createProvider } from "./Helpers.js";
@@ -14,14 +18,19 @@ import type { Props } from "@itwin/presentation-shared";
 
 vi.mock("@itwin/presentation-content", async (importOriginal) => {
   const original = await importOriginal<typeof presentationContentModule>();
-  return { ...original, createContentProvider: vi.fn(), resolveContentSources: vi.fn() };
+  return {
+    ...original,
+    createContentProvider: vi.fn(),
+    createIModelContentConfiguration: vi.fn(),
+    resolveContentSources: vi.fn(),
+  };
 });
 
 describe("getContent", () => {
   const imodelAccess = {} as Props<typeof getContent>["imodelAccess"];
   const targets: presentationContentModule.ContentTarget[] = [{ primaryClass: classA, instanceIds: ["0x1"] }];
   const config: presentationContentModule.ContentConfiguration = { imodelFieldsProviders: [] };
-  const getContentConfiguration = vi.fn<Props<typeof getContent>["getContentConfiguration"]>();
+  const getContentConfiguration = vi.fn<NonNullable<Props<typeof getContent>["getContentConfiguration"]>>();
   const sources: presentationContentModule.ContentSource[] = [];
   const descriptor = createDescriptor({ fields: [createField({ id: "prop" })] });
   const items = [
@@ -42,6 +51,18 @@ describe("getContent", () => {
     expect(resolveContentSources).toHaveBeenCalledExactlyOnceWith({ imodelAccess, targets, config });
     expect(createContentProvider).toHaveBeenCalledExactlyOnceWith({ imodelAccess, sources, config });
     expect(content.descriptor).toBe(descriptor);
+    expect(content.items).toEqual(items);
+  });
+
+  it("uses the default content configuration when none is given", async () => {
+    const defaultConfig: presentationContentModule.ContentConfiguration = { descriptorTransformers: [] };
+    vi.mocked(createIModelContentConfiguration).mockResolvedValue(defaultConfig);
+
+    const content = await getContent({ imodelAccess, targets });
+
+    expect(createIModelContentConfiguration).toHaveBeenCalledExactlyOnceWith({ imodelAccess });
+    expect(resolveContentSources).toHaveBeenCalledExactlyOnceWith({ imodelAccess, targets, config: defaultConfig });
+    expect(createContentProvider).toHaveBeenCalledExactlyOnceWith({ imodelAccess, sources, config: defaultConfig });
     expect(content.items).toEqual(items);
   });
 

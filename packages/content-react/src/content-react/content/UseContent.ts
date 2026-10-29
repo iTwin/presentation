@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import deepEqual from "fast-deep-equal/es6/index.js";
 import { useEffect, useMemo, useState } from "react";
 import { createIModelContentConfiguration } from "@itwin/presentation-content";
 import { getContent } from "./GetContent.js";
 import { useAsyncValue } from "./internal/UseAsyncValue.js";
-import { deepEqual } from "./internal/Utils.js";
 
 import type { ContentConfiguration, ContentTarget } from "@itwin/presentation-content";
 import type { ECSchemaProvider, ECSqlQueryExecutor, Event } from "@itwin/presentation-shared";
@@ -138,7 +138,10 @@ function cacheConfiguration(create: () => Promise<ContentConfiguration>): () => 
   };
 }
 
-/** Returns the previously returned value for as long as the given value stays equal to it by value. */
+/**
+ * Returns the previously returned value for as long as the given value stays equal to it by value. Uses the `es6`
+ * variant of `fast-deep-equal`, because targets may carry `Set`-valued `idset` bindings.
+ */
 function useStableValue<T>(value: T): T {
   const [stableValue, setStableValue] = useState(value);
   if (stableValue !== value && !deepEqual(stableValue, value)) {

@@ -3,7 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
+import {
+  createContentProvider,
+  createIModelContentConfiguration,
+  resolveContentSources,
+} from "@itwin/presentation-content";
 import { abortable, abortableIterable } from "../Utils.js";
 
 import type {
@@ -36,10 +40,9 @@ interface GetContentProps {
   targets: ContentTarget[];
   /**
    * Returns the content configuration. Called once per `getContent` call, so cache the result when loading
-   * content repeatedly. Pass `createIModelContentConfiguration` from `@itwin/presentation-content` to use
-   * the default configuration.
+   * content repeatedly. Defaults to `createIModelContentConfiguration` from `@itwin/presentation-content`.
    */
-  getContentConfiguration: (props: {
+  getContentConfiguration?: (props: {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   }) => Promise<ContentConfiguration>;
   /** Cancels loading. The returned promise rejects with the signal's reason. */
@@ -61,7 +64,7 @@ interface GetContentProps {
  * @public
  */
 export async function getContent(props: GetContentProps): Promise<Content> {
-  const { imodelAccess, targets, getContentConfiguration, abortSignal } = props;
+  const { imodelAccess, targets, getContentConfiguration = createIModelContentConfiguration, abortSignal } = props;
   const config = await abortable(async () => getContentConfiguration({ imodelAccess }), abortSignal);
   const sources = await abortable(async () => resolveContentSources({ imodelAccess, targets, config }), abortSignal);
   const provider = createContentProvider({ imodelAccess, sources, config });
