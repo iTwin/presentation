@@ -15,17 +15,15 @@ import {
   createECSchemaProvider,
   createECSqlQueryExecutor,
   createIModelKey,
-  createValueFormatter,
   registerTxnListeners,
 } from "@itwin/presentation-core-interop";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Button, CircularProgress, Stack, Typography } from "@mui/material";
-import { createPropertyData } from "./PropertyDataMapper";
+import { createPropertyData } from "./TransformToPropertyRecord";
 
 import type { IPropertyDataProvider, PropertyData } from "@itwin/components-react";
 import type { IModelConnection } from "@itwin/core-frontend";
 import type { Content } from "@itwin/presentation-content-react";
-import type { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 
 /**
  * Properties widget backed by `useUnifiedSelectionContent` from `@itwin/presentation-content-react`. Loads content
@@ -58,8 +56,7 @@ export function ContentPropertiesWidget({ imodel }: { imodel: IModelConnection }
     imodelChanged,
     selectionStorage: unifiedSelectionContext.storage,
   });
-  const formatter = useValueFormatter(imodel);
-  const propertyData = usePropertyData({ content, formatter });
+  const propertyData = usePropertyData(content);
   const loadingError = error ?? propertyData.error;
 
   const [dataProvider] = useState(() => new ContentPropertyDataProvider());
@@ -126,13 +123,7 @@ function Message({ children }: { children: React.ReactNode }) {
 }
 
 /** Maps loaded content to `PropertyData`, keeping the previous data while mapping new content of the same targets. */
-function usePropertyData({
-  content,
-  formatter,
-}: {
-  content: Content | undefined;
-  formatter: IPrimitiveValueFormatter;
-}) {
+function usePropertyData(content: Content | undefined) {
   const [state, setState] = useState<{ data?: PropertyData; error?: unknown }>({});
   useEffect(() => {
     if (!content) {
@@ -141,37 +132,15 @@ function usePropertyData({
       return undefined;
     }
     let cancelled = false;
-    createPropertyData({ content, formatter }).then(
+    createPropertyData(content).then(
       (data) => !cancelled && setState({ data }),
       (error: unknown) => !cancelled && setState({ error }),
     );
     return () => {
       cancelled = true;
     };
-  }, [content, formatter]);
+  }, [content]);
   return content ? state : {};
-}
-
-/** Creates a value formatter for the active unit system, and creates it again when the unit system changes. */
-function useValueFormatter(imodel: IModelConnection): IPrimitiveValueFormatter {
-  const [unitSystem, setUnitSystem] = useState(IModelApp.quantityFormatter.activeUnitSystem);
-  useEffect(
-    () =>
-      IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(({ system }) =>
-        setUnitSystem(system),
-      ),
-    [],
-  );
-  return useMemo(
-    () =>
-      createValueFormatter({
-        formatsProvider: IModelApp.formatsProvider,
-        unitsProvider: IModelApp.quantityFormatter,
-        imodel,
-        unitSystem,
-      }),
-    [imodel, unitSystem],
-  );
 }
 
 class ContentPropertyDataProvider implements IPropertyDataProvider {

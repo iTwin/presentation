@@ -20,6 +20,12 @@ import type { Value } from '@itwin/presentation-shared';
 import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
+interface BaseContentEntry {
+    readonly categoryId?: CategoryDefinition["id"];
+    readonly isMerged?: boolean;
+}
+
+// @public
 interface BaseField {
     categoryId?: string;
     hidden?: boolean;
@@ -117,6 +123,9 @@ export interface ContentDescriptor {
 }
 
 // @public
+type ContentEntry = FieldEntry | RelatedInstancesEntry;
+
+// @public
 export interface ContentItem {
     readonly descriptor: ReadonlyContentDescriptor;
     getRelatedInstances(props: {
@@ -147,6 +156,14 @@ interface ContentProviderProps {
 }
 
 // @public
+export interface ContentRecords {
+    readonly categories: Readonly<Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>>;
+    readonly descriptor: ReadonlyContentDescriptor;
+    readonly entries: ReadonlyArray<ContentEntry>;
+    readonly items: ReadonlyArray<ContentItem>;
+}
+
+// @public
 interface ContentRequestOptions {
     filters?: ContentValueFilter[];
     sorting?: ContentSortSpec[];
@@ -174,6 +191,18 @@ export interface ContentTarget {
 }
 
 // @public
+export type ContentTransformer = (content: ContentTransformerInput) => ContentRecords;
+
+// @public
+interface ContentTransformerInput {
+    descriptor: ReadonlyContentDescriptor;
+    items: ReadonlyArray<ContentItem>;
+}
+
+// @public
+type ContentTransformStep = (records: ContentRecords) => ContentRecords;
+
+// @public
 type ContentValueFilter = (ContentValueFilterTarget & {
     operator: ScalarValueFilterOperator;
     value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
@@ -198,6 +227,12 @@ type ContentValueFilterTarget = {
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
+export function createContentTransformer(...steps: ContentTransformStep[]): ContentTransformer;
+
+// @public
+export function createDefaultContentTransformer(props?: DefaultContentTransformerProps): ContentTransformer;
+
+// @public
 export function createHiddenSchemaMembersDescriptorTransformer(): DescriptorTransformer;
 
 // @public
@@ -214,6 +249,11 @@ export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
 
 // @public
 export const DEFAULT_FIELDS_PROVIDER_PRIORITY = 1000;
+
+// @public
+interface DefaultContentTransformerProps {
+    fields?: "common" | "all";
+}
 
 // @public
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer;
@@ -278,6 +318,13 @@ type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration
 
 // @public
 export type Field = PropertyField | CalculatedField | ExternalField;
+
+// @public
+interface FieldEntry extends BaseContentEntry {
+    readonly field: ReadonlyField;
+    readonly kind: "field";
+    readonly values: ReadonlyArray<DeepReadonly<Value>>;
+}
 
 // @public
 interface FieldsProviderContribution {
@@ -391,6 +438,21 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 
 // @public
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
+
+// @public
+interface RelatedInstancesEntry extends BaseContentEntry {
+    readonly fields: ReadonlyArray<ReadonlyPropertyField>;
+    readonly kind: "related-instances";
+    readonly pathFromTarget: DeepReadonly<RelationshipPath>;
+    readonly values: ReadonlyArray<ReadonlyArray<RelatedInstanceValues>>;
+}
+
+// @public
+interface RelatedInstanceValues {
+    readonly key: DeepReadonly<InstanceKey>;
+    readonly relationshipKey?: DeepReadonly<InstanceKey>;
+    readonly values: Readonly<Record<Field["id"], DeepReadonly<Value>>>;
+}
 
 // @public
 interface RelatedPropertiesDeclaration {
