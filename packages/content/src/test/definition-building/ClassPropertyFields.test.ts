@@ -203,6 +203,26 @@ describe("createPropertyFields", () => {
       expect(field).to.not.have.property("readOnly");
       expect(field).to.not.have.property("hidden");
     });
+
+    it("marks the field read-only when the schema declares the property read-only", () => {
+      const [field] = collectFields({
+        properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C", isReadOnly: true })],
+        valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
+        spec: { select: "all" },
+      });
+      expect(field.readOnly).to.equal(true);
+    });
+
+    it("lets a `readOnly` override take precedence over the schema read-only status", () => {
+      const [field] = collectFields({
+        properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C", isReadOnly: true })],
+        valueClassNames: ["TestSchema.C"],
+        relationshipInfo: undefined,
+        spec: { select: "all", overrides: { A: { readOnly: false } } },
+      });
+      expect(field.readOnly).to.equal(false);
+    });
   });
 
   describe("category facts", () => {

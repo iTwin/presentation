@@ -33,7 +33,10 @@ interface BaseField {
   categoryId?: string;
   /** If true, the field is queried but not displayed in UI. */
   hidden?: boolean;
-  /** If true, the field is read-only. */
+  /**
+   * If true, the field is read-only. For a property field, it's taken from the property's schema
+   * read-only status unless overridden by the contributing spec or a descriptor transformer.
+   */
   readOnly?: boolean;
 }
 

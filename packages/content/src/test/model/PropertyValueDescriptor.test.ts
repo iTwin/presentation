@@ -303,6 +303,27 @@ describe("createValueDescriptorFromProperty", () => {
       expect(result).to.deep.equal({ kind: "array", elementType: { kind: "primitive", type: "String" } });
     });
 
+    it("carries the schema's occurrence limits", () => {
+      expect(
+        createValueDescriptorFromProperty(
+          createPrimitiveProperty({ name: "Tags", primitiveType: "String", array: true, minOccurs: 1, maxOccurs: 5 }),
+        ),
+      ).to.deep.equal({
+        kind: "array",
+        elementType: { kind: "primitive", type: "String" },
+        minOccurs: 1,
+        maxOccurs: 5,
+      });
+    });
+
+    it("omits a zero `minOccurs` and an unbounded `maxOccurs`", () => {
+      expect(
+        createValueDescriptorFromProperty(
+          createPrimitiveProperty({ name: "Tags", primitiveType: "String", array: true, minOccurs: 0 }),
+        ),
+      ).to.deep.equal({ kind: "array", elementType: { kind: "primitive", type: "String" } });
+    });
+
     it("wraps an enumeration element type", () => {
       const result = createValueDescriptorFromProperty(
         createEnumerationProperty({ name: "Levels", type: "Number", array: true }),
