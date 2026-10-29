@@ -66,6 +66,18 @@ describe("SelectionStorage", () => {
       expect(selectionStorage.getSelectionLevels({ imodelKey })).toEqual([0, 3]);
     });
 
+    it("returns selection levels sorted in ascending numeric order", () => {
+      [0, 2, 10].forEach((level, i) =>
+        selectionStorage.addToSelection({
+          imodelKey,
+          source: "",
+          selectables: [createSelectableInstanceKey(i + 1, "schema.class1")],
+          level,
+        }),
+      );
+      expect(selectionStorage.getSelectionLevels({ imodelKey })).toEqual([0, 2, 10]);
+    });
+
     it("doesn't include empty selection levels", () => {
       selectionStorage.addToSelection({
         imodelKey,

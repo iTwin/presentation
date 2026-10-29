@@ -572,6 +572,18 @@ describe("mergePropertyFieldsByIdentity", () => {
     expect(() => merge([a, b])).to.throw(/divergent metadata/);
   });
 
+  it("throws when grouped array candidates have divergent occurrence limits", () => {
+    const create = (valueClassName: EC.FullClassNameDotNotation, maxOccurs: number | undefined) =>
+      createField({
+        propertyClassName: "Stuff.Thing",
+        propertyName: "Tags",
+        valueClassNames: [valueClassName],
+        type: { kind: "array", elementType: { kind: "primitive", type: "String" }, minOccurs: 1, maxOccurs },
+      });
+    expect(() => merge([create("Stuff.Door", 3), create("Stuff.Window", 3)])).to.not.throw();
+    expect(() => merge([create("Stuff.Door", 3), create("Stuff.Window", undefined)])).to.throw(/divergent metadata/);
+  });
+
   it("merges navigation candidates that share a target class", () => {
     const a = createField({
       propertyClassName: "Stuff.Thing",

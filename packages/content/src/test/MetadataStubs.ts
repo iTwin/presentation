@@ -24,6 +24,11 @@ export function createPrimitiveProperty(props: {
   declaringClass?: EC.FullClassNameDotNotation | EC.Class;
   /** Whether the property itself is reported as hidden. Defaults to `false`. */
   isHidden?: boolean;
+  /** Whether the schema declares the property read-only. */
+  isReadOnly?: boolean;
+  /** Array occurrence limits; only meaningful with `array: true`. `minOccurs` defaults to `0`. */
+  minOccurs?: number;
+  maxOccurs?: number;
   /** EC schema property category assigned to the property, if any. */
   category?: { fullName: EC.FullClassNameDotNotation; label?: string };
 }): EC.Property {
@@ -35,6 +40,8 @@ export function createPrimitiveProperty(props: {
         ? ({ fullName: props.declaringClass } as EC.Class)
         : (props.declaringClass ?? ({ fullName: "TestSchema.TestClass" } as unknown as EC.Class)),
     isHidden: props.isHidden ?? false,
+    isReadOnly: props.isReadOnly,
+    ...(props.array ? { minOccurs: props.minOccurs ?? 0, maxOccurs: props.maxOccurs } : undefined),
     kindOfQuantity: props.koq ? ({ fullName: props.koq } as unknown as EC.KindOfQuantity) : undefined,
     category: props.category
       ? ({

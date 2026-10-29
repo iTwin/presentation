@@ -326,6 +326,8 @@ export namespace EC {
     class: Class;
     label?: string;
     isHidden: boolean;
+    /** Whether the schema declares the property as read-only. `undefined` means the metadata provider doesn't supply it. */
+    isReadOnly?: boolean;
     kindOfQuantity?: KindOfQuantity;
     category?: PropertyCategory;
 
@@ -564,6 +566,10 @@ export interface ArrayValueDescriptor {
   kind: "array";
   /** The type descriptor for each element in the array. */
   elementType: ValueDescriptor;
+  /** Minimum number of elements the array must contain, when constrained. */
+  minOccurs?: number;
+  /** Maximum number of elements the array may contain, when constrained. `undefined` means unbounded. */
+  maxOccurs?: number;
 }
 
 /**

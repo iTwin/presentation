@@ -94,7 +94,8 @@ interface CreatePropertyFieldsProps {
  * - `propertyClassName` is the class that *declares* the property (may be a base class), so an
  *   inherited property is attributed to its declaring class;
  * - `label` resolves to the override label, else the property's label, else its name;
- * - `readOnly`/`hidden` come from the merged overrides when present;
+ * - `readOnly` comes from the merged overrides when present, else is `true` when the schema declares
+ *   the property read-only; `hidden` comes from the merged overrides when present;
  * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
  *
  * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
@@ -141,6 +142,8 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
     };
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;
+    } else if (property.isReadOnly) {
+      field.readOnly = true;
     }
     if (overrides.hidden !== undefined) {
       field.hidden = overrides.hidden;

@@ -437,6 +437,7 @@ export function createECPropertyFromSchemaView(
     description: svProp.description,
     label: resolveSchemaItemLabel(svProp.label, svProp.name),
     isHidden: svProp.isHidden,
+    isReadOnly: svProp.isReadOnly,
     get category(): EC.PropertyCategory | undefined {
       return svProp.category
         ? createECPropertyCategoryFromSchemaView(svProp.category, useOrCreateSchema(svProp.category.schema, context))
