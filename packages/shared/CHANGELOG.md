@@ -1,5 +1,14 @@
 # @itwin/presentation-shared
 
+## 2.2.0
+
+### Minor Changes
+
+- [#1700](https://github.com/iTwin/presentation/pull/1700): Added schema-derived property attributes to metadata and value descriptor types.
+  
+  - `EC.Property.isReadOnly` tells whether the schema declares the property read-only. It's optional, so metadata providers that don't supply it leave it `undefined`.
+  - `ArrayValueDescriptor.minOccurs` and `ArrayValueDescriptor.maxOccurs` carry an array's occurrence limits, when constrained.
+
 ## 2.1.0
 
 ### Minor Changes

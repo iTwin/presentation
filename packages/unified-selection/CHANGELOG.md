@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 2.0.2
+
+### Patch Changes
+
+- [#1703](https://github.com/iTwin/presentation/pull/1703): `SelectionStorage`: Fixed `getSelectionLevels` sorting levels lexicographically instead of numerically (e.g. returning `[10, 2]` instead of `[2, 10]`).
+- Updated dependencies:
+  - @itwin/presentation-shared@2.2.0
+
 ## 2.0.1
 
 ### Patch Changes
