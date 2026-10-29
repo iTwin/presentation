@@ -8,9 +8,14 @@ import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProv
 import { mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 import { createModelsTreeIdsProvider, normalizeModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
+import { createHierarchyNodePaths, createHierarchyNodeSearchTree } from "./ModelsTreeSearchHierarchyNodes.js";
 
 import type { GuidString } from "@itwin/core-bentley";
-import type { HierarchyDefinition, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type {
+  HierarchyDefinition,
+  HierarchyProvider,
+  LimitingECSqlQueryExecutor,
+} from "@itwin/presentation-hierarchies";
 import type { ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
 import type {
   ElementsGroupInfo,
@@ -41,8 +46,23 @@ interface ModelsTreeProps {
  * Search-specific data access and options for a models tree.
  * @beta
  */
-type ModelsTreeSearchProps = ModelsTreeSearchOptions &
-  ({ targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string });
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & ModelsTreeSearchTargetProps;
+
+/**
+ * Search targets for a models tree, specified either as instance keys or grouping nodes, or as a label.
+ * @beta
+ */
+type ModelsTreeSearchTargetProps = { targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string };
+
+/**
+ * Search options for loading hierarchy nodes of models tree search results.
+ * @beta
+ */
+type ModelsTreeHierarchyNodesSearchProps = Omit<ModelsTreeSearchOptions, "includeOnlyVisibleNodeInstanceKeys"> &
+  ModelsTreeSearchTargetProps & {
+    /** Provider for this tree and iModel, with subject, model, and category label merging disabled. */
+    hierarchyProvider: HierarchyProvider;
+  };
 
 /**
  * Creates a models hierarchy definition and search helpers that share hierarchy configuration and a unique ID.
@@ -86,6 +106,12 @@ export function createModelsTree(props: ModelsTreeProps) {
     idsProvider,
     uniqueId,
   });
+  const hierarchyNodesSearchConfig: ModelsTreeHierarchyConfiguration = {
+    ...hierarchyConfig,
+    subjects: { ...hierarchyConfig.subjects, labelMerging: "disable" },
+    models: { ...hierarchyConfig.models, labelMerging: "disable" },
+    categories: { ...hierarchyConfig.categories, labelMerging: "disable" },
+  };
   return {
     /** Hierarchy definition bound to the supplied iModel access and ID provider. */
     hierarchyDefinition,
@@ -112,6 +138,73 @@ export function createModelsTree(props: ModelsTreeProps) {
         idsProvider,
         uniqueId,
         imodelAccess: props.imodelAccess,
+      }),
+    /**
+     * Same as `createInstanceKeyPaths`, but yields paths of hierarchy nodes loaded from `hierarchyProvider` instead of instance keys.
+     *
+     * The provider must use this tree's `hierarchyDefinition` and the same iModel, with label merging disabled for
+     * subjects, models, and categories. The search configuration also disables label merging. Paths are yielded after searching and
+     * loading the needed hierarchy levels. Siblings of the same class are requested together using an `instanceFilter`
+     * on their `ECInstanceId` values, in chunks of at most 100 IDs. Parent nodes are constructed from search paths so all
+     * planned requests, including different hierarchy levels and chunks, start concurrently without a concurrency limit.
+     * Grouping-node children are requested as soon as the grouping nodes are returned.
+     *
+     * Notes:
+     * - Hidden models are omitted. Paths whose target or a non-hidden ancestor is not found are not yielded.
+     *   The `includeOnlyVisibleNodeInstanceKeys` option is therefore not supported.
+     * - Class grouping nodes are not included in the paths, but their keys are included in the `parentKeys` of the returned nodes.
+     * - Each returned node represents a single instance. Nodes with matching labels remain separate.
+     * - Hidden ancestor keys use search-path base classes.
+     * - Provider hierarchy level size limits apply; its state is not changed by this helper.
+     * @throws An error if a search or provider hierarchy level size limit is exceeded, or loading fails.
+     */
+    createHierarchyNodePaths: ({ hierarchyProvider, ...searchProps }: ModelsTreeHierarchyNodesSearchProps) =>
+      createHierarchyNodePaths({
+        hierarchyProvider,
+        idsProvider,
+        abortSignal: searchProps.abortSignal,
+        instanceKeyPaths: ModelsTreeDefinition.createInstanceKeyPaths({
+          ...searchProps,
+          includeOnlyVisibleNodeInstanceKeys: false,
+          hierarchyConfig: hierarchyNodesSearchConfig,
+          idsProvider,
+          uniqueId,
+          imodelAccess: props.imodelAccess,
+        }),
+      }),
+    /**
+     * Same as `createSearchTree`, but builds a tree of hierarchy nodes loaded from `hierarchyProvider` instead of instance keys.
+     *
+     * Uses the same loading and cancellation behavior as `createHierarchyNodePaths`. Set `revealTargets` to retain
+     * expansion options for matching targets. These options are returned on search entries, not applied to provider nodes.
+     *
+     * Notes:
+     * - Hidden models are omitted and their children take their place. Missing non-hidden nodes and their descendants
+     *   are omitted. Branches without surviving targets are pruned.
+     *   The `includeOnlyVisibleNodeInstanceKeys` option is therefore not supported.
+     * - Class grouping nodes are not included in the tree, but their keys are included in the `parentKeys` of the returned nodes.
+     * - Label merging must be disabled in the hierarchy. Entries are not merged or deduplicated by label.
+     * - Each entry has an explicit `isTarget` flag. Entry children contain only search results, not all hierarchy children.
+     * - Cancellation returns an empty tree rather than partial results.
+     * @throws An error if a search or provider hierarchy level size limit is exceeded, or loading fails.
+     */
+    createHierarchyNodeSearchTree: async ({
+      hierarchyProvider,
+      ...searchProps
+    }: ModelsTreeHierarchyNodesSearchProps & { revealTargets?: boolean }) =>
+      createHierarchyNodeSearchTree({
+        hierarchyProvider,
+        idsProvider,
+        abortSignal: searchProps.abortSignal,
+        loadSearchTree: async () =>
+          ModelsTreeDefinition.createSearchTree({
+            ...searchProps,
+            includeOnlyVisibleNodeInstanceKeys: false,
+            hierarchyConfig: hierarchyNodesSearchConfig,
+            idsProvider,
+            uniqueId,
+            imodelAccess: props.imodelAccess,
+          }),
       }),
   };
 }
