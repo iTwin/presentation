@@ -15,7 +15,8 @@ type PrimitiveValueType = PrimitiveValueDescriptor["type"];
  * (currently `Binary` and `IGeometry` primitives) — callers should drop such properties.
  *
  * Array properties are wrapped as `{ kind: "array", elementType }` around their scalar element
- * shape. Navigation properties become `{ kind: "navigation", targetClassName }` carrying the
+ * shape, carrying the schema's `minOccurs` (when above `0`) and `maxOccurs` (when bounded) limits.
+ * Navigation properties become `{ kind: "navigation", targetClassName }` carrying the
  * relationship's target-constraint class (the runtime value stays a bare id). Enumeration properties
  * become a `primitive` descriptor of their backing type with the enumeration's metadata preserved on
  * `enumeration` (the runtime value stays the raw backing value). A primitive property's
@@ -29,7 +30,12 @@ export function createValueDescriptorFromProperty(property: EC.Property): ValueD
     return undefined;
   }
   if (property.isArray()) {
-    return { kind: "array", elementType: scalar };
+    return {
+      kind: "array",
+      elementType: scalar,
+      ...(property.minOccurs > 0 ? { minOccurs: property.minOccurs } : undefined),
+      ...(property.maxOccurs !== undefined ? { maxOccurs: property.maxOccurs } : undefined),
+    };
   }
   return scalar;
 }

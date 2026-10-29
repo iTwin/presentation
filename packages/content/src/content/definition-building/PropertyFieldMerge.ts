@@ -150,7 +150,12 @@ function toComparableValueDescriptor(descriptor: ValueDescriptor): unknown {
     case "primitive":
       return ["primitive", descriptor.type, descriptor.kindOfQuantity ?? null, descriptor.enumeration ?? null];
     case "array":
-      return ["array", toComparableValueDescriptor(descriptor.elementType)];
+      return [
+        "array",
+        toComparableValueDescriptor(descriptor.elementType),
+        descriptor.minOccurs ?? null,
+        descriptor.maxOccurs ?? null,
+      ];
     case "struct":
       return [
         "struct",
