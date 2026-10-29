@@ -17,6 +17,8 @@ export interface ArrayValueDescriptor {
     elementType: ValueDescriptor;
     // (undocumented)
     kind: "array";
+    maxOccurs?: number;
+    minOccurs?: number;
 }
 
 // @public
@@ -275,6 +277,7 @@ export namespace EC {
         isNavigation(): this is NavigationProperty;
         // (undocumented)
         isPrimitive(): this is PrimitiveProperty;
+        isReadOnly?: boolean;
         // (undocumented)
         isStruct(): this is StructProperty;
         // (undocumented)

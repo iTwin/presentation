@@ -1299,6 +1299,22 @@ describe("createECPropertyFromSchemaView", () => {
     expect(ecProp.label).toBeUndefined();
   });
 
+  it("reports the property's read-only status", () => {
+    const createProp = (isReadOnly: boolean) =>
+      createECPropertyFromSchemaView(
+        createMockProperty({
+          name: "TestProp",
+          isReadOnly,
+          isPrimitive: () => true,
+          primitiveType: SchemaViewPrimitiveType.String,
+        } as unknown as SchemaView.Property),
+        dummyEcClass,
+        dummyMockContext,
+      );
+    expect(createProp(true).isReadOnly).toBe(true);
+    expect(createProp(false).isReadOnly).toBe(false);
+  });
+
   describe("Property class (declaring class)", () => {
     it("uses declaringClass for property.class, including its own schema context", () => {
       const declaringClass = createMockClass({ name: "OtherClass", schemaName: "OtherSchema" });
