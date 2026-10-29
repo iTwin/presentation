@@ -52,7 +52,7 @@ export interface SelectionStorage {
   /** An event that is raised when selection changes. */
   selectionChangeEvent: Event<StorageSelectionChangesListener>;
 
-  /** Get the selection levels currently stored for the specified iModel. */
+  /** Get the selection levels currently stored for the specified iModel, sorted in ascending numeric order. */
   getSelectionLevels(props: IModelKeyProp): number[];
 
   /** Get the selection stored in the storage. */
@@ -270,7 +270,7 @@ class MultiLevelSelectablesContainer {
         levels.push(entry[0]);
       }
     }
-    return levels.sort();
+    return levels.sort((a, b) => a - b);
   }
 
   public clear(level: number) {
