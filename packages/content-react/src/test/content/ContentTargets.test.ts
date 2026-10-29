@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "@itwin/unified-selection";
 import { createContentTargetsFromSelectables } from "../../content-react/content/ContentTargets.js";
 import { classA, classB } from "../Helpers.js";
@@ -62,25 +62,34 @@ describe("createContentTargetsFromSelectables", () => {
 
   it("stops loading custom selectables when aborted", async () => {
     const controller = new AbortController();
+    const reason = new Error("aborted");
     let loadedCount = 0;
+    let finished = false;
     const selectables = Selectables.create([
       {
         identifier: "custom",
         data: undefined,
         async *loadInstanceKeys() {
-          for (let i = 1; i <= 3; ++i) {
-            loadedCount = i;
-            if (i === 2) {
-              controller.abort(new Error("aborted"));
+          try {
+            for (let i = 1; ; ++i) {
+              loadedCount = i;
+              if (i === 2) {
+                controller.abort(reason);
+              }
+              yield { className: classA, id: `0x${i}` };
+              await new Promise((resolve) => setTimeout(resolve, 0));
             }
-            yield { className: classA, id: `0x${i}` };
+          } finally {
+            finished = true;
           }
         },
       },
     ]);
-    await expect(createContentTargetsFromSelectables({ selectables, abortSignal: controller.signal })).rejects.toThrow(
-      "aborted",
+    await expect(createContentTargetsFromSelectables({ selectables, abortSignal: controller.signal })).rejects.toBe(
+      reason,
     );
-    expect(loadedCount).toBe(2);
+    await vi.waitFor(() => expect(finished).toBe(true));
+    const loadedWhenFinished = loadedCount;
+    await vi.waitFor(() => expect(loadedCount).toBe(loadedWhenFinished));
   });
 });

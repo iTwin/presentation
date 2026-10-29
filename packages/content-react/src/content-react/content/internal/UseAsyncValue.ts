@@ -53,20 +53,19 @@ export function useAsyncValue<T>(
     }));
     const controller = new AbortController();
     void (async () => {
+      let next: AsyncValueState<T>;
       try {
-        const value = await load({ signal: controller.signal });
-        if (!controller.signal.aborted) {
-          setState({ load, value, isLoading: false });
-        }
+        next = { load, value: await load({ signal: controller.signal }), isLoading: false };
       } catch (error) {
-        if (!controller.signal.aborted) {
-          setState({
-            load,
-            value: undefined,
-            isLoading: false,
-            error: error === undefined ? new Error("Loading failed without a rejection reason.") : error,
-          });
-        }
+        next = {
+          load,
+          value: undefined,
+          isLoading: false,
+          error: error === undefined ? new Error("Loading failed without a rejection reason.") : error,
+        };
+      }
+      if (!controller.signal.aborted) {
+        setState(next);
       }
     })();
     return () => controller.abort();

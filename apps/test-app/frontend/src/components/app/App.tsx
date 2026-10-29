@@ -308,14 +308,14 @@ function IModelComponents(props: IModelComponentsProps) {
           end: [
             {
               id: "properties",
-              label: "Properties widget",
+              label: "Properties (legacy)",
               content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
             {
               id: "content-properties",
-              label: "Properties (content)",
+              label: "Properties (new gen)",
               content: <ContentPropertiesWidget imodel={imodel} />,
               defaultState: WidgetState.Open,
               canPopout: true,

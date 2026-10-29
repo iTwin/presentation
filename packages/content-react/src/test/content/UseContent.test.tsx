@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResolvablePromise } from "presentation-test-utilities";
 import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent } from "@itwin/core-bentley";
@@ -14,7 +15,7 @@ import {
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useContent } from "../../content-react/content/UseContent.js";
 import { classA } from "../Helpers.js";
-import { createDeferred, createDescriptor, createField, createItem, createProvider } from "./Helpers.js";
+import { createDescriptor, createField, createItem, createProvider } from "./Helpers.js";
 
 import type * as presentationContentModule from "@itwin/presentation-content";
 import type { Props } from "@itwin/presentation-shared";
@@ -95,8 +96,30 @@ describe("useContent", () => {
     expect(resolveContentSources).toHaveBeenCalledOnce();
   });
 
+  it("loads again when only a set-valued binding of targets changes", async () => {
+    const createTargets = (ids: string[]): presentationContentModule.ContentTarget[] => [
+      {
+        primaryClass: classA,
+        instanceFilter: {
+          expression: "this.ECInstanceId IN (:ids)",
+          bindings: { ids: { type: "idset", value: new Set(ids) } },
+        },
+      },
+    ];
+    const { result, rerender } = render({ imodelAccess, targets: createTargets(["0x1"]) });
+    await waitFor(() => expect(result.current.content).toBeDefined());
+
+    rerender({ imodelAccess, targets: createTargets(["0x1"]) });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(resolveContentSources).toHaveBeenCalledOnce();
+
+    rerender({ imodelAccess, targets: createTargets(["0x2"]) });
+    await waitFor(() => expect(resolveContentSources).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(resolveContentSources).mock.lastCall?.[0].targets).toEqual(createTargets(["0x2"]));
+  });
+
   it("clears content when targets change and ignores results of earlier loads", async () => {
-    const slowSources = createDeferred<ContentSource[]>();
+    const slowSources = new ResolvablePromise<ContentSource[]>();
     vi.mocked(resolveContentSources)
       .mockResolvedValueOnce([])
       .mockReturnValueOnce(slowSources.promise)
@@ -114,6 +137,24 @@ describe("useContent", () => {
     await act(async () => slowSources.resolve([]));
     expect(getValue(result.current)).toBe("value 2");
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it("keeps loading without reporting the aborted load's error when reloading while loading", async () => {
+    const firstSources = new ResolvablePromise<ContentSource[]>();
+    const secondSources = new ResolvablePromise<ContentSource[]>();
+    vi.mocked(resolveContentSources)
+      .mockReturnValueOnce(firstSources.promise)
+      .mockReturnValueOnce(secondSources.promise);
+    const { result } = render({ imodelAccess, targets: targetsA });
+    await waitFor(() => expect(resolveContentSources).toHaveBeenCalledOnce());
+
+    act(() => result.current.reload());
+    await waitFor(() => expect(resolveContentSources).toHaveBeenCalledTimes(2));
+    expect(result.current).toEqual({ content: undefined, isLoading: true, reload: expect.any(Function) });
+
+    await act(async () => secondSources.resolve([]));
+    await waitFor(() => expect(getValue(result.current)).toBe("value 1"));
+    expect(result.current.error).toBeUndefined();
   });
 
   it("keeps content while reloading", async () => {

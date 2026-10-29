@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import deepEqual from "fast-deep-equal";
 import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { formatConcatenatedValue, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
@@ -454,29 +455,4 @@ function toDisplayString(value: unknown): string {
     return value;
   }
   return value instanceof Date ? value.toISOString() : JSON.stringify(value);
-}
-
-/** Structural equality for raw values: primitives, `Date`s, arrays and plain objects. */
-function deepEqual(lhs: unknown, rhs: unknown): boolean {
-  if (lhs === rhs) {
-    return true;
-  }
-  if (lhs instanceof Date || rhs instanceof Date) {
-    return lhs instanceof Date && rhs instanceof Date && lhs.getTime() === rhs.getTime();
-  }
-  if (typeof lhs !== "object" || typeof rhs !== "object" || lhs === null || rhs === null) {
-    return false;
-  }
-  if (Array.isArray(lhs) || Array.isArray(rhs)) {
-    return (
-      Array.isArray(lhs) &&
-      Array.isArray(rhs) &&
-      lhs.length === rhs.length &&
-      lhs.every((element, index) => deepEqual(element, rhs[index]))
-    );
-  }
-  const lhsRecord = lhs as Record<string, unknown>;
-  const rhsRecord = rhs as Record<string, unknown>;
-  const keys = new Set([...Object.keys(lhsRecord), ...Object.keys(rhsRecord)]);
-  return [...keys].every((key) => deepEqual(lhsRecord[key], rhsRecord[key]));
 }

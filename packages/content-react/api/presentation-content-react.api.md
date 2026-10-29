@@ -38,7 +38,7 @@ export function getContent(props: GetContentProps): Promise<Content>;
 // @public
 interface GetContentProps {
     abortSignal?: AbortSignal;
-    getContentConfiguration: (props: {
+    getContentConfiguration?: (props: {
         imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     }) => Promise<ContentConfiguration>;
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;

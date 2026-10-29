@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { deepEqual } from "../../content-react/content/internal/Utils.js";
+import deepEqual from "fast-deep-equal/es6/index.js";
 import { classA } from "../Helpers.js";
 
 import type {
@@ -84,16 +84,6 @@ export function createProvider(props: {
         }
       })(),
   };
-}
-
-export function createDeferred<T>() {
-  let resolve!: (value: T) => void;
-  let reject!: (error: unknown) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
 }
 
 /** Creates a custom selectable whose instance keys load after `ready` resolves. */

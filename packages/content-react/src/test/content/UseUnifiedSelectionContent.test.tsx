@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ResolvablePromise } from "presentation-test-utilities";
 import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -14,14 +15,7 @@ import { createStorage } from "@itwin/unified-selection";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useUnifiedSelectionContent } from "../../content-react/content/UseUnifiedSelectionContent.js";
 import { classA, classB } from "../Helpers.js";
-import {
-  createCustomSelectable,
-  createDeferred,
-  createDescriptor,
-  createField,
-  createItem,
-  createProvider,
-} from "./Helpers.js";
+import { createCustomSelectable, createDescriptor, createField, createItem, createProvider } from "./Helpers.js";
 
 import type * as presentationContentModule from "@itwin/presentation-content";
 import type { Props } from "@itwin/presentation-shared";
@@ -205,7 +199,7 @@ describe("useUnifiedSelectionContent", () => {
   });
 
   it("loads instance keys of custom selectables before loading content", async () => {
-    const ready = createDeferred<void>();
+    const ready = new ResolvablePromise<void>();
     const { result } = render();
     select([createCustomSelectable("custom", [{ className: classA, id: "0x5" }], ready.promise)]);
     expect(result.current).toMatchObject({ content: undefined, isLoading: true, selectedInstancesCount: 1 });
@@ -229,8 +223,8 @@ describe("useUnifiedSelectionContent", () => {
   });
 
   it("ignores instance keys of custom selectables of a previous selection", async () => {
-    const readyWithKeys = createDeferred<void>();
-    const readyWithoutKeys = createDeferred<void>();
+    const readyWithKeys = new ResolvablePromise<void>();
+    const readyWithoutKeys = new ResolvablePromise<void>();
     const { result } = render();
     select([createCustomSelectable("with-keys", [{ className: classA, id: "0x1" }], readyWithKeys.promise)]);
     select([createCustomSelectable("without-keys", [], readyWithoutKeys.promise)]);
@@ -241,8 +235,8 @@ describe("useUnifiedSelectionContent", () => {
     await waitFor(() => expect(result.current.content).toBeDefined());
 
     await act(async () => {
-      readyWithKeys.resolve();
-      readyWithoutKeys.resolve();
+      readyWithKeys.resolveSync();
+      readyWithoutKeys.resolveSync();
     });
     expect(result.current).toMatchObject({ isLoading: false, selectedInstancesCount: 2 });
     expect(result.current.content).toBeDefined();
