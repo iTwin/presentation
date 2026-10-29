@@ -5,7 +5,7 @@
 
 import { normalizeFullClassName } from "@itwin/presentation-shared";
 import { TRANSIENT_ELEMENT_CLASSNAME } from "@itwin/unified-selection";
-import { abortableIterable } from "./internal/Utils.js";
+import { abortableIterable } from "../Utils.js";
 
 import type { ContentTarget } from "@itwin/presentation-content";
 import type { EC } from "@itwin/presentation-shared";

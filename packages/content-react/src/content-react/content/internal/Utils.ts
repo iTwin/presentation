@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Structural equality for plain data: primitives, `Date`s, arrays and plain objects.
- * Object keys holding `undefined` are treated the same as missing keys.
+ * Structural equality for plain data: primitives, `Date`s, arrays, `Set`s, `Map`s and plain objects.
+ * Object keys holding `undefined` are treated the same as missing keys. `Set` elements and `Map` keys are
+ * matched by identity, `Map` values are compared structurally.
  */
 export function deepEqual(lhs: unknown, rhs: unknown): boolean {
   if (lhs === rhs) {
@@ -13,6 +14,19 @@ export function deepEqual(lhs: unknown, rhs: unknown): boolean {
   }
   if (lhs instanceof Date || rhs instanceof Date) {
     return lhs instanceof Date && rhs instanceof Date && lhs.getTime() === rhs.getTime();
+  }
+  if (lhs instanceof Set || rhs instanceof Set) {
+    return (
+      lhs instanceof Set && rhs instanceof Set && lhs.size === rhs.size && [...lhs].every((value) => rhs.has(value))
+    );
+  }
+  if (lhs instanceof Map || rhs instanceof Map) {
+    return (
+      lhs instanceof Map &&
+      rhs instanceof Map &&
+      lhs.size === rhs.size &&
+      [...lhs].every(([key, value]) => rhs.has(key) && deepEqual(value, rhs.get(key)))
+    );
   }
   if (typeof lhs !== "object" || typeof rhs !== "object" || lhs === null || rhs === null) {
     return false;
@@ -34,30 +48,4 @@ export function deepEqual(lhs: unknown, rhs: unknown): boolean {
     }
   }
   return true;
-}
-
-/**
- * Runs `load`, throwing the signal's reason if it's aborted before `load` starts or by the time it completes.
- * Use for loaders that don't accept an abort signal themselves.
- */
-export async function abortable<T>(load: () => Promise<T>, signal: AbortSignal | undefined): Promise<T> {
-  signal?.throwIfAborted();
-  const result = await load();
-  signal?.throwIfAborted();
-  return result;
-}
-
-/**
- * Yields items of the given iterable, throwing the signal's reason as soon as it's aborted.
- * Stops reading the source iterable when aborted.
- */
-export async function* abortableIterable<T>(
-  items: AsyncIterable<T>,
-  signal: AbortSignal | undefined,
-): AsyncIterable<T> {
-  signal?.throwIfAborted();
-  for await (const item of items) {
-    signal?.throwIfAborted();
-    yield item;
-  }
 }
