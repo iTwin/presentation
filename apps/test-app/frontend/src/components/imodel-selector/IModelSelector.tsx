@@ -33,6 +33,7 @@ export class IModelSelector extends Component<Props, State> {
   public override async componentDidMount() {
     const imodels = await MyAppFrontend.getSampleImodels();
     imodels.splice(0, 0, "");
+    // oxlint-disable-next-line react/no-did-mount-set-state
     this.setState({
       availableImodels: imodels.map((path: string) => ({ label: path.split(/[\\/]/).pop() ?? "", value: path })),
     });

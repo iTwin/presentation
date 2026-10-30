@@ -69,7 +69,7 @@ export interface Point3dValue {
  * A union for all supported primitive value types.
  * @public
  */
-// oxlint-disable-next-line no-redeclare
+// oxlint-disable-next-line no-redeclare, typescript/no-duplicate-type-constituents
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2dValue | Point3dValue;
 
 /** @public */

@@ -88,8 +88,8 @@ describe("hideTypeDefinitionElementInternalPropertiesTransformer", () => {
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 14 }),
     });
 
-    expect(descriptor.fields[isPrivate.id].hidden).to.be.true;
-    expect(descriptor.fields[recipe.id].hidden).to.be.true;
+    expect(descriptor.fields[isPrivate.id].hidden).toBe(true);
+    expect(descriptor.fields[recipe.id].hidden).toBe(true);
   });
 
   it("does not hide properties already marked hidden by BisCore 1.0.15", async () => {
@@ -102,8 +102,8 @@ describe("hideTypeDefinitionElementInternalPropertiesTransformer", () => {
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 15 }),
     });
 
-    expect(descriptor.fields[isPrivate.id].hidden).to.be.undefined;
-    expect(descriptor.fields[recipe.id].hidden).to.be.undefined;
+    expect(descriptor.fields[isPrivate.id].hidden).toBeUndefined();
+    expect(descriptor.fields[recipe.id].hidden).toBeUndefined();
   });
 
   it("does not hide fields with the same property names declared by other classes", async () => {
@@ -116,8 +116,8 @@ describe("hideTypeDefinitionElementInternalPropertiesTransformer", () => {
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 14 }),
     });
 
-    expect(descriptor.fields[unrelatedIsPrivate.id].hidden).to.be.undefined;
-    expect(descriptor.fields[unrelatedRecipe.id].hidden).to.be.undefined;
+    expect(descriptor.fields[unrelatedIsPrivate.id].hidden).toBeUndefined();
+    expect(descriptor.fields[unrelatedRecipe.id].hidden).toBeUndefined();
   });
 
   it("hides Recipe reached through a related instance (non-empty pathFromTarget)", async () => {
@@ -139,7 +139,7 @@ describe("hideTypeDefinitionElementInternalPropertiesTransformer", () => {
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 14 }),
     });
 
-    expect(descriptor.fields[relatedRecipe.id].hidden).to.be.true;
+    expect(descriptor.fields[relatedRecipe.id].hidden).toBe(true);
   });
 });
 
@@ -244,7 +244,7 @@ describe("showExternalSourceAspectPropsTransformer", () => {
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 2 }),
     });
 
-    expect(descriptor.fields[identifier.id].hidden).to.be.false;
+    expect(descriptor.fields[identifier.id].hidden).toBe(false);
   });
 
   it("shows Identifier reached through a related instance", async () => {
@@ -267,7 +267,7 @@ describe("showExternalSourceAspectPropsTransformer", () => {
       imodelAccess: createImodelAccess({ read: 1, write: 0, minor: 2 }),
     });
 
-    expect(descriptor.fields[identifier.id].hidden).to.be.false;
+    expect(descriptor.fields[identifier.id].hidden).toBe(false);
   });
 
   it("leaves other fields hidden", async () => {
@@ -281,6 +281,6 @@ describe("showExternalSourceAspectPropsTransformer", () => {
       imodelAccess: createImodelAccess(),
     });
 
-    expect(descriptor.fields[unrelatedIdentifier.id].hidden).to.be.true;
+    expect(descriptor.fields[unrelatedIdentifier.id].hidden).toBe(true);
   });
 });

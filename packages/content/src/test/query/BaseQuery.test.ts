@@ -127,12 +127,12 @@ describe("buildBaseQuery", () => {
         propertySelectorPaths: [],
       });
 
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
       expect(result.anchor.paths).to.deep.equal([]);
       expect(result.anchor.parts.from).to.equal(`FROM [TestSchema].[Primary] [this]`);
       expect(result.anchor.parts.joins).to.equal("");
-      expect(result.anchor.parts.where).to.be.undefined;
-      expect(result.anchor.parts.bindings).to.be.undefined;
+      expect(result.anchor.parts.where).toBeUndefined();
+      expect(result.anchor.parts.bindings).toBeUndefined();
       expect(result.anchor.parts.primaryClassAlias).to.equal("this");
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(0);
     });
@@ -418,7 +418,7 @@ describe("buildBaseQuery", () => {
       expect(result.anchor.parts.bindings).to.deep.equal({
         [`${ECSQL_PREFIX}TargetInstanceIds`]: { type: "idset", value: ["0x1", "0x2"] },
       });
-      expect(result.anchor.parts.where).to.be.undefined;
+      expect(result.anchor.parts.where).toBeUndefined();
     });
 
     it("adds a substituted WHERE for instanceFilter", async () => {
@@ -533,8 +533,8 @@ describe("buildBaseQuery", () => {
         ],
       });
 
-      expect(result.additional).not.to.be.undefined;
-      expect(result.anchor.parts.relatedClassAliases.has(serializeRelationshipPath({ path: sortPath }))).to.be.true;
+      expect(result.additional).not.toBeUndefined();
+      expect(result.anchor.parts.relatedClassAliases.has(serializeRelationshipPath({ path: sortPath }))).toBe(true);
     });
 
     it("rejects a sort field on a 1:many related path", async () => {
@@ -561,7 +561,7 @@ describe("buildBaseQuery", () => {
         sortFields: [makeOneToOneNameField(path)],
       });
       expect(result.anchor.paths).to.deep.equal([]);
-      expect(result.anchor.parts.relatedClassAliases.has(pathKey)).to.be.true;
+      expect(result.anchor.parts.relatedClassAliases.has(pathKey)).toBe(true);
       expect(result.additional).to.have.length(1);
       expect(result.additional![0].cardinality).to.equal("many");
       expect(result.additional![0].paths.map((resolved) => resolved.path)).to.deep.equal([path]);
@@ -607,7 +607,7 @@ describe("buildBaseQuery", () => {
       });
 
       expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([extension, ...otherPaths]);
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
     });
   });
 
@@ -1051,7 +1051,7 @@ describe("buildBaseQuery", () => {
         `),
       );
       // The primaries themselves are not narrowed: only their related values are.
-      expect(result.anchor.parts.where).to.be.undefined;
+      expect(result.anchor.parts.where).toBeUndefined();
     });
 
     it("limits an existential filter's correlation to primaries of that class", async () => {
@@ -1200,7 +1200,7 @@ describe("buildBaseQuery", () => {
         propertySelectorPaths: [pathB, pathC],
       });
 
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
       expect(result.anchor.paths).to.have.length(2);
       // Both related steps are OUTER-joined (each link-table path renders two `LEFT OUTER JOIN`s), so a
       // primary missing one related instance keeps the other's columns.
@@ -1332,7 +1332,7 @@ describe("buildBaseQuery", () => {
         cardinalityHints,
       });
 
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
       expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([path]);
     });
   });
@@ -1351,7 +1351,7 @@ describe("buildBaseQuery", () => {
       // A resolved declaration alone earns a path no place in the query — nothing selects it.
       expect(result.anchor.paths).to.deep.equal([]);
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(0);
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
     });
 
     it("joins a selected strict prefix without joining the un-selected 1:many leaf it prefixes", async () => {
@@ -1380,7 +1380,7 @@ describe("buildBaseQuery", () => {
       // resolved declaration but no selector reads it, so it is never joined at all.
       expect(result.anchor.paths).to.deep.equal([{ path: prefix, targetClassNames: [primaryClass] }]);
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
     });
 
     it("joins a selected 1:1 prefix and its selected 1:many leaf as independent paths", async () => {
@@ -1427,7 +1427,7 @@ describe("buildBaseQuery", () => {
       });
       expect(result.anchor.paths).to.deep.equal([{ path, targetClassNames: [primaryClass] }]);
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
     });
 
     it("ignores a propertySelectorPaths entry that is not a prefix of any resolved path", async () => {
@@ -1760,7 +1760,7 @@ describe("buildBaseQuery", () => {
 
       const oneToOneKey = "TestSchema.Primary-[TestSchema.Rel]->TestSchema.Target";
       const oneToOneAliases = result.anchor.parts.relatedClassAliases.get(oneToOneKey);
-      expect(oneToOneAliases).to.not.be.undefined;
+      expect(oneToOneAliases).toBeDefined();
       // Aliases are assigned by sorted prefix keys; `RelMany` sorts before `Rel`, so the one-to-many
       // existential path uses `r0/t0`, while the one-to-one joined path uses `t1`.
       expect(oneToOneAliases!.target).to.equal(`${ECSQL_PREFIX}t1`);
@@ -1958,7 +1958,7 @@ describe("buildBaseQuery", () => {
       const aliases = result.anchor.parts.relatedClassAliases.get(
         "TestSchema.Primary-[TestSchema.Rel39]->TestSchema.Target39",
       );
-      expect(aliases).to.not.be.undefined;
+      expect(aliases).toBeDefined();
       expect(result.anchor.parts.where).to.equal(`WHERE [${aliases!.target}].[Name] = :${ECSQL_PREFIX}vf0`);
 
       // Overflow partition is non-empty — the other, unfiltered paths really did split under the ordinary budget.
@@ -2009,7 +2009,7 @@ describe("buildBaseQuery", () => {
       // The 1:1 path fits the join budget, so the anchor both selects its columns and evaluates the
       // filter — `unionPaths` merges the selected and filter-referenced path so it is joined only once.
       expect(result.anchor.paths.map((p) => p.path)).to.deep.equal([path]);
-      expect(result.additional).to.be.undefined;
+      expect(result.additional).toBeUndefined();
       expect(result.anchor.parts.relatedClassAliases.size).to.equal(1);
       expect(result.anchor.parts.where).to.equal(`WHERE [${ECSQL_PREFIX}t0].[Name] = :${ECSQL_PREFIX}vf0`);
       // A single link-table path renders exactly two `OUTER JOIN`s; a duplicated join would double that.
@@ -2155,6 +2155,6 @@ describe("buildTargetScopedQuery", () => {
       primaryClassScope: { kind: "restricted", classNames: [] },
     });
 
-    expect(parts.where).to.be.undefined;
+    expect(parts.where).toBeUndefined();
   });
 });

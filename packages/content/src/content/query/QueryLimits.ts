@@ -169,7 +169,7 @@ export function packPathsWithinBudget(props: { paths: readonly ResolvedPathWithJ
   const fitting: ResolvedPathWithJoinInfo[] = [];
   for (const [index, path] of props.paths.entries()) {
     if (!props.budget.tryAdd(path.joinInfo)) {
-      return { fitting, overflow: [...props.paths.slice(index)] };
+      return { fitting, overflow: props.paths.slice(index) };
     }
     fitting.push(path);
   }

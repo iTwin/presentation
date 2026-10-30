@@ -330,7 +330,7 @@ describe("convertECExpressionToECSql", () => {
       const result = await convertECExpressionToECSql({
         expression: `this.HasRelatedInstance("BisCore.ModelContainsElements", "Backward", "BisCore.Model")`,
       });
-      expect(result.bindings).to.be.undefined;
+      expect(result.bindings).toBeUndefined();
       expect(trimWhitespace(result.ecsql)).to.equal(
         trimWhitespace(`
           EXISTS (

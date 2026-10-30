@@ -757,7 +757,7 @@ describe("buildDistinctValuesQuery", () => {
     expect(trimWhitespace(query.ecsql)).to.equal(
       `SELECT DISTINCT [this].[Name] FROM ONLY [TestSchema].[Primary] [this]`,
     );
-    expect(query.bindings).to.be.undefined;
+    expect(query.bindings).toBeUndefined();
   });
 
   it("resolves a related property column against the target alias", async () => {

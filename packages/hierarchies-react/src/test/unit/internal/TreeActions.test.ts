@@ -824,21 +824,21 @@ describe("TreeActions", () => {
       });
 
       const actions = createActions(model);
-      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.true;
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).toBe(true);
 
       await actions.reloadTree(undefined).complete;
 
-      expect(provider.getNodes).to.be.calledTwice;
+      expect(provider.getNodes).toHaveBeenCalledTimes(2);
       expect(provider.getNodes).to.be.calledWith(
         createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }),
       );
       // one call is made before reloading to set `rootNode.isLoading`
-      expect(onModelChangedStub).to.be.calledTwice;
+      expect(onModelChangedStub).toHaveBeenCalledTimes(2);
 
       const newModel = onModelChangedStub.mock.calls[1][0];
-      expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
-      expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
-      expect(getHierarchyNode(newModel, "root-1")?.isExpanded).to.be.undefined;
+      expect(getHierarchyNode(newModel, "root-1")).toBeDefined();
+      expect(getHierarchyNode(newModel, "root-2")).toBeDefined();
+      expect(getHierarchyNode(newModel, "root-1")?.isExpanded).toBeUndefined();
     });
 
     it("does not reload auto expanded collapsed nodes", async () => {

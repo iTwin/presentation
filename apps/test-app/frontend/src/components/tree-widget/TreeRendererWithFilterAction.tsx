@@ -82,7 +82,7 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
         },
         labelValidationHint: `Allowed are A to Z, 0 to 9, "-" and "_"`,
         validate: (newLabel: string) => {
-          return /^[A-Za-z0-9\-\_\[\] ]+$/.test(newLabel);
+          return /^[A-Za-z0-9\-_[\] ]+$/.test(newLabel);
         },
       };
     }, []);

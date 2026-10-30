@@ -73,7 +73,7 @@ describe("createContentItem", () => {
 
     const item = createContentItem({ descriptor, contentValues });
 
-    expect(item.getValue(otherField)).to.be.undefined;
+    expect(item.getValue(otherField)).toBeUndefined();
   });
 
   describe("getRelatedInstances", () => {
@@ -136,7 +136,7 @@ describe("createContentItem", () => {
       const entries = item.getRelatedInstances({ pathFromTarget: testPath });
 
       expect(entries[0].getValue(nameField)).to.equal("First");
-      expect(entries[1].getValue(nameField)).to.be.undefined;
+      expect(entries[1].getValue(nameField)).toBeUndefined();
     });
 
     it("uses the inline value for a single-instance ('one') path", () => {
@@ -222,7 +222,7 @@ describe("createContentItem", () => {
       const item = createContentItem({ descriptor, contentValues });
       const entries = item.getRelatedInstances({ pathFromTarget: testPath });
 
-      expect(entries[0].getValue(nameField)).to.be.undefined;
+      expect(entries[0].getValue(nameField)).toBeUndefined();
     });
 
     it("returns an empty array for an unknown path", () => {
@@ -281,7 +281,7 @@ describe("createContentItem", () => {
       const item = createContentItem({ descriptor, contentValues });
       const entries = item.getRelatedInstances({ pathFromTarget: testPath });
 
-      expect(entries[0].getValue(unrelatedField)).to.be.undefined;
+      expect(entries[0].getValue(unrelatedField)).toBeUndefined();
     });
 
     it("resolves to the same entries via a field and its equivalent path", () => {
@@ -381,7 +381,7 @@ describe("createContentItem", () => {
 
       expect(entries).to.have.lengthOf(1);
       expect(entries[0].key).to.deep.equal(aspectKey);
-      expect(entries[0].getValue(unrelatedField)).to.be.undefined;
+      expect(entries[0].getValue(unrelatedField)).toBeUndefined();
     });
   });
 });

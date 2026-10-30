@@ -332,7 +332,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
     });
 
     it("ignores a categoryId that cannot be mapped", async () => {
-      expect((await run({ name: "Height", categoryId: { type: "None" } })).categoryId).to.be.undefined;
+      expect((await run({ name: "Height", categoryId: { type: "None" } })).categoryId).toBeUndefined();
     });
 
     it("maps isReadOnly", async () => {
@@ -394,7 +394,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
       });
 
       it("ignores a string ECExpression isDisplayed", async () => {
-        expect((await run({ name: "Height", isDisplayed: "someExpr" })).hidden).to.be.undefined;
+        expect((await run({ name: "Height", isDisplayed: "someExpr" })).hidden).toBeUndefined();
       });
 
       it("hides other candidates when a property is displayed", async () => {
@@ -463,7 +463,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
           descriptor: createTransformableDescriptor(descriptor),
           imodelAccess: createImodelAccess(),
         });
-        expect(descriptor.fields[b.id].hidden).to.be.undefined;
+        expect(descriptor.fields[b.id].hidden).toBeUndefined();
       });
 
       it("does not hide a sibling for a class the rule does not target", async () => {
@@ -488,7 +488,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
           }),
         });
         // `B` (Door only) is never hidden because Door doesn't match the Window-scoped rule.
-        expect(descriptor.fields[b.id].hidden).to.be.undefined;
+        expect(descriptor.fields[b.id].hidden).toBeUndefined();
       });
     });
   });

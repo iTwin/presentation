@@ -156,7 +156,7 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
     keys: new KeySet(),
     descriptor: {
       contentFlags: ContentFlags.ShowLabels | ContentFlags.NoFields,
-      fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
+      fieldsFilterExpression: filter ? `/DisplayLabel/ ~ "%${filter}%"` : undefined,
     },
     paging: { size: VALUE_BATCH_SIZE },
   };
