@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createContentProvider,
   createIModelContentConfiguration,
@@ -42,6 +42,10 @@ describe("getContent", () => {
     getContentConfiguration.mockReset().mockResolvedValue(config);
     vi.mocked(resolveContentSources).mockResolvedValue(sources);
     vi.mocked(createContentProvider).mockReturnValue(createProvider({ descriptor, items }));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("loads descriptor and all items using the given content configuration", async () => {
@@ -95,18 +99,22 @@ describe("getContent", () => {
   });
 
   it("stops reading items when aborted", async () => {
+    vi.useFakeTimers();
     const controller = new AbortController();
     const onItemsIterationFinished = vi.fn();
     vi.mocked(createContentProvider).mockReturnValue(
       createProvider({ descriptor, items, itemDelay: 10, onItemsIterationFinished }),
     );
     const promise = getContent({ imodelAccess, targets, getContentConfiguration, abortSignal: controller.signal });
-    await new Promise((resolve) => setTimeout(resolve, 15));
+    // Read the first item, leaving the second one pending.
+    await vi.advanceTimersByTimeAsync(10);
     controller.abort(new Error("aborted"));
 
     await expect(promise).rejects.toThrow("aborted");
+    expect(onItemsIterationFinished).not.toHaveBeenCalled();
     // The provider releases its iterator once the item it's reading is ready.
-    await vi.waitFor(() => expect(onItemsIterationFinished).toHaveBeenCalledOnce());
+    await vi.advanceTimersByTimeAsync(10);
+    expect(onItemsIterationFinished).toHaveBeenCalledOnce();
   });
 
   it("rejects with the signal's reason without waiting for pending content source resolution", async () => {

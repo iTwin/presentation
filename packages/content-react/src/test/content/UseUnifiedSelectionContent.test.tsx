@@ -94,18 +94,20 @@ describe("useUnifiedSelectionContent", () => {
     expect(getLoadedTargets()).toEqual([[{ primaryClass: classB, instanceIds: ["0x2"] }]]);
   });
 
-  it("loads content of the changed selection level and clears content of the previous selection", async () => {
+  it("loads content of the changed selection level, keeping content of the previous selection until then", async () => {
     const { result } = render();
     select([
       { className: classA, id: "0x1" },
       { className: classA, id: "0x2" },
     ]);
-    await waitFor(() => expect(result.current.content).toBeDefined());
+    await waitFor(() => expect(result.current.content?.items[0].values.prop).toBe("value 1"));
     expect(result.current.selectedInstancesCount).toBe(2);
 
     select([{ className: classB, id: "0x3" }], 1);
-    expect(result.current).toMatchObject({ content: undefined, isLoading: true, selectedInstancesCount: 1 });
-    await waitFor(() => expect(result.current.content).toBeDefined());
+    expect(result.current).toMatchObject({ isLoading: true, selectedInstancesCount: 1 });
+    expect(result.current.content?.items[0].values.prop).toBe("value 1");
+    await waitFor(() => expect(result.current.content?.items[0].values.prop).toBe("value 2"));
+    expect(result.current.isLoading).toBe(false);
     expect(getLoadedTargets()).toEqual([
       [{ primaryClass: classA, instanceIds: ["0x1", "0x2"] }],
       [{ primaryClass: classB, instanceIds: ["0x3"] }],

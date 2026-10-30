@@ -37,12 +37,12 @@ interface UseUnifiedSelectionContentProps extends Omit<UseContentProps, "targets
  * Result of `useUnifiedSelectionContent`.
  * @public
  */
-export interface UseUnifiedSelectionContentResult extends UseContentResult {
+export type UseUnifiedSelectionContentResult = UseContentResult & {
   /** Number of selected items. A custom selectable counts as one item, whatever number of instances it represents. */
   selectedInstancesCount: number;
   /** Whether more items are selected than `instancesLimit`. No content is loaded in that case. */
   isOverLimit: boolean;
-}
+};
 
 /** Default value of `UseUnifiedSelectionContentProps.instancesLimit`. */
 const DEFAULT_INSTANCES_LIMIT = 100;
@@ -52,8 +52,9 @@ const DEFAULT_INSTANCES_LIMIT = 100;
  *
  * Content is loaded for the selection at the deepest selection level when the hook is mounted, and for the
  * selection at the changed level after every selection change of the given iModel. Content of the previous
- * selection is cleared when the selection changes. Otherwise it works like `useContent`: content is loaded again
- * when `imodelChanged` is raised or when `reload` is called.
+ * selection is kept until content of the new selection is ready, and cleared when nothing is selected or more
+ * items than `instancesLimit` are selected. Otherwise it works like `useContent`: content is loaded again when
+ * `imodelChanged` is raised or when `reload` is called.
  *
  * @public
  */
@@ -79,7 +80,7 @@ export function useUnifiedSelectionContent(props: UseUnifiedSelectionContentProp
       reload,
     };
     if (selection.isLoading) {
-      return { content: undefined, isLoading: true, ...selectionInfo };
+      return { content: contentResult.content, isLoading: true, ...selectionInfo };
     }
     if (selection.error !== undefined) {
       return { content: undefined, isLoading: false, error: selection.error, ...selectionInfo };

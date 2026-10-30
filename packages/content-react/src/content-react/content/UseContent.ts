@@ -27,7 +27,8 @@ export interface UseContentProps {
   imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
   /**
    * Targets to load content for, usually created from the current selection. Content is loaded again only
-   * when the targets change by value. `undefined` or an empty list means there's nothing to load.
+   * when the targets change by value, keeping the current content until the new one is ready. `undefined` or
+   * an empty list means there's nothing to load and clears the content.
    */
   targets: ContentTarget[] | undefined;
   /**
@@ -47,22 +48,30 @@ export interface UseContentProps {
 }
 
 /**
- * Result of `useContent`.
+ * Result of `useContent`. Check `error` to tell whether the latest load failed.
  * @public
  */
-export interface UseContentResult {
-  /**
-   * The loaded content. Undefined when there's nothing to load, while loading content for new targets,
-   * and when loading failed. While reloading, holds the previous content.
-   */
-  content: Content | undefined;
-  /** Whether content is being loaded. */
-  isLoading: boolean;
-  /** The error that made the latest load fail, if any. Rejections with `undefined` are reported as an `Error`. */
-  error?: unknown;
+export type UseContentResult = {
   /** Loads content for the current targets again, keeping the current content until the new one is ready. */
   reload: () => void;
-}
+} & (
+  | {
+      /**
+       * The loaded content. Undefined when there's nothing to load and while loading the first content after
+       * there was nothing to load or loading failed. While loading, holds the previously loaded content.
+       */
+      content: Content | undefined;
+      /** Whether content is being loaded. */
+      isLoading: boolean;
+      error?: never;
+    }
+  | {
+      content?: never;
+      isLoading: false;
+      /** The error that made the latest load fail. Rejections with `undefined` are reported as an `Error`. */
+      error: unknown;
+    }
+);
 
 /** Time to wait for more `imodelChanged` events before reloading content. */
 const IMODEL_CHANGE_DEBOUNCE_TIME = 100;
@@ -71,7 +80,8 @@ const IMODEL_CHANGE_DEBOUNCE_TIME = 100;
  * A React hook that loads content of the given targets and keeps it up to date.
  *
  * Content is loaded again when targets change by value, when `imodelChanged` is raised or when `reload` is
- * called. Only the latest request affects the result.
+ * called. The previously loaded content is kept until the new one is ready. Only the latest request affects
+ * the result.
  *
  * The result holds raw content, as returned by `@itwin/presentation-content`: the descriptor and one content
  * item per instance. Formatting values and merging values of multiple instances is left to the consumer.
@@ -100,7 +110,7 @@ export function useContent(props: UseContentProps): UseContentResult {
         abortSignal: signal,
       });
   }, [imodelAccess, cachedGetContentConfiguration, targets]);
-  const { value: content, isLoading, error, reload } = useAsyncValue(load);
+  const { value: content, isLoading, error, reload } = useAsyncValue(load, { keepPreviousValue: true });
 
   useEffect(() => {
     if (!imodelChanged) {
@@ -118,7 +128,8 @@ export function useContent(props: UseContentProps): UseContentResult {
   }, [imodelChanged, reload]);
 
   return useMemo(
-    (): UseContentResult => ({ content, isLoading, ...(error !== undefined ? { error } : {}), reload }),
+    (): UseContentResult =>
+      error !== undefined ? { content: undefined, isLoading: false, error, reload } : { content, isLoading, reload },
     [content, isLoading, error, reload],
   );
 }

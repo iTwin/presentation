@@ -101,12 +101,17 @@ interface UseContentProps {
 }
 
 // @public
-interface UseContentResult {
-    content: Content | undefined;
-    error?: unknown;
-    isLoading: boolean;
+type UseContentResult = {
     reload: () => void;
-}
+} & ({
+    content: Content | undefined;
+    isLoading: boolean;
+    error?: never;
+} | {
+    content?: never;
+    isLoading: false;
+    error: unknown;
+});
 
 // @public
 export function useInstanceFilterPropertiesInfo(input: UseInstanceFilterPropertiesInfoProps): InstanceFilterPropertiesInfo;
@@ -129,10 +134,10 @@ interface UseUnifiedSelectionContentProps extends Omit<UseContentProps, "targets
 }
 
 // @public
-interface UseUnifiedSelectionContentResult extends UseContentResult {
-    isOverLimit: boolean;
+type UseUnifiedSelectionContentResult = UseContentResult & {
     selectedInstancesCount: number;
-}
+    isOverLimit: boolean;
+};
 
 // @public
 export function useUniqueFieldValues(input: UseUniqueFieldValuesProps): UseUniqueFieldValuesResult;
