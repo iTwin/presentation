@@ -15,10 +15,11 @@ describe("createContentTargetsFromSelectables", () => {
       { className: classA, id: "0x1" },
       { className: classB, id: "0x2" },
       { className: classA, id: "0x3" },
+      { className: classB, id: "0x1" },
     ]);
     await expect(createContentTargetsFromSelectables({ selectables })).resolves.toEqual([
       { primaryClass: classA, instanceIds: ["0x1", "0x3"] },
-      { primaryClass: classB, instanceIds: ["0x2"] },
+      { primaryClass: classB, instanceIds: ["0x2", "0x1"] },
     ]);
   });
 
