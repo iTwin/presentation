@@ -3,20 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  defer,
-  EMPTY,
-  firstValueFrom,
-  forkJoin,
-  from,
-  fromEvent,
-  identity,
-  map,
-  mergeMap,
-  of,
-  reduce,
-  takeUntil,
-} from "rxjs";
+import { defer, EMPTY, forkJoin, from, fromEvent, identity, map, mergeMap, of, reduce, takeUntil } from "rxjs";
 import { HierarchyNode, HierarchyNodeKey, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { eachValueFrom } from "@itwin/presentation-shared";
 import { CLASS_NAMES } from "../../shared/ClassNameDefinitions.js";
@@ -29,12 +16,14 @@ import type { Id64String } from "@itwin/core-bentley";
 import type { GenericInstanceFilter } from "@itwin/core-common";
 import type {
   GetHierarchyNodesProps,
+  GroupingHierarchyNode,
   HierarchyProvider,
   InstancesNodeKey,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import type { InstanceKey } from "@itwin/presentation-shared";
 import type {
+  ClassGroupingHierarchyNode,
   ElementsGroupInfo,
   ModelsTreeSearchPath,
   ModelsTreeSearchPathKey,
@@ -43,27 +32,21 @@ import type {
 import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 
 /**
- * A models hierarchy node that represents a single search path entry. Label merging must be disabled in the hierarchy.
- * @beta
+ * An instance or grouping node in a models hierarchy search path. Label merging must be disabled in the hierarchy.
+ * @alpha
  */
-export type ModelsTreeHierarchyNode = NonGroupingHierarchyNode & { key: InstancesNodeKey };
-
-/**
- * A tree of models hierarchy nodes that represent search tree entries.
- * @beta
- */
-export type ModelsTreeHierarchyNodeSearchTree = Pick<ModelsTreeSearchTree, "options"> & {
-  /** Hierarchy node of this tree entry. */
-  node: ModelsTreeHierarchyNode;
-  /** Whether the node represents an original search target, including leaf targets. */
-  isTarget: boolean;
-  /** Child entries, representing the next level(s) in the search paths. */
-  children?: ModelsTreeHierarchyNodeSearchTree[];
-};
+export type ModelsTreeHierarchyNode = (NonGroupingHierarchyNode & { key: InstancesNodeKey }) | GroupingHierarchyNode;
 
 type ParentNode = GetHierarchyNodesProps["parentNode"];
+/** Key of a search path entry, created by `createEntryKey` from the entry's path. */
+type EntryKey = string;
+interface LoadedInstanceNode {
+  node: NonGroupingHierarchyNode & { key: InstancesNodeKey };
+  /** Element class grouping node the instance node is grouped under. Models tree doesn't nest grouping nodes. */
+  groupedByNode?: ClassGroupingHierarchyNode;
+}
 /** A "hidden" entry identifies a known hidden model, rather than a missing non-hidden ancestor. */
-type LoadedNodes = Map<string, ModelsTreeHierarchyNode | "hidden">;
+type LoadedNodes = Map<EntryKey, LoadedInstanceNode | "hidden">;
 
 /** @internal */
 export function createHierarchyNodePaths(props: {
@@ -87,7 +70,7 @@ export function createHierarchyNodePaths(props: {
           instanceKeyPaths: new Array<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }>(),
         },
       ),
-      // load search tree nodes in a Map<key, HierarchyNode> structure
+      // load search tree nodes in a Map<key, HierarchyNode[]> structure
       // We can then take the search paths and map them to the loaded hierarchy nodes
       mergeMap(({ builder, instanceKeyPaths }) =>
         forkJoin({
@@ -98,31 +81,12 @@ export function createHierarchyNodePaths(props: {
       // Iterate over search paths and get corresponding hierarchy node paths
       mergeMap(({ results, instanceKeyPaths }) =>
         instanceKeyPaths.flatMap(({ path, target }) => {
-          const nodesPath = createNodesPath({ path, results: results.nodes });
+          const nodesPath = createNodesPath({ path, results });
           return nodesPath ? [{ path: nodesPath, target }] : [];
         }),
       ),
       props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
     ),
-  );
-}
-
-/** @internal */
-export async function createHierarchyNodeSearchTree(props: {
-  loadSearchTree: () => Promise<ModelsTreeSearchTree[]>;
-  hierarchyProvider: HierarchyProvider;
-  idsProvider: Pick<ModelsTreeIdsProvider, "getHiddenModelIds">;
-  abortSignal?: AbortSignal;
-}): Promise<ModelsTreeHierarchyNodeSearchTree[]> {
-  return firstValueFrom(
-    defer(async () => props.loadSearchTree()).pipe(
-      mergeMap((searchTree) =>
-        forkJoin({ results: loadSearchTreeNodes({ ...props, searchTree }), searchTree: of(searchTree) }),
-      ),
-      map(({ results }) => results.tree),
-      props.abortSignal ? takeUntil(fromEvent(props.abortSignal, "abort")) : identity,
-    ),
-    { defaultValue: [] },
   );
 }
 
@@ -135,9 +99,9 @@ function createNodesPath({
   results,
 }: {
   path: ModelsTreeSearchPath;
-  results: Map<string, ModelsTreeHierarchyNode>;
+  results: Map<EntryKey, LoadedInstanceNode>;
 }): ModelsTreeHierarchyNode[] | undefined {
-  let key: string | undefined;
+  let key: EntryKey | undefined;
   const loadedNodes = path.map((identifier) => {
     key = createEntryKey({ parentKey: key, identifier });
     return results.get(key);
@@ -147,72 +111,95 @@ function createNodesPath({
   if (path.length === 0 || loadedNodes[loadedNodes.length - 1] === undefined) {
     return undefined;
   }
-  // Ancestor keys have already been adjusted when creating the node tree.
-  return loadedNodes.filter((node) => node !== undefined);
+  // Ancestor keys have already been adjusted when populating the node map.
+  return loadedNodes.flatMap((loaded) =>
+    loaded ? [...(loaded.groupedByNode ? [loaded.groupedByNode] : []), loaded.node] : [],
+  );
 }
 
-/** Creates a tree of loaded nodes for the given search tree entries. */
-function createNodesTree({
+/**
+ * Indexes copies of loaded nodes with ancestor keys of the actual hierarchy into `results`, omitting missing non-hidden
+ * branches.
+ */
+function populateAdjustedNodesMap({
   entries,
   loadedNodes,
   results,
   parentKey,
   ancestorKeys,
+  parentNode,
 }: {
   entries: ModelsTreeSearchTree[];
   loadedNodes: LoadedNodes;
-  results: Map<string, ModelsTreeHierarchyNode>;
+  results: Map<EntryKey, LoadedInstanceNode>;
   /** Key of the parent entry's path. `undefined` for root entries. */
-  parentKey?: string;
+  parentKey?: EntryKey;
   ancestorKeys: HierarchyNodeKey[];
-}): ModelsTreeHierarchyNodeSearchTree[] {
-  return entries.flatMap((entry) => {
+  parentNode?: LoadedInstanceNode["node"];
+}): void {
+  for (const entry of entries) {
     const key = createEntryKey({ parentKey, identifier: entry.identifier });
     const loadedNode = loadedNodes.get(key);
     if (loadedNode === undefined) {
-      return [];
+      continue;
     }
     if (loadedNode === "hidden") {
       // the entry is hidden - its children take its place
-      return createNodesTree({
+      populateAdjustedNodesMap({
         entries: entry.children ?? [],
         loadedNodes,
         results,
         parentKey: key,
         ancestorKeys: [...ancestorKeys, createInstancesNodeKey(entry.identifier)],
       });
+      continue;
     }
+    const { groupedByNode } = loadedNode;
     // Created hierarchy nodes have parentKeys created based on search paths/tree.
     // Those keys use base classes; the loaded instance keys supply the actual ancestor classes.
-    const node = createNodeWithAncestorKeys({ node: loadedNode, ancestorKeys });
-    const children = createNodesTree({
+    const node = createNodeWithAncestorKeys({ node: loadedNode.node, ancestorKeys });
+    results.set(key, {
+      node,
+      ...(groupedByNode
+        ? { groupedByNode: createGroupingNodeWithAncestors({ groupedByNode, ancestorKeys, parentNode }) }
+        : {}),
+    });
+    populateAdjustedNodesMap({
       entries: entry.children ?? [],
       loadedNodes,
       results,
       parentKey: key,
       ancestorKeys: [...node.parentKeys, node.key],
+      parentNode: node,
     });
-    // Input leaves are implicit targets; missing children must not turn an ancestor into a target.
-    const isTarget = !!entry.isTarget || !entry.children?.length;
-    if (!isTarget && !children.length) {
-      return [];
-    }
-    const result = {
-      node,
-      isTarget,
-      ...(entry.options ? { options: entry.options } : {}),
-      ...(children.length ? { children } : {}),
-    };
-    results.set(key, node);
-    return [result];
-  });
+  }
+}
+
+/** Creates a copy of the loaded grouping node with adjusted ancestor keys and non-grouping ancestor. */
+function createGroupingNodeWithAncestors({
+  groupedByNode,
+  ancestorKeys,
+  parentNode,
+}: {
+  groupedByNode: ClassGroupingHierarchyNode;
+  ancestorKeys: HierarchyNodeKey[];
+  parentNode?: LoadedInstanceNode["node"];
+}): ClassGroupingHierarchyNode {
+  const groupingNode = createNodeWithAncestorKeys({ node: groupedByNode, ancestorKeys });
+  if (parentNode) {
+    groupingNode.nonGroupingAncestor = parentNode;
+  } else if (groupedByNode.nonGroupingAncestor) {
+    // Hidden parents are not returned, but their request context is still needed to expand the group.
+    groupingNode.nonGroupingAncestor = { ...groupedByNode.nonGroupingAncestor, parentKeys: ancestorKeys.slice(0, -1) };
+  }
+  return groupingNode;
 }
 
 /**
  * Loads nodes for all entries of the given search tree. Nodes of every hierarchy level are requested in parallel, and all
  * sibling entries of the same class are requested at once.
  *
- * Emits a map with keys created by `createEntryKey` and the corresponding tree. Entries that aren't in the hierarchy
+ * Emits a map from entry keys to loaded instance nodes and their grouping nodes. Entries that aren't in the hierarchy
  * are not in the map. Reconstruction happens only after loading and does not serialize the requests.
  */
 function loadSearchTreeNodes({
@@ -223,9 +210,9 @@ function loadSearchTreeNodes({
   searchTree: ModelsTreeSearchTree[];
   hierarchyProvider: HierarchyProvider;
   idsProvider: Pick<ModelsTreeIdsProvider, "getHiddenModelIds">;
-}): Observable<{ nodes: Map<string, ModelsTreeHierarchyNode>; tree: ModelsTreeHierarchyNodeSearchTree[] }> {
+}): Observable<Map<EntryKey, LoadedInstanceNode>> {
   if (!searchTree.length) {
-    return of({ nodes: new Map(), tree: [] });
+    return of(new Map());
   }
   return defer(() => {
     const loadedNodes: LoadedNodes = new Map();
@@ -240,22 +227,26 @@ function loadSearchTreeNodes({
       }),
       // Use the getNodes request props to load InstanceNodes
       mergeMap((request) =>
-        loadInstanceNodes({ hierarchyProvider, ...request }).pipe(map((node) => ({ node, request }))),
+        loadInstanceNodes({ hierarchyProvider, ...request }).pipe(map((loaded) => ({ loaded, request }))),
       ),
-      reduce((acc, { node, request }) => {
+      reduce((acc, { loaded, request }) => {
+        const { node } = loaded;
         // Node class name is the actual class of that node. Search paths use base classes,
         // need to create a key based on base class so lookup works correctly
         const className = getSearchPathClassName(node);
         const { id } = node.key.instanceKeys[0];
         if (request.ids.has(id)) {
-          acc.set(createLoadedNodeKey({ parentNode: request.parentNode, identifier: { className, id } }), node);
+          acc.set(
+            createEntryKeyFromParentNode({ parentNode: request.parentNode, identifier: { className, id } }),
+            loaded,
+          );
         }
         return acc;
       }, loadedNodes),
       map((loaded) => {
-        const nodes = new Map<string, ModelsTreeHierarchyNode>();
-        const tree = createNodesTree({ entries: searchTree, loadedNodes: loaded, results: nodes, ancestorKeys: [] });
-        return { nodes, tree };
+        const nodes = new Map<EntryKey, LoadedInstanceNode>();
+        populateAdjustedNodesMap({ entries: searchTree, loadedNodes: loaded, results: nodes, ancestorKeys: [] });
+        return nodes;
       }),
     );
   });
@@ -336,7 +327,8 @@ function createNodesRequestsAccumulator() {
  * Adds hierarchy level requests for the given search tree entries and their descendants to the accumulator.
  *
  * Entries hidden in the hierarchy are not requested: sub-models are always hidden, and models hidden by partition content
- * properties are specified by `hiddenModelIds`. Their children are requested as usual.
+ * properties are specified by `hiddenModelIds`. Instead, they're marked as hidden in `loadedNodes`, and their children
+ * are requested as usual.
  */
 function accumulateNodesRequests({
   searchTree,
@@ -351,7 +343,7 @@ function accumulateNodesRequests({
   ancestors?: SearchTreeEntryAncestors;
   accumulator: ReturnType<typeof createNodesRequestsAccumulator>;
   loadedNodes: LoadedNodes;
-  parentKey?: string;
+  parentKey?: EntryKey;
 }) {
   for (const { identifier, children } of searchTree) {
     const key = createEntryKey({ parentKey, identifier });
@@ -402,7 +394,7 @@ function createChildrenAncestors({
       break;
   }
   return {
-    minimalParentNode: createParentNode({ identifier, ancestors }),
+    minimalParentNode: createMinimalParentNode({ identifier, ancestors }),
     nearestAncestorModelId,
     nearestAncestorCategoryId,
     nearestAncestorElementId,
@@ -421,23 +413,30 @@ function createEntryKey({
   identifier,
 }: {
   /** Key of the parent entry's path. `undefined` for root entries. */
-  parentKey?: string;
+  parentKey?: EntryKey;
   identifier: InstanceKey;
-}) {
+}): EntryKey {
   const entryKey = `${identifier.className}:${identifier.id}`;
   return parentKey ? `${parentKey}/${entryKey}` : entryKey;
 }
 
 /**
- * Creates a key of a loaded node, given the search path class name and ID of the instance it represents.
+ * Creates an entry key of a loaded node from the request's parent node and the search path class name and ID of the
+ * instance the node represents.
  *
  * Parent nodes used for requests are created from search path entries, so their instance keys have search path class
  * names. Use the request's parent rather than returned node ancestry, which grouping and hiding may change.
  */
-function createLoadedNodeKey({ parentNode, identifier }: { parentNode: ParentNode; identifier: InstanceKey }) {
+function createEntryKeyFromParentNode({
+  parentNode,
+  identifier,
+}: {
+  parentNode: ParentNode;
+  identifier: InstanceKey;
+}): EntryKey {
   const parentKey = (parentNode ? [...parentNode.parentKeys, parentNode.key] : [])
     .filter((key) => HierarchyNodeKey.isInstances(key))
-    .reduce<string | undefined>(
+    .reduce<EntryKey | undefined>(
       (key, { instanceKeys }) => createEntryKey({ parentKey: key, identifier: instanceKeys[0] }),
       undefined,
     );
@@ -455,7 +454,7 @@ const SEARCH_PATH_CLASS_NAMES = {
  * Returns the search path class name of the instance represented by the given loaded node. Node keys have actual class
  * names of instances, while search path entries have base class names.
  */
-function getSearchPathClassName(node: ModelsTreeHierarchyNode): ModelsTreeSearchPathKey["className"] {
+function getSearchPathClassName(node: LoadedInstanceNode["node"]): ModelsTreeSearchPathKey["className"] {
   const type = ModelsTreeNode.getType(node);
   if (type === undefined || type === "elements-class-group") {
     throw new Error("Expected a subject, model, category or element node");
@@ -473,32 +472,34 @@ function getGroupingNodeKeys(node: ModelsTreeHierarchyNode) {
  * node keys (e.g. class names are more general, grouping node keys are missing). This replaces `parentKeys` of the loaded
  * node with keys of the actual ancestors.
  */
-function createNodeWithAncestorKeys({
+function createNodeWithAncestorKeys<TNode extends ModelsTreeHierarchyNode>({
   node,
   ancestorKeys,
 }: {
-  node: ModelsTreeHierarchyNode;
+  node: TNode;
   ancestorKeys: HierarchyNodeKey[];
-}): ModelsTreeHierarchyNode {
+}): TNode {
   return { ...node, parentKeys: [...ancestorKeys, ...getGroupingNodeKeys(node)] };
 }
 
 /**
- * Loads instance nodes of the hierarchy level of `parentNode`. Nodes grouped under grouping nodes are loaded by requesting
- * children of those grouping nodes.
+ * Loads instance nodes of the hierarchy level of `parentNode` together with their class grouping nodes.
+ * Nodes grouped under class grouping nodes are loaded by requesting children of those grouping nodes. Models tree
+ * doesn't nest grouping nodes, so other kinds of nodes are ignored.
  */
 function loadInstanceNodes(
   props: NodesRequest & { hierarchyProvider: HierarchyProvider },
-): Observable<ModelsTreeHierarchyNode> {
+  groupedByNode?: ClassGroupingHierarchyNode,
+): Observable<LoadedInstanceNode> {
   const { hierarchyProvider, parentNode, instanceFilter } = props;
   return defer(() => from(hierarchyProvider.getNodes({ parentNode, instanceFilter }))).pipe(
     mergeMap((node) => {
-      if (HierarchyNode.isGroupingNode(node)) {
-        return node.groupedInstanceKeys.some(({ id }) => props.ids.has(id))
-          ? loadInstanceNodes({ ...props, parentNode: node })
-          : EMPTY;
+      if (HierarchyNode.isInstancesNode(node)) {
+        return of(groupedByNode ? { node, groupedByNode } : { node });
       }
-      return HierarchyNode.isInstancesNode(node) ? of(node) : EMPTY;
+      return HierarchyNode.isClassGroupingNode(node) && node.groupedInstanceKeys.some(({ id }) => props.ids.has(id))
+        ? loadInstanceNodes({ ...props, parentNode: node }, node)
+        : EMPTY;
     }),
   );
 }
@@ -537,7 +538,7 @@ function isSubModel({ modelId, ancestors }: { modelId: Id64String; ancestors?: S
  * Creates a parent node with the same key and extended data, that models tree hierarchy definition expects from
  * a node representing the given search tree entry.
  */
-function createParentNode({
+function createMinimalParentNode({
   identifier,
   ancestors,
 }: {

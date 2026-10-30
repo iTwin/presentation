@@ -8,7 +8,7 @@ import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProv
 import { mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 import { createModelsTreeIdsProvider, normalizeModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
-import { createHierarchyNodePaths, createHierarchyNodeSearchTree } from "./ModelsTreeSearchHierarchyNodes.js";
+import { createHierarchyNodePaths } from "./ModelsTreeSearchHierarchyNodes.js";
 
 import type { GuidString } from "@itwin/core-bentley";
 import type {
@@ -152,11 +152,13 @@ export function createModelsTree(props: ModelsTreeProps) {
      * Notes:
      * - Hidden models are omitted. Paths whose target or a non-hidden ancestor is not found are not yielded.
      *   The `includeOnlyVisibleNodeInstanceKeys` option is therefore not supported.
-     * - Class grouping nodes are not included in the paths, but their keys are included in the `parentKeys` of the returned nodes.
-     * - Each returned node represents a single instance. Nodes with matching labels remain separate.
+     * - Grouping nodes are included before the instances they contain, including nested grouping levels.
+     *   Their labels, counts, and grouped instance keys reflect the filtered request, including its ID chunk.
+     * - Instance nodes each represent a single instance. Nodes with matching labels remain separate.
      * - Hidden ancestor keys use search-path base classes.
      * - Provider hierarchy level size limits apply; its state is not changed by this helper.
      * @throws An error if a search or provider hierarchy level size limit is exceeded, or loading fails.
+     * @alpha
      */
     createHierarchyNodePaths: ({ hierarchyProvider, ...searchProps }: ModelsTreeHierarchyNodesSearchProps) =>
       createHierarchyNodePaths({
@@ -171,40 +173,6 @@ export function createModelsTree(props: ModelsTreeProps) {
           uniqueId,
           imodelAccess: props.imodelAccess,
         }),
-      }),
-    /**
-     * Same as `createSearchTree`, but builds a tree of hierarchy nodes loaded from `hierarchyProvider` instead of instance keys.
-     *
-     * Uses the same loading and cancellation behavior as `createHierarchyNodePaths`. Set `revealTargets` to retain
-     * expansion options for matching targets. These options are returned on search entries, not applied to provider nodes.
-     *
-     * Notes:
-     * - Hidden models are omitted and their children take their place. Missing non-hidden nodes and their descendants
-     *   are omitted. Branches without surviving targets are pruned.
-     *   The `includeOnlyVisibleNodeInstanceKeys` option is therefore not supported.
-     * - Class grouping nodes are not included in the tree, but their keys are included in the `parentKeys` of the returned nodes.
-     * - Label merging must be disabled in the hierarchy. Entries are not merged or deduplicated by label.
-     * - Each entry has an explicit `isTarget` flag. Entry children contain only search results, not all hierarchy children.
-     * - Cancellation returns an empty tree rather than partial results.
-     * @throws An error if a search or provider hierarchy level size limit is exceeded, or loading fails.
-     */
-    createHierarchyNodeSearchTree: async ({
-      hierarchyProvider,
-      ...searchProps
-    }: ModelsTreeHierarchyNodesSearchProps & { revealTargets?: boolean }) =>
-      createHierarchyNodeSearchTree({
-        hierarchyProvider,
-        idsProvider,
-        abortSignal: searchProps.abortSignal,
-        loadSearchTree: async () =>
-          ModelsTreeDefinition.createSearchTree({
-            ...searchProps,
-            includeOnlyVisibleNodeInstanceKeys: false,
-            hierarchyConfig: hierarchyNodesSearchConfig,
-            idsProvider,
-            uniqueId,
-            imodelAccess: props.imodelAccess,
-          }),
       }),
   };
 }
