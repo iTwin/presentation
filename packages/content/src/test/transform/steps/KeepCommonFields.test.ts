@@ -250,5 +250,137 @@ describe("keepCommonFields", () => {
 
       expect(result.entries).to.deep.equal([]);
     });
+
+    it("doesn't combine forks of the same field", () => {
+      const pumpItems = [items[0]];
+      const original = createRelatedFieldEntry({ id: "original", source: "Plant.Pump", values: [undefined] });
+      const fork = createRelatedFieldEntry({
+        id: "fork",
+        source: "Plant.Pump",
+        values: [["x"]],
+        overrides: { label: "Fork" },
+      });
+      const entries = [original, fork];
+
+      const result = keepCommonFields()(createRecords({ descriptor, items: pumpItems, entries }));
+
+      expect(result.entries).to.have.lengthOf(entries.length);
+      result.entries.forEach((entry, index) => expect(entry).to.equal(entries[index]));
+    });
+
+    it("combines forks with forks of other fields that have the same value classes", () => {
+      const pumpOriginal = createRelatedFieldEntry({
+        id: "pumpOriginal",
+        source: "Plant.Pump",
+        values: [["a"], undefined],
+        overrides: { valueClassNames: ["Plant.AspectA"] },
+      });
+      const pumpFork = createRelatedFieldEntry({
+        id: "pumpFork",
+        source: "Plant.Pump",
+        values: [["b"], undefined],
+        overrides: { valueClassNames: ["Plant.AspectB"] },
+      });
+      const valveFork = createRelatedFieldEntry({
+        id: "valveFork",
+        source: "Plant.Valve",
+        values: [undefined, ["c"]],
+        overrides: { valueClassNames: ["Plant.AspectB"] },
+      });
+      const valveOriginal = createRelatedFieldEntry({
+        id: "valveOriginal",
+        source: "Plant.Valve",
+        values: [undefined, ["d"]],
+        overrides: { valueClassNames: ["Plant.AspectA"] },
+      });
+      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
+
+      const result = keepCommonFields({ combinedFields })(
+        createRecords({ descriptor, items, entries: [pumpOriginal, pumpFork, valveFork, valveOriginal] }),
+      );
+
+      expect(result.entries).to.have.lengthOf(2);
+      expect(result.entries[0]).to.deep.include({ values: [["a"], ["d"]] });
+      expect(result.entries[1]).to.deep.include({ values: [["b"], ["c"]] });
+      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([
+        pumpOriginal.field,
+        valveOriginal.field,
+      ]);
+      expect(combinedFields.get((result.entries[1] as FieldEntry).field)).to.deep.equal([
+        pumpFork.field,
+        valveFork.field,
+      ]);
+    });
+
+    it("combines fields with the same value classes even when non-matching fields come first", () => {
+      const pump = createRelatedFieldEntry({
+        id: "pump",
+        source: "Plant.Pump",
+        values: [["a"], undefined],
+        overrides: { valueClassNames: ["Plant.AspectB"] },
+      });
+      const valveOriginal = createRelatedFieldEntry({
+        id: "valveOriginal",
+        source: "Plant.Valve",
+        values: [undefined, ["b"]],
+        overrides: { valueClassNames: ["Plant.AspectA"] },
+      });
+      const valveFork = createRelatedFieldEntry({
+        id: "valveFork",
+        source: "Plant.Valve",
+        values: [undefined, ["c"]],
+        overrides: { valueClassNames: ["Plant.AspectB"] },
+      });
+      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
+
+      const result = keepCommonFields({ combinedFields })(
+        createRecords({ descriptor, items, entries: [pump, valveOriginal, valveFork] }),
+      );
+
+      expect(result.entries).to.have.lengthOf(1);
+      expect(result.entries[0]).to.deep.include({ values: [["a"], ["c"]] });
+      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([pump.field, valveFork.field]);
+    });
+
+    it("combines fields of all classes when unmatched fields come before matched ones", () => {
+      const pipeItems = [...items, createItem({ descriptor, primaryKey: { className: "Plant.Pipe", id: "0x3" } })];
+      const pump = createRelatedFieldEntry({
+        id: "pump",
+        source: "Plant.Pump",
+        values: [["a"], undefined, undefined],
+        overrides: { valueClassNames: ["Plant.AspectA"] },
+      });
+      const valveOriginal = createRelatedFieldEntry({
+        id: "valveOriginal",
+        source: "Plant.Valve",
+        values: [undefined, ["c"], undefined],
+        overrides: { valueClassNames: ["Plant.AspectC"] },
+      });
+      const pipe = createRelatedFieldEntry({
+        id: "pipe",
+        source: "Plant.Pipe",
+        values: [undefined, undefined, ["b1"]],
+        overrides: { valueClassNames: ["Plant.AspectB"] },
+      });
+      const valveFork = createRelatedFieldEntry({
+        id: "valveFork",
+        source: "Plant.Valve",
+        values: [undefined, ["b2"], undefined],
+        overrides: { valueClassNames: ["Plant.AspectB"] },
+      });
+      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
+
+      const result = keepCommonFields({ combinedFields })(
+        createRecords({ descriptor, items: pipeItems, entries: [pump, valveOriginal, pipe, valveFork] }),
+      );
+
+      expect(result.entries).to.have.lengthOf(1);
+      expect(result.entries[0]).to.deep.include({ values: [["a"], ["b2"], ["b1"]] });
+      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([
+        pump.field,
+        pipe.field,
+        valveFork.field,
+      ]);
+    });
   });
 });
