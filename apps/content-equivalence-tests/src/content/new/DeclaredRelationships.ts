@@ -5,7 +5,7 @@
 
 import { createIModelContentConfiguration } from "@itwin/presentation-content";
 import { getClass } from "@itwin/presentation-shared";
-import { stableStringify } from "../Persistence.js";
+import { stableStringify } from "../../Persistence.js";
 
 import type { ContentConfiguration, ReadonlyPropertyField } from "@itwin/presentation-content";
 import type { EC, ECSchemaProvider, ECSqlQueryExecutor, RelationshipPath } from "@itwin/presentation-shared";

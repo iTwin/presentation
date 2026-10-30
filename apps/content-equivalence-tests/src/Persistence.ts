@@ -22,7 +22,18 @@ export interface SampledElementsScenario {
   id: "sampled-elements";
   keys: InstanceKey[];
 }
+
+/** Compares property grid data, created for each sampled element individually. */
+export interface SampledElementsPropertyGridScenario {
+  id: "sampled-elements-property-grid";
+  keys: InstanceKey[];
+}
+
+/** Scenarios of the content suite. */
 export type Scenario = AllElementsDescriptorScenario | SampledElementsScenario;
+
+/** Scenarios of all suites. */
+export type EquivalenceScenario = Scenario | SampledElementsPropertyGridScenario;
 
 /** Implementation-specific details about generating a capture, reported alongside the scenario's results. */
 export interface CaptureDiagnostics {
@@ -37,7 +48,7 @@ export interface CaptureEnvelope<TImplementation extends ImplementationName = Im
   implementation: TImplementation;
   implementationFingerprint: string;
   imodelFingerprint: string;
-  scenario: Scenario;
+  scenario: EquivalenceScenario;
   createdAt: string;
 }
 
@@ -93,7 +104,7 @@ export function cachePath(props: {
   imodelFingerprint: string;
   implementation: ImplementationName;
   implementationFingerprint: string;
-  scenario: Scenario;
+  scenario: EquivalenceScenario;
 }): string {
   const scenarioFingerprint = hashString(stableStringify(props.scenario));
   return path.join(

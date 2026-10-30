@@ -4,6 +4,14 @@ This private app compares descriptors and sampled raw values produced by the
 legacy `@itwin/presentation-backend` content API and the new
 `@itwin/presentation-content` pipeline.
 
+It also compares property grid data, ready to be shown in UI, created for each
+sampled element by:
+
+- the legacy `PresentationPropertyDataProvider` from
+  `@itwin/presentation-components`;
+- the new pipeline, with its content mapped to `PropertyData` by the test app's
+  [`createPropertyData`](../test-app/frontend/src/components/content-properties-widget/TransformToPropertyRecord.ts).
+
 The suite reads iModels from a runtime JSON manifest. It stores each
 implementation's captures independently, allowing changes to the new content
 package to be compared repeatedly against unchanged legacy output.
@@ -77,6 +85,25 @@ From this directory:
 pnpm test
 ```
 
+The tests are split into two Vitest projects, which run one after the other:
+
+- `content` (`src/content`) compares content descriptors and raw values in a
+  Node.js environment;
+- `property-grid` (`src/property-grid`) compares property grid data in a
+  `happy-dom` environment, because `@itwin/presentation-components` needs a DOM.
+  It also starts an in-process frontend that sends requests to the backend
+  directly.
+
+Each folder contains its project's tests and `legacy` and `new` capture
+adapters. Code shared by both projects, such as configuration, sampling,
+caching and the runner, is in `src`.
+
+To run one of them:
+
+```sh
+pnpm test --project property-grid
+```
+
 Each iModel runs as a separate, sequential test with no Vitest test timeout;
 scenarios have their own time limit, described below. The verbose reporter shows
 per-iModel progress and results. A failing iModel does not prevent the remaining
@@ -125,6 +152,28 @@ The new implementation fingerprint includes the content package's TypeScript
 sources, so changing that package also invalidates only new captures
 automatically. Changes to normalization and comparison code reuse both captures.
 
+Property grid captures have separate fingerprints. The legacy one also includes
+`@itwin/presentation-components` sources, and the new one also includes the test
+app's mapping, so changing either only invalidates the affected property grid
+captures.
+
+## Property grid comparison
+
+The legacy provider uses the default property grid ruleset, extended with the
+same supplemental rules as other legacy captures. Its favorites category is
+disabled. Before comparing, property grid data is normalized:
+
+- categories and records are matched by label, because their names are
+  implementation-specific;
+- the root categories for fields without a category ("Selected Item(s)" and
+  the test app's "Miscellaneous") are treated as the same category;
+- only raw values are compared, except for navigation values, whose display
+  labels are compared too. The test app leaves formatting of other values to the
+  property grid;
+- items of struct arrays (related instances) are compared regardless of order;
+- labels and descriptions of the property data itself are ignored, because the
+  test app uses the class name as the label.
+
 ## Outputs
 
 `output/cache` contains reusable, lossless captures keyed by:
@@ -144,17 +193,23 @@ output/cache/imodel-a7d50df05561/sampling/sampling-053e9ed8114f.json
 
 The capture files retain complete fingerprints and validate them when loaded.
 
-`output/runs` contains one timestamped report directory per test run, shared by all
-iModel tests:
+`output/runs` contains one timestamped report directory per test run of each
+Vitest project, shared by all iModel tests:
 
 ```text
-output/runs/<timestamp>-<process id>/
+output/runs/<timestamp>-<process id>-content/
   run.json
   summary.json
   <iModel name>/
     sample.json
     all-elements-descriptor/
     sampled-elements/
+output/runs/<timestamp>-<process id>-property-grid/
+  run.json
+  summary.json
+  <iModel name>/
+    sample.json
+    sampled-elements-property-grid/
 ```
 
 The run directory contains:
@@ -166,14 +221,17 @@ The run directory contains:
 Each iModel directory contains:
 
 - `sample.json`: sampled keys and candidate counts;
-- `sampling-error.json`: the sampling error, if sampling fails. The `sampled-elements` scenario is then skipped;
+- `sampling-error.json`: the sampling error, if sampling fails. The `sampled-elements` and
+  `sampled-elements-property-grid` scenarios are then skipped;
 - `error.json`: the error, if the iModel can't be processed at all, for example when its file can't be read.
 
 Each scenario directory contains:
 
 - `legacy.normalized.json` and `new.normalized.json`: normalized descriptors and
   values;
-- `differences.json`: structured descriptor and value differences;
+- `differences.json`: structured descriptor and value differences. For property
+  grid data, descriptor differences are differences in categories and record
+  types;
 - `captures.json`: capture paths and cache-hit status;
 - `error.json`: the error, if the scenario fails;
 - `<implementation>.diagnostics.json`: implementation-specific details about
