@@ -626,6 +626,8 @@ Consumers compose these based on their needs:
 
 This keeps the pipeline simple (it only deals with raw data) and gives consumers full control over what transformations they apply and in what order.
 
+For display-oriented post-processing, a content transformer produces an intermediate `ContentRecords` format. Each entry pairs a field (or a group of related-instance fields) with its raw values, one per item. `createDefaultContentTransformer` keeps fields common to all items (or all fields, with `fields: "all"`), drops hidden fields, collapses many-cardinality related values and marks entries with differing values as merged. `createContentTransformer` composes custom steps. Mapping the result to a UI-specific format, is left to the consumer.
+
 ---
 
 ## Key Design Decisions

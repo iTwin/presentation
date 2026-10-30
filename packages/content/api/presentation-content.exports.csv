@@ -7,9 +7,13 @@ public;namespace;CategoryDefinition
 public;interface;ContentConfiguration
 public;interface;ContentDescriptor
 public;interface;ContentItem
+public;interface;ContentRecords
 public;interface;ContentSource
 public;interface;ContentTarget
+public;type;ContentTransformer
 public;function;createContentProvider
+public;function;createContentTransformer
+public;function;createDefaultContentTransformer
 public;function;createHiddenSchemaMembersDescriptorTransformer
 public;function;createIModelContentConfiguration
 public;const;DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY
