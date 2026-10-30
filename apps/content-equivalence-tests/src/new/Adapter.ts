@@ -3,28 +3,28 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { firstValueFrom, from, map, mergeMap, toArray } from "rxjs";
 import {
   createContentProvider,
   createIModelContentConfiguration,
   resolveContentSources,
 } from "@itwin/presentation-content";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { mapConcurrently } from "../Concurrency.js";
 import { CAPTURE_FORMAT_VERSION, stableStringify } from "../Persistence.js";
+import { QueryScope, runInQueryContext, summarizeCanceledQueries } from "../QueryScope.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { ContentItem, ContentTarget, PropertyField, ReadonlyContentDescriptor } from "@itwin/presentation-content";
-import type { InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, ECSqlQueryExecutor, InstanceKey, RelationshipPath } from "@itwin/presentation-shared";
 import type {
   AllElementsDescriptorScenario,
+  CaptureDiagnostics,
   CaptureEnvelope,
   SampledElementsScenario,
   Scenario,
 } from "../Persistence.js";
 
-function createIModelAccess(imodel: IModelDb) {
-  return { ...createECSchemaProvider(imodel), ...createECSqlQueryExecutor(imodel) };
-}
+const SAMPLED_ITEM_CONCURRENCY = 4;
 
 export type CapturedNewValue = ContentItem["values"][string];
 
@@ -78,50 +78,103 @@ function captureNewItem(item: ContentItem, descriptor: ReadonlyContentDescriptor
 
 export async function captureNew(props: {
   imodel: IModelDb;
+  signal: AbortSignal;
   scenario: Scenario;
   implementationFingerprint: string;
   imodelFingerprint: string;
+  /** Receives the capture's ECSQL query report after all of its queries have settled, including when it fails. */
+  onDiagnostics?: (diagnostics: CaptureDiagnostics) => void;
 }): Promise<NewCapture> {
-  const { imodel, scenario } = props;
-  const imodelAccess = createIModelAccess(imodel);
-  const config = await createIModelContentConfiguration({ imodelAccess });
+  const { imodel, onDiagnostics, ...captureProps } = props;
+  const scope = new QueryScope(props.signal);
+  const imodelAccess = { ...createECSchemaProvider(imodel), ...scope.wrap(createECSqlQueryExecutor(imodel)) };
+  const cancelReason = (error: unknown) =>
+    new Error("Canceled after an earlier failure in the same capture.", { cause: error });
+  try {
+    return await captureContent({
+      ...captureProps,
+      imodelAccess,
+      onItemFailure: (error) => scope.abort(cancelReason(error)),
+    });
+  } catch (error) {
+    // A failing pipeline may stop awaiting its other queries, so settle them before the caller closes the iModel.
+    scope.abort(cancelReason(error));
+    await scope.settle();
+    throw error;
+  } finally {
+    const report = scope.getReport();
+    if (report.totalQueries > 0) {
+      onDiagnostics?.({ details: report, failureSummary: summarizeCanceledQueries(report) });
+    }
+  }
+}
+
+async function captureContent(props: {
+  imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
+  signal: AbortSignal;
+  scenario: Scenario;
+  implementationFingerprint: string;
+  imodelFingerprint: string;
+  /** Called when a sampled item fails, so queries of items still running can be canceled. */
+  onItemFailure: (error: unknown) => void;
+}): Promise<NewCapture> {
+  const { imodelAccess, signal, scenario } = props;
+  const config = await runInQueryContext({ phase: "configuration" }, async () =>
+    createIModelContentConfiguration({ imodelAccess }),
+  );
   if (scenario.id === "sampled-elements") {
-    return firstValueFrom(
-      from(scenario.keys).pipe(
-        mergeMap(async (key) => {
+    const items = await mapConcurrently({
+      items: scenario.keys,
+      concurrency: SAMPLED_ITEM_CONCURRENCY,
+      callback: async (key) => {
+        try {
           const itemTargets: ContentTarget[] = [{ primaryClass: key.className, instanceIds: [key.id] }];
-          const itemSources = await resolveContentSources({ imodelAccess, targets: itemTargets, config });
+          const itemSources = await runInQueryContext({ phase: "resolve-sources", instanceKey: key }, async () =>
+            resolveContentSources({ imodelAccess, targets: itemTargets, config }),
+          );
           const itemProvider = createContentProvider({ imodelAccess, sources: itemSources, config });
-          const itemDescriptor = await itemProvider.getContentDescriptor();
-          const items: CapturedNewItem[] = [];
-          for await (const item of itemProvider.getItems()) {
-            items.push(captureNewItem(item, itemDescriptor));
-          }
-          if (items.length !== 1) {
+          const itemDescriptor = await runInQueryContext({ phase: "descriptor", instanceKey: key }, async () =>
+            itemProvider.getContentDescriptor(),
+          );
+          const capturedItems = await runInQueryContext({ phase: "items", instanceKey: key }, async () => {
+            const result: CapturedNewItem[] = [];
+            for await (const item of itemProvider.getItems()) {
+              result.push(captureNewItem(item, itemDescriptor));
+            }
+            return result;
+          });
+          if (capturedItems.length !== 1) {
             throw new Error(
-              `Expected one new-generation content item for '${key.className}:${key.id}', found ${items.length}.`,
+              `Expected one new-generation content item for '${key.className}:${key.id}', found ${capturedItems.length}.`,
             );
           }
-          return items[0];
-        }, 4),
-        toArray(),
-        map((items) => ({
-          captureFormatVersion: CAPTURE_FORMAT_VERSION,
-          implementation: "new",
-          implementationFingerprint: props.implementationFingerprint,
-          imodelFingerprint: props.imodelFingerprint,
-          scenario,
-          createdAt: new Date().toISOString(),
-          items,
-        })),
-      ),
-    );
+          return capturedItems[0];
+        } catch (error) {
+          props.onItemFailure(error);
+          throw error;
+        }
+      },
+      signal,
+    });
+    return {
+      captureFormatVersion: CAPTURE_FORMAT_VERSION,
+      implementation: "new",
+      implementationFingerprint: props.implementationFingerprint,
+      imodelFingerprint: props.imodelFingerprint,
+      scenario,
+      createdAt: new Date().toISOString(),
+      items,
+    };
   }
 
   const allElementTargets: ContentTarget[] = [{ primaryClass: "BisCore.GeometricElement3d" as const }];
-  const allElementSources = await resolveContentSources({ imodelAccess, targets: allElementTargets, config });
+  const allElementSources = await runInQueryContext({ phase: "resolve-sources" }, async () =>
+    resolveContentSources({ imodelAccess, targets: allElementTargets, config }),
+  );
   const allElementProvider = createContentProvider({ imodelAccess, sources: allElementSources, config });
-  const allElementDescriptor = await allElementProvider.getContentDescriptor();
+  const allElementDescriptor = await runInQueryContext({ phase: "descriptor" }, async () =>
+    allElementProvider.getContentDescriptor(),
+  );
   return {
     captureFormatVersion: CAPTURE_FORMAT_VERSION,
     implementation: "new",

@@ -5,8 +5,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { IModelHost, SnapshotDb } from "@itwin/core-backend";
-import { Presentation } from "@itwin/presentation-backend";
+import { SnapshotDb } from "@itwin/core-backend";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { getImplementationFingerprints, getSamplingImplementationFingerprint } from "./Fingerprints.js";
 import { captureLegacy } from "./legacy/Adapter.js";
@@ -29,7 +28,13 @@ import { selectSample } from "./Sampling.js";
 import type { ResolvedIModelEntry, RuntimeConfiguration } from "./Configuration.js";
 import type { LegacyCapture } from "./legacy/Adapter.js";
 import type { NewCapture } from "./new/Adapter.js";
-import type { CaptureEnvelope, CaptureMetadata, ImplementationName, Scenario } from "./Persistence.js";
+import type {
+  CaptureDiagnostics,
+  CaptureEnvelope,
+  CaptureMetadata,
+  ImplementationName,
+  Scenario,
+} from "./Persistence.js";
 import type { Sample } from "./Sampling.js";
 
 export interface RunScenarioSummary {
@@ -46,8 +51,19 @@ function openIModel(filePath: string): SnapshotDb {
   return SnapshotDb.openFile(filePath);
 }
 
+class ScenarioTimeoutError extends Error {
+  public constructor(timeoutMs: number) {
+    super(`Scenario exceeded its time limit of ${timeoutMs / 60_000} minute(s).`);
+    this.name = "ScenarioTimeoutError";
+  }
+}
+
 function shouldRefresh(config: RuntimeConfiguration, implementation: ImplementationName): boolean {
   return config.refresh === "all" || config.refresh === implementation;
+}
+
+function logProgress(context: string, message: string): void {
+  console.info(`[${new Date().toISOString()}] [${context}] ${message}`);
 }
 
 function readReusableCapture<TCapture extends CaptureEnvelope>(
@@ -97,36 +113,20 @@ function readSample(filePath: string): Sample | undefined {
   }
 }
 
-class BackendLifecycle {
-  private constructor() {}
-
-  public static async start(): Promise<BackendLifecycle> {
-    const lifecycle = new BackendLifecycle();
-    await lifecycle.start();
-    return lifecycle;
-  }
-
-  private async start() {
-    await IModelHost.startup({ profileName: "presentation-content-equivalence-tests" });
-    Presentation.initialize();
-  }
-
-  public async [Symbol.asyncDispose](): Promise<void> {
-    Presentation.terminate();
-    await IModelHost.shutdown();
-  }
-}
-
 async function loadOrCreateSample(props: {
   config: RuntimeConfiguration;
   imodel: ResolvedIModelEntry;
   imodelFingerprint: string;
 }): Promise<Sample> {
+  const context = `${props.imodel.name}/sampling`;
   const filePath = sampleCachePath(props.config, props.imodelFingerprint, props.imodel);
+  logProgress(context, "Checking sample cache.");
   const cached = readSample(filePath);
   if (cached) {
+    logProgress(context, `Using cached sample with ${cached.keys.length} keys from '${filePath}'.`);
     return cached;
   }
+  logProgress(context, "No valid cached sample; selecting instance keys.");
   const imodelDb = openIModel(props.imodel.path);
   try {
     const sample = await selectSample({
@@ -135,6 +135,7 @@ async function loadOrCreateSample(props: {
       explicitKeys: props.imodel.instanceKeys,
     });
     writeJson(filePath, sample);
+    logProgress(context, `Saved sample with ${sample.keys.length} keys to '${filePath}'.`);
     return sample;
   } finally {
     imodelDb.close();
@@ -148,14 +149,20 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
   implementation: TCapture["implementation"];
   implementationFingerprint: string;
   scenario: Scenario;
+  signal: AbortSignal;
+  /** Collects diagnostics reported by `createCapture`, keyed by implementation. */
+  diagnostics: Map<ImplementationName, CaptureDiagnostics>;
   createCapture: (props: {
     imodel: SnapshotDb;
+    signal: AbortSignal;
+    onDiagnostics?: (diagnostics: CaptureDiagnostics) => void;
     scenario: Scenario;
     implementationFingerprint: string;
     imodelFingerprint: string;
   }) => Promise<TCapture>;
 }): Promise<{ capture: TCapture; cacheHit: boolean; filePath: string }> {
   const { config, implementation, implementationFingerprint, imodelFingerprint, scenario } = props;
+  const context = `${props.imodel.name}/${scenario.id}/${implementation}`;
   const filePath = cachePath({ config, imodelFingerprint, implementation, implementationFingerprint, scenario });
   const expected = {
     captureFormatVersion: CAPTURE_FORMAT_VERSION,
@@ -165,59 +172,66 @@ async function loadOrCreateCapture<TCapture extends CaptureEnvelope>(props: {
     scenario,
   };
   if (!shouldRefresh(config, implementation)) {
+    logProgress(context, "Checking capture cache.");
     const capture = readReusableCapture<TCapture>(filePath, expected);
     if (capture) {
+      logProgress(context, `Using cached capture from '${filePath}'.`);
       return { capture, cacheHit: true, filePath };
     }
+    logProgress(context, "No valid cached capture; generating content.");
+  } else {
+    logProgress(context, "Refresh requested; generating content.");
   }
 
+  props.signal.throwIfAborted();
   const imodelDb = openIModel(props.imodel.path);
   try {
+    // The capture must settle before the iModel closes, so time limits only stop work cooperatively.
     const capture = await props.createCapture({
       imodel: imodelDb,
+      signal: props.signal,
+      onDiagnostics: (diagnostics) => props.diagnostics.set(implementation, diagnostics),
       scenario,
       implementationFingerprint,
       imodelFingerprint,
     });
     writeJson(filePath, capture);
+    logProgress(context, `Saved generated capture to '${filePath}'.`);
     return { capture, cacheHit: false, filePath };
   } finally {
     imodelDb.close();
   }
 }
 
-function createRunDirectory(outputDirectory: string): string {
+export function createEquivalenceRun(config: RuntimeConfiguration) {
   const timestamp = new Date().toISOString().replaceAll(":", "-");
-  const runDirectory = path.join(outputDirectory, "runs", `${timestamp}-${process.pid}`);
+  const runDirectory = path.join(config.outputDirectory, "runs", `${timestamp}-${process.pid}`);
   fs.mkdirSync(runDirectory, { recursive: true });
-  return runDirectory;
-}
-
-export async function runEquivalence(config: RuntimeConfiguration): Promise<RunScenarioSummary[]> {
-  await using _init = await BackendLifecycle.start();
   const fingerprints = getImplementationFingerprints();
-  const runDirectory = createRunDirectory(config.outputDirectory);
-  const summaries: RunScenarioSummary[] = [];
-  const errors: string[] = [];
-
   writeJson(path.join(runDirectory, "run.json"), {
     manifestPath: config.manifestPath,
     manifest: config.manifest,
     refresh: config.refresh,
     implementationFingerprints: fingerprints,
   });
+  return { runDirectory, fingerprints, summaries: [] as RunScenarioSummary[], errors: [] as string[] };
+}
 
-  for (const imodel of config.imodels) {
-    const imodelDirectory = path.join(runDirectory, imodel.name);
-    let imodelFingerprint: string;
-    try {
-      imodelFingerprint = await hashFile(imodel.path);
-    } catch (error) {
-      const message = `${imodel.name}: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`;
-      errors.push(message);
-      writeJson(path.join(imodelDirectory, "error.json"), { message });
-      continue;
-    }
+export async function runEquivalence(
+  config: RuntimeConfiguration,
+  imodel: ResolvedIModelEntry,
+  run: ReturnType<typeof createEquivalenceRun>,
+): Promise<RunScenarioSummary[]> {
+  const context = imodel.name;
+  const { runDirectory, fingerprints } = run;
+  logProgress(context, `Writing reports to '${runDirectory}'.`);
+  const summaries: RunScenarioSummary[] = [];
+  const errors: string[] = [];
+  const imodelDirectory = path.join(runDirectory, imodel.name);
+
+  try {
+    logProgress(imodel.name, "Hashing iModel file.");
+    const imodelFingerprint = await hashFile(imodel.path);
 
     // Sampling failure only rules out the "sampled-elements" scenario; the descriptor scenario needs no sample.
     let sample: Sample | undefined;
@@ -228,6 +242,7 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
       const message = `${imodel.name}/sampling: ${
         error instanceof Error ? (error.stack ?? error.message) : String(error)
       }`;
+      console.error(message);
       errors.push(message);
       writeJson(path.join(imodelDirectory, "sampling-error.json"), { message });
     }
@@ -238,7 +253,18 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
     ];
 
     for (const scenario of scenarios) {
+      const scenarioContext = `${imodel.name}/${scenario.id}`;
       const scenarioDirectory = path.join(imodelDirectory, scenario.id);
+      const controller = new AbortController();
+      const { scenarioTimeoutMs } = config;
+      const timer =
+        scenarioTimeoutMs !== undefined
+          ? setTimeout(() => {
+              logProgress(scenarioContext, "Time limit reached; canceling running work.");
+              controller.abort(new ScenarioTimeoutError(scenarioTimeoutMs));
+            }, scenarioTimeoutMs)
+          : undefined;
+      const diagnostics = new Map<ImplementationName, CaptureDiagnostics>();
       try {
         const legacy = await loadOrCreateCapture<LegacyCapture>({
           config,
@@ -247,6 +273,8 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           implementation: "legacy",
           implementationFingerprint: fingerprints.legacy,
           scenario,
+          signal: controller.signal,
+          diagnostics,
           createCapture: captureLegacy,
         });
         const current = await loadOrCreateCapture<NewCapture>({
@@ -256,18 +284,25 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           implementation: "new",
           implementationFingerprint: fingerprints.new,
           scenario,
+          signal: controller.signal,
+          diagnostics,
           createCapture: captureNew,
         });
+        controller.signal.throwIfAborted();
+        logProgress(scenarioContext, "Normalizing legacy and new captures.");
         const imodelDb = openIModel(imodel.path);
         let normalizedLegacy, normalizedNew;
         try {
           const imodelAccess = { ...createECSchemaProvider(imodelDb), ...createECSqlQueryExecutor(imodelDb) };
           normalizedLegacy = await normalizeLegacyCapture(legacy.capture, imodelAccess);
+          controller.signal.throwIfAborted();
           normalizedNew = await normalizeNewCapture(current.capture, imodelAccess, imodelDb.schemaContext);
+          controller.signal.throwIfAborted();
         } finally {
           imodelDb.close();
         }
 
+        logProgress(scenarioContext, "Comparing normalized content.");
         let differences;
         if (scenario.id === "all-elements-descriptor") {
           if (normalizedLegacy.descriptor === undefined || normalizedNew.descriptor === undefined) {
@@ -289,6 +324,10 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           new: { path: current.filePath, cacheHit: current.cacheHit },
         });
 
+        logProgress(
+          scenarioContext,
+          `Comparison complete: ${differences.descriptorDifferences.length} descriptor difference(s), ${differences.valueDifferences.length} value difference(s).`,
+        );
         summaries.push({
           imodel: imodel.name,
           scenario: scenario.id,
@@ -299,19 +338,37 @@ export async function runEquivalence(config: RuntimeConfiguration): Promise<RunS
           reportDirectory: scenarioDirectory,
         });
       } catch (error) {
+        const failure = controller.signal.aborted ? controller.signal.reason : error;
         const message = `${imodel.name}/${scenario.id}: ${
-          error instanceof Error ? (error.stack ?? error.message) : String(error)
-        }`;
+          failure instanceof Error ? (failure.stack ?? failure.message) : String(failure)
+        }${[...diagnostics.values()].map(({ failureSummary }) => (failureSummary ? `\n${failureSummary}` : "")).join("")}`;
+        console.error(message);
         errors.push(message);
         writeJson(path.join(scenarioDirectory, "error.json"), { message });
+      } finally {
+        clearTimeout(timer);
+        for (const [implementation, { details }] of diagnostics) {
+          writeJson(path.join(scenarioDirectory, `${implementation}.diagnostics.json`), details);
+        }
       }
     }
+  } catch (error) {
+    const message = `${imodel.name}: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`;
+    console.error(message);
+    errors.push(message);
+    writeJson(path.join(imodelDirectory, "error.json"), { message });
   }
 
-  writeJson(path.join(runDirectory, "summary.json"), { summaries, errors });
+  run.summaries.push(...summaries);
+  run.errors.push(...errors);
+  writeJson(path.join(runDirectory, "summary.json"), { summaries: run.summaries, errors: run.errors });
   const mismatchCount = summaries.reduce(
     (sum, summary) => sum + summary.descriptorDifferences + summary.valueDifferences,
     0,
+  );
+  logProgress(
+    context,
+    `Finished ${summaries.length} scenario(s) with ${errors.length} execution error(s) and ${mismatchCount} difference(s). Reports: '${runDirectory}'.`,
   );
   if (errors.length > 0 || mismatchCount > 0) {
     throw new Error(

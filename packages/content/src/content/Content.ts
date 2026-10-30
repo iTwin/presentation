@@ -13,11 +13,11 @@
  *     (including provider-declared related properties).
  *   - Nested expansion: for every provider opted in via `applyRecursively`, re-invokes
  *     `getContribution` with a synthesized `{ primaryClass: anchorClassName }` target at each
- *     *nested anchor* — a related-instance class surfaced by any resolved related-properties path
- *     (final step when the producing declaration omits `properties`, else steps selecting all target
- *     properties, optionally with an `exclude` subset). Steps using `include` or `"none"` do not
+ *     *nested anchor* — the declared target class of a related-properties step that resolved to some
+ *     instances (final step when the producing declaration omits `properties`, else steps selecting all
+ *     target properties, optionally with an `exclude` subset). Steps using `include` or `"none"` do not
  *     anchor nested contributions. Nested declarations are still resolved as the **full path from
- *     the original target** (concrete prefix + declared suffix), never from the anchor class alone,
+ *     the original target** (declared prefix + declared suffix), never from the anchor class alone,
  *     so instance scoping (`instanceIds`/`instanceFilter`) is preserved. Recursive and unbounded —
  *     data-driven termination, guarded per branch by `(providerId, anchorClassName)` against cyclic
  *     instance graphs. See `IModelFieldsProvider.applyRecursively` and

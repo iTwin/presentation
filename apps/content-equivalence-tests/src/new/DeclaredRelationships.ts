@@ -23,12 +23,11 @@ async function getOrCreate<T>(cache: Map<string, Promise<T>>, key: string, creat
 }
 
 /**
- * Creates a function that recovers the relationships selected by provider declarations for a field's concrete
- * `pathFromTarget`. The path is matched against declarations contributed for the field's primary classes; path
- * steps past a matching declaration are matched against nested contributions of `applyRecursively` providers,
- * applied on the concrete class the declaration ends at.
+ * Resolves relationship names for comparison with legacy: navigation-backed steps use the declared
+ * relationship, while other steps retain the concrete relationship. Declarations are matched against
+ * the field's primary classes, including nested contributions from `applyRecursively` providers.
  */
-export async function createDeclaredRelationshipsResolver(
+export async function createRelationshipNamesResolver(
   imodelAccess: ECSchemaProvider & ECSqlQueryExecutor,
 ): Promise<(field: ReadonlyPropertyField) => Promise<EC.FullClassNameDotNotation[]>> {
   const config: ContentConfiguration = await createIModelContentConfiguration({ imodelAccess });
@@ -69,6 +68,33 @@ export async function createDeclaredRelationshipsResolver(
     (await derivesFrom(concrete.relationshipName, declared.relationshipName)) &&
     (await derivesFrom(concrete.targetClassName, declared.targetClassName));
 
+  const navigationPropertyCache = new Map<string, Promise<boolean>>();
+  const hasNavigationProperty = async (step: ConcretePath[number], relationshipName: EC.FullClassNameDotNotation) =>
+    getOrCreate(
+      navigationPropertyCache,
+      stableStringify([
+        step.sourceClassName,
+        step.targetClassName,
+        step.relationshipReverse ?? false,
+        relationshipName,
+      ]),
+      async () => {
+        const [sourceClass, targetClass] = await Promise.all([
+          getClass(imodelAccess, step.sourceClassName),
+          getClass(imodelAccess, step.targetClassName),
+        ]);
+        const [source, target] = step.relationshipReverse ? [targetClass, sourceClass] : [sourceClass, targetClass];
+        const matches = (property: EC.Property, direction: EC.NavigationProperty["direction"]) =>
+          property.isNavigation() &&
+          property.direction === direction &&
+          property.relationshipClass.fullName === relationshipName;
+        return (
+          source.getProperties().some((property) => matches(property, "Forward")) ||
+          target.getProperties().some((property) => matches(property, "Backward"))
+        );
+      },
+    );
+
   const matchFrom = async (
     path: ConcretePath,
     start: number,
@@ -107,6 +133,14 @@ export async function createDeclaredRelationshipsResolver(
         `Expected one declaration matching the path of field '${field.id}', found ${distinct.length}: ${stableStringify(distinct)}.`,
       );
     }
-    return distinct[0];
+    return Promise.all(
+      distinct[0].map(async (declaredName, index) => {
+        const step = field.pathFromTarget[index];
+        // Legacy retains the declared relationship for navigation joins rather than reading RelECClassId.
+        return step.relationshipName === declaredName || (await hasNavigationProperty(step, declaredName))
+          ? declaredName
+          : step.relationshipName;
+      }),
+    );
   };
 }

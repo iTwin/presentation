@@ -24,6 +24,14 @@ export interface SampledElementsScenario {
 }
 export type Scenario = AllElementsDescriptorScenario | SampledElementsScenario;
 
+/** Implementation-specific details about generating a capture, reported alongside the scenario's results. */
+export interface CaptureDiagnostics {
+  /** JSON-serializable details, written to `<implementation>.diagnostics.json` in the scenario's report directory. */
+  details: unknown;
+  /** Short description appended to the scenario's error message when the scenario fails. */
+  failureSummary?: string;
+}
+
 export interface CaptureEnvelope<TImplementation extends ImplementationName = ImplementationName> {
   captureFormatVersion: number;
   implementation: TImplementation;

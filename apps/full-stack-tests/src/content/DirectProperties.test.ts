@@ -175,6 +175,58 @@ describe("Content", () => {
       }
     });
 
+    it("projects schema-derived read-only status", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECProperty propertyName="ReadOnlyProp" typeName="string" readOnly="true" />
+              <ECProperty propertyName="WritableProp" typeName="string" />
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.A.fullName);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+
+      expect(getPropertyFieldByName(descriptor, "ReadOnlyProp").readOnly).toBe(true);
+      expect(getPropertyFieldByName(descriptor, "WritableProp").readOnly).toBeUndefined();
+    });
+
+    it("projects schema-derived array occurrence limits", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="A">
+              <ECArrayProperty propertyName="BoundedArrayProp" typeName="int" minOccurs="1" maxOccurs="3" />
+            </ECEntityClass>
+          `,
+        );
+        builder.insertInstance(s.items.A.fullName);
+        return { schema: s };
+      });
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      const descriptor = await buildDescriptor({
+        imodelAccess,
+        targets: [{ primaryClass: setup.schema.items.A.fullName }],
+      });
+
+      expect(getPropertyFieldByName(descriptor, "BoundedArrayProp").type).toMatchObject({
+        kind: "array",
+        minOccurs: 1,
+        maxOccurs: 3,
+      });
+    });
+
     it("models navigation property fields", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(

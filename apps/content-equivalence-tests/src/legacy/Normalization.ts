@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropertyValueFormat, Value } from "@itwin/presentation-common";
-import { normalizeFullClassName } from "@itwin/presentation-shared";
+import { getClass, normalizeFullClassName } from "@itwin/presentation-shared";
 import {
   createCanonicalEnumeration,
   createCanonicalRelationshipPath,
@@ -235,6 +235,7 @@ function createCanonicalField(props: {
 
 interface NormalizationContext {
   constraints: RelationshipConstraints;
+  hiddenProperties: Set<string>;
 }
 
 function createCanonicalDescriptor({
@@ -266,29 +267,51 @@ function createCanonicalDescriptor({
       unsupportedFields.push({ sourcePath, reason: "Legacy field is not property-backed." });
       return;
     }
-    const canonicalField = createCanonicalField({
-      field,
-      sourcePath,
-      path: relationshipPath,
-      categories,
-      classes,
-      constraints,
-    });
+    const properties = field.properties.filter(
+      ({ property }) =>
+        !context.hiddenProperties.has(`${normalizeFullClassName(classes[property.classInfo].name)}.${property.name}`),
+    );
+    if (properties.length === 0) {
+      return;
+    }
+    // Legacy can merge schema-local enum names whose choices differ. Normalize each property
+    // independently before grouping, rather than applying the first property's type to them all.
+    const propertyFields = new Map<string, CanonicalField>();
+    for (const property of properties) {
+      const canonicalField = createCanonicalField({
+        field: { ...field, properties: [property] },
+        sourcePath,
+        path: relationshipPath,
+        categories,
+        classes,
+        constraints,
+      });
+      const existing = propertyFields.get(canonicalField.key);
+      if (existing) {
+        existing.propertyClassNames = [
+          ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
+        ].sort();
+      } else {
+        propertyFields.set(canonicalField.key, canonicalField);
+      }
+    }
     // Consolidated legacy descriptors can contain several related-content fields that normalize to the same
     // canonical identity. While merging related-content paths, native `RelatedClass::Unify` widens the target
     // selection to polymorphic when two paths differ only by SQL alias. `EndsWithSameRelatedClass` then rejects
     // later paths whose target is still non-polymorphic, so a field is created per source-class path instead
     // of one. Merge them here.
-    const existing = fieldsByKey.get(canonicalField.key);
-    if (existing) {
-      existing.propertyClassNames = [
-        ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
-      ].sort();
-      existing.sourcePaths.push(...canonicalField.sourcePaths);
-    } else {
-      fieldsByKey.set(canonicalField.key, canonicalField);
+    for (const canonicalField of propertyFields.values()) {
+      const existing = fieldsByKey.get(canonicalField.key);
+      if (existing) {
+        existing.propertyClassNames = [
+          ...new Set([...existing.propertyClassNames, ...canonicalField.propertyClassNames]),
+        ].sort();
+        existing.sourcePaths.push(...canonicalField.sourcePaths);
+      } else {
+        fieldsByKey.set(canonicalField.key, canonicalField);
+      }
+      fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
     }
-    fieldMappings.push({ canonicalKey: canonicalField.key, sourcePath, type: canonicalField.type });
   };
   descriptor.fields.forEach((field) => visit(field, [], undefined));
   const fields = [...fieldsByKey.values()];
@@ -420,7 +443,16 @@ function createCanonicalItem({
 }): CanonicalItem {
   const { descriptor, fieldMappings } = createCanonicalDescriptor({ descriptor: sourceDescriptor, context });
   const sourcePathsByCanonicalKey = new Map<string, string[]>();
+  const canonicalKeysBySourcePath = new Map<string, string>();
   for (const { canonicalKey, sourcePath } of fieldMappings) {
+    const sourcePathKey = stableStringify(sourcePath);
+    const previousCanonicalKey = canonicalKeysBySourcePath.get(sourcePathKey);
+    if (previousCanonicalKey !== undefined && previousCanonicalKey !== canonicalKey) {
+      throw new Error(
+        `Legacy item field '${sourcePath.join(".")}' contains incompatible property types; its value cannot be assigned to a canonical field unambiguously.`,
+      );
+    }
+    canonicalKeysBySourcePath.set(sourcePathKey, canonicalKey);
     const previousSourcePath = sourcePathsByCanonicalKey.get(canonicalKey);
     if (previousSourcePath) {
       const itemIdentity = item.primaryKeys
@@ -460,6 +492,51 @@ function collectRelationshipNames(descriptors: DescriptorJSON[]): Set<EC.FullCla
   return names;
 }
 
+async function getHiddenProperties(
+  descriptors: DescriptorJSON[],
+  schemaProvider: ECSchemaProvider,
+): Promise<Set<string>> {
+  const propertiesByClass = new Map<EC.FullClassNameDotNotation, Set<string>>();
+  for (const descriptor of descriptors) {
+    const visit = (field: FieldJSON<string>) => {
+      if ("nestedFields" in field) {
+        field.nestedFields.forEach(visit);
+      } else if ("properties" in field) {
+        for (const { property } of field.properties) {
+          const className = normalizeFullClassName(descriptor.classesMap[property.classInfo].name);
+          let properties = propertiesByClass.get(className);
+          if (!properties) {
+            properties = new Set();
+            propertiesByClass.set(className, properties);
+          }
+          properties.add(property.name);
+        }
+      }
+    };
+    descriptor.fields.forEach(visit);
+  }
+  const hiddenProperties = new Set<string>();
+  for (const [className, propertyNames] of propertiesByClass) {
+    const propertyClass = await getClass(schemaProvider, className);
+    for (const propertyName of propertyNames) {
+      if (className === "BisCore.ExternalSourceAspect" && propertyName === "Identifier") {
+        continue;
+      }
+      let declaringClass: EC.Class | undefined = propertyClass.getProperty(propertyName)!.class;
+      while (declaringClass) {
+        if (declaringClass.isHidden !== undefined) {
+          if (declaringClass.isHidden) {
+            hiddenProperties.add(`${className}.${propertyName}`);
+          }
+          break;
+        }
+        declaringClass = declaringClass.baseClass;
+      }
+    }
+  }
+  return hiddenProperties;
+}
+
 export async function createCanonicalCapture(
   capture: LegacyCapture,
   schemaProvider: ECSchemaProvider,
@@ -467,6 +544,7 @@ export async function createCanonicalCapture(
   const descriptors = "descriptor" in capture ? [capture.descriptor] : capture.items.map((item) => item.descriptor);
   const context = {
     constraints: await getRelationshipConstraints(schemaProvider, collectRelationshipNames(descriptors)),
+    hiddenProperties: await getHiddenProperties(descriptors, schemaProvider),
   };
   if ("descriptor" in capture) {
     const { descriptor } = createCanonicalDescriptor({ descriptor: capture.descriptor, context });

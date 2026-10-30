@@ -11,7 +11,10 @@ export default defineConfig({
     include: ["src/**/*.test.ts"],
     environment: "node",
     fileParallelism: false,
-    testTimeout: 30 * 60 * 1000,
+    reporters: ["verbose"],
+    // Vitest can't stop a timed-out test, so abandoned work would overlap later tests and teardown.
+    // `CONTENT_EQUIVALENCE_SCENARIO_TIMEOUT_MINUTES` bounds each scenario instead.
+    testTimeout: 0,
     hookTimeout: 60 * 1000,
   },
 });

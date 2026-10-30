@@ -532,25 +532,39 @@ function combineCardinalityHint(
 }
 
 /**
- * Creates the nested-expansion queue entries for a declaration's resolved paths — one per
- * (resolved path, anchor step). Anchor steps are the ones that fully expose a related instance and can
- * therefore anchor nested content: each resolved path's final step when the declaration omits
- * `properties` (resolved lengths can differ from the declared length when the declaration uses a
- * custom `resolve`, so the final step is derived per resolved path), or every step whose `target`
- * selects all properties, possibly excluding a subset. An `include` selection, `"none"`, and
- * relationship-only steps do not expose the complete instance. `stepIndexOffset` translates a nested
- * declaration's suffix-relative `stepIndex` values into indices of the full path; pass `0` for a
- * direct declaration.
+ * Creates the nested-expansion queue entries for a declaration: one per anchor step. An anchor step is one
+ * that loads all properties of its target instance:
+ * - the final step, when the declaration omits `properties`;
+ * - otherwise, each step whose `target` selects `"all"` or an `exclude` subset.
+ *
+ * Anchors are taken from the declared path, so every concrete class found below a declared step shares one
+ * anchor. Each entry also carries the concrete prefixes of `paths` up to its anchor step, so nested paths are
+ * only accepted through concrete classes the declaration actually reached. A custom `resolve` returns paths
+ * that don't necessarily follow the declared steps, so each of its resolved paths anchors on its own concrete
+ * classes instead, skipping anchor steps outside the path.
  */
 function createNestedQueueEntries(props: {
   declaration: RelatedPropertiesDeclaration;
+  /**
+   * The declaration's full declared path from the original target, including the parent's prefix for a nested
+   * declaration. `undefined` for a declaration with a custom `resolve`.
+   */
+  declaredPath: RelationshipPath | undefined;
+  /** The declaration's resolved paths. Used for anchors only when `declaredPath` is `undefined`. */
   paths: ResolvedPath[];
+  /**
+   * Number of prefix steps before the declaration's own steps, which translates its
+   * `properties[].stepIndex` into indices of the full path. `0` for a direct declaration.
+   */
   stepIndexOffset: number;
+  /** The branch's cycle guard, carried over to the created entries. */
   appliedPairs: ReadonlySet<string>;
+  /** Combined cardinality hint of `paths`, carried over to the created entries. */
   parentCardinalityHint: CardinalityHint | undefined;
+  /** Category context inherited from the parent, extended per entry by `createNestedCategoryContext`. */
   categoryContext: CategoryContext;
 }): NestedQueueEntry[] {
-  const { declaration, paths, stepIndexOffset, appliedPairs, parentCardinalityHint } = props;
+  const { declaration, declaredPath, paths, stepIndexOffset, appliedPairs, parentCardinalityHint } = props;
   const specAnchorIndices = declaration.properties
     ?.filter((spec) => {
       const selection = spec.target?.select;
@@ -558,15 +572,16 @@ function createNestedQueueEntries(props: {
     })
     .map((spec) => stepIndexOffset + spec.stepIndex);
   const entries: NestedQueueEntry[] = [];
-  for (const resolvedPath of paths) {
-    const anchorIndices = specAnchorIndices ?? [resolvedPath.path.length - 1];
+  for (const path of declaredPath ? [declaredPath] : paths.map((resolved) => resolved.path)) {
+    const anchorIndices = specAnchorIndices ?? [path.length - 1];
     for (const anchorIdx of anchorIndices) {
-      if (anchorIdx < 0 || anchorIdx >= resolvedPath.path.length) {
+      if (anchorIdx < 0 || anchorIdx >= path.length) {
         continue;
       }
       entries.push({
-        prefixSteps: resolvedPath.path.slice(0, anchorIdx + 1),
-        anchorClassName: resolvedPath.path[anchorIdx].targetClassName,
+        prefixSteps: path.slice(0, anchorIdx + 1),
+        anchorClassName: path[anchorIdx].targetClassName,
+        allowedPrefixes: declaredPath ? createAllowedPrefixes(paths, anchorIdx + 1) : undefined,
         appliedPairs,
         parentCardinalityHint,
         categoryContext: createNestedCategoryContext({
@@ -579,6 +594,46 @@ function createNestedQueueEntries(props: {
     }
   }
   return entries;
+}
+
+/** Concrete path prefixes, keyed by `serializePrefix`, mapped to the primary classes that reach them. */
+type AllowedPrefixes = ReadonlyMap<string, ReadonlySet<EC.FullClassNameDotNotation>>;
+
+function serializePrefix(path: RelationshipPath, length: number): string {
+  return serializeRelationshipPath({ path: path.slice(0, length), includeInstanceFilters: true });
+}
+
+function createAllowedPrefixes(paths: ResolvedPath[], prefixLength: number): AllowedPrefixes {
+  const result = new Map<string, Set<EC.FullClassNameDotNotation>>();
+  for (const { path, targetClassNames } of paths) {
+    const classes = getOrCreate({ map: result, key: serializePrefix(path, prefixLength), createFunc: () => new Set() });
+    targetClassNames.forEach((className) => classes.add(className));
+  }
+  return result;
+}
+
+/**
+ * Keeps the paths whose first `prefixLength` steps match an allowed prefix, narrowing their primary classes
+ * to the ones reaching that prefix. Returns new objects rather than modifying `paths`, which may be shared
+ * through the resolution cache.
+ */
+function filterByAllowedPrefixes(
+  paths: ResolvedPath[],
+  prefixLength: number,
+  allowedPrefixes: AllowedPrefixes,
+): ResolvedPath[] {
+  return paths.flatMap((resolved) => {
+    const allowedClasses = allowedPrefixes.get(serializePrefix(resolved.path, prefixLength));
+    const targetClassNames = allowedClasses
+      ? resolved.targetClassNames.filter((className) => allowedClasses.has(className))
+      : [];
+    if (targetClassNames.length === 0) {
+      return [];
+    }
+    return targetClassNames.length === resolved.targetClassNames.length
+      ? [resolved]
+      : [{ ...resolved, targetClassNames }];
+  });
 }
 
 function createNestedCategoryContext(props: {
@@ -607,11 +662,19 @@ function providerAnchorKey(providerId: string, anchorClassName: string): string 
   return `${providerId}#${anchorClassName}`;
 }
 
-/** A pending nested-expansion seed: a concrete prefix ending at an anchor class. */
+/** A pending nested-expansion seed: a prefix ending at an anchor class. */
 interface NestedQueueEntry {
-  /** Concrete path steps from the original target up to and including the anchor step. */
+  /**
+   * Path steps from the original target up to and including the anchor step. Declared steps, except below a
+   * custom `resolve`, where they're the concrete steps it returned.
+   */
   prefixSteps: RelationshipPath;
   anchorClassName: EC.FullClassNameDotNotation;
+  /**
+   * Concrete prefixes the parent declaration resolved through. Nested paths resolved from the declared
+   * `prefixSteps` are only accepted through one of them. `undefined` when `prefixSteps` are already concrete.
+   */
+  allowedPrefixes: AllowedPrefixes | undefined;
   /** `(providerId, anchorClassName)` pairs already applied earlier on this branch (cycle guard). */
   appliedPairs: ReadonlySet<string>;
   /** Combined cardinality hint of the path up to and including the anchor's producing declaration. */
@@ -622,11 +685,12 @@ interface NestedQueueEntry {
 const EMPTY_APPLIED_PAIRS: ReadonlySet<string> = new Set();
 
 /**
- * Expands nested contributions from `applyRecursively` providers over the base declaration
- * groups' anchors, breadth-first. Expansion stops when a nested declaration resolves to no instances
- * or the `(provider, anchor class)` cycle guard detects a repeated branch. Nested declarations are
- * resolved as a full path (`prefixSteps + declaration.path`) from the original target so its instance
- * IDs and filter continue to scope every nested level.
+ * Applies `applyRecursively` providers on the anchors of `baseGroups`, recursively and breadth-first.
+ * Expansion stops when a nested declaration resolves to no instances or the `(provider, anchor class)` cycle
+ * guard detects a repeated branch. The guard uses declared anchor classes, so distinct concrete subclasses
+ * below the same declared step don't count as distinct anchors. Nested declarations are resolved as a full
+ * path (`prefixSteps + declaration.path`) from the original target, so its instance IDs and filter scope
+ * every nested level.
  */
 async function resolveNestedGroups({
   imodelAccess,
@@ -664,7 +728,7 @@ async function resolveNestedGroups({
   };
 
   // Memoized per full (serialized) declared path — distinct branches can re-derive an identical
-  // concrete prefix + declared suffix combination.
+  // prefix + suffix combination.
   const resolutionCache = new Map<string, Promise<ResolvedPath[]>>();
   const resolveFullPath = async (fullPath: RelationshipPath): Promise<ResolvedPath[]> => {
     const key = serializeRelationshipPath({ path: fullPath, includeInstanceFilters: true });
@@ -682,6 +746,7 @@ async function resolveNestedGroups({
   let queue: NestedQueueEntry[] = baseGroups.flatMap((group) =>
     createNestedQueueEntries({
       declaration: group.declaration,
+      declaredPath: group.declaration.resolve ? undefined : group.declaration.path,
       paths: group.paths,
       stepIndexOffset: 0,
       appliedPairs: EMPTY_APPLIED_PAIRS,
@@ -731,7 +796,7 @@ async function resolveNestedGroups({
             const perDeclaration = await Promise.all(
               contribution.relatedProperties.map(async (declaration, declarationIndex) => {
                 // Custom resolvers receive only the synthesized anchor target and cannot constrain
-                // results through the concrete prefix from the original target. Their directly resolved
+                // results through the prefix from the original target. Their directly resolved
                 // paths may still anchor contributions from other providers.
                 if (declaration.resolve) {
                   return undefined;
@@ -747,17 +812,20 @@ async function resolveNestedGroups({
                 // Typing the anchor step at a narrower declared source restricts the join to it and makes
                 // that class's navigation properties reachable.
                 const lastPrefixIndex = entry.prefixSteps.length - 1;
-                const fullPath = [
+                const declaredPath = [
                   ...entry.prefixSteps.map((step, i) =>
                     i === lastPrefixIndex ? { ...step, targetClassName: effectiveSource } : step,
                   ),
                   ...declaration.path,
                 ];
-                const paths = await resolveFullPath(fullPath);
+                const resolvedPaths = await resolveFullPath(declaredPath);
+                const paths = entry.allowedPrefixes
+                  ? filterByAllowedPrefixes(resolvedPaths, entry.prefixSteps.length, entry.allowedPrefixes)
+                  : resolvedPaths;
                 if (paths.length === 0) {
                   return undefined;
                 }
-                return { provider, declaration, declarationIndex, paths, pairKey, entry };
+                return { provider, declaration, declarationIndex, paths, declaredPath, pairKey, entry };
               }),
             );
             return perDeclaration.filter((r): r is NonNullable<typeof r> => r !== undefined);
@@ -767,7 +835,7 @@ async function resolveNestedGroups({
       }),
     );
 
-    for (const { provider, declaration, declarationIndex, paths, pairKey, entry } of perEntry.flat()) {
+    for (const { provider, declaration, declarationIndex, paths, declaredPath, pairKey, entry } of perEntry.flat()) {
       const effectiveCardinalityHint = combineCardinalityHint(entry.parentCardinalityHint, declaration.cardinalityHint);
       const groupKey = JSON.stringify([
         provider.id,
@@ -796,9 +864,20 @@ async function resolveNestedGroups({
       }
       for (const resolved of paths) {
         const pathKey = serializeRelationshipPath({ path: resolved.path, includeInstanceFilters: true });
-        if (!merged.pathsByKey.has(pathKey)) {
-          merged.pathsByKey.set(pathKey, resolved);
-        }
+        const existing = merged.pathsByKey.get(pathKey);
+        // Branches can accept the same path for different primary classes.
+        merged.pathsByKey.set(
+          pathKey,
+          existing
+            ? {
+                ...existing,
+                targetClassNames: toSortedUniqueClassNames([
+                  ...existing.targetClassNames,
+                  ...resolved.targetClassNames,
+                ]),
+              }
+            : resolved,
+        );
       }
 
       // Enqueue this group's own anchors for the next expansion level, extending the branch's
@@ -808,6 +887,7 @@ async function resolveNestedGroups({
       queue.push(
         ...createNestedQueueEntries({
           declaration,
+          declaredPath,
           paths,
           stepIndexOffset: entry.prefixSteps.length,
           appliedPairs: nextAppliedPairs,

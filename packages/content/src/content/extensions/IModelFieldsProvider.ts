@@ -42,36 +42,22 @@ export interface IModelFieldsProvider extends BaseFieldsProvider {
   }): Promise<FieldsProviderContribution | undefined>;
 
   /**
-   * When `true`, this provider's contribution is recursively applied on every **nested anchor** —
-   * the concrete related-instance classes surfaced by any resolved related-properties path (from any
-   * provider, including this one). A target step is a nested anchor when its declaration omits
-   * `properties`, selects `"all"`, or selects all except an `exclude` subset. An `include` selection
-   * and `"none"` do not expose the whole related instance and therefore do not create an anchor.
+   * When `true`, this provider's `relatedProperties` also apply to related instances surfaced by other
+   * related-properties declarations, recursively. Such a related instance is a nested anchor when its
+   * declaration loads all of its properties (`properties` omitted, `"all"`, or an `exclude` selection).
    *
-   * On a nested anchor, `getContribution` is invoked with a synthesized `ContentTarget` containing
-   * only `primaryClass` (the anchor class) — `instanceIds` and `instanceFilter` are always
-   * `undefined`. Providers that inspect those members should treat their absence as "not scoped to
-   * specific instances", exactly as they would for an omitted direct target.
+   * For a nested anchor, `getContribution` is called with a target containing only `primaryClass`: the
+   * target class of the declared step (e.g. `BisCore.TypeDefinitionElement`), not each concrete class found
+   * in the data. As with a direct target, a declaration applies to a subclass only by starting its path
+   * at that subclass, and a mixin target (e.g. `BisCore.ISubModeledElement`) is passed as the mixin, so a
+   * provider that checks `classDerivesFrom(target.primaryClass, "BisCore.Element")` contributes nothing for
+   * it. Anchors of a declaration with a custom `resolve` are the concrete classes it returns.
    *
-   * Nested declarations are resolved as the full path from the *original* content target (the
-   * concrete prefix up to and including the anchor, plus the contribution's declared suffix) — never
-   * from the anchor class alone — so instance scoping from the original target's `instanceIds` /
-   * `instanceFilter` carries through correctly.
+   * To guarantee termination, a provider is applied at most once per anchor class along a chain of nested
+   * anchors. E.g. a `B -> B` declaration expands one level below the first `B` anchor, whichever concrete
+   * `B` subclasses the data contains.
    *
-   * Only `relatedProperties` participate in recursive application (and any `categories` they
-   * reference) — `calculatedFields` are never applied on nested content, since recursive application
-   * exists solely to pull in new related targets, which only `relatedProperties` declarations
-   * introduce. Declarations with a custom `resolve` callback are also skipped when used as a nested
-   * suffix, because their resolution logic runs from the target class alone and cannot honor the
-   * prefix; their resolved paths still land in the content source as regular declarations, so they
-   * still anchor other providers' nested contributions when they are themselves a parent.
-   *
-   * Recursion is unbounded — an anchor surfaced by a nested contribution can itself receive nested
-   * contributions from any opted-in provider, including this one. Termination is data-driven: a
-   * nested declaration whose full path matches no instances resolves to zero paths and contributes
-   * nothing further. As a guard against cyclic instance graphs (e.g. a self-referential
-   * relationship), a given `(provider, anchor class)` pair is applied at most once per expansion
-   * branch.
+   * Calculated fields and declarations with a custom `resolve` aren't applied recursively.
    */
   applyRecursively?: boolean;
 }
