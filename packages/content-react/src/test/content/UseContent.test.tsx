@@ -5,7 +5,7 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { StrictMode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent } from "@itwin/core-bentley";
 import {
   createContentProvider,
@@ -56,6 +56,10 @@ describe("useContent", () => {
         ],
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   function render(initialProps: UseContentProps, options?: { strict?: boolean }) {
@@ -118,7 +122,7 @@ describe("useContent", () => {
     expect(vi.mocked(resolveContentSources).mock.lastCall?.[0].targets).toEqual(createTargets(["0x2"]));
   });
 
-  it("clears content when targets change and ignores results of earlier loads", async () => {
+  it("keeps content while loading content for new targets and ignores results of earlier loads", async () => {
     const slowSources = new ResolvablePromise<ContentSource[]>();
     vi.mocked(resolveContentSources)
       .mockResolvedValueOnce([])
@@ -128,15 +132,27 @@ describe("useContent", () => {
     await waitFor(() => expect(getValue(result.current)).toBe("value 1"));
 
     rerender({ imodelAccess, targets: targetsA });
-    expect(result.current).toEqual({ content: undefined, isLoading: true, reload: expect.any(Function) });
+    expect(result.current.isLoading).toBe(true);
+    expect(getValue(result.current)).toBe("value 1");
     await waitFor(() => expect(resolveContentSources).toHaveBeenCalledTimes(2));
 
     rerender({ imodelAccess, targets: targetsB });
+    expect(getValue(result.current)).toBe("value 1");
     await waitFor(() => expect(getValue(result.current)).toBe("value 2"));
 
     await act(async () => slowSources.resolve([]));
     expect(getValue(result.current)).toBe("value 2");
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it("doesn't keep content of a failed load while loading content for new targets", async () => {
+    vi.mocked(resolveContentSources).mockRejectedValueOnce(new Error("loading error"));
+    const { result, rerender } = render({ imodelAccess, targets: targetsA });
+    await waitFor(() => expect(result.current.error).toBeDefined());
+
+    rerender({ imodelAccess, targets: targetsB });
+    expect(result.current).toEqual({ content: undefined, isLoading: true, reload: expect.any(Function) });
+    await waitFor(() => expect(getValue(result.current)).toBe("value 1"));
   });
 
   it("keeps loading without reporting the aborted load's error when reloading while loading", async () => {
@@ -175,6 +191,7 @@ describe("useContent", () => {
     const { result } = render({ imodelAccess, imodelChanged, targets: targetsA });
     await waitFor(() => expect(getValue(result.current)).toBe("value 1"));
 
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     act(() => {
       imodelChanged.raiseEvent();
       imodelChanged.raiseEvent();
@@ -182,8 +199,11 @@ describe("useContent", () => {
     });
     expect(result.current.isLoading).toBe(false);
 
+    await act(async () => vi.runAllTimersAsync());
+    expect(vi.getTimerCount()).toBe(0);
+    vi.useRealTimers();
+
     await waitFor(() => expect(getValue(result.current)).toBe("value 2"));
-    await act(async () => new Promise((resolve) => setTimeout(resolve, 150)));
     expect(resolveContentSources).toHaveBeenCalledTimes(2);
     expect(createIModelContentConfiguration).toHaveBeenCalledOnce();
   });
@@ -231,19 +251,21 @@ describe("useContent", () => {
     expect(result.current).toEqual({ content: undefined, isLoading: false, reload: expect.any(Function) });
   });
 
-  it("loads content again when the data source changes", async () => {
+  it("loads content again when the data source changes, keeping the current content until then", async () => {
     const getContentConfiguration = vi.fn(async () => ({}));
     const { result, rerender } = render({ imodelAccess, targets: targetsA });
     await waitFor(() => expect(getValue(result.current)).toBe("value 1"));
 
     rerender({ imodelAccess, targets: targetsA, getContentConfiguration });
-    expect(result.current).toEqual({ content: undefined, isLoading: true, reload: expect.any(Function) });
+    expect(result.current.isLoading).toBe(true);
+    expect(getValue(result.current)).toBe("value 1");
     await waitFor(() => expect(getValue(result.current)).toBe("value 2"));
     expect(getContentConfiguration).toHaveBeenCalledOnce();
 
     const otherIModelAccess = {} as UseContentProps["imodelAccess"];
     rerender({ imodelAccess: otherIModelAccess, targets: targetsA, getContentConfiguration });
-    expect(result.current).toEqual({ content: undefined, isLoading: true, reload: expect.any(Function) });
+    expect(result.current.isLoading).toBe(true);
+    expect(getValue(result.current)).toBe("value 2");
     await waitFor(() => expect(getValue(result.current)).toBe("value 3"));
     expect(getContentConfiguration).toHaveBeenLastCalledWith({ imodelAccess: otherIModelAccess });
   });
