@@ -52,6 +52,9 @@ interface RecordProps {
   label: string;
   type: DeepReadonly<ValueDescriptor>;
   value: DeepReadonly<Value>;
+  isReadonly: boolean;
+  /** Overrides `isReadonly` for members of struct values, by member name. */
+  isMemberReadonly?: (memberName: string) => boolean;
 }
 
 type ContentEntry = ContentRecords["entries"][number];
@@ -64,6 +67,7 @@ async function createEntryRecord(
   if (entry.isMerged) {
     const record = new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive }, createDescription(props));
     record.isMerged = true;
+    record.isReadonly = props.isReadonly;
     return record;
   }
   return createRecord(props);
@@ -74,10 +78,18 @@ function getEntryRecordProps(entry: ContentEntry, categories: ContentRecords["ca
   // available value represents all of them.
   if (entry.kind === "field") {
     const value = entry.values.find((itemValue) => itemValue !== undefined);
-    return { name: entry.field.id, label: entry.field.label, type: entry.field.type, value };
+    return {
+      name: entry.field.id,
+      label: entry.field.label,
+      type: entry.field.type,
+      value,
+      isReadonly: !!entry.field.readOnly,
+    };
   }
-  // Related instances are shown as an array of structs, one struct per related instance.
+  // Related instances are shown as an array of structs, one struct per related instance. The array and its structs
+  // are read-only, while struct members take read-only status from their fields.
   const { fields, pathFromTarget } = entry;
+  const readonlyFieldIds = new Set(fields.filter((field) => field.readOnly).map((field) => field.id));
   const instances = entry.values.find((itemInstances) => itemInstances.length > 0) ?? [];
   return {
     name: `related(${fields[0].id})`,
@@ -92,20 +104,28 @@ function getEntryRecordProps(entry: ContentEntry, categories: ContentRecords["ca
       },
     },
     value: instances.map((instance) => instance.values),
+    isReadonly: true,
+    isMemberReadonly: (memberName) => readonlyFieldIds.has(memberName),
   };
 }
 
 async function createRecord(props: RecordProps): Promise<PropertyRecord> {
-  return new PropertyRecord(await createValue(props), createDescription(props));
+  const record = new PropertyRecord(await createValue(props), createDescription(props));
+  record.isReadonly = props.isReadonly;
+  return record;
 }
 
-async function createValue({ type, value }: RecordProps): Promise<PropertyValue> {
+async function createValue({ type, value, isReadonly, isMemberReadonly }: RecordProps): Promise<PropertyValue> {
   switch (type.kind) {
     case "struct": {
       const struct = value as DeepReadonly<Record<string, Value>> | undefined;
       const members = await Promise.all(
         type.members.map(async (member) => {
-          const record = await createRecord({ ...member, value: struct?.[member.name] });
+          const record = await createRecord({
+            ...member,
+            value: struct?.[member.name],
+            isReadonly: isMemberReadonly?.(member.name) ?? isReadonly,
+          });
           return [member.name, record] as const;
         }),
       );
@@ -115,7 +135,14 @@ async function createValue({ type, value }: RecordProps): Promise<PropertyValue>
       const elements = (value ?? []) as Array<DeepReadonly<Value>>;
       const items = await Promise.all(
         elements.map(async (element, index) =>
-          createRecord({ name: `[${index}]`, label: `[${index}]`, type: type.elementType, value: element }),
+          createRecord({
+            name: `[${index}]`,
+            label: `[${index}]`,
+            type: type.elementType,
+            value: element,
+            isReadonly,
+            isMemberReadonly,
+          }),
         ),
       );
       return { valueFormat: PropertyValueFormat.Array, items, itemsTypeName: getTypeName(type.elementType) };
