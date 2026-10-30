@@ -444,7 +444,7 @@ describe("collectCategories", () => {
       fields: [direct, categorized],
     });
     expect(categories).to.deep.equal({});
-    expect(direct.field.categoryId).to.be.undefined;
+    expect(direct.field.categoryId).toBeUndefined();
     expect(categorized.field.categoryId).to.equal("explicit");
   });
 

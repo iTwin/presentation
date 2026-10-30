@@ -156,7 +156,7 @@ function useUniquePropertyValuesRuleset(
               {
                 specType: "SelectedNodeInstances",
                 acceptableClassNames: selectedClasses
-                  ? selectedClasses.map(({ name }) => name.split(/[\.:]/)[1])
+                  ? selectedClasses.map(({ name }) => name.split(/[.:]/)[1])
                   : undefined,
                 acceptablePolymorphically: true,
               },
@@ -190,7 +190,7 @@ function useUniquePropertyValuesRuleset(
 function createSchemaClasses(infos: ClassInfo[]): MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[] {
   const schemaClassMap = new Map<string, string[]>();
   infos.forEach((info) => {
-    const [schemaName, className] = info.name.split(/[\.:]/);
+    const [schemaName, className] = info.name.split(/[.:]/);
     let classNames = schemaClassMap.get(schemaName);
     if (!classNames) {
       classNames = [];

@@ -352,7 +352,7 @@ export class ContentDataProvider implements IContentDataProvider {
       return undefined;
     }
 
-    return new Descriptor({ ...descriptor });
+    return new Descriptor(descriptor);
   });
 
   /**

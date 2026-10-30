@@ -168,6 +168,8 @@ export async function collectInParallel<TInput, TOutput>({
  */
 export function stableStringify(value: unknown): string {
   if (value instanceof Set) {
+    // lexicographical sorting is expected here
+    // oxlint-disable-next-line typescript/require-array-sort-compare
     return stableStringify([...value].sort());
   }
   if (value === null || value === undefined || typeof value !== "object") {

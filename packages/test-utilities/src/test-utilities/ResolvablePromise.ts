@@ -25,18 +25,19 @@ export class ResolvablePromise<T> implements Promise<T> {
   }
 
   public async catch<TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined,
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
   ): Promise<T | TResult> {
     return this._wrapped.catch(onrejected);
   }
 
-  public async finally(onfinally?: (() => void) | null | undefined): Promise<T> {
+  public async finally(onfinally?: (() => void) | null): Promise<T> {
     return this._wrapped.finally(onfinally);
   }
 
+  // oxlint-disable-next-line unicorn/no-thenable
   public async then<TResult1 = T, TResult2 = never>(
-    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
   ): Promise<TResult1 | TResult2> {
     return this._wrapped.then(onfulfilled, onrejected);
   }

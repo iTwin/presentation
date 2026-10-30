@@ -79,17 +79,17 @@ describe("bisCoreFieldsProvider", () => {
     // information and type-definition fields stay on the direct content target. Opting this provider
     // into recursion would expand every descriptor containing a nested element (an element's link
     // would gain its own links, and so on) without failing any other assertion in this suite.
-    expect(bisCoreFieldsProvider.applyRecursively).to.not.be.true;
+    expect(bisCoreFieldsProvider.applyRecursively).not.toBe(true);
   });
 
   it("does not contribute fields for a class unrelated to BisCore.Element", async () => {
     const contribution = await getContribution(createImodelAccess(), "TestSchema.NotAnElement");
-    expect(contribution).to.be.undefined;
+    expect(contribution).toBeUndefined();
   });
 
   it("contributes all BisCore.Element fields", async () => {
     const contribution = await getContribution(createImodelAccess(), "BisCore.Element");
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expectBaseElementPaths(contribution!);
     expect(Object.keys(contribution!.categories ?? {})).to.have.members([
       SOURCE_INFORMATION_CATEGORY_ID,
@@ -103,7 +103,7 @@ describe("bisCoreFieldsProvider", () => {
       createImodelAccess({ derivesFrom: { [primaryClass]: ["BisCore.Element", "BisCore.GeometricElement3d"] } }),
       primaryClass,
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.GeometricElement3dHasTypeDefinition"],
@@ -116,7 +116,7 @@ describe("bisCoreFieldsProvider", () => {
       createImodelAccess({ derivesFrom: { [primaryClass]: ["BisCore.Element", "BisCore.GeometricElement2d"] } }),
       primaryClass,
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.GeometricElement2dHasTypeDefinition"],
@@ -131,7 +131,7 @@ describe("bisCoreFieldsProvider", () => {
       }),
       primaryClass,
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.GeometricElement2dHasTypeDefinition"],
@@ -149,7 +149,7 @@ describe("bisCoreFieldsProvider", () => {
       }),
       primaryClass,
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.GeometricElement3dHasTypeDefinition"],
@@ -223,7 +223,7 @@ describe("bisCoreFieldsProvider", () => {
       createImodelAccess({ bisCoreVersion: { read: 1, write: 0, minor: 2 } }),
       "BisCore.Element",
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.ElementOwnsMultiAspects"],
@@ -241,7 +241,7 @@ describe("bisCoreFieldsProvider", () => {
       createImodelAccess({ bisCoreVersion: { read: 1, write: 0, minor: 13 } }),
       "BisCore.Element",
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.ElementOwnsMultiAspects"],
@@ -273,22 +273,22 @@ describe("bisCoreAspectsFieldsProvider", () => {
   }
 
   it("is applied recursively, so owned aspects also surface on nested content", () => {
-    expect(bisCoreAspectsFieldsProvider.applyRecursively).to.be.true;
+    expect(bisCoreAspectsFieldsProvider.applyRecursively).toBe(true);
   });
 
   it("does not contribute fields for a class unrelated to BisCore.Element", async () => {
     const contribution = await getAspectsContribution(createImodelAccess(), "TestSchema.NotAnElement");
-    expect(contribution).to.be.undefined;
+    expect(contribution).toBeUndefined();
   });
 
   it("contributes owned unique- and multi-aspect fields", async () => {
     const contribution = await getAspectsContribution(createImodelAccess(), "BisCore.Element");
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ["BisCore.ElementOwnsUniqueAspect"],
       ["BisCore.ElementOwnsMultiAspects"],
     ]);
-    expect(contribution!.categories).to.be.undefined;
+    expect(contribution!.categories).toBeUndefined();
   });
 
   it("excludes BisCore.ExternalSourceAspect from the generic owned-multi-aspect declaration at BisCore 1.0.2", async () => {
@@ -301,7 +301,7 @@ describe("bisCoreAspectsFieldsProvider", () => {
       createImodelAccess({ bisCoreVersion: { read: 1, write: 0, minor: 2 } }),
       "BisCore.Element",
     );
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
 
     const genericMultiAspects = contribution!.relatedProperties![1];
     expect(genericMultiAspects.path[0].relationshipName).to.eq("BisCore.ElementOwnsMultiAspects");
@@ -312,10 +312,10 @@ describe("bisCoreAspectsFieldsProvider", () => {
 
   it("does not exclude BisCore.ExternalSourceAspect from the generic owned-multi-aspect declaration below BisCore 1.0.2", async () => {
     const contribution = await getAspectsContribution(createImodelAccess(), "BisCore.Element");
-    expect(contribution).to.not.be.undefined;
+    expect(contribution).toBeDefined();
 
     const genericMultiAspects = contribution!.relatedProperties![1];
     expect(genericMultiAspects.path[0].relationshipName).to.eq("BisCore.ElementOwnsMultiAspects");
-    expect(genericMultiAspects.path[0].instanceFilter).to.be.undefined;
+    expect(genericMultiAspects.path[0].instanceFilter).toBeUndefined();
   });
 });

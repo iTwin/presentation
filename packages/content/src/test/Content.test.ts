@@ -1157,7 +1157,7 @@ describe("resolveContentSources", () => {
       const [query] = vi.mocked(imodelAccess.createQueryReader).mock.calls.map((call) => call[0]);
       expect(query.ecsql).to.include("FROM [TestSchema].[Pump] [this]");
       expect(query.ecsql).to.include("WHERE [this].Active = 1");
-      expect(query.bindings).to.be.undefined;
+      expect(query.bindings).toBeUndefined();
     });
 
     it("keeps the target as the path source when the declared source is a base of it", async () => {
@@ -2189,7 +2189,7 @@ describe("resolveContentSources", () => {
       });
 
       it("skips a declaration scoped to a class unrelated to the anchor", async () => {
-        expect(await resolveNested([unrelatedBToC])).to.be.undefined;
+        expect(await resolveNested([unrelatedBToC])).toBeUndefined();
       });
 
       it("rejects a nested declaration without path steps", async () => {
@@ -2709,7 +2709,7 @@ describe("resolveContentSources", () => {
 
         const requestedClasses = providerB.getContribution.mock.calls.map(([{ target }]) => target.primaryClass);
         expect(requestedClasses).to.include("TestSchema.ClassB");
-        expect(requestedClasses.filter(isConcreteBClass)).to.be.empty;
+        expect(requestedClasses.filter(isConcreteBClass)).toHaveLength(0);
         // Two racing strategies for the declared 2-step path, regardless of the number of concrete classes.
         expect(getQueries({ imodelAccess, stepCount: 2 })).to.have.length(2);
         expect(result.resolvedDeclarations.filter((group) => group.nested)).to.deep.equal([
@@ -2736,7 +2736,7 @@ describe("resolveContentSources", () => {
           config: { imodelFieldsProviders: [providerA, createProviderBForEveryB()] },
         });
 
-        expect(result.resolvedDeclarations.filter((group) => group.nested)).to.be.empty;
+        expect(result.resolvedDeclarations.filter((group) => group.nested)).toHaveLength(0);
       });
 
       it("restricts nested paths to the subclass a declaration starts at", async () => {
@@ -2754,7 +2754,7 @@ describe("resolveContentSources", () => {
 
         const queries = getQueries({ imodelAccess, stepCount: 2 });
         expect(queries).to.have.length(2);
-        expect(queries.some((ecsql) => ecsql.includes("FROM [TestSchema].[ClassB1] [s0]"))).to.be.true;
+        expect(queries.some((ecsql) => ecsql.includes("FROM [TestSchema].[ClassB1] [s0]"))).toBe(true);
         const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
         expect(nestedGroups.map((group) => [group.nested!.anchorClassName, group.paths])).to.deep.equal([
           [
@@ -2775,7 +2775,7 @@ describe("resolveContentSources", () => {
           config: { imodelFieldsProviders: [providerA, providerForConcreteBOnly] },
         });
 
-        expect(result.resolvedDeclarations.filter((group) => group.nested)).to.be.empty;
+        expect(result.resolvedDeclarations.filter((group) => group.nested)).toHaveLength(0);
       });
 
       it("anchors a custom resolver's paths on their concrete classes", async () => {

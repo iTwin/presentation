@@ -83,10 +83,13 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
               })),
             );
           }),
-          reduce((result, { value, index }) => {
-            result[index] = value;
-            return result;
-          }, new Array<string>(keys.length)),
+          reduce(
+            (result, { value, index }) => {
+              result[index] = value;
+              return result;
+            },
+            Array.from<string>({ length: keys.length }),
+          ),
         )
         .subscribe({ next: resolve, error: reject });
     });

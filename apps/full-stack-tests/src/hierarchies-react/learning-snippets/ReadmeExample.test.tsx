@@ -143,8 +143,8 @@ describe("Hierarchies React", () => {
         );
         await waitFor(() => getByRole("tree"));
 
-        expect(getByText("My Model A")).to.not.be.null;
-        expect(getByText("My Model B")).to.not.be.null;
+        expect(getByText("My Model A")).not.toBeNull();
+        expect(getByText("My Model B")).not.toBeNull();
       });
     });
   });

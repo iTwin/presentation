@@ -74,6 +74,7 @@ interface NodeSelectClauseProps {
   ecClassId: ECSqlValueSelector;
   ecInstanceId: ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector | { of: Props<IInstanceLabelSelectClauseFactory["createSelectClause"]> };
+  // oxlint-disable-next-line typescript/no-duplicate-type-constituents
   extendedData?: { [key: string]: Id64String | string | number | boolean | ECSqlValueSelector };
   autoExpand?: boolean | ECSqlValueSelector;
   supportsFiltering?: boolean | ECSqlValueSelector;
@@ -849,7 +850,7 @@ function assignRelationshipPathAliases(
   targetAlias: string,
 ): JoinRelationshipPath {
   function createAlias(fullClassName: EC.FullClassNameDotNotation, index: number) {
-    return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
+    return `rel_${pathIndex}_${fullClassName.replaceAll(/[.:]/g, "_")}_${index}`;
   }
   const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
@@ -927,7 +928,7 @@ async function tryGetClass(
 function isSchemaOrClassNotFoundError(e: unknown): e is Error {
   return (
     e instanceof Error &&
-    (!!e.message.match(/^Schema "[\w\d_]+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/))
+    (!!e.message.match(/^Schema "[\w\d_]+" not found/) || !!e.message.match(/^Class "[\w\d_.:]+" not found/))
   );
 }
 function isPropertyNotFoundError(e: unknown): e is Error {
