@@ -30,6 +30,7 @@ import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel } from "@
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { Root } from "@stratakit/mui";
 import { MyAppFrontend } from "../../frontendApi/MyAppFrontend";
+import { ContentPropertiesWidget } from "../content-properties-widget/ContentPropertiesWidget";
 import { FilterBuilder } from "../filter-builder/FilterBuilder";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
@@ -307,8 +308,15 @@ function IModelComponents(props: IModelComponentsProps) {
           end: [
             {
               id: "properties",
-              label: "Properties widget",
+              label: "Properties (legacy)",
               content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
+              id: "content-properties",
+              label: "Properties (new gen)",
+              content: <ContentPropertiesWidget imodel={imodel} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
