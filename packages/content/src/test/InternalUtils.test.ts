@@ -121,17 +121,17 @@ describe("collectInParallel", () => {
 
 describe("schema version comparison", () => {
   it("compares write, read, and minor versions in order", () => {
-    expect(isSchemaVersionAtLeast({ read: 1, write: 0, minor: 15 }, "1.0.15")).to.be.true;
-    expect(isSchemaVersionAtLeast({ read: 2, write: 0, minor: 0 }, "1.0.15")).to.be.true;
-    expect(isSchemaVersionAtLeast({ read: 0, write: 1, minor: 0 }, "1.0.15")).to.be.true;
-    expect(isSchemaVersionAtLeast({ read: 1, write: 0, minor: 14 }, "1.0.15")).to.be.false;
+    expect(isSchemaVersionAtLeast({ read: 1, write: 0, minor: 15 }, "1.0.15")).toBe(true);
+    expect(isSchemaVersionAtLeast({ read: 2, write: 0, minor: 0 }, "1.0.15")).toBe(true);
+    expect(isSchemaVersionAtLeast({ read: 0, write: 1, minor: 0 }, "1.0.15")).toBe(true);
+    expect(isSchemaVersionAtLeast({ read: 1, write: 0, minor: 14 }, "1.0.15")).toBe(false);
   });
 
   it("checks exclusive upper version bounds", () => {
-    expect(isSchemaVersionBelow({ read: 1, write: 0, minor: 14 }, "1.0.15")).to.be.true;
-    expect(isSchemaVersionBelow({ read: 1, write: 0, minor: 15 }, "1.0.15")).to.be.false;
-    expect(isSchemaVersionBelow({ read: 2, write: 0, minor: 0 }, "1.0.15")).to.be.false;
-    expect(isSchemaVersionBelow({ read: 0, write: 1, minor: 0 }, "1.0.15")).to.be.false;
+    expect(isSchemaVersionBelow({ read: 1, write: 0, minor: 14 }, "1.0.15")).toBe(true);
+    expect(isSchemaVersionBelow({ read: 1, write: 0, minor: 15 }, "1.0.15")).toBe(false);
+    expect(isSchemaVersionBelow({ read: 2, write: 0, minor: 0 }, "1.0.15")).toBe(false);
+    expect(isSchemaVersionBelow({ read: 0, write: 1, minor: 0 }, "1.0.15")).toBe(false);
   });
 });
 
@@ -221,7 +221,7 @@ describe("resolveEffectiveSourceClass", () => {
   });
 
   it("returns undefined when neither class derives from the other", async () => {
-    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Derived", "TestSchema.Sibling")).to.be.undefined;
+    expect(await resolveEffectiveSourceClass(imodelAccess, "TestSchema.Derived", "TestSchema.Sibling")).toBeUndefined();
   });
 });
 

@@ -821,9 +821,9 @@ describe("Content", () => {
           }
           const values = items.map((item) => item.getValue(specificField));
           if (direction === "asc") {
-            expect(values).toEqual([...new Array(nullCount).fill(undefined), 2, 6]);
+            expect(values).toEqual([...Array.from({ length: nullCount }), 2, 6]);
           } else if (direction === "desc") {
-            expect(values).toEqual([6, 2, ...new Array(nullCount).fill(undefined)]);
+            expect(values).toEqual([6, 2, ...Array.from({ length: nullCount })]);
           }
         },
       );
@@ -990,7 +990,7 @@ describe("Content", () => {
         const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
 
         const items = await collect(provider.getItems({ sorting: [{ field: scoreField, direction: "asc" }] }));
-        const sortedIds = [...setup.keys.map((k) => k.id)].sort();
+        const sortedIds = setup.keys.map((k) => k.id).sort();
         expect(items.map((item) => item.primaryKey.id)).toEqual(sortedIds);
       });
 
@@ -1128,16 +1128,14 @@ describe("Content", () => {
               <ECEntityClass typeName="Base" modifier="Abstract">
                 <ECProperty propertyName="Score" typeName="int" />
               </ECEntityClass>
-              ${new Array(sourceCount)
-                .fill(0)
-                .map(
-                  (_, i) => `
+              ${Array.from(
+                { length: sourceCount },
+                (_, i) => `
                     <ECEntityClass typeName="D${i}">
                       <BaseClass>Base</BaseClass>
                     </ECEntityClass>
                   `,
-                )
-                .join("")}
+              ).join("")}
             `,
           );
           for (let i = 0; i < sourceCount; ++i) {
@@ -1148,15 +1146,15 @@ describe("Content", () => {
         const imodelAccess = createContentIModelAccess(setup.ecdb);
         const provider = await createProvider({
           imodelAccess,
-          targets: new Array(sourceCount)
-            .fill(0)
-            .map((_, i) => ({ primaryClass: setup.schema.items[`D${i}`].fullName })),
+          targets: Array.from({ length: sourceCount }, (_, i) => ({
+            primaryClass: setup.schema.items[`D${i}`].fullName,
+          })),
         });
         const scoreField = getPropertyFieldByName(await provider.getContentDescriptor(), "Score");
 
         const items = await collect(provider.getItems({ sorting: [{ field: scoreField, direction: "asc" }] }));
         expect(items.map((item) => item.getValue(scoreField))).toEqual(
-          new Array(sourceCount).fill(0).map((_, i) => i + 1),
+          Array.from({ length: sourceCount }, (_, i) => i + 1),
         );
       });
 
@@ -1310,7 +1308,7 @@ describe("Content", () => {
         expect(items).toHaveLength(nullCount + valuedScores.length);
         expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(nullCount + valuedScores.length);
         const values = items.map((item) => item.getValue(scoreField));
-        expect(values.slice(0, nullCount)).toEqual(new Array(nullCount).fill(undefined));
+        expect(values.slice(0, nullCount)).toEqual(Array.from({ length: nullCount }));
         expect(values.slice(nullCount)).toEqual(valuedScores);
       });
 
@@ -1350,7 +1348,7 @@ describe("Content", () => {
         expect(new Set(items.map((item) => item.primaryKey.id)).size).toBe(nullCount + valuedScores.length);
         const values = items.map((item) => item.getValue(scoreField));
         expect(values.slice(0, valuedScores.length)).toEqual(valuedScores);
-        expect(values.slice(valuedScores.length)).toEqual(new Array(nullCount).fill(undefined));
+        expect(values.slice(valuedScores.length)).toEqual(Array.from({ length: nullCount }));
       });
 
       it("orders items by a 1:1 related property across more items than a single page holds", async () => {

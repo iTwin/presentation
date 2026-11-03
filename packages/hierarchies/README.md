@@ -146,7 +146,7 @@ function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider
                   FROM BisCore.Element this
                   WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})
                 `,
-                bindings: [...parentNodeInstanceIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+                bindings: parentNodeInstanceIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
               },
             },
           ],
@@ -163,7 +163,7 @@ async function main() {
   const provider = createProvider(createIModelAccess(await getIModelConnection()));
   async function loadBranch(parentNode: HierarchyNode | undefined, indent: number = 0) {
     for await (const node of provider.getNodes({ parentNode })) {
-      console.log(`${new Array(indent * 2 + 1).join(" ")}${node.label}`);
+      console.log(`${" ".repeat(indent * 2)}${node.label}`);
       await loadBranch(node, indent + 1);
     }
   }

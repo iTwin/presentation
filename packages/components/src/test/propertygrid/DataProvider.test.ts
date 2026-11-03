@@ -263,6 +263,7 @@ describe("PropertyDataProvider", () => {
 
     it("does not invalidate cache when setting to same value", () => {
       const spy = vi.spyOn(provider, "invalidateCache");
+      // oxlint-disable-next-line no-self-assign
       provider.propertiesMergeMode = provider.propertiesMergeMode;
       expect(spy).not.toHaveBeenCalled();
     });
@@ -278,7 +279,7 @@ describe("PropertyDataProvider", () => {
 
     it("doesn't invalidate cache when setting to same value", () => {
       const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
-      // oxlint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated, no-self-assign
       provider.includeFieldsWithNoValues = provider.includeFieldsWithNoValues;
       expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });
@@ -294,7 +295,7 @@ describe("PropertyDataProvider", () => {
 
     it("doesn't invalidate cache when setting to same value", () => {
       const invalidateCacheSpy = vi.spyOn(provider, "invalidateCache");
-      // oxlint-disable-next-line @typescript-eslint/no-deprecated
+      // oxlint-disable-next-line @typescript-eslint/no-deprecated, no-self-assign
       provider.includeFieldsWithCompositeValues = provider.includeFieldsWithCompositeValues;
       expect(invalidateCacheSpy).not.toHaveBeenCalled();
     });

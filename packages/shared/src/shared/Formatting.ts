@@ -72,7 +72,7 @@ export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
   return async function (value: TypedPrimitiveValue): Promise<string> {
     for (const formatter of formatters) {
       const result = formatter(value);
-      if (!!result) {
+      if (result) {
         return result;
       }
     }

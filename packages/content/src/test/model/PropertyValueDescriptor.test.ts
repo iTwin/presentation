@@ -122,14 +122,14 @@ describe("createValueDescriptorFromProperty", () => {
       const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Data", primitiveType: "Binary" }),
       );
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("returns undefined for IGeometry", () => {
       const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Geometry", primitiveType: "IGeometry" }),
       );
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
 
     it("preserves extendedTypeName on a String property", () => {
@@ -291,7 +291,7 @@ describe("createValueDescriptorFromProperty", () => {
       const result = createValueDescriptorFromProperty(
         createNavigationProperty({ name: "Model", direction: "Forward" }),
       );
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
   });
 
@@ -359,7 +359,7 @@ describe("createValueDescriptorFromProperty", () => {
       const result = createValueDescriptorFromProperty(
         createPrimitiveProperty({ name: "Blobs", primitiveType: "Binary", array: true }),
       );
-      expect(result).to.be.undefined;
+      expect(result).toBeUndefined();
     });
   });
 
@@ -376,6 +376,6 @@ describe("createValueDescriptorFromProperty", () => {
       isNavigation: () => false,
     } as unknown as EC.Property;
     const result = createValueDescriptorFromProperty(property);
-    expect(result).to.be.undefined;
+    expect(result).toBeUndefined();
   });
 });
