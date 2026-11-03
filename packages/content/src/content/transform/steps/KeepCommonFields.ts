@@ -9,7 +9,13 @@ import { filterFields, isFieldApplicable } from "./Utils.js";
 
 import type { DeepReadonly, Value } from "@itwin/presentation-shared";
 import type { ReadonlyField, ReadonlyPropertyField } from "../../model/Field.js";
-import type { ContentEntry, ContentRecords, ContentTransformStep, FieldEntry } from "../ContentTransformer.js";
+import type {
+  ContentEntry,
+  ContentRecords,
+  ContentTransformContext,
+  ContentTransformStep,
+  FieldEntry,
+} from "../TransformContent.js";
 
 type RelatedFieldEntry = FieldEntry & { field: ReadonlyPropertyField };
 
@@ -37,20 +43,22 @@ export function keepCommonFields(props?: {
   combinedFields?: WeakMap<ReadonlyField, ReadonlyPropertyField[]>;
 }): ContentTransformStep {
   const combinedFields = props?.combinedFields ?? new WeakMap();
-  return (records) => {
-    const entries = combineRelatedFields({ records, combinedFields });
+  return (records, { items }) => {
+    const entries = combineRelatedFields({ records, items, combinedFields });
     return {
       ...records,
-      entries: filterFields(entries, (field) => records.items.every((item) => isFieldApplicable(field, item))),
+      entries: filterFields(entries, (field) => items.every((item) => isFieldApplicable(field, item))),
     };
   };
 }
 
 function combineRelatedFields({
   records,
+  items,
   combinedFields,
 }: {
   records: ContentRecords;
+  items: ContentTransformContext["items"];
   combinedFields: WeakMap<ReadonlyField, ReadonlyPropertyField[]>;
 }): ContentEntry[] {
   const groups = new Map<string, RelatedFieldEntry[]>();
@@ -67,7 +75,7 @@ function combineRelatedFields({
     if (group.length < 2) {
       continue;
     }
-    const combined = combineEntries(group, records.items);
+    const combined = combineEntries(group, items);
     combinedFields.set(
       combined.field,
       group.map(({ field }) => field),
@@ -138,7 +146,7 @@ function addToDisjointSubgroup(subgroups: PrimaryClassesSubgroup[], entries: Rel
   primaryClassNames.forEach((className) => subgroup.primaryClassNames.add(className));
 }
 
-function combineEntries(group: RelatedFieldEntry[], items: ContentRecords["items"]): RelatedFieldEntry {
+function combineEntries(group: RelatedFieldEntry[], items: ContentTransformContext["items"]): RelatedFieldEntry {
   const [first] = group;
   const pathCardinality = group.some(({ field }) => field.pathCardinality === "many") ? "many" : "one";
   const combinedField: ReadonlyPropertyField = {

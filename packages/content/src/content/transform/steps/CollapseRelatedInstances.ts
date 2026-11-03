@@ -15,7 +15,7 @@ import type {
   FieldEntry,
   RelatedInstancesEntry,
   RelatedInstanceValues,
-} from "../ContentTransformer.js";
+} from "../TransformContent.js";
 
 /**
  * Creates a content transform step that reshapes values of fields reached over many-cardinality relationship
@@ -36,7 +36,7 @@ export function collapseRelatedInstances(props?: {
   getFieldPaths?: (field: ReadonlyPropertyField) => ReadonlyArray<DeepReadonly<RelationshipPath>>;
 }): ContentTransformStep {
   const getFieldPaths = props?.getFieldPaths ?? ((field) => [field.pathFromTarget]);
-  return (records) => {
+  return (records, { items }) => {
     const pathsByKey = new Map<string, Map<string, DeepReadonly<RelationshipPath>>>();
     for (const entry of records.entries) {
       if (isManyEntry(entry)) {
@@ -65,7 +65,7 @@ export function collapseRelatedInstances(props?: {
         key: pathKey,
         createFunc: () => {
           const paths = [...pathsByKey.get(pathKey)!.values()];
-          return records.items.map(
+          return items.map(
             (item) =>
               paths
                 .map((path) => item.getRelatedInstances({ pathFromTarget: path }))

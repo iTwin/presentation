@@ -10,13 +10,13 @@ import {
   createDescriptor,
   createItem,
   createPropertyField,
-  createRecords,
+  createStepArgs,
   createRelatedEntry,
 } from "../Helpers.js";
 
 import type { EC } from "@itwin/presentation-shared";
 import type { ContentItem } from "../../../content/model/ContentItem.js";
-import type { ContentEntry, FieldEntry } from "../../../content/transform/ContentTransformer.js";
+import type { ContentEntry, FieldEntry } from "../../../content/transform/TransformContent.js";
 
 const descriptor = createDescriptor([]);
 const aspectKey = { className: "BisCore.ElementMultiAspect" as const, id: "0x10" };
@@ -28,7 +28,7 @@ function createItems(classNames: Array<EC.FullClassNameDotNotation>): ContentIte
 }
 
 function merge(items: ContentItem[], entries: ContentEntry[]) {
-  return mergeFields()(createRecords({ descriptor, items, entries })).entries;
+  return mergeFields()(...createStepArgs({ descriptor, items, entries })).entries;
 }
 
 describe("mergeFields", () => {

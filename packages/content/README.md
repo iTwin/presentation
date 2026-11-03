@@ -63,13 +63,13 @@ All extension points are registered through the `ContentConfiguration` object pa
 
 ## Transforming content
 
-The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. A content transformer turns a descriptor and its items into an intermediate format, `ContentRecords`, that UI components map into their own shape, such as property grid records.
+The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. `transformContent` turns a descriptor and its items into an intermediate format, `ContentRecords`, that UI components map into their own shape, such as property grid records. Its second argument is a configuration with the steps to run over the records, in order.
 
 `ContentRecords` holds a list of entries in display order. A `FieldEntry` pairs a field with its raw values, one per item. A `RelatedInstancesEntry` groups the fields of a many-cardinality relationship path by related instance.
 
-**`createDefaultContentTransformer`** covers the common case of showing content of one or more selected instances as a single record set, such as in a property grid. Its transformer:
+**`createPropertyGridConfig`** creates a predefined configuration that covers the common case of showing content of one or more selected instances as a single record set, such as in a property grid. Its steps:
 
-- Drops fields marked `hidden`.
-- Keeps only fields that apply to every item's primary class. Pass `fields: "all"` to keep all fields instead. Content is usually requested with one target per selected class, and each target's related property paths start at its own class, so the same related property is split into one field per class. Such fields are combined into one before filtering, so the property is still kept.
-- Unwraps many-cardinality related values when every item reaches at most one related instance. Otherwise it groups them into a `RelatedInstancesEntry`.
-- Marks entries as merged when their values differ between the items they apply to.
+- Drop fields marked `hidden`.
+- Keep only fields that apply to every item's primary class. Pass `fields: "all"` to keep all fields instead. Content is usually requested with one target per selected class, and each target's related property paths start at its own class, so the same related property is split into one field per class. Such fields are combined into one before filtering, so the property is still kept.
+- Unwrap many-cardinality related values when every item reaches at most one related instance. Otherwise group them into a `RelatedInstancesEntry`.
+- Mark entries as merged when their values differ between the items they apply to.

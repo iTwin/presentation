@@ -158,9 +158,7 @@ interface ContentProviderProps {
 // @public
 export interface ContentRecords {
     readonly categories: Readonly<Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>>;
-    readonly descriptor: ReadonlyContentDescriptor;
     readonly entries: ReadonlyArray<ContentEntry>;
-    readonly items: ReadonlyArray<ContentItem>;
 }
 
 // @public
@@ -191,16 +189,18 @@ export interface ContentTarget {
 }
 
 // @public
-export type ContentTransformer = (content: ContentTransformerInput) => ContentRecords;
-
-// @public
-interface ContentTransformerInput {
-    descriptor: ReadonlyContentDescriptor;
-    items: ReadonlyArray<ContentItem>;
+export interface ContentTransformConfig {
+    steps: ReadonlyArray<ContentTransformStep>;
 }
 
 // @public
-type ContentTransformStep = (records: ContentRecords) => ContentRecords;
+export interface ContentTransformContext {
+    readonly descriptor: ReadonlyContentDescriptor;
+    readonly items: ReadonlyArray<ContentItem>;
+}
+
+// @public
+export type ContentTransformStep = (records: ContentRecords, context: ContentTransformContext) => ContentRecords;
 
 // @public
 type ContentValueFilter = (ContentValueFilterTarget & {
@@ -227,12 +227,6 @@ type ContentValueFilterTarget = {
 export function createContentProvider(props: ContentProviderProps): ContentProvider;
 
 // @public
-export function createContentTransformer(...steps: ContentTransformStep[]): ContentTransformer;
-
-// @public
-export function createDefaultContentTransformer(props?: DefaultContentTransformerProps): ContentTransformer;
-
-// @public
 export function createHiddenSchemaMembersDescriptorTransformer(): DescriptorTransformer;
 
 // @public
@@ -245,15 +239,13 @@ interface CreateIModelContentConfigurationProps {
 }
 
 // @public
+export function createPropertyGridConfig(props?: PropertyGridConfigProps): ContentTransformConfig;
+
+// @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
 
 // @public
 export const DEFAULT_FIELDS_PROVIDER_PRIORITY = 1000;
-
-// @public
-interface DefaultContentTransformerProps {
-    fields?: "common" | "all";
-}
 
 // @public
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer;
@@ -403,6 +395,11 @@ export namespace PropertyField {
 }
 
 // @public
+interface PropertyGridConfigProps {
+    fields?: "common" | "all";
+}
+
+// @public
 interface PropertyOverrides {
     // (undocumented)
     categoryId?: string;
@@ -527,6 +524,15 @@ interface TransformableDescriptor {
 
 // @public
 type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
+
+// @public
+export function transformContent(content: TransformContentInput, config: ContentTransformConfig): ContentRecords;
+
+// @public
+interface TransformContentInput {
+    descriptor: ReadonlyContentDescriptor;
+    items: ReadonlyArray<ContentItem>;
+}
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";

@@ -13,13 +13,13 @@ import {
   createExternalField,
   createItem,
   createPropertyField,
-  createRecords,
+  createStepArgs,
   createRelatedEntry,
 } from "../Helpers.js";
 
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
 import type { PropertyField, ReadonlyField, ReadonlyPropertyField } from "../../../content/model/Field.js";
-import type { FieldEntry } from "../../../content/transform/ContentTransformer.js";
+import type { FieldEntry } from "../../../content/transform/TransformContent.js";
 
 describe("keepCommonFields", () => {
   const pumpKey: InstanceKey = { className: "Plant.Pump", id: "0x1" };
@@ -45,7 +45,7 @@ describe("keepCommonFields", () => {
       values: [undefined, undefined, undefined],
     }));
 
-    const result = keepCommonFields()(createRecords({ descriptor, items, entries }));
+    const result = keepCommonFields()(...createStepArgs({ descriptor, items, entries }));
 
     expect(result.entries).to.deep.equal([entries[0], entries[2], entries[4]]);
   });
@@ -55,7 +55,7 @@ describe("keepCommonFields", () => {
       { kind: "field", field: createPropertyField("a", { primaryClassNames: ["Plant.Pump"] }), values: [] },
     ];
 
-    const result = keepCommonFields()(createRecords({ entries }));
+    const result = keepCommonFields()(...createStepArgs({ entries }));
 
     expect(result.entries).to.deep.equal(entries);
   });
@@ -78,7 +78,7 @@ describe("keepCommonFields", () => {
     const droppedEntry = createRelatedEntry({ fields: [{ ...aspectA, primaryClassNames: ["Plant.Valve"] }] });
 
     const result = keepCommonFields()(
-      createRecords({ descriptor, items, entries: [keptEntry, partialEntry, droppedEntry] }),
+      ...createStepArgs({ descriptor, items, entries: [keptEntry, partialEntry, droppedEntry] }),
     );
 
     expect(result.entries).to.have.lengthOf(2);
@@ -131,7 +131,7 @@ describe("keepCommonFields", () => {
       const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
       const result = keepCommonFields({ combinedFields })(
-        createRecords({ descriptor, items, entries: [pumpAspect, direct, valveAspect] }),
+        ...createStepArgs({ descriptor, items, entries: [pumpAspect, direct, valveAspect] }),
       );
 
       expect(result.entries).to.deep.equal([
@@ -179,7 +179,7 @@ describe("keepCommonFields", () => {
       });
       const entries = [pumpAspect, otherProperty, otherRelationship];
 
-      const result = keepCommonFields()(createRecords({ descriptor, items, entries }));
+      const result = keepCommonFields()(...createStepArgs({ descriptor, items, entries }));
 
       expect(result.entries).to.have.lengthOf(entries.length);
       result.entries.forEach((entry, index) => expect(entry).to.equal(entries[index]));
@@ -199,7 +199,7 @@ describe("keepCommonFields", () => {
         overrides: { pathCardinality: "one" },
       });
 
-      const result = keepCommonFields()(createRecords({ descriptor, items, entries: [pumpAspect, valveAspect] }));
+      const result = keepCommonFields()(...createStepArgs({ descriptor, items, entries: [pumpAspect, valveAspect] }));
 
       expect(result.entries).to.have.lengthOf(1);
       expect(result.entries[0]).to.deep.include({ values: ["x", "y"] });
@@ -227,7 +227,7 @@ describe("keepCommonFields", () => {
       });
 
       const result = keepCommonFields()(
-        createRecords({ descriptor, items: pipeItems, entries: [pumpAspect, valveAspect, pipeAspect] }),
+        ...createStepArgs({ descriptor, items: pipeItems, entries: [pumpAspect, valveAspect, pipeAspect] }),
       );
 
       expect(result.entries).to.have.lengthOf(1);
@@ -245,7 +245,7 @@ describe("keepCommonFields", () => {
       });
 
       const result = keepCommonFields()(
-        createRecords({ descriptor, items: tankItems, entries: [pumpAspect, valveAspect] }),
+        ...createStepArgs({ descriptor, items: tankItems, entries: [pumpAspect, valveAspect] }),
       );
 
       expect(result.entries).to.deep.equal([]);
@@ -262,7 +262,7 @@ describe("keepCommonFields", () => {
       });
       const entries = [original, fork];
 
-      const result = keepCommonFields()(createRecords({ descriptor, items: pumpItems, entries }));
+      const result = keepCommonFields()(...createStepArgs({ descriptor, items: pumpItems, entries }));
 
       expect(result.entries).to.have.lengthOf(entries.length);
       result.entries.forEach((entry, index) => expect(entry).to.equal(entries[index]));
@@ -296,7 +296,7 @@ describe("keepCommonFields", () => {
       const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
       const result = keepCommonFields({ combinedFields })(
-        createRecords({ descriptor, items, entries: [pumpOriginal, pumpFork, valveFork, valveOriginal] }),
+        ...createStepArgs({ descriptor, items, entries: [pumpOriginal, pumpFork, valveFork, valveOriginal] }),
       );
 
       expect(result.entries).to.have.lengthOf(2);
@@ -334,7 +334,7 @@ describe("keepCommonFields", () => {
       const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
       const result = keepCommonFields({ combinedFields })(
-        createRecords({ descriptor, items, entries: [pump, valveOriginal, valveFork] }),
+        ...createStepArgs({ descriptor, items, entries: [pump, valveOriginal, valveFork] }),
       );
 
       expect(result.entries).to.have.lengthOf(1);
@@ -371,7 +371,7 @@ describe("keepCommonFields", () => {
       const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
       const result = keepCommonFields({ combinedFields })(
-        createRecords({ descriptor, items: pipeItems, entries: [pump, valveOriginal, pipe, valveFork] }),
+        ...createStepArgs({ descriptor, items: pipeItems, entries: [pump, valveOriginal, pipe, valveFork] }),
       );
 
       expect(result.entries).to.have.lengthOf(1);

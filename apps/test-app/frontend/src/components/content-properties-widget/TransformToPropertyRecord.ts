@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { createDefaultContentTransformer } from "@itwin/presentation-content";
+import { createPropertyGridConfig, transformContent } from "@itwin/presentation-content";
 import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/presentation-shared";
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
@@ -15,7 +15,7 @@ import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescrip
 
 const DEFAULT_CATEGORY: CategoryDefinition = { id: "/default-category/", label: "Miscellaneous" };
 
-const transform = createDefaultContentTransformer();
+const propertyGridConfig = createPropertyGridConfig();
 
 const navigationLabelFormatter = createDefaultValueFormatter();
 
@@ -23,7 +23,7 @@ const labelCollator = new Intl.Collator(undefined, { sensitivity: "base" });
 
 /** Maps content of the selected instances to `PropertyData` for the `PropertyGrid` component. */
 export async function createPropertyData(content: Content): Promise<PropertyData> {
-  const { categories, entries } = transform(content);
+  const { categories, entries } = transformContent(content, propertyGridConfig);
   const tree = createCategoryTree(categories);
   const records: PropertyData["records"] = {};
   for (const entry of entries) {

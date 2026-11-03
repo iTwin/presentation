@@ -10,12 +10,13 @@ public;interface;ContentItem
 public;interface;ContentRecords
 public;interface;ContentSource
 public;interface;ContentTarget
-public;type;ContentTransformer
+public;interface;ContentTransformConfig
+public;interface;ContentTransformContext
+public;type;ContentTransformStep
 public;function;createContentProvider
-public;function;createContentTransformer
-public;function;createDefaultContentTransformer
 public;function;createHiddenSchemaMembersDescriptorTransformer
 public;function;createIModelContentConfiguration
+public;function;createPropertyGridConfig
 public;const;DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY
 public;const;DEFAULT_FIELDS_PROVIDER_PRIORITY
 public;function;defineDescriptorTransformer
@@ -34,3 +35,4 @@ public;type;ReadonlyField
 public;type;ReadonlyPropertyField
 public;function;reduceItems
 public;function;resolveContentSources
+public;function;transformContent

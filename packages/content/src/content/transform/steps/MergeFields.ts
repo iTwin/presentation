@@ -6,7 +6,7 @@
 import deepEqual from "fast-deep-equal/es6/index.js";
 import { isFieldApplicable } from "./Utils.js";
 
-import type { ContentTransformStep } from "../ContentTransformer.js";
+import type { ContentTransformStep } from "../TransformContent.js";
 
 /**
  * Creates a content transform step that sets `isMerged` on entries whose values differ between content items the
@@ -16,11 +16,11 @@ import type { ContentTransformStep } from "../ContentTransformer.js";
  * by their field values, ignoring instance keys.
  */
 export function mergeFields(): ContentTransformStep {
-  return (records) => ({
+  return (records, { items }) => ({
     ...records,
     entries: records.entries.map((entry) => {
       const fields = entry.kind === "field" ? [entry.field] : entry.fields;
-      const values: unknown[] = records.items.flatMap((item, index) => {
+      const values: unknown[] = items.flatMap((item, index) => {
         if (!fields.some((field) => isFieldApplicable(field, item))) {
           return [];
         }

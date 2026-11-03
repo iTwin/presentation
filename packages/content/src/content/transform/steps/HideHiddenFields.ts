@@ -5,7 +5,7 @@
 
 import { filterFields } from "./Utils.js";
 
-import type { ContentTransformStep } from "../ContentTransformer.js";
+import type { ContentTransformStep } from "../TransformContent.js";
 
 /** Creates a content transform step that drops fields marked as `hidden`. */
 export function hideHiddenFields(): ContentTransformStep {

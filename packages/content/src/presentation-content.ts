@@ -42,6 +42,11 @@ export type { BisCoreLocalizedStrings } from "./content/extensions/biscore/BisCo
 export { mapItems, reduceItems } from "./content/Utilities.js";
 
 // Content transformation
-export type { ContentRecords, ContentTransformer } from "./content/transform/ContentTransformer.js";
-export { createContentTransformer } from "./content/transform/ContentTransformer.js";
-export { createDefaultContentTransformer } from "./content/transform/DefaultContentTransformer.js";
+export type {
+  ContentRecords,
+  ContentTransformConfig,
+  ContentTransformContext,
+  ContentTransformStep,
+} from "./content/transform/TransformContent.js";
+export { transformContent } from "./content/transform/TransformContent.js";
+export { createPropertyGridConfig } from "./content/transform/PropertyGridConfig.js";

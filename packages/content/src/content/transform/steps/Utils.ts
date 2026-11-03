@@ -5,7 +5,7 @@
 
 import type { ContentItem } from "../../model/ContentItem.js";
 import type { ReadonlyField } from "../../model/Field.js";
-import type { ContentEntry } from "../ContentTransformer.js";
+import type { ContentEntry } from "../TransformContent.js";
 
 /**
  * Checks whether the field applies to the item, based on whether the item's primary class is in the field's

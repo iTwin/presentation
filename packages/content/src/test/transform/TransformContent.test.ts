@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it, vi } from "vitest";
-import { createContentTransformer } from "../../content/transform/ContentTransformer.js";
+import { transformContent } from "../../content/transform/TransformContent.js";
 import { createDescriptor, createItem, createPropertyField } from "./Helpers.js";
 
-import type { ContentRecords } from "../../content/transform/ContentTransformer.js";
+import type { ContentRecords, ContentTransformContext } from "../../content/transform/TransformContent.js";
 
-describe("createContentTransformer", () => {
+describe("transformContent", () => {
   it("creates initial records with one field entry per descriptor field", () => {
     const fieldA = createPropertyField("a", { categoryId: "cat" });
     const fieldB = createPropertyField("b");
@@ -19,11 +19,9 @@ describe("createContentTransformer", () => {
       createItem({ descriptor, primaryKey: { className: "BisCore.Element", id: "0x2" }, values: { a: "a2" } }),
     ];
 
-    const result = createContentTransformer()({ descriptor, items });
+    const result = transformContent({ descriptor, items }, { steps: [] });
 
     expect(result).to.deep.equal({
-      descriptor,
-      items,
       categories: descriptor.categories,
       entries: [
         { kind: "field", field: fieldA, categoryId: "cat", values: ["a1", "a2"] },
@@ -32,16 +30,23 @@ describe("createContentTransformer", () => {
     });
   });
 
-  it("runs steps in order, passing output of one step to the next", () => {
+  it("runs steps in order, passing output of one step to the next and the same context to all", () => {
     const descriptor = createDescriptor([createPropertyField("a")]);
-    const first = vi.fn((records: ContentRecords): ContentRecords => ({ ...records, entries: [] }));
-    const secondResult = { ...createContentTransformer()({ descriptor, items: [] }) };
-    const second = vi.fn((): ContentRecords => secondResult);
+    const items = [createItem({ descriptor })];
+    const first = vi.fn((records: ContentRecords, _context: ContentTransformContext): ContentRecords => ({
+      ...records,
+      entries: [],
+    }));
+    const secondResult: ContentRecords = { categories: {}, entries: [] };
+    const second = vi.fn((_records: ContentRecords, _context: ContentTransformContext): ContentRecords => secondResult);
 
-    const result = createContentTransformer(first, second)({ descriptor, items: [] });
+    const result = transformContent({ descriptor, items }, { steps: [first, second] });
 
     expect(first).toHaveBeenCalledOnce();
-    expect(second).toHaveBeenCalledWith(first.mock.results[0].value);
+    const context = first.mock.calls[0][1];
+    expect(context).to.deep.equal({ descriptor, items });
+    expect(second).toHaveBeenCalledWith(first.mock.results[0].value, context);
+    expect(second.mock.calls[0][1]).to.equal(context);
     expect(result).to.equal(secondResult);
   });
 });

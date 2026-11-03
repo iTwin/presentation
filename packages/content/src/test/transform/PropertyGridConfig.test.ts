@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { createDefaultContentTransformer } from "../../content/transform/DefaultContentTransformer.js";
+import { createPropertyGridConfig } from "../../content/transform/PropertyGridConfig.js";
+import { transformContent } from "../../content/transform/TransformContent.js";
 import { aspectA, aspectsPath, createDescriptor, createItem, createPropertyField } from "./Helpers.js";
 
-describe("createDefaultContentTransformer", () => {
+describe("createPropertyGridConfig", () => {
   const common = createPropertyField("common", { primaryClassNames: ["Plant.Pump", "Plant.Valve"] });
   const pumpOnly = createPropertyField("pumpOnly", { primaryClassNames: ["Plant.Pump"] });
   const hidden = createPropertyField("hidden", { primaryClassNames: ["Plant.Pump", "Plant.Valve"], hidden: true });
@@ -30,7 +31,7 @@ describe("createDefaultContentTransformer", () => {
   ];
 
   it("keeps common fields, hides hidden fields, collapses related instances and merges values", () => {
-    const result = createDefaultContentTransformer()({ descriptor, items });
+    const result = transformContent({ descriptor, items }, createPropertyGridConfig());
 
     expect(result.entries).to.deep.equal([
       { kind: "field", field: common, values: ["a", "b"], isMerged: true },
@@ -39,7 +40,7 @@ describe("createDefaultContentTransformer", () => {
   });
 
   it("keeps all fields when `fields` is `all`", () => {
-    const result = createDefaultContentTransformer({ fields: "all" })({ descriptor, items });
+    const result = transformContent({ descriptor, items }, createPropertyGridConfig({ fields: "all" }));
 
     expect(result.entries).to.deep.equal([
       { kind: "field", field: common, values: ["a", "b"], isMerged: true },
@@ -84,7 +85,7 @@ describe("createDefaultContentTransformer", () => {
       }),
     ];
 
-    const result = createDefaultContentTransformer()({ descriptor: relatedDescriptor, items: relatedItems });
+    const result = transformContent({ descriptor: relatedDescriptor, items: relatedItems }, createPropertyGridConfig());
 
     expect(result.entries).to.deep.equal([
       {
@@ -104,10 +105,10 @@ describe("createDefaultContentTransformer", () => {
     ]);
 
     // Fields aren't combined when all fields are kept.
-    const allFieldsResult = createDefaultContentTransformer({ fields: "all" })({
-      descriptor: relatedDescriptor,
-      items: relatedItems,
-    });
+    const allFieldsResult = transformContent(
+      { descriptor: relatedDescriptor, items: relatedItems },
+      createPropertyGridConfig({ fields: "all" }),
+    );
     expect(
       allFieldsResult.entries.map((entry) => (entry.kind === "field" ? entry.field.id : entry.fields[0].id)),
     ).to.deep.equal(["pumpAspect", "valveAspect"]);

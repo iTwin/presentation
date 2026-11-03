@@ -14,11 +14,11 @@ import {
   createDescriptor,
   createItem,
   createPropertyField,
-  createRecords,
+  createStepArgs,
 } from "../Helpers.js";
 
 import type { InstanceKey } from "@itwin/presentation-shared";
-import type { FieldEntry } from "../../../content/transform/ContentTransformer.js";
+import type { FieldEntry } from "../../../content/transform/TransformContent.js";
 
 describe("collapseRelatedInstances", () => {
   const direct = createPropertyField("direct");
@@ -34,7 +34,7 @@ describe("collapseRelatedInstances", () => {
       values: ["x"],
     }));
 
-    const result = collapseRelatedInstances()(createRecords({ descriptor, items, entries }));
+    const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries }));
 
     expect(result.entries).to.deep.equal(entries);
   });
@@ -53,7 +53,7 @@ describe("collapseRelatedInstances", () => {
     ];
     const entry: FieldEntry = { kind: "field", field: aspectA, categoryId: "aspects", values: [["a1"], [], undefined] };
 
-    const result = collapseRelatedInstances()(createRecords({ descriptor, items, entries: [entry] }));
+    const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries: [entry] }));
 
     expect(result.entries).to.deep.equal([{ ...entry, values: ["a1", undefined, undefined] }]);
   });
@@ -83,7 +83,7 @@ describe("collapseRelatedInstances", () => {
       { kind: "field", field: aspectB, categoryId: "aspects", values: [["b1"], undefined] },
     ];
 
-    const result = collapseRelatedInstances()(createRecords({ descriptor, items, entries }));
+    const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries }));
 
     expect(result.entries).to.deep.equal([
       entries[0],
@@ -134,7 +134,7 @@ describe("collapseRelatedInstances", () => {
     const entry: FieldEntry = { kind: "field", field: aspectA, categoryId: "aspects", values: [["a1"], ["a2", "a3"]] };
 
     const result = collapseRelatedInstances({ getFieldPaths: () => [aspectsPath, valvePath] })(
-      createRecords({ descriptor, items, entries: [entry] }),
+      ...createStepArgs({ descriptor, items, entries: [entry] }),
     );
 
     expect(result.entries).to.deep.equal([

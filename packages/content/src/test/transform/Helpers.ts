@@ -14,8 +14,9 @@ import type { CalculatedField, ExternalField, Field, PropertyField } from "../..
 import type {
   ContentEntry,
   ContentRecords,
+  ContentTransformContext,
   RelatedInstancesEntry,
-} from "../../content/transform/ContentTransformer.js";
+} from "../../content/transform/TransformContent.js";
 
 export function createPropertyField(id: string, overrides?: Partial<PropertyField>): PropertyField {
   return {
@@ -83,13 +84,17 @@ export function createItem(props: {
   });
 }
 
-export function createRecords(props: {
+/** Creates the `records` and `context` arguments of a content transform step. */
+export function createStepArgs(props: {
   descriptor?: ContentDescriptor;
   items?: ContentItem[];
   entries: ContentEntry[];
-}): ContentRecords {
+}): [ContentRecords, ContentTransformContext] {
   const descriptor = props.descriptor ?? createDescriptor([]);
-  return { descriptor, items: props.items ?? [], categories: descriptor.categories, entries: props.entries };
+  return [
+    { categories: descriptor.categories, entries: props.entries },
+    { descriptor, items: props.items ?? [] },
+  ];
 }
 
 export const aspectsPath: RelationshipPath = [

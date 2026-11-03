@@ -16,17 +16,26 @@ import type { Field, ReadonlyField, ReadonlyPropertyField } from "../model/Field
  * @public
  */
 export interface ContentRecords {
-  /** Descriptor of the source content. */
-  readonly descriptor: ReadonlyContentDescriptor;
-  /** Source content items. Entry values are aligned with this array by index. */
-  readonly items: ReadonlyArray<ContentItem>;
   /**
-   * Category definitions available to entries, keyed by category ID. Initialized from `descriptor.categories`;
+   * Category definitions available to entries, keyed by category ID. Initialized from the descriptor's categories;
    * steps may add synthetic categories.
    */
   readonly categories: Readonly<Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>>;
   /** Entries in display order. Steps may filter, reorder, replace or duplicate them. */
   readonly entries: ReadonlyArray<ContentEntry>;
+}
+
+/**
+ * Source content being transformed by {@link transformContent}. Created once before running the steps, and the same
+ * context is passed to every step.
+ *
+ * @public
+ */
+export interface ContentTransformContext {
+  /** Descriptor of the source content. */
+  readonly descriptor: ReadonlyContentDescriptor;
+  /** Source content items. Entry values are aligned with this array by index. */
+  readonly items: ReadonlyArray<ContentItem>;
 }
 
 /**
@@ -43,7 +52,7 @@ interface BaseContentEntry {
   /** ID of the category the entry belongs to. Initialized from the field's `categoryId`. */
   readonly categoryId?: CategoryDefinition["id"];
   /**
-   * Set when items the entry applies to have different values for it. Set by `createDefaultContentTransformer`.
+   * Set when items the entry applies to have different values for it. Set by `createPropertyGridConfig` steps.
    */
   readonly isMerged?: boolean;
 }
@@ -58,7 +67,7 @@ export interface FieldEntry extends BaseContentEntry {
   /** The field this entry represents. */
   readonly field: ReadonlyField;
   /**
-   * Raw values of the field, one per source item: `values[i]` belongs to `ContentRecords.items[i]`. Items the field
+   * Raw values of the field, one per source item: `values[i]` belongs to `ContentTransformContext.items[i]`. Items the field
    * doesn't apply to have `undefined` values.
    */
   readonly values: ReadonlyArray<DeepReadonly<Value>>;
@@ -66,7 +75,7 @@ export interface FieldEntry extends BaseContentEntry {
 
 /**
  * An entry grouping fields of a many-cardinality relationship path by related instance.
- * Created by `createDefaultContentTransformer`.
+ * Created by `createPropertyGridConfig` steps.
  * @public
  */
 export interface RelatedInstancesEntry extends BaseContentEntry {
@@ -76,7 +85,7 @@ export interface RelatedInstancesEntry extends BaseContentEntry {
   readonly pathFromTarget: DeepReadonly<RelationshipPath>;
   /** Fields of the related instances, in display order. */
   readonly fields: ReadonlyArray<ReadonlyPropertyField>;
-  /** Related instances of each source item: `values[i]` belongs to `ContentRecords.items[i]`. */
+  /** Related instances of each source item: `values[i]` belongs to `ContentTransformContext.items[i]`. */
   readonly values: ReadonlyArray<ReadonlyArray<RelatedInstanceValues>>;
 }
 
@@ -94,17 +103,17 @@ export interface RelatedInstanceValues {
 }
 
 /**
- * A single step of a content transformer created with {@link createContentTransformer}. Steps must not mutate
- * the given records - they return new ones instead.
+ * A single content transformation step. Takes records produced by the previous step and the transformation context,
+ * and returns new records. Steps must not mutate the given records.
  * @public
  */
-export type ContentTransformStep = (records: ContentRecords) => ContentRecords;
+export type ContentTransformStep = (records: ContentRecords, context: ContentTransformContext) => ContentRecords;
 
 /**
- * Content to transform with a content transformer.
+ * Content to transform with {@link transformContent}.
  * @public
  */
-interface ContentTransformerInput {
+interface TransformContentInput {
   /** Descriptor of the content. */
   descriptor: ReadonlyContentDescriptor;
   /** Content items to transform. */
@@ -112,38 +121,38 @@ interface ContentTransformerInput {
 }
 
 /**
- * A function that converts content into {@link ContentRecords} and runs content transform steps over them.
- * Created with {@link createContentTransformer} or `createDefaultContentTransformer`.
+ * Configuration of {@link transformContent}.
  * @public
  */
-export type ContentTransformer = (content: ContentTransformerInput) => ContentRecords;
+export interface ContentTransformConfig {
+  /** Steps to run over content records, in order. */
+  steps: ReadonlyArray<ContentTransformStep>;
+}
 
 /**
- * Creates a {@link ContentTransformer} that converts content into {@link ContentRecords} and runs the given steps
- * over them, in order.
+ * Converts content into {@link ContentRecords} and runs steps of the given configuration over them, in order. Every
+ * step receives the same {@link ContentTransformContext} with the source content.
  *
  * Initial records contain one `FieldEntry` per descriptor field, in descriptor order, with raw values of every
  * item. The result is meant to be mapped into a consumer-specific format, e.g. property grid data.
  *
- * Use `createDefaultContentTransformer` for the commonly needed transformation. Use this function to compose custom
- * steps instead.
+ * Use a predefined configuration, e.g. one created by `createPropertyGridConfig`, or provide custom steps.
  *
  * @example
  * ```ts
- * const transform = createContentTransformer(myFilteringStep, mySortingStep);
- * const propertyData = mapToPropertyData(transform({ descriptor, items }));
+ * const propertyGridRecords = transformContent({ descriptor, items }, createPropertyGridConfig());
+ * const customRecords = transformContent({ descriptor, items }, { steps: [myFilteringStep, mySortingStep] });
  * ```
  *
  * @public
  */
-export function createContentTransformer(...steps: ContentTransformStep[]): ContentTransformer {
-  return (content) => steps.reduce((records, step) => step(records), createInitialRecords(content));
+export function transformContent(content: TransformContentInput, config: ContentTransformConfig): ContentRecords {
+  const context: ContentTransformContext = { descriptor: content.descriptor, items: content.items };
+  return config.steps.reduce((records, step) => step(records, context), createInitialRecords(context));
 }
 
-function createInitialRecords({ descriptor, items }: ContentTransformerInput): ContentRecords {
+function createInitialRecords({ descriptor, items }: ContentTransformContext): ContentRecords {
   return {
-    descriptor,
-    items,
     categories: descriptor.categories,
     entries: Object.values(descriptor.fields).map((field): FieldEntry => ({
       kind: "field",
