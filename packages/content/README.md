@@ -72,4 +72,4 @@ The pipeline returns raw values: one `ContentItem` per primary instance. The val
 - Drop fields marked `hidden`.
 - Keep only fields that apply to every item's primary class. Pass `fields: "all"` to keep all fields instead. Content is usually requested with one target per selected class, and each target's related property paths start at its own class, so the same related property is split into one field per class. Such fields are combined into one before filtering, so the property is still kept.
 - Unwrap many-cardinality related values when every item reaches at most one related instance. Otherwise group them into a `RelatedInstancesEntry`.
-- Mark entries as merged when their values differ between the items they apply to.
+- Mark entries as varying when their values differ between the items they apply to.

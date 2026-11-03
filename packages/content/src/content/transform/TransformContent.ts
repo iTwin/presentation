@@ -54,7 +54,7 @@ interface BaseContentEntry {
   /**
    * Set when items the entry applies to have different values for it. Set by `createPropertyGridConfig` steps.
    */
-  readonly isMerged?: boolean;
+  readonly varies?: boolean;
 }
 
 /**

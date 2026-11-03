@@ -626,7 +626,7 @@ Consumers compose these based on their needs:
 
 This keeps the pipeline simple (it only deals with raw data) and gives consumers full control over what transformations they apply and in what order.
 
-For display-oriented post-processing, `transformContent` produces an intermediate `ContentRecords` format by running a configured list of steps. Each entry pairs a field (or a group of related-instance fields) with its raw values, one per item. The predefined configuration from `createPropertyGridConfig` keeps fields common to all items (or all fields, with `fields: "all"`), drops hidden fields, collapses many-cardinality related values and marks entries with differing values as merged. Consumers can also pass custom steps. Mapping the result to a UI-specific format, is left to the consumer.
+For display-oriented post-processing, `transformContent` produces an intermediate `ContentRecords` format by running a configured list of steps. Each entry pairs a field (or a group of related-instance fields) with its raw values, one per item. The predefined configuration from `createPropertyGridConfig` keeps fields common to all items (or all fields, with `fields: "all"`), drops hidden fields, collapses many-cardinality related values and marks entries with differing values as varying. Consumers can also pass custom steps. Mapping the result to a UI-specific format, is left to the consumer.
 
 ---
 

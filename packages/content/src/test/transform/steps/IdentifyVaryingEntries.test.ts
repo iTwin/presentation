@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { mergeFields } from "../../../content/transform/steps/MergeFields.js";
+import { identifyVaryingEntries } from "../../../content/transform/steps/IdentifyVaryingEntries.js";
 import {
   aspectA,
   createDescriptor,
@@ -28,10 +28,10 @@ function createItems(classNames: Array<EC.FullClassNameDotNotation>): ContentIte
 }
 
 function merge(items: ContentItem[], entries: ContentEntry[]) {
-  return mergeFields()(...createStepArgs({ descriptor, items, entries })).entries;
+  return identifyVaryingEntries()(...createStepArgs({ descriptor, items, entries })).entries;
 }
 
-describe("mergeFields", () => {
+describe("identifyVaryingEntries", () => {
   it("leaves entries with equal values untouched", () => {
     const items = createItems(["BisCore.Element", "BisCore.Element"]);
     const equal: FieldEntry = { kind: "field", field: createPropertyField("equal"), values: [{ a: [1] }, { a: [1] }] };
@@ -54,7 +54,7 @@ describe("mergeFields", () => {
     result.forEach((entry, index) => expect(entry).to.equal(entries[index]));
   });
 
-  it("marks entries with different values as merged", () => {
+  it("marks entries with different values as varying", () => {
     const items = createItems(["BisCore.Element", "BisCore.Element", "BisCore.Element"]);
     const different: FieldEntry = { kind: "field", field: createPropertyField("different"), values: ["x", "x", "y"] };
     const differentDates: FieldEntry = {
@@ -76,9 +76,9 @@ describe("mergeFields", () => {
     const result = merge(items, [different, differentDates, relatedDifferent]);
 
     expect(result).to.deep.equal([
-      { ...different, isMerged: true },
-      { ...differentDates, isMerged: true },
-      { ...relatedDifferent, isMerged: true },
+      { ...different, varies: true },
+      { ...differentDates, varies: true },
+      { ...relatedDifferent, varies: true },
     ]);
   });
 

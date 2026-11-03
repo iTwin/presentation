@@ -30,7 +30,7 @@ import type {
  * original fields (see `keepCommonFields`) may reach related instances of different items over different paths -
  * `getFieldPaths` returns all of them. Each item's related instances are taken from the first path that reaches any.
  *
- * Should run before `mergeFields`.
+ * Should run before `identifyVaryingEntries`.
  */
 export function collapseRelatedInstances(props?: {
   getFieldPaths?: (field: ReadonlyPropertyField) => ReadonlyArray<DeepReadonly<RelationshipPath>>;

@@ -34,7 +34,7 @@ describe("createPropertyGridConfig", () => {
     const result = transformContent({ descriptor, items }, createPropertyGridConfig());
 
     expect(result.entries).to.deep.equal([
-      { kind: "field", field: common, values: ["a", "b"], isMerged: true },
+      { kind: "field", field: common, values: ["a", "b"], varies: true },
       { kind: "field", field: related, categoryId: "aspects", values: ["x", "x"] },
     ]);
   });
@@ -43,7 +43,7 @@ describe("createPropertyGridConfig", () => {
     const result = transformContent({ descriptor, items }, createPropertyGridConfig({ fields: "all" }));
 
     expect(result.entries).to.deep.equal([
-      { kind: "field", field: common, values: ["a", "b"], isMerged: true },
+      { kind: "field", field: common, values: ["a", "b"], varies: true },
       { kind: "field", field: pumpOnly, values: ["p", undefined] },
       { kind: "field", field: related, categoryId: "aspects", values: ["x", "x"] },
     ]);
@@ -100,7 +100,7 @@ describe("createPropertyGridConfig", () => {
             { key: valveAspectKeys[1], values: { pumpAspect: "y" } },
           ],
         ],
-        isMerged: true,
+        varies: true,
       },
     ]);
 

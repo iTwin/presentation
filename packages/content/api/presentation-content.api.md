@@ -22,7 +22,7 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 // @public
 interface BaseContentEntry {
     readonly categoryId?: CategoryDefinition["id"];
-    readonly isMerged?: boolean;
+    readonly varies?: boolean;
 }
 
 // @public

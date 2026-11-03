@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collapseRelatedInstances } from "./steps/CollapseRelatedInstances.js";
-import { hideHiddenFields } from "./steps/HideHiddenFields.js";
+import { identifyVaryingEntries } from "./steps/IdentifyVaryingEntries.js";
 import { keepCommonFields } from "./steps/KeepCommonFields.js";
-import { mergeFields } from "./steps/MergeFields.js";
+import { removeHiddenFields } from "./steps/RemoveHiddenFields.js";
 
 import type { ReadonlyField, ReadonlyPropertyField } from "../model/Field.js";
 import type { ContentTransformConfig } from "./TransformContent.js";
@@ -41,9 +41,9 @@ interface PropertyGridConfigProps {
  * 3. Reshape values of fields reached over many-cardinality relationship paths. When every item reaches at most one
  *    related instance over the path, values are unwrapped from arrays. Otherwise, fields of the path within the same
  *    category are grouped into a `RelatedInstancesEntry`, with values grouped by related instance.
- * 4. Set `isMerged` on entries whose values differ between items they apply to. Values are compared deeply.
+ * 4. Set `varies` on entries whose values differ between items they apply to. Values are compared deeply.
  *
- * When an entry isn't merged, all items it applies to have the same value.
+ * When an entry doesn't vary, all items it applies to have the same value.
  *
  * @example
  * ```ts
@@ -57,12 +57,12 @@ export function createPropertyGridConfig(props?: PropertyGridConfigProps): Conte
   const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
   return {
     steps: [
-      hideHiddenFields(),
+      removeHiddenFields(),
       ...((props?.fields ?? "common") === "common" ? [keepCommonFields({ combinedFields })] : []),
       collapseRelatedInstances({
         getFieldPaths: (field) => (combinedFields.get(field) ?? [field]).map(({ pathFromTarget }) => pathFromTarget),
       }),
-      mergeFields(),
+      identifyVaryingEntries(),
     ],
   };
 }

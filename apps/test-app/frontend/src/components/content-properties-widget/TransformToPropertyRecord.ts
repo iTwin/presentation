@@ -64,7 +64,7 @@ async function createEntryRecord(
   categories: ContentRecords["categories"],
 ): Promise<PropertyRecord> {
   const props = getEntryRecordProps(entry, categories);
-  if (entry.isMerged) {
+  if (entry.varies) {
     const record = new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive }, createDescription(props));
     record.isMerged = true;
     record.isReadonly = props.isReadonly;
@@ -74,7 +74,7 @@ async function createEntryRecord(
 }
 
 function getEntryRecordProps(entry: ContentEntry, categories: ContentRecords["categories"]): RecordProps {
-  // Unless the entry is merged, all items it applies to have equal values, and the rest have no values. So the first
+  // Unless the entry varies, all items it applies to have equal values, and the rest have no values. So the first
   // available value represents all of them.
   if (entry.kind === "field") {
     const value = entry.values.find((itemValue) => itemValue !== undefined);

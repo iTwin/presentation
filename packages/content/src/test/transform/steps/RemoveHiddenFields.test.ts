@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { hideHiddenFields } from "../../../content/transform/steps/HideHiddenFields.js";
+import { removeHiddenFields } from "../../../content/transform/steps/RemoveHiddenFields.js";
 import { createPropertyField, createStepArgs } from "../Helpers.js";
 
 import type { FieldEntry } from "../../../content/transform/TransformContent.js";
 
-describe("hideHiddenFields", () => {
+describe("removeHiddenFields", () => {
   it("drops hidden fields", () => {
     const entries = [createPropertyField("visible"), createPropertyField("hidden", { hidden: true })].map(
       (field): FieldEntry => ({ kind: "field", field, values: [] }),
     );
-    const result = hideHiddenFields()(...createStepArgs({ entries }));
+    const result = removeHiddenFields()(...createStepArgs({ entries }));
     expect(result.entries).to.deep.equal([entries[0]]);
   });
 });

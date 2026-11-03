@@ -9,13 +9,13 @@ import { isFieldApplicable } from "./Utils.js";
 import type { ContentTransformStep } from "../TransformContent.js";
 
 /**
- * Creates a content transform step that sets `isMerged` on entries whose values differ between content items the
+ * Creates a content transform step that sets `varies` on entries whose values differ between content items the
  * entry applies to (see `isFieldApplicable`). Items the entry doesn't apply to are ignored.
  *
  * Values are compared deeply. For a `RelatedInstancesEntry`, related instances of every item are compared as a whole
  * by their field values, ignoring instance keys.
  */
-export function mergeFields(): ContentTransformStep {
+export function identifyVaryingEntries(): ContentTransformStep {
   return (records, { items }) => ({
     ...records,
     entries: records.entries.map((entry) => {
@@ -26,7 +26,7 @@ export function mergeFields(): ContentTransformStep {
         }
         return [entry.kind === "field" ? entry.values[index] : entry.values[index].map((instance) => instance.values)];
       });
-      return values.some((value) => !deepEqual(value, values[0])) ? { ...entry, isMerged: true } : entry;
+      return values.some((value) => !deepEqual(value, values[0])) ? { ...entry, varies: true } : entry;
     }),
   });
 }
