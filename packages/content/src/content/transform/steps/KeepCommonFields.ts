@@ -35,16 +35,12 @@ type RelatedFieldEntry = FieldEntry & { field: ReadonlyPropertyField };
  *   `"many"` if any original field's is.
  * - Each item's value is taken from the original field that applies to the item. When the combined field is
  *   many-valued, single values of `"one"` fields are wrapped into arrays.
- *
- * Original fields of every combined field are stored in `combinedFields`, so that other steps can find related
- * instances reached over the original paths.
+ * - The combined entry's `combinedFrom` lists the original fields, so that other steps can find related instances
+ *   reached over the original paths.
  */
-export function keepCommonFields(props?: {
-  combinedFields?: WeakMap<ReadonlyField, ReadonlyPropertyField[]>;
-}): ContentTransformStep {
-  const combinedFields = props?.combinedFields ?? new WeakMap();
+export function keepCommonFields(): ContentTransformStep {
   return (records, { items }) => {
-    const entries = combineRelatedFields({ records, items, combinedFields });
+    const entries = combineRelatedFields({ records, items });
     return {
       ...records,
       entries: filterFields(entries, (field) => items.every((item) => isFieldApplicable(field, item))),
@@ -55,11 +51,9 @@ export function keepCommonFields(props?: {
 function combineRelatedFields({
   records,
   items,
-  combinedFields,
 }: {
   records: ContentRecords;
   items: ContentTransformContext["items"];
-  combinedFields: WeakMap<ReadonlyField, ReadonlyPropertyField[]>;
 }): ContentEntry[] {
   const groups = new Map<string, RelatedFieldEntry[]>();
   for (const entry of records.entries) {
@@ -76,10 +70,6 @@ function combineRelatedFields({
       continue;
     }
     const combined = combineEntries(group, items);
-    combinedFields.set(
-      combined.field,
-      group.map(({ field }) => field),
-    );
     group.forEach(({ field }, index) => replacements.set(field, index === 0 ? combined : undefined));
   }
   return records.entries.flatMap((entry) => {
@@ -158,6 +148,7 @@ function combineEntries(group: RelatedFieldEntry[], items: ContentTransformConte
   return {
     ...first,
     field: combinedField,
+    combinedFrom: group.map(({ field }) => field),
     values: items.map((item, index): DeepReadonly<Value> => {
       const source = group.find((entry) => isFieldApplicable(entry.field, item));
       if (!source) {

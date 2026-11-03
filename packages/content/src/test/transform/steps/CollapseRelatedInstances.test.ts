@@ -115,7 +115,7 @@ describe("collapseRelatedInstances", () => {
     ]);
   });
 
-  it("looks up related instances over all paths returned by `getFieldPaths`", () => {
+  it("looks up related instances over paths of all fields the entry was combined from", () => {
     const valvePath = [{ ...aspectsPath[0], sourceClassName: "Plant.Valve" as const }];
     const descriptor = createDescriptor([aspectA]);
     const aspect1: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x10" };
@@ -131,11 +131,15 @@ describe("collapseRelatedInstances", () => {
         ],
       }),
     ];
-    const entry: FieldEntry = { kind: "field", field: aspectA, categoryId: "aspects", values: [["a1"], ["a2", "a3"]] };
+    const entry: FieldEntry = {
+      kind: "field",
+      field: aspectA,
+      categoryId: "aspects",
+      values: [["a1"], ["a2", "a3"]],
+      combinedFrom: [aspectA, { ...aspectA, id: "valveAspectA", pathFromTarget: valvePath }],
+    };
 
-    const result = collapseRelatedInstances({ getFieldPaths: () => [aspectsPath, valvePath] })(
-      ...createStepArgs({ descriptor, items, entries: [entry] }),
-    );
+    const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries: [entry] }));
 
     expect(result.entries).to.deep.equal([
       {

@@ -71,6 +71,12 @@ export interface FieldEntry extends BaseContentEntry {
    * doesn't apply to have `undefined` values.
    */
   values: Array<DeepReadonly<Value>>;
+  /**
+   * Original fields this entry's field was combined from, when it stands for several fields. Each item's value is
+   * taken from the original field that applies to the item, so steps that need per-item field information should look
+   * it up in the original fields.
+   */
+  combinedFrom?: ReadonlyPropertyField[];
 }
 
 /**

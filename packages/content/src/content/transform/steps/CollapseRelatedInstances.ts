@@ -26,16 +26,13 @@ import type {
  * - Otherwise, fields of the path within the same category are grouped into a single `RelatedInstancesEntry`,
  *   positioned where the first of them was, with values grouped by related instance.
  *
- * Related instances of an item are looked up by the field's `pathFromTarget`. A field that stands for several
- * original fields (see `keepCommonFields`) may reach related instances of different items over different paths -
- * `getFieldPaths` returns all of them. Each item's related instances are taken from the first path that reaches any.
+ * Related instances of an item are looked up by the field's `pathFromTarget`. A field combined from several original
+ * fields (see `FieldEntry.combinedFrom`) may reach related instances of different items over different paths - all of
+ * the original fields' paths are used. Each item's related instances are taken from the first path that reaches any.
  *
  * Should run before `identifyVaryingEntries`.
  */
-export function collapseRelatedInstances(props?: {
-  getFieldPaths?: (field: ReadonlyPropertyField) => ReadonlyArray<DeepReadonly<RelationshipPath>>;
-}): ContentTransformStep {
-  const getFieldPaths = props?.getFieldPaths ?? ((field) => [field.pathFromTarget]);
+export function collapseRelatedInstances(): ContentTransformStep {
   return (records, { items }) => {
     const pathsByKey = new Map<string, Map<string, DeepReadonly<RelationshipPath>>>();
     for (const entry of records.entries) {
@@ -45,7 +42,9 @@ export function collapseRelatedInstances(props?: {
           key: serializeRelationshipPath({ path: entry.field.pathFromTarget }),
           createFunc: () => new Map(),
         });
-        getFieldPaths(entry.field).forEach((path) => paths.set(serializeRelationshipPath({ path }), path));
+        (entry.combinedFrom ?? [entry.field]).forEach(({ pathFromTarget }) =>
+          paths.set(serializeRelationshipPath({ path: pathFromTarget }), pathFromTarget),
+        );
       }
     }
     const instancesByPath = new Map<string, RelatedInstancesPerItem>();

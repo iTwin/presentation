@@ -313,6 +313,7 @@ export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
 interface FieldEntry extends BaseContentEntry {
+    combinedFrom?: ReadonlyPropertyField[];
     field: ReadonlyField;
     kind: "field";
     values: Array<DeepReadonly<Value>>;

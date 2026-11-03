@@ -18,7 +18,7 @@ import {
 } from "../Helpers.js";
 
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { PropertyField, ReadonlyField, ReadonlyPropertyField } from "../../../content/model/Field.js";
+import type { PropertyField } from "../../../content/model/Field.js";
 import type { FieldEntry } from "../../../content/transform/TransformContent.js";
 
 describe("keepCommonFields", () => {
@@ -128,9 +128,8 @@ describe("keepCommonFields", () => {
       };
       const pumpAspect = createRelatedFieldEntry({ id: "pump", source: "Plant.Pump", values: [["x"], undefined] });
       const valveAspect = createRelatedFieldEntry({ id: "valve", source: "Plant.Valve", values: [undefined, ["y"]] });
-      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
-      const result = keepCommonFields({ combinedFields })(
+      const result = keepCommonFields()(
         ...createStepArgs({ descriptor, items, entries: [pumpAspect, direct, valveAspect] }),
       );
 
@@ -142,13 +141,10 @@ describe("keepCommonFields", () => {
             primaryClassNames: ["Plant.Pump", "Plant.Valve"],
             valueClassNames: ["Plant.PumpAspect", "Plant.ValveAspect"],
           },
+          combinedFrom: [pumpAspect.field, valveAspect.field],
           values: [["x"], ["y"]],
         },
         direct,
-      ]);
-      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([
-        pumpAspect.field,
-        valveAspect.field,
       ]);
     });
 
@@ -293,23 +289,16 @@ describe("keepCommonFields", () => {
         values: [undefined, ["d"]],
         overrides: { valueClassNames: ["Plant.AspectA"] },
       });
-      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
-      const result = keepCommonFields({ combinedFields })(
+      const result = keepCommonFields()(
         ...createStepArgs({ descriptor, items, entries: [pumpOriginal, pumpFork, valveFork, valveOriginal] }),
       );
 
       expect(result.entries).to.have.lengthOf(2);
       expect(result.entries[0]).to.deep.include({ values: [["a"], ["d"]] });
       expect(result.entries[1]).to.deep.include({ values: [["b"], ["c"]] });
-      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([
-        pumpOriginal.field,
-        valveOriginal.field,
-      ]);
-      expect(combinedFields.get((result.entries[1] as FieldEntry).field)).to.deep.equal([
-        pumpFork.field,
-        valveFork.field,
-      ]);
+      expect((result.entries[0] as FieldEntry).combinedFrom).to.deep.equal([pumpOriginal.field, valveOriginal.field]);
+      expect((result.entries[1] as FieldEntry).combinedFrom).to.deep.equal([pumpFork.field, valveFork.field]);
     });
 
     it("combines fields with the same value classes even when non-matching fields come first", () => {
@@ -331,15 +320,14 @@ describe("keepCommonFields", () => {
         values: [undefined, ["c"]],
         overrides: { valueClassNames: ["Plant.AspectB"] },
       });
-      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
-      const result = keepCommonFields({ combinedFields })(
+      const result = keepCommonFields()(
         ...createStepArgs({ descriptor, items, entries: [pump, valveOriginal, valveFork] }),
       );
 
       expect(result.entries).to.have.lengthOf(1);
       expect(result.entries[0]).to.deep.include({ values: [["a"], ["c"]] });
-      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([pump.field, valveFork.field]);
+      expect((result.entries[0] as FieldEntry).combinedFrom).to.deep.equal([pump.field, valveFork.field]);
     });
 
     it("combines fields of all classes when unmatched fields come before matched ones", () => {
@@ -368,19 +356,14 @@ describe("keepCommonFields", () => {
         values: [undefined, ["b2"], undefined],
         overrides: { valueClassNames: ["Plant.AspectB"] },
       });
-      const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
 
-      const result = keepCommonFields({ combinedFields })(
+      const result = keepCommonFields()(
         ...createStepArgs({ descriptor, items: pipeItems, entries: [pump, valveOriginal, pipe, valveFork] }),
       );
 
       expect(result.entries).to.have.lengthOf(1);
       expect(result.entries[0]).to.deep.include({ values: [["a"], ["b2"], ["b1"]] });
-      expect(combinedFields.get((result.entries[0] as FieldEntry).field)).to.deep.equal([
-        pump.field,
-        pipe.field,
-        valveFork.field,
-      ]);
+      expect((result.entries[0] as FieldEntry).combinedFrom).to.deep.equal([pump.field, pipe.field, valveFork.field]);
     });
   });
 });

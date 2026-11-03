@@ -8,7 +8,6 @@ import { identifyVaryingEntries } from "./steps/IdentifyVaryingEntries.js";
 import { keepCommonFields } from "./steps/KeepCommonFields.js";
 import { removeHiddenFields } from "./steps/RemoveHiddenFields.js";
 
-import type { ReadonlyField, ReadonlyPropertyField } from "../model/Field.js";
 import type { ContentTransformConfig } from "./TransformContent.js";
 
 /**
@@ -54,14 +53,11 @@ interface PropertyGridConfigProps {
  * @public
  */
 export function createPropertyGridConfig(props?: PropertyGridConfigProps): ContentTransformConfig {
-  const combinedFields = new WeakMap<ReadonlyField, ReadonlyPropertyField[]>();
   return {
     steps: [
       removeHiddenFields(),
-      ...((props?.fields ?? "common") === "common" ? [keepCommonFields({ combinedFields })] : []),
-      collapseRelatedInstances({
-        getFieldPaths: (field) => (combinedFields.get(field) ?? [field]).map(({ pathFromTarget }) => pathFromTarget),
-      }),
+      ...((props?.fields ?? "common") === "common" ? [keepCommonFields()] : []),
+      collapseRelatedInstances(),
       identifyVaryingEntries(),
     ],
   };
