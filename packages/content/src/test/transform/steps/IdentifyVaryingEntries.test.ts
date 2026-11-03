@@ -99,4 +99,25 @@ describe("identifyVaryingEntries", () => {
     expect(result[0]).to.equal(pumpField);
     expect(result[1]).to.equal(pumpRelated);
   });
+
+  it("ignores order of related instances", () => {
+    const items = createItems(["BisCore.Element", "BisCore.Element"]);
+    const otherKey = { ...aspectKey, id: "0x11" };
+    const related = createRelatedEntry({
+      values: [
+        [
+          { key: aspectKey, values: { aspectA: "a" } },
+          { key: otherKey, values: { aspectA: "b" } },
+        ],
+        [
+          { key: otherKey, values: { aspectA: "b" } },
+          { key: aspectKey, values: { aspectA: "a" } },
+        ],
+      ],
+    });
+
+    const result = merge(items, [related]);
+
+    expect(result[0]).to.equal(related);
+  });
 });

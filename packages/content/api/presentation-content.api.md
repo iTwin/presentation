@@ -21,8 +21,8 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseContentEntry {
-    readonly categoryId?: CategoryDefinition["id"];
-    readonly varies?: boolean;
+    categoryId?: CategoryDefinition["id"];
+    varies?: boolean;
 }
 
 // @public
@@ -157,8 +157,8 @@ interface ContentProviderProps {
 
 // @public
 export interface ContentRecords {
-    readonly categories: Readonly<Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>>;
-    readonly entries: ReadonlyArray<ContentEntry>;
+    categories: Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>;
+    entries: ContentEntry[];
 }
 
 // @public
@@ -190,13 +190,13 @@ export interface ContentTarget {
 
 // @public
 export interface ContentTransformConfig {
-    steps: ReadonlyArray<ContentTransformStep>;
+    steps: ContentTransformStep[];
 }
 
 // @public
 export interface ContentTransformContext {
-    readonly descriptor: ReadonlyContentDescriptor;
-    readonly items: ReadonlyArray<ContentItem>;
+    descriptor: ReadonlyContentDescriptor;
+    items: ContentItem[];
 }
 
 // @public
@@ -313,9 +313,9 @@ export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
 interface FieldEntry extends BaseContentEntry {
-    readonly field: ReadonlyField;
-    readonly kind: "field";
-    readonly values: ReadonlyArray<DeepReadonly<Value>>;
+    field: ReadonlyField;
+    kind: "field";
+    values: Array<DeepReadonly<Value>>;
 }
 
 // @public
@@ -438,17 +438,17 @@ export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accu
 
 // @public
 interface RelatedInstancesEntry extends BaseContentEntry {
-    readonly fields: ReadonlyArray<ReadonlyPropertyField>;
-    readonly kind: "related-instances";
-    readonly pathFromTarget: DeepReadonly<RelationshipPath>;
-    readonly values: ReadonlyArray<ReadonlyArray<RelatedInstanceValues>>;
+    fields: ReadonlyPropertyField[];
+    kind: "related-instances";
+    pathFromTarget: DeepReadonly<RelationshipPath>;
+    values: RelatedInstanceValues[][];
 }
 
 // @public
 interface RelatedInstanceValues {
-    readonly key: DeepReadonly<InstanceKey>;
-    readonly relationshipKey?: DeepReadonly<InstanceKey>;
-    readonly values: Readonly<Record<Field["id"], DeepReadonly<Value>>>;
+    key: DeepReadonly<InstanceKey>;
+    relationshipKey?: DeepReadonly<InstanceKey>;
+    values: Record<Field["id"], DeepReadonly<Value>>;
 }
 
 // @public
@@ -531,7 +531,7 @@ export function transformContent(content: TransformContentInput, config: Content
 // @public
 interface TransformContentInput {
     descriptor: ReadonlyContentDescriptor;
-    items: ReadonlyArray<ContentItem>;
+    items: ContentItem[];
 }
 
 // @public (undocumented)

@@ -20,9 +20,9 @@ export interface ContentRecords {
    * Category definitions available to entries, keyed by category ID. Initialized from the descriptor's categories;
    * steps may add synthetic categories.
    */
-  readonly categories: Readonly<Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>>;
+  categories: Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>;
   /** Entries in display order. Steps may filter, reorder, replace or duplicate them. */
-  readonly entries: ReadonlyArray<ContentEntry>;
+  entries: ContentEntry[];
 }
 
 /**
@@ -33,9 +33,9 @@ export interface ContentRecords {
  */
 export interface ContentTransformContext {
   /** Descriptor of the source content. */
-  readonly descriptor: ReadonlyContentDescriptor;
+  descriptor: ReadonlyContentDescriptor;
   /** Source content items. Entry values are aligned with this array by index. */
-  readonly items: ReadonlyArray<ContentItem>;
+  items: ContentItem[];
 }
 
 /**
@@ -50,11 +50,11 @@ export type ContentEntry = FieldEntry | RelatedInstancesEntry;
  */
 interface BaseContentEntry {
   /** ID of the category the entry belongs to. Initialized from the field's `categoryId`. */
-  readonly categoryId?: CategoryDefinition["id"];
+  categoryId?: CategoryDefinition["id"];
   /**
    * Set when items the entry applies to have different values for it. Set by `createPropertyGridConfig` steps.
    */
-  readonly varies?: boolean;
+  varies?: boolean;
 }
 
 /**
@@ -63,14 +63,14 @@ interface BaseContentEntry {
  */
 export interface FieldEntry extends BaseContentEntry {
   /** Discriminator of the entry kind. */
-  readonly kind: "field";
+  kind: "field";
   /** The field this entry represents. */
-  readonly field: ReadonlyField;
+  field: ReadonlyField;
   /**
    * Raw values of the field, one per source item: `values[i]` belongs to `ContentTransformContext.items[i]`. Items the field
    * doesn't apply to have `undefined` values.
    */
-  readonly values: ReadonlyArray<DeepReadonly<Value>>;
+  values: Array<DeepReadonly<Value>>;
 }
 
 /**
@@ -80,13 +80,13 @@ export interface FieldEntry extends BaseContentEntry {
  */
 export interface RelatedInstancesEntry extends BaseContentEntry {
   /** Discriminator of the entry kind. */
-  readonly kind: "related-instances";
+  kind: "related-instances";
   /** The relationship path from content target to the related instances. */
-  readonly pathFromTarget: DeepReadonly<RelationshipPath>;
+  pathFromTarget: DeepReadonly<RelationshipPath>;
   /** Fields of the related instances, in display order. */
-  readonly fields: ReadonlyArray<ReadonlyPropertyField>;
+  fields: ReadonlyPropertyField[];
   /** Related instances of each source item: `values[i]` belongs to `ContentTransformContext.items[i]`. */
-  readonly values: ReadonlyArray<ReadonlyArray<RelatedInstanceValues>>;
+  values: RelatedInstanceValues[][];
 }
 
 /**
@@ -95,11 +95,11 @@ export interface RelatedInstancesEntry extends BaseContentEntry {
  */
 export interface RelatedInstanceValues {
   /** Key of the related instance. */
-  readonly key: DeepReadonly<InstanceKey>;
+  key: DeepReadonly<InstanceKey>;
   /** Key of the last relationship step's instance, when present. */
-  readonly relationshipKey?: DeepReadonly<InstanceKey>;
+  relationshipKey?: DeepReadonly<InstanceKey>;
   /** Raw values of the related instance, keyed by field ID. */
-  readonly values: Readonly<Record<Field["id"], DeepReadonly<Value>>>;
+  values: Record<Field["id"], DeepReadonly<Value>>;
 }
 
 /**
@@ -117,7 +117,7 @@ interface TransformContentInput {
   /** Descriptor of the content. */
   descriptor: ReadonlyContentDescriptor;
   /** Content items to transform. */
-  items: ReadonlyArray<ContentItem>;
+  items: ContentItem[];
 }
 
 /**
@@ -126,7 +126,7 @@ interface TransformContentInput {
  */
 export interface ContentTransformConfig {
   /** Steps to run over content records, in order. */
-  steps: ReadonlyArray<ContentTransformStep>;
+  steps: ContentTransformStep[];
 }
 
 /**
