@@ -11,6 +11,7 @@ import type { ECSchemaProvider } from '@itwin/presentation-shared';
 import type { ECSqlQueryDef } from '@itwin/presentation-shared';
 import type { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import type { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
+import type { ECSqlQueryRow } from '@itwin/presentation-shared';
 import type { Event as Event_2 } from '@itwin/presentation-shared';
 import type { EventListener as EventListener_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
@@ -672,6 +673,12 @@ interface NodeSelectClauseProps {
 }
 
 // @public
+export class NodesLimitExceededError extends RowsLimitExceededError {
+    constructor(limit: number, nodes: HierarchyNode[], rows?: ECSqlQueryRow[]);
+    readonly nodes: HierarchyNode[];
+}
+
+// @public
 interface NodesQueryClauseFactory {
     createFilterClauses(props: {
         contentClass: {
@@ -769,9 +776,10 @@ export interface PropertyValueRangeGroupingNodeKey {
 
 // @public
 export class RowsLimitExceededError extends Error {
-    constructor(limit: number);
+    constructor(limit: number, rows?: ECSqlQueryRow[]);
     // (undocumented)
     readonly limit: number;
+    readonly rows: ECSqlQueryRow[];
 }
 
 // @public

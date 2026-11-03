@@ -7,7 +7,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
+import { NodesLimitExceededError, RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import {
   createMergedIModelHierarchyProvider,
@@ -1453,6 +1453,210 @@ describe("createIModelHierarchyProvider", () => {
       ]);
 
       await expect(provider.getNodes({ parentNode: rootNodes[0] }).next()).rejects.toThrow(RowsLimitExceededError);
+    });
+
+    it("throws `NodesLimitExceededError` with processed nodes created from rows read before the limit was exceeded", async () => {
+      const rows: RowDef[] = [
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "b",
+        },
+        {
+          [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+          [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+          [NodeSelectClauseColumnNames.DisplayLabel]: "a",
+        },
+      ];
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError(2, rows);
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+            }
+            return [];
+          },
+          async postProcessNode({ node }) {
+            return { ...node, extendedData: { postProcessed: true } };
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error).toBeInstanceOf(RowsLimitExceededError);
+      expect(error.limit).toBe(2);
+      expect(error.rows).toEqual(rows);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "a",
+          extendedData: { postProcessed: true },
+          children: false,
+        },
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x2", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "b",
+          extendedData: { postProcessed: true },
+          children: false,
+        },
+      ]);
+    });
+
+    it("throws `NodesLimitExceededError` with grouped nodes when hierarchy level exceeds the limit", async () => {
+      const groupingKey: GroupingNodeKey = { type: "label-grouping", label: "x", groupId: undefined };
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError(
+            2,
+            ["0x1", "0x2"].map((id) => ({
+              [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+              [NodeSelectClauseColumnNames.ECInstanceId]: id,
+              [NodeSelectClauseColumnNames.DisplayLabel]: "x",
+              [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byLabel: true }),
+            })),
+          );
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      const expectedInstanceKeys: IModelInstanceKey[] = [
+        { className: "a.b", id: "0x1", imodelKey: "test-imodel" },
+        { className: "a.b", id: "0x2", imodelKey: "test-imodel" },
+      ];
+      expect(error.nodes).toEqual([
+        {
+          key: groupingKey,
+          parentKeys: [],
+          label: "x",
+          groupedInstanceKeys: expectedInstanceKeys,
+          children: true,
+        } satisfies GroupingHierarchyNode,
+      ]);
+
+      // grouping node's children are taken from cache, created while handling the limit error
+      const groupedNodes = await collect(provider.getNodes({ parentNode: error.nodes[0] }));
+      expect(groupedNodes).toHaveLength(2);
+      expect(groupedNodes).toEqual(
+        expect.arrayContaining(
+          expectedInstanceKeys.map((key) => ({
+            key: { type: "instances", instanceKeys: [key] },
+            parentKeys: [groupingKey],
+            label: "x",
+            children: false,
+          })),
+        ),
+      );
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
+    });
+
+    it("throws `NodesLimitExceededError` with nodes of hidden node's child hierarchy level, when it exceeds the limit", async () => {
+      const hiddenNode = createTestSourceGenericNode({ key: "hidden", processingParams: { hideInHierarchy: true } });
+      const childRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+      };
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError(1, [childRow]);
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ node: hiddenNode }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "hidden") {
+              return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error.rows).toEqual([childRow]);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [createTestGenericNodeKey({ id: "hidden", source: sourceName })],
+          label: "child",
+          children: false,
+        },
+      ]);
+    });
+
+    it("throws `NodesLimitExceededError` with nodes of hidden node's child hierarchy level, when both - hierarchy level and the child hierarchy level exceed the limit", async () => {
+      const hiddenRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "hidden",
+        [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
+      };
+      const childRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "c.d",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+      };
+      imodelAccess.createQueryReader.mockImplementation((query) =>
+        (async function* () {
+          throw query.ecsql === "ROOT_QUERY"
+            ? new RowsLimitExceededError(1, [hiddenRow])
+            : new RowsLimitExceededError(1, [childRow]);
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ fullClassName: "a.b", query: { ecsql: "ROOT_QUERY" } }];
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys[0].id === "0x1") {
+              return [{ fullClassName: "c.d", query: { ecsql: "CHILD_QUERY" } }];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error.rows).toEqual([childRow]);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "c.d", id: "0x2", imodelKey: "test-imodel" }] },
+          parentKeys: [
+            { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          ],
+          label: "child",
+          children: false,
+        },
+      ]);
     });
   });
 
