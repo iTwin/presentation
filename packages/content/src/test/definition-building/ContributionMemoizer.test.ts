@@ -38,8 +38,8 @@ describe("createContributionMemoizer", () => {
     const target: ContentTarget = { primaryClass: "Schema.A" };
     const memoizer = createContributionMemoizer({ imodelAccess });
 
-    expect(await memoizer.getContribution({ provider, target })).to.be.undefined;
-    expect(await memoizer.getContribution({ provider, target })).to.be.undefined;
+    expect(await memoizer.getContribution({ provider, target })).toBeUndefined();
+    expect(await memoizer.getContribution({ provider, target })).toBeUndefined();
     expect(getContribution).toHaveBeenCalledTimes(1);
   });
 

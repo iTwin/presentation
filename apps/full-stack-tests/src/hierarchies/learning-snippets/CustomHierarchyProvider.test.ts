@@ -727,7 +727,7 @@ async function traverseHierarchy(provider: HierarchyProvider): Promise<void>;
 async function traverseHierarchy(provider: HierarchyProvider, parentNode: HierarchyNode, level: number): Promise<void>;
 async function traverseHierarchy(
   provider: HierarchyProvider,
-  parentNode: HierarchyNode | undefined = undefined,
+  parentNode?: HierarchyNode,
   level: number = 0,
 ): Promise<void> {
   for await (const node of provider.getNodes({ parentNode })) {

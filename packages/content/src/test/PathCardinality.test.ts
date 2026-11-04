@@ -246,9 +246,9 @@ describe("collectPathCardinalities", () => {
     const hints = collectPathCardinalities(makeDescriptor([fieldA]));
 
     expect(hints.get(serializeRelationshipPath({ path: filteredA }))).to.equal("one");
-    expect(hints.has(serializeRelationshipPath({ path: filteredB }))).to.be.false;
-    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).to.be.false;
-    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: filteredB }))).toBe(false);
+    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).toBe(false);
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).toBe(false);
   });
 
   it("does not leak a `one` hint across filtered prefixes or into the unfiltered path", () => {
@@ -267,8 +267,8 @@ describe("collectPathCardinalities", () => {
     expect(hints.get(serializeRelationshipPath({ path: filteredA }))).to.equal("one");
     expect(hints.get(serializeRelationshipPath({ path: filteredB }))).to.equal("many");
     expect(hints.get(serializeRelationshipPath({ path: filteredA.slice(0, 1) }))).to.equal("one");
-    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).to.be.false;
-    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: filteredB.slice(0, 1) }))).toBe(false);
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).toBe(false);
   });
 
   it("reuses the schema-cardinality cache for equivalent filtered lookups", async () => {
@@ -308,7 +308,7 @@ describe("collectPathCardinalities", () => {
     const field = makeField({ id: "c", pathFromTarget: [aToB, bToC], pathCardinality: "many" });
     const hints = collectPathCardinalities(makeDescriptor([field]));
 
-    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).to.be.false;
+    expect(hints.has(serializeRelationshipPath({ path: [aToB] }))).toBe(false);
     expect(hints.get(serializeRelationshipPath({ path: [aToB, bToC] }))).to.equal("many");
   });
 

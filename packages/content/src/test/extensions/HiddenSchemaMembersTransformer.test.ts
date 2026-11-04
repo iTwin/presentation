@@ -146,7 +146,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
 
     await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
 
-    expect(descriptor.fields[field.id].hidden).to.be.undefined;
+    expect(descriptor.fields[field.id].hidden).toBeUndefined();
   });
 
   it("stops the base-class walk at the first explicit isHidden===false, leaving the field visible", async () => {
@@ -175,7 +175,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const descriptor = createDescriptor([field]);
     const transformer = createHiddenSchemaMembersDescriptorTransformer();
     await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
-    expect(descriptor.fields[field.id].hidden).to.be.undefined;
+    expect(descriptor.fields[field.id].hidden).toBeUndefined();
   });
 
   it("keeps a property inherited from a visible base class visible even when the field's valueClassNames contains a hidden subclass", async () => {
@@ -193,7 +193,7 @@ describe("createHiddenSchemaMembersDescriptorTransformer", () => {
     const descriptor = createDescriptor([field]);
     const transformer = createHiddenSchemaMembersDescriptorTransformer();
     await transformer.transform({ descriptor: createTransformableDescriptor(descriptor), imodelAccess });
-    expect(descriptor.fields[field.id].hidden).to.be.undefined;
+    expect(descriptor.fields[field.id].hidden).toBeUndefined();
     expect(field.valueClassNames).to.deep.equal(["TestSchema.Sub"]);
   });
 

@@ -102,7 +102,7 @@ describe("useTree", () => {
 
   it("loads root nodes with minimal provider setup", async () => {
     const customHierarchyProvider = createHierarchyProvider(() => ({
-      async *getNodes({}) {
+      async *getNodes() {
         yield createTestHierarchyNode({ id: "root-1" });
       },
     }));
@@ -119,7 +119,7 @@ describe("useTree", () => {
 
   it("loads and sets custom error to root nodes with minimal provider setup", async () => {
     const customHierarchyProvider = createHierarchyProvider(() => ({
-      async *getNodes({}) {
+      async *getNodes() {
         yield createTestHierarchyNode({ id: "root-1" });
       },
     }));
@@ -157,7 +157,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps).to.be.undefined;
+      expect(treeRenderProps).toBeUndefined();
     });
 
     await act(async () => {
@@ -166,7 +166,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps).to.be.not.undefined;
+      expect(treeRenderProps).toBeDefined();
       expect(treeRenderProps!.rootNodes).toHaveLength(1);
       expect(hierarchyProvider.setHierarchySearch).toHaveBeenCalledWith({ paths: searchTree });
     });
@@ -257,7 +257,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps).to.be.undefined;
+      expect(treeRenderProps).toBeUndefined();
     });
 
     await act(async () => {
@@ -300,9 +300,9 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps).to.be.undefined;
-      expect(getSearchPaths1).to.be.called;
-      expect(hierarchyProvider.setHierarchySearch).to.not.be.called;
+      expect(treeRenderProps).toBeUndefined();
+      expect(getSearchPaths1).toHaveBeenCalled();
+      expect(hierarchyProvider.setHierarchySearch).not.toHaveBeenCalled();
     });
 
     const promise2 = new ResolvablePromise<HierarchySearchTree[]>();
@@ -312,9 +312,9 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps).to.be.undefined;
-      expect(getSearchPaths2).to.be.called;
-      expect(hierarchyProvider.setHierarchySearch).to.not.be.called;
+      expect(treeRenderProps).toBeUndefined();
+      expect(getSearchPaths2).toHaveBeenCalled();
+      expect(hierarchyProvider.setHierarchySearch).not.toHaveBeenCalled();
     });
 
     await act(async () => {
@@ -430,7 +430,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).toHaveLength(1);
-      expect(result.current.getNode("test-id")).to.be.undefined;
+      expect(result.current.getNode("test-id")).toBeUndefined();
     });
   });
 
@@ -714,7 +714,7 @@ describe("useTree", () => {
     });
 
     const details = getTreeRendererProps(result.current)!.getHierarchyLevelDetails("invalid");
-    expect(details).to.be.undefined;
+    expect(details).toBeUndefined();
   });
 
   it("`getHierarchyLevelDetails` returns undefined for grouping node", async () => {
@@ -740,7 +740,7 @@ describe("useTree", () => {
     });
 
     const details = getTreeRendererProps(result.current)!.getHierarchyLevelDetails(nodeId);
-    expect(details).to.be.undefined;
+    expect(details).toBeUndefined();
   });
 
   it("`getHierarchyLevelDetails` returns options for hierarchy node", async () => {
@@ -1078,7 +1078,7 @@ describe("useUnifiedSelectionTree", () => {
 
   it("adds instance node to unified selection", async () => {
     const { instanceKey, instancesNodeKey, imodelKey } = createNodeKey("0x1");
-    const { nodeId: nodeId, node: node } = createHierarchyNodeWithKey(instancesNodeKey, "root-1");
+    const { nodeId, node } = createHierarchyNodeWithKey(instancesNodeKey, "root-1");
     hierarchyProvider.getNodes.mockImplementation((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
@@ -1110,7 +1110,7 @@ describe("useUnifiedSelectionTree", () => {
 
   it("adds custom selectable to unified selection", async () => {
     const nodeKey: GenericNodeKey = { type: "generic", id: "test-node" };
-    const { nodeId: nodeId, node: node } = createHierarchyNodeWithKey(nodeKey, "root-1");
+    const { nodeId, node } = createHierarchyNodeWithKey(nodeKey, "root-1");
     hierarchyProvider.getNodes.mockImplementation((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
@@ -1145,7 +1145,7 @@ describe("useUnifiedSelectionTree", () => {
 
   it("reacts to unified selection changes", async () => {
     const { instanceKey, instancesNodeKey, imodelKey } = createNodeKey("0x1");
-    const { nodeId: nodeId, node: node } = createHierarchyNodeWithKey(instancesNodeKey, "root-1");
+    const { nodeId, node } = createHierarchyNodeWithKey(instancesNodeKey, "root-1");
     hierarchyProvider.getNodes.mockImplementation((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });

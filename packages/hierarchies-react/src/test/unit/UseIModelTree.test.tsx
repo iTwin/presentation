@@ -55,7 +55,7 @@ describe("useIModelTree hooks", () => {
         });
       const { result } = renderHook(useIModelTree, { initialProps: { ...initialProps, getSearchPaths } });
       await waitFor(() => {
-        expect(getTreeRendererProps(result.current)).to.not.be.undefined;
+        expect(getTreeRendererProps(result.current)).toBeDefined();
       });
       expect(getSearchPaths).toHaveBeenCalledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
@@ -103,7 +103,7 @@ describe("useIModelTree hooks", () => {
         initialProps: { ...initialProps, getSearchPaths },
       });
       await waitFor(() => {
-        expect(getTreeRendererProps(result.current)).to.not.be.undefined;
+        expect(getTreeRendererProps(result.current)).toBeDefined();
       });
       expect(getSearchPaths).toHaveBeenCalledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });

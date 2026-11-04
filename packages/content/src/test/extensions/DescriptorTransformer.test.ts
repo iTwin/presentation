@@ -70,7 +70,7 @@ describe("createTransformableDescriptor", () => {
       const descriptor = createDescriptor([field]);
       const transformable = createTransformableDescriptor(descriptor);
       transformable.removeField(field.id);
-      expect(descriptor.fields[field.id]).to.be.undefined;
+      expect(descriptor.fields[field.id]).toBeUndefined();
     });
   });
 
