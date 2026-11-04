@@ -15,7 +15,8 @@ export class RowsLimitExceededError extends Error {
   public readonly limit: number;
 
   /**
-   * Rows that were read before the limit was exceeded. Contains at most `limit` rows.
+   * Rows that were read before the limit was exceeded. When thrown by `LimitingECSqlQueryExecutor`, contains
+   * at most `limit` rows.
    */
   public readonly rows: ECSqlQueryRow[];
 
@@ -43,24 +44,27 @@ export class RowsLimitExceededError extends Error {
 
 /**
  * Error that is thrown by hierarchy provider when hierarchy level size limit is exceeded. In addition to
- * what `RowsLimitExceededError` provides, it contains hierarchy nodes created from the rows that were read
- * before the limit was exceeded.
+ * what `RowsLimitExceededError` provides, it contains the hierarchy level's nodes, where queries that exceeded
+ * the limit contribute nodes created from the rows that were read before the limit was exceeded.
+ *
+ * When multiple queries exceed the limit (e.g. a query of the hierarchy level and a query of a hidden node's
+ * child hierarchy level), `rows` contains rows of all of them, so it may contain more than `limit` rows.
  *
  * @public
  */
 export class NodesLimitExceededError extends RowsLimitExceededError {
   /**
-   * Hierarchy nodes created from the rows that were read before the limit was exceeded. The nodes
-   * are processed the same way as nodes returned by `HierarchyProvider.getNodes`.
+   * Nodes of the hierarchy level, processed the same way as nodes returned by `HierarchyProvider.getNodes`. Queries
+   * that exceeded the limit contribute nodes created from the rows that were read before the limit was exceeded.
    */
   public readonly nodes: HierarchyNode[];
 
   public constructor(props: {
     /** The rows limit that was exceeded. */
     limit: number;
-    /** Rows that were read before the limit was exceeded. */
+    /** Rows of all queries that exceeded the limit, that were read before the limit was exceeded. */
     rows: ECSqlQueryRow[];
-    /** Hierarchy nodes created from the rows that were read before the limit was exceeded. */
+    /** Nodes of the hierarchy level. */
     nodes: HierarchyNode[];
   }) {
     const { nodes, ...rowsLimitProps } = props;
