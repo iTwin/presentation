@@ -1511,6 +1511,58 @@ describe("createIModelHierarchyProvider", () => {
       ]);
     });
 
+    it("throws `NodesLimitExceededError` with nodes of only the query that exceeded the limit, when hierarchy level is created from multiple queries", async () => {
+      const exceedingQueryRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "exceeding query node",
+      };
+      const otherQueryCompleted = new ResolvablePromise<void>();
+      imodelAccess.createQueryReader.mockImplementation((query) =>
+        (async function* () {
+          if (query.ecsql === "OTHER_QUERY") {
+            yield {
+              [NodeSelectClauseColumnNames.FullClassName]: "c.d",
+              [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+              [NodeSelectClauseColumnNames.DisplayLabel]: "other query node",
+            } satisfies RowDef;
+            await otherQueryCompleted.resolve();
+            return;
+          }
+          // make sure the other query's rows are read before the limit is exceeded
+          await otherQueryCompleted.promise;
+          throw new RowsLimitExceededError({ limit: 1, rows: [exceedingQueryRow] });
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                { fullClassName: "c.d", query: { ecsql: "OTHER_QUERY" } },
+                { fullClassName: "a.b", query: { ecsql: "EXCEEDING_QUERY" } },
+              ];
+            }
+            return [];
+          },
+        },
+      });
+
+      const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
+      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error.rows).toEqual([exceedingQueryRow]);
+      expect(error.nodes).toEqual([
+        {
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [],
+          label: "exceeding query node",
+          children: false,
+        },
+      ]);
+    });
+
     it("throws `NodesLimitExceededError` with grouped nodes when hierarchy level exceeds the limit", async () => {
       const groupingKey: GroupingNodeKey = { type: "label-grouping", label: "x", groupId: undefined };
       imodelAccess.createQueryReader.mockImplementation(() =>
