@@ -1658,6 +1658,95 @@ describe("createIModelHierarchyProvider", () => {
         },
       ]);
     });
+
+    it("creates nodes from rows read before the limit was exceeded only when getting nodes and only once", async () => {
+      const childNode: SourceInstanceHierarchyNode = {
+        key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1" }] },
+        label: "child",
+        children: false,
+      };
+      const parseNode = vi.fn<NodeParser>().mockReturnValue(childNode);
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError(1, [{}]);
+        })(),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          parseNode,
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ node: createTestSourceGenericNode({ key: "root" }) }];
+            }
+            return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+          },
+        },
+        queryCacheSize: 10,
+      });
+
+      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(rootNodes).toEqual([
+        createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: sourceName }), children: true }),
+      ]);
+      expect(parseNode).not.toHaveBeenCalled();
+
+      const expectedNodes = [
+        {
+          ...childNode,
+          key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
+          parentKeys: [rootNodes[0].key],
+        },
+      ];
+      for (let i = 0; i < 2; ++i) {
+        const error = await collect(provider.getNodes({ parentNode: rootNodes[0] })).catch((e) => e);
+        expect(error).toBeInstanceOf(NodesLimitExceededError);
+        expect(error.nodes).toEqual(expectedNodes);
+      }
+      expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
+      expect(parseNode).toHaveBeenCalledOnce();
+    });
+
+    it("doesn't create nodes from rows read before the limit was exceeded when determining children through hidden child node", async () => {
+      const childRow: RowDef = {
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+      };
+      imodelAccess.createQueryReader.mockImplementation(() =>
+        (async function* () {
+          throw new RowsLimitExceededError(1, [childRow]);
+        })(),
+      );
+      const preProcessNode = vi.fn().mockImplementation(async ({ node }) => node);
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          preProcessNode,
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [{ node: createTestSourceGenericNode({ key: "root" }) }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [
+                { node: createTestSourceGenericNode({ key: "hidden", processingParams: { hideInHierarchy: true } }) },
+              ];
+            }
+            return [{ fullClassName: "a.b", query: { ecsql: "QUERY" } }];
+          },
+        },
+      });
+
+      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(rootNodes).toEqual([
+        createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: sourceName }), children: true }),
+      ]);
+      const preProcessedNodeKeys = preProcessNode.mock.calls.map(([{ node }]) => node.key);
+      expect(preProcessedNodeKeys).toEqual([
+        createTestGenericNodeKey({ id: "root", source: sourceName }),
+        createTestGenericNodeKey({ id: "hidden", source: sourceName }),
+      ]);
+    });
   });
 
   describe("Caching", () => {
