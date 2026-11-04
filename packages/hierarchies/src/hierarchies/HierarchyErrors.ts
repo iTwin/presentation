@@ -11,17 +11,33 @@ import type { HierarchyNode } from "./HierarchyNode.js";
  * @public
  */
 export class RowsLimitExceededError extends Error {
+  /** The rows limit that was exceeded. */
+  public readonly limit: number;
+
   /**
    * Rows that were read before the limit was exceeded. Contains at most `limit` rows.
    */
   public readonly rows: ECSqlQueryRow[];
 
-  public constructor(
-    public readonly limit: number,
-    rows?: ECSqlQueryRow[],
-  ) {
+  /**
+   * Creates an error without the rows that were read before the limit was exceeded - the `rows` property is set to an empty array.
+   * @deprecated in 2.1. Use the overload that takes a props object, which also accepts the rows that were read before the limit was exceeded.
+   */
+  public constructor(limit: number);
+  /**
+   * Creates an error with the rows that were read before the limit was exceeded.
+   */
+  public constructor(props: {
+    /** The rows limit that was exceeded. */
+    limit: number;
+    /** Rows that were read before the limit was exceeded. */
+    rows: ECSqlQueryRow[];
+  });
+  public constructor(limitOrProps: number | { limit: number; rows: ECSqlQueryRow[] }) {
+    const { limit, rows } = typeof limitOrProps === "number" ? { limit: limitOrProps, rows: [] } : limitOrProps;
     super(`Query rows limit of ${limit} exceeded`);
-    this.rows = rows ?? [];
+    this.limit = limit;
+    this.rows = rows;
   }
 }
 
@@ -39,8 +55,16 @@ export class NodesLimitExceededError extends RowsLimitExceededError {
    */
   public readonly nodes: HierarchyNode[];
 
-  public constructor(limit: number, nodes: HierarchyNode[], rows?: ECSqlQueryRow[]) {
-    super(limit, rows);
+  public constructor(props: {
+    /** The rows limit that was exceeded. */
+    limit: number;
+    /** Rows that were read before the limit was exceeded. */
+    rows: ECSqlQueryRow[];
+    /** Hierarchy nodes created from the rows that were read before the limit was exceeded. */
+    nodes: HierarchyNode[];
+  }) {
+    const { nodes, ...rowsLimitProps } = props;
+    super(rowsLimitProps);
     this.nodes = nodes;
   }
 }

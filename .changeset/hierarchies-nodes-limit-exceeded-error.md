@@ -8,6 +8,8 @@ Hierarchy providers, created using `createIModelHierarchyProvider` or `createMer
 
 The error extends `RowsLimitExceededError`, so existing checks for `RowsLimitExceededError` keep working. In addition, `RowsLimitExceededError` now contains `rows` - the rows that were read before the limit was exceeded. The executor, created using `createLimitingECSqlQueryExecutor`, includes up to `limit` rows.
 
+`RowsLimitExceededError` got a new constructor overload that takes a `{ limit, rows }` props object. The constructor that only takes `limit` is deprecated - errors created with it have an empty `rows` list.
+
 ```ts
 try {
   for await (const node of provider.getNodes({ parentNode: undefined, hierarchyLevelSizeLimit: 100 })) {

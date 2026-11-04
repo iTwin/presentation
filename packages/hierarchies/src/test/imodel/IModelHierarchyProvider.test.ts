@@ -1432,7 +1432,7 @@ describe("createIModelHierarchyProvider", () => {
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(123);
+          throw new RowsLimitExceededError({ limit: 123, rows: [] });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1470,7 +1470,7 @@ describe("createIModelHierarchyProvider", () => {
       ];
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(2, rows);
+          throw new RowsLimitExceededError({ limit: 2, rows });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1515,15 +1515,15 @@ describe("createIModelHierarchyProvider", () => {
       const groupingKey: GroupingNodeKey = { type: "label-grouping", label: "x", groupId: undefined };
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(
-            2,
-            ["0x1", "0x2"].map((id) => ({
+          throw new RowsLimitExceededError({
+            limit: 2,
+            rows: ["0x1", "0x2"].map((id) => ({
               [NodeSelectClauseColumnNames.FullClassName]: "a.b",
               [NodeSelectClauseColumnNames.ECInstanceId]: id,
               [NodeSelectClauseColumnNames.DisplayLabel]: "x",
               [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({ byLabel: true }),
             })),
-          );
+          });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1579,7 +1579,7 @@ describe("createIModelHierarchyProvider", () => {
       };
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(1, [childRow]);
+          throw new RowsLimitExceededError({ limit: 1, rows: [childRow] });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1625,8 +1625,8 @@ describe("createIModelHierarchyProvider", () => {
       imodelAccess.createQueryReader.mockImplementation((query) =>
         (async function* () {
           throw query.ecsql === "ROOT_QUERY"
-            ? new RowsLimitExceededError(1, [hiddenRow])
-            : new RowsLimitExceededError(1, [childRow]);
+            ? new RowsLimitExceededError({ limit: 1, rows: [hiddenRow] })
+            : new RowsLimitExceededError({ limit: 1, rows: [childRow] });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1668,7 +1668,7 @@ describe("createIModelHierarchyProvider", () => {
       const parseNode = vi.fn<NodeParser>().mockReturnValue(childNode);
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(1, [{}]);
+          throw new RowsLimitExceededError({ limit: 1, rows: [{}] });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1715,7 +1715,7 @@ describe("createIModelHierarchyProvider", () => {
       };
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
-          throw new RowsLimitExceededError(1, [childRow]);
+          throw new RowsLimitExceededError({ limit: 1, rows: [childRow] });
         })(),
       );
       const preProcessNode = vi.fn().mockImplementation(async ({ node }) => node);

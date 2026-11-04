@@ -674,7 +674,11 @@ interface NodeSelectClauseProps {
 
 // @public
 export class NodesLimitExceededError extends RowsLimitExceededError {
-    constructor(limit: number, nodes: HierarchyNode[], rows?: ECSqlQueryRow[]);
+    constructor(props: {
+        limit: number;
+        rows: ECSqlQueryRow[];
+        nodes: HierarchyNode[];
+    });
     readonly nodes: HierarchyNode[];
 }
 
@@ -776,8 +780,12 @@ export interface PropertyValueRangeGroupingNodeKey {
 
 // @public
 export class RowsLimitExceededError extends Error {
-    constructor(limit: number, rows?: ECSqlQueryRow[]);
-    // (undocumented)
+    // @deprecated
+    constructor(limit: number);
+    constructor(props: {
+        limit: number;
+        rows: ECSqlQueryRow[];
+    });
     readonly limit: number;
     readonly rows: ECSqlQueryRow[];
 }

@@ -822,7 +822,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       // creating the nodes may result in another limit exceeded error for hidden node's child hierarchy level
       catchError((childLevelError) => this.handleFinalizedNodesLimitExceededError(childLevelError, props)),
       toArray(),
-      mergeMap((nodes) => throwError(() => new NodesLimitExceededError(e.limit, nodes, e.rows))),
+      mergeMap((nodes) => throwError(() => new NodesLimitExceededError({ limit: e.limit, rows: e.rows, nodes }))),
     );
   }
 
@@ -1020,7 +1020,7 @@ class SourceNodesLimitExceededError extends RowsLimitExceededError {
     cause: RowsLimitExceededError,
     public readonly nodes: SourceNodesObservable,
   ) {
-    super(cause.limit, cause.rows);
+    super({ limit: cause.limit, rows: cause.rows });
   }
 }
 
@@ -1032,7 +1032,7 @@ class ProcessedNodesLimitExceededError extends RowsLimitExceededError {
     cause: RowsLimitExceededError,
     public readonly nodes: ProcessedNodesObservable,
   ) {
-    super(cause.limit, cause.rows);
+    super({ limit: cause.limit, rows: cause.rows });
   }
 }
 

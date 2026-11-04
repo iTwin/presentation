@@ -496,7 +496,7 @@ describe("useTree", () => {
 
     hierarchyProvider.getNodes.mockImplementation((props) => {
       if (props.hierarchyLevelSizeLimit === undefined) {
-        return throwingAsyncIterator(new RowsLimitExceededError(1));
+        return throwingAsyncIterator(new RowsLimitExceededError({ limit: 1, rows: [] }));
       }
       if (props.parentNode === undefined && props.hierarchyLevelSizeLimit === 50) {
         return createAsyncIterator(rootNodes);
@@ -832,7 +832,7 @@ describe("useTree", () => {
 
   it("reports when hierarchy level size exceeds limit", async () => {
     hierarchyProvider.getNodes.mockImplementation(() => {
-      return throwingAsyncIterator(new RowsLimitExceededError(555));
+      return throwingAsyncIterator(new RowsLimitExceededError({ limit: 555, rows: [] }));
     });
     const onHierarchyLimitExceededSpy = vi.fn();
     const { result } = renderHook(useTree, {

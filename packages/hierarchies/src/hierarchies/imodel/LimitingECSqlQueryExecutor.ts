@@ -77,7 +77,7 @@ export function createLimitingECSqlQueryExecutor(
           queryLogger.onStep();
           buffer.push(row);
           if (buffer.length > limit) {
-            throw new RowsLimitExceededError(limit, buffer.slice(0, limit));
+            throw new RowsLimitExceededError({ limit, rows: buffer.slice(0, limit) });
           }
         }
       } finally {
