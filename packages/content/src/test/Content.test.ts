@@ -62,7 +62,13 @@ function createMockGetSchema(derivedClasses: Record<string, string[]> = {}) {
         getClass: (className: string) => {
           const fullName = `${schemaName}.${className}`;
           const derived = derivedClasses[fullName] ?? [];
-          return { fullName, getDerivedClassNames: () => derived, isRelationshipClass: () => false };
+          const isRelationship = className.includes("Rel");
+          return {
+            fullName,
+            getDerivedClassNames: () => derived,
+            isRelationshipClass: () => isRelationship,
+            ...(isRelationship ? { source: { constraintClasses: [] }, target: { constraintClasses: [] } } : {}),
+          };
         },
       }) as unknown as EC.Schema,
   );
@@ -1449,7 +1455,8 @@ describe("resolveContentSources", () => {
         createQueryReader: vi.fn((_query: ECSqlQueryDef) => {
           callCount++;
           // First declaration gets no results, second gets results
-          const rows = callCount <= 1 ? [] : [{ 0: "TestSchema.ClassA", 1: "TestSchema.ConcreteC" }];
+          const rows =
+            callCount <= 1 ? [] : [{ 0: "TestSchema.ClassA", 1: "TestSchema.RelAC", 2: "TestSchema.ConcreteC" }];
           return (async function* () {
             for (const row of rows) {
               yield row;
@@ -3885,6 +3892,55 @@ describe("resolveContentSources", () => {
       expect(source.resolvedDeclarations[0].paths).to.deep.equal([
         { path: [{ ...path[0], sourceClassName: "TestSchema.ClassA11" }], targetClassNames: ["TestSchema.ClassA11"] },
       ]);
+    });
+
+    it("keeps the source class of a path declared from a class narrower than the target's when the constraint is unrelated to it", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA1",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.RelAB",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const baseAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA11", 1: "TestSchema.RelAB", 2: "TestSchema.ClassB" }],
+      });
+      vi.mocked(baseAccess.classDerivesFrom).mockImplementation(
+        async (derived, base) =>
+          (derived === "TestSchema.ClassA1" && base === "TestSchema.ClassA") ||
+          (derived === "TestSchema.ClassA11" && ["TestSchema.ClassA1", "TestSchema.Mixin"].includes(base)),
+      );
+      // E.g. a mixin implemented by a subclass of the declared class, but not by the declared class itself.
+      const imodelAccess = withRelationships(baseAccess, {
+        "TestSchema.RelAB": { source: { constraintClasses: [constraintClass("TestSchema.Mixin")] } },
+      });
+
+      const [source] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [provider] },
+      });
+
+      expect(source.resolvedDeclarations[0].paths).to.deep.equal([{ path, targetClassNames: ["TestSchema.ClassA11"] }]);
+    });
+
+    it("throws when a resolved path's first step isn't a relationship class", async () => {
+      const path: RelationshipPath = [
+        {
+          sourceClassName: "TestSchema.ClassA",
+          targetClassName: "TestSchema.ClassB",
+          relationshipName: "TestSchema.EntityClass",
+        },
+      ];
+      const provider = createMockIModelFieldsProvider("test_v1", { relatedProperties: [{ path }] });
+      const imodelAccess = createMockIModelAccess({
+        resolvePathsQueryResults: [{ 0: "TestSchema.ClassA", 1: "TestSchema.EntityClass", 2: "TestSchema.ClassB" }],
+      });
+
+      await expect(
+        resolveContentSources({ imodelAccess, targets: [targetA], config: { imodelFieldsProviders: [provider] } }),
+      ).rejects.toThrow('Class "TestSchema.EntityClass" is not a relationship class.');
     });
 
     it("keeps custom resolver paths starting at subclasses of the target's class", async () => {

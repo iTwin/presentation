@@ -976,11 +976,12 @@ function createPathStartNormalizer(
           return resolved;
         }
         // A path that doesn't start at the target's class starts at its subclass: one it was declared for (see
-        // `resolveEffectiveSourceClass`) or a custom `resolve` returned. Keep that class when it's also a subclass
-        // of the constraint class: it restricts the primary instances the path applies to.
+        // `resolveEffectiveSourceClass`) or a custom `resolve` returned. That class restricts the primary
+        // instances the path applies to, so it's only replaced by a constraint class deriving from it, which
+        // restricts them further.
         if (
           firstStep.sourceClassName !== target.primaryClass &&
-          (await schemaProvider.classDerivesFrom(firstStep.sourceClassName, constraintClassName))
+          !(await schemaProvider.classDerivesFrom(constraintClassName, firstStep.sourceClassName))
         ) {
           return resolved;
         }

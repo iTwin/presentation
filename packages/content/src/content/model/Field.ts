@@ -66,8 +66,8 @@ export interface PropertyField extends BaseField {
    * Empty array means the field belongs to the target class directly.
    *
    * A related property's path starts at its first relationship's constraint class, so the property reached
-   * from different content targets is one field. A path declared for a subclass of both the target's class and
-   * that constraint class starts at the declared class instead, and applies only to its instances.
+   * from different content targets is one field. A path declared for a subclass of the target's class keeps
+   * starting at it, and applies only to its instances — unless the constraint class derives from it.
    */
   pathFromTarget: RelationshipPath;
   /**

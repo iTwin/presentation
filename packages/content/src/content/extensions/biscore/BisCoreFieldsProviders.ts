@@ -6,7 +6,7 @@
 import { defineIModelFieldsProvider } from "../IModelFieldsProvider.js";
 import { isBisCoreSchemaAtLeast } from "./BisCoreUtils.js";
 
-import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../ContentTarget.js";
 import type { CategoryDefinition } from "../../model/Category.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../IModelFieldsProvider.js";
@@ -337,7 +337,7 @@ async function createExternalSourceContribution(
 }
 
 /**
- * Builds 2d/3d type-definition related properties declarations (`GeometricElement3dHasTypeDefinition`
+ * 2d/3d type-definition related properties declarations (`GeometricElement3dHasTypeDefinition`
  * / `GeometricElement2dHasTypeDefinition`) and represented-element declarations
  * (`DrawingGraphicRepresentsElement` / `GraphicalElement3dRepresentsElement`).
  *
@@ -346,43 +346,48 @@ async function createExternalSourceContribution(
  * only to that subclass's instances (e.g. `GraphicalElement3dRepresentsElement` for a `GeometricElement3d`
  * target).
  */
-function createTypeDefinitionAndRepresentedElementRelatedProperties(): RelatedPropertiesDeclaration[] {
-  const declare = (props: {
-    sourceClassName: EC.FullClassNameDotNotation;
-    relationshipName: EC.FullClassNameDotNotation;
-    targetClassName: EC.FullClassNameDotNotation;
-    cardinalityHint: RelatedPropertiesDeclaration["cardinalityHint"];
-  }): RelatedPropertiesDeclaration => {
-    const { cardinalityHint, ...step } = props;
-    return { path: [step], cardinalityHint };
-  };
-  return [
-    declare({
-      sourceClassName: "BisCore.GeometricElement3d",
-      relationshipName: "BisCore.GeometricElement3dHasTypeDefinition",
-      targetClassName: "BisCore.TypeDefinitionElement",
-      cardinalityHint: "one",
-    }),
-    declare({
-      sourceClassName: "BisCore.GraphicalElement3d",
-      relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
-      targetClassName: "BisCore.Element",
-      cardinalityHint: "many",
-    }),
-    declare({
-      sourceClassName: "BisCore.GeometricElement2d",
-      relationshipName: "BisCore.GeometricElement2dHasTypeDefinition",
-      targetClassName: "BisCore.TypeDefinitionElement",
-      cardinalityHint: "one",
-    }),
-    declare({
-      sourceClassName: "BisCore.DrawingGraphic",
-      relationshipName: "BisCore.DrawingGraphicRepresentsElement",
-      targetClassName: "BisCore.Element",
-      cardinalityHint: "many",
-    }),
-  ];
-}
+const TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_RELATED_PROPERTIES: RelatedPropertiesDeclaration[] = [
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.GeometricElement3d",
+        relationshipName: "BisCore.GeometricElement3dHasTypeDefinition",
+        targetClassName: "BisCore.TypeDefinitionElement",
+      },
+    ],
+    cardinalityHint: "one",
+  },
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.GraphicalElement3d",
+        relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
+        targetClassName: "BisCore.Element",
+      },
+    ],
+    cardinalityHint: "many",
+  },
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.GeometricElement2d",
+        relationshipName: "BisCore.GeometricElement2dHasTypeDefinition",
+        targetClassName: "BisCore.TypeDefinitionElement",
+      },
+    ],
+    cardinalityHint: "one",
+  },
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.DrawingGraphic",
+        relationshipName: "BisCore.DrawingGraphicRepresentsElement",
+        targetClassName: "BisCore.Element",
+      },
+    ],
+    cardinalityHint: "many",
+  },
+];
 
 /**
  * The iModel fields provider contributing `BisCore:Element`'s owned aspect fields
@@ -438,7 +443,7 @@ export function createBisCoreFieldsProvider(strings: BisCoreLocalizedStrings): I
         ...linksContribution.relatedProperties,
         ...groupsContribution.relatedProperties,
         ...externalSourceContribution.relatedProperties,
-        ...createTypeDefinitionAndRepresentedElementRelatedProperties(),
+        ...TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_RELATED_PROPERTIES,
       ];
 
       return {

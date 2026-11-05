@@ -23,11 +23,12 @@ describe("createLimitingECSqlQueryExecutor", () => {
   });
 
   it("throws when base executor returns more rows than the limit", async () => {
-    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([{}, {}]));
-    const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 1);
-    await expect(collect(limitingExecutor.createQueryReader({ ecsql: "query" }))).rejects.toBeInstanceOf(
-      RowsLimitExceededError,
-    );
+    baseExecutor.createQueryReader.mockReturnValue(createAsyncIterator([{ id: 1 }, { id: 2 }, { id: 3 }]));
+    const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 2);
+    const error = await collect(limitingExecutor.createQueryReader({ ecsql: "query" })).catch((e) => e);
+    expect(error).toBeInstanceOf(RowsLimitExceededError);
+    expect(error.limit).toBe(2);
+    expect(error.rows).toEqual([{ id: 1 }, { id: 2 }]);
   });
 
   it(`calls base executor with original query when limit is "unbounded"`, async () => {

@@ -113,6 +113,8 @@ export async function resolveEffectiveSourceClass(
  * Returns the class the step's relationship allows at the step's starting end — from the source constraint for
  * a forward step, the target constraint for a reversed one: its abstract class, or its only class. Returns
  * `undefined` when there's no such single class.
+ *
+ * @throws if the step's relationship isn't a relationship class.
  */
 export async function getStepSourceConstraintClassName(
   schemaProvider: ECSchemaProvider,
@@ -120,7 +122,7 @@ export async function getStepSourceConstraintClassName(
 ): Promise<EC.FullClassNameDotNotation | undefined> {
   const relationship = await getClass(schemaProvider, step.relationshipName);
   if (!relationship.isRelationshipClass()) {
-    return undefined;
+    throw new Error(`Class "${step.relationshipName}" is not a relationship class.`);
   }
   const constraint = step.relationshipReverse ? relationship.target : relationship.source;
   if (constraint.abstractConstraint) {

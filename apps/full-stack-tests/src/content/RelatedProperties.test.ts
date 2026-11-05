@@ -1424,5 +1424,89 @@ describe("Content", () => {
         });
       });
     });
+
+    it("restricts a property declared for a subclass of the target's class to its instances when the relationship is constrained to a mixin", async () => {
+      using setup = await buildTestECDb(async (builder, testName) => {
+        const s = await importSchema(
+          testName,
+          builder,
+          `
+            <ECEntityClass typeName="Base">
+              <ECCustomAttributes>
+                <ClassMap xmlns="ECDbMap.02.00.01">
+                  <MapStrategy>TablePerHierarchy</MapStrategy>
+                </ClassMap>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="IMix" modifier="Abstract">
+              <ECCustomAttributes>
+                <IsMixin xmlns="CoreCustomAttributes.01.00.04">
+                  <AppliesToEntityClass>Base</AppliesToEntityClass>
+                </IsMixin>
+              </ECCustomAttributes>
+            </ECEntityClass>
+            <ECEntityClass typeName="A1"><BaseClass>Base</BaseClass></ECEntityClass>
+            <ECEntityClass typeName="A11">
+              <BaseClass>A1</BaseClass>
+              <BaseClass>IMix</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="A2">
+              <BaseClass>Base</BaseClass>
+              <BaseClass>IMix</BaseClass>
+            </ECEntityClass>
+            <ECEntityClass typeName="C">
+              <ECProperty propertyName="PropC" typeName="string" />
+            </ECEntityClass>
+            <ECRelationshipClass typeName="MixToC" strength="referencing" modifier="None">
+              <Source multiplicity="(0..*)" roleLabel="to" polymorphic="true"><Class class="IMix" /></Source>
+              <Target multiplicity="(0..*)" roleLabel="from" polymorphic="true"><Class class="C" /></Target>
+            </ECRelationshipClass>
+          `,
+        );
+        const insert = (className: "A11" | "A2") => {
+          const a = builder.insertInstance(s.items[className].fullName);
+          const c = builder.insertInstance(s.items.C.fullName, { propC: `c-${className.toLowerCase()}` });
+          builder.insertRelationship(s.items.MixToC.fullName, a.id, c.id);
+          return a;
+        };
+        return { schema: s, a11: insert("A11"), a2: insert("A2") };
+      });
+      const { schema, a11, a2 } = setup;
+      const imodelAccess = createContentIModelAccess(setup.ecdb);
+      // `A1` doesn't implement the mixin, but its subclass `A11` does.
+      const path: RelationshipPath = [
+        {
+          sourceClassName: schema.items.A1.fullName,
+          targetClassName: schema.items.C.fullName,
+          relationshipName: schema.items.MixToC.fullName,
+        },
+      ];
+      const config: ContentConfiguration = {
+        imodelFieldsProviders: [
+          defineIModelFieldsProvider({
+            id: "provider_v1",
+            async getContribution() {
+              return { relatedProperties: [{ path, cardinalityHint: "one" }] };
+            },
+          }),
+        ],
+      };
+      const sources = await resolveContentSources({
+        imodelAccess,
+        targets: [{ primaryClass: schema.items.Base.fullName }],
+        config,
+      });
+      const provider = createContentProvider({ imodelAccess, sources, config });
+
+      const field = getPropertyFieldByName(await provider.getContentDescriptor(), "PropC");
+      const items = await collect(provider.getItems());
+
+      expect(field.pathFromTarget).toEqual(path);
+      // `A2` implements the mixin too, but the declaration is for `A1` instances only.
+      expect(Object.fromEntries(items.map((item) => [item.primaryKey.id, item.getValue(field)]))).toEqual({
+        [a11.id]: "c-a11",
+        [a2.id]: undefined,
+      });
+    });
   });
 });
