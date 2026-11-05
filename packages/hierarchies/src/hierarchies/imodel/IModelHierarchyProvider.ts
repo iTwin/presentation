@@ -801,7 +801,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       hasNodes: this.createHasNodesObservable(
         // determining children treats hierarchy level exceeding the limit as having children - don't record such errors
         // into request's limit exceeded errors, because the request itself doesn't contain nodes of this hierarchy level
-        createPreProcessedNodes({ requestId: props.requestContext.requestId, limitExceededErrors: undefined }),
+        createPreProcessedNodes({ ...props.requestContext, limitExceededErrors: undefined }),
         entry.processingStatus === "none" ? entry.observable : undefined,
         props,
       ),
