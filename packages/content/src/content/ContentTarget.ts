@@ -174,12 +174,18 @@ interface ResolvedExternalInputGroup {
  */
 export interface ResolvedPath {
   /**
-   * The concrete relationship path from the content target to the related property source.
+   * The relationship path from the content target to the related property source.
    *
-   * Every class on each step is concrete — the step's `sourceClassName`, `targetClassName` and
-   * `relationshipName` are all resolved from the scanned data, never a polymorphically-selected base.
-   * For a polymorphic relationship this means the concrete relationship subclass(es) actually present
-   * in the data; distinct subclasses are reported as separate `ResolvedPath` entries.
+   * The path starts at its first relationship's constraint class, so a relationship path resolved for
+   * different targets gets the same description. A path declared for a subclass of both the target's class
+   * and that constraint class starts at the declared class instead, which restricts the primary instances
+   * the path applies to.
+   *
+   * The rest of the path is concrete: each step's `relationshipName` and `targetClassName`, and the
+   * `sourceClassName` of every step after the first, are resolved from the scanned data, never a
+   * polymorphically-selected base. For a polymorphic relationship this means the concrete relationship
+   * subclass(es) actually present in the data; distinct subclasses are reported as separate `ResolvedPath`
+   * entries.
    */
   path: RelationshipPath;
 
@@ -223,11 +229,11 @@ interface ResolvedDeclarationGroup {
   declarationIndex: number;
 
   /**
-   * Concrete relationship paths resolved from the declaration's generic path, each with the
-   * concrete content-target classes it applies to. All path classes are concrete — no base classes.
+   * Relationship paths resolved from the declaration's generic path, each with the concrete
+   * content-target classes it applies to (see `ResolvedPath`).
    *
-   * For a `nested` group, every path is the *full* concrete path from this source's target — the
-   * concrete prefix up to and including the anchor step, followed by the nested declaration's own
+   * For a `nested` group, every path is the *full* path from this source's target — the
+   * prefix up to and including the anchor step, followed by the nested declaration's own
    * (now concrete) suffix steps — not just the nested declaration's suffix. `targetClassNames`
    * remains the near-end (true primary) classes throughout, so `PropertyField.primaryClassNames`
    * semantics are unchanged for nested fields.

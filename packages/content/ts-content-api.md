@@ -45,6 +45,8 @@ Naively encoding the full path (e.g., `SourceClass.Prop/Rel1/Class2/Rel2/Class3/
 
 **Decision:** Use full non-encoded field IDs with format `{PropertyClassName}.{PropertyName}({serialized path from content target to property class})`. For direct (non-related) properties, the path portion is omitted. Memory impact is negligible at expected scale (~1K fields, average 2-step paths ≈ ~260 KB total).
 
+Related property paths start at their first relationship's constraint class (e.g. `BisCore.UrlLink.Url(BisCore.Element-[BisCore.ElementHasLinks]->BisCore.RepositoryLink)`), so a related property reached over the same relationships from different content targets is one field with one ID. A path declared for a subclass of both the target's class and the constraint class starts at the declared class instead: it applies only to that class's instances, so it's a separate field.
+
 Field IDs remain consumer-facing value keys only. Query requirements and field-to-query bindings are derived and retained privately by the content provider; they are not properties of `ContentDescriptor`, `PropertyField`, or `CalculatedField`.
 
 ## Multi-source property fields

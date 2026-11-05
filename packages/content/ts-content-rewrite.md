@@ -117,7 +117,7 @@ These are not 1:1:
 
 Requirement kinds mirror the SQL-backed field kinds:
 
-- A property requirement selects a real EC property column. Its private ID equals the property field's _base_ ID (source class + property name + path, with no fork suffix), so every fork/override variant of the same property collapses to one read.
+- A property requirement selects a real EC property column. Its private ID equals the property field's _base_ ID (property class + property name + path, with no fork suffix), so every fork/override variant of the same property collapses to one read. Related property paths start at their first relationship's constraint class, so a related property reached from different targets is read once (see `ResolvedPath.path` for the exception).
 - A calculated requirement selects the result of an ECSQL expression and uses the calculated field ID privately.
 
 External fields have no SQL requirement of their own — they are populated out-of-band.
@@ -783,7 +783,7 @@ A field's ID must not change when:
 - Its category is moved.
 - The descriptor is rebuilt after a schema change (as long as the underlying property still exists).
 
-The ID is derived from: `sourceClassName + propertyAccessPath` for schema properties, or a declared stable name for calculated fields.
+The ID is derived from: `propertyClassName + propertyName + pathFromTarget` for schema properties, or a declared stable name for calculated fields. Related property paths start at their first relationship's constraint class, so a related property reached from different content targets has one field and one ID (see `ResolvedPath.path` for the exception).
 
 When using the ECSQL `$` selector (which returns all properties as a JSON blob), values are keyed by property name within the blob. The query builder assigns a deterministic alias to each JOINed table that encodes the path and step (e.g., `p0_s1` = path 0, step 1) and selects `alias.$` for each. The value loader uses the column alias to identify which path step the blob belongs to, then uses property names within the JSON to map values to fields. Together, `columnAlias (→ path + step + className) + jsonKey (→ propertyName)` reconstruct the full field ID.
 

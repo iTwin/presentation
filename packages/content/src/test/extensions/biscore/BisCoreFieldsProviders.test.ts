@@ -25,6 +25,17 @@ const BASE_ELEMENT_PATHS = [
   ["BisCore.ElementGroupsMembers", "BisCore.ElementHasLinks"],
 ];
 
+/** Type-definition and represented-element declarations, contributed after every other declaration. */
+const TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_STEPS = [
+  ["BisCore.GeometricElement3dHasTypeDefinition", "BisCore.GeometricElement3d"],
+  ["BisCore.GraphicalElement3dRepresentsElement", "BisCore.GraphicalElement3d"],
+  ["BisCore.GeometricElement2dHasTypeDefinition", "BisCore.GeometricElement2d"],
+  ["BisCore.DrawingGraphicRepresentsElement", "BisCore.DrawingGraphic"],
+];
+const TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_PATHS = TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_STEPS.map(
+  ([relationshipName]) => [relationshipName],
+);
+
 /** Builds an `ECSchemaProvider` stub whose `classDerivesFrom` reflects the given class hierarchy. */
 function createImodelAccess(props?: {
   derivesFrom?: Record<string, string[]>;
@@ -61,7 +72,10 @@ function getRelationshipPaths(contribution: FieldsProviderContribution) {
 }
 
 function expectBaseElementPaths(contribution: FieldsProviderContribution): void {
-  expect(getRelationshipPaths(contribution)).to.deep.equal(BASE_ELEMENT_PATHS);
+  expect(getRelationshipPaths(contribution)).to.deep.equal([
+    ...BASE_ELEMENT_PATHS,
+    ...TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_PATHS,
+  ]);
 }
 
 describe("bisCoreFieldsProvider", () => {
@@ -97,126 +111,25 @@ describe("bisCoreFieldsProvider", () => {
     ]);
   });
 
-  it("contributes all BisCore.GeometricElement3d fields", async () => {
-    const primaryClass = "TestSchema.MyGeometricElement3d";
-    const contribution = await getContribution(
-      createImodelAccess({ derivesFrom: { [primaryClass]: ["BisCore.Element", "BisCore.GeometricElement3d"] } }),
-      primaryClass,
-    );
-    expect(contribution).toBeDefined();
-    expect(getRelationshipPaths(contribution!)).to.deep.equal([
-      ...BASE_ELEMENT_PATHS,
-      ["BisCore.GeometricElement3dHasTypeDefinition"],
-    ]);
-  });
-
-  it("contributes all BisCore.GeometricElement2d fields", async () => {
-    const primaryClass = "TestSchema.MyGeometricElement2d";
-    const contribution = await getContribution(
-      createImodelAccess({ derivesFrom: { [primaryClass]: ["BisCore.Element", "BisCore.GeometricElement2d"] } }),
-      primaryClass,
-    );
-    expect(contribution).toBeDefined();
-    expect(getRelationshipPaths(contribution!)).to.deep.equal([
-      ...BASE_ELEMENT_PATHS,
-      ["BisCore.GeometricElement2dHasTypeDefinition"],
-    ]);
-  });
-
-  it("contributes all BisCore.DrawingGraphic fields", async () => {
-    const primaryClass = "TestSchema.MyDrawingGraphic";
-    const contribution = await getContribution(
-      createImodelAccess({
-        derivesFrom: { [primaryClass]: ["BisCore.Element", "BisCore.GeometricElement2d", "BisCore.DrawingGraphic"] },
-      }),
-      primaryClass,
-    );
-    expect(contribution).toBeDefined();
-    expect(getRelationshipPaths(contribution!)).to.deep.equal([
-      ...BASE_ELEMENT_PATHS,
-      ["BisCore.GeometricElement2dHasTypeDefinition"],
-      ["BisCore.DrawingGraphicRepresentsElement"],
-    ]);
-  });
-
-  it("contributes all BisCore.GraphicalElement3d fields", async () => {
-    const primaryClass = "TestSchema.MyGraphicalElement3d";
-    const contribution = await getContribution(
-      createImodelAccess({
-        derivesFrom: {
-          [primaryClass]: ["BisCore.Element", "BisCore.GeometricElement3d", "BisCore.GraphicalElement3d"],
-        },
-      }),
-      primaryClass,
-    );
-    expect(contribution).toBeDefined();
-    expect(getRelationshipPaths(contribution!)).to.deep.equal([
-      ...BASE_ELEMENT_PATHS,
-      ["BisCore.GeometricElement3dHasTypeDefinition"],
-      ["BisCore.GraphicalElement3dRepresentsElement"],
-    ]);
-  });
-
-  it("starts represented-element paths at the narrower class under a broader geometric target", async () => {
-    // A request for every 3d element must still reach the declaration that only applies to graphical
-    // elements, which then starts at `GraphicalElement3d` so it applies to those elements only.
-    const imodelAccess = createImodelAccess({
-      derivesFrom: {
-        "BisCore.GeometricElement3d": ["BisCore.Element"],
-        "BisCore.GraphicalElement3d": ["BisCore.Element", "BisCore.GeometricElement3d"],
-      },
-    });
-    const contribution = await getContribution(imodelAccess, "BisCore.GeometricElement3d");
-
-    expect(getRelationshipPaths(contribution!)).to.deep.equal([
-      ...BASE_ELEMENT_PATHS,
-      ["BisCore.GeometricElement3dHasTypeDefinition"],
-      ["BisCore.GraphicalElement3dRepresentsElement"],
-    ]);
-    const [typeDefinition, represented] = contribution!.relatedProperties!.slice(BASE_ELEMENT_PATHS.length);
-    expect(typeDefinition.path[0].sourceClassName).to.eq("BisCore.GeometricElement3d");
-    expect(represented.path[0].sourceClassName).to.eq("BisCore.GraphicalElement3d");
-  });
-
-  it("starts type-definition and represented-element paths at their declared classes under BisCore.Element", async () => {
-    const imodelAccess = createImodelAccess({
-      derivesFrom: {
-        "BisCore.GeometricElement3d": ["BisCore.Element"],
-        "BisCore.GraphicalElement3d": ["BisCore.Element", "BisCore.GeometricElement3d"],
-        "BisCore.GeometricElement2d": ["BisCore.Element"],
-        "BisCore.DrawingGraphic": ["BisCore.Element", "BisCore.GeometricElement2d"],
-      },
-    });
-    const contribution = await getContribution(imodelAccess, "BisCore.Element");
-
-    const typeAndRepresented = contribution!.relatedProperties!.slice(BASE_ELEMENT_PATHS.length);
-    expect(
-      typeAndRepresented.map((declaration) => [
-        declaration.path[0].relationshipName,
-        declaration.path[0].sourceClassName,
-      ]),
-    ).to.deep.equal([
-      ["BisCore.GeometricElement3dHasTypeDefinition", "BisCore.GeometricElement3d"],
-      ["BisCore.GraphicalElement3dRepresentsElement", "BisCore.GraphicalElement3d"],
-      ["BisCore.GeometricElement2dHasTypeDefinition", "BisCore.GeometricElement2d"],
-      ["BisCore.DrawingGraphicRepresentsElement", "BisCore.DrawingGraphic"],
-    ]);
-  });
-
-  it("does not contribute represented-element paths for a sibling of the graphical class", async () => {
-    const imodelAccess = createImodelAccess({
-      derivesFrom: {
-        "TestSchema.Sibling": ["BisCore.Element", "BisCore.GeometricElement3d"],
-        "BisCore.GraphicalElement3d": ["BisCore.Element", "BisCore.GeometricElement3d"],
-      },
-    });
-    const contribution = await getContribution(imodelAccess, "TestSchema.Sibling");
-
-    expect(getRelationshipPaths(contribution!)).to.deep.equal([
-      ...BASE_ELEMENT_PATHS,
-      ["BisCore.GeometricElement3dHasTypeDefinition"],
-    ]);
-  });
+  it.each<EC.FullClassNameDotNotation>([
+    "BisCore.Element",
+    "TestSchema.MyGeometricElement3d",
+    "TestSchema.MyDrawingGraphic",
+  ])(
+    "contributes type-definition and represented-element declarations starting at their classes for %s",
+    async (primaryClass) => {
+      // Source resolution skips declarations unrelated to the target and limits those declared for its
+      // subclasses to their instances.
+      const contribution = await getContribution(
+        createImodelAccess({ derivesFrom: { [primaryClass]: ["BisCore.Element"] } }),
+        primaryClass,
+      );
+      const declarations = contribution!.relatedProperties!.slice(BASE_ELEMENT_PATHS.length);
+      expect(
+        declarations.map((declaration) => [declaration.path[0].relationshipName, declaration.path[0].sourceClassName]),
+      ).to.deep.equal(TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_STEPS);
+    },
+  );
 
   it("adds source identifier fields at BisCore 1.0.2", async () => {
     const contribution = await getContribution(
@@ -227,6 +140,7 @@ describe("bisCoreFieldsProvider", () => {
     expect(getRelationshipPaths(contribution!)).to.deep.equal([
       ...BASE_ELEMENT_PATHS,
       ["BisCore.ElementOwnsMultiAspects"],
+      ...TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_PATHS,
     ]);
 
     // The `Kind <> 'Relationship'` filter excludes synchronization-only aspects from the identifier
@@ -252,6 +166,7 @@ describe("bisCoreFieldsProvider", () => {
         "BisCore.ExternalSourceGroupGroupsSources",
         "BisCore.ExternalSourceIsInRepository",
       ],
+      ...TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_PATHS,
     ]);
     expect(Object.keys(contribution!.categories ?? {})).to.have.members([
       SOURCE_INFORMATION_CATEGORY_ID,
