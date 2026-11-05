@@ -688,7 +688,7 @@ interface NodesQueryClauseFactory {
     createSelectClause(props: NodeSelectClauseProps): Promise<string>;
 }
 
-// @public
+// @beta
 export class NodesQueryRowsLimitExceededError extends RowsLimitExceededError {
     constructor(props: {
         limit: number;
