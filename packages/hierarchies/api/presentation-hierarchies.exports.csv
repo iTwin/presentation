@@ -42,6 +42,7 @@ public;function;mergeProviders
 public;type;NodeParser
 public;type;NodePostProcessor
 public;type;NodePreProcessor
+beta;class;NodesQueryRowsLimitExceededError
 public;interface;NonGroupingHierarchyNode
 public;type;ProcessedHierarchyNode
 public;namespace;ProcessedHierarchyNode

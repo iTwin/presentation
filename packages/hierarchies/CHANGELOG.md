@@ -1,5 +1,58 @@
 # @itwin/presentation-hierarchies
 
+## 2.1.0
+
+### Minor Changes
+
+- [#1677](https://github.com/iTwin/presentation/pull/1677): `NodesQueryClauseFactory`: Added support for filtering by `ECInstanceId` in `createFilterClauses`. Previously, `GenericInstanceFilter` rules referencing the `ECInstanceId` system property resulted in no instances being returned.
+  
+  The rule's `value.rawValue` is expected to be an `Id64String`, for example:
+  
+  ```ts
+  const nodes = provider.getNodes({
+    parentNode: undefined,
+    instanceFilter: {
+      propertyClassNames: ["BisCore.Element"],
+      relatedInstances: [],
+      rules: {
+        sourceAlias: "this",
+        propertyName: "ECInstanceId",
+        operator: "is-equal",
+        propertyTypeName: "long",
+        value: { rawValue: "0x123", displayValue: "0x123" },
+      },
+    },
+  });
+  ```
+  
+  Supported operators are `is-equal`, `is-not-equal`, `less`, `less-or-equal`, `greater`, `greater-or-equal`, `is-null` and `is-not-null`.
+- [#1711](https://github.com/iTwin/presentation/pull/1711): Added `NodesQueryRowsLimitExceededError`, which allows consumers to get hierarchy nodes when a hierarchy level exceeds the size limit.
+  
+  Hierarchy providers, created using `createIModelHierarchyProvider` or `createMergedIModelHierarchyProvider`, now throw `NodesQueryRowsLimitExceededError` from `getNodes` when the hierarchy level size limit is exceeded. In addition to `limit`, the error contains `nodes` - the hierarchy level's nodes, processed the same way as nodes returned by `getNodes`. Queries that exceeded the limit contribute nodes created from the rows that were read before the limit was exceeded, while the rest of the hierarchy level - other queries, generic nodes, and child hierarchy levels of hidden nodes - is created as usual.
+  
+  The error extends `RowsLimitExceededError`, so existing checks for `RowsLimitExceededError` keep working. Its `rows` list is always empty - use `nodes` instead. In the next major release, `NodesQueryRowsLimitExceededError` will no longer extend `RowsLimitExceededError`, so prefer checking for `NodesQueryRowsLimitExceededError` explicitly. In addition, `RowsLimitExceededError` now contains `rows` - the rows that were read before the limit was exceeded. The executor, created using `createLimitingECSqlQueryExecutor`, includes up to `limit` rows.
+  
+  `RowsLimitExceededError` got a new constructor overload that takes a `{ limit, rows }` props object. The constructor that only takes `limit` is deprecated - errors created with it have an empty `rows` list.
+  
+  ```ts
+  try {
+    for await (const node of provider.getNodes({ parentNode: undefined, hierarchyLevelSizeLimit: 100 })) {
+      // handle node
+    }
+  } catch (e) {
+    if (e instanceof NodesQueryRowsLimitExceededError) {
+      // hierarchy nodes created before the limit was exceeded
+      const nodes = e.nodes;
+    }
+  }
+  ```
+
+### Patch Changes
+
+- [#1709](https://github.com/iTwin/presentation/pull/1709): Update iTwin.js Core dependencies to `5.14.5`.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.2.0
+
 ## 2.0.1
 
 ### Patch Changes

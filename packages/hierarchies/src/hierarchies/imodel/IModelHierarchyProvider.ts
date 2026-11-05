@@ -9,6 +9,7 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
+  defer,
   EMPTY,
   filter,
   finalize,
@@ -25,6 +26,8 @@ import {
   take,
   takeUntil,
   tap,
+  throwError,
+  toArray,
 } from "rxjs";
 import { assert, BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import {
@@ -35,7 +38,7 @@ import {
   InstanceKey,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../HierarchyErrors.js";
+import { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "../HierarchyErrors.js";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { HierarchySearchTree } from "../HierarchySearch.js";
@@ -61,7 +64,7 @@ import { createGroupingOperator } from "./operators/Grouping.js";
 import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js";
 import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
 import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
-import { readNodes } from "./TreeNodesReader.js";
+import { parseNodes, readNodes } from "./TreeNodesReader.js";
 import { ECSQL_PREFIX } from "./Utils.js";
 
 import type { Observable, ObservableInput, ObservedValueOf } from "rxjs";
@@ -74,6 +77,7 @@ import type {
   EventArgs,
   IInstanceLabelSelectClauseFactory,
   IPrimitiveValueFormatter,
+  Props,
 } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import type { GenericNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
@@ -263,7 +267,14 @@ export function createMergedIModelHierarchyProvider(
 }
 
 interface RequestContextProp {
-  requestContext: { requestId: string };
+  requestContext: {
+    requestId: string;
+    /**
+     * Collects errors of hierarchy levels that exceeded the limit while creating nodes for `getNodes`. When set, such
+     * hierarchy levels don't fail - their nodes, created from rows read before the limit was exceeded, are used instead.
+     */
+    limitExceededErrors?: RowsLimitExceededError[];
+  };
 }
 
 type WithSourceNameOverride<T> = T & { sourceName?: string };
@@ -521,6 +532,9 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       targetInstanceKeys?: InstanceKey[];
     } & RequestContextProp,
   ): SourceNodesObservable {
+    // the observable is shared and never re-subscribed (see `shareReplayWithErrors` below), so there's no need to
+    // scope the errors' list per subscription
+    const limitExceededErrors: RowsLimitExceededError[] = [];
     const createSourceNodesFromDefinition = (
       imodelAccess: IModelAccess,
       parseNode: RxjsHierarchyDefinition["parseNode"],
@@ -530,16 +544,21 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         return of({ ...def.node, key: { type: "generic" as const, id: def.node.key, source: this.#sourceName } });
       }
       const query = createInstanceKeysFilteredQuery(def.query, props.targetInstanceKeys);
+      const parser: Props<typeof parseNodes>["parser"] = parseNode
+        ? ({ row }) => parseNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
+        : undefined;
       return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
-        readNodes({
-          queryExecutor: imodelAccess,
-          query,
-          limit: props.hierarchyLevelSizeLimit,
-          parser: parseNode
-            ? ({ row }) => parseNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
-            : undefined,
-        }).pipe(
-          map((node) => ({
+        readNodes({ queryExecutor: imodelAccess, query, limit: props.hierarchyLevelSizeLimit, parser }).pipe(
+          catchError((e) => {
+            if (!(e instanceof RowsLimitExceededError)) {
+              throw e;
+            }
+            // don't fail other definitions of the hierarchy level - emit nodes created from rows that were read before
+            // the limit was exceeded, and fail the hierarchy level after all its nodes are emitted
+            limitExceededErrors.push(e);
+            return parseNodes({ rows: e.rows, parser });
+          }),
+          map((node): SourceInstanceHierarchyNode => ({
             ...node,
             key: {
               ...node.key,
@@ -570,7 +589,12 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       );
     }
 
-    return sourceNodes.pipe(
+    // the error is emitted after all nodes, so caching the observable caches both - nodes and the error
+    return concat(
+      sourceNodes,
+      // check for errors only after all nodes are emitted
+      defer(() => (limitExceededErrors.length ? throwError(() => limitExceededErrors[0]) : EMPTY)),
+    ).pipe(
       finalize(() => {
         /* v8 ignore next -- @preserve */
         doLog({
@@ -583,11 +607,22 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     );
   }
 
-  private createPreProcessedNodesObservable(
-    queryNodesObservable: SourceNodesObservable,
-    props: GetHierarchyNodesProps & RequestContextProp,
-  ): Observable<ProcessedHierarchyNode> {
-    return queryNodesObservable.pipe(
+  private createPreProcessedNodesObservable({
+    sourceNodes,
+    ...props
+  }: GetHierarchyNodesProps &
+    RequestContextProp & { sourceNodes: SourceNodesObservable }): Observable<ProcessedHierarchyNode> {
+    return sourceNodes.pipe(
+      catchError((e) => {
+        // source nodes observable emits nodes created from rows that were read before the limit was exceeded, and only
+        // then fails - if requested, collect the error and let the nodes go through the rest of the pipeline
+        const { limitExceededErrors } = props.requestContext;
+        if (e instanceof RowsLimitExceededError && limitExceededErrors) {
+          limitExceededErrors.push(e);
+          return EMPTY;
+        }
+        throw e;
+      }),
       // we're going to be mutating the nodes, but don't want to mutate the original one, so just clone it here once
       map((node) => ({ ...node })),
       // set parent node keys on the source node
@@ -756,32 +791,30 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" } & RequestContextProp,
   ) {
     const entry = this.getCachedObservableEntry(props);
-    switch (entry.processingStatus) {
-      case "none": {
-        const pre = this.createPreProcessedNodesObservable(entry.observable, props);
-        const post = this.createProcessedNodesObservable(pre, props);
-        return {
-          processedNodes: post,
-          hasNodes: this.createHasNodesObservable(pre, entry.observable, props),
-          finalizedNodes: this.createFinalizedNodesObservable(post, props),
-        };
-      }
-      case "pre-processed": {
-        const post = this.createProcessedNodesObservable(entry.observable, props);
-        return {
-          processedNodes: post,
-          hasNodes: this.createHasNodesObservable(entry.observable, undefined, props),
-          finalizedNodes: this.createFinalizedNodesObservable(post, props),
-        };
-      }
-    }
+    const createPreProcessedNodes = (requestContext: RequestContextProp["requestContext"]) =>
+      entry.processingStatus === "none"
+        ? this.createPreProcessedNodesObservable({ ...props, requestContext, sourceNodes: entry.observable })
+        : entry.observable;
+    const processedNodes = this.createProcessedNodesObservable(createPreProcessedNodes(props.requestContext), props);
+    return {
+      processedNodes,
+      hasNodes: this.createHasNodesObservable(
+        // determining children treats hierarchy level exceeding the limit as having children - don't record such errors
+        // into request's limit exceeded errors, because the request itself doesn't contain nodes of this hierarchy level
+        createPreProcessedNodes({ ...props.requestContext, limitExceededErrors: undefined }),
+        entry.processingStatus === "none" ? entry.observable : undefined,
+        props,
+      ),
+      finalizedNodes: this.createFinalizedNodesObservable(processedNodes, props),
+    };
   }
 
   /**
    * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
    */
   public getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
-    const requestContext = { requestId: Guid.createValue() };
+    const limitExceededErrors: RowsLimitExceededError[] = [];
+    const requestContext = { requestId: Guid.createValue(), limitExceededErrors };
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodes`;
     const timer = new StopWatch(undefined, true);
     let error: any;
@@ -794,6 +827,19 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     });
     return eachValueFrom(
       this.getChildNodesObservables({ ...props, requestContext }).finalizedNodes.pipe(
+        toArray(),
+        mergeMap((nodes) =>
+          // hierarchy levels that exceeded the limit didn't fail, so that their nodes are created - fail the request now
+          limitExceededErrors.length
+            ? throwError(
+                () =>
+                  new NodesQueryRowsLimitExceededError({
+                    limit: Math.min(...limitExceededErrors.map((e) => e.limit)),
+                    nodes,
+                  }),
+              )
+            : from(nodes),
+        ),
         tap(() => ++nodesCount),
         catchError((e) => {
           error = e;

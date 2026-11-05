@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.2
+
+### Patch Changes
+
+- [#1709](https://github.com/iTwin/presentation/pull/1709): Update iTwin.js Core dependencies to `5.14.5`.
+- [#1709](https://github.com/iTwin/presentation/pull/1709): Update StrataKit & `@tanstack/react-virtual` dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.1.0
+  - @itwin/presentation-shared@2.2.0
+  - @itwin/unified-selection@2.0.2
+
 ## 2.0.1
 
 ### Patch Changes
