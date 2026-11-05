@@ -1,5 +1,16 @@
 # @itwin/presentation-core-interop
 
+## 2.1.0
+
+### Minor Changes
+
+- [#1700](https://github.com/iTwin/presentation/pull/1700): `createECSchemaProvider`: Properties now report the schema's read-only status through `EC.Property.isReadOnly`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.2.0
+
 ## 2.0.0
 
 ### Major Changes
