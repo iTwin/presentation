@@ -272,9 +272,8 @@ function validateContribution(provider: IModelFieldsProvider, contribution: Fiel
   return contribution;
 }
 
-// Starts a custom resolver's paths at the declared source class, like discovered paths, so only the declaration
-// scopes the primary instances a path applies to. The returned start class only filters `targetClassNames`, and
-// one unrelated to the declared class is rejected.
+// Makes a custom resolver's paths honor the declared source class: a broader first-step source is
+// narrowed to it, while a source unrelated to it contradicts the declaration.
 async function enforceDeclaredSource({
   imodelAccess,
   paths,
@@ -313,7 +312,7 @@ async function enforceDeclaredSource({
       }
       return {
         ...resolved,
-        path: first.sourceClassName === sourceClassName ? resolved.path : [{ ...first, sourceClassName }, ...rest],
+        path: enforced === first.sourceClassName ? resolved.path : [{ ...first, sourceClassName: enforced }, ...rest],
         targetClassNames,
       };
     }),
@@ -976,9 +975,9 @@ function createPathStartNormalizer(
         if (!constraintClassName || constraintClassName === firstStep.sourceClassName) {
           return resolved;
         }
-        // A path that doesn't start at the target's class was declared for its subclass (see
-        // `resolveEffectiveSourceClass`). Keep that class when it's also a subclass of the constraint class: it
-        // restricts the primary instances the path applies to.
+        // A path that doesn't start at the target's class starts at its subclass: one it was declared for (see
+        // `resolveEffectiveSourceClass`) or a custom `resolve` returned. Keep that class when it's also a subclass
+        // of the constraint class: it restricts the primary instances the path applies to.
         if (
           firstStep.sourceClassName !== target.primaryClass &&
           (await schemaProvider.classDerivesFrom(firstStep.sourceClassName, constraintClassName))

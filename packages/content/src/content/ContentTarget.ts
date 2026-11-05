@@ -178,8 +178,8 @@ export interface ResolvedPath {
    *
    * The path starts at its first relationship's constraint class, so a relationship path resolved for
    * different targets gets the same description. A path declared for a subclass of both the target's class
-   * and that constraint class starts at the declared class instead, which restricts the primary instances
-   * the path applies to.
+   * and that constraint class, or returned by a custom `resolve` starting at one, starts at that subclass
+   * instead, which restricts the primary instances the path applies to.
    *
    * The rest of the path is concrete: each step's `relationshipName` and `targetClassName`, and the
    * `sourceClassName` of every step after the first, are resolved from the scanned data, never a

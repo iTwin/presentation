@@ -144,11 +144,9 @@ export interface RelatedPropertiesDeclaration {
    * paired with the concrete content-target classes it applies to. The declaration's
    * `properties` and `cardinalityHint` still apply to each resolved path.
    *
-   * The callback receives the original target, including its instance IDs and filter. A returned path
-   * must start at a class related to the first step's `sourceClassName` (see `path`), otherwise it's
-   * rejected with an error. The returned start class only limits the path's `targetClassNames` to classes
-   * deriving from it — as for discovered paths, the declared `sourceClassName` scopes the primary instances
-   * the path applies to.
+   * The callback receives the original target, including its instance IDs and filter. It must honor
+   * the first step's `sourceClassName` (see `path`): a returned path starting at a base of it is
+   * narrowed to it, and one starting at an unrelated class is rejected with an error.
    *
    * The callback fully replaces default discovery, including its exclusion of hidden target subclasses, so
    * a returned path may end at a hidden class. When loading, each step reaches only instances of its class

@@ -1233,11 +1233,11 @@ describe("resolveContentSources", () => {
       },
       {
         returnedSource: "TestSchema.SpecialPump",
-        enforcedSource: "TestSchema.Pump",
+        enforcedSource: "TestSchema.SpecialPump",
         classes: ["TestSchema.SpecialPump"],
       },
     ] as const)(
-      "starts custom resolver paths at the declared source and filters their classes for $returnedSource",
+      "filters custom resolver classes against the enforced source for $returnedSource",
       async ({ returnedSource, enforcedSource, classes }) => {
         const imodelAccess = createAccess({
           "TestSchema.Pump": ["TestSchema.Base"],
@@ -3887,7 +3887,7 @@ describe("resolveContentSources", () => {
       ]);
     });
 
-    it("starts custom resolver paths starting at concrete primary classes at the constraint class", async () => {
+    it("keeps custom resolver paths starting at subclasses of the target's class", async () => {
       const step = (sourceClassName: EC.FullClassNameDotNotation): RelationshipPath[number] => ({
         sourceClassName,
         targetClassName: "TestSchema.ClassB",
@@ -3920,10 +3920,10 @@ describe("resolveContentSources", () => {
         config: { imodelFieldsProviders: [provider] },
       });
 
-      // The concrete classes come from the data rather than the declaration, so they don't restrict primaries.
+      // The resolver scopes each path to its start class's instances, so siblings don't get its values.
       expect(source.resolvedDeclarations[0].paths).to.deep.equal([
-        { path: [step("TestSchema.Base")], targetClassNames: ["TestSchema.ClassA1"] },
-        { path: [step("TestSchema.Base")], targetClassNames: ["TestSchema.ClassA2"] },
+        { path: [step("TestSchema.ClassA1")], targetClassNames: ["TestSchema.ClassA1"] },
+        { path: [step("TestSchema.ClassA2")], targetClassNames: ["TestSchema.ClassA2"] },
       ]);
     });
 
