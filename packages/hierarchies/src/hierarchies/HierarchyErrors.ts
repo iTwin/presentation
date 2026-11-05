@@ -46,7 +46,11 @@ export class RowsLimitExceededError extends Error {
  * that were read before the limit was exceeded, it contains the hierarchy level's nodes, where queries that exceeded
  * the limit contribute nodes created from those rows. The `rows` property is always empty.
  *
- * @public
+ * @note The error extends `RowsLimitExceededError` only to keep existing checks for `RowsLimitExceededError`
+ * working. In the next major release it will no longer extend `RowsLimitExceededError`, so consumers should check
+ * for `NodesQueryRowsLimitExceededError` explicitly.
+ *
+ * @beta
  */
 export class NodesQueryRowsLimitExceededError extends RowsLimitExceededError {
   /**
