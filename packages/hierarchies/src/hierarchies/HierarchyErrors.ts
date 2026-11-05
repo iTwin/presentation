@@ -15,8 +15,7 @@ export class RowsLimitExceededError extends Error {
   public readonly limit: number;
 
   /**
-   * Rows that were read before the limit was exceeded. When thrown by `LimitingECSqlQueryExecutor`, contains
-   * at most `limit` rows.
+   * Rows that were read before the limit was exceeded. Contains at most `limit` rows.
    */
   public readonly rows: ECSqlQueryRow[];
 
@@ -43,16 +42,13 @@ export class RowsLimitExceededError extends Error {
 }
 
 /**
- * Error that is thrown by hierarchy provider when hierarchy level size limit is exceeded. In addition to
- * what `RowsLimitExceededError` provides, it contains the hierarchy level's nodes, where queries that exceeded
- * the limit contribute nodes created from the rows that were read before the limit was exceeded.
- *
- * When multiple queries exceed the limit (e.g. a query of the hierarchy level and a query of a hidden node's
- * child hierarchy level), `rows` contains rows of all of them, so it may contain more than `limit` rows.
+ * Error that is thrown by hierarchy provider when hierarchy level size limit is exceeded. Instead of the rows
+ * that were read before the limit was exceeded, it contains the hierarchy level's nodes, where queries that exceeded
+ * the limit contribute nodes created from those rows. The `rows` property is always empty.
  *
  * @public
  */
-export class NodesLimitExceededError extends RowsLimitExceededError {
+export class NodesQueryRowsLimitExceededError extends RowsLimitExceededError {
   /**
    * Nodes of the hierarchy level, processed the same way as nodes returned by `HierarchyProvider.getNodes`. Queries
    * that exceeded the limit contribute nodes created from the rows that were read before the limit was exceeded.
@@ -62,13 +58,10 @@ export class NodesLimitExceededError extends RowsLimitExceededError {
   public constructor(props: {
     /** The rows limit that was exceeded. */
     limit: number;
-    /** Rows of all queries that exceeded the limit, that were read before the limit was exceeded. */
-    rows: ECSqlQueryRow[];
     /** Nodes of the hierarchy level. */
     nodes: HierarchyNode[];
   }) {
-    const { nodes, ...rowsLimitProps } = props;
-    super(rowsLimitProps);
-    this.nodes = nodes;
+    super({ limit: props.limit, rows: [] });
+    this.nodes = props.nodes;
   }
 }

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe, expect, it } from "vitest";
-import { NodesLimitExceededError, RowsLimitExceededError } from "../hierarchies/HierarchyErrors.js";
+import { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "../hierarchies/HierarchyErrors.js";
 import { createTestGenericNode } from "./Utils.js";
 
 describe("RowsLimitExceededError", () => {
@@ -26,15 +26,14 @@ describe("RowsLimitExceededError", () => {
   });
 });
 
-describe("NodesLimitExceededError", () => {
-  it("creates error from props", () => {
-    const rows = [{ id: 1 }];
+describe("NodesQueryRowsLimitExceededError", () => {
+  it("creates error from props with empty rows list", () => {
     const nodes = [createTestGenericNode()];
-    const error = new NodesLimitExceededError({ limit: 1, rows, nodes });
+    const error = new NodesQueryRowsLimitExceededError({ limit: 1, nodes });
     expect(error).toBeInstanceOf(RowsLimitExceededError);
     expect(error.message).toBe("Query rows limit of 1 exceeded");
     expect(error.limit).toBe(1);
-    expect(error.rows).toBe(rows);
+    expect(error.rows).toEqual([]);
     expect(error.nodes).toBe(nodes);
   });
 });

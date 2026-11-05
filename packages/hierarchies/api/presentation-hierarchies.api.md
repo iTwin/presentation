@@ -673,16 +673,6 @@ interface NodeSelectClauseProps {
 }
 
 // @public
-export class NodesLimitExceededError extends RowsLimitExceededError {
-    constructor(props: {
-        limit: number;
-        rows: ECSqlQueryRow[];
-        nodes: HierarchyNode[];
-    });
-    readonly nodes: HierarchyNode[];
-}
-
-// @public
 interface NodesQueryClauseFactory {
     createFilterClauses(props: {
         contentClass: {
@@ -696,6 +686,15 @@ interface NodesQueryClauseFactory {
         joins: string;
     }>;
     createSelectClause(props: NodeSelectClauseProps): Promise<string>;
+}
+
+// @public
+export class NodesQueryRowsLimitExceededError extends RowsLimitExceededError {
+    constructor(props: {
+        limit: number;
+        nodes: HierarchyNode[];
+    });
+    readonly nodes: HierarchyNode[];
 }
 
 // @public

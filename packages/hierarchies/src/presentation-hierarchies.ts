@@ -29,7 +29,7 @@ export {
 export type { SourceHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 export { ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 
-export { NodesLimitExceededError, RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
+export { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
 export type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode.js";
 export { HierarchyNode } from "./hierarchies/HierarchyNode.js";
 export type { HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier.js";

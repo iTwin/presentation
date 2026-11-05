@@ -6,10 +6,7 @@
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import { describe, expect, it } from "vitest";
-import {
-  sortNodesByLabelIntoArrayOperator,
-  sortNodesByLabelOperator,
-} from "../../../hierarchies/internal/operators/Sorting.js";
+import { sortNodesByLabelOperator } from "../../../hierarchies/internal/operators/Sorting.js";
 import { createTestProcessedGenericNode } from "../../Utils.js";
 
 describe("Sorting", () => {
@@ -21,20 +18,5 @@ describe("Sorting", () => {
     ];
     const result = await collect(from(nodes).pipe(sortNodesByLabelOperator));
     expect(result).toEqual([nodes[2], nodes[0], nodes[1]]);
-  });
-
-  it("sorts nodes into a single array", async () => {
-    const nodes = [
-      createTestProcessedGenericNode({ label: "b" }),
-      createTestProcessedGenericNode({ label: "c" }),
-      createTestProcessedGenericNode({ label: "a" }),
-    ];
-    const result = await collect(from(nodes).pipe(sortNodesByLabelIntoArrayOperator));
-    expect(result).toEqual([[nodes[2], nodes[0], nodes[1]]]);
-  });
-
-  it("emits an empty array when there are no nodes", async () => {
-    const result = await collect(from([]).pipe(sortNodesByLabelIntoArrayOperator));
-    expect(result).toEqual([[]]);
   });
 });

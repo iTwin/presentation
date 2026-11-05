@@ -7,7 +7,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
-import { NodesLimitExceededError, RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
+import { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import {
   createMergedIModelHierarchyProvider,
@@ -1455,7 +1455,7 @@ describe("createIModelHierarchyProvider", () => {
       await expect(provider.getNodes({ parentNode: rootNodes[0] }).next()).rejects.toThrow(RowsLimitExceededError);
     });
 
-    it("throws `NodesLimitExceededError` with processed nodes created from rows read before the limit was exceeded", async () => {
+    it("throws `NodesQueryRowsLimitExceededError` with processed nodes created from rows read before the limit was exceeded", async () => {
       const rows: RowDef[] = [
         {
           [NodeSelectClauseColumnNames.FullClassName]: "a.b",
@@ -1489,10 +1489,10 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
-      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
       expect(error).toBeInstanceOf(RowsLimitExceededError);
       expect(error.limit).toBe(2);
-      expect(error.rows).toEqual(rows);
+      expect(error.rows).toEqual([]);
       expect(error.nodes).toEqual([
         {
           key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
@@ -1511,7 +1511,7 @@ describe("createIModelHierarchyProvider", () => {
       ]);
     });
 
-    it("throws `NodesLimitExceededError` with nodes of all hierarchy level's definitions, when one of its queries exceeds the limit", async () => {
+    it("throws `NodesQueryRowsLimitExceededError` with nodes of all hierarchy level's definitions, when one of its queries exceeds the limit", async () => {
       const genericNode = createTestSourceGenericNode({ key: "generic", label: "generic node" });
       const exceedingQueryRow: RowDef = {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
@@ -1550,8 +1550,7 @@ describe("createIModelHierarchyProvider", () => {
 
       const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
       expect(imodelAccess.createQueryReader).toHaveBeenCalledTimes(2);
-      expect(error).toBeInstanceOf(NodesLimitExceededError);
-      expect(error.rows).toEqual([exceedingQueryRow]);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
       expect(error.nodes).toEqual([
         {
           key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
@@ -1574,7 +1573,7 @@ describe("createIModelHierarchyProvider", () => {
       ]);
     });
 
-    it("throws `NodesLimitExceededError` with rows of all queries that exceeded the limit, when multiple queries exceed it", async () => {
+    it("throws `NodesQueryRowsLimitExceededError` with nodes of all queries that exceeded the limit, when multiple queries exceed it", async () => {
       const createRow = (id: string): RowDef => ({
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: id,
@@ -1582,14 +1581,7 @@ describe("createIModelHierarchyProvider", () => {
       });
       imodelAccess.createQueryReader.mockImplementation((query) =>
         (async function* () {
-          if (query.ecsql === "SECOND_QUERY") {
-            // make sure this query exceeds the limit after the first one
-            await new Promise((resolve) => setTimeout(resolve, 0));
-          }
-          throw new RowsLimitExceededError({
-            limit: 1,
-            rows: [createRow(query.ecsql === "FIRST_QUERY" ? "0x1" : "0x2")],
-          });
+          throw new RowsLimitExceededError({ limit: 1, rows: [createRow(query.ecsql)] });
         })(),
       );
       using provider = createIModelHierarchyProvider({
@@ -1598,8 +1590,8 @@ describe("createIModelHierarchyProvider", () => {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
-                { fullClassName: "a.b", query: { ecsql: "SECOND_QUERY" } },
-                { fullClassName: "a.b", query: { ecsql: "FIRST_QUERY" } },
+                { fullClassName: "a.b", query: { ecsql: "0x1" } },
+                { fullClassName: "a.b", query: { ecsql: "0x2" } },
               ];
             }
             return [];
@@ -1608,12 +1600,12 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
-      expect(error).toBeInstanceOf(NodesLimitExceededError);
-      expect(error.rows).toEqual([createRow("0x1"), createRow("0x2")]);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
+      expect(error.limit).toBe(1);
       expect(error.nodes.map((node: HierarchyNode) => node.label)).toEqual(["0x1", "0x2"]);
     });
 
-    it("throws `NodesLimitExceededError` with grouped nodes when hierarchy level exceeds the limit", async () => {
+    it("throws `NodesQueryRowsLimitExceededError` with grouped nodes when hierarchy level exceeds the limit", async () => {
       const groupingKey: GroupingNodeKey = { type: "label-grouping", label: "x", groupId: undefined };
       imodelAccess.createQueryReader.mockImplementation(() =>
         (async function* () {
@@ -1641,7 +1633,7 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
-      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
       const expectedInstanceKeys: IModelInstanceKey[] = [
         { className: "a.b", id: "0x1", imodelKey: "test-imodel" },
         { className: "a.b", id: "0x2", imodelKey: "test-imodel" },
@@ -1672,7 +1664,7 @@ describe("createIModelHierarchyProvider", () => {
       expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
     });
 
-    it("throws `NodesLimitExceededError` with hidden node's siblings and nodes of its child hierarchy level, when the child hierarchy level exceeds the limit", async () => {
+    it("throws `NodesQueryRowsLimitExceededError` with hidden node's siblings and nodes of its child hierarchy level, when the child hierarchy level exceeds the limit", async () => {
       const hiddenNode = createTestSourceGenericNode({ key: "hidden", processingParams: { hideInHierarchy: true } });
       const siblingNode = createTestSourceGenericNode({ key: "sibling", label: "sibling" });
       const childRow: RowDef = {
@@ -1701,8 +1693,7 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
-      expect(error).toBeInstanceOf(NodesLimitExceededError);
-      expect(error.rows).toEqual([childRow]);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
       expect(error.nodes).toEqual([
         {
           key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
@@ -1719,7 +1710,7 @@ describe("createIModelHierarchyProvider", () => {
       ]);
     });
 
-    it("throws `NodesLimitExceededError` with hierarchy level's nodes and nodes of hidden node's child hierarchy level, when both - hierarchy level and the child hierarchy level exceed the limit", async () => {
+    it("throws `NodesQueryRowsLimitExceededError` with hierarchy level's nodes and nodes of hidden node's child hierarchy level, when both - hierarchy level and the child hierarchy level exceed the limit", async () => {
       const hiddenRow: RowDef = {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
@@ -1759,9 +1750,8 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
-      expect(error).toBeInstanceOf(NodesLimitExceededError);
+      expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
       expect(error.limit).toBe(2);
-      expect(error.rows).toEqual([hiddenRow, visibleRow, childRow]);
       expect(error.nodes).toEqual([
         {
           key: { type: "instances", instanceKeys: [{ className: "c.d", id: "0x2", imodelKey: "test-imodel" }] },
@@ -1852,7 +1842,7 @@ describe("createIModelHierarchyProvider", () => {
       ];
       for (let i = 0; i < 2; ++i) {
         const error = await collect(provider.getNodes({ parentNode: rootNodes[0] })).catch((e) => e);
-        expect(error).toBeInstanceOf(NodesLimitExceededError);
+        expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
         expect(error.nodes).toEqual(expectedNodes);
       }
       expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
@@ -2332,7 +2322,7 @@ describe("createMergedIModelHierarchyProvider", () => {
     ).toThrow("requires at least one iModel");
   });
 
-  it("throws `NodesLimitExceededError` with nodes of all iModels, when query of one of them exceeds the limit", async () => {
+  it("throws `NodesQueryRowsLimitExceededError` with nodes of all iModels, when query of one of them exceeds the limit", async () => {
     const imodelAccess1 = { ...createIModelAccessStub(), imodelKey: "imodel 1" };
     const imodelAccess2 = { ...createIModelAccessStub(), imodelKey: "imodel 2" };
     const createRow = (id: string): RowDef => ({
@@ -2356,8 +2346,7 @@ describe("createMergedIModelHierarchyProvider", () => {
     });
 
     const error = await collect(provider.getNodes({ parentNode: undefined })).catch((e) => e);
-    expect(error).toBeInstanceOf(NodesLimitExceededError);
-    expect(error.rows).toEqual([createRow("0x2")]);
+    expect(error).toBeInstanceOf(NodesQueryRowsLimitExceededError);
     expect(error.nodes).toEqual([
       {
         key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "imodel 1" }] },
