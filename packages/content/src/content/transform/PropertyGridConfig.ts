@@ -33,13 +33,10 @@ interface PropertyGridConfigProps {
  * entries in a property grid. Its steps:
  *
  * 1. Drop fields marked as `hidden`.
- * 2. Keep only fields that apply to all items, unless `fields: "all"` is set. Before that, related property fields
- *    that differ only by the source class of their path's first step are combined into one field that applies to all
- *    classes of the original fields. Such fields show up when content is requested for instances of several classes,
- *    as related property paths start at each content target's class.
+ * 2. Keep only fields that apply to all items, unless `fields: "all"` is set.
  * 3. Reshape values of fields reached over many-cardinality relationship paths. When every item reaches at most one
  *    related instance over the path, values are unwrapped from arrays. Otherwise, fields of the path within the same
- *    category are grouped into a `RelatedInstancesEntry`, with values grouped by related instance.
+ *    category are grouped into a `RelatedInstancesEntry` holding the related instances of every item.
  * 4. Set `varies` on entries whose values differ between items they apply to. Values are compared deeply.
  *
  * When an entry doesn't vary, all items it applies to have the same value.

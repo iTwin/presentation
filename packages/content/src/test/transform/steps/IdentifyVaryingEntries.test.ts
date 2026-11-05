@@ -6,10 +6,11 @@
 import { describe, expect, it } from "vitest";
 import { identifyVaryingEntries } from "../../../content/transform/steps/IdentifyVaryingEntries.js";
 import {
-  aspectA,
+  aspectProp1,
   createDescriptor,
   createItem,
   createPropertyField,
+  createRelatedInstance,
   createStepArgs,
   createRelatedEntry,
 } from "../Helpers.js";
@@ -42,8 +43,8 @@ describe("identifyVaryingEntries", () => {
     };
     const relatedEqual = createRelatedEntry({
       values: [
-        [{ key: aspectKey, values: { aspectA: "a" } }],
-        [{ key: { ...aspectKey, id: "0x20" }, values: { aspectA: "a" } }],
+        [createRelatedInstance(aspectKey, { aspectProp1: "a" })],
+        [createRelatedInstance({ ...aspectKey, id: "0x20" }, { aspectProp1: "a" })],
       ],
     });
     const entries = [equal, equalDates, relatedEqual];
@@ -64,10 +65,10 @@ describe("identifyVaryingEntries", () => {
     };
     const relatedDifferent = createRelatedEntry({
       values: [
-        [{ key: aspectKey, values: { aspectA: "a" } }],
+        [createRelatedInstance(aspectKey, { aspectProp1: "a" })],
         [
-          { key: { ...aspectKey, id: "0x20" }, values: { aspectA: "a" } },
-          { key: { ...aspectKey, id: "0x21" }, values: { aspectA: "b" } },
+          createRelatedInstance({ ...aspectKey, id: "0x20" }, { aspectProp1: "a" }),
+          createRelatedInstance({ ...aspectKey, id: "0x21" }, { aspectProp1: "b" }),
         ],
         [],
       ],
@@ -90,8 +91,12 @@ describe("identifyVaryingEntries", () => {
       values: ["x", undefined, "x"],
     };
     const pumpRelated = createRelatedEntry({
-      fields: [{ ...aspectA, primaryClassNames: ["Plant.Pump"] }],
-      values: [[{ key: aspectKey, values: { aspectA: "a" } }], [], [{ key: aspectKey, values: { aspectA: "a" } }]],
+      fields: [{ ...aspectProp1, primaryClassNames: ["Plant.Pump"] }],
+      values: [
+        [createRelatedInstance(aspectKey, { aspectProp1: "a" })],
+        [],
+        [createRelatedInstance(aspectKey, { aspectProp1: "a" })],
+      ],
     });
 
     const result = merge(items, [pumpField, pumpRelated]);
@@ -105,14 +110,8 @@ describe("identifyVaryingEntries", () => {
     const otherKey = { ...aspectKey, id: "0x11" };
     const related = createRelatedEntry({
       values: [
-        [
-          { key: aspectKey, values: { aspectA: "a" } },
-          { key: otherKey, values: { aspectA: "b" } },
-        ],
-        [
-          { key: otherKey, values: { aspectA: "b" } },
-          { key: aspectKey, values: { aspectA: "a" } },
-        ],
+        [createRelatedInstance(aspectKey, { aspectProp1: "a" }), createRelatedInstance(otherKey, { aspectProp1: "b" })],
+        [createRelatedInstance(otherKey, { aspectProp1: "b" }), createRelatedInstance(aspectKey, { aspectProp1: "a" })],
       ],
     });
 

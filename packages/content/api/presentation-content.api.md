@@ -21,7 +21,6 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseContentEntry {
-    categoryId?: CategoryDefinition["id"];
     varies?: boolean;
 }
 
@@ -157,7 +156,6 @@ interface ContentProviderProps {
 
 // @public
 export interface ContentRecords {
-    categories: Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>;
     entries: ContentEntry[];
 }
 
@@ -313,7 +311,6 @@ export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
 interface FieldEntry extends BaseContentEntry {
-    combinedFrom?: ReadonlyPropertyField[];
     field: ReadonlyField;
     kind: "field";
     values: Array<DeepReadonly<Value>>;
@@ -441,15 +438,7 @@ export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accu
 interface RelatedInstancesEntry extends BaseContentEntry {
     fields: ReadonlyPropertyField[];
     kind: "related-instances";
-    pathFromTarget: DeepReadonly<RelationshipPath>;
-    values: RelatedInstanceValues[][];
-}
-
-// @public
-interface RelatedInstanceValues {
-    key: DeepReadonly<InstanceKey>;
-    relationshipKey?: DeepReadonly<InstanceKey>;
-    values: Record<Field["id"], DeepReadonly<Value>>;
+    values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
 }
 
 // @public

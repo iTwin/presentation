@@ -7,7 +7,8 @@ import deepEqual from "fast-deep-equal/es6/index.js";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { isFieldApplicable } from "./Utils.js";
 
-import type { ContentTransformStep, RelatedInstanceValues } from "../TransformContent.js";
+import type { ReadonlyPropertyField } from "../../model/Field.js";
+import type { ContentTransformStep, RelatedInstancesEntry } from "../TransformContent.js";
 
 /**
  * Creates a content transform step that sets `varies` on entries whose values differ between content items the
@@ -26,13 +27,17 @@ export function identifyVaryingEntries(): ContentTransformStep {
         if (!fields.some((field) => isFieldApplicable(field, item))) {
           return [];
         }
-        return [entry.kind === "field" ? entry.values[index] : getSortedInstanceValues(entry.values[index])];
+        return [
+          entry.kind === "field" ? entry.values[index] : getSortedInstanceValues(entry.values[index], entry.fields),
+        ];
       });
       return values.some((value) => !deepEqual(value, values[0])) ? { ...entry, varies: true } : entry;
     }),
   });
 }
 
-function getSortedInstanceValues(instances: RelatedInstanceValues[]) {
-  return [...instances].sort((lhs, rhs) => InstanceKey.compare(lhs.key, rhs.key)).map((instance) => instance.values);
+function getSortedInstanceValues(instances: RelatedInstancesEntry["values"][number], fields: ReadonlyPropertyField[]) {
+  return [...instances]
+    .sort((lhs, rhs) => InstanceKey.compare(lhs.key, rhs.key))
+    .map((instance) => fields.map((field) => instance.getValue(field)));
 }

@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import type { DeepReadonly, InstanceKey, RelationshipPath, Value } from "@itwin/presentation-shared";
-import type { CategoryDefinition } from "../model/Category.js";
+import type { DeepReadonly, Value } from "@itwin/presentation-shared";
 import type { ReadonlyContentDescriptor } from "../model/ContentDescriptor.js";
 import type { ContentItem } from "../model/ContentItem.js";
-import type { Field, ReadonlyField, ReadonlyPropertyField } from "../model/Field.js";
+import type { ReadonlyField, ReadonlyPropertyField } from "../model/Field.js";
 
 /**
  * Intermediate content format passed between content transform steps. Holds one entry per displayed field
@@ -16,11 +15,6 @@ import type { Field, ReadonlyField, ReadonlyPropertyField } from "../model/Field
  * @public
  */
 export interface ContentRecords {
-  /**
-   * Category definitions available to entries, keyed by category ID. Initialized from the descriptor's categories;
-   * steps may add synthetic categories.
-   */
-  categories: Record<CategoryDefinition["id"], DeepReadonly<CategoryDefinition>>;
   /** Entries in display order. Steps may filter, reorder, replace or duplicate them. */
   entries: ContentEntry[];
 }
@@ -49,8 +43,6 @@ export type ContentEntry = FieldEntry | RelatedInstancesEntry;
  * @public
  */
 interface BaseContentEntry {
-  /** ID of the category the entry belongs to. Initialized from the field's `categoryId`. */
-  categoryId?: CategoryDefinition["id"];
   /**
    * Set when items the entry applies to have different values for it. Set by `createPropertyGridConfig` steps.
    */
@@ -71,12 +63,6 @@ export interface FieldEntry extends BaseContentEntry {
    * doesn't apply to have `undefined` values.
    */
   values: Array<DeepReadonly<Value>>;
-  /**
-   * Original fields this entry's field was combined from, when it stands for several fields. Each item's value is
-   * taken from the original field that applies to the item, so steps that need per-item field information should look
-   * it up in the original fields.
-   */
-  combinedFrom?: ReadonlyPropertyField[];
 }
 
 /**
@@ -87,25 +73,16 @@ export interface FieldEntry extends BaseContentEntry {
 export interface RelatedInstancesEntry extends BaseContentEntry {
   /** Discriminator of the entry kind. */
   kind: "related-instances";
-  /** The relationship path from content target to the related instances. */
-  pathFromTarget: DeepReadonly<RelationshipPath>;
-  /** Fields of the related instances, in display order. */
+  /**
+   * Fields of the related instances, in display order. There's at least one field, and all fields share the same
+   * `pathFromTarget` - the relationship path from content target to the related instances - and `categoryId`.
+   */
   fields: ReadonlyPropertyField[];
-  /** Related instances of each source item: `values[i]` belongs to `ContentTransformContext.items[i]`. */
-  values: RelatedInstanceValues[][];
-}
-
-/**
- * Values of a single related instance in a `RelatedInstancesEntry`.
- * @public
- */
-export interface RelatedInstanceValues {
-  /** Key of the related instance. */
-  key: DeepReadonly<InstanceKey>;
-  /** Key of the last relationship step's instance, when present. */
-  relationshipKey?: DeepReadonly<InstanceKey>;
-  /** Raw values of the related instance, keyed by field ID. */
-  values: Record<Field["id"], DeepReadonly<Value>>;
+  /**
+   * Related instances of each source item, as returned by `ContentItem.getRelatedInstances`: `values[i]` belongs to
+   * `ContentTransformContext.items[i]`. Use `getValue` of a related instance to get its value of one of `fields`.
+   */
+  values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
 }
 
 /**
@@ -159,11 +136,9 @@ export function transformContent(content: TransformContentInput, config: Content
 
 function createInitialRecords({ descriptor, items }: ContentTransformContext): ContentRecords {
   return {
-    categories: descriptor.categories,
     entries: Object.values(descriptor.fields).map((field): FieldEntry => ({
       kind: "field",
       field,
-      ...(field.categoryId !== undefined ? { categoryId: field.categoryId } : {}),
       values: items.map((item) => item.getValue(field)),
     })),
   };

@@ -34,17 +34,6 @@ export function filterFields(
     if (fields.length === entry.fields.length) {
       return [entry];
     }
-    return [
-      {
-        ...entry,
-        fields,
-        values: entry.values.map((itemInstances) =>
-          itemInstances.map((instance) => ({
-            ...instance,
-            values: Object.fromEntries(fields.map((field) => [field.id, instance.values[field.id]])),
-          })),
-        ),
-      },
-    ];
+    return [{ ...entry, fields }];
   });
 }

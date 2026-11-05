@@ -6,8 +6,8 @@
 import { describe, expect, it } from "vitest";
 import { collapseRelatedInstances } from "../../../content/transform/steps/CollapseRelatedInstances.js";
 import {
-  aspectA,
-  aspectB,
+  aspectProp1,
+  aspectProp2,
   aspectsPath,
   childrenPath,
   createCalculatedField,
@@ -15,6 +15,7 @@ import {
   createItem,
   createPropertyField,
   createStepArgs,
+  getRelatedInstanceValues,
 } from "../Helpers.js";
 
 import type { InstanceKey } from "@itwin/presentation-shared";
@@ -40,7 +41,7 @@ describe("collapseRelatedInstances", () => {
   });
 
   it("unwraps values when every item reaches at most one related instance", () => {
-    const descriptor = createDescriptor([aspectA]);
+    const descriptor = createDescriptor([aspectProp1]);
     const items = [
       createItem({
         descriptor,
@@ -51,7 +52,7 @@ describe("collapseRelatedInstances", () => {
       createItem({ descriptor, relatedInstances: [{ path: aspectsPath, instances: [] }] }),
       createItem({ descriptor }),
     ];
-    const entry: FieldEntry = { kind: "field", field: aspectA, categoryId: "aspects", values: [["a1"], [], undefined] };
+    const entry: FieldEntry = { kind: "field", field: aspectProp1, values: [["a1"], [], undefined] };
 
     const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries: [entry] }));
 
@@ -59,102 +60,48 @@ describe("collapseRelatedInstances", () => {
   });
 
   it("groups fields of the same path and category by related instance", () => {
-    const aspectOtherCategory = createPropertyField("aspectOtherCategory", {
+    const aspectPropOtherCategory = createPropertyField("aspectPropOtherCategory", {
+      propertyClassName: "BisCore.ElementMultiAspect",
       pathFromTarget: aspectsPath,
       pathCardinality: "many",
     });
-    const descriptor = createDescriptor([direct, aspectA, aspectOtherCategory, aspectB]);
+    const descriptor = createDescriptor([direct, aspectProp1, aspectPropOtherCategory, aspectProp2]);
     const aspect1: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x10" };
     const aspect2: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x11" };
-    const relationship: InstanceKey = { className: "BisCore.ElementOwnsMultiAspects", id: "0x20" };
     const items = [
       createItem({
         descriptor,
-        relatedInstances: [
-          { path: aspectsPath, instances: [{ key: aspect1, relationshipKey: relationship }, { key: aspect2 }] },
-        ],
+        values: { aspectProp1: ["a1", "a2"], aspectPropOtherCategory: ["o1"], aspectProp2: ["b1"] },
+        relatedInstances: [{ path: aspectsPath, instances: [{ key: aspect1 }, { key: aspect2 }] }],
       }),
       createItem({ descriptor }),
     ];
     const entries: FieldEntry[] = [
       { kind: "field", field: direct, values: ["d1", "d2"] },
-      { kind: "field", field: aspectA, categoryId: "aspects", values: [["a1", "a2"], undefined] },
-      { kind: "field", field: aspectOtherCategory, values: [["o1", undefined], undefined] },
-      { kind: "field", field: aspectB, categoryId: "aspects", values: [["b1"], undefined] },
+      { kind: "field", field: aspectProp1, values: [["a1", "a2"], undefined] },
+      { kind: "field", field: aspectPropOtherCategory, values: [["o1"], undefined] },
+      { kind: "field", field: aspectProp2, values: [["b1"], undefined] },
     ];
 
     const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries }));
 
-    expect(result.entries).to.deep.equal([
-      entries[0],
-      {
-        kind: "related-instances",
-        pathFromTarget: aspectsPath,
-        fields: [aspectA, aspectB],
-        categoryId: "aspects",
-        values: [
-          [
-            { key: aspect1, relationshipKey: relationship, values: { aspectA: "a1", aspectB: "b1" } },
-            { key: aspect2, values: { aspectA: "a2", aspectB: undefined } },
-          ],
-          [],
-        ],
-      },
-      {
-        kind: "related-instances",
-        pathFromTarget: aspectsPath,
-        fields: [aspectOtherCategory],
-        values: [
-          [
-            { key: aspect1, relationshipKey: relationship, values: { aspectOtherCategory: "o1" } },
-            { key: aspect2, values: { aspectOtherCategory: undefined } },
-          ],
-          [],
-        ],
-      },
+    expect(result.entries).to.have.lengthOf(3);
+    expect(result.entries[0]).to.equal(entries[0]);
+    expect(result.entries[1]).to.deep.include({ kind: "related-instances", fields: [aspectProp1, aspectProp2] });
+    expect(getRelatedInstanceValues(result.entries[1])).to.deep.equal([
+      [
+        { key: aspect1, values: { aspectProp1: "a1", aspectProp2: "b1" } },
+        { key: aspect2, values: { aspectProp1: "a2", aspectProp2: undefined } },
+      ],
+      [],
     ]);
-  });
-
-  it("looks up related instances over paths of all fields the entry was combined from", () => {
-    const valvePath = [{ ...aspectsPath[0], sourceClassName: "Plant.Valve" as const }];
-    const descriptor = createDescriptor([aspectA]);
-    const aspect1: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x10" };
-    const aspect2: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x11" };
-    const aspect3: InstanceKey = { className: "BisCore.ElementMultiAspect", id: "0x12" };
-    const items = [
-      createItem({ descriptor, relatedInstances: [{ path: aspectsPath, instances: [{ key: aspect1 }] }] }),
-      createItem({
-        descriptor,
-        relatedInstances: [
-          { path: aspectsPath, instances: [] },
-          { path: valvePath, instances: [{ key: aspect2 }, { key: aspect3 }] },
-        ],
-      }),
-    ];
-    const entry: FieldEntry = {
-      kind: "field",
-      field: aspectA,
-      categoryId: "aspects",
-      values: [["a1"], ["a2", "a3"]],
-      combinedFrom: [aspectA, { ...aspectA, id: "valveAspectA", pathFromTarget: valvePath }],
-    };
-
-    const result = collapseRelatedInstances()(...createStepArgs({ descriptor, items, entries: [entry] }));
-
-    expect(result.entries).to.deep.equal([
-      {
-        kind: "related-instances",
-        pathFromTarget: aspectsPath,
-        fields: [aspectA],
-        categoryId: "aspects",
-        values: [
-          [{ key: aspect1, values: { aspectA: "a1" } }],
-          [
-            { key: aspect2, values: { aspectA: "a2" } },
-            { key: aspect3, values: { aspectA: "a3" } },
-          ],
-        ],
-      },
+    expect(result.entries[2]).to.deep.include({ kind: "related-instances", fields: [aspectPropOtherCategory] });
+    expect(getRelatedInstanceValues(result.entries[2])).to.deep.equal([
+      [
+        { key: aspect1, values: { aspectPropOtherCategory: "o1" } },
+        { key: aspect2, values: { aspectPropOtherCategory: undefined } },
+      ],
+      [],
     ]);
   });
 });

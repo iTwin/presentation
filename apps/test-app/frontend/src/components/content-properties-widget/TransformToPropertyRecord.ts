@@ -23,11 +23,12 @@ const labelCollator = new Intl.Collator(undefined, { sensitivity: "base" });
 
 /** Maps content of the selected instances to `PropertyData` for the `PropertyGrid` component. */
 export async function createPropertyData(content: Content): Promise<PropertyData> {
-  const { categories, entries } = transformContent(content, propertyGridConfig);
+  const { categories } = content.descriptor;
+  const { entries } = transformContent(content, propertyGridConfig);
   const tree = createCategoryTree(categories);
   const records: PropertyData["records"] = {};
   for (const entry of entries) {
-    const category = tree.get(entry.categoryId);
+    const category = tree.get(getCategoryId(entry));
     (records[category.name] ??= []).push(await createEntryRecord(entry, categories));
   }
   for (const categoryRecords of Object.values(records)) {
@@ -58,11 +59,14 @@ interface RecordProps {
 }
 
 type ContentEntry = ContentRecords["entries"][number];
+type CategoryDefinitions = Content["descriptor"]["categories"];
 
-async function createEntryRecord(
-  entry: ContentEntry,
-  categories: ContentRecords["categories"],
-): Promise<PropertyRecord> {
+/** Entries take their category from their field. All fields of a related instances entry share the same category. */
+function getCategoryId(entry: ContentEntry): string | undefined {
+  return entry.kind === "field" ? entry.field.categoryId : entry.fields[0].categoryId;
+}
+
+async function createEntryRecord(entry: ContentEntry, categories: CategoryDefinitions): Promise<PropertyRecord> {
   const props = getEntryRecordProps(entry, categories);
   if (entry.varies) {
     const record = new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive }, createDescription(props));
@@ -73,7 +77,7 @@ async function createEntryRecord(
   return createRecord(props);
 }
 
-function getEntryRecordProps(entry: ContentEntry, categories: ContentRecords["categories"]): RecordProps {
+function getEntryRecordProps(entry: ContentEntry, categories: CategoryDefinitions): RecordProps {
   // Unless the entry varies, all items it applies to have equal values, and the rest have no values. So the first
   // available value represents all of them.
   if (entry.kind === "field") {
@@ -88,13 +92,14 @@ function getEntryRecordProps(entry: ContentEntry, categories: ContentRecords["ca
   }
   // Related instances are shown as an array of structs, one struct per related instance. The array and its structs
   // are read-only, while struct members take read-only status from their fields.
-  const { fields, pathFromTarget } = entry;
+  const { fields } = entry;
+  const { pathFromTarget, categoryId } = fields[0];
   const readonlyFieldIds = new Set(fields.filter((field) => field.readOnly).map((field) => field.id));
   const instances = entry.values.find((itemInstances) => itemInstances.length > 0) ?? [];
   return {
     name: `related(${fields[0].id})`,
     label:
-      (entry.categoryId !== undefined ? categories[entry.categoryId]?.label : undefined) ??
+      (categoryId !== undefined ? categories[categoryId]?.label : undefined) ??
       pathFromTarget[pathFromTarget.length - 1].targetClassName,
     type: {
       kind: "array",
@@ -103,7 +108,7 @@ function getEntryRecordProps(entry: ContentEntry, categories: ContentRecords["ca
         members: fields.map((field) => ({ name: field.id, label: field.label, type: field.type })),
       },
     },
-    value: instances.map((instance) => instance.values),
+    value: instances.map((instance) => Object.fromEntries(fields.map((field) => [field.id, instance.getValue(field)]))),
     isReadonly: true,
     isMemberReadonly: (memberName) => readonlyFieldIds.has(memberName),
   };
@@ -216,7 +221,7 @@ function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
  * Creates property categories on demand, so that only categories with records (and their ancestors) end up in the
  * tree. The default category is the only root: it holds fields without a category, and categories without a parent.
  */
-function createCategoryTree(definitions: Partial<ContentRecords["categories"]>) {
+function createCategoryTree(definitions: Partial<CategoryDefinitions>) {
   const roots: PropertyCategory[] = [];
   const created = new Map<string, PropertyCategory>();
   function get(categoryId: string | undefined): PropertyCategory {

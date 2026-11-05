@@ -91,10 +91,7 @@ export function createStepArgs(props: {
   entries: ContentEntry[];
 }): [ContentRecords, ContentTransformContext] {
   const descriptor = props.descriptor ?? createDescriptor([]);
-  return [
-    { categories: descriptor.categories, entries: props.entries },
-    { descriptor, items: props.items ?? [] },
-  ];
+  return [{ entries: props.entries }, { descriptor, items: props.items ?? [] }];
 }
 
 export const aspectsPath: RelationshipPath = [
@@ -113,27 +110,52 @@ export const childrenPath: RelationshipPath = [
   },
 ];
 
-export const aspectA = createPropertyField("aspectA", {
+/** Properties of the same related class, `BisCore.ElementMultiAspect`, reached over `aspectsPath`. */
+export const aspectProp1 = createPropertyField("aspectProp1", {
+  propertyClassName: "BisCore.ElementMultiAspect",
   pathFromTarget: aspectsPath,
   pathCardinality: "many",
   categoryId: "aspects",
 });
-export const aspectB = createPropertyField("aspectB", {
+export const aspectProp2 = createPropertyField("aspectProp2", {
+  propertyClassName: "BisCore.ElementMultiAspect",
   pathFromTarget: aspectsPath,
   pathCardinality: "many",
   categoryId: "aspects",
 });
 
+/** Creates a related instance, as returned by `ContentItem.getRelatedInstances`, with values keyed by field ID. */
+export function createRelatedInstance(
+  key: InstanceKey,
+  values: Record<string, Value>,
+): RelatedInstancesEntry["values"][number][number] {
+  return { key, getValue: (field) => values[field.id] };
+}
+
+/** Converts related instances of the entry into plain objects with values keyed by field ID, for comparison. */
+export function getRelatedInstanceValues(entry: ContentEntry) {
+  if (entry.kind !== "related-instances") {
+    throw new Error("Expected a related instances entry");
+  }
+  return entry.values.map((itemInstances) =>
+    itemInstances.map((instance) => ({
+      key: instance.key,
+      values: Object.fromEntries(entry.fields.map((field) => [field.id, instance.getValue(field)])),
+    })),
+  );
+}
+
 export function createRelatedEntry(overrides?: Partial<RelatedInstancesEntry>): RelatedInstancesEntry {
   return {
     kind: "related-instances",
-    pathFromTarget: aspectsPath,
-    fields: [aspectA, aspectB],
-    categoryId: "aspects",
+    fields: [aspectProp1, aspectProp2],
     values: [
       [
-        { key: { className: "BisCore.ElementMultiAspect", id: "0x10" }, values: { aspectA: "a1", aspectB: "" } },
-        { key: { className: "BisCore.ElementMultiAspect", id: "0x11" }, values: { aspectA: "a2", aspectB: undefined } },
+        createRelatedInstance(
+          { className: "BisCore.ElementMultiAspect", id: "0x10" },
+          { aspectProp1: "a1", aspectProp2: "" },
+        ),
+        createRelatedInstance({ className: "BisCore.ElementMultiAspect", id: "0x11" }, { aspectProp1: "a2" }),
       ],
     ],
     ...overrides,

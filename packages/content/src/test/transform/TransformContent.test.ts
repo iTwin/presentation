@@ -11,9 +11,9 @@ import type { ContentRecords, ContentTransformContext } from "../../content/tran
 
 describe("transformContent", () => {
   it("creates initial records with one field entry per descriptor field", () => {
-    const fieldA = createPropertyField("a", { categoryId: "cat" });
+    const fieldA = createPropertyField("a");
     const fieldB = createPropertyField("b");
-    const descriptor = createDescriptor([fieldA, fieldB], [{ id: "cat", label: "Category" }]);
+    const descriptor = createDescriptor([fieldA, fieldB]);
     const items = [
       createItem({ descriptor, values: { a: "a1", b: 1 } }),
       createItem({ descriptor, primaryKey: { className: "BisCore.Element", id: "0x2" }, values: { a: "a2" } }),
@@ -22,9 +22,8 @@ describe("transformContent", () => {
     const result = transformContent({ descriptor, items }, { steps: [] });
 
     expect(result).to.deep.equal({
-      categories: descriptor.categories,
       entries: [
-        { kind: "field", field: fieldA, categoryId: "cat", values: ["a1", "a2"] },
+        { kind: "field", field: fieldA, values: ["a1", "a2"] },
         { kind: "field", field: fieldB, values: [1, undefined] },
       ],
     });
@@ -37,7 +36,7 @@ describe("transformContent", () => {
       ...records,
       entries: [],
     }));
-    const secondResult: ContentRecords = { categories: {}, entries: [] };
+    const secondResult: ContentRecords = { entries: [] };
     const second = vi.fn((_records: ContentRecords, _context: ContentTransformContext): ContentRecords => secondResult);
 
     const result = transformContent({ descriptor, items }, { steps: [first, second] });
