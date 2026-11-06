@@ -40,3 +40,7 @@ export type { BisCoreLocalizedStrings } from "./content/extensions/biscore/BisCo
 
 // Consumer utilities
 export { mapItems, reduceItems } from "./content/Utilities.js";
+
+// Content transformation
+export type { ContentEntries } from "./content/transform/TransformContent.js";
+export { transformContent } from "./content/transform/TransformContent.js";

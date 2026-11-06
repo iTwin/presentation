@@ -60,3 +60,20 @@ The package provides three extension mechanisms, each targeting a different stag
 - **`defineExternalFieldsProvider`** — declare fields whose values come from external sources. The provider specifies which iModel properties it needs as inputs and supplies values for its own fields in a batch callback. Direct inputs pass through the property's value unchanged. Related inputs specify `related.path`, which must be nonempty, and an optional `related.cardinalityHint`. A `"many"` hint supplies an array with one value per related instance.
 
 All extension points are registered through the `ContentConfiguration` object passed to `resolveContentSources` and `createContentProvider`.
+
+## Transforming content
+
+The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. `transformContent` shapes a descriptor and its items for a specific kind of UI and returns `ContentEntries`, which UI components map into their own format, such as property grid records. The `config` prop tells what the content is shaped for:
+
+```ts
+const { entries } = transformContent({ descriptor, items, config: { type: "propertyGrid" } });
+```
+
+Each entry is either a single field with its raw values, one per item, or a group of fields of a many-cardinality relationship path holding the related instances of every item. Read related instance values with `getValue(field)`. Entries don't carry categories, so use the fields' `categoryId` and the descriptor's `categories`.
+
+The `propertyGrid` configuration shows content of one or more selected instances as a single set of entries:
+
+- Fields marked `hidden` are dropped.
+- Only fields that apply to every item's primary class are kept. Pass `fields: "all"` to keep all fields instead.
+- Many-cardinality related values are unwrapped when every item reaches at most one related instance. Otherwise they're grouped by related instance.
+- Each entry's `varies` tells whether its values differ between the items it applies to.

@@ -6,6 +6,7 @@ public;interface;CategoryDefinition
 public;namespace;CategoryDefinition
 public;interface;ContentConfiguration
 public;interface;ContentDescriptor
+public;interface;ContentEntries
 public;interface;ContentItem
 public;interface;ContentSource
 public;interface;ContentTarget
@@ -30,3 +31,4 @@ public;type;ReadonlyField
 public;type;ReadonlyPropertyField
 public;function;reduceItems
 public;function;resolveContentSources
+public;function;transformContent
