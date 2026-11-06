@@ -3,49 +3,54 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { transformContent } from "../../content/transform/TransformContent.js";
-import { createDescriptor, createItem, createPropertyField } from "./Helpers.js";
-
-import type { ContentRecords, ContentTransformContext } from "../../content/transform/TransformContent.js";
+import { aspectProp1, aspectsPath, createDescriptor, createItem, createPropertyField } from "./Helpers.js";
 
 describe("transformContent", () => {
-  it("creates initial records with one field entry per descriptor field", () => {
-    const fieldA = createPropertyField("a");
-    const fieldB = createPropertyField("b");
-    const descriptor = createDescriptor([fieldA, fieldB]);
+  describe("propertyGrid", () => {
+    const common = createPropertyField("common", { primaryClassNames: ["Plant.Pump", "Plant.Valve"] });
+    const pumpOnly = createPropertyField("pumpOnly", { primaryClassNames: ["Plant.Pump"] });
+    const hidden = createPropertyField("hidden", { primaryClassNames: ["Plant.Pump", "Plant.Valve"], hidden: true });
+    const related = { ...aspectProp1, primaryClassNames: ["Plant.Pump" as const, "Plant.Valve" as const] };
+    const descriptor = createDescriptor([common, pumpOnly, hidden, related]);
+    const aspectKey = { className: "BisCore.ElementMultiAspect" as const, id: "0x10" };
     const items = [
-      createItem({ descriptor, values: { a: "a1", b: 1 } }),
-      createItem({ descriptor, primaryKey: { className: "BisCore.Element", id: "0x2" }, values: { a: "a2" } }),
+      createItem({
+        descriptor,
+        primaryKey: { className: "Plant.Pump", id: "0x1" },
+        values: { common: "a", pumpOnly: "p", hidden: "h", aspectProp1: ["x"] },
+        relatedInstances: [{ path: aspectsPath, instances: [{ key: aspectKey }] }],
+      }),
+      createItem({
+        descriptor,
+        primaryKey: { className: "Plant.Valve", id: "0x2" },
+        values: { common: "b", hidden: "h", aspectProp1: ["x"] },
+        relatedInstances: [{ path: aspectsPath, instances: [{ key: { ...aspectKey, id: "0x11" } }] }],
+      }),
     ];
 
-    const result = transformContent({ descriptor, items }, { steps: [] });
+    it("keeps common fields, removes hidden fields, collapses related instances and identifies varying values", () => {
+      const result = transformContent({ descriptor, items, config: { type: "propertyGrid" } });
 
-    expect(result).to.deep.equal({
-      entries: [
-        { kind: "field", field: fieldA, values: ["a1", "a2"] },
-        { kind: "field", field: fieldB, values: [1, undefined] },
-      ],
+      expect(result).to.deep.equal({
+        entries: [
+          { kind: "field", field: common, values: ["a", "b"], varies: true },
+          { kind: "field", field: related, values: ["x", "x"], varies: false },
+        ],
+      });
     });
-  });
 
-  it("runs steps in order, passing output of one step to the next and the same context to all", () => {
-    const descriptor = createDescriptor([createPropertyField("a")]);
-    const items = [createItem({ descriptor })];
-    const first = vi.fn((records: ContentRecords, _context: ContentTransformContext): ContentRecords => ({
-      ...records,
-      entries: [],
-    }));
-    const secondResult: ContentRecords = { entries: [] };
-    const second = vi.fn((_records: ContentRecords, _context: ContentTransformContext): ContentRecords => secondResult);
+    it("keeps all fields when `fields` is `all`", () => {
+      const result = transformContent({ descriptor, items, config: { type: "propertyGrid", fields: "all" } });
 
-    const result = transformContent({ descriptor, items }, { steps: [first, second] });
-
-    expect(first).toHaveBeenCalledOnce();
-    const context = first.mock.calls[0][1];
-    expect(context).to.deep.equal({ descriptor, items });
-    expect(second).toHaveBeenCalledWith(first.mock.results[0].value, context);
-    expect(second.mock.calls[0][1]).to.equal(context);
-    expect(result).to.equal(secondResult);
+      expect(result).to.deep.equal({
+        entries: [
+          { kind: "field", field: common, values: ["a", "b"], varies: true },
+          { kind: "field", field: pumpOnly, values: ["p", undefined], varies: false },
+          { kind: "field", field: related, values: ["x", "x"], varies: false },
+        ],
+      });
+    });
   });
 });

@@ -4,18 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { createPropertyGridConfig, transformContent } from "@itwin/presentation-content";
+import { transformContent } from "@itwin/presentation-content";
 import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/presentation-shared";
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, ContentRecords } from "@itwin/presentation-content";
+import type { CategoryDefinition, ContentEntries } from "@itwin/presentation-content";
 import type { Content } from "@itwin/presentation-content-react";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
 const DEFAULT_CATEGORY: CategoryDefinition = { id: "/default-category/", label: "Miscellaneous" };
-
-const propertyGridConfig = createPropertyGridConfig();
 
 const navigationLabelFormatter = createDefaultValueFormatter();
 
@@ -24,7 +22,7 @@ const labelCollator = new Intl.Collator(undefined, { sensitivity: "base" });
 /** Maps content of the selected instances to `PropertyData` for the `PropertyGrid` component. */
 export async function createPropertyData(content: Content): Promise<PropertyData> {
   const { categories } = content.descriptor;
-  const { entries } = transformContent(content, propertyGridConfig);
+  const { entries } = transformContent({ ...content, config: { type: "propertyGrid" } });
   const tree = createCategoryTree(categories);
   const records: PropertyData["records"] = {};
   for (const entry of entries) {
@@ -58,7 +56,7 @@ interface RecordProps {
   isMemberReadonly?: (memberName: string) => boolean;
 }
 
-type ContentEntry = ContentRecords["entries"][number];
+type ContentEntry = ContentEntries["entries"][number];
 type CategoryDefinitions = Content["descriptor"]["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */

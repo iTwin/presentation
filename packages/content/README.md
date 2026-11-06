@@ -63,13 +63,17 @@ All extension points are registered through the `ContentConfiguration` object pa
 
 ## Transforming content
 
-The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. `transformContent` turns a descriptor and its items into an intermediate format, `ContentRecords`, that UI components map into their own shape, such as property grid records. Its second argument is a configuration with the steps to run over the records, in order.
+The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. `transformContent` shapes a descriptor and its items for a specific kind of UI and returns `ContentEntries`, which UI components map into their own format, such as property grid records. The `config` prop tells what the content is shaped for:
 
-`ContentRecords` holds a list of entries in display order. A `FieldEntry` pairs a field with its raw values, one per item. A `RelatedInstancesEntry` groups the fields of a many-cardinality relationship path and holds the related instances of every item. Read their values with `getValue(field)`. Entries don't carry categories, so use the fields' `categoryId` and the descriptor's `categories`.
+```ts
+const { entries } = transformContent({ descriptor, items, config: { type: "propertyGrid" } });
+```
 
-**`createPropertyGridConfig`** creates a predefined configuration that covers the common case of showing content of one or more selected instances as a single record set, such as in a property grid. Its steps:
+Each entry is either a single field with its raw values, one per item, or a group of fields of a many-cardinality relationship path holding the related instances of every item. Read related instance values with `getValue(field)`. Entries don't carry categories, so use the fields' `categoryId` and the descriptor's `categories`.
 
-- Drop fields marked `hidden`.
-- Keep only fields that apply to every item's primary class. Pass `fields: "all"` to keep all fields instead.
-- Unwrap many-cardinality related values when every item reaches at most one related instance. Otherwise group them into a `RelatedInstancesEntry`.
-- Mark entries as varying when their values differ between the items they apply to.
+The `propertyGrid` configuration shows content of one or more selected instances as a single set of entries:
+
+- Fields marked `hidden` are dropped.
+- Only fields that apply to every item's primary class are kept. Pass `fields: "all"` to keep all fields instead.
+- Many-cardinality related values are unwrapped when every item reaches at most one related instance. Otherwise they're grouped by related instance.
+- Each entry's `varies` tells whether its values differ between the items it applies to.

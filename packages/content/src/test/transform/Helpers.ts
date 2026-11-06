@@ -11,12 +11,7 @@ import type { CategoryDefinition } from "../../content/model/Category.js";
 import type { ContentDescriptor } from "../../content/model/ContentDescriptor.js";
 import type { ContentItem, RelatedInstanceEntry } from "../../content/model/ContentItem.js";
 import type { CalculatedField, ExternalField, Field, PropertyField } from "../../content/model/Field.js";
-import type {
-  ContentEntry,
-  ContentRecords,
-  ContentTransformContext,
-  RelatedInstancesEntry,
-} from "../../content/transform/TransformContent.js";
+import type { FieldValues, RelatedInstancesValues } from "../../content/transform/PropertyGrid.js";
 
 export function createPropertyField(id: string, overrides?: Partial<PropertyField>): PropertyField {
   return {
@@ -84,16 +79,6 @@ export function createItem(props: {
   });
 }
 
-/** Creates the `records` and `context` arguments of a content transform step. */
-export function createStepArgs(props: {
-  descriptor?: ContentDescriptor;
-  items?: ContentItem[];
-  entries: ContentEntry[];
-}): [ContentRecords, ContentTransformContext] {
-  const descriptor = props.descriptor ?? createDescriptor([]);
-  return [{ entries: props.entries }, { descriptor, items: props.items ?? [] }];
-}
-
 export const aspectsPath: RelationshipPath = [
   {
     sourceClassName: "BisCore.Element",
@@ -128,12 +113,12 @@ export const aspectProp2 = createPropertyField("aspectProp2", {
 export function createRelatedInstance(
   key: InstanceKey,
   values: Record<string, Value>,
-): RelatedInstancesEntry["values"][number][number] {
+): RelatedInstancesValues["values"][number][number] {
   return { key, getValue: (field) => values[field.id] };
 }
 
 /** Converts related instances of the entry into plain objects with values keyed by field ID, for comparison. */
-export function getRelatedInstanceValues(entry: ContentEntry) {
+export function getRelatedInstanceValues(entry: FieldValues | RelatedInstancesValues) {
   if (entry.kind !== "related-instances") {
     throw new Error("Expected a related instances entry");
   }
@@ -145,7 +130,7 @@ export function getRelatedInstanceValues(entry: ContentEntry) {
   );
 }
 
-export function createRelatedEntry(overrides?: Partial<RelatedInstancesEntry>): RelatedInstancesEntry {
+export function createRelatedEntry(overrides?: Partial<RelatedInstancesValues>): RelatedInstancesValues {
   return {
     kind: "related-instances",
     fields: [aspectProp1, aspectProp2],

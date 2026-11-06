@@ -21,7 +21,7 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseContentEntry {
-    varies?: boolean;
+    varies: boolean;
 }
 
 // @public
@@ -122,6 +122,11 @@ export interface ContentDescriptor {
 }
 
 // @public
+export interface ContentEntries {
+    entries: ContentEntry[];
+}
+
+// @public
 type ContentEntry = FieldEntry | RelatedInstancesEntry;
 
 // @public
@@ -155,11 +160,6 @@ interface ContentProviderProps {
 }
 
 // @public
-export interface ContentRecords {
-    entries: ContentEntry[];
-}
-
-// @public
 interface ContentRequestOptions {
     filters?: ContentValueFilter[];
     sorting?: ContentSortSpec[];
@@ -187,18 +187,7 @@ export interface ContentTarget {
 }
 
 // @public
-export interface ContentTransformConfig {
-    steps: ContentTransformStep[];
-}
-
-// @public
-export interface ContentTransformContext {
-    descriptor: ReadonlyContentDescriptor;
-    items: ContentItem[];
-}
-
-// @public
-export type ContentTransformStep = (records: ContentRecords, context: ContentTransformContext) => ContentRecords;
+type ContentTransformConfig = PropertyGridTransformConfig;
 
 // @public
 type ContentValueFilter = (ContentValueFilterTarget & {
@@ -235,9 +224,6 @@ interface CreateIModelContentConfigurationProps {
     imodelAccess: ECSqlQueryExecutor & ECSchemaProvider;
     localizedStrings?: Partial<BisCoreLocalizedStrings>;
 }
-
-// @public
-export function createPropertyGridConfig(props?: PropertyGridConfigProps): ContentTransformConfig;
 
 // @public
 export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
@@ -393,8 +379,9 @@ export namespace PropertyField {
 }
 
 // @public
-interface PropertyGridConfigProps {
+interface PropertyGridTransformConfig {
     fields?: "common" | "all";
+    type: "propertyGrid";
 }
 
 // @public
@@ -516,10 +503,11 @@ interface TransformableDescriptor {
 type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
 
 // @public
-export function transformContent(content: TransformContentInput, config: ContentTransformConfig): ContentRecords;
+export function transformContent(props: TransformContentProps): ContentEntries;
 
 // @public
-interface TransformContentInput {
+interface TransformContentProps {
+    config: ContentTransformConfig;
     descriptor: ReadonlyContentDescriptor;
     items: ContentItem[];
 }
