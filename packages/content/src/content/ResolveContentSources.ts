@@ -9,6 +9,7 @@ import {
   buildCategoryContext,
   ECSQL_PREFIX,
   getOrCreate,
+  getStepSourceConstraintClassName,
   PRIMARY_CLASS_ALIAS,
   resolveEffectiveSourceClass,
 } from "./InternalUtils.js";
@@ -926,19 +927,67 @@ function resolveTarget({
 }): Observable<ContentSource> {
   const resolvedPrimaryClasses = from(resolvePrimaryClasses({ imodelAccess, target }));
   const nestedProviders = providers.filter((provider) => provider.applyRecursively === true);
+  const startPathsAtConstraints = createPathStartNormalizer(imodelAccess, target);
   const resolvedDeclarations = resolveBaseGroups({ imodelAccess, providers, target }).pipe(
     mergeMap(async (baseGroups): Promise<ResolvedDeclarationGroupOutput[]> => {
       const nestedGroups = await resolveNestedGroups({ imodelAccess, target, nestedProviders, baseGroups });
       // Base groups first (provider then declaration order), followed by nested groups in their
       // breadth-first discovery order (shallower anchors first) — see `ContentSource.resolvedDeclarations`.
-      return [
-        ...baseGroups.map(({ providerId, declarationIndex, paths }) => ({ providerId, declarationIndex, paths })),
-        ...nestedGroups,
-      ];
+      // Nested paths are resolved from their prefixes' declared source classes, so paths are moved to
+      // constraint classes only after nested expansion.
+      return Promise.all(
+        [
+          ...baseGroups.map(({ providerId, declarationIndex, paths }) => ({ providerId, declarationIndex, paths })),
+          ...nestedGroups,
+        ].map(async (group) => ({ ...group, paths: await startPathsAtConstraints(group.paths) })),
+      );
     }),
   );
-  const resolvedExternalInputs = resolveExternalInputs({ imodelAccess, target, externalFieldsProviders });
+  const resolvedExternalInputs = resolveExternalInputs({ imodelAccess, target, externalFieldsProviders }).pipe(
+    mergeMap(async (groups) =>
+      Promise.all(groups.map(async (group) => ({ ...group, paths: await startPathsAtConstraints(group.paths) }))),
+    ),
+  );
   return forkJoin({ target: of(target), resolvedPrimaryClasses, resolvedDeclarations, resolvedExternalInputs });
+}
+
+/**
+ * Creates a function that starts resolved paths at their first relationship's constraint class (see
+ * `getStepSourceConstraintClassName`), so a relationship path resolved for different targets gets the same
+ * description.
+ *
+ * Returns new objects rather than modifying `paths`, which may be shared through the resolution cache.
+ */
+function createPathStartNormalizer(
+  schemaProvider: ECSchemaProvider,
+  target: ContentTarget,
+): (paths: ResolvedPath[]) => Promise<ResolvedPath[]> {
+  const constraintClasses = new Map<string, Promise<EC.FullClassNameDotNotation | undefined>>();
+  return async (paths) =>
+    Promise.all(
+      paths.map(async (resolved): Promise<ResolvedPath> => {
+        const [firstStep, ...otherSteps] = resolved.path;
+        const constraintClassName = await getOrCreate({
+          map: constraintClasses,
+          key: JSON.stringify([firstStep.relationshipName, !!firstStep.relationshipReverse]),
+          createFunc: async () => getStepSourceConstraintClassName(schemaProvider, firstStep),
+        });
+        if (!constraintClassName || constraintClassName === firstStep.sourceClassName) {
+          return resolved;
+        }
+        // A path that doesn't start at the target's class starts at its subclass: one it was declared for (see
+        // `resolveEffectiveSourceClass`) or a custom `resolve` returned. That class restricts the primary
+        // instances the path applies to, so it's only replaced by a constraint class deriving from it, which
+        // restricts them further.
+        if (
+          firstStep.sourceClassName !== target.primaryClass &&
+          !(await schemaProvider.classDerivesFrom(constraintClassName, firstStep.sourceClassName))
+        ) {
+          return resolved;
+        }
+        return { ...resolved, path: [{ ...firstStep, sourceClassName: constraintClassName }, ...otherSteps] };
+      }),
+    );
 }
 
 // --- Overlap detection ---

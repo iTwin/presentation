@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { resolveEffectiveSourceClass } from "../../InternalUtils.js";
 import { defineIModelFieldsProvider } from "../IModelFieldsProvider.js";
 import { isBisCoreSchemaAtLeast } from "./BisCoreUtils.js";
 
-import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
 import type { ContentTarget } from "../../ContentTarget.js";
 import type { CategoryDefinition } from "../../model/Category.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../IModelFieldsProvider.js";
@@ -338,66 +337,57 @@ async function createExternalSourceContribution(
 }
 
 /**
- * Builds 2d/3d type-definition related properties declarations (`GeometricElement3dHasTypeDefinition`
+ * 2d/3d type-definition related properties declarations (`GeometricElement3dHasTypeDefinition`
  * / `GeometricElement2dHasTypeDefinition`) and represented-element declarations
  * (`DrawingGraphicRepresentsElement` / `GraphicalElement3dRepresentsElement`).
  *
- * A declaration applies when the target class derives from its source class, or the source class derives
- * from the target class (a request for `BisCore.GeometricElement3d` still reaches
- * `GraphicalElement3dRepresentsElement`). In the latter case the path starts at the source class, so the
- * declaration only applies to its instances.
+ * The declarations start at their relationships' source classes and are returned for every target. Source
+ * resolution skips the ones unrelated to the target, and applies the ones declared for a subclass of the target
+ * only to that subclass's instances (e.g. `GraphicalElement3dRepresentsElement` for a `GeometricElement3d`
+ * target).
  */
-async function createTypeDefinitionAndRepresentedElementRelatedProperties(
-  imodelAccess: ECSchemaProvider,
-  target: ContentTarget,
-): Promise<RelatedPropertiesDeclaration[]> {
-  const relatedProperties: RelatedPropertiesDeclaration[] = [];
-  const declare = async (props: {
-    declaredSourceClassName: EC.FullClassNameDotNotation;
-    relationshipName: EC.FullClassNameDotNotation;
-    targetClassName: EC.FullClassNameDotNotation;
-    cardinalityHint: RelatedPropertiesDeclaration["cardinalityHint"];
-  }) => {
-    const sourceClassName = await resolveEffectiveSourceClass(
-      imodelAccess,
-      target.primaryClass,
-      props.declaredSourceClassName,
-    );
-    if (sourceClassName) {
-      relatedProperties.push({
-        path: [{ sourceClassName, targetClassName: props.targetClassName, relationshipName: props.relationshipName }],
-        cardinalityHint: props.cardinalityHint,
-      });
-    }
-  };
-
-  await declare({
-    declaredSourceClassName: "BisCore.GeometricElement3d",
-    relationshipName: "BisCore.GeometricElement3dHasTypeDefinition",
-    targetClassName: "BisCore.TypeDefinitionElement",
+const TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_RELATED_PROPERTIES: RelatedPropertiesDeclaration[] = [
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.GeometricElement3d",
+        relationshipName: "BisCore.GeometricElement3dHasTypeDefinition",
+        targetClassName: "BisCore.TypeDefinitionElement",
+      },
+    ],
     cardinalityHint: "one",
-  });
-  await declare({
-    declaredSourceClassName: "BisCore.GraphicalElement3d",
-    relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
-    targetClassName: "BisCore.Element",
+  },
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.GraphicalElement3d",
+        relationshipName: "BisCore.GraphicalElement3dRepresentsElement",
+        targetClassName: "BisCore.Element",
+      },
+    ],
     cardinalityHint: "many",
-  });
-  await declare({
-    declaredSourceClassName: "BisCore.GeometricElement2d",
-    relationshipName: "BisCore.GeometricElement2dHasTypeDefinition",
-    targetClassName: "BisCore.TypeDefinitionElement",
+  },
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.GeometricElement2d",
+        relationshipName: "BisCore.GeometricElement2dHasTypeDefinition",
+        targetClassName: "BisCore.TypeDefinitionElement",
+      },
+    ],
     cardinalityHint: "one",
-  });
-  await declare({
-    declaredSourceClassName: "BisCore.DrawingGraphic",
-    relationshipName: "BisCore.DrawingGraphicRepresentsElement",
-    targetClassName: "BisCore.Element",
+  },
+  {
+    path: [
+      {
+        sourceClassName: "BisCore.DrawingGraphic",
+        relationshipName: "BisCore.DrawingGraphicRepresentsElement",
+        targetClassName: "BisCore.Element",
+      },
+    ],
     cardinalityHint: "many",
-  });
-
-  return relatedProperties;
-}
+  },
+];
 
 /**
  * The iModel fields provider contributing `BisCore:Element`'s owned aspect fields
@@ -453,7 +443,7 @@ export function createBisCoreFieldsProvider(strings: BisCoreLocalizedStrings): I
         ...linksContribution.relatedProperties,
         ...groupsContribution.relatedProperties,
         ...externalSourceContribution.relatedProperties,
-        ...(await createTypeDefinitionAndRepresentedElementRelatedProperties(imodelAccess, target)),
+        ...TYPE_DEFINITION_AND_REPRESENTED_ELEMENT_RELATED_PROPERTIES,
       ];
 
       return {
