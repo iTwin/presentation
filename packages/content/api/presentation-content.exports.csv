@@ -6,7 +6,6 @@ public;interface;CategoryDefinition
 public;namespace;CategoryDefinition
 public;interface;ContentConfiguration
 public;interface;ContentDescriptor
-public;interface;ContentEntries
 public;interface;ContentItem
 public;interface;ContentSource
 public;interface;ContentTarget
@@ -24,6 +23,7 @@ public;function;getDistinctFieldValues
 public;function;mapItems
 public;interface;PropertyField
 public;namespace;PropertyField
+public;interface;PropertyGridEntries
 public;type;ReadonlyCalculatedField
 public;type;ReadonlyContentDescriptor
 public;type;ReadonlyExternalField

@@ -63,7 +63,7 @@ All extension points are registered through the `ContentConfiguration` object pa
 
 ## Transforming content
 
-The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. `transformContent` shapes a descriptor and its items for a specific kind of UI and returns `ContentEntries`, which UI components map into their own format, such as property grid records. The `config` prop tells what the content is shaped for:
+The pipeline returns raw values: one `ContentItem` per primary instance. The values aren't formatted, and many-cardinality related fields hold arrays. `transformContent` shapes a descriptor and its items for a specific kind of UI, selected by the `config` prop. The result type depends on the configuration type - for `propertyGrid` it's `PropertyGridEntries` - and UI components map it into their own format, such as property grid records:
 
 ```ts
 const { entries } = transformContent({ descriptor, items, config: { type: "propertyGrid" } });

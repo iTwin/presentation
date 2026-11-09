@@ -20,11 +20,6 @@ import type { Value } from '@itwin/presentation-shared';
 import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
-interface BaseContentEntry {
-    varies: boolean;
-}
-
-// @public
 interface BaseField {
     categoryId?: string;
     hidden?: boolean;
@@ -38,6 +33,11 @@ interface BaseField {
 interface BaseFieldsProvider {
     id: `${string}_v${number}`;
     priority?: number;
+}
+
+// @public
+interface BasePropertyGridEntry {
+    varies: boolean;
 }
 
 // @public
@@ -122,14 +122,6 @@ export interface ContentDescriptor {
 }
 
 // @public
-export interface ContentEntries {
-    entries: ContentEntry[];
-}
-
-// @public
-type ContentEntry = FieldEntry | RelatedInstancesEntry;
-
-// @public
 export interface ContentItem {
     readonly descriptor: ReadonlyContentDescriptor;
     getRelatedInstances(props: {
@@ -187,7 +179,15 @@ export interface ContentTarget {
 }
 
 // @public
-type ContentTransformConfig = PropertyGridTransformConfig;
+interface ContentTransformations {
+    propertyGrid: {
+        config: PropertyGridTransformConfig;
+        result: PropertyGridEntries;
+    };
+}
+
+// @public
+type ContentTransformType = keyof ContentTransformations;
 
 // @public
 type ContentValueFilter = (ContentValueFilterTarget & {
@@ -296,7 +296,7 @@ type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration
 export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
-interface FieldEntry extends BaseContentEntry {
+interface FieldEntry extends BasePropertyGridEntry {
     field: ReadonlyField;
     kind: "field";
     values: Array<DeepReadonly<Value>>;
@@ -379,6 +379,14 @@ export namespace PropertyField {
 }
 
 // @public
+export interface PropertyGridEntries {
+    entries: PropertyGridEntry[];
+}
+
+// @public
+type PropertyGridEntry = FieldEntry | RelatedInstancesEntry;
+
+// @public
 interface PropertyGridTransformConfig {
     fields?: "common" | "all";
     type: "propertyGrid";
@@ -422,7 +430,7 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
 
 // @public
-interface RelatedInstancesEntry extends BaseContentEntry {
+interface RelatedInstancesEntry extends BasePropertyGridEntry {
     fields: ReadonlyPropertyField[];
     kind: "related-instances";
     values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
@@ -503,11 +511,13 @@ interface TransformableDescriptor {
 type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
 
 // @public
-export function transformContent(props: TransformContentProps): ContentEntries;
+export function transformContent<TType extends ContentTransformType>(props: TransformContentProps<TType>): ContentTransformations[TType]["result"];
 
 // @public
-interface TransformContentProps {
-    config: ContentTransformConfig;
+interface TransformContentProps<TType extends ContentTransformType> {
+    config: ContentTransformations[TType]["config"] & {
+        type: TType;
+    };
     descriptor: ReadonlyContentDescriptor;
     items: ContentItem[];
 }

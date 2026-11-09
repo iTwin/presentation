@@ -626,7 +626,7 @@ Consumers compose these based on their needs:
 
 This keeps the pipeline simple (it only deals with raw data) and gives consumers full control over what transformations they apply and in what order.
 
-For display-oriented post-processing, `transformContent` shapes content for a specific kind of UI, selected by its `config` (currently only `propertyGrid`), and returns `ContentEntries`. Each entry pairs a field (or a group of related-instance fields) with its raw values, one per item. The `propertyGrid` configuration keeps fields common to all items (or all fields, with `fields: "all"`), drops hidden fields, collapses many-cardinality related values and marks entries with differing values as varying. The transformation steps are internal. Mapping the result to a UI-specific format, is left to the consumer.
+For display-oriented post-processing, `transformContent` shapes content for a specific kind of UI, selected by its `config` (currently only `propertyGrid`), and returns a result specific to that configuration type - `PropertyGridEntries` for `propertyGrid`. Each entry pairs a field (or a group of related-instance fields) with its raw values, one per item. The `propertyGrid` configuration keeps fields common to all items (or all fields, with `fields: "all"`), drops hidden fields, collapses many-cardinality related values and marks entries with differing values as varying. The transformation steps are internal. Mapping the result to a UI-specific format, is left to the consumer.
 
 ---
 

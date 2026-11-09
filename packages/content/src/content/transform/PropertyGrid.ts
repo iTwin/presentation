@@ -12,30 +12,119 @@ import type { DeepReadonly, Value } from "@itwin/presentation-shared";
 import type { ReadonlyContentDescriptor } from "../model/ContentDescriptor.js";
 import type { ContentItem } from "../model/ContentItem.js";
 import type { ReadonlyField, ReadonlyPropertyField } from "../model/Field.js";
-import type { ContentEntries } from "./TransformContent.js";
+
+/**
+ * Content shaped by `transformContent` for a property grid. Holds one entry per displayed field (or group of fields),
+ * each carrying raw values of all transformed content items.
+ *
+ * @public
+ */
+export interface PropertyGridEntries {
+  /** Entries in descriptor field order. */
+  entries: PropertyGridEntry[];
+}
+
+/**
+ * An entry of `PropertyGridEntries`.
+ * @public
+ */
+type PropertyGridEntry = FieldEntry | RelatedInstancesEntry;
+
+/**
+ * Attributes shared by all `PropertyGridEntry` kinds.
+ * @public
+ */
+interface BasePropertyGridEntry {
+  /**
+   * Whether content items the entry applies to have different values for it. When `false`, all items the entry
+   * applies to have the same value, and the rest have no values.
+   */
+  varies: boolean;
+}
+
+/**
+ * An entry for a single field.
+ * @public
+ */
+interface FieldEntry extends BasePropertyGridEntry {
+  /** Discriminator of the entry kind. */
+  kind: "field";
+  /** The field this entry represents. */
+  field: ReadonlyField;
+  /**
+   * Raw values of the field, one per transformed content item: `values[i]` belongs to `items[i]`. Items the field
+   * doesn't apply to have `undefined` values.
+   */
+  values: Array<DeepReadonly<Value>>;
+}
+
+/**
+ * An entry grouping fields of a many-cardinality relationship path by related instance.
+ * @public
+ */
+interface RelatedInstancesEntry extends BasePropertyGridEntry {
+  /** Discriminator of the entry kind. */
+  kind: "related-instances";
+  /**
+   * Fields of the related instances, in display order. There's at least one field, and all fields share the same
+   * `pathFromTarget` - the relationship path from content target to the related instances - and `categoryId`.
+   */
+  fields: ReadonlyPropertyField[];
+  /**
+   * Related instances of each transformed content item, as returned by `ContentItem.getRelatedInstances`:
+   * `values[i]` belongs to `items[i]`. Use `getValue` of a related instance to get its value of one of `fields`.
+   */
+  values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
+}
+
+/**
+ * Transforms content for displaying it in a property grid - content of one or more instances is shown as a single
+ * set of entries:
+ *
+ * - Fields marked as `hidden` are dropped.
+ * - Only fields that apply to all items are kept, unless `fields` is `"all"`. A field applies to an item when the
+ *   item's primary class is in the field's `primaryClassNames`; external fields apply to all items.
+ * - Values of fields reached over many-cardinality relationship paths are reshaped. When every item reaches at most
+ *   one related instance over the path, values are unwrapped from arrays. Otherwise, fields of the path within the
+ *   same category are grouped into a single `related-instances` entry holding the related instances of every item.
+ * - Each entry's `varies` tells whether its values differ between items it applies to. Values are compared deeply,
+ *   and related instances are compared regardless of their order.
+ *
+ * @public
+ */
+export interface PropertyGridTransformConfig {
+  /** Discriminator of the transformation type. */
+  type: "propertyGrid";
+  /**
+   * Which fields to keep when content has items of different classes:
+   * - `"common"` keeps only fields that apply to all items, i.e. the intersection of item fields.
+   * - `"all"` keeps all fields, i.e. the union of item fields.
+   *
+   * @default "common"
+   */
+  fields?: "common" | "all";
+}
 
 /** Transforms content for a property grid. See `PropertyGridTransformConfig` for what's done. */
 export function transformForPropertyGrid({
   descriptor,
   items,
-  fields,
+  config,
 }: {
   descriptor: ReadonlyContentDescriptor;
   items: ContentItem[];
-  fields: "common" | "all";
-}): ContentEntries {
+  config: PropertyGridTransformConfig;
+}): PropertyGridEntries {
   const visibleFields = removeHiddenFields(createFieldValues({ descriptor, items }));
-  const keptFields = fields === "common" ? keepCommonFields(visibleFields, items) : visibleFields;
+  const keptFields = (config.fields ?? "common") === "common" ? keepCommonFields(visibleFields, items) : visibleFields;
   return { entries: identifyVaryingEntries(collapseRelatedInstances(keptFields, items), items) };
 }
 
-type ContentEntry = ContentEntries["entries"][number];
-
 /** A field and its values of every content item, before it's known whether the values vary. */
-export type FieldValues = Omit<Extract<ContentEntry, { kind: "field" }>, "varies">;
+export type FieldValues = Omit<FieldEntry, "varies">;
 
 /** Related instances of every content item, before it's known whether they vary. */
-export type RelatedInstancesValues = Omit<Extract<ContentEntry, { kind: "related-instances" }>, "varies">;
+export type RelatedInstancesValues = Omit<RelatedInstancesEntry, "varies">;
 
 /**
  * Checks whether the field applies to the item, based on whether the item's primary class is in the field's
@@ -141,7 +230,7 @@ function getElement(value: DeepReadonly<Value>, index: number): DeepReadonly<Val
 export function identifyVaryingEntries(
   entries: Array<FieldValues | RelatedInstancesValues>,
   items: ContentItem[],
-): ContentEntries["entries"] {
+): PropertyGridEntry[] {
   return entries.map((entry) => {
     const fields = entry.kind === "field" ? [entry.field] : entry.fields;
     const values: unknown[] = items.flatMap((item, index) => {

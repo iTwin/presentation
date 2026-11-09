@@ -9,7 +9,7 @@ import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/pre
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, ContentEntries } from "@itwin/presentation-content";
+import type { CategoryDefinition, PropertyGridEntries } from "@itwin/presentation-content";
 import type { Content } from "@itwin/presentation-content-react";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
@@ -56,15 +56,15 @@ interface RecordProps {
   isMemberReadonly?: (memberName: string) => boolean;
 }
 
-type ContentEntry = ContentEntries["entries"][number];
+type PropertyGridEntry = PropertyGridEntries["entries"][number];
 type CategoryDefinitions = Content["descriptor"]["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */
-function getCategoryId(entry: ContentEntry): string | undefined {
+function getCategoryId(entry: PropertyGridEntry): string | undefined {
   return entry.kind === "field" ? entry.field.categoryId : entry.fields[0].categoryId;
 }
 
-async function createEntryRecord(entry: ContentEntry, categories: CategoryDefinitions): Promise<PropertyRecord> {
+async function createEntryRecord(entry: PropertyGridEntry, categories: CategoryDefinitions): Promise<PropertyRecord> {
   const props = getEntryRecordProps(entry, categories);
   if (entry.varies) {
     const record = new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive }, createDescription(props));
@@ -75,7 +75,7 @@ async function createEntryRecord(entry: ContentEntry, categories: CategoryDefini
   return createRecord(props);
 }
 
-function getEntryRecordProps(entry: ContentEntry, categories: CategoryDefinitions): RecordProps {
+function getEntryRecordProps(entry: PropertyGridEntry, categories: CategoryDefinitions): RecordProps {
   // Unless the entry varies, all items it applies to have equal values, and the rest have no values. So the first
   // available value represents all of them.
   if (entry.kind === "field") {
