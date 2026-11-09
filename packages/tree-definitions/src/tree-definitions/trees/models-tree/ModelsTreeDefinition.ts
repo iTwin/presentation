@@ -902,8 +902,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           ecsql: `
             SELECT
               ${selectClause}
-            FROM ${instanceFilterClauses.from} this
-             ${
+            ${
                // CROSS JOIN pins the join order so that SQLite always drives the query from the most selective
                // id set, instead of picking a full table scan based on iModel statistics
                parentIds
