@@ -346,7 +346,7 @@ describe("Models tree", () => {
     });
 
     describe.each(["cold", "warm"] as const)("filters Model children level (%s cache)", (cacheState) => {
-      it.only("by related instances with to-many relationship", async () => {
+      it("by related instances with to-many relationship", async () => {
         await using buildIModelResult = await buildIModel(async (imodel) =>
           withEditTxn(imodel, (txn) => {
             const rootSubject = { className: normalizeFullClassName(Subject.classFullName), id: "0x1" };
