@@ -681,7 +681,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         fullClassName: CLASS_NAMES.SpatialCategory,
         query: {
           ecsql: `
-            SELECT
+            SELECT ${
+              // filter joins may traverse to-many relationships and return the same category multiple times
+              categoryInstanceFilterClauses.joins ? "DISTINCT" : ""
+            }
               ${await this.createCategoryNodeSelectClause({
                 createSelectClause,
                 extendedData: { modelIds: { selector: createIdsSelector(modelIds) } },
@@ -903,19 +906,19 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             SELECT
               ${selectClause}
             ${
-               // CROSS JOIN pins the join order so that SQLite always drives the query from the most selective
-               // id set, instead of picking a full table scan based on iModel statistics
-               parentIds
-                 ? `
+              // CROSS JOIN pins the join order so that SQLite always drives the query from the most selective
+              // id set, instead of picking a full table scan based on iModel statistics
+              parentIds
+                ? `
                   FROM IdSet(?) parentIdSet
                   CROSS JOIN ${instanceFilterClauses.from} this ON this.Parent.Id = parentIdSet.id
                   CROSS JOIN IdSet(?) categoryIdSet ON this.Category.Id = categoryIdSet.id
                 `
-                 : `
+                : `
                   FROM IdSet(?) categoryIdSet
                   CROSS JOIN ${instanceFilterClauses.from} this ON this.Category.Id = categoryIdSet.id
                   `
-             }
+            }
             CROSS JOIN IdSet(?) modelIdSet ON this.Model.Id = modelIdSet.id
             ${instanceFilterClauses.joins}
             ${createWhereClause({
