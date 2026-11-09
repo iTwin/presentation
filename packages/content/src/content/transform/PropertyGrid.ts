@@ -89,8 +89,8 @@ export function collapseRelatedInstances(
   items: ContentItem[],
 ): Array<FieldValues | RelatedInstancesValues> {
   const instancesByPath = new Map<string, RelatedInstancesPerItem>();
-  const groups = new Map<string, { index: number; instances: RelatedInstancesPerItem; fields: RelatedFieldValues[] }>();
-  const result: Array<FieldValues | RelatedInstancesValues | undefined> = [];
+  const groups = new Map<string, RelatedInstancesValues>();
+  const result: Array<FieldValues | RelatedInstancesValues> = [];
   for (const fieldValues of fields) {
     if (!isManyFieldValues(fieldValues)) {
       result.push(fieldValues);
@@ -110,21 +110,16 @@ export function collapseRelatedInstances(
     const group = getOrCreate({
       map: groups,
       key: JSON.stringify([pathKey, categoryId]),
-      createFunc: () => {
-        result.push(undefined);
-        return { index: result.length - 1, instances, fields: [] };
+      createFunc: (): RelatedInstancesValues => {
+        // The group takes the place of its first field; fields found later are added to it.
+        const newGroup: RelatedInstancesValues = { kind: "related-instances", fields: [], values: instances };
+        result.push(newGroup);
+        return newGroup;
       },
     });
-    group.fields.push(fieldValues);
+    group.fields.push(fieldValues.field);
   }
-  for (const group of groups.values()) {
-    result[group.index] = {
-      kind: "related-instances",
-      fields: group.fields.map(({ field }) => field),
-      values: group.instances,
-    };
-  }
-  return result as Array<FieldValues | RelatedInstancesValues>;
+  return result;
 }
 
 function isManyFieldValues(fieldValues: FieldValues): fieldValues is RelatedFieldValues {
