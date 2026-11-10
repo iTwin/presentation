@@ -36,6 +36,8 @@ export interface CanonicalPropertyRecordType {
   enum?: CanonicalEnumerationInfo;
   isMerged?: boolean;
   itemsTypeName?: string;
+  /** Distinct types of array items, so that types of items' members are compared too. */
+  items?: CanonicalPropertyRecordType[];
   members?: Record<string, CanonicalPropertyRecordType>;
 }
 
@@ -70,6 +72,16 @@ function keyByLabel<TEntry>(entries: TEntry[], getLabel: (entry: TEntry) => stri
   });
 }
 
+function getDistinctItemTypes(items: CapturedPropertyRecord[]): CanonicalPropertyRecordType[] {
+  const types = new Map(
+    items.map((item) => {
+      const type = createCanonicalRecordType(item);
+      return [stableStringify(type), type];
+    }),
+  );
+  return [...types].sort(([lhs], [rhs]) => lhs.localeCompare(rhs)).map(([, type]) => type);
+}
+
 function createCanonicalRecordType(record: CapturedPropertyRecord): CanonicalPropertyRecordType {
   const { property, value } = record;
   return {
@@ -81,7 +93,9 @@ function createCanonicalRecordType(record: CapturedPropertyRecord): CanonicalPro
       ? { enum: createCanonicalEnumeration(property.enum.isStrict ?? false, property.enum.choices) }
       : undefined),
     ...(record.isMerged ? { isMerged: true } : undefined),
-    ...(value.valueFormat === "array" ? { itemsTypeName: value.itemsTypeName } : undefined),
+    ...(value.valueFormat === "array"
+      ? { itemsTypeName: value.itemsTypeName, items: getDistinctItemTypes(value.items) }
+      : undefined),
     ...(value.valueFormat === "struct"
       ? {
           members: Object.fromEntries(
