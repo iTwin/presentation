@@ -57,7 +57,8 @@ export interface CanonicalPropertyGridItem {
 
 /**
  * Creates a key for each entry that's unique among `entries`, based on the entry's label. Labels aren't unique, so
- * later duplicates get an ordinal suffix.
+ * later duplicates are keyed by a `[label, occurrence]` tuple. Labels that look like such a tuple are always keyed by
+ * one, so they can't collide with keys of duplicates.
  */
 function keyByLabel<TEntry>(entries: TEntry[], getLabel: (entry: TEntry) => string): Array<[string, TEntry]> {
   const counts = new Map<string, number>();
@@ -65,7 +66,7 @@ function keyByLabel<TEntry>(entries: TEntry[], getLabel: (entry: TEntry) => stri
     const label = getLabel(entry);
     const count = (counts.get(label) ?? 0) + 1;
     counts.set(label, count);
-    return [count > 1 ? `${label} #${count}` : label, entry];
+    return [count > 1 || label.startsWith("[") ? JSON.stringify([label, count]) : label, entry];
   });
 }
 
