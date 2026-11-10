@@ -9,7 +9,7 @@ import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/pre
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, PropertyGridEntries } from "@itwin/presentation-content";
+import type { CategoryDefinition, PropertyGridEntry } from "@itwin/presentation-content";
 import type { Content } from "@itwin/presentation-content-react";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
@@ -56,7 +56,6 @@ interface RecordProps {
   isMemberReadonly?: (memberName: string) => boolean;
 }
 
-type PropertyGridEntry = PropertyGridEntries["entries"][number];
 type CategoryDefinitions = Content["descriptor"]["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */

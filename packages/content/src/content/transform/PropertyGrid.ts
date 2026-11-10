@@ -28,13 +28,13 @@ export interface PropertyGridEntries {
  * An entry of `PropertyGridEntries`.
  * @public
  */
-type PropertyGridEntry = FieldEntry | RelatedInstancesEntry;
+export type PropertyGridEntry = PropertyGridFieldEntry | PropertyGridRelatedInstancesEntry;
 
 /**
  * Attributes shared by all `PropertyGridEntry` kinds.
  * @public
  */
-interface BasePropertyGridEntry {
+interface PropertyGridEntryBase {
   /**
    * Whether content items the entry applies to have different values for it. When `false`, all items the entry
    * applies to have the same value, and the rest have no values.
@@ -46,7 +46,7 @@ interface BasePropertyGridEntry {
  * An entry for a single field.
  * @public
  */
-interface FieldEntry extends BasePropertyGridEntry {
+interface PropertyGridFieldEntry extends PropertyGridEntryBase {
   /** Discriminator of the entry kind. */
   kind: "field";
   /** The field this entry represents. */
@@ -62,7 +62,7 @@ interface FieldEntry extends BasePropertyGridEntry {
  * An entry grouping fields of a many-cardinality relationship path by related instance.
  * @public
  */
-interface RelatedInstancesEntry extends BasePropertyGridEntry {
+interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
   /** Discriminator of the entry kind. */
   kind: "related-instances";
   /**
@@ -121,10 +121,10 @@ export function transformForPropertyGrid({
 }
 
 /** A field and its values of every content item, before it's known whether the values vary. */
-export type FieldValues = Omit<FieldEntry, "varies">;
+export type FieldValues = Omit<PropertyGridFieldEntry, "varies">;
 
 /** Related instances of every content item, before it's known whether they vary. */
-export type RelatedInstancesValues = Omit<RelatedInstancesEntry, "varies">;
+export type RelatedInstancesValues = Omit<PropertyGridRelatedInstancesEntry, "varies">;
 
 /**
  * Checks whether the field applies to the item, based on whether the item's primary class is in the field's

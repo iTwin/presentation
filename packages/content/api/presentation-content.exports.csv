@@ -23,7 +23,7 @@ public;function;getDistinctFieldValues
 public;function;mapItems
 public;interface;PropertyField
 public;namespace;PropertyField
-public;interface;PropertyGridEntries
+public;type;PropertyGridEntry
 public;type;ReadonlyCalculatedField
 public;type;ReadonlyContentDescriptor
 public;type;ReadonlyExternalField

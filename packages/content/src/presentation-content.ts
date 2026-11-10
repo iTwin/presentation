@@ -42,5 +42,5 @@ export type { BisCoreLocalizedStrings } from "./content/extensions/biscore/BisCo
 export { mapItems, reduceItems } from "./content/Utilities.js";
 
 // Content transformation
-export type { PropertyGridEntries } from "./content/transform/PropertyGrid.js";
+export type { PropertyGridEntry } from "./content/transform/PropertyGrid.js";
 export { transformContent } from "./content/transform/TransformContent.js";

@@ -36,11 +36,6 @@ interface BaseFieldsProvider {
 }
 
 // @public
-interface BasePropertyGridEntry {
-    varies: boolean;
-}
-
-// @public
 export interface BisCoreLocalizedStrings {
     documentLink: string;
     modelSource: string;
@@ -296,13 +291,6 @@ type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration
 export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
-interface FieldEntry extends BasePropertyGridEntry {
-    field: ReadonlyField;
-    kind: "field";
-    values: Array<DeepReadonly<Value>>;
-}
-
-// @public
 interface FieldsProviderContribution {
     calculatedFields?: CalculatedFieldDeclaration[];
     categories?: Record<CategoryDefinition["id"], CategoryDefinition>;
@@ -379,12 +367,31 @@ export namespace PropertyField {
 }
 
 // @public
-export interface PropertyGridEntries {
+interface PropertyGridEntries {
     entries: PropertyGridEntry[];
 }
 
 // @public
-type PropertyGridEntry = FieldEntry | RelatedInstancesEntry;
+export type PropertyGridEntry = PropertyGridFieldEntry | PropertyGridRelatedInstancesEntry;
+
+// @public
+interface PropertyGridEntryBase {
+    varies: boolean;
+}
+
+// @public
+interface PropertyGridFieldEntry extends PropertyGridEntryBase {
+    field: ReadonlyField;
+    kind: "field";
+    values: Array<DeepReadonly<Value>>;
+}
+
+// @public
+interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
+    fields: ReadonlyPropertyField[];
+    kind: "related-instances";
+    values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
+}
 
 // @public
 interface PropertyGridTransformConfig {
@@ -428,13 +435,6 @@ export type ReadonlyPropertyField = DeepReadonly<PropertyField>;
 
 // @public
 export function reduceItems<TIn, TOut>(items: AsyncIterable<TIn>, reducer: (accumulator: TOut, item: TIn) => TOut | Promise<TOut>, initial: TOut): Promise<TOut>;
-
-// @public
-interface RelatedInstancesEntry extends BasePropertyGridEntry {
-    fields: ReadonlyPropertyField[];
-    kind: "related-instances";
-    values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
-}
 
 // @public
 interface RelatedPropertiesDeclaration {
