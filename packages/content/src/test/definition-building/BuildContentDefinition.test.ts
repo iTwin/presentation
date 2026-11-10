@@ -265,6 +265,51 @@ describe("buildContentDefinition", () => {
     expect(descriptor.categories[categoryId]).to.deep.equal({ id: categoryId, label: "B" });
   });
 
+  it("merges a related property reached from different targets into one field", async () => {
+    const imodelAccess = createSchemaAccess([
+      createRelationshipClass({ fullName: "TestSchema.BaseToB" }),
+      createEntityClass({ fullName: "TestSchema.A1" }),
+      createEntityClass({ fullName: "TestSchema.A2" }),
+      createEntityClass({
+        fullName: "TestSchema.B",
+        properties: [createPrimitiveProperty({ name: "Related", declaringClass: "TestSchema.B" })],
+      }),
+    ]);
+    // Resolved paths start at the relationship's constraint class, whichever target they were resolved for.
+    const path: RelationshipPath = [
+      { sourceClassName: "TestSchema.Base", targetClassName: "TestSchema.B", relationshipName: "TestSchema.BaseToB" },
+    ];
+    const provider: IModelFieldsProvider = {
+      id: "p1_v1",
+      async getContribution({ target }) {
+        return { relatedProperties: [{ path: [{ ...path[0], sourceClassName: target.primaryClass }] }] };
+      },
+    };
+    const createTargetSource = (primaryClass: EC.FullClassNameDotNotation): ContentSource => ({
+      target: { primaryClass },
+      resolvedPrimaryClasses: [primaryClass],
+      resolvedDeclarations: [
+        { providerId: provider.id, declarationIndex: 0, paths: [{ path, targetClassNames: [primaryClass] }] },
+      ],
+      resolvedExternalInputs: [],
+    });
+
+    const { descriptor } = await buildContentDefinition({
+      imodelAccess,
+      sources: [createTargetSource("TestSchema.A1"), createTargetSource("TestSchema.A2")],
+      config: { imodelFieldsProviders: [provider] },
+    });
+
+    expect(Object.keys(descriptor.fields)).to.deep.equal([
+      "TestSchema.B.Related(TestSchema.Base-[TestSchema.BaseToB]->TestSchema.B)",
+    ]);
+    const related = descriptor.fields[
+      "TestSchema.B.Related(TestSchema.Base-[TestSchema.BaseToB]->TestSchema.B)"
+    ] as PropertyField;
+    expect(related.primaryClassNames).to.deep.equal(["TestSchema.A1", "TestSchema.A2"]);
+    expect(related.pathFromTarget).to.deep.equal(path);
+  });
+
   describe("related path cardinality", () => {
     const path: RelationshipPath = [
       { sourceClassName: "TestSchema.A", targetClassName: "TestSchema.B", relationshipName: "TestSchema.AtoB" },

@@ -1,17 +1,31 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "options": {
-    "typeAware": true
+    "typeAware": true,
+    "denyWarnings": true
   },
   "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "categories": {
+    "correctness": "error"
+  },
   "ignorePatterns": ["**/lib/**", "**/build/**"],
   "rules": {
     "import/no-duplicates": "error",
     "no-shadow": ["error", { "hoist": "all", "allow": ["T", "args"] }],
     "no-redeclare": "error",
+    "no-unused-expressions": ["error", { "allowShortCircuit": true, "allowTernary": true }],
     "typescript/no-deprecated": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/promise-function-async": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ],
     "typescript/prefer-promise-reject-errors": "error",
     "typescript/only-throw-error": "error",
     "typescript/no-unnecessary-condition": ["error", { "allowConstantLoopConditions": "only-allowed-literals" }],
@@ -34,20 +48,8 @@
       ],
       "plugins": ["react"],
       "rules": {
-        "react/exhaustive-deps": "error",
         "react/rules-of-hooks": "error",
-        "react/error-boundaries": "error",
-        "react/globals": "error",
-        "react/immutability": "error",
-        "react/incompatible-library": "error",
-        "react/preserve-manual-memoization": "error",
-        "react/purity": "error",
-        "react/refs": "error",
-        "react/set-state-in-effect": "error",
-        "react/set-state-in-render": "error",
-        "react/static-components": "error",
-        "react/unsupported-syntax": "error",
-        "react/use-memo": "error"
+        "react/unsupported-syntax": "error"
       }
     },
     {
@@ -64,9 +66,12 @@
       }
     },
     {
-      "files": ["**/src/test/**", "**/*.test.ts", "**/*.test.tsx"],
+      "files": ["**/src/test/**", "**/*.test.ts", "**/*.test.tsx", "packages/test-utilities/**"],
       "rules": {
-        "typescript/unbound-method": "off"
+        "typescript/unbound-method": "off",
+        "typescript/require-array-sort-compare": "off",
+        "no-unsafe-optional-chaining": "off",
+        "require-yield": "off"
       }
     }
   ]

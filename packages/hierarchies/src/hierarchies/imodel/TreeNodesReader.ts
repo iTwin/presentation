@@ -9,9 +9,9 @@ import { parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
 import { log } from "../internal/LoggingUtils.js";
 
-import type { Observable, ObservedValueOf } from "rxjs";
+import type { Observable, ObservableInput, ObservedValueOf } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
-import type { EC, ECSqlQueryDef, Props } from "@itwin/presentation-shared";
+import type { EC, ECSqlQueryDef, ECSqlQueryRow, Props } from "@itwin/presentation-shared";
 import type { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import type { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
@@ -28,15 +28,24 @@ interface ReadNodesProps {
 
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
-  const { queryExecutor, query, limit } = props;
-  const parser = props.parser ?? ((row) => of(defaultNodesParser(row)));
+  const { queryExecutor, query, limit, parser } = props;
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
     restartToken: `readNodes/${Guid.createValue()}`,
     ...(limit !== undefined ? { limit } : undefined),
   };
+  return parseNodes({ rows: queryExecutor.createQueryReader(query, config), parser });
+}
 
-  return from(queryExecutor.createQueryReader(query, config)).pipe(
+/**
+ * Parses given ECSQL rows into nodes using the given parser or `defaultNodesParser`, if parser is not provided.
+ * @internal
+ */
+export function parseNodes(
+  props: { rows: ObservableInput<ECSqlQueryRow> } & Pick<ReadNodesProps, "parser">,
+): Observable<SourceInstanceHierarchyNode> {
+  const parser = props.parser ?? ((row) => of(defaultNodesParser(row)));
+  return from(props.rows).pipe(
     /* v8 ignore next -- @preserve */
     log({ category: LOGGING_NAMESPACE, severity: "trace", message: (row) => JSON.stringify(row) }),
     mergeMap((row) => parser({ row })),

@@ -123,7 +123,7 @@ export namespace HierarchySearchPath {
       return true;
     }
     if (!rhs || !lhs) {
-      return !!rhs ? rhs : lhs;
+      return rhs ? rhs : lhs;
     }
 
     if ("groupingLevel" in lhs) {

@@ -54,30 +54,30 @@ describe("Learning snippets", async () => {
         withEditTxn(imodel, (txn) => {
           const categoryKey = insertSpatialCategory({ txn, codeValue: "My Category" });
           const modelKey = insertPhysicalModelWithPartition({ txn, codeValue: "My Model" });
-          (elementKeys.push(
+          elementKeys.push(
             insertPhysicalElement({
               txn,
               userLabel: "My Assembly Element",
               modelId: modelKey.id,
               categoryId: categoryKey.id,
             }),
-          ),
-            elementKeys.push(
-              insertPhysicalElement({
-                txn,
-                userLabel: "My Child Element 1",
-                modelId: modelKey.id,
-                categoryId: categoryKey.id,
-                parentId: elementKeys[0].id,
-              }),
-              insertPhysicalElement({
-                txn,
-                userLabel: "My Child Element 2",
-                modelId: modelKey.id,
-                categoryId: categoryKey.id,
-                parentId: elementKeys[0].id,
-              }),
-            ));
+          );
+          elementKeys.push(
+            insertPhysicalElement({
+              txn,
+              userLabel: "My Child Element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: elementKeys[0].id,
+            }),
+            insertPhysicalElement({
+              txn,
+              userLabel: "My Child Element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: elementKeys[0].id,
+            }),
+          );
         });
       });
 

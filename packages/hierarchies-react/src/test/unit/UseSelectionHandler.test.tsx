@@ -300,7 +300,7 @@ describe("useSelectionHandler", () => {
       await waitFor(() => {
         expect(selectNodesStub).toHaveBeenCalledWith(["node-2", "node-3"], "replace");
       });
-      +selectNodesStub.mockReset();
+      selectNodesStub.mockReset();
 
       result.current.handleNodeSelect({ nodeId: "node-4", isSelected: false, shiftDown: false, ctrlDown: true });
       await waitFor(() => {

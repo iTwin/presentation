@@ -5,7 +5,7 @@
 
 import { getClass } from "@itwin/presentation-shared";
 
-import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding } from "@itwin/presentation-shared";
+import type { DeepReadonly, EC, ECSchemaProvider, ECSqlBinding, RelationshipPath } from "@itwin/presentation-shared";
 import type { CategoryContext } from "./ContentTarget.js";
 import type { StepPropertySpec } from "./model/PropertySpec.js";
 
@@ -110,6 +110,28 @@ export async function resolveEffectiveSourceClass(
 }
 
 /**
+ * Returns the class the step's relationship allows at the step's starting end — from the source constraint for
+ * a forward step, the target constraint for a reversed one: its abstract class, or its only class. Returns
+ * `undefined` when there's no such single class.
+ *
+ * @throws if the step's relationship isn't a relationship class.
+ */
+export async function getStepSourceConstraintClassName(
+  schemaProvider: ECSchemaProvider,
+  step: Pick<RelationshipPath[number], "relationshipName" | "relationshipReverse">,
+): Promise<EC.FullClassNameDotNotation | undefined> {
+  const relationship = await getClass(schemaProvider, step.relationshipName);
+  if (!relationship.isRelationshipClass()) {
+    throw new Error(`Class "${step.relationshipName}" is not a relationship class.`);
+  }
+  const constraint = step.relationshipReverse ? relationship.target : relationship.source;
+  if (constraint.abstractConstraint) {
+    return constraint.abstractConstraint.fullName;
+  }
+  return constraint.constraintClasses.length === 1 ? constraint.constraintClasses[0].fullName : undefined;
+}
+
+/**
  * Returns whether a schema version is at or above a `read.write.minor` version (inclusive).
  * Comparison order is write, then read, then minor.
  *
@@ -168,6 +190,8 @@ export async function collectInParallel<TInput, TOutput>({
  */
 export function stableStringify(value: unknown): string {
   if (value instanceof Set) {
+    // lexicographical sorting is expected here
+    // oxlint-disable-next-line typescript/require-array-sort-compare
     return stableStringify([...value].sort());
   }
   if (value === null || value === undefined || typeof value !== "object") {

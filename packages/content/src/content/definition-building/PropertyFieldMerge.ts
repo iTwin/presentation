@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { type ValueDescriptor } from "@itwin/presentation-shared";
 import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvider.js";
 import { getOrCreate } from "../InternalUtils.js";
 import { PropertyField } from "../model/Field.js";
 import { toSortedUniqueClassNames } from "../model/Utils.js";
 import { resolveCardinality } from "../PathCardinality.js";
 
+import type { ValueDescriptor } from "@itwin/presentation-shared";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { Field } from "../model/Field.js";
 import type { CategorizedField, FieldCategorization } from "./ClassPropertyFields.js";
@@ -35,9 +35,10 @@ interface PropertyFieldCandidate extends CategorizedField {
  * Merges per-source candidate property fields into the descriptor's `fields` record,
  * keyed by field ID, applying the **merge-by-default** contract:
  *
- * - Candidates are grouped by their base ID (`PropertyField.computeId` without a `forkKey`),
- *   i.e. by declared `(propertyClassName, propertyName, pathFromTarget)`. Concrete-endpoint
- *   variants of the same declared property therefore collapse into one field.
+ * - Candidates are grouped by their ID (`PropertyField.computeId` without a `forkKey`), i.e. by
+ *   `(propertyClassName, propertyName, pathFromTarget)`. Since paths start at their first relationship's
+ *   constraint class (see `ResolvedPath.path`), a related property reached over the same relationships from
+ *   different content targets is one field.
  * - Each group produces a single field whose `valueClassNames` and `primaryClassNames` are each the
  *   sorted, de-duplicated union of the group's respective value-supplier and primary classes.
  * - Field metadata (`label`, `hidden`, `readOnly`, `type`) and category facts are resolved as follows:

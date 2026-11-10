@@ -1120,9 +1120,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           IFNULL(
             (
               SELECT 1
-              FROM ${this.#categoryElementClass} ce
+              FROM ${CLASS_NAMES.Element} ce
               ${createWhereClause({
                 conditions: [
+                  `ce.ECClassId IS (${this.#categoryElementClass})`,
                   "ce.Parent.Id = this.ECInstanceId",
                   createExcludedClassesClause({ alias: "ce", excludedClassNames: this.#excludedClasses }),
                   elementsHiddenClassesFilter.createWhereClause("ce"),
@@ -1147,9 +1148,10 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
                     (
                       SELECT 1
                       FROM ${CLASS_NAMES.Model} m
-                      JOIN ${this.#categoryElementClass} ce ON ce.Model.Id = m.ECInstanceId
+                      JOIN ${CLASS_NAMES.Element} ce ON ce.Model.Id = m.ECInstanceId
                       ${createWhereClause({
                         conditions: [
+                          `ce.ECClassId IS (${this.#categoryElementClass})`,
                           "m.ECInstanceId = this.ECInstanceId",
                           "NOT m.IsPrivate",
                           "NOT m.IsTemplate",

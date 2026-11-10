@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
   "author": {
@@ -68,7 +68,7 @@
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "@stratakit/structures": "catalog:stratakit",
-    "@tanstack/react-virtual": "^3.14.22",
+    "@tanstack/react-virtual": "^3.14.26",
     "classnames": "catalog:react",
     "immer": "^10.2.0",
     "react-compiler-runtime": "catalog:react",

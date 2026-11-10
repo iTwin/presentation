@@ -93,13 +93,13 @@ export function createTestPropertiesContentField(
   };
   if ("itemsField" in props) {
     const itemsField = props.itemsField;
-    if (!!itemsField) {
+    if (itemsField) {
       return new ArrayPropertiesField({ ...props, ...baseProps, itemsField });
     }
   }
   if ("memberFields" in props) {
     const memberFields = props.memberFields;
-    if (!!memberFields) {
+    if (memberFields) {
       return new StructPropertiesField({ ...props, ...baseProps, memberFields });
     }
   }

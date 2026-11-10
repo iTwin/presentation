@@ -23,6 +23,7 @@ public;function;getDistinctFieldValues
 public;function;mapItems
 public;interface;PropertyField
 public;namespace;PropertyField
+public;type;PropertyGridEntry
 public;type;ReadonlyCalculatedField
 public;type;ReadonlyContentDescriptor
 public;type;ReadonlyExternalField
@@ -30,3 +31,4 @@ public;type;ReadonlyField
 public;type;ReadonlyPropertyField
 public;function;reduceItems
 public;function;resolveContentSources
+public;function;transformContent

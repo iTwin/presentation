@@ -84,8 +84,6 @@ export async function* eachValueFrom<T>(source: Subscribable<T>): AsyncIterableI
       }
       yield result.value;
     }
-  } catch (err) {
-    throw err;
   } finally {
     subs.unsubscribe();
   }

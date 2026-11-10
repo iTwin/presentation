@@ -296,7 +296,7 @@ function useExpandAndScrollToNode({
     if (index === -1) {
       return;
     }
-    virtualizer.scrollToIndex(index, { align: "auto" });
+    virtualizer.scrollToIndex(index, { align: "center" });
     scrollToNode.current.onScrollComplete?.();
     scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
@@ -321,7 +321,7 @@ function useExpandAndScrollToNode({
       };
     } else {
       const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
-      virtualizer.scrollToIndex(index, { align: "auto" });
+      virtualizer.scrollToIndex(index, { align: "center" });
       onComplete?.(targetNode);
     }
     return "success";

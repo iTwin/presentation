@@ -83,7 +83,7 @@ export class TreeActions {
                 if (index === returnIndex) {
                   return;
                 }
-                member.timeTracker?.[Symbol.dispose];
+                member.timeTracker?.[Symbol.dispose]();
                 member.onComplete();
               });
               return groupArr[returnIndex];
@@ -184,14 +184,14 @@ export class TreeActions {
     options?: { discardState?: boolean; ignoreCache?: boolean },
   ) {
     const currModel = this._currentModel;
-    const expandedNodes = !!options?.discardState
+    const expandedNodes = options?.discardState
       ? []
       : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
-    const collapsedNodes = !!options?.discardState
+    const collapsedNodes = options?.discardState
       ? []
       : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
     const getHierarchyLevelOptions = (node: TreeModelRootNode | TreeModelHierarchyNode) => {
-      if (!!options?.discardState) {
+      if (options?.discardState) {
         return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
       }
       const filteredNodeId = getNonGroupedParentId(node, this._nodeIdFactory);
@@ -207,7 +207,7 @@ export class TreeActions {
       return !!node.nodeData.autoExpand;
     };
     const buildNode = (node: TreeModelHierarchyNode) =>
-      !!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel);
+      options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel);
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
     if (!rootNode) {
@@ -221,7 +221,7 @@ export class TreeActions {
 
     return this.loadSubTree(
       { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache },
-      !!options?.discardState ? undefined : { ...currModel.rootNode },
+      options?.discardState ? undefined : { ...currModel.rootNode },
       options?.discardState,
     );
   }
