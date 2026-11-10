@@ -174,6 +174,17 @@ export interface ContentTarget {
 }
 
 // @public
+interface ContentTransformations {
+    propertyGrid: {
+        config: PropertyGridTransformConfig;
+        result: PropertyGridEntries;
+    };
+}
+
+// @public
+type ContentTransformType = keyof ContentTransformations;
+
+// @public
 type ContentValueFilter = (ContentValueFilterTarget & {
     operator: ScalarValueFilterOperator;
     value: Exclude<PrimitiveValue, Point2dValue | Point3dValue>;
@@ -356,6 +367,39 @@ export namespace PropertyField {
 }
 
 // @public
+interface PropertyGridEntries {
+    entries: PropertyGridEntry[];
+}
+
+// @public
+export type PropertyGridEntry = PropertyGridFieldEntry | PropertyGridRelatedInstancesEntry;
+
+// @public
+interface PropertyGridEntryBase {
+    varies: boolean;
+}
+
+// @public
+interface PropertyGridFieldEntry extends PropertyGridEntryBase {
+    field: ReadonlyField;
+    kind: "field";
+    values: Array<DeepReadonly<Value>>;
+}
+
+// @public
+interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
+    fields: ReadonlyPropertyField[];
+    kind: "related-instances";
+    values: Array<ReturnType<ContentItem["getRelatedInstances"]>>;
+}
+
+// @public
+interface PropertyGridTransformConfig {
+    fields?: "common" | "all";
+    type: "propertyGrid";
+}
+
+// @public
 interface PropertyOverrides {
     // (undocumented)
     categoryId?: string;
@@ -465,6 +509,18 @@ interface TransformableDescriptor {
 
 // @public
 type TransformableField<TField extends Field = Field> = TField extends Field ? DeepReadonly<Omit<TField, MutableFieldMetadata>> & Pick<TField, MutableFieldMetadata> : never;
+
+// @public
+export function transformContent<TType extends ContentTransformType>(props: TransformContentProps<TType>): ContentTransformations[TType]["result"];
+
+// @public
+interface TransformContentProps<TType extends ContentTransformType> {
+    config: ContentTransformations[TType]["config"] & {
+        type: TType;
+    };
+    descriptor: ReadonlyContentDescriptor;
+    items: ContentItem[];
+}
 
 // @public (undocumented)
 type ValueFilterOperator = "is-equal" | "is-not-equal" | "is-null" | "is-not-null" | "less-than" | "less-than-or-equal" | "greater-than" | "greater-than-or-equal" | "like" | "is-in" | "is-not-in";
