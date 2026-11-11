@@ -36,6 +36,7 @@
     "cspell": "pnpm run cspell:contents && pnpm run cspell:filenames",
     "check": "changeset status",
     "release": "npm run build:all && changeset publish",
+    "benchmark:content": "pnpm run -C ./apps/performance-tests benchmark:content",
     "benchmark:hierarchies": "pnpm run -C ./apps/performance-tests benchmark:hierarchies",
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
