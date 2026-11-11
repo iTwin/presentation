@@ -780,6 +780,7 @@ export interface StructValue {
 
 // @public
 export interface StructValueDescriptor {
+    className: EC.FullClassNameDotNotation;
     // (undocumented)
     kind: "struct";
     members: StructMember[];

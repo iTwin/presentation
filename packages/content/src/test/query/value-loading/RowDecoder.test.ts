@@ -173,9 +173,11 @@ describe("RowDecoder", () => {
         createPropertyValueDecoder({ kind: "array", elementType: dateType })(["2021-11-08T10:18:23.317", undefined]),
       ).toEqual([new Date("2021-11-08T10:18:23.317Z"), undefined]);
       expect(
-        createPropertyValueDecoder({ kind: "struct", members: [{ name: "When", label: "When", type: dateType }] })({
-          ["When"]: "2021-11-08T10:18:23.317Z",
-        }),
+        createPropertyValueDecoder({
+          kind: "struct",
+          className: "TestSchema.TestStruct",
+          members: [{ name: "When", label: "When", type: dateType }],
+        })({ ["When"]: "2021-11-08T10:18:23.317Z" }),
       ).toEqual({ ["When"]: new Date("2021-11-08T10:18:23.317Z") });
     });
 
@@ -224,8 +226,16 @@ describe("RowDecoder", () => {
       { type: { kind: "primitive", type: "Point2d" }, raw: {}, message: /point property/ },
       { type: { kind: "primitive", type: "Point2d" }, raw: { ["X"]: "1", ["Y"]: 2 }, message: /point property/ },
       { type: { kind: "primitive", type: "Point3d" }, raw: { ["X"]: 1, ["Y"]: 2 }, message: /numeric Z coordinate/ },
-      { type: { kind: "struct", members: [] }, raw: "value", message: /struct property/ },
-      { type: { kind: "struct", members: [] }, raw: [], message: /struct property/ },
+      {
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+        raw: "value",
+        message: /struct property/,
+      },
+      {
+        type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+        raw: [],
+        message: /struct property/,
+      },
       {
         type: { kind: "array", elementType: { kind: "primitive", type: "Point2d" } },
         raw: [{ ["X"]: 1 }],
@@ -235,6 +245,7 @@ describe("RowDecoder", () => {
       {
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Nav", label: "Nav", type: { kind: "navigation", targetClassName: "Schema.B" } }],
         },
         raw: { ["Nav"]: { ["Id"]: false } },
@@ -276,12 +287,14 @@ describe("RowDecoder", () => {
           kind: "array",
           elementType: {
             kind: "struct",
+            className: "TestSchema.TestStruct",
             members: [
               {
                 name: "Nested",
                 label: "Nested",
                 type: {
                   kind: "struct",
+                  className: "TestSchema.TestStruct",
                   members: [
                     { name: "Point", label: "Point", type: { kind: "primitive", type: "Point3d" } },
                     { name: "Nav", label: "Nav", type: { kind: "navigation", targetClassName: "Schema.B" } },
@@ -305,6 +318,7 @@ describe("RowDecoder", () => {
       {
         type: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [
             { name: "X", label: "X", type: { kind: "primitive", type: "Double" } },
             { name: "Y", label: "Y", type: { kind: "primitive", type: "Double" } },
