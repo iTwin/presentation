@@ -32,14 +32,20 @@ describe("search", () => {
     setup: async () => {
       const imodel = SnapshotDb.openFile(Datasets.getDataset({ name: "50k elements in 500 classes" }).imodelPath);
       const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
-      const elements: InstanceKey[] = (
-        await collect(
-          createECSqlQueryExecutor(imodel).createQueryReader({
-            ecsql: `SELECT ec_classname(ECClassId, 's.c') className, ECInstanceId id FROM ${fullClassName} ORDER BY ECInstanceId`,
-          }),
-        )
-      ).map(({ className, id }) => ({ className, id }));
-      expect(elements).toHaveLength(totalNumberOfSearchPaths);
+      let elements: InstanceKey[];
+      try {
+        elements = (
+          await collect(
+            createECSqlQueryExecutor(imodel).createQueryReader({
+              ecsql: `SELECT ec_classname(ECClassId, 's.c') className, ECInstanceId id FROM ${fullClassName} ORDER BY ECInstanceId`,
+            }),
+          )
+        ).map(({ className, id }) => ({ className, id }));
+        expect(elements).toHaveLength(totalNumberOfSearchPaths);
+      } catch (error) {
+        imodel.close();
+        throw error;
+      }
 
       const [root, ...rest] = elements;
       const parents = rest.slice(0, totalNumberOfSearchPaths / numberOfPathsForASingleParent);

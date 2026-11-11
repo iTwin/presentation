@@ -46,16 +46,21 @@ describe("models tree", () => {
     setup: async () => {
       const { imodelPath, meta } = Datasets.getDataset({ name: "50k functional 3D elements" });
       const imodel = SnapshotDb.openFile(imodelPath);
-      const imodelAccess = await StatelessHierarchyProvider.createIModelAccess(imodel, "unbounded");
-      const targetItems = new Array<InstanceKey>();
-      const query: ECSqlQueryDef = {
-        ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM ${meta.physicalElementClassName}`,
-      };
-      for await (const row of imodelAccess.createQueryReader(query, { limit: "unbounded" })) {
-        targetItems.push({ id: row.ECInstanceId, className: meta.physicalElementClassName });
+      try {
+        const imodelAccess = await StatelessHierarchyProvider.createIModelAccess(imodel, "unbounded");
+        const targetItems = new Array<InstanceKey>();
+        const query: ECSqlQueryDef = {
+          ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM ${meta.physicalElementClassName}`,
+        };
+        for await (const row of imodelAccess.createQueryReader(query, { limit: "unbounded" })) {
+          targetItems.push({ id: row.ECInstanceId, className: meta.physicalElementClassName });
+        }
+        expect(targetItems).toHaveLength(meta.elementCount);
+        return { imodel, imodelAccess, targetItems };
+      } catch (error) {
+        imodel.close();
+        throw error;
       }
-      expect(targetItems).toHaveLength(meta.elementCount);
-      return { imodel, imodelAccess, targetItems };
     },
     cleanup: (props) => props.imodel.close(),
     test: async ({ imodelAccess, targetItems }) => {
