@@ -27,7 +27,8 @@ import {
 } from "./Helpers.js";
 
 import type { EC, InstanceKey } from "@itwin/presentation-shared";
-import type { ContentItem } from "../../content/model/ContentItem.js";
+import type { ContentItem, RelatedInstanceEntry } from "../../content/model/ContentItem.js";
+import type { PropertyField } from "../../content/model/Field.js";
 import type { FieldValues, RelatedInstancesValues } from "../../content/transform/PropertyGrid.js";
 
 describe("createFieldValues", () => {
@@ -174,6 +175,36 @@ describe("collapseRelatedInstances", () => {
       ],
       [],
     ]);
+  });
+
+  it("groups fields in the target category separately from fields in a defined category", () => {
+    const createAspectField = (id: string, category: PropertyField["category"]) =>
+      createPropertyField(id, {
+        propertyClassName: "BisCore.ElementMultiAspect",
+        pathFromTarget: aspectsPath,
+        pathCardinality: "many",
+        category,
+      });
+    const target1 = createAspectField("target1", { type: "target" });
+    const defined = createAspectField("defined", { type: "category", id: "target" });
+    const target2 = createAspectField("target2", { type: "target" });
+    const descriptor = createDescriptor([target1, defined, target2]);
+    const instances: RelatedInstanceEntry[] = [
+      { key: { className: "BisCore.ElementMultiAspect", id: "0x10" } },
+      { key: { className: "BisCore.ElementMultiAspect", id: "0x11" } },
+    ];
+    const items = [createItem({ descriptor, relatedInstances: [{ path: aspectsPath, instances }] })];
+    const entries = [target1, defined, target2].map((field): FieldValues => ({
+      kind: "field",
+      field,
+      values: [[field.id, field.id]],
+    }));
+
+    const result = collapseRelatedInstances(entries, items);
+
+    expect(result).to.have.lengthOf(2);
+    expect(result[0]).to.deep.include({ kind: "related-instances", fields: [target1, target2] });
+    expect(result[1]).to.deep.include({ kind: "related-instances", fields: [defined] });
   });
 });
 

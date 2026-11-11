@@ -25,6 +25,7 @@ function propertyField(props: {
     pathFromTarget: props.pathFromTarget,
   });
   return {
+    category: { type: "target" },
     kind: "property",
     id: fieldId,
     label: "Label",
@@ -216,6 +217,7 @@ describe("createTransformableDescriptor", () => {
 
     it("throws when the field is not a property field", () => {
       const calculated: CalculatedField = {
+        category: { type: "target" },
         kind: "calculated",
         sourceClassName: "Stuff.Thing",
         id: "calc",

@@ -132,7 +132,7 @@ function LoadedContentFilterBuilder({
       return (
         <span className="filter-builder-property">
           {property.label}
-          {property.categoryId ? (
+          {property.category.type === "category" ? (
             <Badge backgroundColor="montecarlo">{getCategoryLabel(property, descriptor)}</Badge>
           ) : null}
         </span>
@@ -209,7 +209,7 @@ function toPropertyDescription(property: ReadonlyPropertyField): PropertyDescrip
 }
 
 function getCategoryLabel(property: ReadonlyPropertyField, descriptor: ReadonlyContentDescriptor): string {
-  let category = property.categoryId ? descriptor.categories[property.categoryId] : undefined;
+  let category = property.category.type === "category" ? descriptor.categories[property.category.id] : undefined;
   if (!category) {
     return "Related";
   }
@@ -219,7 +219,7 @@ function getCategoryLabel(property: ReadonlyPropertyField, descriptor: ReadonlyC
   while (category && !visited.has(category.id)) {
     labels.unshift(category.label);
     visited.add(category.id);
-    category = category.parentId ? descriptor.categories[category.parentId] : undefined;
+    category = category.parent.type === "category" ? descriptor.categories[category.parent.id] : undefined;
   }
   return labels.join(" | ");
 }

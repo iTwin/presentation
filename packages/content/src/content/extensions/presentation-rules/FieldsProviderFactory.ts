@@ -91,6 +91,7 @@ export function createFieldsProviderFromContentModifierRule(
           imodelAccess,
           specs: rule.relatedProperties,
           sourceClassName,
+          isSameInstanceContext: true,
         });
       }
 
@@ -229,6 +230,7 @@ function mapPropertiesForStep(
 interface NormalizedRelatedPropertiesSpec {
   propertiesSource: PresentationRules.RelationshipPathSpecification;
   instanceFilter?: string;
+  relationshipMeaning?: PresentationRules.RelatedPropertiesSpecification["relationshipMeaning"];
   nestedRelatedProperties?: PresentationRules.RelatedPropertiesSpecification[];
   properties?: PresentationRules.RelatedPropertiesSpecification["properties"];
   relationshipProperties?: PresentationRules.RelatedPropertiesSpecification["relationshipProperties"];
@@ -311,18 +313,29 @@ async function mapRelatedPropertiesSpec(props: {
  * Recursively flattens a `RelatedPropertiesSpecification` and all its `nestedRelatedProperties`
  * into a flat list of `RelatedPropertiesDeclaration`s. Nested specs produce declarations whose
  * paths are the concatenation of the parent's path + the nested spec's own path.
+ *
+ * A spec with `relationshipMeaning: "SameInstance"` shows its properties as if they belonged to the content target,
+ * so its declaration attaches categories to the top-level context (`propertyCategoryScope: "parent"`) — but only
+ * when every enclosing spec has that meaning too. Otherwise the properties belong to the closest enclosing related
+ * instance and stay in its category.
  */
 async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
   specs: PresentationRules.RelatedPropertiesSpecification[];
   sourceClassName: EC.FullClassNameDotNotation;
+  /** Whether every enclosing spec has `SameInstance` relationship meaning. `true` for top-level specs. */
+  isSameInstanceContext: boolean;
 }): Promise<RelatedPropertiesDeclaration[]> {
-  const { imodelAccess, specs, sourceClassName } = props;
+  const { imodelAccess, specs, sourceClassName, isSameInstanceContext } = props;
   const declarations: RelatedPropertiesDeclaration[] = [];
 
   for (const spec of specs) {
     for (const normalizedSpec of normalizeRelatedPropertiesSpec(spec)) {
+      const isSameInstance = isSameInstanceContext && normalizedSpec.relationshipMeaning === "SameInstance";
       const result = await mapRelatedPropertiesSpec({ imodelAccess, spec: normalizedSpec, sourceClassName });
+      if (isSameInstance) {
+        result.propertyCategoryScope = "parent";
+      }
       declarations.push(result);
 
       // Recursively flatten nestedRelatedProperties.
@@ -334,6 +347,7 @@ async function flattenRelatedPropertiesSpecs(props: {
           imodelAccess,
           specs: normalizedSpec.nestedRelatedProperties,
           sourceClassName: lastTargetClassName,
+          isSameInstanceContext: isSameInstance,
         });
 
         const offset = result.path.length;
@@ -342,12 +356,15 @@ async function flattenRelatedPropertiesSpecs(props: {
             ...nestedDecl,
             path: [...result.path, ...nestedDecl.path],
             properties: [
-              // The parent declaration already loads these classes' properties; keep only their categories.
-              ...result.properties.map((step): StepPropertySpec => ({
-                stepIndex: step.stepIndex,
-                target: { select: "none" },
-                ...(step.relationship ? { relationship: { select: "none" } } : undefined),
-              })),
+              // The parent declaration already loads these classes' properties; keep only their categories, unless
+              // the parent's properties belong to the content target and have no categories of their own.
+              ...(isSameInstance
+                ? []
+                : result.properties.map((step): StepPropertySpec => ({
+                    stepIndex: step.stepIndex,
+                    target: { select: "none" },
+                    ...(step.relationship ? { relationship: { select: "none" } } : undefined),
+                  }))),
               ...nestedDecl.properties.map((step) => ({ ...step, stepIndex: offset + step.stepIndex })),
             ],
           });
@@ -379,6 +396,7 @@ function normalizeRelatedPropertiesSpec(
 
   const common: Omit<NormalizedRelatedPropertiesSpec, "propertiesSource"> = {
     instanceFilter: spec.instanceFilter,
+    relationshipMeaning: spec.relationshipMeaning,
     nestedRelatedProperties: spec.nestedRelatedProperties,
     properties: spec.properties,
     relationshipProperties: spec.relationshipProperties,

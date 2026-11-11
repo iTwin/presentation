@@ -67,7 +67,7 @@ interface PropertyGridRelatedInstancesEntry extends PropertyGridEntryBase {
   kind: "related-instances";
   /**
    * Fields of the related instances, in display order. There's at least one field, and all fields share the same
-   * `pathFromTarget` - the relationship path from content target to the related instances - and `categoryId`.
+   * `pathFromTarget` - the relationship path from content target to the related instances - and `category`.
    */
   fields: ReadonlyPropertyField[];
   /**
@@ -185,7 +185,7 @@ export function collapseRelatedInstances(
       result.push(fieldValues);
       continue;
     }
-    const { pathFromTarget, categoryId } = fieldValues.field;
+    const { pathFromTarget, category } = fieldValues.field;
     const pathKey = serializeRelationshipPath({ path: pathFromTarget });
     const instances = getOrCreate({
       map: instancesByPath,
@@ -198,7 +198,7 @@ export function collapseRelatedInstances(
     }
     const group = getOrCreate({
       map: groups,
-      key: JSON.stringify([pathKey, categoryId]),
+      key: JSON.stringify([pathKey, category.type === "category" ? category.id : undefined]),
       createFunc: (): RelatedInstancesValues => {
         // The group takes the place of its first field; fields found later are added to it.
         const newGroup: RelatedInstancesValues = { kind: "related-instances", fields: [], values: instances };

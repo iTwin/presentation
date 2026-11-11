@@ -139,6 +139,8 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       pathCardinality,
       valueClassNames,
       primaryClassNames,
+      // The categorization pass places the field in its category.
+      category: { type: "target" },
     };
     if (overrides.readOnly !== undefined) {
       field.readOnly = overrides.readOnly;

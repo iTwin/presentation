@@ -129,6 +129,7 @@ describe("createContentProvider", () => {
 
     it("includes value filters in a count query", async () => {
       const length: PropertyField = {
+        category: { type: "target" },
         kind: "property",
         id: "Schema.A.Length",
         label: "Length",
@@ -229,6 +230,7 @@ describe("createContentProvider", () => {
 
     it("includes value filters in an instance-key query", async () => {
       const length: PropertyField = {
+        category: { type: "target" },
         kind: "property",
         id: "Schema.A.Length",
         label: "Length",

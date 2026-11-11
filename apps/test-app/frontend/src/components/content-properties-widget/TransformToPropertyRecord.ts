@@ -9,11 +9,12 @@ import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/pre
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, PropertyGridEntry } from "@itwin/presentation-content";
+import type { CategoryDefinition, Field, PropertyGridEntry } from "@itwin/presentation-content";
 import type { Content } from "@itwin/presentation-content-react";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
-const DEFAULT_CATEGORY: CategoryDefinition = { id: "/default-category/", label: "Miscellaneous" };
+/** The category of the content target's own properties. */
+const TARGET_CATEGORY = { name: "/default-category/", label: "Miscellaneous" };
 
 const navigationLabelFormatter = createDefaultValueFormatter();
 
@@ -26,7 +27,7 @@ export async function createPropertyData(content: Content): Promise<PropertyData
   const tree = createCategoryTree(categories);
   const records: PropertyData["records"] = {};
   for (const entry of entries) {
-    const category = tree.get(getCategoryId(entry));
+    const category = tree.get(getCategory(entry));
     (records[category.name] ??= []).push(await createEntryRecord(entry, categories));
   }
   for (const categoryRecords of Object.values(records)) {
@@ -59,8 +60,8 @@ interface RecordProps {
 type CategoryDefinitions = Content["descriptor"]["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */
-function getCategoryId(entry: PropertyGridEntry): string | undefined {
-  return entry.kind === "field" ? entry.field.categoryId : entry.fields[0].categoryId;
+function getCategory(entry: PropertyGridEntry): DeepReadonly<Field["category"]> {
+  return entry.kind === "field" ? entry.field.category : entry.fields[0].category;
 }
 
 async function createEntryRecord(entry: PropertyGridEntry, categories: CategoryDefinitions): Promise<PropertyRecord> {
@@ -90,13 +91,13 @@ function getEntryRecordProps(entry: PropertyGridEntry, categories: CategoryDefin
   // Related instances are shown as an array of structs, one struct per related instance. The array and its structs
   // are read-only, while struct members take read-only status from their fields.
   const { fields } = entry;
-  const { pathFromTarget, categoryId } = fields[0];
+  const { pathFromTarget, category } = fields[0];
   const readonlyFieldIds = new Set(fields.filter((field) => field.readOnly).map((field) => field.id));
   const instances = entry.values.find((itemInstances) => itemInstances.length > 0) ?? [];
   return {
     name: `related(${fields[0].id})`,
     label:
-      (categoryId !== undefined ? categories[categoryId]?.label : undefined) ??
+      (category.type === "category" ? categories[category.id]?.label : undefined) ??
       pathFromTarget[pathFromTarget.length - 1].targetClassName,
     type: {
       kind: "array",
@@ -216,20 +217,30 @@ function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
 
 /**
  * Creates property categories on demand, so that only categories with records (and their ancestors) end up in the
- * tree. The default category is the only root: it holds fields without a category, and categories without a parent.
+ * tree. The content target's category and top-level categories are roots. References to unknown categories fall back
+ * to the content target's category.
  */
 function createCategoryTree(definitions: Partial<CategoryDefinitions>) {
   const roots: PropertyCategory[] = [];
   const created = new Map<string, PropertyCategory>();
-  function get(categoryId: string | undefined): PropertyCategory {
-    const definition = (categoryId !== undefined ? definitions[categoryId] : undefined) ?? DEFAULT_CATEGORY;
-    let category = created.get(definition.id);
+  function getOrCreate(props: {
+    name: string;
+    label: string;
+    parent: DeepReadonly<CategoryDefinition["parent"]>;
+  }): PropertyCategory {
+    let category = created.get(props.name);
     if (!category) {
-      category = { name: definition.id, label: definition.label, expand: true, childCategories: [] };
-      created.set(definition.id, category);
-      (definition === DEFAULT_CATEGORY ? roots : get(definition.parentId).childCategories!).push(category);
+      category = { name: props.name, label: props.label, expand: true, childCategories: [] };
+      created.set(props.name, category);
+      (props.parent.type === "topLevel" ? roots : get(props.parent).childCategories!).push(category);
     }
     return category;
+  }
+  function get(reference: DeepReadonly<CategoryDefinition["parent"]>): PropertyCategory {
+    const definition = reference.type === "category" ? definitions[reference.id] : undefined;
+    return definition
+      ? getOrCreate({ name: definition.id, label: definition.label, parent: definition.parent })
+      : getOrCreate({ ...TARGET_CATEGORY, parent: { type: "topLevel" } });
   }
   return { roots, get };
 }
