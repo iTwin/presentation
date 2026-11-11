@@ -1,30 +1,46 @@
 # Presentation performance tests
 
-## Tests
-
-The tests are supposed to represent various scenarios that we want to profile.
-
-## Test reporter
-
-Additionally, we want to measure how much time the main thread is being blocked.
-Also, these tests have a different purpose - to provide a benchmark that will be used by GitHub actions and can be useful for the developers.
-The simplest way to accommodate that is to use a custom test reporter (defined in `TestReporter.ts`).
-The reporter gathers test durations and information about main thread blocking and saves it to a file if an output path is provided.
-
-Example:
-
-```bash
-export BENCHMARK_OUTPUT_PATH="./results.json"
-pnpm test
-```
-
-### iModels
-
-The tests may use iModels that are managed in `Datasets.ts` module. The iModels are stored locally in the `./datasets` folder.
+Benchmarks for hierarchies and unified selection. The tests exercise the public APIs against local iModels and report elapsed time and main-thread blocking.
 
 ## Usage
 
-- In order to run all performance tests type:
-  `pnpm test`
-- In order to run performance tests and save the results to `./benchmark.json` enter:
-  `pnpm benchmark`.
+Build from the repository root:
+
+```bash
+pnpm lage build --to presentation-performance-tests
+```
+
+From this package directory, use `pnpm test` to run all tests, or choose a suite:
+
+| Suite             | Tests                         | Tests with JSON results            |
+| ----------------- | ----------------------------- | ---------------------------------- |
+| Hierarchies       | `pnpm test:hierarchies`       | `pnpm benchmark:hierarchies`       |
+| Unified selection | `pnpm test:unified-selection` | `pnpm benchmark:unified-selection` |
+
+Each benchmark command writes `<suite>-benchmark.json` in this directory. The benchmark commands also work from the repository root. To choose another output path, run `BENCHMARK_OUTPUT_PATH=./results.json pnpm test`.
+
+## Measurement
+
+The [test runner](./src/util/TestUtilities.ts) measures the `test` callback, including its assertions. Dataset initialization, `setup`, and `cleanup` are outside the measurement. Test files run sequentially under the shared [Vitest configuration](./vitest.config.ts).
+
+By default, each test runs once. Set `BENCHMARK_ITERATIONS=3` to report the fastest of three iterations and its blocking measurements. Setup and cleanup run only once, so each measured callback must repeat the intended work rather than return a cached result. The test scripts enable explicit garbage collection, which runs before each timed iteration.
+
+[MainThreadBlocksDetector.ts](./src/util/MainThreadBlocksDetector.ts) measures delayed timer callbacks to detect main-thread blocking. [TestReporter.ts](./src/util/TestReporter.ts) prints durations and blocking statistics, and writes elapsed-time and P95 blocking metrics in the GitHub benchmark action's JSON format when `BENCHMARK_OUTPUT_PATH` is set.
+
+## Datasets
+
+[Datasets.ts](./src/util/Datasets.ts) initializes all iModels in `./datasets`, creating or downloading any that are missing. After changing a generator, run `RECREATE=true pnpm test` to regenerate synthetic datasets locally.
+
+## GitHub workflows
+
+Each suite has separate PR and master workflows:
+
+| Suite             | Pull requests                                                             | Master and manual runs                                                     |
+| ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Hierarchies       | [PR workflow](../../.github/workflows/benchmark-pr-hierarchies.yml)       | [Master workflow](../../.github/workflows/benchmark-hierarchies.yml)       |
+| Unified selection | [PR workflow](../../.github/workflows/benchmark-pr-unified-selection.yml) | [Master workflow](../../.github/workflows/benchmark-unified-selection.yml) |
+
+- PR workflows skip drafts and post results as a comment. They use the default single iteration.
+- Master workflows run three iterations and publish benchmark history to `gh-pages` when running on `master`. They also support manual dispatch.
+- Automatic runs use path filters for the relevant packages and benchmark infrastructure.
+- Workflows cache iModels using keys derived from dataset generator files.

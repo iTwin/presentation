@@ -16,8 +16,8 @@ import type { IModelAccess } from "./StatelessHierarchyProvider.js";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: IModelAccess) => createModelsTree({ imodelAccess }).hierarchyDefinition;
-  const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
-  const cleanup = (iModel: IModelDb) => iModel.close();
+  const setup = () => SnapshotDb.openFile(Datasets.getDataset({ name: "baytown" }).imodelPath);
+  const cleanup = (imodel: IModelDb) => imodel.close();
 
   run({
     testName: "initial (Baytown)",
@@ -41,21 +41,23 @@ describe("models tree", () => {
     },
   });
 
-  run<{ iModel: SnapshotDb; imodelAccess: IModelAccess; targetItems: Array<InstanceKey> }>({
+  run<{ imodel: SnapshotDb; imodelAccess: IModelAccess; targetItems: Array<InstanceKey> }>({
     testName: "creates initial filtered view for 50k target items",
     setup: async () => {
-      const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
-      const imodelAccess = await StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
+      const { imodelPath, meta } = Datasets.getDataset({ name: "50k functional 3D elements" });
+      const imodel = SnapshotDb.openFile(imodelPath);
+      const imodelAccess = await StatelessHierarchyProvider.createIModelAccess(imodel, "unbounded");
       const targetItems = new Array<InstanceKey>();
       const query: ECSqlQueryDef = {
-        ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d`,
+        ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM ${meta.physicalElementClassName}`,
       };
       for await (const row of imodelAccess.createQueryReader(query, { limit: "unbounded" })) {
-        targetItems.push({ id: row.ECInstanceId, className: "Generic.PhysicalObject" });
+        targetItems.push({ id: row.ECInstanceId, className: meta.physicalElementClassName });
       }
-      return { iModel, imodelAccess, targetItems };
+      expect(targetItems).toHaveLength(meta.elementCount);
+      return { imodel, imodelAccess, targetItems };
     },
-    cleanup: (props) => props.iModel.close(),
+    cleanup: (props) => props.imodel.close(),
     test: async ({ imodelAccess, targetItems }) => {
       const abortSignal = new AbortController().signal;
       const modelsTree = createModelsTree({ imodelAccess });
@@ -66,13 +68,14 @@ describe("models tree", () => {
             acc + (node.isTarget || !node.children ? 1 : 0) + (node.children ? countTargets(node.children) : 0),
           0,
         );
-      expect(countTargets(search.paths)).toBe(50000);
+      expect(countTargets(search.paths)).toBe(targetItems.length);
       const provider = await StatelessHierarchyProvider.create({
         imodelAccess,
         getHierarchyFactory: () => modelsTree.hierarchyDefinition,
         search,
       });
       const result = await provider.loadHierarchy({ depth: 2 });
+      // The physical model and its spatial category.
       expect(result).toBe(2);
     },
   });

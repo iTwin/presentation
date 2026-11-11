@@ -4,40 +4,44 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { describe } from "vitest";
-import { Datasets } from "../util/Datasets.js";
+import { DATASETS } from "../util/Datasets.js";
 import { runHierarchyTest } from "./RunHierarchyTest.js";
 
 import type { EC } from "@itwin/presentation-shared";
 
 describe("grouping", () => {
-  const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-  const expectedNodeCount = 50_000 + 50_000 / itemsPerGroup;
+  const {
+    schema: { name: schemaName, baseClassName, classNamePrefix, propertyName },
+    elementCount,
+    classCount,
+  } = DATASETS["50k elements in 500 classes"];
+  const expectedNodeCount = elementCount + classCount;
   const baseFullClassName: EC.FullClassNameDotNotation = `${schemaName}.${baseClassName}`;
 
   runHierarchyTest({
     testName: "by label",
-    iModelName: "50k flat elements",
+    imodelName: "50k elements in 500 classes",
     expectedNodeCount,
     nodeSelectProps: { grouping: { byLabel: true } },
   });
 
   runHierarchyTest({
     testName: "by class",
-    iModelName: "50k flat elements",
+    imodelName: "50k elements in 500 classes",
     expectedNodeCount,
     nodeSelectProps: { grouping: { byClass: true } },
   });
 
   runHierarchyTest({
     testName: "by property",
-    iModelName: "50k flat elements",
+    imodelName: "50k elements in 500 classes",
     fullClassName: baseFullClassName,
     expectedNodeCount,
     nodeSelectProps: {
       grouping: {
         byProperties: {
           propertiesClassName: baseFullClassName,
-          propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }],
+          propertyGroups: [{ propertyName, propertyClassAlias: "this" }],
         },
       },
     },
@@ -49,20 +53,20 @@ describe("grouping", () => {
     physicalElementFullClassName,
     baseFullClassName,
     ...[...Array(baseClassQueryLimit).keys()].map(
-      (i): EC.FullClassNameDotNotation => `${schemaName}.${defaultClassName}_${i}`,
+      (i): EC.FullClassNameDotNotation => `${schemaName}.${classNamePrefix}_${i}`,
     ),
   ];
   runHierarchyTest({
     testName: `by base class (${baseClassQueryLimit} classes)`,
-    iModelName: "50k flat elements",
+    imodelName: "50k elements in 500 classes",
     fullClassName: baseFullClassName,
-    expectedNodeCount: 50_000 + fullClassNames.length,
+    expectedNodeCount: elementCount + fullClassNames.length,
     nodeSelectProps: { grouping: { byBaseClasses: { fullClassNames } } },
   });
 
   runHierarchyTest({
     testName: "by multiple attributes",
-    iModelName: "50k flat elements",
+    imodelName: "50k elements in 500 classes",
     fullClassName: baseFullClassName,
     nodeSelectProps: {
       grouping: {
@@ -71,7 +75,7 @@ describe("grouping", () => {
         byLabel: true,
         byProperties: {
           propertiesClassName: baseFullClassName,
-          propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }],
+          propertyGroups: [{ propertyName, propertyClassAlias: "this" }],
         },
       },
     },

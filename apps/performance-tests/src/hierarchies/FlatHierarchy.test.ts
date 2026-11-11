@@ -5,4 +5,4 @@
 
 import { runHierarchyTest } from "./RunHierarchyTest.js";
 
-runHierarchyTest({ testName: "flat 50k elements list", iModelName: "50k flat elements" });
+runHierarchyTest({ testName: "flat 50k elements list", imodelName: "50k elements in 500 classes" });

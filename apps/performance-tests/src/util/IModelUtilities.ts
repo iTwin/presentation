@@ -8,15 +8,23 @@ import { SnapshotDb, withEditTxn } from "@itwin/core-backend";
 
 import type { EditTxn } from "@itwin/core-backend";
 
-export async function createIModel(name: string, localPath: string, cb: (txn: EditTxn) => void | Promise<void>) {
+export async function createSnapshotIModel({
+  name,
+  localPath,
+  populate,
+}: {
+  name: string;
+  localPath: string;
+  populate: (txn: EditTxn) => void | Promise<void>;
+}) {
   fs.rmSync(localPath, { force: true });
-  const iModel = SnapshotDb.createEmpty(localPath, { rootSubject: { name } });
+  const imodel = SnapshotDb.createEmpty(localPath, { rootSubject: { name } });
   try {
-    await withEditTxn(iModel, async (txn) => {
-      await cb(txn);
-      iModel.analyze();
+    await withEditTxn(imodel, async (txn) => {
+      await populate(txn);
+      imodel.analyze();
     });
   } finally {
-    iModel.close();
+    imodel.close();
   }
 }

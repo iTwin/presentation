@@ -17,8 +17,8 @@ import type {
 } from "@itwin/presentation-hierarchies";
 
 describe("hide if no children", () => {
-  const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
-  const cleanup = (iModel: IModelDb) => iModel.close();
+  const setup = () => SnapshotDb.openFile(Datasets.getDataset({ name: "50k elements in 500 classes" }).imodelPath);
+  const cleanup = (imodel: IModelDb) => imodel.close();
 
   run({
     testName: `required to finalize root, w/o children`,

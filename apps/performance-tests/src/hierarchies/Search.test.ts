@@ -3,57 +3,57 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { describe, expect } from "vitest";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
+import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { HierarchyNode, HierarchySearchTree } from "@itwin/presentation-hierarchies";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
-import { Datasets } from "../util/Datasets.js";
+import { Datasets, DATASETS } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { DefineHierarchyLevelProps } from "@itwin/presentation-hierarchies";
+import type { InstanceKey } from "@itwin/presentation-shared";
 
 describe("search", () => {
-  const totalNumberOfSearchPaths = 50000;
+  // Every physical element in the dataset is targeted by one search path.
+  const { elementCount: totalNumberOfSearchPaths } = DATASETS["50k elements in 500 classes"];
   // We could use any number here.
   // Using 1k because of two reasons:
   // 1. It is more than Compound SELECT Statement limit (500);
   // 2. Test takes < 20s. With more paths it would take longer.
   const numberOfPathsForASingleParent = 1000;
-  const physicalElementsSmallestDecimalId = 20;
 
   run({
     testName: `searches with ${totalNumberOfSearchPaths} paths`,
-    setup: () => {
-      const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-      const search = HierarchySearchTree.createBuilder();
-      const parentIdsArr = new Array<number>();
-      for (let i = 1; i <= totalNumberOfSearchPaths / numberOfPathsForASingleParent; ++i) {
-        parentIdsArr.push(i + physicalElementsSmallestDecimalId);
-        for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
-          search.accept({
-            path: [
-              {
-                className: `${schemaName}.${defaultClassName}_0`,
-                id: `0x${physicalElementsSmallestDecimalId.toString(16)}`,
-              },
-              {
-                className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
-                id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
-              },
-              {
-                className: `${schemaName}.${defaultClassName}_${Math.floor(j / itemsPerGroup)}`,
-                id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}`,
-              },
-            ],
-          });
-        }
-      }
-
-      const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
+    setup: async () => {
+      const imodel = SnapshotDb.openFile(Datasets.getDataset({ name: "50k elements in 500 classes" }).imodelPath);
       const fullClassName = normalizeFullClassName(PhysicalElement.classFullName);
+      const elements: InstanceKey[] = (
+        await collect(
+          createECSqlQueryExecutor(imodel).createQueryReader({
+            ecsql: `SELECT ec_classname(ECClassId, 's.c') className, ECInstanceId id FROM ${fullClassName} ORDER BY ECInstanceId`,
+          }),
+        )
+      ).map(({ className, id }) => ({ className, id }));
+      expect(elements).toHaveLength(totalNumberOfSearchPaths);
+
+      const [root, ...rest] = elements;
+      const parents = rest.slice(0, totalNumberOfSearchPaths / numberOfPathsForASingleParent);
+      const search = HierarchySearchTree.createBuilder();
+      parents.forEach((parent, i) => {
+        for (const element of elements.slice(
+          i * numberOfPathsForASingleParent,
+          (i + 1) * numberOfPathsForASingleParent,
+        )) {
+          search.accept({ path: [root, parent, element] });
+        }
+      });
+      const rootId = Id64.getLocalId(root.id);
+      const parentIdsArr = parents.map(({ id }) => Id64.getLocalId(id));
       const createHierarchyLevelDefinition = async (
         createSelectClause: DefineHierarchyLevelProps["createSelectClause"],
         whereClause: (alias: string) => string,
@@ -76,28 +76,29 @@ describe("search", () => {
         ];
       };
       return {
-        iModel,
+        imodel,
         getHierarchyFactory: () => ({
           async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
-            // A hierarchy with this structure is created:
+            // A hierarchy with this structure is created, where the root is the first physical element and
+            // the parents are the following ones:
             //
-            //        id:21 -> all other BisCore.PhysicalElement
+            //        parent 1 -> all other BisCore.PhysicalElement
             //       /  .
-            //  id:20   .
+            //  root    .
             //       \  .
-            //        id:70 -> all other BisCore.PhysicalElement
+            //        parent 50 -> all other BisCore.PhysicalElement
             //
             // We need to split the hierarchy in 50 parts to reduce the time of the test.
 
             if (!parentNode) {
               return createHierarchyLevelDefinition(
                 createSelectClause,
-                (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`,
+                (alias) => `WHERE ${alias}.ECInstanceId = ${rootId}`,
               );
             }
             if (
               HierarchyNode.isInstancesNode(parentNode) &&
-              parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
+              parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === rootId)
             ) {
               return createHierarchyLevelDefinition(
                 createSelectClause,
@@ -111,8 +112,7 @@ describe("search", () => {
             ) {
               return createHierarchyLevelDefinition(
                 createSelectClause,
-                (alias) =>
-                  `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
+                (alias) => `WHERE ${alias}.ECInstanceId NOT IN (${rootId}, ${parentIdsArr.join(", ")})`,
               );
             }
 
@@ -122,12 +122,13 @@ describe("search", () => {
         search,
       };
     },
-    cleanup: (props: { iModel: IModelDb }) => {
-      props.iModel.close();
+    cleanup: (props: { imodel: IModelDb }) => {
+      props.imodel.close();
     },
-    test: async ({ search, ...props }) => {
+    test: async ({ search, imodel, ...props }) => {
       const provider = await StatelessHierarchyProvider.create({
         ...props,
+        iModel: imodel,
         search: { paths: search.getTree() },
         rowLimit: "unbounded",
       });
