@@ -218,29 +218,49 @@ describe("Content items", () => {
     testName: "5000 sorted items across 50 sources with equal sort values",
     imodelName: "50k elements in 500 classes",
     setup: async ({ imodelAccess, config, dataset }) => {
+      const { schema } = dataset.meta;
+      const sortConfig = {
+        ...config,
+        imodelFieldsProviders: [
+          ...(config.imodelFieldsProviders ?? []),
+          defineIModelFieldsProvider({
+            id: "performance-tests_v1",
+            getContribution: async () => ({
+              calculatedFields: [
+                {
+                  id: "constant",
+                  label: "Constant",
+                  sourceClassName: `${schema.name}.${schema.baseClassName}`,
+                  expression: "1",
+                  type: { kind: "primitive", type: "Integer" },
+                },
+              ],
+            }),
+          }),
+        ],
+      };
       const sources = await resolveContentSources({
         imodelAccess,
         targets: Array.from({ length: 50 }, (_, i): ContentTarget => ({
-          primaryClass: `${dataset.meta.schema.name}.${dataset.meta.schema.classNamePrefix}_${i}`,
+          primaryClass: `${schema.name}.${schema.classNamePrefix}_${i}`,
         })),
-        config,
+        config: sortConfig,
       });
       expect(sources).toHaveLength(50);
-      const provider = createContentProvider({ imodelAccess, sources, config });
+      const provider = createContentProvider({ imodelAccess, sources, config: sortConfig });
       const descriptor = await provider.getContentDescriptor();
-      const labelField = getPropertyFields({ descriptor, propertyName: "UserLabel" })[0];
-      assert(labelField);
-      return { provider, labelField, expectedCount: (50 * dataset.meta.elementCount) / dataset.meta.classCount };
+      const constantField = Object.values(descriptor.fields).find(
+        (field): field is CalculatedField => field.kind === "calculated",
+      );
+      assert(constantField);
+      return { provider, constantField, expectedCount: (50 * dataset.meta.elementCount) / dataset.meta.classCount };
     },
-    test: async ({ provider, labelField, expectedCount }) => {
+    test: async ({ provider, constantField, expectedCount }) => {
       const ids = new Set<Id64String>();
       const classes = new Set<string>();
-      let previous = "";
       let count = 0;
-      for await (const item of provider.getItems({ sorting: [{ field: labelField, direction: "asc" }] })) {
-        const value = item.getValue(labelField);
-        assert(typeof value === "string" && value >= previous);
-        previous = value;
+      for await (const item of provider.getItems({ sorting: [{ field: constantField, direction: "asc" }] })) {
+        assert.equal(item.getValue(constantField), 1);
         ids.add(item.primaryKey.id);
         classes.add(item.primaryKey.className);
         ++count;
