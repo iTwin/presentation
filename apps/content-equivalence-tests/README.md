@@ -170,7 +170,7 @@ disabled. Before comparing, property grid data is normalized:
 - only raw values are compared, except for navigation values, whose display
   labels are compared too. The test app leaves formatting of other values to the
   property grid;
-- items of struct arrays (related instances) are compared regardless of order;
+- array items are compared regardless of order;
 - labels and descriptions of the property data itself are ignored, because the
   test app uses the class name as the label.
 

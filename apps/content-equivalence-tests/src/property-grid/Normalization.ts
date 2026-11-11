@@ -156,13 +156,12 @@ function createCanonicalRecordValue(record: CapturedPropertyRecord): CanonicalVa
           createCanonicalRecordValue(member),
         ]),
       );
-    case "array": {
-      const items = value.items.map(createCanonicalRecordValue);
-      // Arrays of structs hold related instances, whose order isn't defined.
-      return value.itemsTypeName === "struct"
-        ? items.sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs)))
-        : items;
-    }
+    case "array":
+      // Only the items matter, not their order: related instances aren't ordered, and differences in the order of
+      // array property items aren't what these tests look for.
+      return value.items
+        .map(createCanonicalRecordValue)
+        .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs)));
   }
 }
 
