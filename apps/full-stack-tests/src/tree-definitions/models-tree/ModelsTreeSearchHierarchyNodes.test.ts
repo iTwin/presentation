@@ -57,13 +57,15 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = setupResult;
-      const { tree, provider } = createTreeAndProvider({
+      const { tree, provider, imodelAccess } = createTreeAndProvider({
         imodelConnection,
         hierarchyConfig: { elements: { classGrouping: "disable" } },
       });
       const targetKey = keys[target];
 
-      const paths = await collect(createNodePaths({ tree, targetItems: [targetKey], hierarchyProvider: provider }));
+      const paths = await collect(
+        createNodePaths({ tree, imodelAccess, targetItems: [targetKey], hierarchyProvider: provider }),
+      );
       const [{ path: instanceKeysPath }] = await collect(tree.createInstanceKeyPaths({ targetItems: [targetKey] }));
       expect(paths).toEqual([
         { path: await loadNodesPathByTraversal({ provider, path: instanceKeysPath }), target: targetKey.id },
@@ -87,16 +89,18 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = setupResult;
-      const { tree, provider } = createTreeAndProvider({
+      const { tree, provider, imodelAccess } = createTreeAndProvider({
         imodelConnection,
         hierarchyConfig: { elements: { classGrouping: "disable" } },
       });
 
-      expect(await collect(createNodePaths({ tree, targetItems: [keys.model], hierarchyProvider: provider }))).toEqual(
-        [],
-      );
+      expect(
+        await collect(createNodePaths({ tree, imodelAccess, targetItems: [keys.model], hierarchyProvider: provider })),
+      ).toEqual([]);
 
-      const paths = await collect(createNodePaths({ tree, targetItems: [keys.element], hierarchyProvider: provider }));
+      const paths = await collect(
+        createNodePaths({ tree, imodelAccess, targetItems: [keys.element], hierarchyProvider: provider }),
+      );
       expect(paths).toHaveLength(1);
       expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(["subject", "category", "element"]);
       await expectPathToBeExpandable({ provider, path: paths[0].path, hiddenModelIds: [keys.model.id] });
@@ -133,17 +137,19 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = setupResult;
-      const { tree, provider } = createTreeAndProvider({
+      const { tree, provider, imodelAccess } = createTreeAndProvider({
         imodelConnection,
         hierarchyConfig: { elements: { classGrouping: "disable" } },
       });
 
       expect(
-        await collect(createNodePaths({ tree, targetItems: [keys.subModel], hierarchyProvider: provider })),
+        await collect(
+          createNodePaths({ tree, imodelAccess, targetItems: [keys.subModel], hierarchyProvider: provider }),
+        ),
       ).toEqual([]);
 
       const paths = await collect(
-        createNodePaths({ tree, targetItems: [keys.subModelElement], hierarchyProvider: provider }),
+        createNodePaths({ tree, imodelAccess, targetItems: [keys.subModelElement], hierarchyProvider: provider }),
       );
       expect(paths).toHaveLength(1);
       expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(types);
@@ -162,13 +168,13 @@ describe("Models tree", () => {
           }),
         );
         const { imodelConnection, ...keys } = setupResult;
-        const { tree, provider } = createTreeAndProvider({
+        const { tree, provider, imodelAccess } = createTreeAndProvider({
           imodelConnection,
           hierarchyConfig: { elements: { classGrouping } },
         });
 
         const paths = await collect(
-          createNodePaths({ tree, targetItems: [keys.element], hierarchyProvider: provider }),
+          createNodePaths({ tree, imodelAccess, targetItems: [keys.element], hierarchyProvider: provider }),
         );
         expect(paths).toHaveLength(1);
         const { path } = paths[0];
@@ -200,14 +206,14 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, elements } = setupResult;
-      const { tree, provider } = createTreeAndProvider({
+      const { tree, provider, imodelAccess } = createTreeAndProvider({
         imodelConnection,
         hierarchyConfig: { elements: { classGrouping: "disable" } },
       });
 
       const getNodesSpy = vi.spyOn(provider, "getNodes");
       const paths = await collect(
-        createNodePaths({ tree, targetItems: elements, limit: "unbounded", hierarchyProvider: provider }),
+        createNodePaths({ tree, imodelAccess, targetItems: elements, limit: "unbounded", hierarchyProvider: provider }),
       );
       expect(paths.map(({ path, target }) => ({ key: path[path.length - 1].key, target }))).toEqual(
         expect.arrayContaining(
@@ -245,7 +251,7 @@ function createTreeAndProvider({
     },
   });
   const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
-  return { tree, provider };
+  return { tree, provider, imodelAccess };
 }
 
 /**
@@ -254,17 +260,21 @@ function createTreeAndProvider({
  */
 async function* createNodePaths({
   tree,
+  imodelAccess,
   hierarchyProvider,
   ...searchProps
 }: Parameters<ReturnType<typeof createModelsTree>["createInstanceKeyPaths"]>[0] & {
   tree: ReturnType<typeof createModelsTree>;
+  imodelAccess: ReturnType<typeof createIModelAccess>;
   hierarchyProvider: HierarchyProvider;
 }) {
-  for await (const { searchPath, nodesPath } of createHierarchyNodePaths({
+  const nodePaths = await createHierarchyNodePaths({
     hierarchyProvider,
+    imodelAccess,
     paths: tree.createInstanceKeyPaths(searchProps),
     createMinimalNode: await tree.getMinimalNodeFactory(),
-  })) {
+  });
+  for (const { searchPath, nodesPath } of nodePaths) {
     yield { path: nodesPath, target: searchPath.target };
   }
 }

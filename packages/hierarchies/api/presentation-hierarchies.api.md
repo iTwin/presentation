@@ -45,10 +45,10 @@ export interface ClassGroupingNodeKey {
 // @beta
 export function createHierarchyNodePaths<TSearchPath extends {
     path: DeepReadonly<IModelInstanceKey[]>;
-}>(props: CreateHierarchyNodePathsProps<TSearchPath>): AsyncIterableIterator<{
+}>(props: CreateHierarchyNodePathsProps<TSearchPath>): Promise<Array<{
     searchPath: TSearchPath;
     nodesPath: HierarchyNode[];
-}>;
+}>>;
 
 // @beta
 interface CreateHierarchyNodePathsProps<TSearchPath extends {
@@ -58,7 +58,9 @@ interface CreateHierarchyNodePathsProps<TSearchPath extends {
         instanceKey: DeepReadonly<IModelInstanceKey>;
         parentNode: MinimalHierarchyNode | undefined;
     }) => MinimalHierarchyNode;
+    hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
     hierarchyProvider: HierarchyProvider;
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
     paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
 }
 

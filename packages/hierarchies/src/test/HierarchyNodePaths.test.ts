@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { collect, createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
+import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { HierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { createHierarchyNodePaths } from "../hierarchies/HierarchyNodePaths.js";
@@ -46,6 +46,9 @@ describe("createHierarchyNodePaths", () => {
   let hierarchy: Map<string, HierarchyNode[]>;
   const getNodes = vi.fn<HierarchyProvider["getNodes"]>();
   const hierarchyProvider = createHierarchyProvider(() => ({ getNodes }));
+  // classes of loaded nodes derive from search path classes
+  const derivedClasses: { [derived: string]: string } = { "s.DerivedA": "s.A", "s.DerivedB": "s.B" };
+  const imodelAccess = { classDerivesFrom: (derived: string, base: string) => derivedClasses[derived] === base };
   const createMinimalNode = vi.fn(
     ({
       instanceKey,
@@ -97,9 +100,12 @@ describe("createHierarchyNodePaths", () => {
 
   /** Loads node paths for the given instance key paths and returns them with `searchPath` set to the instance key path. */
   async function loadPaths(paths: IModelInstanceKey[][]) {
-    const nodePaths = await collect(
-      createHierarchyNodePaths({ hierarchyProvider, paths: paths.map((path) => ({ path })), createMinimalNode }),
-    );
+    const nodePaths = await createHierarchyNodePaths({
+      hierarchyProvider,
+      imodelAccess,
+      paths: paths.map((path) => ({ path })),
+      createMinimalNode,
+    });
     return nodePaths.map(({ searchPath, nodesPath }) => ({ searchPath: searchPath.path, nodesPath }));
   }
 
@@ -146,7 +152,12 @@ describe("createHierarchyNodePaths", () => {
       await releaseSecondPath;
       yield { path: [a, e] };
     }
-    const result = collect(createHierarchyNodePaths({ hierarchyProvider, paths: createPaths(), createMinimalNode }));
+    const result = createHierarchyNodePaths({
+      hierarchyProvider,
+      imodelAccess,
+      paths: createPaths(),
+      createMinimalNode,
+    });
     await vi.waitFor(() => expect(createMinimalNode).toHaveBeenCalledTimes(2));
     expect(getNodes).not.toHaveBeenCalled();
     await releaseSecondPath.resolve();
@@ -178,9 +189,12 @@ describe("createHierarchyNodePaths", () => {
       { path: [a, b], target: "b" },
       { path: [a], target: "a" },
     ];
-    const result = await collect(
-      createHierarchyNodePaths({ hierarchyProvider, paths: createAsyncIterator(paths), createMinimalNode }),
-    );
+    const result = await createHierarchyNodePaths({
+      hierarchyProvider,
+      imodelAccess,
+      paths: createAsyncIterator(paths),
+      createMinimalNode,
+    });
     expect(result).toEqual([
       { searchPath: paths[0], nodesPath: createPath([nodeA, nodeB]) },
       { searchPath: paths[1], nodesPath: createPath([nodeA]) },
@@ -220,6 +234,40 @@ describe("createHierarchyNodePaths", () => {
       { searchPath: [a, b, c], nodesPath: createPath([nodeA, nodeB, mergedNode]) },
       { searchPath: [a, b, d], nodesPath: createPath([nodeA, nodeB, mergedNode]) },
     ]);
+  });
+
+  it("doesn't match nodes of other classes with the same ID", async () => {
+    // e.g. a model has the same ID as the element it models
+    const otherClassNode = createInstanceNode({ className: "s.Other", id: c.id });
+    setHierarchy([...hierarchyEntries, [nodeB, [nodeC, otherClassNode]]]);
+    expect(await loadPaths([[a, b, c]])).toEqual([
+      { searchPath: [a, b, c], nodesPath: createPath([nodeA, nodeB, nodeC]) },
+    ]);
+  });
+
+  it("matches nodes whose class is a base class of the search path class", async () => {
+    const baseClassNodeA = createInstanceNode(a);
+    setHierarchy([[undefined, [baseClassNodeA]]]);
+    const derivedA = { ...a, className: "s.DerivedA" as const };
+    expect(await loadPaths([[derivedA]])).toEqual([
+      { searchPath: [derivedA], nodesPath: createPath([baseClassNodeA]) },
+    ]);
+  });
+
+  it("passes hierarchy level size limit to every request", async () => {
+    const groupC = createGroupingNode(nodeC);
+    setHierarchy([...hierarchyEntries, [nodeB, [groupC]], [groupC, [nodeC]]]);
+    const result = await createHierarchyNodePaths({
+      hierarchyProvider,
+      imodelAccess,
+      hierarchyLevelSizeLimit: "unbounded",
+      paths: [{ path: [a, b, c] }],
+      createMinimalNode,
+    });
+    expect(result).toHaveLength(1);
+    // root, b's and c's levels, and children of the grouping node
+    expect(getNodes).toHaveBeenCalledTimes(4);
+    getNodes.mock.calls.forEach(([props]) => expect(props.hierarchyLevelSizeLimit).toBe("unbounded"));
   });
 
   it("ignores generic nodes", async () => {

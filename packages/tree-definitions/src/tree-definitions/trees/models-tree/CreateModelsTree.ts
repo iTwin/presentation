@@ -128,13 +128,13 @@ export function createModelsTree(props: ModelsTreeProps) {
      * loads hierarchy nodes for paths created by `createInstanceKeyPaths`:
      *
      * ```ts
-     * for await (const { searchPath, nodesPath } of createHierarchyNodePaths({
+     * const nodePaths = await createHierarchyNodePaths({
      *   hierarchyProvider,
+     *   imodelAccess,
      *   paths: tree.createInstanceKeyPaths({ targetItems }),
      *   createMinimalNode: await tree.getMinimalNodeFactory(),
-     * })) {
-     *   // `searchPath` is the `{ path, target }` object yielded by `createInstanceKeyPaths`
-     * }
+     * });
+     * // every `searchPath` in `nodePaths` is a `{ path, target }` object yielded by `createInstanceKeyPaths`
      * ```
      *
      * The hierarchy provider must use this tree's `hierarchyDefinition` and the same iModel. Paths must be created with
@@ -143,7 +143,6 @@ export function createModelsTree(props: ModelsTreeProps) {
      *
      * The callback throws an error if the instance key's class isn't a models tree search path class, or the parent node
      * doesn't match it.
-     * @alpha
      */
     getMinimalNodeFactory: async (): Promise<Props<typeof createHierarchyNodePaths>["createMinimalNode"]> =>
       createModelsTreeMinimalNodeFactory({ idsProvider }),

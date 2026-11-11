@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, EMPTY, from, mergeMap, of, reduce } from "rxjs";
-import { eachValueFrom } from "@itwin/presentation-shared";
+import { defer, EMPTY, from, lastValueFrom, mergeAll, mergeMap, of, reduce, toArray } from "rxjs";
 import { HierarchyNode } from "./HierarchyNode.js";
 
 import type { Observable } from "rxjs";
@@ -14,10 +13,10 @@ import type {
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
 } from "@itwin/core-common";
-import type { DeepReadonly } from "@itwin/presentation-shared";
+import type { DeepReadonly, EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
 import type { HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
-import type { HierarchyProvider } from "./HierarchyProvider.js";
+import type { GetHierarchyNodesProps, HierarchyProvider } from "./HierarchyProvider.js";
 
 /**
  * A node that `createHierarchyNodePaths` creates for every search path instance key, without loading it from a
@@ -46,6 +45,18 @@ export type MinimalHierarchyNode = ParentHierarchyNode<NonGroupingHierarchyNode>
 interface CreateHierarchyNodePathsProps<TSearchPath extends { path: DeepReadonly<IModelInstanceKey[]> }> {
   /** Provider to load the hierarchy nodes from. */
   hierarchyProvider: HierarchyProvider;
+
+  /**
+   * Class hierarchy inspector of the iModel that the paths are created for. Used to match loaded nodes to search path
+   * instance keys, whose class names may be base or derived classes of the actual instance classes.
+   */
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+
+  /**
+   * Hierarchy level size limit override, passed to every `HierarchyProvider.getNodes` call. If not provided, the
+   * provider's limit applies.
+   */
+  hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
 
   /**
    * Search paths to load hierarchy nodes for. Every search path object has a `path` of instance keys from a root node
@@ -81,24 +92,27 @@ type IdentifierKey = string;
  * Because every hierarchy level is requested with exactly the instances in the paths, grouping nodes group the same
  * instances as when the paths are applied using `HierarchyProvider.setHierarchySearch`.
  *
- * Paths are consumed one by one as they come in, and hierarchy levels are requested once all paths are consumed.
+ * Paths are consumed one by one as they come in, hierarchy levels are requested once all paths are consumed, and the
+ * returned promise resolves once all hierarchy levels are loaded.
  *
- * Yields a nodes path for every input path, together with the input path object as `searchPath`. Nodes paths contain grouping nodes
- * before the instance nodes they group, and don't contain nodes that are hidden in the hierarchy. Input paths whose
- * target or a non-hidden ancestor is not found in the hierarchy are not yielded.
+ * Resolves with a nodes path for every input path, together with the input path object as `searchPath`. Nodes paths
+ * contain grouping nodes before the instance nodes they group, and don't contain nodes that are hidden in the
+ * hierarchy. Input paths whose target or a non-hidden ancestor is not found in the hierarchy are omitted.
  *
  * Notes:
+ * - The provider's state is not changed by this function.
  * - Ancestor keys of hidden nodes are taken from their minimal nodes.
- * - Provider hierarchy level size limits apply, and the provider's state is not changed by this helper.
+ * - Instances are filtered by their `ECInstanceId` values using `OR` expressions, so hierarchy levels with many
+ *   requested instances result in large queries.
  *
- * @throws An error if a provider hierarchy level size limit is exceeded, or loading fails.
+ * @throws An error if a hierarchy level size limit is exceeded, or loading fails.
  * @beta
  */
-export function createHierarchyNodePaths<TSearchPath extends { path: DeepReadonly<IModelInstanceKey[]> }>(
+export async function createHierarchyNodePaths<TSearchPath extends { path: DeepReadonly<IModelInstanceKey[]> }>(
   props: CreateHierarchyNodePathsProps<TSearchPath>,
-): AsyncIterableIterator<{ searchPath: TSearchPath; nodesPath: HierarchyNode[] }> {
-  const { hierarchyProvider, createMinimalNode } = props;
-  return eachValueFrom(
+): Promise<Array<{ searchPath: TSearchPath; nodesPath: HierarchyNode[] }>> {
+  const { hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, createMinimalNode } = props;
+  return lastValueFrom(
     from(props.paths).pipe(
       // collect path entries by their parents as paths come in, so that siblings can be requested together once all
       // paths are received
@@ -127,7 +141,7 @@ export function createHierarchyNodePaths<TSearchPath extends { path: DeepReadonl
         },
       ),
       mergeMap(({ minimalEntriesByParent, paths }) =>
-        getLoadedEntries({ hierarchyProvider, minimalEntriesByParent }).pipe(
+        getLoadedEntries({ hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, minimalEntriesByParent }).pipe(
           mergeMap((loadedEntries) => {
             // shared by all paths, so that entries of common path prefixes are resolved only once
             const resolvedEntriesAccumulator = new Map<MinimalHierarchyNode, ResolvedEntry>();
@@ -138,6 +152,7 @@ export function createHierarchyNodePaths<TSearchPath extends { path: DeepReadonl
           }),
         ),
       ),
+      toArray(),
     ),
   );
 }
@@ -173,6 +188,7 @@ interface ResolvedEntry {
 interface NodesRequest {
   parentNode: ParentHierarchyNode | undefined;
   instanceFilter: GenericInstanceFilter;
+  hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
   /** Requested entries by their instance IDs. Used to match loaded nodes to entries. */
   entries: Map<Id64String, SearchPathEntry[]>;
 }
@@ -274,19 +290,34 @@ function getResolvedEntry({
  */
 function getLoadedEntries({
   hierarchyProvider,
+  imodelAccess,
+  hierarchyLevelSizeLimit,
   minimalEntriesByParent,
 }: {
   hierarchyProvider: HierarchyProvider;
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+  hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
   minimalEntriesByParent: EntriesByParent;
 }): Observable<Map<MinimalHierarchyNode, LoadedEntryNodes>> {
-  return defer(() => from(getRequestPropsForGetNodes(minimalEntriesByParent))).pipe(
+  return defer(() => from(getRequestPropsForGetNodes({ minimalEntriesByParent, hierarchyLevelSizeLimit }))).pipe(
     mergeMap((request) =>
       loadEntryNodes({ hierarchyProvider, request, groupingNodes: [], parentNode: request.parentNode }).pipe(
         mergeMap((loaded) =>
-          loaded.node.key.instanceKeys.flatMap((loadedKey) =>
-            (request.entries.get(loadedKey.id) ?? [])
-              .filter(({ instanceKey }) => !instanceKey.imodelKey || instanceKey.imodelKey === loadedKey.imodelKey)
-              .map(({ minimalNode }) => ({ minimalNode, loaded })),
+          from(
+            loaded.node.key.instanceKeys.flatMap((loadedKey) =>
+              (request.entries.get(loadedKey.id) ?? [])
+                .filter(({ instanceKey }) => !instanceKey.imodelKey || instanceKey.imodelKey === loadedKey.imodelKey)
+                .map((entry) => ({ entry, loadedKey })),
+            ),
+          ).pipe(
+            // instances of different classes may share IDs (e.g. a model and its modeled element), so in addition to
+            // IDs, the loaded instance class has to match the search path class
+            mergeMap(async ({ entry, loadedKey }) =>
+              (await classesMatch({ imodelAccess, lhs: entry.instanceKey.className, rhs: loadedKey.className }))
+                ? [{ minimalNode: entry.minimalNode, loaded }]
+                : [],
+            ),
+            mergeAll(),
           ),
         ),
       ),
@@ -303,7 +334,13 @@ function getLoadedEntries({
  * entries.
  * Entries hidden in the hierarchy are not requested, but their children are.
  */
-function getRequestPropsForGetNodes(minimalEntriesByParent: EntriesByParent): NodesRequest[] {
+function getRequestPropsForGetNodes({
+  minimalEntriesByParent,
+  hierarchyLevelSizeLimit,
+}: {
+  minimalEntriesByParent: EntriesByParent;
+  hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
+}): NodesRequest[] {
   const requests = new Array<NodesRequest>();
   for (const [minimalParentNode, children] of minimalEntriesByParent) {
     const entries = new Map<Id64String, SearchPathEntry[]>();
@@ -316,6 +353,7 @@ function getRequestPropsForGetNodes(minimalEntriesByParent: EntriesByParent): No
       requests.push({
         parentNode: minimalParentNode,
         instanceFilter: createECInstanceIdsFilter([...entries.keys()]),
+        ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
         entries,
       });
     }
@@ -339,7 +377,16 @@ function loadEntryNodes({
   parentNode: ParentHierarchyNode | undefined;
   groupingNodes: GroupingHierarchyNode[];
 }): Observable<LoadedEntryNodes> {
-  return defer(() => from(hierarchyProvider.getNodes({ parentNode, instanceFilter: request.instanceFilter }))).pipe(
+  const { instanceFilter, hierarchyLevelSizeLimit } = request;
+  return defer(() =>
+    from(
+      hierarchyProvider.getNodes({
+        parentNode,
+        instanceFilter,
+        ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
+      }),
+    ),
+  ).pipe(
     mergeMap((node) => {
       if (HierarchyNode.isGroupingNode(node)) {
         // grouping nodes may also group unrelated instances promoted from hidden nodes - skip groups without requested instances
@@ -349,6 +396,21 @@ function loadEntryNodes({
       }
       return HierarchyNode.isInstancesNode(node) ? of({ node, groupingNodes }) : EMPTY;
     }),
+  );
+}
+
+/** Checks whether one of the given classes derives from the other. */
+async function classesMatch({
+  imodelAccess,
+  lhs,
+  rhs,
+}: {
+  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+  lhs: EC.FullClassNameDotNotation;
+  rhs: EC.FullClassNameDotNotation;
+}): Promise<boolean> {
+  return (
+    lhs === rhs || (await imodelAccess.classDerivesFrom(lhs, rhs)) || (await imodelAccess.classDerivesFrom(rhs, lhs))
   );
 }
 

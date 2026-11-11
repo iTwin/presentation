@@ -250,8 +250,9 @@ const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(),
 });
-const nodePaths = createHierarchyNodePaths({
+const nodePaths = await createHierarchyNodePaths({
   hierarchyProvider,
+  imodelAccess,
   paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
   // Minimal nodes are used as parent nodes when requesting child hierarchy levels. Our hierarchy definition
   // only needs parent node's key to create them.
@@ -261,12 +262,8 @@ const nodePaths = createHierarchyNodePaths({
     label: "",
   }),
 });
-const labelPaths = [];
-for await (const { nodesPath } of nodePaths) {
-  labelPaths.push(nodesPath.map((node) => node.label));
-}
 // Each path contains the nodes `hierarchyProvider.getNodes` returns for every hierarchy level
-expect(labelPaths).toEqual([
+expect(nodePaths.map(({ nodesPath }) => nodesPath.map((node) => node.label))).toEqual([
   ["A", "B", "C"],
   ["A", "E"],
 ]);
