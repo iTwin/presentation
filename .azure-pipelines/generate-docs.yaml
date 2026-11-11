@@ -56,10 +56,6 @@ stages:
 
             $diff=$(git diff --name-only $(git merge-base $targetCommit $prCommit))
             $files=$diff -split ' '
-            Write-Host "Changed files:"
-            foreach ($file in $files) {
-              Write-Host $file
-            }
 
             foreach ($file in $files) {
               foreach ($path in $paths) {
