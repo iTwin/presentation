@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;ClassGroupingNodeKey
+beta;function;createHierarchyNodePaths
 public;function;createHierarchyProvider
 public;function;createHierarchySearchHelper
 public;function;createIModelHierarchyProvider
@@ -39,6 +40,7 @@ public;interface;InstancesNodeKey
 public;interface;LabelGroupingNodeKey
 public;interface;LimitingECSqlQueryExecutor
 public;function;mergeProviders
+beta;type;MinimalHierarchyNode
 public;type;NodeParser
 public;type;NodePostProcessor
 public;type;NodePreProcessor

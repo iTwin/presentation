@@ -8,15 +8,15 @@ import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProv
 import { mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 import { createModelsTreeIdsProvider, normalizeModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
-import { createHierarchyNodePaths } from "./ModelsTreeSearchHierarchyNodes.js";
+import { createModelsTreeMinimalNodeFactory } from "./ModelsTreeMinimalNodes.js";
 
 import type { GuidString } from "@itwin/core-bentley";
 import type {
+  createHierarchyNodePaths,
   HierarchyDefinition,
-  HierarchyProvider,
   LimitingECSqlQueryExecutor,
 } from "@itwin/presentation-hierarchies";
-import type { ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, InstanceKey, Props } from "@itwin/presentation-shared";
 import type {
   ElementsGroupInfo,
   ModelsTreeHierarchyConfiguration,
@@ -53,16 +53,6 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions & ModelsTreeSearchTargetPro
  * @beta
  */
 type ModelsTreeSearchTargetProps = { targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string };
-
-/**
- * Search options for loading hierarchy nodes of models tree search results.
- * @beta
- */
-type ModelsTreeHierarchyNodesSearchProps = Omit<ModelsTreeSearchOptions, "includeOnlyVisibleNodeInstanceKeys"> &
-  ModelsTreeSearchTargetProps & {
-    /** Provider for this tree and iModel, with subject, model, and category label merging disabled. */
-    hierarchyProvider: HierarchyProvider;
-  };
 
 /**
  * Creates a models hierarchy definition and search helpers that share hierarchy configuration and a unique ID.
@@ -106,12 +96,6 @@ export function createModelsTree(props: ModelsTreeProps) {
     idsProvider,
     uniqueId,
   });
-  const hierarchyNodesSearchConfig: ModelsTreeHierarchyConfiguration = {
-    ...hierarchyConfig,
-    subjects: { ...hierarchyConfig.subjects, labelMerging: "disable" },
-    models: { ...hierarchyConfig.models, labelMerging: "disable" },
-    categories: { ...hierarchyConfig.categories, labelMerging: "disable" },
-  };
   return {
     /** Hierarchy definition bound to the supplied iModel access and ID provider. */
     hierarchyDefinition,
@@ -140,39 +124,28 @@ export function createModelsTree(props: ModelsTreeProps) {
         imodelAccess: props.imodelAccess,
       }),
     /**
-     * Same as `createInstanceKeyPaths`, but yields paths of hierarchy nodes loaded from `hierarchyProvider` instead of instance keys.
+     * Creates a `createMinimalNode` callback for `createHierarchyNodePaths` from `@itwin/presentation-hierarchies`, which
+     * loads hierarchy nodes for paths created by `createInstanceKeyPaths`:
      *
-     * The provider must use this tree's `hierarchyDefinition` and the same iModel, with label merging disabled for
-     * subjects, models, and categories. The search configuration also disables label merging. Paths are yielded after searching and
-     * loading the needed hierarchy levels. Siblings of the same class are requested together using an `instanceFilter`
-     * on their `ECInstanceId` values, in chunks of at most 100 IDs. Parent nodes are constructed from search paths so all
-     * planned requests, including different hierarchy levels and chunks, start concurrently without a concurrency limit.
-     * Grouping-node children are requested as soon as the grouping nodes are returned.
+     * ```ts
+     * for await (const { searchPath, nodesPath } of createHierarchyNodePaths({
+     *   hierarchyProvider,
+     *   paths: tree.createInstanceKeyPaths({ targetItems }),
+     *   createMinimalNode: await tree.getMinimalNodeFactory(),
+     * })) {
+     *   // `searchPath` is the `{ path, target }` object yielded by `createInstanceKeyPaths`
+     * }
+     * ```
      *
-     * Notes:
-     * - Hidden models are omitted. Paths whose target or a non-hidden ancestor is not found are not yielded.
-     *   The `includeOnlyVisibleNodeInstanceKeys` option is therefore not supported.
-     * - Grouping nodes are included before the instances they contain, including nested grouping levels.
-     *   Their labels, counts, and grouped instance keys reflect the filtered request, including its ID chunk.
-     * - Instance nodes each represent a single instance. Nodes with matching labels remain separate.
-     * - Hidden ancestor keys use search-path base classes.
-     * - Provider hierarchy level size limits apply; its state is not changed by this helper.
-     * @throws An error if a search or provider hierarchy level size limit is exceeded, or loading fails.
+     * The hierarchy provider must use this tree's `hierarchyDefinition` and the same iModel. Paths must be created with
+     * the default `includeOnlyVisibleNodeInstanceKeys: false` - the callback marks sub-models and models hidden by
+     * partition content properties as hidden, using hidden model IDs loaded when the callback is created.
+     *
+     * The callback throws an error if the instance key's class isn't a models tree search path class, or the parent node
+     * doesn't match it.
      * @alpha
      */
-    createHierarchyNodePaths: ({ hierarchyProvider, ...searchProps }: ModelsTreeHierarchyNodesSearchProps) =>
-      createHierarchyNodePaths({
-        hierarchyProvider,
-        idsProvider,
-        abortSignal: searchProps.abortSignal,
-        instanceKeyPaths: ModelsTreeDefinition.createInstanceKeyPaths({
-          ...searchProps,
-          includeOnlyVisibleNodeInstanceKeys: false,
-          hierarchyConfig: hierarchyNodesSearchConfig,
-          idsProvider,
-          uniqueId,
-          imodelAccess: props.imodelAccess,
-        }),
-      }),
+    getMinimalNodeFactory: async (): Promise<Props<typeof createHierarchyNodePaths>["createMinimalNode"]> =>
+      createModelsTreeMinimalNodeFactory({ idsProvider }),
   };
 }

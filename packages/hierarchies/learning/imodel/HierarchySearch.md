@@ -235,3 +235,41 @@ expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
 ```
 
 <!-- END EXTRACTION -->
+
+### Loading hierarchy nodes for search paths
+
+The `createHierarchyNodePaths` function loads a path of hierarchy nodes for each search path. The path contains the nodes that `HierarchyProvider.getNodes` would return for each hierarchy level, from the root down to the search target. Nodes created by `createMinimalNode` are used as parents when requesting hierarchy levels, so they should have everything the hierarchy definition needs, including `processingParams.hideInHierarchy` for nodes that are hidden in the hierarchy.
+
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePathsImports, Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePaths], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { createHierarchyNodePaths } from "@itwin/presentation-hierarchies";
+
+const hierarchyProvider = createIModelHierarchyProvider({
+  imodelAccess,
+  hierarchyDefinition: createHierarchyDefinition(),
+});
+const nodePaths = createHierarchyNodePaths({
+  hierarchyProvider,
+  paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
+  // Minimal nodes are used as parent nodes when requesting child hierarchy levels. Our hierarchy definition
+  // only needs parent node's key to create them.
+  createMinimalNode: ({ instanceKey, parentNode }) => ({
+    key: { type: "instances", instanceKeys: [instanceKey] },
+    parentKeys: parentNode ? [...parentNode.parentKeys, parentNode.key] : [],
+    label: "",
+  }),
+});
+const labelPaths = [];
+for await (const { nodesPath } of nodePaths) {
+  labelPaths.push(nodesPath.map((node) => node.label));
+}
+// Each path contains the nodes `hierarchyProvider.getNodes` returns for every hierarchy level
+expect(labelPaths).toEqual([
+  ["A", "B", "C"],
+  ["A", "E"],
+]);
+```
+
+<!-- END EXTRACTION -->

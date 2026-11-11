@@ -5,6 +5,7 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
+import type { createHierarchyNodePaths } from '@itwin/presentation-hierarchies';
 import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
@@ -12,7 +13,6 @@ import type { GroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import type { GuidString } from '@itwin/core-bentley';
 import type { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
-import type { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
 import type { Id64Array } from '@itwin/core-bentley';
 import { Id64String } from '@itwin/core-bentley';
@@ -21,6 +21,7 @@ import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { Props } from '@itwin/presentation-shared';
 import type { Subscribable } from '@itwin/presentation-shared';
 
 // @beta
@@ -317,10 +318,7 @@ export function createModelsTree(props: ModelsTreeProps): {
     createSearchTree: (searchProps: ModelsTreeSearchProps & {
         revealTargets?: boolean;
     }) => Promise<ModelsTreeSearchTree[]>;
-    createHierarchyNodePaths: (input: ModelsTreeHierarchyNodesSearchProps) => AsyncIterableIterator<{
-        path: ModelsTreeHierarchyNode[];
-        target: Id64String | ElementsGroupInfo;
-    }>;
+    getMinimalNodeFactory: () => Promise<Props<typeof createHierarchyNodePaths>["createMinimalNode"]>;
 };
 
 // @beta
@@ -405,16 +403,6 @@ interface ModelsTreeHierarchyConfiguration {
         labelMerging?: "enable" | "disable";
     };
 }
-
-// @alpha
-type ModelsTreeHierarchyNode = (NonGroupingHierarchyNode & {
-    key: InstancesNodeKey;
-}) | GroupingHierarchyNode;
-
-// @beta
-type ModelsTreeHierarchyNodesSearchProps = Omit<ModelsTreeSearchOptions, "includeOnlyVisibleNodeInstanceKeys"> & ModelsTreeSearchTargetProps & {
-    hierarchyProvider: HierarchyProvider;
-};
 
 // @beta
 export interface ModelsTreeIdsProvider {

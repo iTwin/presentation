@@ -15,8 +15,12 @@ import {
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createIModelHierarchyProvider, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { CLASS_NAMES, createModelsTree } from "@itwin/presentation-tree-definitions/internal";
+import {
+  createHierarchyNodePaths,
+  createIModelHierarchyProvider,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
+import { createModelsTree } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Common.js";
 import { buildIModel } from "../IModelUtils.js";
@@ -59,9 +63,7 @@ describe("Models tree", () => {
       });
       const targetKey = keys[target];
 
-      const paths = await collect(
-        tree.createHierarchyNodePaths({ targetItems: [targetKey], hierarchyProvider: provider }),
-      );
+      const paths = await collect(createNodePaths({ tree, targetItems: [targetKey], hierarchyProvider: provider }));
       const [{ path: instanceKeysPath }] = await collect(tree.createInstanceKeyPaths({ targetItems: [targetKey] }));
       expect(paths).toEqual([
         { path: await loadNodesPathByTraversal({ provider, path: instanceKeysPath }), target: targetKey.id },
@@ -90,13 +92,11 @@ describe("Models tree", () => {
         hierarchyConfig: { elements: { classGrouping: "disable" } },
       });
 
-      expect(
-        await collect(tree.createHierarchyNodePaths({ targetItems: [keys.model], hierarchyProvider: provider })),
-      ).toEqual([]);
-
-      const paths = await collect(
-        tree.createHierarchyNodePaths({ targetItems: [keys.element], hierarchyProvider: provider }),
+      expect(await collect(createNodePaths({ tree, targetItems: [keys.model], hierarchyProvider: provider }))).toEqual(
+        [],
       );
+
+      const paths = await collect(createNodePaths({ tree, targetItems: [keys.element], hierarchyProvider: provider }));
       expect(paths).toHaveLength(1);
       expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(["subject", "category", "element"]);
       await expectPathToBeExpandable({ provider, path: paths[0].path, hiddenModelIds: [keys.model.id] });
@@ -139,11 +139,11 @@ describe("Models tree", () => {
       });
 
       expect(
-        await collect(tree.createHierarchyNodePaths({ targetItems: [keys.subModel], hierarchyProvider: provider })),
+        await collect(createNodePaths({ tree, targetItems: [keys.subModel], hierarchyProvider: provider })),
       ).toEqual([]);
 
       const paths = await collect(
-        tree.createHierarchyNodePaths({ targetItems: [keys.subModelElement], hierarchyProvider: provider }),
+        createNodePaths({ tree, targetItems: [keys.subModelElement], hierarchyProvider: provider }),
       );
       expect(paths).toHaveLength(1);
       expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(types);
@@ -168,7 +168,7 @@ describe("Models tree", () => {
         });
 
         const paths = await collect(
-          tree.createHierarchyNodePaths({ targetItems: [keys.element], hierarchyProvider: provider }),
+          createNodePaths({ tree, targetItems: [keys.element], hierarchyProvider: provider }),
         );
         expect(paths).toHaveLength(1);
         const { path } = paths[0];
@@ -186,7 +186,7 @@ describe("Models tree", () => {
       },
     );
 
-    it("requests more than 100 elements of the same class in one level with 2 requests", async () => {
+    it("requests more than 100 elements in one level with a single request", async () => {
       const elementsCount = 101;
       await using setupResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
@@ -207,7 +207,7 @@ describe("Models tree", () => {
 
       const getNodesSpy = vi.spyOn(provider, "getNodes");
       const paths = await collect(
-        tree.createHierarchyNodePaths({ targetItems: elements, limit: "unbounded", hierarchyProvider: provider }),
+        createNodePaths({ tree, targetItems: elements, limit: "unbounded", hierarchyProvider: provider }),
       );
       expect(paths.map(({ path, target }) => ({ key: path[path.length - 1].key, target }))).toEqual(
         expect.arrayContaining(
@@ -218,12 +218,10 @@ describe("Models tree", () => {
         ),
       );
       expect(paths).toHaveLength(elementsCount);
-      const elementRequestSizes = getNodesSpy.mock.calls.flatMap(([{ instanceFilter }]) =>
-        instanceFilter?.propertyClassNames.includes(CLASS_NAMES.GeometricElement3d)
-          ? ["rules" in instanceFilter.rules ? instanceFilter.rules.rules.length : 1]
-          : [],
+      const elementRequests = getNodesSpy.mock.calls.filter(
+        ([{ parentNode }]) => parentNode?.extendedData?.type === "category",
       );
-      expect(elementRequestSizes.sort((lhs, rhs) => lhs - rhs)).toEqual([1, 100]);
+      expect(elementRequests).toHaveLength(1);
     });
   });
 });
@@ -248,6 +246,27 @@ function createTreeAndProvider({
   });
   const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition: tree.hierarchyDefinition });
   return { tree, provider };
+}
+
+/**
+ * Loads hierarchy node paths for the given search targets, the way consumers are expected to: by passing the tree's
+ * instance key paths and minimal node factory to `createHierarchyNodePaths`.
+ */
+async function* createNodePaths({
+  tree,
+  hierarchyProvider,
+  ...searchProps
+}: Parameters<ReturnType<typeof createModelsTree>["createInstanceKeyPaths"]>[0] & {
+  tree: ReturnType<typeof createModelsTree>;
+  hierarchyProvider: HierarchyProvider;
+}) {
+  for await (const { searchPath, nodesPath } of createHierarchyNodePaths({
+    hierarchyProvider,
+    paths: tree.createInstanceKeyPaths(searchProps),
+    createMinimalNode: await tree.getMinimalNodeFactory(),
+  })) {
+    yield { path: nodesPath, target: searchPath.target };
+  }
 }
 
 /** Loads nodes for the given path of instance keys by traversing the hierarchy from the root. */
