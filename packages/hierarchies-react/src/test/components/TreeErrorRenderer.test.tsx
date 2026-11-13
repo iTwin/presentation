@@ -5,6 +5,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
+import { StrataKitErrorRegionItem } from "../../presentation-hierarchies-react/stratakit/ErrorRegionItem.js";
 import { TreeErrorRenderer } from "../../presentation-hierarchies-react/stratakit/TreeErrorRenderer.js";
 import { COLOR_SCHEMES, renderWithTheme, validateSnapshot } from "./RenderUtils.js";
 import { createTreeNode } from "./TestUtils.js";
@@ -54,6 +55,25 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         "Something went wrong",
       );
       await validateSnapshot(locator);
+    });
+
+    it("renders custom error items", async () => {
+      const errorNodes = [
+        createTreeNode({
+          id: "node-1",
+          label: "Node 1",
+          errors: [{ id: "error-1", type: "Generic", message: "Something went wrong" }],
+        }),
+      ];
+      await renderTreeErrorRenderer(
+        {
+          ...defaultProps,
+          errorNodes,
+          renderError: ({ treeNode }) => <StrataKitErrorRegionItem messageId={treeNode.id} message="Custom error" />,
+        },
+        colorScheme,
+        "Custom error",
+      );
     });
 
     it("renders with children load error", async () => {

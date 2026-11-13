@@ -25,7 +25,7 @@ interface TreeErrorRendererOwnProps {
   treeLabel: string;
   /** List of error nodes to render errors for. */
   errorNodes: ReturnType<typeof useErrorNodes>;
-  /** Callback to render custom error messages. Component should be wrapped in `unstable_ErrorRegion.Item` from `@stratakit/structures` package. */
+  /** Callback to render custom error messages. Return a `StrataKitErrorRegionItem` for custom errors. */
   renderError?: (props: ErrorItemRendererProps) => ReactElement;
 }
 
@@ -33,7 +33,7 @@ interface TreeErrorRendererOwnProps {
 export type TreeErrorRendererProps = TreeErrorRendererOwnProps & Omit<ErrorItemRendererProps, "treeNode" | "error">;
 
 /**
- * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@stratakit/structures`.
+ * A component that renders error display dropdown using StrataKit's `ErrorRegion` component.
  * As input, the component uses a list of `ErrorNode` objects, which are generally created using the `useErrorNodes` hook.
  *
  * @alpha

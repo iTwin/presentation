@@ -457,9 +457,6 @@ importers:
       '@stratakit/mui':
         specifier: catalog:stratakit
         version: 1.2.1(@mui/material@9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
-      '@stratakit/structures':
-        specifier: catalog:stratakit
-        version: 0.6.2(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(immer@10.2.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.2
@@ -796,9 +793,6 @@ importers:
       '@stratakit/mui':
         specifier: catalog:stratakit
         version: 1.2.1(@mui/material@9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
-      '@stratakit/structures':
-        specifier: catalog:stratakit
-        version: 0.6.2(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(immer@10.2.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1182,6 +1176,9 @@ importers:
 
   packages/hierarchies-react:
     dependencies:
+      '@ariakit/react':
+        specifier: ^0.4.42
+        version: 0.4.42(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 5.15.0
@@ -1197,9 +1194,6 @@ importers:
       '@stratakit/icons':
         specifier: ^0.4.7
         version: 0.4.7
-      '@stratakit/structures':
-        specifier: catalog:stratakit
-        version: 0.6.2(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(immer@10.2.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
       '@tanstack/react-virtual':
         specifier: ^3.14.26
         version: 3.14.26(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1234,6 +1228,9 @@ importers:
       '@stratakit/mui':
         specifier: catalog:stratakit
         version: 1.2.1(@mui/material@9.5.0(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@8.1.1)
+      '@stratakit/structures':
+        specifier: catalog:stratakit
+        version: 0.6.2(@stratakit/foundations@1.0.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react@19.3.0)(immer@10.2.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.2

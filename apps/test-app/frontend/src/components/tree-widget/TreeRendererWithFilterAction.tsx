@@ -6,13 +6,13 @@
 import { forwardRef, memo, useCallback, useMemo } from "react";
 import {
   ErrorItemRenderer,
+  StrataKitErrorRegionItem,
   StrataKitTreeRenderer,
   TreeActionBase,
   TreeErrorRenderer,
   TreeNodeFilterAction,
   TreeNodeRenameAction,
 } from "@itwin/presentation-hierarchies-react/stratakit";
-import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 
 import addSvg from "@stratakit/icons/add.svg";
 
@@ -114,7 +114,9 @@ export const TreeRendererWithFilterAction = forwardRef<StrataKitTreeRendererAttr
 type ErrorItemProps = ComponentProps<typeof ErrorItemRenderer>;
 function CustomErrorItemRenderer({ error, treeNode, ...rest }: ErrorItemProps) {
   if (error.type === "Generic") {
-    return <ErrorRegion.Item message={error.message.replace("{{node}}", treeNode.label)} messageId={error.id} />;
+    return (
+      <StrataKitErrorRegionItem message={error.message.replace("{{node}}", treeNode.label)} messageId={error.id} />
+    );
   }
   return <ErrorItemRenderer error={error} treeNode={treeNode} {...rest} />;
 }

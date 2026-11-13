@@ -15,12 +15,13 @@ import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenameContextProvider, useTreeNodeRenameContextValue } from "./TreeNodeRenameAction.js";
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
-import type { ComponentProps, CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
+import type { CSSProperties, FC, PropsWithoutRef, ReactElement, ReactNode, RefAttributes } from "react";
 import type { VirtualItem } from "@tanstack/react-virtual";
 import type { FlatTreeItem, FlatTreeNodeItem } from "../FlatTreeNode.js";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
 import type { SelectionMode } from "../UseSelectionHandler.js";
+import type { ElementPropsWithRender } from "./ElementPropsWithRender.js";
 import type { TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import type { RenameParameters, TreeNodeEditingProps } from "./TreeNodeRenameAction.js";
 import type { StrataKitTreeItemProps, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
@@ -41,7 +42,7 @@ interface TreeRendererOwnProps {
   getEditingProps?: (node: TreeNode) => TreeNodeEditingProps | undefined;
 
   /** Custom props for the root Tree component. */
-  treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
+  treeRootProps?: Partial<Omit<ElementPropsWithRender<"div"> & RefAttributes<HTMLDivElement | HTMLElement>, "style">>;
 
   /** A callback that returns tree item props for specific node. */
   getTreeItemProps?: (
@@ -83,7 +84,7 @@ type StrataKitTreeRendererProps = TreeRendererProps &
   TreeRendererOwnProps;
 
 /**
- * A component that renders a tree using the `Tree` component from `@stratakit/structures`.
+ * A component that renders a tree using StrataKit's tree components.
  *
  * @alpha
  */

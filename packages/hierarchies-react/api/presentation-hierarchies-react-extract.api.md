@@ -4,7 +4,6 @@
 
 ```ts
 
-import { ComponentProps } from 'react';
 import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { FC } from 'react';
@@ -15,6 +14,7 @@ import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { HierarchySearchTree } from '@itwin/presentation-hierarchies';
+import { HTMLAttributes } from 'react';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX } from 'react';
@@ -25,11 +25,11 @@ import { PropsWithChildren } from 'react';
 import { PropsWithoutRef } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
+import { Ref } from 'react';
 import { RefAttributes } from 'react';
 import { Selectable } from '@itwin/unified-selection';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { setLogger } from '@itwin/presentation-hierarchies';
-import { Tree } from '@stratakit/structures';
 
 // @public
 interface ChildrenLoadErrorInfo {
@@ -46,6 +46,13 @@ interface CommonRendererProps {
     getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
     reloadTree: (options?: ReloadTreeOptions) => void;
 }
+
+// @alpha
+type ElementPropsWithRender<TElement extends keyof JSX.IntrinsicElements> = {
+    render?: ReactElement | ((props: HTMLAttributes<any> & {
+        ref?: Ref<any>;
+    }) => ReactNode);
+} & Omit<ComponentPropsWithoutRef<TElement>, "render">;
 
 // @public
 export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
@@ -192,13 +199,27 @@ export { SelectionStorage }
 export { setLogger }
 
 // @alpha
+export function StrataKitErrorRegionItem(props: StrataKitErrorRegionItemProps): JSX.Element;
+
+// @alpha
+interface StrataKitErrorRegionItemProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+    actions?: ReactNode;
+    message?: ReactNode;
+    messageId?: string;
+}
+
+// @alpha
 export function StrataKitRootErrorRenderer(input: StrataKitRootErrorRendererProps): JSX.Element;
 
 // @alpha (undocumented)
 type StrataKitRootErrorRendererProps = RootErrorRendererProps;
 
 // @alpha (undocumented)
-type StrataKitTreeItemProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions" | "inlineActions" | "expanded" | "onExpandedChange" | "icon" | "unstable_decorations" | "error"> & {
+type StrataKitTreeItemProps = Omit<ElementPropsWithRender<"div">, "content" | "children"> & {
+    selected?: boolean;
+    onSelectedChange?: (selected: boolean) => void;
+    label?: ReactNode;
+    description?: ReactNode;
     decorations?: ReactNode;
 };
 
@@ -223,7 +244,11 @@ export interface TreeActionBaseAttributes {
 }
 
 // @alpha (undocumented)
-type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.ItemAction>, "onClick"> & TreeActionBaseAttributes & {
+type TreeActionBaseProps = Omit<ElementPropsWithRender<"button">, "children" | "onClick"> & TreeActionBaseAttributes & {
+    label: string;
+    icon?: string | JSX.Element;
+    visible?: boolean;
+    dot?: string;
     onClick?: () => void;
 };
 
@@ -305,7 +330,7 @@ interface TreeRendererOwnProps {
     id?: string;
     selectionMode?: SelectionMode_2;
     treeLabel: string;
-    treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
+    treeRootProps?: Partial<Omit<ElementPropsWithRender<"div"> & RefAttributes<HTMLDivElement | HTMLElement>, "style">>;
 }
 
 // @alpha
