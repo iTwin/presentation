@@ -556,6 +556,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core-dev
         version: 5.15.0(@itwin/core-bentley@5.15.0)(@itwin/core-quantity@5.15.0(@itwin/core-bentley@5.15.0))
+      '@itwin/presentation-content':
+        specifier: workspace:*
+        version: link:../../packages/content
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop

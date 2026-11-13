@@ -16,10 +16,12 @@ import {
   insertGroupInformationModelWithPartition,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
+  insertPhysicalType,
   insertSpatialCategory,
   insertSubCategory,
   insertSubject,
 } from "presentation-test-utilities";
+import { Code, IModel } from "@itwin/core-common";
 import { createSnapshotIModel } from "./IModelUtilities.js";
 
 import type { Id64String } from "@itwin/core-bentley";
@@ -55,6 +57,19 @@ const ELEMENTS_IN_500_CLASSES = {
 export const DATASETS = {
   baytown: {},
   "1k subjects": { elementCount: 1_000, chainCount: 20, userLabel: "test_subject" },
+  "50k single-class elements": {
+    elementCount: 50_000,
+    bucketCount: 10,
+    schema: {
+      name: "ContentPerformance",
+      className: "Element",
+      ordinalPropertyName: "Ordinal",
+      bucketPropertyName: "Bucket",
+    },
+    userLabelPrefix: "Element",
+    modelCodeValue: "Content model",
+    categoryCodeValue: "Content category",
+  },
   "50k elements in 500 classes": ELEMENTS_IN_500_CLASSES,
   "50k hierarchical 2D and 3D elements": {
     elementCount: 50_000,
@@ -70,6 +85,16 @@ export const DATASETS = {
     groupClassName: "Generic.Group",
     groupUserLabel: "test_group",
   },
+  "10k elements in 100 groups each, 10 elements in 50k groups": {
+    elementCount: 10_000,
+    groupCount: 50_000,
+    groupsPerElement: 100,
+    hubElementCount: 10,
+    elementClassName: "Generic.PhysicalObject",
+    hubElementClassName: "Generic.Graphic3d",
+    groupClassName: "Generic.Group",
+    groupUserLabelPrefix: "Group",
+  },
   "50k subcategories": { elementCount: 50_000 },
   "50k functional 3D elements": {
     elementCount: 50_000,
@@ -83,6 +108,27 @@ export const DATASETS = {
     drawingGraphicClassName: "BisCore.DrawingGraphic",
     drawingGraphicUserLabel: "test_element",
     functionalElementClassName: "Functional.FunctionalComposite",
+  },
+  "50k elements with properties, types and aspects": {
+    elementCount: 50_000,
+    directPropertyCount: 32,
+    directStringPropertyLength: 32,
+    typeCount: 10,
+    aspectClassCount: 70,
+    schema: {
+      name: "ContentPerformance",
+      className: "Element",
+      propertyNamePrefix: "Value",
+      aspectClassNamePrefix: "Aspect",
+      aspectPropertyName: "Value",
+    },
+    typeClassName: "Generic.PhysicalType",
+    typeUserLabelPrefix: "Type",
+    userLabelPrefix: "Element",
+  },
+  "50k elements in 500 classes with 50 content modifiers": {
+    ...ELEMENTS_IN_500_CLASSES,
+    contentModifiers: { count: 50, labelPrefix: "Property" },
   },
 } as const;
 const IMODEL_NAMES = Object.keys(DATASETS) as IModelName[];
@@ -152,11 +198,18 @@ export class Datasets {
   private static createIModelFactory({ name }: { name: Exclude<IModelName, "baytown"> }): IModelFactory {
     switch (name) {
       case "50k elements in 500 classes":
+      case "50k elements in 500 classes with 50 content modifiers":
         return async (props) => this.createFlatElementsAcrossClassesIModel({ ...props, ...DATASETS[name] });
+      case "50k single-class elements":
+        return async (props) => this.createOrdinalAndBucketElementsIModel({ ...props, ...DATASETS[name] });
+      case "50k elements with properties, types and aspects":
+        return async (props) => this.createElementsWithPropertiesTypesAndAspectsIModel({ ...props, ...DATASETS[name] });
       case "50k hierarchical 2D and 3D elements":
         return async (props) => this.createHierarchical2dAnd3dElementsIModel({ ...props, ...DATASETS[name] });
       case "50k group member elements":
         return async (props) => this.createGroupMemberChainsIModel({ ...props, ...DATASETS[name] });
+      case "10k elements in 100 groups each, 10 elements in 50k groups":
+        return async (props) => this.createHighFanOutGroupMembersIModel({ ...props, ...DATASETS[name] });
       case "1k subjects":
         return async (props) => this.createHierarchicalSubjectsIModel({ ...props, ...DATASETS[name] });
       case "50k subcategories":
@@ -181,10 +234,74 @@ export class Datasets {
   }
 
   /**
+   * Create `groupCount` `groupClassName` elements with `${groupUserLabelPrefix}_${index}` user labels and
+   * `elementCount` `elementClassName` elements. Element `i` is a member of
+   * the `groupsPerElement` groups starting at index `i * groupsPerElement`, wrapping around `groupCount`. Additional
+   * `hubElementCount` `hubElementClassName` elements are members of every group. All non-group elements belong to the
+   * same spatial category and physical model.
+   */
+  private static async createHighFanOutGroupMembersIModel({
+    name,
+    localPath,
+    elementCount,
+    groupCount,
+    groupsPerElement,
+    hubElementCount,
+    elementClassName,
+    hubElementClassName,
+    groupClassName,
+    groupUserLabelPrefix,
+  }: IModelFactoryProps & Dataset<"10k elements in 100 groups each, 10 elements in 50k groups">["meta"]) {
+    await createSnapshotIModel({
+      name,
+      localPath,
+      populate: async (txn) => {
+        const { id: groupModelId } = insertGroupInformationModelWithPartition({
+          txn,
+          codeValue: "group information model",
+        });
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "test physical model" });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "My Category" });
+        const groupIds = Array.from(
+          { length: groupCount },
+          (_, i) =>
+            insertGroupInformationElement({
+              txn,
+              classFullName: groupClassName,
+              modelId: groupModelId,
+              userLabel: `${groupUserLabelPrefix}_${i}`,
+            }).id,
+        );
+        const insertMember = (classFullName: `${string}.${string}`, memberGroupIds: Id64String[]) => {
+          const { id: memberId } = insertPhysicalElement({ txn, classFullName, modelId, categoryId });
+          for (const groupId of memberGroupIds) {
+            txn.insertRelationship({
+              sourceId: groupId,
+              targetId: memberId,
+              classFullName: "BisCore.ElementGroupsMembers",
+            });
+          }
+        };
+        for (let i = 0; i < elementCount; ++i) {
+          insertMember(
+            elementClassName,
+            Array.from({ length: groupsPerElement }, (_, j) => groupIds[(i * groupsPerElement + j) % groupCount]),
+          );
+        }
+        for (let i = 0; i < hubElementCount; ++i) {
+          insertMember(hubElementClassName, groupIds);
+        }
+      },
+    });
+  }
+
+  /**
    * Create an iModel with `elementCount` physical elements without parent-child relationships, all belonging to the same
    * spatial category and physical model. The elements are evenly split into `classCount` batches, each of its own class
    * derived from a common base class. Elements in the same batch share the same user label and `schema.propertyName`
-   * value.
+   * value. When `contentModifiers` is set, the iModel also contains a ruleset with content modifiers for the first
+   * `contentModifiers.count` classes, which display `schema.propertyName` with `${contentModifiers.labelPrefix} ${index}`
+   * labels.
    */
   private static async createFlatElementsAcrossClassesIModel({
     name,
@@ -195,7 +312,13 @@ export class Datasets {
     userLabelPrefix,
     propertyValuePrefix,
     categoryCodeValue,
-  }: IModelFactoryProps & Dataset<"50k elements in 500 classes">["meta"]) {
+    contentModifiers,
+  }: IModelFactoryProps &
+    Omit<typeof ELEMENTS_IN_500_CLASSES, "elementCount" | "classCount"> & {
+      elementCount: number;
+      classCount: number;
+      contentModifiers?: { count: number; labelPrefix: string };
+    }) {
     const elementsPerGroup = elementCount / classCount;
 
     // prettier-ignore
@@ -229,6 +352,192 @@ export class Datasets {
               categoryId,
               [propertyName]: `${propertyValuePrefix}_${groupIdx}`,
             });
+          }
+        }
+        if (contentModifiers) {
+          await txn.iModel.importSchemaStrings([
+            getFullSchemaXml({
+              schemaName: "PresentationRules",
+              schemaAlias: "pr",
+              schemaContentXml: `
+              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+              <ECEntityClass typeName="Ruleset">
+                <BaseClass>bis:DefinitionElement</BaseClass>
+              </ECEntityClass>
+            `,
+            }),
+          ]);
+          txn.insertElement({
+            classFullName: "PresentationRules.Ruleset",
+            model: IModel.dictionaryId,
+            code: Code.createEmpty(),
+            jsonProperties: {
+              // The embedded-ruleset reader expects this nested payload in the JsonProperties column.
+              jsonProperties: {
+                id: "content-performance-modifiers",
+                supplementationInfo: { supplementationPurpose: "content-performance" },
+                rules: Array.from({ length: contentModifiers.count }, (_, i) => ({
+                  ruleType: "ContentModifier",
+                  class: { schemaName, className: `${classNamePrefix}_${i}` },
+                  propertyOverrides: [
+                    { name: propertyName, isDisplayed: true, labelOverride: `${contentModifiers.labelPrefix} ${i}` },
+                    { name: "UserLabel", isDisplayed: true },
+                  ],
+                })),
+              },
+            },
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Create an iModel with `elementCount` `${schema.name}.${schema.className}` instances with
+   * `${userLabelPrefix}_${index}` user labels, all belonging to the `modelCodeValue` physical model and
+   * `categoryCodeValue` spatial category. Values of `schema.ordinalPropertyName` are unique and inserted in reverse,
+   * while values of `schema.bucketPropertyName` take `bucketCount` values in insertion order.
+   */
+  private static async createOrdinalAndBucketElementsIModel({
+    name,
+    localPath,
+    elementCount,
+    bucketCount,
+    schema,
+    userLabelPrefix,
+    modelCodeValue,
+    categoryCodeValue,
+  }: IModelFactoryProps & Dataset<"50k single-class elements">["meta"]) {
+    await createSnapshotIModel({
+      name,
+      localPath,
+      populate: async (txn) => {
+        await txn.iModel.importSchemaStrings([
+          getFullSchemaXml({
+            schemaName: schema.name,
+            schemaContentXml: `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECEntityClass typeName="${schema.className}">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              <ECProperty propertyName="${schema.ordinalPropertyName}" typeName="int" />
+              <ECProperty propertyName="${schema.bucketPropertyName}" typeName="int" />
+            </ECEntityClass>
+          `,
+          }),
+        ]);
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: modelCodeValue });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: categoryCodeValue });
+        for (let i = 0; i < elementCount; ++i) {
+          insertPhysicalElement({
+            txn,
+            modelId,
+            categoryId,
+            classFullName: `${schema.name}.${schema.className}`,
+            userLabel: `${userLabelPrefix}_${i}`,
+            [schema.ordinalPropertyName]: elementCount - i - 1,
+            [schema.bucketPropertyName]: i % bucketCount,
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Create an iModel with `elementCount` `${schema.name}.${schema.className}` instances with
+   * `${userLabelPrefix}_${index}` user labels in the same physical model and spatial category. Every element has
+   * `directPropertyCount` string properties named `${schema.propertyNamePrefix}${index}`, each holding the last digit of
+   * `index` repeated `directStringPropertyLength` times.
+   *
+   * There are `typeCount` `typeClassName` instances with `${typeUserLabelPrefix}_${index}` user labels, each owning one unique aspect of every `aspectClassCount` aspect
+   * class `${schema.name}.${schema.aspectClassNamePrefix}${index}`, with `schema.aspectPropertyName` set to the aspect
+   * class index + `aspectClassCount`. Element `i` is of type `i % typeCount` and owns aspects of the classes whose index
+   * has the same remainder, with `schema.aspectPropertyName` set to the aspect class index. Together the elements own
+   * aspects of every class.
+   */
+  private static async createElementsWithPropertiesTypesAndAspectsIModel({
+    name,
+    localPath,
+    elementCount,
+    directPropertyCount,
+    directStringPropertyLength,
+    typeCount,
+    aspectClassCount,
+    schema,
+    typeClassName,
+    typeUserLabelPrefix,
+    userLabelPrefix,
+  }: IModelFactoryProps & Dataset<"50k elements with properties, types and aspects">["meta"]) {
+    const getAspectClassName = (index: number) => `${schema.name}.${schema.aspectClassNamePrefix}${index}`;
+    await createSnapshotIModel({
+      name,
+      localPath,
+      populate: async (txn) => {
+        await txn.iModel.importSchemaStrings([
+          getFullSchemaXml({
+            schemaName: schema.name,
+            schemaContentXml: `
+            <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+            <ECEntityClass typeName="${schema.className}">
+              <BaseClass>bis:PhysicalElement</BaseClass>
+              ${Array.from(
+                { length: directPropertyCount },
+                (_, i) => `<ECProperty propertyName="${schema.propertyNamePrefix}${i}" typeName="string" />`,
+              ).join("")}
+            </ECEntityClass>
+            ${Array.from(
+              { length: aspectClassCount },
+              (_, i) => `
+                <ECEntityClass typeName="${schema.aspectClassNamePrefix}${i}">
+                  <BaseClass>bis:ElementUniqueAspect</BaseClass>
+                  <ECProperty propertyName="${schema.aspectPropertyName}" typeName="int" />
+                </ECEntityClass>
+              `,
+            ).join("")}
+          `,
+          }),
+        ]);
+        const { id: modelId } = insertPhysicalModelWithPartition({ txn, codeValue: "Content model" });
+        const { id: categoryId } = insertSpatialCategory({ txn, codeValue: "Content category" });
+        const typeIds = Array.from({ length: typeCount }, (_, type) => {
+          const { id: typeId } = insertPhysicalType({
+            txn,
+            classFullName: typeClassName,
+            userLabel: `${typeUserLabelPrefix}_${type}`,
+          });
+          for (let aspect = 0; aspect < aspectClassCount; ++aspect) {
+            const aspectProps = {
+              classFullName: getAspectClassName(aspect),
+              element: { id: typeId },
+              [schema.aspectPropertyName]: aspect + aspectClassCount,
+            };
+            txn.insertAspect(aspectProps);
+          }
+          return typeId;
+        });
+        const propertyValues = Object.fromEntries(
+          Array.from({ length: directPropertyCount }, (_, i) => [
+            `${schema.propertyNamePrefix}${i}`,
+            String(i % 10).repeat(directStringPropertyLength),
+          ]),
+        );
+        for (let i = 0; i < elementCount; ++i) {
+          const type = i % typeCount;
+          const { id: elementId } = insertPhysicalElement({
+            txn,
+            modelId,
+            categoryId,
+            typeDefinitionId: typeIds[type],
+            classFullName: `${schema.name}.${schema.className}`,
+            userLabel: `${userLabelPrefix}_${i}`,
+            ...propertyValues,
+          });
+          for (let aspect = type; aspect < aspectClassCount; aspect += typeCount) {
+            const aspectProps = {
+              classFullName: getAspectClassName(aspect),
+              element: { id: elementId },
+              [schema.aspectPropertyName]: aspect,
+            };
+            txn.insertAspect(aspectProps);
           }
         }
       },

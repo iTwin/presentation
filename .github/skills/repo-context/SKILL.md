@@ -43,7 +43,7 @@ This is a **pnpm monorepo** orchestrated with **Lage** and versioned with **Chan
 |-----|------|---------|
 | `full-stack-tests` | `apps/full-stack-tests` | Integration tests |
 | `test-app` | `apps/test-app` | Sample app (frontend + backend) |
-| `performance-tests` | `apps/performance-tests` | Benchmarks for hierarchies and unified selection |
+| `performance-tests` | `apps/performance-tests` | Benchmarks for content, hierarchies, and unified selection |
 
 ## Key Conventions
 

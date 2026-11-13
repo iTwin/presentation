@@ -1,6 +1,6 @@
 # Presentation performance tests
 
-Benchmarks for hierarchies and unified selection. The tests exercise the public APIs against local iModels and report elapsed time and main-thread blocking.
+Benchmarks for content, hierarchies, and unified selection. The tests exercise the public APIs against local iModels and report elapsed time and main-thread blocking.
 
 ## Usage
 
@@ -14,6 +14,7 @@ From this package directory, use `pnpm test` to run all tests, or choose a suite
 
 | Suite             | Tests                         | Tests with JSON results            |
 | ----------------- | ----------------------------- | ---------------------------------- |
+| Content           | `pnpm test:content`           | `pnpm benchmark:content`           |
 | Hierarchies       | `pnpm test:hierarchies`       | `pnpm benchmark:hierarchies`       |
 | Unified selection | `pnpm test:unified-selection` | `pnpm benchmark:unified-selection` |
 
@@ -37,6 +38,7 @@ Each suite has separate PR and master workflows:
 
 | Suite             | Pull requests                                                             | Master and manual runs                                                     |
 | ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Content           | [PR workflow](../../.github/workflows/benchmark-pr-content.yml)           | [Master workflow](../../.github/workflows/benchmark-content.yml)           |
 | Hierarchies       | [PR workflow](../../.github/workflows/benchmark-pr-hierarchies.yml)       | [Master workflow](../../.github/workflows/benchmark-hierarchies.yml)       |
 | Unified selection | [PR workflow](../../.github/workflows/benchmark-pr-unified-selection.yml) | [Master workflow](../../.github/workflows/benchmark-unified-selection.yml) |
 
