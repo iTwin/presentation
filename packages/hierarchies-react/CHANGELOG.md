@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.3
+
+### Patch Changes
+
+- [#1719](https://github.com/iTwin/presentation/pull/1719): Bump iTwin.js Core dependencies to `5.15.0`.
+- [#1712](https://github.com/iTwin/presentation/pull/1712): `StrataKitTreeRenderer`: Nodes are now scrolled to the center of the viewport when navigating to a node from the errors list or via `renameNode`. Previously, the node could end up at the top edge of the tree and be hidden behind the expanded errors region.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.1.1
+  - @itwin/presentation-shared@2.2.1
+  - @itwin/unified-selection@2.0.3
+
 ## 2.0.2
 
 ### Patch Changes

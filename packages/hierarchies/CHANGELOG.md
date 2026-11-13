@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 2.1.1
+
+### Patch Changes
+
+- [#1719](https://github.com/iTwin/presentation/pull/1719): Bump iTwin.js Core dependencies to `5.15.0`.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.2.1
+
 ## 2.1.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @itwin/presentation-tree-definitions
 
+## 0.3.2
+
+### Patch Changes
+
+- [#1717](https://github.com/iTwin/presentation/pull/1717): Improve query performance
+- [#1719](https://github.com/iTwin/presentation/pull/1719): Bump iTwin.js Core dependencies to `5.15.0`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.1.1
+  - @itwin/presentation-shared@2.2.1
+
 ## 0.3.1
 
 ### Patch Changes
