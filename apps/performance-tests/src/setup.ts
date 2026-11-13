@@ -20,8 +20,9 @@ beforeAll(async () => {
   Logger.setLevel("ECDb", LogLevel.None);
 
   await IModelHost.startup({ profileName: "presentation-performance-tests" });
-  await Datasets.initialize("./datasets");
-}, 60000);
+  await Datasets.initialize({ datasetsDirPath: "./datasets" });
+  // Creating all datasets when they aren't cached takes several minutes.
+}, 600_000);
 
 afterAll(async () => {
   await IModelHost.shutdown();

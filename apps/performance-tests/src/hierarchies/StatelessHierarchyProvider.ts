@@ -81,13 +81,13 @@ export class StatelessHierarchyProvider {
     return new StatelessHierarchyProvider(hierarchyProvider);
   }
 
-  public static async createIModelAccess(iModel: IModelDb, rowLimit?: number | "unbounded"): Promise<IModelAccess> {
-    const schemaProvider = createECSchemaProvider(iModel);
+  public static async createIModelAccess(imodel: IModelDb, rowLimit?: number | "unbounded"): Promise<IModelAccess> {
+    const schemaProvider = createECSchemaProvider(imodel);
     const rowLimitToUse = rowLimit ?? DEFAULT_ROW_LIMIT;
     const imodelAccess = {
-      imodelKey: iModel.key,
+      imodelKey: imodel.key,
       ...schemaProvider,
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModel), rowLimitToUse),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), rowLimitToUse),
     };
     return imodelAccess;
   }
