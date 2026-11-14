@@ -226,7 +226,7 @@ describe("getUniqueFieldValues", () => {
     const structField = createPropertyField({
       id: "s",
       valueClassNames: [classA],
-      type: { kind: "struct", members: [] },
+      type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
     });
 
     await expect(getUniqueFieldValues({ imodelAccess, field: arrayField })).rejects.toThrow(

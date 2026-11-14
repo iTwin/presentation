@@ -109,6 +109,7 @@ describe("createNavigationValuePopulator", () => {
         points: { kind: "array", elementType: { kind: "primitive", type: "Point2d" } },
         address: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "Street", label: "Street", type: { kind: "primitive", type: "String" } }],
         },
       }),

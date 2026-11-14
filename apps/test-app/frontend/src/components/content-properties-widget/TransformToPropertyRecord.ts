@@ -5,7 +5,7 @@
 
 import { PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { transformContent } from "@itwin/presentation-content";
-import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, formatConcatenatedValue, parseFullClassName } from "@itwin/presentation-shared";
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
@@ -54,6 +54,8 @@ interface RecordProps {
   isReadonly: boolean;
   /** Overrides `isReadonly` for members of struct values, by member name. */
   isMemberReadonly?: (memberName: string) => boolean;
+  /** Overrides type name of the struct value, or of struct array items, by default taken from the struct class. */
+  structTypeName?: string;
 }
 
 type CategoryDefinitions = Content["descriptor"]["categories"];
@@ -93,15 +95,18 @@ function getEntryRecordProps(entry: PropertyGridEntry, categories: CategoryDefin
   const { pathFromTarget, categoryId } = fields[0];
   const readonlyFieldIds = new Set(fields.filter((field) => field.readOnly).map((field) => field.id));
   const instances = entry.values.find((itemInstances) => itemInstances.length > 0) ?? [];
+  const targetClassName = pathFromTarget[pathFromTarget.length - 1].targetClassName;
+  const label = (categoryId !== undefined ? categories[categoryId]?.label : undefined) ?? targetClassName;
   return {
     name: `related(${fields[0].id})`,
-    label:
-      (categoryId !== undefined ? categories[categoryId]?.label : undefined) ??
-      pathFromTarget[pathFromTarget.length - 1].targetClassName,
+    label,
+    // Like the legacy property grid, related instance structs are named by their label.
+    structTypeName: label,
     type: {
       kind: "array",
       elementType: {
         kind: "struct",
+        className: targetClassName,
         members: fields.map((field) => ({ name: field.id, label: field.label, type: field.type })),
       },
     },
@@ -117,7 +122,13 @@ async function createRecord(props: RecordProps): Promise<PropertyRecord> {
   return record;
 }
 
-async function createValue({ type, value, isReadonly, isMemberReadonly }: RecordProps): Promise<PropertyValue> {
+async function createValue({
+  type,
+  value,
+  isReadonly,
+  isMemberReadonly,
+  structTypeName,
+}: RecordProps): Promise<PropertyValue> {
   switch (type.kind) {
     case "struct": {
       const struct = value as DeepReadonly<Record<string, Value>> | undefined;
@@ -144,10 +155,15 @@ async function createValue({ type, value, isReadonly, isMemberReadonly }: Record
             value: element,
             isReadonly,
             isMemberReadonly,
+            structTypeName,
           }),
         ),
       );
-      return { valueFormat: PropertyValueFormat.Array, items, itemsTypeName: getTypeName(type.elementType) };
+      return {
+        valueFormat: PropertyValueFormat.Array,
+        items,
+        itemsTypeName: getTypeName(type.elementType, structTypeName),
+      };
     }
     case "navigation": {
       const navigation = value as NavigationValue | undefined;
@@ -164,8 +180,8 @@ async function createValue({ type, value, isReadonly, isMemberReadonly }: Record
   }
 }
 
-function createDescription({ name, label, type }: Omit<RecordProps, "value">): PropertyDescription {
-  const description: PropertyDescription = { name, displayLabel: label, typename: getTypeName(type) };
+function createDescription({ name, label, type, structTypeName }: Omit<RecordProps, "value">): PropertyDescription {
+  const description: PropertyDescription = { name, displayLabel: label, typename: getTypeName(type, structTypeName) };
   if (type.kind === "primitive") {
     description.kindOfQuantityName = type.kindOfQuantity;
     if (type.enumeration) {
@@ -181,17 +197,24 @@ function createDescription({ name, label, type }: Omit<RecordProps, "value">): P
   return description;
 }
 
-function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
+/**
+ * Names types the same way the legacy property grid does: primitives by their extended type name when set, structs by
+ * their class name without the schema, and arrays by their element type name with a `[]` suffix.
+ */
+function getTypeName(type: DeepReadonly<ValueDescriptor>, structTypeName?: string): string {
   switch (type.kind) {
     case "struct":
-      return StandardTypeNames.Struct;
+      return structTypeName ?? parseFullClassName(type.className).className;
     case "array":
-      return StandardTypeNames.Array;
+      return `${getTypeName(type.elementType, structTypeName)}[]`;
     case "navigation":
       return StandardTypeNames.Navigation;
     case "primitive":
       if (type.enumeration) {
         return StandardTypeNames.Enum;
+      }
+      if (type.extendedType) {
+        return type.extendedType;
       }
       switch (type.type) {
         case "Boolean":
@@ -201,8 +224,9 @@ function getTypeName(type: DeepReadonly<ValueDescriptor>): string {
         case "Double":
           return StandardTypeNames.Double;
         case "Integer":
-        case "Long":
           return StandardTypeNames.Int;
+        case "Long":
+          return "long";
         case "Point2d":
           return StandardTypeNames.Point2d;
         case "Point3d":

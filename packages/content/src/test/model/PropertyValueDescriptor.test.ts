@@ -49,7 +49,7 @@ function createStructProperty(props: { name: string; members: EC.Property[]; arr
     isPrimitive: () => false,
     isEnumeration: () => false,
     isNavigation: () => false,
-    structClass: { getProperties: () => props.members } as unknown as EC.StructClass,
+    structClass: { fullName: "TestSchema.TestStruct", getProperties: () => props.members } as unknown as EC.StructClass,
   } as unknown as EC.Property;
 }
 
@@ -254,6 +254,7 @@ describe("createValueDescriptorFromProperty", () => {
       );
       expect(result).to.deep.equal({
         kind: "struct",
+        className: "TestSchema.TestStruct",
         members: [
           { name: "X", label: "X", type: { kind: "primitive", type: "Double" } },
           { name: "Label", label: "Display Label", type: { kind: "primitive", type: "String" } },
@@ -350,6 +351,7 @@ describe("createValueDescriptorFromProperty", () => {
         kind: "array",
         elementType: {
           kind: "struct",
+          className: "TestSchema.TestStruct",
           members: [{ name: "X", label: "X", type: { kind: "primitive", type: "Double" } }],
         },
       });
