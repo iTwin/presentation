@@ -32,6 +32,9 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePathsImports
+import { createHierarchyNodePaths } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_END__
 import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -323,6 +326,33 @@ describe("Hierarchies", () => {
             ],
           },
         ]);
+      });
+
+      it("loads hierarchy node paths", async () => {
+        const imodelAccess = createIModelAccess(imodelConnection);
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePaths
+        const hierarchyProvider = createIModelHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: createHierarchyDefinition(),
+        });
+        const nodePaths = await createHierarchyNodePaths({
+          hierarchyProvider,
+          imodelAccess,
+          paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
+          // Minimal nodes are used as parent nodes when requesting child hierarchy levels. Our hierarchy definition
+          // only needs parent node's key to create them.
+          createMinimalNode: ({ instanceKey, parentNode }) => ({
+            key: { type: "instances", instanceKeys: [instanceKey] },
+            parentKeys: parentNode ? [...parentNode.parentKeys, parentNode.key] : [],
+            label: "",
+          }),
+        });
+        // Each path contains the nodes `hierarchyProvider.getNodes` returns for every hierarchy level
+        expect(nodePaths.map(({ nodesPath }) => nodesPath.map((node) => node.label))).toEqual([
+          ["A", "B", "C"],
+          ["A", "E"],
+        ]);
+        // __PUBLISH_EXTRACT_END__
       });
 
       it("sets auto-expand flag to parent nodes of the revealed search target", async () => {

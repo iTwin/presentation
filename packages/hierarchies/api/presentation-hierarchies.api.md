@@ -42,6 +42,28 @@ export interface ClassGroupingNodeKey {
     type: "class-grouping";
 }
 
+// @beta
+export function createHierarchyNodePaths<TSearchPath extends {
+    path: DeepReadonly<IModelInstanceKey[]>;
+}>(props: CreateHierarchyNodePathsProps<TSearchPath>): Promise<Array<{
+    searchPath: TSearchPath;
+    nodesPath: HierarchyNode[];
+}>>;
+
+// @beta
+interface CreateHierarchyNodePathsProps<TSearchPath extends {
+    path: DeepReadonly<IModelInstanceKey[]>;
+}> {
+    createMinimalNode: (props: {
+        instanceKey: DeepReadonly<IModelInstanceKey>;
+        parentNode: MinimalHierarchyNode | undefined;
+    }) => MinimalHierarchyNode;
+    hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
+    hierarchyProvider: HierarchyProvider;
+    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+    paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
+}
+
 // @public
 export function createHierarchyProvider<TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">>(partialFactory: (props: {
     hierarchyChanged: RaisableEvent<EventListener_2<HierarchyProvider["hierarchyChanged"]>>;
@@ -622,6 +644,13 @@ interface MergeHierarchyProvidersProps {
 // @public
 export function mergeProviders(input: MergeHierarchyProvidersProps): HierarchyProvider & {
     [Symbol.dispose]: () => void;
+};
+
+// @beta
+export type MinimalHierarchyNode = ParentHierarchyNode<NonGroupingHierarchyNode> & {
+    processingParams?: {
+        hideInHierarchy?: boolean;
+    };
 };
 
 // @public

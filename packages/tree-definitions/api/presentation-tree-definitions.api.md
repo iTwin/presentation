@@ -5,6 +5,7 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
+import type { createHierarchyNodePaths } from '@itwin/presentation-hierarchies';
 import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
@@ -20,6 +21,7 @@ import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { Props } from '@itwin/presentation-shared';
 import type { Subscribable } from '@itwin/presentation-shared';
 
 // @beta
@@ -316,6 +318,7 @@ export function createModelsTree(props: ModelsTreeProps): {
     createSearchTree: (searchProps: ModelsTreeSearchProps & {
         revealTargets?: boolean;
     }) => Promise<ModelsTreeSearchTree[]>;
+    getMinimalNodeFactory: () => Promise<Props<typeof createHierarchyNodePaths>["createMinimalNode"]>;
 };
 
 // @beta
@@ -490,11 +493,14 @@ type ModelsTreeSearchPathKey = IModelInstanceKey & {
 };
 
 // @beta
-type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & ModelsTreeSearchTargetProps;
+
+// @beta
+type ModelsTreeSearchTargetProps = {
     targetItems: Array<InstanceKey | ElementsGroupInfo>;
 } | {
     label: string;
-});
+};
 
 // @beta
 interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {

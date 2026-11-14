@@ -8,10 +8,15 @@ import { createSharedIdsProvider } from "../../shared/idsProviders/SharedIdsProv
 import { mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils.js";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 import { createModelsTreeIdsProvider, normalizeModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
+import { createModelsTreeMinimalNodeFactory } from "./ModelsTreeMinimalNodes.js";
 
 import type { GuidString } from "@itwin/core-bentley";
-import type { HierarchyDefinition, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import type { ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
+import type {
+  createHierarchyNodePaths,
+  HierarchyDefinition,
+  LimitingECSqlQueryExecutor,
+} from "@itwin/presentation-hierarchies";
+import type { ECSchemaProvider, InstanceKey, Props } from "@itwin/presentation-shared";
 import type {
   ElementsGroupInfo,
   ModelsTreeHierarchyConfiguration,
@@ -41,8 +46,13 @@ interface ModelsTreeProps {
  * Search-specific data access and options for a models tree.
  * @beta
  */
-type ModelsTreeSearchProps = ModelsTreeSearchOptions &
-  ({ targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string });
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & ModelsTreeSearchTargetProps;
+
+/**
+ * Search targets for a models tree, specified either as instance keys or grouping nodes, or as a label.
+ * @beta
+ */
+type ModelsTreeSearchTargetProps = { targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string };
 
 /**
  * Creates a models hierarchy definition and search helpers that share hierarchy configuration and a unique ID.
@@ -113,5 +123,28 @@ export function createModelsTree(props: ModelsTreeProps) {
         uniqueId,
         imodelAccess: props.imodelAccess,
       }),
+    /**
+     * Creates a `createMinimalNode` callback for `createHierarchyNodePaths` from `@itwin/presentation-hierarchies`, which
+     * loads hierarchy nodes for paths created by `createInstanceKeyPaths`:
+     *
+     * ```ts
+     * const nodePaths = await createHierarchyNodePaths({
+     *   hierarchyProvider,
+     *   imodelAccess,
+     *   paths: tree.createInstanceKeyPaths({ targetItems }),
+     *   createMinimalNode: await tree.getMinimalNodeFactory(),
+     * });
+     * // every `searchPath` in `nodePaths` is a `{ path, target }` object yielded by `createInstanceKeyPaths`
+     * ```
+     *
+     * The hierarchy provider must use this tree's `hierarchyDefinition` and the same iModel. Paths must be created with
+     * the default `includeOnlyVisibleNodeInstanceKeys: false` - the callback marks sub-models and models hidden by
+     * partition content properties as hidden, using hidden model IDs loaded when the callback is created.
+     *
+     * The callback throws an error if the instance key's class isn't a models tree search path class, or the parent node
+     * doesn't match it.
+     */
+    getMinimalNodeFactory: async (): Promise<Props<typeof createHierarchyNodePaths>["createMinimalNode"]> =>
+      createModelsTreeMinimalNodeFactory({ idsProvider }),
   };
 }
