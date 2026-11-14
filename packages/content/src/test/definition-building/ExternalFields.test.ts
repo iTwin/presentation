@@ -31,6 +31,7 @@ describe("collectExternalFields", () => {
         label: "Flow",
         type: { kind: "primitive", type: "Double" },
         providerId: "ext_v1",
+        category: { type: "target" },
       },
       "ext_v1:status": {
         kind: "external",
@@ -38,7 +39,7 @@ describe("collectExternalFields", () => {
         label: "Status",
         type: { kind: "primitive", type: "String" },
         providerId: "ext_v1",
-        categoryId: "cat",
+        category: { type: "category", id: "cat" },
       },
     });
   });

@@ -31,6 +31,7 @@ function propertyField(props: {
   });
   const valueClassNames = toSortedUniqueClassNames(props.valueClassNames ?? [props.propertyClassName]);
   return {
+    category: { type: "target" },
     kind: "property",
     id,
     label: props.label ?? "Label",

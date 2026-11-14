@@ -40,6 +40,7 @@ describe("createPropertyFields", () => {
         valueClassNames: ["TestSchema.B"],
         primaryClassNames: ["TestSchema.A"],
         pathCardinality: "one",
+        category: { type: "target" },
       },
     ]);
   });
@@ -191,7 +192,7 @@ describe("createPropertyFields", () => {
       expect(beta.field.readOnly).to.equal(true);
     });
 
-    it("omits categoryId/readOnly/hidden when no override provides them", () => {
+    it("places the field in the target category and omits readOnly/hidden when no override provides them", () => {
       const [field] = collectFields({
         properties: [createPrimitiveProperty({ name: "A", declaringClass: "TestSchema.C" })],
         valueClassNames: ["TestSchema.C"],
@@ -199,7 +200,7 @@ describe("createPropertyFields", () => {
         spec: { select: "all" },
       });
 
-      expect(field).to.not.have.property("categoryId");
+      expect(field.category).to.deep.equal({ type: "target" });
       expect(field).to.not.have.property("readOnly");
       expect(field).to.not.have.property("hidden");
     });

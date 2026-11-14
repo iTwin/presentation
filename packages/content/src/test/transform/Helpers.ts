@@ -25,6 +25,7 @@ export function createPropertyField(id: string, overrides?: Partial<PropertyFiel
     pathCardinality: "one",
     valueClassNames: ["BisCore.Element"],
     primaryClassNames: ["BisCore.Element"],
+    category: { type: "target" },
     ...overrides,
   };
 }
@@ -38,6 +39,7 @@ export function createCalculatedField(id: string, overrides?: Partial<Calculated
     sourceClassName: "BisCore.Element",
     expression: "this.CodeValue",
     primaryClassNames: ["BisCore.Element"],
+    category: { type: "target" },
     ...overrides,
   };
 }
@@ -49,6 +51,7 @@ export function createExternalField(id: string, overrides?: Partial<ExternalFiel
     label: id,
     type: { kind: "primitive", type: "String" },
     providerId: "test_v1",
+    category: { type: "target" },
     ...overrides,
   };
 }
@@ -100,13 +103,13 @@ export const aspectProp1 = createPropertyField("aspectProp1", {
   propertyClassName: "BisCore.ElementMultiAspect",
   pathFromTarget: aspectsPath,
   pathCardinality: "many",
-  categoryId: "aspects",
+  category: { type: "category", id: "aspects" },
 });
 export const aspectProp2 = createPropertyField("aspectProp2", {
   propertyClassName: "BisCore.ElementMultiAspect",
   pathFromTarget: aspectsPath,
   pathCardinality: "many",
-  categoryId: "aspects",
+  category: { type: "category", id: "aspects" },
 });
 
 /** Creates a related instance, as returned by `ContentItem.getRelatedInstances`, with values keyed by field ID. */

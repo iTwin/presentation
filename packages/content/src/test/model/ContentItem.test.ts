@@ -23,6 +23,7 @@ function createTestDescriptor(fields: Field[]): ContentDescriptor {
 
 function createTestPropertyField(id: string, overrides?: Partial<PropertyField>): PropertyField {
   return {
+    category: { type: "target" },
     kind: "property",
     id,
     label: id,

@@ -36,6 +36,7 @@ export function createField(props: Partial<Omit<PropertyField, "kind">> & Pick<P
     pathCardinality: "one",
     valueClassNames: [classA],
     primaryClassNames: [classA],
+    category: { type: "target" },
     ...props,
   };
 }

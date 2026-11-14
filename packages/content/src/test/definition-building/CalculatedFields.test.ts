@@ -99,6 +99,7 @@ describe("collectCalculatedFields", () => {
         expression: "this.FlowRate * 2",
         type: { kind: "primitive", type: "Double" },
         primaryClassNames: ["TestSchema.A"],
+        category: { type: "target" },
       },
     });
   });
@@ -123,7 +124,7 @@ describe("collectCalculatedFields", () => {
     const field = fields["p_v1:calc"];
     expect(field.targetAlias).to.equal("e");
     expect(field.bindings).to.deep.equal({ p: { type: "string", value: "v" } });
-    expect(field.categoryId).to.equal("cat");
+    expect(field.category).to.deep.equal({ type: "category", id: "cat" });
   });
 
   it("deduplicates the same provider's calculated fields across sources", async () => {

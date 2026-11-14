@@ -176,7 +176,11 @@ function applyPropertySpecification(
   }
   const categoryId = resolveCategoryId(spec.categoryId);
   if (categoryId !== undefined) {
-    field.categoryId = categoryId;
+    field.category = { type: "category", id: categoryId };
+  } else if (typeof spec.categoryId === "object" && field.pathFromTarget.length === 0) {
+    // `DefaultParent`, `Root` and `None` put a direct property in the content target's category. For related
+    // properties they refer to a related class category, which isn't supported.
+    field.category = { type: "target" };
   }
   if (spec.isDisplayed === false) {
     field.hidden = true;

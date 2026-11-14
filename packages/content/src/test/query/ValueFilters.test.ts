@@ -13,6 +13,7 @@ import type { CalculatedField, PropertyField } from "../../content/model/Field.j
 
 describe("buildValueFilterClauses", () => {
   const propertyField: PropertyField = {
+    category: { type: "target" },
     kind: "property",
     id: "field-id",
     label: "Field",
@@ -26,6 +27,7 @@ describe("buildValueFilterClauses", () => {
   };
 
   const calculatedField: CalculatedField = {
+    category: { type: "target" },
     kind: "calculated",
     sourceClassName: "TestSchema.TestClass",
     id: "calculated-id",

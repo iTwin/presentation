@@ -11,6 +11,7 @@ import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation
 import type { ContentSource } from "../ContentTarget.js";
 import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
+import type { CategoryParentReference } from "../model/Category.js";
 import type { Field, PropertyField } from "../model/Field.js";
 import type { CategorizedField } from "./ClassPropertyFields.js";
 import type { GetAnchorContributionFn, GetContributionFn } from "./ContributionMemoizer.js";
@@ -37,7 +38,7 @@ export async function collectCategories(
   const { categories, assignments } = await materializeCategories(declared, requests, props.imodelAccess);
   for (const { field, categoryId } of assignments) {
     if (categoryId !== undefined) {
-      field.categoryId = categoryId;
+      field.category = { type: "category", id: categoryId };
     }
   }
   return categories;
@@ -122,15 +123,26 @@ type CategoryRequest =
       parent?: CategoryRequest;
     };
 
+/**
+ * Where the outermost category of a request chain is placed: in the content target's own category, or at the top
+ * level next to it.
+ */
+type CategoryBase = "target" | "topLevel";
+
 interface FieldCategoryRequest {
   field: PropertyField;
   category?: CategoryRequest;
+  base: CategoryBase;
 }
 
 /**
  * Resolves each field's category and parent chain into requests without assigning field category IDs.
  * Overrides reference declared categories; other fields request class or property categories according
  * to their anchor, scope, and enclosing context. Matching declared IDs take precedence over generation.
+ *
+ * Categories of the content target's own properties are placed in the target's category: direct properties, and
+ * properties of declarations whose categories attach to the top-level context (`propertyCategoryScope: "parent"`).
+ * Categories of other related properties start at the top level.
  *
  * Requests describe placement before equivalent categories are shared and their final IDs are chosen.
  */
@@ -154,8 +166,12 @@ function resolveFieldCategoryRequests(
 
   return fields.map(({ field, categorization }) => {
     const { category, propertyCategoryScope, categoryContext } = categorization;
+    const base: CategoryBase =
+      categorization.anchor === "none" || (propertyCategoryScope === "parent" && categoryContext.length === 0)
+        ? "target"
+        : "topLevel";
     if (category?.source === "override") {
-      return { field, category: { kind: "declared", id: category.id } };
+      return { field, category: { kind: "declared", id: category.id }, base };
     }
     let anchor: CategoryRequest | undefined;
     for (const context of categoryContext) {
@@ -168,7 +184,7 @@ function resolveFieldCategoryRequests(
       anchor = requestAnchor(field.pathFromTarget, categorization.anchor, anchor);
     }
     if (category?.source !== "propertyCategory") {
-      return { field, category: anchor };
+      return { field, category: anchor, base };
     }
     const id = anchor ? `${anchor.id}/${category.id}` : category.id;
     return {
@@ -176,6 +192,7 @@ function resolveFieldCategoryRequests(
       category: declared.has(id)
         ? { kind: "declared", id }
         : { kind: "propertyCategory", id, propertyCategoryName: category.id, label: category.label, parent: anchor },
+      base,
     };
   });
 }
@@ -183,14 +200,16 @@ function resolveFieldCategoryRequests(
 /**
  * Turns field requests into category definitions and field assignments. Automatic target-class,
  * relationship-class, and property categories share an entry when their fully qualified names and
- * shared parents match. Different paths to the same schema item can share; identically named items
+ * shared parents match — or, for outermost categories, their placement (in the content target's category or at the
+ * top level). Different paths to the same schema item can share; identically named items
  * from different schemas cannot. Labels do not determine identity. Declared categories share by ID
  * and remain separate from automatic entries.
  *
  * The request with the lexicographically smallest ID supplies the shared entry's explicit label or
  * class name for label lookup. Equal IDs retain the first request. This is a tie-breaking rule, not
  * a preference for a particular schema, category origin, or label. Final IDs account for shared parents
- * and distinguish the same path requested under different parents.
+ * and distinguish the same path requested under different parents, or placed both in the content target's category
+ * and at the top level (the top-level one gets a `topLevel/` prefix).
  *
  * Resolves class labels and remaps references to shared categories, cloning declared definitions so
  * provider-owned objects remain unchanged. Returns assignments without mutating the fields.
@@ -204,21 +223,27 @@ async function materializeCategories(
     index: number;
     request: CategoryRequest;
     parent?: SharedCategory;
+    /** Where the category is placed when it has no parent category. */
+    base: CategoryBase;
     id?: string;
   }
   const shared = new Map<string, SharedCategory>();
   const aliases = new Map<string, Set<SharedCategory>>();
-  const getOrCreateSharedCategory = (request: CategoryRequest): SharedCategory => {
+  const getOrCreateSharedCategory = (request: CategoryRequest, base: CategoryBase): SharedCategory => {
     const parent =
-      request.kind !== "declared" && request.parent ? getOrCreateSharedCategory(request.parent) : undefined;
+      request.kind !== "declared" && request.parent ? getOrCreateSharedCategory(request.parent, base) : undefined;
     const key = JSON.stringify(
       request.kind === "declared"
         ? ["declared", request.id]
-        : ["automatic", request.kind === "class" ? request.className : request.propertyCategoryName, parent?.index],
+        : [
+            "automatic",
+            request.kind === "class" ? request.className : request.propertyCategoryName,
+            parent?.index ?? base,
+          ],
     );
     let entry = shared.get(key);
     if (!entry) {
-      entry = { index: shared.size, request, parent };
+      entry = { index: shared.size, request, parent, base };
       shared.set(key, entry);
     } else if (request.id < entry.request.id) {
       entry.request = request;
@@ -230,17 +255,25 @@ async function materializeCategories(
     }
     return entry;
   };
-  const placements = requests.map(({ field, category }) => ({
+  const placements = requests.map(({ field, category, base }) => ({
     field,
-    category: category && getOrCreateSharedCategory(category),
+    category: category && getOrCreateSharedCategory(category, base),
   }));
   const resolveCategoryId = (entry: SharedCategory): string => {
     if (entry.id === undefined) {
-      const { request, parent } = entry;
+      const { request, parent, base } = entry;
       if (parent && request.kind === "propertyCategory") {
         entry.id = `${resolveCategoryId(parent)}/${request.propertyCategoryName}`;
       } else if (parent && request.kind === "class" && aliases.get(request.id)!.size > 1) {
         entry.id = `${resolveCategoryId(parent)}/${request.id}`;
+      } else if (
+        !parent &&
+        base === "topLevel" &&
+        request.kind !== "declared" &&
+        [...aliases.get(request.id)!].some((other) => !other.parent && other.base !== base)
+      ) {
+        // The same category is also placed in the content target's category, which keeps the plain ID.
+        entry.id = `${base}/${request.id}`;
       } else {
         entry.id = request.id;
       }
@@ -260,13 +293,15 @@ async function materializeCategories(
       id,
       {
         ...category,
-        ...(category.parentId !== undefined ? { parentId: remapCategoryReference(category.parentId) } : undefined),
-      },
+        ...(category.parent.type === "category"
+          ? { parent: { type: "category", id: remapCategoryReference(category.parent.id) } }
+          : undefined),
+      } satisfies CategoryDefinition,
     ]),
   );
   await Promise.all(
     [...shared.values()].map(async (entry) => {
-      const { request, parent } = entry;
+      const { request, parent, base } = entry;
       const id = resolveCategoryId(entry);
       if (request.kind === "declared" || declared.has(id)) {
         return;
@@ -277,7 +312,7 @@ async function materializeCategories(
           request.kind === "propertyCategory"
             ? request.label
             : await getClassLabel({ imodelAccess, className: request.className }),
-        ...(parent ? { parentId: resolveCategoryId(parent) } : undefined),
+        parent: parent ? { type: "category", id: resolveCategoryId(parent) } : { type: base },
       };
     }),
   );
@@ -295,8 +330,8 @@ async function materializeCategories(
 }
 
 /**
- * Drops categories that no field references. A category is kept when a field targets it directly or
- * it is an ancestor (via `parentId`) of such a category — so a referenced category's whole parent
+ * Drops categories that no field references. A category is kept when a field is placed in it directly or
+ * it is an ancestor (via `parent`) of such a category — so a referenced category's whole parent
  * chain survives.
  *
  * @internal
@@ -308,12 +343,12 @@ export function pruneUnreferencedCategories(props: {
   const { fields, categories } = props;
   const referenced = new Set<CategoryDefinition["id"]>();
   for (const field of Object.values(fields)) {
-    let id: CategoryDefinition["id"] | undefined = field.categoryId;
-    // Walk the parent chain, stopping at the root, an already-visited category, or a dangling
-    // reference (a `categoryId`/`parentId` pointing at a category that no longer exists).
-    while (id !== undefined && !referenced.has(id) && id in categories) {
-      referenced.add(id);
-      id = categories[id].parentId;
+    let reference: CategoryParentReference = field.category;
+    // Walk the parent chain, stopping at the content target's category, the top level, an already-visited category,
+    // or a dangling reference (a field or parent pointing at a category that no longer exists).
+    while (reference.type === "category" && !referenced.has(reference.id) && reference.id in categories) {
+      referenced.add(reference.id);
+      reference = categories[reference.id].parent;
     }
   }
   return Object.fromEntries(Object.entries(categories).filter(([id]) => referenced.has(id)));
