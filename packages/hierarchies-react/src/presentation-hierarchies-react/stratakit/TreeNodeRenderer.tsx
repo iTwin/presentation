@@ -12,9 +12,10 @@ import { useTreeContextMenu } from "./TreeContextMenu.js";
 
 import refreshSvg from "@stratakit/icons/refresh.svg";
 
-import type { ComponentPropsWithoutRef, FC, PropsWithRef, ReactNode, RefAttributes } from "react";
+import type { FC, PropsWithRef, ReactNode, RefAttributes } from "react";
 import type { TreeRendererProps } from "../Renderers.js";
 import type { TreeNode } from "../TreeNode.js";
+import type { ElementPropsWithRender } from "./ElementPropsWithRender.js";
 import type { TreeActionBaseAttributes } from "./TreeAction.js";
 
 /** @internal */
@@ -40,10 +41,14 @@ interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" 
 }
 
 /** @alpha */
-export type StrataKitTreeItemProps = Omit<
-  ComponentPropsWithoutRef<typeof Tree.Item>,
-  "actions" | "inlineActions" | "expanded" | "onExpandedChange" | "icon" | "unstable_decorations" | "error"
-> & {
+export type StrataKitTreeItemProps = Omit<ElementPropsWithRender<"div">, "content" | "children"> & {
+  selected?: boolean;
+  /** Invoked when the tree item's selection changes. */
+  onSelectedChange?: (selected: boolean) => void;
+  /** Primary label displayed for the tree item. */
+  label?: ReactNode;
+  /** Secondary text displayed with the tree item. */
+  description?: ReactNode;
   /**
    * Used to render elements between expander and label.
    * E.g. icons, color picker, etc.
@@ -51,11 +56,14 @@ export type StrataKitTreeItemProps = Omit<
   decorations?: ReactNode;
 };
 
+/** Tree item position props that are optional on a `div`, but required by the StrataKit tree item. */
+type TreeItemPositionProps = Required<Pick<StrataKitTreeItemProps, "aria-level" | "aria-posinset" | "aria-setsize">>;
+
 /** @internal */
-export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwnProps;
+export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeItemPositionProps & TreeNodeRendererOwnProps;
 
 /**
- * A component that renders a given `TreeNode` using the `Tree.Item` component from `@stratakit/structures`.
+ * A component that renders a given `TreeNode` using StrataKit's tree item component.
  *
  * @internal
  */
@@ -157,23 +165,22 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 
 export const PlaceholderNode: FC<
   // oxlint-disable-next-line @typescript-eslint/no-deprecated
-  PropsWithRef<
-    Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & RefAttributes<HTMLElement>
-  >
+  PropsWithRef<Pick<StrataKitTreeItemProps, "style"> & TreeItemPositionProps & RefAttributes<HTMLElement>>
 > = memo(
-  forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
-    function PlaceholderNode({ ...props }, forwardedRef) {
-      const translate = useTranslation();
-      return (
-        <Tree.Item
-          {...props}
-          ref={forwardedRef}
-          label={translate("loading")}
-          unstable_decorations={<CircularProgress size={16} title={translate("loading")} />}
-        />
-      );
-    },
-  ),
+  forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style"> & TreeItemPositionProps>(function PlaceholderNode(
+    { ...props },
+    forwardedRef,
+  ) {
+    const translate = useTranslation();
+    return (
+      <Tree.Item
+        {...props}
+        ref={forwardedRef}
+        label={translate("loading")}
+        unstable_decorations={<CircularProgress size={16} title={translate("loading")} />}
+      />
+    );
+  }),
 );
 
 function injectActionVariant(actions: ReactNode[], variant: TreeActionBaseAttributes["variant"]) {

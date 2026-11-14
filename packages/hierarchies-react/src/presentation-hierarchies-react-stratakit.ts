@@ -10,5 +10,6 @@ export { TreeNodeRenameAction } from "./presentation-hierarchies-react/stratakit
 export type { StrataKitTreeRendererAttributes } from "./presentation-hierarchies-react/stratakit/TreeRenderer.js";
 export { StrataKitTreeRenderer } from "./presentation-hierarchies-react/stratakit/TreeRenderer.js";
 export { StrataKitRootErrorRenderer } from "./presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
+export { StrataKitErrorRegionItem } from "./presentation-hierarchies-react/stratakit/ErrorRegionItem.js";
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/stratakit/TreeErrorRenderer.js";
 export { ErrorItemRenderer } from "./presentation-hierarchies-react/stratakit/ErrorItemRenderer.js";

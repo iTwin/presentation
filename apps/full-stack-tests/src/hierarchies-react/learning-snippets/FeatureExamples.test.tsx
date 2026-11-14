@@ -32,7 +32,7 @@ import type { StrataKitTreeRendererAttributes } from "@itwin/presentation-hierar
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Features.ErrorImports
 import { Link, Typography } from "@mui/material";
 import { ErrorItemRenderer, TreeErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
-import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
+import { StrataKitErrorRegionItem } from "@itwin/presentation-hierarchies-react/stratakit";
 import type { ComponentProps } from "react";
 // __PUBLISH_EXTRACT_END__
 import { render, waitFor } from "../../RenderUtils.js";
@@ -285,7 +285,7 @@ describe("Hierarchies React", () => {
         }
 
         // A custom error item renderer. For your own `"Generic"` errors it renders a custom
-        // `unstable_ErrorRegion.Item`; everything else - including the default message and node link - is
+        // `StrataKitErrorRegionItem`; everything else - including the default message and node link - is
         // delegated to the delivered `ErrorItemRenderer`.
         function MyErrorItemRenderer(props: ComponentProps<typeof ErrorItemRenderer>) {
           const { error } = props;
@@ -298,7 +298,7 @@ describe("Hierarchies React", () => {
                 scrollToItem={() => props.scrollToNode(props.treeNode)}
               />
             );
-            return <ErrorRegion.Item messageId={props.treeNode.id} message={message} />;
+            return <StrataKitErrorRegionItem messageId={props.treeNode.id} message={message} />;
           }
           return <ErrorItemRenderer {...props} />;
         }

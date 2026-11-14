@@ -8,6 +8,7 @@ public;interface;HierarchyLevelDetails
 alpha;const;LOCALIZATION_NAMESPACES
 public;function;LocalizationContextProvider
 public;interface;ResultSetTooLargeErrorInfo
+alpha;function;StrataKitErrorRegionItem
 alpha;function;StrataKitRootErrorRenderer
 alpha;const;StrataKitTreeRenderer
 alpha;interface;StrataKitTreeRendererAttributes

@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { createRef } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { TreeActionBase } from "../../presentation-hierarchies-react/stratakit/TreeAction.js";
@@ -55,6 +56,27 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       const { locator } = await renderTree(props, colorScheme);
       await expect.element(locator.getByText("Root Node")).toBeVisible();
       await validateSnapshot(locator);
+    });
+
+    it("forwards custom root, item and action props", async () => {
+      const rootRef = createRef<HTMLElement>();
+      const onAction = vi.fn();
+      const props = createDefaultProps({
+        rootNodes: [createTreeNode({ id: "node-1", label: "Root Node" })],
+        treeRootProps: { "aria-label": "Custom tree", id: "custom-root", ref: rootRef },
+        getTreeItemProps: () => ({ title: "Item title", label: "Custom label", description: "Item description" }),
+        getInlineActions: () => [
+          <TreeActionBase key="action-1" label="Custom action" icon={placeholderSvg} visible onClick={onAction} />,
+        ],
+      });
+      const { locator } = await renderTree(props, colorScheme);
+      await expect.element(locator.getByRole("tree", { name: "Custom tree" })).toBeVisible();
+      await expect.element(locator.getByRole("treeitem")).toHaveAttribute("title", "Item title");
+      await expect.element(locator.getByText("Custom label")).toBeVisible();
+      await expect.element(locator.getByText("Item description")).toBeVisible();
+      expect(rootRef.current?.id).toBe("custom-root");
+      await locator.getByRole("button", { name: "Custom action" }).click();
+      expect(onAction).toHaveBeenCalledOnce();
     });
 
     it("renders tree with expanded parent and children", async () => {

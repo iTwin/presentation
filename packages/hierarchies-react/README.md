@@ -99,7 +99,7 @@ While the package provides a headless UI, it also delivers a set of [StrataKit](
 
 ### `StrataKitTreeRenderer`
 
-The component renders a virtualized tree using the `Tree` component from `@stratakit/structures`. It handles node selection modes, error display, and virtualized scrolling. It accepts a required `treeLabel` prop (used for accessibility) and spreads `treeRendererProps` returned by the tree state hooks.
+The component renders a virtualized tree using StrataKit components. It handles node selection modes, error display, and virtualized scrolling. It accepts a required `treeLabel` prop (used for accessibility) and spreads `treeRendererProps` returned by the tree state hooks.
 
 ## Full example
 
@@ -357,7 +357,7 @@ const renameMyModel = () => treeRef.current?.renameNode((node) => node.label ===
 
 ### Custom errors
 
-Custom errors are attached to nodes through the `getTreeNodeErrors` callback on the tree state hook, using the `"Generic"` type (the `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` types are produced internally). A generic error only needs a `message` (and optionally `isNodeExpandable`), and the delivered renderer displays it with a link to the node - the same way it renders the internally produced types. Attach an `additionalData` payload to carry structured context, then customize rendering through the `errorRenderer` prop: delegate to `TreeErrorRenderer` and provide a `renderError` callback that renders your own `unstable_ErrorRegion.Item` for your errors and falls back to the delivered `ErrorItemRenderer` for everything else (keeping the default message and node link):
+Custom errors are attached to nodes through the `getTreeNodeErrors` callback on the tree state hook, using the `"Generic"` type (the `ResultSetTooLarge`, `NoFilterMatches`, and `ChildrenLoad` types are produced internally). A generic error only needs a `message` (and optionally `isNodeExpandable`), and the delivered renderer displays it with a link to the node - the same way it renders the internally produced types. Attach an `additionalData` payload to carry structured context, then customize rendering through the `errorRenderer` prop: delegate to `TreeErrorRenderer` and provide a `renderError` callback that renders your own `StrataKitErrorRegionItem` for your errors and falls back to the delivered `ErrorItemRenderer` for everything else (keeping the default message and node link):
 
 <!-- [[include: [Presentation.HierarchiesReact.Features.HookImports, Presentation.HierarchiesReact.Features.RendererImport, Presentation.HierarchiesReact.Features.ErrorImports, Presentation.HierarchiesReact.Features.ErrorRendering], tsx]] -->
 <!-- BEGIN EXTRACTION -->
@@ -367,8 +367,8 @@ import { useTree } from "@itwin/presentation-hierarchies-react";
 import { StrataKitRootErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
 import { ErrorItemRenderer, TreeErrorRenderer } from "@itwin/presentation-hierarchies-react/stratakit";
+import { StrataKitErrorRegionItem } from "@itwin/presentation-hierarchies-react/stratakit";
 import { Link, Typography } from "@mui/material";
-import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 
 import type { ComponentProps } from "react";
 
@@ -396,7 +396,7 @@ function ErrorMessage({ label, message, scrollToItem }: { label: string; message
 }
 
 // A custom error item renderer. For your own `"Generic"` errors it renders a custom
-// `unstable_ErrorRegion.Item`; everything else - including the default message and node link - is
+// `StrataKitErrorRegionItem`; everything else - including the default message and node link - is
 // delegated to the delivered `ErrorItemRenderer`.
 function MyErrorItemRenderer(props: ComponentProps<typeof ErrorItemRenderer>) {
   const { error } = props;
@@ -409,7 +409,7 @@ function MyErrorItemRenderer(props: ComponentProps<typeof ErrorItemRenderer>) {
         scrollToItem={() => props.scrollToNode(props.treeNode)}
       />
     );
-    return <ErrorRegion.Item messageId={props.treeNode.id} message={message} />;
+    return <StrataKitErrorRegionItem messageId={props.treeNode.id} message={message} />;
   }
   return <ErrorItemRenderer {...props} />;
 }

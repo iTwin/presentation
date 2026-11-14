@@ -38,7 +38,6 @@ export default defineConfig({
           "@stratakit/bricks",
           "@stratakit/foundations",
           "@stratakit/mui",
-          "@stratakit/structures",
           "@stratakit/icons",
         ],
       },

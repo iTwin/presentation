@@ -8,7 +8,8 @@ import { ListItemIcon, MenuItem, Typography } from "@mui/material";
 import { Icon } from "@stratakit/mui";
 import { Tree } from "@stratakit/structures";
 
-import type { ComponentPropsWithoutRef, NamedExoticComponent } from "react";
+import type { JSX, NamedExoticComponent } from "react";
+import type { ElementPropsWithRender } from "./ElementPropsWithRender.js";
 
 /**
  * Attributes used to decide how to render tree actions. They allow to differentiate action style based on the context
@@ -32,8 +33,16 @@ export interface TreeActionBaseAttributes {
 }
 
 /** @alpha */
-export type TreeActionBaseProps = Omit<ComponentPropsWithoutRef<typeof Tree.ItemAction>, "onClick"> &
+export type TreeActionBaseProps = Omit<ElementPropsWithRender<"button">, "children" | "onClick"> &
   TreeActionBaseAttributes & {
+    /** Label displayed in menus and as the inline action's tooltip. */
+    label: string;
+    /** SVG URL or element used as the action icon. */
+    icon?: string | JSX.Element;
+    /** Controls visibility when the action is inline. */
+    visible?: boolean;
+    /** Accessible description for the action's indicator dot. */
+    dot?: string;
     /** Callback invoked when the action is clicked. */
     onClick?: () => void;
   };
