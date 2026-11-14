@@ -184,7 +184,7 @@ export type CanonicalCapture =
   | { descriptor: CanonicalDescriptor; items?: never }
   | { descriptor?: never; items: CanonicalItem[] };
 
-interface Difference {
+export interface Difference {
   path: string;
   legacy: unknown;
   new: unknown;
@@ -226,7 +226,7 @@ export function isPointValue(value: object): value is CanonicalPointValue {
   );
 }
 
-function collectDifferences(legacy: unknown, current: unknown, path: string): Difference[] {
+export function collectDifferences(legacy: unknown, current: unknown, path: string): Difference[] {
   if (stableStringify(legacy) === stableStringify(current)) {
     return [];
   }

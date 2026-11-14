@@ -11,8 +11,8 @@ import {
   getRelationshipConstraints,
   isPointValue,
   roundFloatingPointNoise,
-} from "../NormalizationCommon.js";
-import { stableStringify } from "../Persistence.js";
+} from "../../NormalizationCommon.js";
+import { stableStringify } from "../../Persistence.js";
 
 import type {
   CategoryDescriptionJSON,
@@ -36,7 +36,7 @@ import type {
   CanonicalRelationshipStep,
   CanonicalValue,
   RelationshipConstraints,
-} from "../NormalizationCommon.js";
+} from "../../NormalizationCommon.js";
 import type { CapturedLegacyItem, LegacyCapture } from "./Adapter.js";
 
 interface LegacyFieldMapping {

@@ -9,9 +9,9 @@ import {
   resolveContentSources,
 } from "@itwin/presentation-content";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { mapConcurrently } from "../Concurrency.js";
-import { CAPTURE_FORMAT_VERSION, stableStringify } from "../Persistence.js";
-import { QueryScope, runInQueryContext, summarizeCanceledQueries } from "../QueryScope.js";
+import { mapConcurrently } from "../../Concurrency.js";
+import { CAPTURE_FORMAT_VERSION, stableStringify } from "../../Persistence.js";
+import { QueryScope, runInQueryContext, summarizeCanceledQueries } from "../../QueryScope.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { ContentItem, ContentTarget, PropertyField, ReadonlyContentDescriptor } from "@itwin/presentation-content";
@@ -22,7 +22,7 @@ import type {
   CaptureEnvelope,
   SampledElementsScenario,
   Scenario,
-} from "../Persistence.js";
+} from "../../Persistence.js";
 
 const SAMPLED_ITEM_CONCURRENCY = 4;
 

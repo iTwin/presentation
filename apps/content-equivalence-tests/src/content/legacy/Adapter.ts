@@ -11,8 +11,8 @@ import {
   KeySet,
   RuleTypes,
 } from "@itwin/presentation-common";
-import { mapConcurrently } from "../Concurrency.js";
-import { CAPTURE_FORMAT_VERSION } from "../Persistence.js";
+import { mapConcurrently } from "../../Concurrency.js";
+import { CAPTURE_FORMAT_VERSION } from "../../Persistence.js";
 
 import type { IModelDb } from "@itwin/core-backend";
 import type { BackendDiagnosticsOptions } from "@itwin/presentation-backend";
@@ -29,7 +29,7 @@ import type {
   CaptureEnvelope,
   SampledElementsScenario,
   Scenario,
-} from "../Persistence.js";
+} from "../../Persistence.js";
 
 const RULESET_ID = "content-output-equivalence";
 

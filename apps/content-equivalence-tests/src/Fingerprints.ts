@@ -8,6 +8,8 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { hashString } from "./Persistence.js";
 
+import type { ImplementationName } from "./Persistence.js";
+
 const require = createRequire(import.meta.url);
 
 function getPackageVersion(packageName: string): string {
@@ -26,9 +28,9 @@ function listFiles(directory: string): string[] {
   });
 }
 
-function hashDirectory(directory: string): string {
+function hashDirectory(directory: string, extensions = [".ts"]): string {
   const contents = listFiles(directory)
-    .filter((filePath) => filePath.endsWith(".ts"))
+    .filter((filePath) => extensions.some((extension) => filePath.endsWith(extension)))
     .sort()
     .map((filePath) => `${path.relative(directory, filePath)}\0${fs.readFileSync(filePath, "utf8")}`)
     .join("\0");
@@ -43,23 +45,58 @@ export function getSamplingImplementationFingerprint(): string {
   return hashSourceFile("Sampling.ts");
 }
 
-export function getImplementationFingerprints(): Record<"legacy" | "new", string> {
-  const packagesDirectory = path.resolve(import.meta.dirname, "../../../packages");
+export type ImplementationFingerprints = Record<ImplementationName, string>;
+
+/** Fingerprints of implementations used for content scenarios and for property grid scenarios. */
+export interface Fingerprints {
+  content: ImplementationFingerprints;
+  propertyGrid: ImplementationFingerprints;
+}
+
+export function getImplementationFingerprints(): Fingerprints {
+  const repositoryDirectory = path.resolve(import.meta.dirname, "../../..");
+  const packagesDirectory = path.join(repositoryDirectory, "packages");
+  const legacyPackages = [
+    getPackageVersion("@itwin/presentation-backend"),
+    getPackageVersion("@itwin/presentation-common"),
+  ];
+  const newPackages = [
+    hashDirectory(path.join(packagesDirectory, "content", "src")),
+    hashDirectory(path.join(packagesDirectory, "core-interop", "src")),
+    hashDirectory(path.join(packagesDirectory, "shared", "src")),
+  ];
   return {
-    legacy: hashString(
-      [
-        hashSourceFile("legacy/Adapter.ts"),
-        getPackageVersion("@itwin/presentation-backend"),
-        getPackageVersion("@itwin/presentation-common"),
-      ].join(":"),
-    ),
-    new: hashString(
-      [
-        hashSourceFile("new/Adapter.ts"),
-        hashDirectory(path.join(packagesDirectory, "content", "src")),
-        hashDirectory(path.join(packagesDirectory, "core-interop", "src")),
-        hashDirectory(path.join(packagesDirectory, "shared", "src")),
-      ].join(":"),
-    ),
+    content: {
+      legacy: hashString([hashSourceFile("content/legacy/Adapter.ts"), ...legacyPackages].join(":")),
+      new: hashString([hashSourceFile("content/new/Adapter.ts"), ...newPackages].join(":")),
+    },
+    propertyGrid: {
+      legacy: hashString(
+        [
+          ...legacyPackages,
+          hashSourceFile("property-grid/Capture.ts"),
+          hashSourceFile("property-grid/legacy/Adapter.ts"),
+          getPackageVersion("@itwin/presentation-frontend"),
+          hashDirectory(path.join(packagesDirectory, "components", "src", "presentation-components"), [".ts", ".tsx"]),
+          hashDirectory(path.join(packagesDirectory, "shared", "src")),
+        ].join(":"),
+      ),
+      new: hashString(
+        [
+          ...newPackages,
+          hashSourceFile("property-grid/Capture.ts"),
+          hashSourceFile("property-grid/new/Adapter.ts"),
+          hashString(
+            fs.readFileSync(
+              path.join(
+                repositoryDirectory,
+                "apps/test-app/frontend/src/components/content-properties-widget/TransformToPropertyRecord.ts",
+              ),
+              "utf8",
+            ),
+          ),
+        ].join(":"),
+      ),
+    },
   };
 }
