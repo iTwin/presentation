@@ -1,0 +1,150 @@
+name: Performance benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect changed suites
+    if: '!github.event.pull_request.draft'
+    runs-on: ubuntu-latest
+    outputs:
+      suites: ${{ steps.changes.outputs.suites }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+
+      - name: Detect changed suites
+        id: changes
+        run: node ./scripts/getChangedBenchmarks.js
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  prepare:
+    name: Prepare datasets
+    needs: changes
+    if: needs.changes.outputs.suites != '[]'
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache.outputs.cache-primary-key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Check datasets cache
+        id: cache
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./apps/performance-tests/datasets/*.bim
+          key: performance-test-datasets-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts', './apps/performance-tests/src/util/IModelUtilities.ts', './packages/test-utilities/src/**', './pnpm-lock.yaml') }}
+          lookup-only: true
+
+      - name: Install pnpm
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Use Node.js 24
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build benchmark tests
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm lage build --to presentation-performance-tests
+
+      - name: Generate datasets
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm --dir apps/performance-tests prepare:datasets
+
+      - name: Save datasets
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./apps/performance-tests/datasets/*.bim
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+  benchmark:
+    name: '${{ matrix.suite.name }}: Benchmark performance'
+    needs: [changes, prepare]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJSON(needs.changes.outputs.suites) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.15.0
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build benchmark tests
+        run: pnpm lage build --to presentation-performance-tests
+
+      # The cache may be missing if a concurrent run with the same key saved it first. Test setup then generates the datasets.
+      - name: Restore datasets
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          path: ./apps/performance-tests/datasets/*.bim
+          key: ${{ needs.prepare.outputs.cache-key }}
+
+      - name: Run benchmark tests
+        run: pnpm "benchmark:$SUITE"
+        env:
+          SUITE: ${{ matrix.suite.id }}
+          BENCHMARK_ITERATIONS: ${{ github.event_name == 'pull_request' && '1' || '3' }}
+
+      - name: Store benchmark result
+        uses: JonasDov/github-action-benchmark@04d30c72aa7aad091b58aacbb6c182ebb2ecb6c0
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/master' }}
+        with:
+          name: ${{ matrix.suite.name }} benchmark
+          tool: 'customSmallerIsBetter'
+          output-file-path: ./apps/performance-tests/${{ matrix.suite.id }}-benchmark.json
+          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          auto-push: true
+
+      - name: Post benchmark summary
+        uses: JonasDov/github-action-benchmark@04d30c72aa7aad091b58aacbb6c182ebb2ecb6c0
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          name: ${{ matrix.suite.name }} benchmark
+          tool: 'customSmallerIsBetter'
+          output-file-path: ./apps/performance-tests/${{ matrix.suite.id }}-benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          save-data-file: false
+          comment-on-pull-request: true

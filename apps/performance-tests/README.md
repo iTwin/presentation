@@ -22,7 +22,7 @@ Each benchmark command writes `<suite>-benchmark.json` in this directory. The be
 
 ## Measurement
 
-The [test runner](./src/util/TestUtilities.ts) measures the `test` callback, including its assertions. Dataset initialization, `setup`, and `cleanup` are outside the measurement. Test files run sequentially under the shared [Vitest configuration](./vitest.config.ts).
+The [test runner](./src/util/TestUtilities.ts) measures the `test` callback, including its assertions. Dataset initialization, `setup`, and `cleanup` are outside the measurement. Test files run sequentially locally under the shared [Vitest configuration](./vitest.config.ts).
 
 By default, each test runs once. Set `BENCHMARK_ITERATIONS=3` to report the fastest of three iterations and its blocking measurements. Setup and cleanup run only once, so each measured callback must repeat the intended work rather than return a cached result. The test scripts enable explicit garbage collection, which runs before each timed iteration.
 
@@ -30,19 +30,14 @@ By default, each test runs once. Set `BENCHMARK_ITERATIONS=3` to report the fast
 
 ## Datasets
 
-[Datasets.ts](./src/util/Datasets.ts) initializes all iModels in `./datasets`, creating or downloading any that are missing. After changing a generator, run `RECREATE=true pnpm test` to regenerate synthetic datasets locally.
+[Datasets.ts](./src/util/Datasets.ts) initializes all iModels in `./datasets`, creating or downloading any that are missing. Run `pnpm prepare:datasets` to prepare them without running benchmarks. After changing a generator, delete the affected `.bim` files from `./datasets` and run `pnpm prepare:datasets` again.
 
 ## GitHub workflows
 
-Each suite has separate PR and master workflows:
+The [benchmark workflow](../../.github/workflows/benchmark.yml) runs on pull requests, pushes to `master` and manual dispatch:
 
-| Suite             | Pull requests                                                             | Master and manual runs                                                     |
-| ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Content           | [PR workflow](../../.github/workflows/benchmark-pr-content.yml)           | [Master workflow](../../.github/workflows/benchmark-content.yml)           |
-| Hierarchies       | [PR workflow](../../.github/workflows/benchmark-pr-hierarchies.yml)       | [Master workflow](../../.github/workflows/benchmark-hierarchies.yml)       |
-| Unified selection | [PR workflow](../../.github/workflows/benchmark-pr-unified-selection.yml) | [Master workflow](../../.github/workflows/benchmark-unified-selection.yml) |
+1. [getChangedBenchmarks.js](../../scripts/getChangedBenchmarks.js) picks the suites affected by the changes. Manual runs pick all suites.
+2. The datasets get generated and cached. The cache key depends on the generators, test utilities and dependency lockfile.
+3. Each picked suite runs in its own job and produces its own report. On pull requests the job runs one iteration and posts results as a comment. On `master` it runs three iterations and publishes benchmark history to `gh-pages`.
 
-- PR workflows skip drafts and post results as a comment. They use the default single iteration.
-- Master workflows run three iterations and publish benchmark history to `gh-pages` when running on `master`. They also support manual dispatch.
-- Automatic runs use path filters for the relevant packages and benchmark infrastructure.
-- Workflows cache iModels using keys derived from dataset generator files.
+Draft pull requests are skipped.
