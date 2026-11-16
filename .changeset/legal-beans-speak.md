@@ -6,4 +6,4 @@
 "@itwin/unified-selection": patch
 ---
 
-Bump iTwin.js Core dependencies to `5.15.0`.
+Bump iTwin.js Core dependencies to `5.15.1`.
