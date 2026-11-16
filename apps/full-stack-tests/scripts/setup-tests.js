@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { execFileSync } from "child_process";
-import cpx from "cpx2";
+import { copySync } from "cpx2";
 import fs from "fs";
 import path from "path";
 
@@ -25,7 +25,7 @@ function copyITwinFrontendAssets(outputDir) {
     })
     .filter((assetsPath) => fs.existsSync(assetsPath))
     .forEach((src) => {
-      cpx.copySync(`${src}/**/*`, outputDir);
+      copySync(`${src}/**/*`, outputDir);
     });
 }
 

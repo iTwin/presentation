@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "benchmark:content": "cross-env BENCHMARK_OUTPUT_PATH=./content-benchmark.json pnpm test:content",
     "benchmark:hierarchies": "cross-env BENCHMARK_OUTPUT_PATH=./hierarchies-benchmark.json pnpm test:hierarchies",
     "benchmark:unified-selection": "cross-env BENCHMARK_OUTPUT_PATH=./unified-selection-benchmark.json pnpm test:unified-selection",
     "build": "tsc -b",
@@ -12,6 +13,7 @@
     "lint": "oxlint src",
     "lint:no-internal": "eslint \"./src/**/*.ts\"",
     "test": "cross-env NODE_OPTIONS=--expose-gc vitest run",
+    "test:content": "cross-env NODE_OPTIONS=--expose-gc vitest run src/content",
     "test:hierarchies": "cross-env NODE_OPTIONS=--expose-gc vitest run src/hierarchies",
     "test:unified-selection": "cross-env NODE_OPTIONS=--expose-gc vitest run src/unified-selection",
     "test:recreate": "cross-env RECREATE=true pnpm test"
@@ -23,6 +25,7 @@
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
+    "@itwin/presentation-content": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-tree-definitions": "workspace:*",
