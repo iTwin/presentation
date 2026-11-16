@@ -17,6 +17,7 @@ import { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
 import type { ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
+import type { NonGroupingHierarchyNode } from "../HierarchyNode.js";
 import type { IModelInstanceKey } from "../HierarchyNodeKey.js";
 import type { HierarchySearchTree } from "../HierarchySearch.js";
 import type {
@@ -93,7 +94,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (props) =>
       this._nodesParser(props).pipe(
         mergeMap((parsedNode) => {
-          const { row, parentNode: parentInstanceNode, imodelKey } = props;
+          const { row, imodelKey } = props;
+          // nodes are only parsed for hierarchy levels of non-grouping parent nodes
+          const parentInstanceNode = props.parentNode as Pick<NonGroupingHierarchyNode, "search"> | undefined;
           if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }

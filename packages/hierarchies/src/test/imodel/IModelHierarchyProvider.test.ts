@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
 import { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
@@ -25,6 +25,7 @@ import {
   createTestGenericNode,
   createTestGenericNodeKey,
   createTestInstanceKey,
+  createTestInstanceNode,
   createTestSourceGenericNode,
 } from "../Utils.js";
 
@@ -521,6 +522,45 @@ describe("createIModelHierarchyProvider", () => {
           children: false,
         } satisfies HierarchyNode,
       ]);
+    });
+
+    it("assigns non-grouping parent node to grouping nodes as their non-grouping ancestor", async () => {
+      imodelAccess.stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
+      imodelAccess.createQueryReader.mockReturnValue(
+        createAsyncIterator<RowDef>([
+          {
+            [NodeSelectClauseColumnNames.FullClassName]: "x.y",
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x2",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "child",
+            [NodeSelectClauseColumnNames.HasChildren]: false,
+            [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+              byClass: true,
+              byLabel: true,
+            } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
+          },
+        ]),
+      );
+      using provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            return parentNode ? [{ fullClassName: "x.y", query: { ecsql: "QUERY" } }] : [];
+          },
+        },
+      });
+      const instanceParentNode = createTestInstanceNode({
+        key: { type: "instances", instanceKeys: [{ className: "x.y", id: "0x1" }] },
+      });
+
+      // grouping nodes, created for children of a non-grouping node, get the node as their non-grouping ancestor
+      const [classGroupingNode] = await collect(provider.getNodes({ parentNode: instanceParentNode }));
+      assert(HierarchyNode.isGroupingNode(classGroupingNode));
+      expect(classGroupingNode.nonGroupingAncestor).toEqual(instanceParentNode);
+
+      // grouping nodes, created for children of a grouping node, get its non-grouping ancestor
+      const [labelGroupingNode] = await collect(provider.getNodes({ parentNode: classGroupingNode }));
+      assert(HierarchyNode.isGroupingNode(labelGroupingNode));
+      expect(labelGroupingNode.nonGroupingAncestor).toEqual(instanceParentNode);
     });
   });
 

@@ -9,7 +9,7 @@ public;function;createLimitingECSqlQueryExecutor
 public;function;createMergedIModelHierarchyProvider
 public;function;createPredicateBasedHierarchyDefinition
 public;type;DefineGenericNodeChildHierarchyLevelProps
-public;interface;DefineHierarchyLevelProps
+public;type;DefineHierarchyLevelProps
 public;type;DefineInstanceNodeChildHierarchyLevelProps
 public;type;DefineRootHierarchyLevelProps
 public;interface;GenericNodeKey
@@ -40,7 +40,6 @@ public;interface;InstancesNodeKey
 public;interface;LabelGroupingNodeKey
 public;interface;LimitingECSqlQueryExecutor
 public;function;mergeProviders
-beta;type;MinimalHierarchyNode
 public;type;NodeParser
 public;type;NodePostProcessor
 public;type;NodePreProcessor

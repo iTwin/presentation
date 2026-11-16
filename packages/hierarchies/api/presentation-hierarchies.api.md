@@ -47,20 +47,21 @@ export function createHierarchyNodePaths<TSearchPath extends {
     path: DeepReadonly<IModelInstanceKey[]>;
 }>(props: CreateHierarchyNodePathsProps<TSearchPath>): Promise<Array<{
     searchPath: TSearchPath;
-    nodesPath: HierarchyNode[];
+    nodesPath: Array<HierarchyNode & {
+        isHidden?: boolean;
+    }>;
 }>>;
 
 // @beta
 interface CreateHierarchyNodePathsProps<TSearchPath extends {
     path: DeepReadonly<IModelInstanceKey[]>;
 }> {
-    createMinimalNode: (props: {
-        instanceKey: DeepReadonly<IModelInstanceKey>;
-        parentNode: MinimalHierarchyNode | undefined;
-    }) => MinimalHierarchyNode;
     hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
-    hierarchyProvider: HierarchyProvider;
-    imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+    hierarchyProviderProps: Pick<Props<typeof createIModelHierarchyProvider>, "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"> & {
+        hierarchyDefinition: HierarchyDefinition<{
+            path: DeepReadonly<IModelInstanceKey[]>;
+        }>;
+    };
     paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
 }
 
@@ -109,10 +110,11 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 };
 
 // @public
-export interface DefineHierarchyLevelProps extends Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> {
-    instanceFilter?: GenericInstanceFilter;
+export type DefineHierarchyLevelProps<TParentProps extends {} = {
     parentNode: HierarchyDefinitionParentNode | undefined;
-}
+}> = Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> & {
+    instanceFilter?: GenericInstanceFilter;
+} & TParentProps;
 
 // @public
 export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
@@ -255,11 +257,19 @@ interface HierarchyChangedEventArgs {
 }
 
 // @public
-export interface HierarchyDefinition {
-    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
-    parseNode?: NodeParser;
-    postProcessNode?: NodePostProcessor;
-    preProcessNode?: NodePreProcessor;
+export interface HierarchyDefinition<TParentProps extends {} | undefined = undefined, TProcessingParentProps extends {} | undefined = TParentProps> {
+    defineHierarchyLevel(props: DefineHierarchyLevelProps<OrDefault<TParentProps, {
+        parentNode: HierarchyDefinitionParentNode | undefined;
+    }>>): Promise<HierarchyLevelDefinition>;
+    parseNode?: NodeParser<OrDefault<TParentProps, {
+        parentNode?: HierarchyDefinitionParentNode;
+    }>>;
+    postProcessNode?: NodePostProcessor<OrDefault<TProcessingParentProps, {
+        parentNode?: ParentHierarchyNode;
+    }>>;
+    preProcessNode?: NodePreProcessor<OrDefault<TProcessingParentProps, {
+        parentNode?: ParentHierarchyNode;
+    }>>;
 }
 
 // @public
@@ -646,33 +656,29 @@ export function mergeProviders(input: MergeHierarchyProvidersProps): HierarchyPr
     [Symbol.dispose]: () => void;
 };
 
-// @beta
-export type MinimalHierarchyNode = ParentHierarchyNode<NonGroupingHierarchyNode> & {
-    processingParams?: {
-        hideInHierarchy?: boolean;
-    };
-};
-
 // @public
-export type NodeParser = (props: {
+export type NodeParser<TParentProps extends {} = {
+    parentNode?: HierarchyDefinitionParentNode;
+}> = (props: {
     row: {
         [columnName: string]: any;
     };
-    parentNode?: HierarchyDefinitionParentNode;
     imodelKey: string;
-}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+} & TParentProps) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (props: {
+export type NodePostProcessor<TParentProps extends {} = {
+    parentNode?: ParentHierarchyNode;
+}> = (props: {
     node: ProcessedHierarchyNode;
-    parentNode?: ParentHierarchyNode;
-}) => Promise<ProcessedHierarchyNode>;
+} & TParentProps) => Promise<ProcessedHierarchyNode>;
 
 // @public
-export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
-    node: TNode;
+export type NodePreProcessor<TParentProps extends {} = {
     parentNode?: ParentHierarchyNode;
-}) => Promise<TNode | undefined>;
+}> = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(props: {
+    node: TNode;
+} & TParentProps) => Promise<TNode | undefined>;
 
 // @public
 interface NodeSelectClauseProps {
@@ -732,6 +738,9 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
     search?: HierarchyNodeSearchProps;
     supportsFiltering?: boolean;
 }
+
+// @public
+type OrDefault<T, TDefault> = [T] extends [undefined] ? TDefault : NonNullable<T>;
 
 // @public
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;

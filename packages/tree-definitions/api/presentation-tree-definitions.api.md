@@ -5,7 +5,6 @@
 ```ts
 
 import type { ClassGroupingNodeKey } from '@itwin/presentation-hierarchies';
-import type { createHierarchyNodePaths } from '@itwin/presentation-hierarchies';
 import type { DeepReadonly } from '@itwin/presentation-shared';
 import type { EC } from '@itwin/presentation-shared';
 import type { ECSchemaProvider } from '@itwin/presentation-shared';
@@ -21,7 +20,6 @@ import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
-import type { Props } from '@itwin/presentation-shared';
 import type { Subscribable } from '@itwin/presentation-shared';
 
 // @beta
@@ -280,7 +278,7 @@ interface ClassificationsTreeSearchTree extends Omit<HierarchySearchTree, "ident
 
 // @beta
 export function createCategoriesTree(props: CategoriesTreeProps): {
-    hierarchyDefinition: HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition<undefined, undefined>;
     createInstanceKeyPaths: (searchProps: CategoriesTreeSearchProps) => AsyncIterableIterator<{
         path: CategoriesTreeSearchPath;
         target: Id64String;
@@ -295,7 +293,7 @@ export function createCategoriesTreeIdsProvider(input: CategoriesTreeIdsProvider
 
 // @beta
 export function createClassificationsTree(props: ClassificationsTreeProps): {
-    hierarchyDefinition: HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition<undefined, undefined>;
     createInstanceKeyPaths: (searchProps: ClassificationsTreeSearchProps) => AsyncIterableIterator<{
         path: ClassificationsTreeSearchPath;
         target: Id64String;
@@ -310,7 +308,11 @@ export function createClassificationsTreeIdsProvider(input: ClassificationsTreeI
 
 // @beta
 export function createModelsTree(props: ModelsTreeProps): {
-    hierarchyDefinition: HierarchyDefinition;
+    hierarchyDefinition: HierarchyDefinition<undefined, undefined> & HierarchyDefinition<{
+        path: DeepReadonly<IModelInstanceKey[]>;
+    }, {
+        path: DeepReadonly<IModelInstanceKey[]>;
+    }>;
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
         path: ModelsTreeSearchPath;
         target: Id64String | ElementsGroupInfo;
@@ -318,7 +320,6 @@ export function createModelsTree(props: ModelsTreeProps): {
     createSearchTree: (searchProps: ModelsTreeSearchProps & {
         revealTargets?: boolean;
     }) => Promise<ModelsTreeSearchTree[]>;
-    getMinimalNodeFactory: () => Promise<Props<typeof createHierarchyNodePaths>["createMinimalNode"]>;
 };
 
 // @beta

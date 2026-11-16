@@ -5,6 +5,7 @@
 
 import { defer, EMPTY, from, lastValueFrom, mergeAll, mergeMap, of, reduce, toArray } from "rxjs";
 import { HierarchyNode } from "./HierarchyNode.js";
+import { PathBasedIModelHierarchyProvider } from "./imodel/PathBasedIModelHierarchyProvider.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -13,48 +14,36 @@ import type {
   GenericInstanceFilterRule,
   GenericInstanceFilterRuleGroup,
 } from "@itwin/core-common";
-import type { DeepReadonly, EC, ECSchemaProvider } from "@itwin/presentation-shared";
-import type { GroupingHierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import type { DeepReadonly, EC, ECSchemaProvider, Props } from "@itwin/presentation-shared";
+import type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import type { HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
-import type { GetHierarchyNodesProps, HierarchyProvider } from "./HierarchyProvider.js";
-
-/**
- * A node that `createHierarchyNodePaths` creates for every search path instance key, without loading it from a
- * `HierarchyProvider`. Minimal nodes of instances that have children in the search paths are used as parent nodes
- * when requesting those children, so they need the attributes that the provider uses to create the child hierarchy
- * level, e.g. `key`, `parentKeys` and `extendedData`.
- *
- * @beta
- */
-export type MinimalHierarchyNode = ParentHierarchyNode<NonGroupingHierarchyNode> & {
-  /** Hierarchy processing parameters of the node. */
-  processingParams?: {
-    /**
-     * Set to `true` if the node is hidden in the hierarchy and its children are displayed in its place. Such
-     * node itself is not requested and it's not included in the resulting nodes path, but it's still used as
-     * a parent node when requesting its children.
-     */
-    hideInHierarchy?: boolean;
-  };
-};
+import type { GetHierarchyNodesProps } from "./HierarchyProvider.js";
+import type { HierarchyDefinition } from "./imodel/IModelHierarchyDefinition.js";
+import type { createIModelHierarchyProvider } from "./imodel/IModelHierarchyProvider.js";
+import type { PathBasedHierarchyNode } from "./imodel/PathBasedIModelHierarchyProvider.js";
 
 /**
  * Props for `createHierarchyNodePaths`.
  * @beta
  */
 interface CreateHierarchyNodePathsProps<TSearchPath extends { path: DeepReadonly<IModelInstanceKey[]> }> {
-  /** Provider to load the hierarchy nodes from. */
-  hierarchyProvider: HierarchyProvider;
-
   /**
-   * Class hierarchy inspector of the iModel that the paths are created for. Used to match loaded nodes to search path
-   * instance keys, whose class names may be base or derived classes of the actual instance classes.
+   * Props for the hierarchy provider that `createHierarchyNodePaths` creates internally to load the nodes.
+   *
+   * The hierarchy definition identifies parents of hierarchy levels by paths of instance keys rather than parent
+   * nodes - its callbacks receive a `path` of search path instance keys from a root node to the parent node (empty for
+   * root nodes), instead of `parentNode`. When determining whether nodes have children, the path ends with the
+   * instance key of the node, rather than a search path instance key. Generic node keys can't be put into paths, so
+   * generic nodes can't have children.
    */
-  imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
+  hierarchyProviderProps: Pick<
+    Props<typeof createIModelHierarchyProvider>,
+    "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"
+  > & { hierarchyDefinition: HierarchyDefinition<{ path: DeepReadonly<IModelInstanceKey[]> }> };
 
   /**
-   * Hierarchy level size limit override, passed to every `HierarchyProvider.getNodes` call. If not provided, the
-   * provider's limit applies.
+   * Hierarchy level size limit override, passed to every hierarchy level request. If not provided, the limit of
+   * `hierarchyProviderProps.imodelAccess` applies.
    */
   hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
 
@@ -63,20 +52,6 @@ interface CreateHierarchyNodePathsProps<TSearchPath extends { path: DeepReadonly
    * to a target node, and may have any other properties, e.g. ones yielded by tree definitions' `createInstanceKeyPaths`.
    */
   paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
-
-  /**
-   * Creates a minimal node for the given search path instance key. If the instance has children in the search paths,
-   * the node is used as a parent node when requesting them from `hierarchyProvider`, so it has to contain everything
-   * the hierarchy definition expects from parent nodes.
-   *
-   * The function is called once for every unique search path prefix, as `paths` are consumed. Nodes are
-   * created from root to leaves, so `parentNode` is the minimal node created for the previous identifier in the path,
-   * or `undefined` for root identifiers.
-   */
-  createMinimalNode: (props: {
-    instanceKey: DeepReadonly<IModelInstanceKey>;
-    parentNode: MinimalHierarchyNode | undefined;
-  }) => MinimalHierarchyNode;
 }
 
 type IdentifierKey = string;
@@ -84,10 +59,9 @@ type IdentifierKey = string;
 /**
  * Loads hierarchy nodes for the given paths of instance keys.
  *
- * Paths are split into entries, and a minimal node is created for every unique entry using `createMinimalNode`. This
- * allows requesting all hierarchy levels concurrently, without waiting for parent nodes to be loaded. All sibling
- * entries are requested together, using an `instanceFilter` on their `ECInstanceId` values. Children of grouping nodes,
- * containing requested instances, are requested as soon as the grouping nodes are returned.
+ * Paths are split into entries, and every unique entry is identified by its path from the root. This allows requesting
+ * all hierarchy levels concurrently, without waiting for parent nodes to be loaded. All sibling entries are requested
+ * together, using an `instanceFilter` on their `ECInstanceId` values.
  *
  * Because every hierarchy level is requested with exactly the instances in the paths, grouping nodes group the same
  * instances as when the paths are applied using `HierarchyProvider.setHierarchySearch`.
@@ -96,12 +70,13 @@ type IdentifierKey = string;
  * returned promise resolves once all hierarchy levels are loaded.
  *
  * Resolves with a nodes path for every input path, together with the input path object as `searchPath`. Nodes paths
- * contain grouping nodes before the instance nodes they group, and don't contain nodes that are hidden in the
- * hierarchy. Input paths whose target or a non-hidden ancestor is not found in the hierarchy are omitted.
+ * contain grouping nodes before the instance nodes they group. Nodes that are hidden in the hierarchy are included in
+ * the paths with the `isHidden` flag - their children are displayed in their place. Input paths whose target or an
+ * ancestor is not found in the hierarchy, or whose target is hidden, are omitted.
  *
  * Notes:
- * - The provider's state is not changed by this function.
- * - Ancestor keys of hidden nodes are taken from their minimal nodes.
+ * - Nodes hidden in the hierarchy have to be included in the search paths. Their children are requested separately
+ *   from their siblings, so they're not grouped together with them.
  * - Instances are filtered by their `ECInstanceId` values using `OR` expressions, so hierarchy levels with many
  *   requested instances result in large queries.
  *
@@ -110,43 +85,49 @@ type IdentifierKey = string;
  */
 export async function createHierarchyNodePaths<TSearchPath extends { path: DeepReadonly<IModelInstanceKey[]> }>(
   props: CreateHierarchyNodePathsProps<TSearchPath>,
-): Promise<Array<{ searchPath: TSearchPath; nodesPath: HierarchyNode[] }>> {
-  const { hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, createMinimalNode } = props;
+): Promise<Array<{ searchPath: TSearchPath; nodesPath: Array<HierarchyNode & { isHidden?: boolean }> }>> {
+  const { hierarchyProviderProps, hierarchyLevelSizeLimit } = props;
   return lastValueFrom(
     from(props.paths).pipe(
       // collect path entries by their parents as paths come in, so that siblings can be requested together once all
       // paths are received
       reduce(
         (acc, searchPath) => {
-          let parentNode: MinimalHierarchyNode | undefined;
-          const minimalNodesPath = searchPath.path.map((instanceKey) => {
+          let parentEntry: SearchPathEntry | undefined;
+          const entriesPath = searchPath.path.map((instanceKey) => {
             const children = getOrCreate(
-              acc.minimalEntriesByParent,
-              parentNode,
+              acc.entriesByParent,
+              parentEntry,
               () => new Map<IdentifierKey, SearchPathEntry>(),
             );
+            const parentPath = parentEntry?.path ?? [];
             const entry = getOrCreate(children, createIdentifierKey(instanceKey), () => ({
               instanceKey,
-              minimalNode: createMinimalNode({ instanceKey, parentNode }),
+              path: [...parentPath, instanceKey],
             }));
-            parentNode = entry.minimalNode;
-            return entry.minimalNode;
+            parentEntry = entry;
+            return entry;
           });
-          acc.paths.push({ searchPath, minimalNodesPath });
+          acc.paths.push({ searchPath, entriesPath });
           return acc;
         },
         {
-          minimalEntriesByParent: new Map() as EntriesByParent,
-          paths: new Array<{ searchPath: TSearchPath; minimalNodesPath: MinimalHierarchyNode[] }>(),
+          entriesByParent: new Map() as EntriesByParent,
+          paths: new Array<{ searchPath: TSearchPath; entriesPath: SearchPathEntry[] }>(),
         },
       ),
-      mergeMap(({ minimalEntriesByParent, paths }) =>
-        getLoadedEntries({ hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, minimalEntriesByParent }).pipe(
+      mergeMap(({ entriesByParent, paths }) =>
+        getLoadedEntries({
+          hierarchyProvider: new PathBasedIModelHierarchyProvider(hierarchyProviderProps),
+          imodelAccess: hierarchyProviderProps.imodelAccess,
+          hierarchyLevelSizeLimit,
+          entriesByParent,
+        }).pipe(
           mergeMap((loadedEntries) => {
             // shared by all paths, so that entries of common path prefixes are resolved only once
-            const resolvedEntriesAccumulator = new Map<MinimalHierarchyNode, ResolvedEntry>();
-            return paths.flatMap(({ searchPath, minimalNodesPath }) => {
-              const nodesPath = createNodesPath({ minimalNodesPath, loadedEntries, resolvedEntriesAccumulator });
+            const resolvedEntriesAccumulator = new Map<SearchPathEntry, ResolvedEntry>();
+            return paths.flatMap(({ searchPath, entriesPath }) => {
+              const nodesPath = createNodesPath({ entriesPath, loadedEntries, resolvedEntriesAccumulator });
               return nodesPath ? [{ searchPath, nodesPath }] : [];
             });
           }),
@@ -159,36 +140,40 @@ export async function createHierarchyNodePaths<TSearchPath extends { path: DeepR
 
 interface SearchPathEntry {
   instanceKey: DeepReadonly<IModelInstanceKey>;
-  minimalNode: MinimalHierarchyNode;
+  /** Instance keys of the search path from the root entry to this entry, inclusive. */
+  path: DeepReadonly<IModelInstanceKey[]>;
 }
 
-/** Search path entries by the minimal node of their parent entry, or `undefined` for root entries. */
-type EntriesByParent = Map<MinimalHierarchyNode | undefined, Map<IdentifierKey, SearchPathEntry>>;
+/** Search path entries by their parent entry, or `undefined` for root entries. */
+type EntriesByParent = Map<SearchPathEntry | undefined, Map<IdentifierKey, SearchPathEntry>>;
 
 /** An instance node loaded for a search path entry, together with the grouping nodes it's grouped under. */
 interface LoadedEntryNodes {
   node: NonGroupingHierarchyNode & { key: InstancesNodeKey };
   /** Grouping nodes the instance node is grouped under, from the outermost to the innermost. */
   groupingNodes: GroupingHierarchyNode[];
+  /** Whether the node is hidden in the hierarchy. Hidden nodes aren't grouped. */
+  isHidden: boolean;
 }
 
 /**
  * A search path entry with its nodes adjusted to the actual hierarchy, and information needed to resolve its children.
  */
 interface ResolvedEntry {
-  /** Grouping nodes and the instance node of the entry. Empty for hidden entries. */
-  nodes: HierarchyNode[];
+  /** Grouping nodes and the instance node of the entry. Hidden instance nodes have the `isHidden` flag. */
+  nodes: Array<HierarchyNode & { isHidden?: boolean }>;
+  /** Whether the entry's node is hidden in the hierarchy. */
+  isHidden: boolean;
   /** Keys of the actual ancestors of the entry's children. */
   childrenAncestorKeys: HierarchyNodeKey[];
-  /** The actual non-grouping parent node of the entry's children. `undefined` for children of hidden entries. */
-  childrenParentNode?: NonGroupingHierarchyNode;
+  /** The actual non-grouping parent node of the entry's children. May be a hidden node. */
+  childrenParentNode: NonGroupingHierarchyNode;
 }
 
 /** A hierarchy level request for sibling search path entries. */
 interface NodesRequest {
-  parentNode: ParentHierarchyNode | undefined;
+  path: DeepReadonly<IModelInstanceKey[]>;
   instanceFilter: GenericInstanceFilter;
-  hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
   /** Requested entries by their instance IDs. Used to match loaded nodes to entries. */
   entries: Map<Id64String, SearchPathEntry[]>;
 }
@@ -204,79 +189,68 @@ function createIdentifierKey({ imodelKey, className, id }: DeepReadonly<IModelIn
 }
 
 /**
- * Creates a path of nodes for the given path of minimal nodes, with ancestor keys of the actual hierarchy. Returns
- * `undefined` if the path's target or a non-hidden ancestor is not in the hierarchy.
+ * Creates a path of nodes for the given path of entries, with ancestor keys of the actual hierarchy. Returns
+ * `undefined` if the path's target or an ancestor is not in the hierarchy, or the target is hidden.
  *
- * Minimal nodes used as parents for requests are created from search paths, so keys of loaded nodes' ancestors don't match
- * the actual hierarchy (e.g. class names may be more general, grouping node keys are missing). Resolved entries are
- * stored in `resolvedEntriesAccumulator`, so that they're reused by other paths with the same prefix.
+ * Nodes are loaded with ancestor keys based on search path instance keys, which don't match the actual hierarchy (e.g.
+ * class names may be more general, grouping node keys are missing). Resolved entries are stored in
+ * `resolvedEntriesAccumulator`, so that they're reused by other paths with the same prefix.
  */
 function createNodesPath({
-  minimalNodesPath,
+  entriesPath,
   loadedEntries,
   resolvedEntriesAccumulator,
 }: {
-  minimalNodesPath: MinimalHierarchyNode[];
-  loadedEntries: Map<MinimalHierarchyNode, LoadedEntryNodes>;
-  resolvedEntriesAccumulator: Map<MinimalHierarchyNode, ResolvedEntry>;
-}): HierarchyNode[] | undefined {
-  if (minimalNodesPath.length === 0) {
-    return undefined;
-  }
-  const nodesPath = new Array<HierarchyNode>();
-  let resolvedParentEntry: ResolvedEntry = { nodes: [], childrenAncestorKeys: [] };
-  for (const minimalNode of minimalNodesPath) {
-    let entry = resolvedEntriesAccumulator.get(minimalNode);
-    if (!entry) {
-      entry = getResolvedEntry({ minimalNode, loadedEntry: loadedEntries.get(minimalNode), resolvedParentEntry });
-      if (!entry) {
+  entriesPath: SearchPathEntry[];
+  loadedEntries: Map<SearchPathEntry, LoadedEntryNodes>;
+  resolvedEntriesAccumulator: Map<SearchPathEntry, ResolvedEntry>;
+}): ResolvedEntry["nodes"] | undefined {
+  const nodesPath: ResolvedEntry["nodes"] = [];
+  let resolvedParentEntry: Pick<ResolvedEntry, "childrenAncestorKeys" | "childrenParentNode"> | undefined;
+  let resolvedEntry: ResolvedEntry | undefined;
+  for (const entry of entriesPath) {
+    resolvedEntry = resolvedEntriesAccumulator.get(entry);
+    if (!resolvedEntry) {
+      const loadedEntry = loadedEntries.get(entry);
+      if (!loadedEntry) {
         return undefined;
       }
-      resolvedEntriesAccumulator.set(minimalNode, entry);
+      resolvedEntry = getResolvedEntry({ loadedEntry, resolvedParentEntry });
+      resolvedEntriesAccumulator.set(entry, resolvedEntry);
     }
-    nodesPath.push(...entry.nodes);
-    resolvedParentEntry = entry;
+    nodesPath.push(...resolvedEntry.nodes);
+    resolvedParentEntry = resolvedEntry;
   }
   // a hidden target isn't in the hierarchy
-  return minimalNodesPath[minimalNodesPath.length - 1].processingParams?.hideInHierarchy ? undefined : nodesPath;
+  return resolvedEntry && !resolvedEntry.isHidden ? nodesPath : undefined;
 }
 
-/**
- * Creates copies of the loaded entry nodes with ancestor keys of the actual hierarchy. Returns `undefined` if the entry
- * isn't hidden and its nodes weren't loaded.
- */
+/** Creates copies of the loaded entry nodes with ancestor keys of the actual hierarchy. */
 function getResolvedEntry({
-  minimalNode,
   loadedEntry,
   resolvedParentEntry,
 }: {
-  minimalNode: MinimalHierarchyNode;
-  loadedEntry: LoadedEntryNodes | undefined;
-  resolvedParentEntry: ResolvedEntry;
-}): ResolvedEntry | undefined {
-  const { childrenAncestorKeys: ancestorKeys, childrenParentNode: parentNode } = resolvedParentEntry;
-  if (minimalNode.processingParams?.hideInHierarchy) {
-    // the entry is hidden - its children take its place
-    return { nodes: [], childrenAncestorKeys: [...ancestorKeys, minimalNode.key] };
-  }
-  if (!loadedEntry) {
-    return undefined;
-  }
-  // Nodes of this entry were requested with the entry's minimal parent node, so their `parentKeys` are based on minimal
-  // nodes: ancestor class names come from the search path (may be base classes) and grouping nodes above minimal
-  // ancestors are missing. Here they're replaced with keys of the actual ancestors - `ancestorKeys`, resolved from the
-  // parent entry, followed by keys of the entry's grouping nodes that precede the node.
+  loadedEntry: LoadedEntryNodes;
+  resolvedParentEntry: Pick<ResolvedEntry, "childrenAncestorKeys" | "childrenParentNode"> | undefined;
+}): ResolvedEntry {
+  const ancestorKeys = resolvedParentEntry?.childrenAncestorKeys ?? [];
+  // Nodes of this entry were requested with the entry's search path, so their `parentKeys` are based on search path
+  // instance keys: ancestor class names may be base classes, and grouping and hidden nodes' keys may differ. Here they're
+  // replaced with keys of the actual ancestors - `ancestorKeys`, resolved from the parent entry, followed by keys of the
+  // entry's grouping nodes that precede the node.
   const groupingNodes = loadedEntry.groupingNodes.map((groupingNode, index): GroupingHierarchyNode => ({
     ...groupingNode,
     parentKeys: [...ancestorKeys, ...loadedEntry.groupingNodes.slice(0, index).map(({ key }) => key)],
-    ...getNonGroupingAncestor({ groupingNode, ancestorKeys, parentNode }),
+    ...(resolvedParentEntry ? { nonGroupingAncestor: resolvedParentEntry.childrenParentNode } : {}),
   }));
   const node: NonGroupingHierarchyNode = {
     ...loadedEntry.node,
     parentKeys: [...ancestorKeys, ...groupingNodes.map(({ key }) => key)],
   };
   return {
-    nodes: [...groupingNodes, node],
+    // hidden nodes aren't grouped
+    nodes: loadedEntry.isHidden ? [{ ...node, isHidden: true }] : [...groupingNodes, node],
+    isHidden: loadedEntry.isHidden,
     childrenAncestorKeys: [...node.parentKeys, node.key],
     childrenParentNode: node,
   };
@@ -285,23 +259,29 @@ function getResolvedEntry({
 /**
  * Loads nodes for all given search path entries. Nodes of every hierarchy level are requested concurrently.
  *
- * Emits a map from entries' minimal nodes to their loaded nodes. Loaded nodes have ancestor keys based on minimal
- * nodes. Entries that are hidden or aren't in the hierarchy are not in the map.
+ * Emits a map from entries to their loaded nodes. Loaded nodes have ancestor keys based on search path instance keys.
+ * Entries that aren't in the hierarchy are not in the map.
  */
 function getLoadedEntries({
   hierarchyProvider,
   imodelAccess,
   hierarchyLevelSizeLimit,
-  minimalEntriesByParent,
+  entriesByParent,
 }: {
-  hierarchyProvider: HierarchyProvider;
+  hierarchyProvider: Pick<PathBasedIModelHierarchyProvider, "getNodes" | "getGroupingNodeChildren">;
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
-  minimalEntriesByParent: EntriesByParent;
-}): Observable<Map<MinimalHierarchyNode, LoadedEntryNodes>> {
-  return defer(() => from(getRequestPropsForGetNodes({ minimalEntriesByParent, hierarchyLevelSizeLimit }))).pipe(
-    mergeMap((request) =>
-      loadEntryNodes({ hierarchyProvider, request, groupingNodes: [], parentNode: request.parentNode }).pipe(
+  entriesByParent: EntriesByParent;
+}): Observable<Map<SearchPathEntry, LoadedEntryNodes>> {
+  return defer(() => from(getRequestPropsForGetNodes(entriesByParent))).pipe(
+    mergeMap((request) => {
+      const requestProps = {
+        path: request.path,
+        instanceFilter: request.instanceFilter,
+        ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
+      };
+      return hierarchyProvider.getNodes(requestProps).pipe(
+        mergeMap((node) => getEntryNodes({ hierarchyProvider, requestProps, node, groupingNodes: [] })),
         mergeMap((loaded) =>
           from(
             loaded.node.key.instanceKeys.flatMap((loadedKey) =>
@@ -314,89 +294,58 @@ function getLoadedEntries({
             // IDs, the loaded instance class has to match the search path class
             mergeMap(async ({ entry, loadedKey }) =>
               (await classesMatch({ imodelAccess, lhs: entry.instanceKey.className, rhs: loadedKey.className }))
-                ? [{ minimalNode: entry.minimalNode, loaded }]
+                ? [{ entry, loaded }]
                 : [],
             ),
             mergeAll(),
           ),
         ),
-      ),
-    ),
-    reduce(
-      (acc, { minimalNode, loaded }) => acc.set(minimalNode, loaded),
-      new Map<MinimalHierarchyNode, LoadedEntryNodes>(),
-    ),
+      );
+    }),
+    reduce((acc, { entry, loaded }) => acc.set(entry, loaded), new Map<SearchPathEntry, LoadedEntryNodes>()),
   );
 }
 
-/**
- * Creates hierarchy level requests for the given search path entries - one for every parent with non-hidden child
- * entries.
- * Entries hidden in the hierarchy are not requested, but their children are.
- */
-function getRequestPropsForGetNodes({
-  minimalEntriesByParent,
-  hierarchyLevelSizeLimit,
-}: {
-  minimalEntriesByParent: EntriesByParent;
-  hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
-}): NodesRequest[] {
-  const requests = new Array<NodesRequest>();
-  for (const [minimalParentNode, children] of minimalEntriesByParent) {
+/** Creates hierarchy level requests for the given search path entries - one for every parent with child entries. */
+function getRequestPropsForGetNodes(entriesByParent: EntriesByParent): NodesRequest[] {
+  return [...entriesByParent].map(([parentEntry, children]) => {
     const entries = new Map<Id64String, SearchPathEntry[]>();
     for (const entry of children.values()) {
-      if (!entry.minimalNode.processingParams?.hideInHierarchy) {
-        getOrCreate(entries, entry.instanceKey.id, () => new Array<SearchPathEntry>()).push(entry);
-      }
+      getOrCreate(entries, entry.instanceKey.id, () => new Array<SearchPathEntry>()).push(entry);
     }
-    if (entries.size > 0) {
-      requests.push({
-        parentNode: minimalParentNode,
-        instanceFilter: createECInstanceIdsFilter([...entries.keys()]),
-        ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
-        entries,
-      });
-    }
-  }
-  return requests;
+    return { path: parentEntry?.path ?? [], instanceFilter: createECInstanceIdsFilter([...entries.keys()]), entries };
+  });
 }
 
 /**
- * Loads nodes of the hierarchy level of `parentNode` for the requested entries. Emits every loaded instance node together
- * with the grouping nodes it's grouped under. Nodes grouped under grouping nodes are loaded by requesting children of
- * those grouping nodes.
+ * Emits the given instance node, or instance nodes grouped under the given grouping node, together with the grouping
+ * nodes they're grouped under. Generic nodes are skipped, because they can't be search path entries.
  */
-function loadEntryNodes({
+function getEntryNodes({
   hierarchyProvider,
-  request,
-  parentNode,
+  requestProps,
+  node,
   groupingNodes,
 }: {
-  hierarchyProvider: HierarchyProvider;
-  request: NodesRequest;
-  parentNode: ParentHierarchyNode | undefined;
+  hierarchyProvider: Pick<PathBasedIModelHierarchyProvider, "getGroupingNodeChildren">;
+  requestProps: Omit<Props<PathBasedIModelHierarchyProvider["getGroupingNodeChildren"]>, "groupingNode">;
+  node: PathBasedHierarchyNode;
   groupingNodes: GroupingHierarchyNode[];
 }): Observable<LoadedEntryNodes> {
-  const { instanceFilter, hierarchyLevelSizeLimit } = request;
-  return defer(() =>
-    from(
-      hierarchyProvider.getNodes({
-        parentNode,
-        instanceFilter,
-        ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
-      }),
-    ),
-  ).pipe(
-    mergeMap((node) => {
-      if (HierarchyNode.isGroupingNode(node)) {
-        // grouping nodes may also group unrelated instances promoted from hidden nodes - skip groups without requested instances
-        return node.groupedInstanceKeys.some(({ id }) => request.entries.has(id))
-          ? loadEntryNodes({ hierarchyProvider, request, parentNode: node, groupingNodes: [...groupingNodes, node] })
-          : EMPTY;
-      }
-      return HierarchyNode.isInstancesNode(node) ? of({ node, groupingNodes }) : EMPTY;
-    }),
-  );
+  if (HierarchyNode.isGroupingNode(node)) {
+    return hierarchyProvider
+      .getGroupingNodeChildren({ groupingNode: node, ...requestProps })
+      .pipe(
+        mergeMap((childNode) =>
+          getEntryNodes({ hierarchyProvider, requestProps, node: childNode, groupingNodes: [...groupingNodes, node] }),
+        ),
+      );
+  }
+  if (!HierarchyNode.isInstancesNode(node)) {
+    return EMPTY;
+  }
+  const { isHidden, ...instanceNode } = node;
+  return of({ node: instanceNode, groupingNodes, isHidden: !!isHidden });
 }
 
 /** Checks whether one of the given classes derives from the other. */
@@ -412,25 +361,6 @@ async function classesMatch({
   return (
     lhs === rhs || (await imodelAccess.classDerivesFrom(lhs, rhs)) || (await imodelAccess.classDerivesFrom(rhs, lhs))
   );
-}
-
-function getNonGroupingAncestor({
-  groupingNode,
-  ancestorKeys,
-  parentNode,
-}: {
-  groupingNode: GroupingHierarchyNode;
-  ancestorKeys: HierarchyNodeKey[];
-  parentNode?: NonGroupingHierarchyNode;
-}): Pick<GroupingHierarchyNode, "nonGroupingAncestor"> {
-  if (parentNode) {
-    return { nonGroupingAncestor: parentNode };
-  }
-  if (groupingNode.nonGroupingAncestor) {
-    // Hidden parents are not returned, but their request context is still needed to expand the group.
-    return { nonGroupingAncestor: { ...groupingNode.nonGroupingAncestor, parentKeys: ancestorKeys.slice(0, -1) } };
-  }
-  return {};
 }
 
 /**

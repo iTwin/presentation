@@ -17,6 +17,13 @@ interface HierarchyCacheEntry<T> {
   variations: LRUCache<string, T>;
 }
 
+/** Props that identify a cached hierarchy level. */
+type HierarchyCacheRequestProps = Pick<GetHierarchyNodesProps, "instanceFilter" | "hierarchyLevelSizeLimit"> & {
+  /** Keys of the hierarchy level's parent node and its ancestors, from the root. Empty for the root level. */
+  parentKeys: HierarchyNodeKey[];
+  targetInstanceKeys?: InstanceKey[];
+};
+
 interface ChildNodeObservablesCacheProps {
   size: number;
   variationsCount?: number;
@@ -32,12 +39,7 @@ export class HierarchyCache<T> {
     this._map = new LRUDictionary<HierarchyNodeKey[], HierarchyCacheEntry<T>>(props.size, compareHierarchyNodeKeys);
   }
 
-  private createCacheKeys(
-    props: Omit<GetHierarchyNodesProps, "parentNode"> & {
-      parentNode: { key: HierarchyNodeKey; parentKeys: HierarchyNodeKey[] } | undefined;
-      targetInstanceKeys?: InstanceKey[];
-    },
-  ) {
+  private createCacheKeys(props: HierarchyCacheRequestProps) {
     function createVariationKey() {
       const { instanceFilter, hierarchyLevelSizeLimit, targetInstanceKeys } = props;
       if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined && targetInstanceKeys === undefined) {
@@ -46,13 +48,7 @@ export class HierarchyCache<T> {
       return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit, targetInstanceKeys });
     }
 
-    if (!props.parentNode) {
-      return { primaryKey: [], variationKey: createVariationKey() };
-    }
-
-    const parentKeys = props.parentNode.parentKeys;
-
-    return { primaryKey: [...parentKeys, props.parentNode.key], variationKey: createVariationKey() };
+    return { primaryKey: props.parentKeys, variationKey: createVariationKey() };
   }
 
   private getCacheAccessors(primaryKey: HierarchyNodeKey[], variationKey?: string) {
@@ -80,12 +76,12 @@ export class HierarchyCache<T> {
     };
   }
 
-  public set(requestProps: GetHierarchyNodesProps, value: T) {
+  public set(requestProps: HierarchyCacheRequestProps, value: T) {
     const { primaryKey, variationKey } = this.createCacheKeys(requestProps);
     this.getCacheAccessors(primaryKey, variationKey).set(value);
   }
 
-  public get(requestProps: GetHierarchyNodesProps): T | undefined {
+  public get(requestProps: HierarchyCacheRequestProps): T | undefined {
     const { primaryKey, variationKey } = this.createCacheKeys(requestProps);
     return this.getCacheAccessors(primaryKey, variationKey).get();
   }

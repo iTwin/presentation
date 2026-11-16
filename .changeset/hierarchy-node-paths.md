@@ -2,6 +2,8 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Added `createHierarchyNodePaths` function, which loads hierarchy nodes along the given search paths - objects with a `path` of instance keys, like the ones yielded by tree definitions' `createInstanceKeyPaths`. A caller-supplied `createMinimalNode` callback creates a minimal node for every instance key in the paths, and those nodes are used as parent nodes when requesting hierarchy levels from a `HierarchyProvider`. Minimal nodes of nodes that are hidden in the hierarchy must have `processingParams.hideInHierarchy` set, the same as nodes returned by `HierarchyProvider.getNodes`.
+Added `createHierarchyNodePaths` function, which loads hierarchy nodes along the given search paths - objects with a `path` of instance keys, like the ones yielded by tree definitions' `createInstanceKeyPaths`.
 
-The function resolves with a `{ searchPath, nodesPath }` object for every search path, where `nodesPath` contains the same nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target.
+The hierarchy definition, passed through `hierarchyProviderProps`, receives a `path` of instance keys from the root to the parent node instead of a parent node - `HierarchyDefinition<{ path: DeepReadonly<IModelInstanceKey[]> }>`. The definition should apply the `instanceFilter` it receives. Nodes that are hidden in the hierarchy have to be included in the search paths - they're included in the resulting node paths with the `isHidden` flag. Generic nodes can't have children.
+
+The function resolves with a `{ searchPath, nodesPath }` object for every search path, where `nodesPath` contains the same nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target, plus the hidden nodes. Search paths whose target isn't found or is hidden are omitted.

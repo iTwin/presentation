@@ -331,23 +331,43 @@ describe("Hierarchies", () => {
       it("loads hierarchy node paths", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePaths
-        const hierarchyProvider = createIModelHierarchyProvider({
-          imodelAccess,
-          hierarchyDefinition: createHierarchyDefinition(),
-        });
         const nodePaths = await createHierarchyNodePaths({
-          hierarchyProvider,
-          imodelAccess,
+          hierarchyProviderProps: {
+            imodelAccess,
+            hierarchyDefinition: {
+              // Instead of a parent node, hierarchy level is identified by a path of instance keys from the root to
+              // the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has to
+              // be applied.
+              defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
+                const { from, joins, where } = await createFilterClauses({
+                  contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
+                  filter: instanceFilter,
+                });
+                const parentId = path.length > 0 ? path[path.length - 1].id : undefined;
+                return [
+                  {
+                    fullClassName: "BisCore.PhysicalElement",
+                    query: {
+                      ecsql: `
+                        SELECT ${await createSelectClause({
+                          ecClassId: { selector: "this.ECClassId" },
+                          ecInstanceId: { selector: "this.ECInstanceId" },
+                          nodeLabel: { selector: "this.UserLabel" },
+                        })}
+                        FROM ${from} this
+                        ${joins}
+                        WHERE ${parentId ? "this.Parent.Id = ?" : "this.Parent IS NULL"} ${where ? `AND ${where}` : ""}
+                      `,
+                      bindings: parentId ? [{ type: "id", value: parentId }] : undefined,
+                    },
+                  },
+                ];
+              },
+            },
+          },
           paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
-          // Minimal nodes are used as parent nodes when requesting child hierarchy levels. Our hierarchy definition
-          // only needs parent node's key to create them.
-          createMinimalNode: ({ instanceKey, parentNode }) => ({
-            key: { type: "instances", instanceKeys: [instanceKey] },
-            parentKeys: parentNode ? [...parentNode.parentKeys, parentNode.key] : [],
-            label: "",
-          }),
         });
-        // Each path contains the nodes `hierarchyProvider.getNodes` returns for every hierarchy level
+        // Each path contains the nodes a hierarchy provider returns for every hierarchy level
         expect(nodePaths.map(({ nodesPath }) => nodesPath.map((node) => node.label))).toEqual([
           ["A", "B", "C"],
           ["A", "E"],
