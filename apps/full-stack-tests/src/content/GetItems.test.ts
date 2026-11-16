@@ -1464,6 +1464,67 @@ describe("Content", () => {
     });
 
     describe("filtering", () => {
+      it("matches missing or null values on a many-valued related path", async () => {
+        using setup = await buildTestECDb(async (builder, testName) => {
+          const schema = await importSchema(
+            testName,
+            builder,
+            `
+              <ECEntityClass typeName="A">
+                <ECProperty propertyName="Name" typeName="string" />
+              </ECEntityClass>
+              <ECEntityClass typeName="B">
+                <ECProperty propertyName="Description" typeName="string" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="AtoB" strength="referencing" modifier="None">
+                <Source multiplicity="(0..*)" roleLabel="a to b" polymorphic="true"><Class class="A" /></Source>
+                <Target multiplicity="(0..*)" roleLabel="b to a" polymorphic="true"><Class class="B" /></Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const mixed = builder.insertInstance(schema.items.A.fullName, { name: "mixed" });
+          const nonNull = builder.insertInstance(schema.items.A.fullName, { name: "non-null" });
+          const missing = builder.insertInstance(schema.items.A.fullName, { name: "missing" });
+          for (const [source, value] of [
+            [mixed, undefined],
+            [mixed, "value"],
+            [nonNull, "value"],
+          ] as const) {
+            const related = builder.insertInstance(schema.items.B.fullName, { description: value });
+            builder.insertRelationship(schema.items.AtoB.fullName, source.id, related.id);
+          }
+          return { schema, mixed, nonNull, missing };
+        });
+        const imodelAccess = createContentIModelAccess(setup.ecdb);
+        const path: RelationshipPath = [
+          {
+            sourceClassName: setup.schema.items.A.fullName,
+            targetClassName: setup.schema.items.B.fullName,
+            relationshipName: setup.schema.items.AtoB.fullName,
+          },
+        ];
+        const fieldsProvider = defineIModelFieldsProvider({
+          id: "provider_v1",
+          async getContribution() {
+            return { relatedProperties: [{ path }] };
+          },
+        });
+        const provider = await createProvider({
+          imodelAccess,
+          targets: [{ primaryClass: setup.schema.items.A.fullName }],
+          config: { imodelFieldsProviders: [fieldsProvider] },
+        });
+        const field = getPropertyFieldByName(await provider.getContentDescriptor(), "Description");
+        const filters = [{ field, operator: "is-null" as const }];
+        const expected = [setup.mixed, setup.missing];
+        expect(await provider.getSize({ filters })).toBe(expected.length);
+        expectKeys(await collect(provider.getInstanceKeys({ filters })), expected);
+        expectKeys(
+          (await collect(provider.getItems({ filters }))).map((item) => item.primaryKey),
+          expected,
+        );
+      });
+
       it("applies a value filter to restrict the returned items", async () => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const schema = await importSchema(
