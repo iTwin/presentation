@@ -52,7 +52,6 @@
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",
-    "@types/cpx2": "npm:@types/cpx@1.5.5",
     "@types/deep-equal-in-any-order": "catalog:test-tools",
     "@types/node": "catalog:build-tools",
     "@types/object-hash": "^3.0.6",

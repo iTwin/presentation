@@ -469,9 +469,6 @@ importers:
       '@testing-library/user-event':
         specifier: catalog:test-tools
         version: 14.6.10(@testing-library/dom@10.4.2)
-      '@types/cpx2':
-        specifier: npm:@types/cpx@1.5.5
-        version: '@types/cpx@1.5.5'
       '@types/deep-equal-in-any-order':
         specifier: catalog:test-tools
         version: 1.0.4
@@ -3496,9 +3493,6 @@ packages:
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
-
-  '@types/cpx@1.5.5':
-    resolution: {integrity: sha512-PwM+cN40GZcjG9YgGFp/rQGKOpTqr6scUl1Q85NHL5jieh9I203kKiArjJcExwxy4+vTABmVUNRkNvGbPnRQZg==}
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
@@ -9262,10 +9256,6 @@ snapshots:
     dependencies:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
-
-  '@types/cpx@1.5.5':
-    dependencies:
-      '@types/node': 26.6.6
 
   '@types/deep-eql@4.0.2': {}
 
