@@ -8,9 +8,9 @@
  * output. All suites are selected when `BASE_SHA` is not set (e.g. manual runs).
  */
 
-const { execFileSync } = require("child_process");
-const { appendFileSync } = require("fs");
-const { matchesGlob } = require("path");
+import { execFileSync } from "node:child_process";
+import { appendFileSync } from "node:fs";
+import { matchesGlob } from "node:path";
 
 const COMMON_PATHS = [
   "apps/performance-tests/package.json",
@@ -27,7 +27,7 @@ const COMMON_PATHS = [
   "pnpm-workspace.yaml",
   "tsconfig.json",
   ".github/workflows/benchmark.yml",
-  "scripts/getChangedBenchmarks.js",
+  "scripts/getChangedBenchmarks.mjs",
 ];
 
 const SUITES = [

@@ -31,7 +31,7 @@ jobs:
 
       - name: Detect changed suites
         id: changes
-        run: node ./scripts/getChangedBenchmarks.js
+        run: node ./scripts/getChangedBenchmarks.mjs
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

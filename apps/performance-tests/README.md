@@ -36,7 +36,7 @@ By default, each test runs once. Set `BENCHMARK_ITERATIONS=3` to report the fast
 
 The [benchmark workflow](../../.github/workflows/benchmark.yml) runs on pull requests, pushes to `master` and manual dispatch:
 
-1. [getChangedBenchmarks.js](../../scripts/getChangedBenchmarks.js) picks the suites affected by the changes. Manual runs pick all suites.
+1. [getChangedBenchmarks.mjs](../../scripts/getChangedBenchmarks.mjs) picks the suites affected by the changes. Manual runs pick all suites.
 2. The datasets get generated and cached. The cache key depends on the generators, test utilities and dependency lockfile.
 3. Each picked suite runs in its own job and produces its own report. On pull requests the job runs one iteration and posts results as a comment. On `master` it runs three iterations and publishes benchmark history to `gh-pages`.
 
