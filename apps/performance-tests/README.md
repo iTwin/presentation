@@ -38,6 +38,10 @@ The [benchmark workflow](../../.github/workflows/benchmark.yml) runs on pull req
 
 1. [getChangedBenchmarks.mjs](../../scripts/getChangedBenchmarks.mjs) picks the suites affected by the changes. Manual runs pick all suites.
 2. The datasets get generated and cached. The cache key depends on the generators, test utilities and dependency lockfile.
-3. Each picked suite runs in its own job and produces its own report. On pull requests the job runs one iteration and posts results as a comment. On `master` it runs three iterations and publishes benchmark history to `gh-pages`.
+3. Each picked suite runs in its own job. On pull requests the job runs one iteration and posts results as a comment. On `master` it runs three iterations and a separate job publishes the suite's benchmark history to `gh-pages`.
 
 Draft pull requests are skipped.
+
+### Publishing
+
+The publishing job uses its `GITHUB_TOKEN` with `contents: write` to push benchmark history to `gh-pages`. The branch allows GitHub Actions to push, but blocks force pushes and deletions.
