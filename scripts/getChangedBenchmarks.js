@@ -44,14 +44,22 @@ const SUITES = [
   },
 ];
 
-const { BASE_SHA: base, HEAD_SHA: head, GITHUB_OUTPUT: output } = process.env;
+const { BASE_SHA: base, HEAD_SHA: head, EVENT_NAME: eventName, GITHUB_OUTPUT: output } = process.env;
 // A zero SHA means there's no previous commit, e.g. when a branch is created.
-const changedFiles =
-  base && !/^0+$/.test(base)
-    ? execFileSync("git", ["diff", "--name-only", `${base}...${head}`], { encoding: "utf8" })
-        .split("\n")
-        .filter(Boolean)
-    : undefined;
+let changedFiles;
+if (base && !/^0+$/.test(base)) {
+  const range = eventName === "pull_request" ? `${base}...${head}` : `${base}..${head}`;
+  try {
+    changedFiles = execFileSync("git", ["diff", "--no-renames", "--name-only", "-z", range], { encoding: "utf8" })
+      .split("\0")
+      .filter(Boolean);
+  } catch (error) {
+    if (eventName !== "push") {
+      throw error;
+    }
+    console.warn(`Could not compare push commits ${range}: ${error.message}; running all benchmark suites.`);
+  }
+}
 
 const suites = SUITES.filter(
   ({ paths }) =>
