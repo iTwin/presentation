@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Writes the benchmark suites affected by changes between `BASE_SHA` and `HEAD_SHA` to the `suites` GitHub Actions
- * output. All suites are selected when `BASE_SHA` is not set (e.g. manual runs).
+ * Writes the benchmark suites affected by changes between `BASE_SHA` and `HEAD_SHA` and their shard runs to GitHub
+ * Actions outputs. All suites are selected when `BASE_SHA` is not set (e.g. manual runs).
+ * Each suite gets one shard per test file, matching Vitest's file-level sharding.
  */
 
 import { execFileSync } from "node:child_process";
-import { appendFileSync } from "node:fs";
+import { appendFileSync, globSync } from "node:fs";
 import { matchesGlob } from "node:path";
 
 const COMMON_PATHS = [
@@ -65,6 +66,14 @@ const suites = SUITES.filter(
   ({ paths }) =>
     !changedFiles || changedFiles.some((file) => [...COMMON_PATHS, ...paths].some((glob) => matchesGlob(file, glob))),
 ).map(({ id, name }) => ({ id, name }));
+const runs = suites.flatMap((suite) => {
+  const shards = globSync(`apps/performance-tests/src/${suite.id}/**/*.test.ts`).length;
+  if (shards === 0) {
+    throw new Error(`No benchmark test files found for suite "${suite.id}".`);
+  }
+  return Array.from({ length: shards }, (_, index) => ({ ...suite, shard: index + 1, shards }));
+});
 
 console.log(`Changed benchmark suites: ${suites.map(({ name }) => name).join(", ") || "none"}`);
 appendFileSync(output, `suites=${JSON.stringify(suites)}\n`);
+appendFileSync(output, `runs=${JSON.stringify(runs)}\n`);
