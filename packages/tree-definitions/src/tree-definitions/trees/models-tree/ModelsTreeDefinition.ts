@@ -335,8 +335,18 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     this.#schemaProvider = props.imodelAccess;
   }
 
-  public preProcessNode: NodePreProcessor = async ({ node }) => {
+  public preProcessNode: NodePreProcessor = async ({ node, parentNode }) => {
     if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
+      if (parentNode && ModelsTreeNodeInternal.isElementNode(parentNode)) {
+        return {
+          ...node,
+          extendedData: {
+            ...node.extendedData,
+            modelIds: [parentNode.extendedData.modelId],
+            parentElementIds: parentNode.key.instanceKeys.map(({ id }) => id),
+          },
+        };
+      }
       return {
         ...node,
         extendedData: {
@@ -853,7 +863,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     extendedData,
   }: {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
-    extendedData: Parameters<DefineHierarchyLevelProps["createSelectClause"]>[0]["extendedData"];
+    extendedData?: Parameters<DefineHierarchyLevelProps["createSelectClause"]>[0]["extendedData"];
   }): Promise<string> {
     return createSelectClause({
       ecClassId: { selector: "this.ECClassId" },
@@ -953,7 +963,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     assert(ModelsTreeNodeInternal.isElementNode(parentNode), "Expected parent node to be element node");
     const parentCategoryId = parentNode.extendedData.categoryId;
-    const parentModelId = parentNode.extendedData.modelId;
 
     const [elementInstanceFilterClauses, categoryInstanceFilterClauses, allSubModels, elementsHiddenClassesFilter] =
       await Promise.all([
@@ -993,7 +1002,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           ${elementInstanceFilterClauses.joins}
           ${createWhereClause({
             conditions: [
-              `this.Category.Id = ${parentCategoryId}`,
+              `this.Category.Id = ?`,
               createExcludedClassesClause({
                 alias: "this",
                 excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -1003,26 +1012,22 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ],
           })}
         `,
-          bindings: [...bindings, { type: "idset", value: elementIds }],
+          bindings: [...bindings, { type: "idset", value: elementIds }, { type: "id", value: parentCategoryId }],
         },
       },
       {
         fullClassName: CLASS_NAMES.SpatialCategory,
         query: {
+          // Parent-specific ids (`modelIds`, `parentElementIds`) are set in `preProcessNode` rather than inlined into
+          // the query, so that the query text stays the same for every parent element and prepared statements get reused.
           ecsql: `
           SELECT
-            ${await this.createCategoryNodeSelectClause({
-              createSelectClause,
-              extendedData: {
-                modelIds: { selector: createIdsSelector([parentModelId]) },
-                parentElementIds: { selector: createIdsSelector(elementIds) },
-              },
-            })}
+            ${await this.createCategoryNodeSelectClause({ createSelectClause })}
           FROM ${categoryInstanceFilterClauses.from} this
           ${categoryInstanceFilterClauses.joins ? `${categoryInstanceFilterClauses.joins}` : ""}
           ${createWhereClause({
             conditions: [
-              `this.ECInstanceId <> ${parentCategoryId}`,
+              `this.ECInstanceId <> ?`,
               `this.ECInstanceId IN (
                 SELECT DISTINCT ce.Category.Id
                 FROM ${this.#hierarchyConfig.elements.baseClass} ce
@@ -1041,7 +1046,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ],
           })}
         `,
-          bindings: [{ type: "idset", value: elementIds }],
+          bindings: [
+            { type: "id", value: parentCategoryId },
+            { type: "idset", value: elementIds },
+          ],
         },
       },
     ];
