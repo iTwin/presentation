@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import fs from "fs";
+import { createRequire } from "module";
 import path from "path";
 import {
   getFullSchemaXml,
@@ -859,7 +860,7 @@ export class Datasets {
     packageName: string;
     schemaFileName: string;
   }): Promise<string> {
-    const schemaFile = path.join(__dirname, "..", "..", "node_modules", "@bentley", packageName, schemaFileName);
+    const schemaFile = createRequire(import.meta.url).resolve(`@bentley/${packageName}/${schemaFileName}`);
     return fs.readFileSync(schemaFile, "utf8");
   }
 }
