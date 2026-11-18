@@ -141,9 +141,6 @@ export const StrataKitTreeRenderer: FC<
       }
 
       requestAnimationFrame(() => {
-        if (document.activeElement !== document.body) {
-          return;
-        }
         // A collapsed parent can leave a shallower sibling at the same index.
         parentRef.current?.querySelector<HTMLElement>(`[data-index="${index}"][aria-level="${level}"]`)?.focus();
       });
