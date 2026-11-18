@@ -116,7 +116,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       await expect.element(locator.getByRole("treeitem", { name: "Loaded Child" })).toHaveFocus();
     });
 
-    it("does not move focus after a loading placeholder is blurred", async () => {
+    it("does not move focus on children load if active element is not placeholder", async () => {
       const props = createDefaultProps();
       const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
         <div style={{ height: 100, width: 300 }}>
@@ -145,6 +145,70 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       );
 
       await expect.element(parent).toHaveFocus();
+    });
+
+    it("does not focus another branch at the placeholder's former index and level", async () => {
+      const props = createDefaultProps();
+      const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
+        <div style={{ height: 200, width: 300 }}>
+          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
+        </div>
+      );
+      const { locator, rerender } = await renderWithTheme(
+        renderTreeWithNodes([
+          createTreeNode({
+            id: "a",
+            label: "A",
+            isExpanded: true,
+            children: [
+              createTreeNode({ id: "b", label: "B" }),
+              createTreeNode({ id: "c", label: "C", isExpanded: true, isLoading: true, children: true }),
+            ],
+          }),
+          createTreeNode({
+            id: "d",
+            label: "D",
+            children: [createTreeNode({ id: "e", label: "E", children: [createTreeNode({ id: "f", label: "F" })] })],
+          }),
+        ]),
+        { colorScheme },
+      );
+
+      const placeholder = locator.getByRole("treeitem", { name: "Loading" }).element() as HTMLElement;
+      const placeholderIndex = placeholder.getAttribute("data-index");
+      const placeholderLevel = placeholder.getAttribute("aria-level");
+      placeholder.focus();
+
+      await rerender(
+        renderTreeWithNodes([
+          createTreeNode({
+            id: "a",
+            label: "A",
+            children: [
+              createTreeNode({ id: "b", label: "B" }),
+              createTreeNode({ id: "c", label: "C", isExpanded: true, isLoading: true, children: true }),
+            ],
+          }),
+          createTreeNode({
+            id: "d",
+            label: "D",
+            isExpanded: true,
+            children: [
+              createTreeNode({
+                id: "e",
+                label: "E",
+                isExpanded: true,
+                children: [createTreeNode({ id: "f", label: "F" })],
+              }),
+            ],
+          }),
+        ]),
+      );
+
+      const otherBranchChild = locator.getByRole("treeitem", { name: "F" });
+      expect(otherBranchChild.element().getAttribute("data-index")).toBe(placeholderIndex);
+      expect(otherBranchChild.element().getAttribute("aria-level")).toBe(placeholderLevel);
+      await expect.element(otherBranchChild).not.toHaveFocus();
     });
 
     it("renders tree with selected node", async () => {

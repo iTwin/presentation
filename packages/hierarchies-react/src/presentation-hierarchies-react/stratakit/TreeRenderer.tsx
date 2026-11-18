@@ -117,19 +117,8 @@ export const StrataKitTreeRenderer: FC<
     });
     const flatItems = useFlatTreeItems(rootNodes);
     const errorNodes = useErrorNodes(rootNodes);
-    const focusedPlaceholderParentId = useRef<string | undefined>(undefined);
-    const onPlaceholderFocus = useCallback(
-      (event: Parameters<NonNullable<StrataKitTreeItemProps["onFocus"]>>[0]) => {
-        const index = Number(event.currentTarget.dataset.index);
-        focusedPlaceholderParentId.current = flatItems[index - 1]?.id;
-      },
-      [flatItems],
-    );
-    const onPlaceholderBlur = useCallback(() => {
-      focusedPlaceholderParentId.current = undefined;
-    }, []);
-
     const parentRef = useRef<HTMLDivElement>(null);
+    const { onPlaceholderFocus, onPlaceholderBlur } = usePlaceholderFocus(flatItems, parentRef);
 
     // oxlint-disable-next-line react-hooks/incompatible-library
     const virtualizer = useVirtualizer({
@@ -140,33 +129,6 @@ export const StrataKitTreeRenderer: FC<
       overscan: 10,
     });
     const items = virtualizer.getVirtualItems();
-    useLayoutEffect(() => {
-      const parentId = focusedPlaceholderParentId.current;
-      if (parentId === undefined) {
-        return;
-      }
-
-      const parentIndex = flatItems.findIndex((item) => item.id === parentId);
-      // parent is no longer visible we should not attempt to focus its children
-      if (parentIndex === -1) {
-        focusedPlaceholderParentId.current = undefined;
-        return;
-      }
-
-      const parent = flatItems[parentIndex];
-      const firstChild = flatItems[parentIndex + 1];
-      if (isPlaceholderItem(firstChild)) {
-        return;
-      }
-      // the relationship between nodes are not parent and child as expected
-      if (firstChild.level !== parent.level + 1) {
-        focusedPlaceholderParentId.current = undefined;
-        return;
-      }
-
-      parentRef.current?.querySelector<HTMLElement>(`[data-index="${parentIndex + 1}"]`)?.focus();
-      focusedPlaceholderParentId.current = undefined;
-    }, [flatItems]);
     const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
 
     const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
@@ -380,6 +342,47 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
     }
   }
   return undefined;
+}
+
+function usePlaceholderFocus(flatItems: FlatTreeItem[], parentRef: { current: HTMLDivElement | null }) {
+  const focusedParentId = useRef<string | undefined>(undefined);
+  const onPlaceholderFocus = useCallback(
+    (event: Parameters<NonNullable<StrataKitTreeItemProps["onFocus"]>>[0]) => {
+      const index = Number(event.currentTarget.dataset.index);
+      focusedParentId.current = flatItems[index - 1]?.id;
+    },
+    [flatItems],
+  );
+  const onPlaceholderBlur = useCallback(() => {
+    focusedParentId.current = undefined;
+  }, []);
+
+  useLayoutEffect(() => {
+    const parentId = focusedParentId.current;
+    if (parentId === undefined) {
+      return;
+    }
+
+    const parentIndex = flatItems.findIndex((item) => item.id === parentId);
+    if (parentIndex === -1) {
+      focusedParentId.current = undefined;
+      return;
+    }
+
+    const parent = flatItems[parentIndex];
+    const firstChild = flatItems[parentIndex + 1];
+    if (firstChild.level !== parent.level + 1) {
+      focusedParentId.current = undefined;
+      return;
+    }
+    if (isPlaceholderItem(firstChild)) {
+      return;
+    }
+    parentRef.current?.querySelector<HTMLElement>(`[data-index="${parentIndex + 1}"]`)?.focus();
+    focusedParentId.current = undefined;
+  }, [flatItems, parentRef]);
+
+  return { onPlaceholderFocus, onPlaceholderBlur };
 }
 
 type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
