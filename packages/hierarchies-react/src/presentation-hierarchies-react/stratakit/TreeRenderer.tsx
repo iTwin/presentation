@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
@@ -117,6 +117,17 @@ export const StrataKitTreeRenderer: FC<
     });
     const flatItems = useFlatTreeItems(rootNodes);
     const errorNodes = useErrorNodes(rootNodes);
+    const focusedPlaceholderParentId = useRef<string | undefined>(undefined);
+    const onPlaceholderFocus = useCallback(
+      (event: Parameters<NonNullable<StrataKitTreeItemProps["onFocus"]>>[0]) => {
+        const index = Number(event.currentTarget.dataset.index);
+        focusedPlaceholderParentId.current = flatItems[index - 1]?.id;
+      },
+      [flatItems],
+    );
+    const onPlaceholderBlur = useCallback(() => {
+      focusedPlaceholderParentId.current = undefined;
+    }, []);
 
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -129,22 +140,33 @@ export const StrataKitTreeRenderer: FC<
       overscan: 10,
     });
     const items = virtualizer.getVirtualItems();
-    const onPlaceholderUnmount = useCallback((element: HTMLElement | null) => {
-      if (!element || document.activeElement !== element) {
+    useLayoutEffect(() => {
+      const parentId = focusedPlaceholderParentId.current;
+      if (parentId === undefined) {
         return;
       }
 
-      const index = element.dataset.index;
-      const level = element.getAttribute("aria-level");
-      if (index === undefined || level === null) {
+      const parentIndex = flatItems.findIndex((item) => item.id === parentId);
+      // parent is no longer visible we should not attempt to focus its children
+      if (parentIndex === -1) {
+        focusedPlaceholderParentId.current = undefined;
         return;
       }
 
-      requestAnimationFrame(() => {
-        // A collapsed parent can leave a shallower sibling at the same index.
-        parentRef.current?.querySelector<HTMLElement>(`[data-index="${index}"][aria-level="${level}"]`)?.focus();
-      });
-    }, []);
+      const parent = flatItems[parentIndex];
+      const firstChild = flatItems[parentIndex + 1];
+      if (isPlaceholderItem(firstChild)) {
+        return;
+      }
+      // the relationship between nodes are not parent and child as expected
+      if (firstChild.level !== parent.level + 1) {
+        focusedPlaceholderParentId.current = undefined;
+        return;
+      }
+
+      parentRef.current?.querySelector<HTMLElement>(`[data-index="${parentIndex + 1}"]`)?.focus();
+      focusedPlaceholderParentId.current = undefined;
+    }, [flatItems]);
     const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
 
     const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
@@ -223,7 +245,7 @@ export const StrataKitTreeRenderer: FC<
                     data-index={virtualizedItem.index}
                     start={virtualizedItem.start}
                     item={item}
-                    onPlaceholderUnmount={onPlaceholderUnmount}
+                    placeholderProps={{ onFocus: onPlaceholderFocus, onBlur: onPlaceholderBlur }}
                     selected={selected}
                     expandNode={expandNode}
                     reloadTree={reloadTree}
@@ -364,12 +386,12 @@ type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
   "data-index": number;
   item: FlatTreeItem;
-  onPlaceholderUnmount: (element: HTMLElement | null) => void;
+  placeholderProps: Pick<StrataKitTreeItemProps, "onFocus" | "onBlur">;
 };
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    { start, item, onPlaceholderUnmount, ...props },
+    { start, item, placeholderProps, ...props },
     forwardedRef,
   ) {
     const style: CSSProperties = useMemo(
@@ -393,7 +415,7 @@ const VirtualTreeItem = memo(
           aria-level={item.level}
           aria-posinset={1}
           aria-setsize={1}
-          onUnmount={onPlaceholderUnmount}
+          {...placeholderProps}
         />
       );
     }

@@ -116,6 +116,37 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       await expect.element(locator.getByRole("treeitem", { name: "Loaded Child" })).toHaveFocus();
     });
 
+    it("does not move focus after a loading placeholder is blurred", async () => {
+      const props = createDefaultProps();
+      const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
+        <div style={{ height: 100, width: 300 }}>
+          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
+        </div>
+      );
+      const { locator, rerender } = await renderWithTheme(
+        renderTreeWithNodes([
+          createTreeNode({ id: "parent", label: "Parent", isExpanded: true, isLoading: true, children: true }),
+        ]),
+        { colorScheme },
+      );
+
+      (locator.getByRole("treeitem", { name: "Loading" }).element() as HTMLElement).focus();
+      const parent = locator.getByRole("treeitem", { name: "Parent" });
+      (parent.element() as HTMLElement).focus();
+      await rerender(
+        renderTreeWithNodes([
+          createTreeNode({
+            id: "parent",
+            label: "Parent",
+            isExpanded: true,
+            children: [createTreeNode({ id: "child", label: "Loaded Child" })],
+          }),
+        ]),
+      );
+
+      await expect.element(parent).toHaveFocus();
+    });
+
     it("renders tree with selected node", async () => {
       const props = createDefaultProps({
         rootNodes: [
