@@ -36,14 +36,12 @@ import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
-  createIdsSelector,
   createWhereClause,
   getClassesByPerspective,
   getOptimalBatchSize,
   getOrCreate,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
-  parseIdsSelectorResult,
 } from "../../shared/Utils.js";
 import { CategoriesTreeNodeInternal } from "./CategoriesTreeNodeInternal.js";
 
@@ -282,10 +280,7 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
           extendedData: { ...node.extendedData, modelIds: parentNode.key.instanceKeys.map(({ id }) => id) },
         };
       }
-      return {
-        ...node,
-        extendedData: { ...node.extendedData, modelIds: parseIdsSelectorResult(node.extendedData.modelIds) },
-      };
+      return { ...node, extendedData: { ...node.extendedData, modelIds: [] } };
     }
     if (
       CategoriesTreeNodeInternal.isModelNode(node) &&
@@ -940,7 +935,6 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               extendedData: {
                 type: "category",
                 description: { selector: "this.Description" },
-                modelIds: { selector: createIdsSelector(new Array<ModelId>()) },
                 hasSubCategories:
                   categoriesWithMultipleSubCategories.length > 0
                     ? {
@@ -1054,7 +1048,6 @@ export class CategoriesTreeDefinition implements HierarchyDefinition {
               extendedData: {
                 type: "category",
                 description: { selector: "this.Description" },
-                modelIds: { selector: createIdsSelector(new Array<ModelId>()) },
                 hasSubCategories: { selector: `IFNULL((${hasChildSubCategories}), 0)` },
               },
             })}
