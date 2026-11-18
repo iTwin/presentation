@@ -34,12 +34,10 @@ import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
-  createIdsSelector,
   createWhereClause,
   getOptimalBatchSize,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
-  parseIdsSelectorResult,
 } from "../../shared/Utils.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
@@ -70,6 +68,7 @@ import type {
 import type { CategoryId } from "../../shared/Types.js";
 import type { DeepRequired, HiddenClassesFilter } from "../../shared/Utils.js";
 import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
+import type { CategoryNodeProps } from "./ModelsTreeNodeInternal.js";
 
 /**
  * An element class grouping node that can be used as a search target.
@@ -236,6 +235,65 @@ type ModelsTreeChildrenQueryProps = Pick<
   "instanceFilter" | "createSelectClause" | "createFilterClauses"
 >;
 
+/** Finds the closest entry of the given class in the path, going from its end. */
+function findClosestPathEntry(path: ModelsTreePathProps["path"], className: string) {
+  for (let i = path.length - 1; i >= 0; --i) {
+    if (path[i].className === className) {
+      return path[i];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Returns ID of the category of the element at the end of the path. Child elements with the same category as their
+ * parent element aren't grouped under category nodes, so the closest category in the path is the element's category.
+ */
+function getElementCategoryId(path: ModelsTreePathProps["path"]): Id64String {
+  const category = findClosestPathEntry(path, CLASS_NAMES.SpatialCategory);
+  assert(category !== undefined, "Expected element to have a category in its path");
+  return category.id;
+}
+
+/** Returns IDs of models and parent elements of category nodes - categories are children of either models or elements. */
+function getCategoryNodeParentIds(parentProps: ModelsTreeProcessorParentProps): CategoryNodeProps {
+  if ("path" in parentProps) {
+    const { path } = parentProps;
+    const parentEntry = path.at(-1);
+    assert(parentEntry !== undefined, "Expected category node to have a parent");
+    if (parentEntry.className === CLASS_NAMES.GeometricElement3d) {
+      // elements are in the closest model of their path
+      const model = findClosestPathEntry(path, CLASS_NAMES.GeometricModel3d);
+      assert(model !== undefined, "Expected element to have a model in its path");
+      return { modelIds: [model.id], parentElementIds: [parentEntry.id] };
+    }
+    assert(parentEntry.className === CLASS_NAMES.GeometricModel3d, "Expected category node parent to be a model");
+    return { modelIds: [parentEntry.id] };
+  }
+  const { parentNode } = parentProps;
+  assert(parentNode !== undefined, "Expected category node to have a parent node");
+  if (ModelsTreeNodeInternal.isElementNode(parentNode)) {
+    return {
+      modelIds: [parentNode.extendedData.modelId],
+      parentElementIds: parentNode.key.instanceKeys.map(({ id }) => id),
+    };
+  }
+  assert(ModelsTreeNodeInternal.isModelNode(parentNode), "Expected category node parent to be a model node");
+  return { modelIds: parentNode.key.instanceKeys.map(({ id }) => id) };
+}
+
+/** Returns the category of the modeled element, if the model is a sub-model, i.e. a child of an element. */
+function getSubModeledElementCategory(parentProps: ModelsTreeProcessorParentProps): Id64String | undefined {
+  if ("path" in parentProps) {
+    const { path } = parentProps;
+    return path.at(-1)?.className === CLASS_NAMES.GeometricElement3d ? getElementCategoryId(path) : undefined;
+  }
+  const { parentNode } = parentProps;
+  return parentNode && ModelsTreeNodeInternal.isElementNode(parentNode)
+    ? parentNode.extendedData.categoryId
+    : undefined;
+}
+
 /** @internal */
 interface ModelsTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
@@ -331,17 +389,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
           {
             parentInstancesNodePredicate: CLASS_NAMES.ISubModeledElement,
             definitions: async ({
-              parentNode,
               parentNodeInstanceIds,
               ...requestProps
-            }: DefineInstanceNodeChildHierarchyLevelProps) => {
-              assert(ModelsTreeNodeInternal.isElementNode(parentNode), "Expected parent node to be element node");
-              return this.createISubModeledElementChildrenQuery({
-                ...requestProps,
-                elementIds: parentNodeInstanceIds,
-                categoryId: parentNode.extendedData.categoryId,
-              });
-            },
+            }: DefineInstanceNodeChildHierarchyLevelProps) =>
+              this.createISubModeledElementChildrenQuery({ ...requestProps, elementIds: parentNodeInstanceIds }),
           },
           {
             parentInstancesNodePredicate: CLASS_NAMES.GeometricModel3d,
@@ -367,7 +418,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
               return this.createSpatialCategoryChildrenQuery({
                 ...requestProps,
                 categoryIds: parentNodeInstanceIds,
-                modelIds: parseIdsSelectorResult(parentNode.extendedData.modelIds),
+                modelIds: parentNode.extendedData.modelIds,
                 parentElementIds: parentNode.extendedData.parentElementIds,
               });
             },
@@ -384,7 +435,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
                 ...requestProps,
                 elementIds: parentNodeInstanceIds,
                 categoryId: parentNode.extendedData.categoryId,
-                modelId: parentNode.extendedData.modelId,
               });
             },
           },
@@ -395,18 +445,17 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
     this.#schemaProvider = props.imodelAccess;
   }
 
-  public preProcessNode: NodePreProcessor<ModelsTreeProcessorParentProps> = async ({ node }) => {
+  // Parent-specific ids are assigned here rather than inlined into queries, so that query text stays the same for
+  // every parent and prepared statements get reused.
+  public preProcessNode: NodePreProcessor<ModelsTreeProcessorParentProps> = async ({ node, ...parentProps }) => {
     if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
-      return {
-        ...node,
-        extendedData: {
-          ...node.extendedData,
-          modelIds: parseIdsSelectorResult(node.extendedData.modelIds),
-          ...(node.extendedData.parentElementIds !== undefined
-            ? { parentElementIds: parseIdsSelectorResult(node.extendedData.parentElementIds) }
-            : {}),
-        },
-      };
+      return { ...node, extendedData: { ...node.extendedData, ...getCategoryNodeParentIds(parentProps) } };
+    }
+    if (ModelsTreeNodeInternal.isModelNode(node)) {
+      const subModeledElementCategory = getSubModeledElementCategory(parentProps);
+      if (subModeledElementCategory !== undefined) {
+        return { ...node, extendedData: { ...node.extendedData, subModeledElementCategory } };
+      }
     }
     return node;
   };
@@ -480,69 +529,27 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
     switch (lastPathEntry.className) {
       case CLASS_NAMES.Subject:
         return this.createSubjectChildrenQuery({ ...requestProps, parentNodeInstanceIds: [lastPathEntry.id] });
-      case CLASS_NAMES.GeometricModel3d: {
-        let subModeledElementCategory = undefined;
-        for (let i = path.length - 2; i >= 0; --i) {
-          const entry = path[i];
-          if (entry.className === CLASS_NAMES.SpatialCategory) {
-            subModeledElementCategory = entry.id;
-            break;
-          }
-        }
+      case CLASS_NAMES.GeometricModel3d:
         return this.createGeometricModel3dChildrenQuery({
           ...requestProps,
           modelIds: [lastPathEntry.id],
-          subModeledElementCategory,
+          subModeledElementCategory: getSubModeledElementCategory({ path: path.slice(0, -1) }),
         });
-      }
-      case CLASS_NAMES.SpatialCategory: {
-        // categories are children of either a model or an element - in the latter case they group the element's children
-        const parentEntry = path.at(-2);
-        const parentElementId = parentEntry?.className === CLASS_NAMES.GeometricElement3d ? parentEntry.id : undefined;
-        let modelId = undefined;
-        for (let i = path.length - 2; i >= 0; --i) {
-          const entry = path[i];
-          if (entry.className === CLASS_NAMES.GeometricModel3d) {
-            modelId = entry.id;
-            break;
-          }
-        }
-        assert(!!modelId);
+      case CLASS_NAMES.SpatialCategory:
         return this.createSpatialCategoryChildrenQuery({
           ...requestProps,
           categoryIds: [lastPathEntry.id],
-          modelIds: [modelId],
-          parentElementIds: parentElementId ? [parentElementId] : undefined,
+          ...getCategoryNodeParentIds({ path: path.slice(0, -1) }),
         });
-      }
       case CLASS_NAMES.GeometricElement3d: {
-        let categoryId = undefined;
-        let modelId = undefined;
-        for (let i = path.length - 2; i >= 0; --i) {
-          const entry = path[i];
-          if (!categoryId && entry.className === CLASS_NAMES.SpatialCategory) {
-            categoryId = entry.id;
-          }
-          if (!modelId && entry.className === CLASS_NAMES.GeometricModel3d) {
-            modelId = entry.id;
-          }
-          if (modelId && categoryId) {
-            break;
-          }
-        }
-        assert(!!modelId && !!categoryId);
+        const elementIds = [lastPathEntry.id];
         const [childrenFromParent, childrenFromModel] = await Promise.all([
           this.createGeometricElement3dChildrenQuery({
             ...requestProps,
-            elementIds: [lastPathEntry.id],
-            categoryId: categoryId,
-            modelId: modelId,
+            elementIds,
+            categoryId: getElementCategoryId(path),
           }),
-          this.createISubModeledElementChildrenQuery({
-            ...requestProps,
-            elementIds: [lastPathEntry.id],
-            categoryId: categoryId,
-          }),
+          this.createISubModeledElementChildrenQuery({ ...requestProps, elementIds }),
         ]);
         return [...childrenFromParent, ...childrenFromModel];
       }
@@ -713,12 +720,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
 
   private async createISubModeledElementChildrenQuery({
     elementIds,
-    categoryId,
     createSelectClause,
-  }: ModelsTreeChildrenQueryProps & {
-    elementIds: Id64String[];
-    categoryId: Id64String;
-  }): Promise<HierarchyLevelDefinition> {
+  }: ModelsTreeChildrenQueryProps & { elementIds: Id64String[] }): Promise<HierarchyLevelDefinition> {
     const elementsHiddenClassesFilter = await ECSql.createHiddenClassesFilter({
       schemaProvider: this.#schemaProvider,
       baseClassName: this.#hierarchyConfig.elements.baseClass,
@@ -737,7 +740,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
                 nodeLabel: "", // doesn't matter - the node is always hidden
                 hideNodeInHierarchy: true,
                 hasChildren: true,
-                extendedData: { type: "model", subModeledElementCategory: { selector: `IdToHex(${categoryId})` } },
+                extendedData: { type: "model" },
               })}
             FROM ${CLASS_NAMES.GeometricModel3d} this
             JOIN IdSet(?) elementIdSet ON this.ModeledElement.Id = elementIdSet.id
@@ -841,10 +844,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
               // filter joins may traverse to-many relationships and return the same category multiple times
               categoryInstanceFilterClauses.joins ? "DISTINCT" : ""
             }
-              ${await this.createCategoryNodeSelectClause({
-                createSelectClause,
-                extendedData: { modelIds: { selector: createIdsSelector(modelIds) } },
-              })}
+              ${await this.createCategoryNodeSelectClause({ createSelectClause })}
             FROM ${categoryInstanceFilterClauses.from} this
             ${
               categoriesToShow
@@ -872,13 +872,16 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
             ${createWhereClause({
               conditions: [
                 categoryInstanceFilterClauses.where,
-                !categoriesToShow &&
-                  subModeledElementCategory !== undefined &&
-                  `this.ECInstanceId <> ${subModeledElementCategory}`,
+                !categoriesToShow && subModeledElementCategory !== undefined && `this.ECInstanceId <> ?`,
               ],
             })}
           `,
-          bindings: [{ type: "idset", value: categoriesToShow ? categoriesToShow : modelIds }],
+          bindings: [
+            { type: "idset", value: categoriesToShow ? categoriesToShow : modelIds },
+            ...(!categoriesToShow && subModeledElementCategory !== undefined
+              ? [{ type: "id" as const, value: subModeledElementCategory }]
+              : []),
+          ],
         },
       });
     }
@@ -902,7 +905,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
             ${createWhereClause({
               conditions: [
                 "this.Parent.Id IS NULL",
-                `this.Category.Id = ${subModeledElementCategory}`,
+                `this.Category.Id = ?`,
                 createExcludedClassesClause({
                   alias: "this",
                   excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -912,7 +915,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
               ],
             })}
           `,
-          bindings: [...bindings, { type: "idset", value: modelIds }],
+          bindings: [...bindings, { type: "idset", value: modelIds }, { type: "id", value: subModeledElementCategory }],
         },
       });
     }
@@ -1006,10 +1009,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
 
   private async createCategoryNodeSelectClause({
     createSelectClause,
-    extendedData,
   }: {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
-    extendedData: Parameters<DefineHierarchyLevelProps["createSelectClause"]>[0]["extendedData"];
   }): Promise<string> {
     return createSelectClause({
       ecClassId: { selector: "this.ECClassId" },
@@ -1019,7 +1020,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
         ? { grouping: { byLabel: { action: "merge", groupId: "category" } } }
         : {}),
       hasChildren: true,
-      extendedData: { type: "category", ...extendedData },
+      extendedData: { type: "category" },
       supportsFiltering: this.supportsFiltering(),
     });
   }
@@ -1035,7 +1036,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
     categoryIds: Id64String[];
     modelIds: Id64String[];
     /** IDs of parent elements, if the categories group child elements of elements. */
-    parentElementIds: Id64String[] | undefined;
+    parentElementIds?: Id64String[];
   }): Promise<HierarchyLevelDefinition> {
     const [instanceFilterClauses, allSubModels, elementsHiddenClassesFilter] = await Promise.all([
       createFilterClauses({
@@ -1106,14 +1107,12 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
   private async createGeometricElement3dChildrenQuery({
     elementIds,
     categoryId: parentCategoryId,
-    modelId: parentModelId,
     instanceFilter,
     createSelectClause,
     createFilterClauses,
   }: ModelsTreeChildrenQueryProps & {
     elementIds: Id64String[];
     categoryId: Id64String;
-    modelId: Id64String;
   }): Promise<HierarchyLevelDefinition> {
     const [elementInstanceFilterClauses, categoryInstanceFilterClauses, allSubModels, elementsHiddenClassesFilter] =
       await Promise.all([
@@ -1153,7 +1152,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
           ${elementInstanceFilterClauses.joins}
           ${createWhereClause({
             conditions: [
-              `this.Category.Id = ${parentCategoryId}`,
+              `this.Category.Id = ?`,
               createExcludedClassesClause({
                 alias: "this",
                 excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -1163,26 +1162,22 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
             ],
           })}
         `,
-          bindings: [...bindings, { type: "idset", value: elementIds }],
+          bindings: [...bindings, { type: "idset", value: elementIds }, { type: "id", value: parentCategoryId }],
         },
       },
       {
         fullClassName: CLASS_NAMES.SpatialCategory,
         query: {
+          // Parent-specific ids (`modelIds`, `parentElementIds`) are set in `preProcessNode` rather than inlined into
+          // the query, so that the query text stays the same for every parent element and prepared statements get reused.
           ecsql: `
           SELECT
-            ${await this.createCategoryNodeSelectClause({
-              createSelectClause,
-              extendedData: {
-                modelIds: { selector: createIdsSelector([parentModelId]) },
-                parentElementIds: { selector: createIdsSelector(elementIds) },
-              },
-            })}
+            ${await this.createCategoryNodeSelectClause({ createSelectClause })}
           FROM ${categoryInstanceFilterClauses.from} this
           ${categoryInstanceFilterClauses.joins ? `${categoryInstanceFilterClauses.joins}` : ""}
           ${createWhereClause({
             conditions: [
-              `this.ECInstanceId <> ${parentCategoryId}`,
+              `this.ECInstanceId <> ?`,
               `this.ECInstanceId IN (
                 SELECT DISTINCT ce.Category.Id
                 FROM ${this.#hierarchyConfig.elements.baseClass} ce
@@ -1201,7 +1196,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
             ],
           })}
         `,
-          bindings: [{ type: "idset", value: elementIds }],
+          bindings: [
+            { type: "id", value: parentCategoryId },
+            { type: "idset", value: elementIds },
+          ],
         },
       },
     ];
