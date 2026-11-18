@@ -116,6 +116,35 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       await expect.element(locator.getByRole("treeitem", { name: "Loaded Child" })).toHaveFocus();
     });
 
+    it("returns focus to the parent when loading children fails", async () => {
+      const props = createDefaultProps();
+      const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
+        <div style={{ height: 100, width: 300 }}>
+          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
+        </div>
+      );
+      const { locator, rerender } = await renderWithTheme(
+        renderTreeWithNodes([
+          createTreeNode({ id: "parent", label: "Parent", isExpanded: true, isLoading: true, children: true }),
+        ]),
+        { colorScheme },
+      );
+
+      (locator.getByRole("treeitem", { name: "Loading" }).element() as HTMLElement).focus();
+      await rerender(
+        renderTreeWithNodes([
+          createTreeNode({
+            id: "parent",
+            label: "Parent",
+            isExpanded: true,
+            errors: [{ id: "children-error", type: "ChildrenLoad", message: "Failed to load children" }],
+          }),
+        ]),
+      );
+
+      await expect.element(locator.getByRole("treeitem", { name: "Parent" })).toHaveFocus();
+    });
+
     it("does not move focus on children load if active element is not placeholder", async () => {
       const props = createDefaultProps();
       const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (

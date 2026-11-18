@@ -371,14 +371,12 @@ function usePlaceholderFocus(flatItems: FlatTreeItem[], parentRef: { current: HT
 
     const parent = flatItems[parentIndex];
     const firstChild = flatItems[parentIndex + 1];
-    if (firstChild.level !== parent.level + 1) {
-      focusedParentId.current = undefined;
+    if (firstChild && isPlaceholderItem(firstChild)) {
       return;
     }
-    if (isPlaceholderItem(firstChild)) {
-      return;
-    }
-    parentRef.current?.querySelector<HTMLElement>(`[data-index="${parentIndex + 1}"]`)?.focus();
+    // If loading produces no direct child, keep focus on the parent.
+    const focusIndex = firstChild && firstChild.level === parent.level + 1 ? parentIndex + 1 : parentIndex;
+    parentRef.current?.querySelector<HTMLElement>(`[data-index="${focusIndex}"]`)?.focus();
     focusedParentId.current = undefined;
   }, [flatItems, parentRef]);
 
