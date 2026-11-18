@@ -177,8 +177,8 @@ export function createModelsTreeIdsProvider({
     });
     conditions.push(`
       EXISTS (
-        SELECT 1 FROM ${hierarchyConfig.elements.baseClass} e
-        ${createWhereClause({ conditions: [`e.Model.Id = ${modelAlias}.ECInstanceId`, elementsHiddenClassesFilter.createWhereClause("e")] })}
+        SELECT 1 FROM ${CLASS_NAMES.Element} e
+        ${createWhereClause({ conditions: [`e.Model.Id = ${modelAlias}.ECInstanceId`, elementsHiddenClassesFilter.createWhereClause("e"), `e.ECClassId IS (${hierarchyConfig.elements.baseClass})`] })}
       )
     `);
     return { conditions };

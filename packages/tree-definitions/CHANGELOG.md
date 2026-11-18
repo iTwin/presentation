@@ -1,5 +1,16 @@
 # @itwin/presentation-tree-definitions
 
+## 0.3.2
+
+### Patch Changes
+
+- [#1738](https://github.com/iTwin/presentation/pull/1738): Models and Categories trees: Improve performance of loading child nodes of elements.
+- [#1717](https://github.com/iTwin/presentation/pull/1717): Improve query performance
+- [#1719](https://github.com/iTwin/presentation/pull/1719): Bump iTwin.js Core dependencies to `5.15.1`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.1.1
+  - @itwin/presentation-shared@2.2.1
+
 ## 0.3.1
 
 ### Patch Changes

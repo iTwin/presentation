@@ -34,12 +34,10 @@ import { fromWithRelease, releaseMainThreadOnItemsCount, toObservable, toPromise
 import { catchBeSQLiteInterrupts, SearchLimitExceededError } from "../../shared/TreeErrors.js";
 import {
   createExcludedClassesClause,
-  createIdsSelector,
   createWhereClause,
   getOptimalBatchSize,
   groupingNodeDataFromChildren,
   mergeWithDefaults,
-  parseIdsSelectorResult,
 } from "../../shared/Utils.js";
 import { ModelsTreeNodeInternal } from "./ModelsTreeNodeInternal.js";
 
@@ -335,17 +333,31 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     this.#schemaProvider = props.imodelAccess;
   }
 
-  public preProcessNode: NodePreProcessor = async ({ node }) => {
+  // Parent-specific ids are assigned here rather than inlined into queries, so that query text stays the same for
+  // every parent node and prepared statements get reused.
+  public preProcessNode: NodePreProcessor = async ({ node, parentNode }) => {
     if (ModelsTreeNodeInternal.isRawCategoryNode(node)) {
+      assert(parentNode !== undefined, "Expected category node to have a parent node");
+      if (ModelsTreeNodeInternal.isElementNode(parentNode)) {
+        return {
+          ...node,
+          extendedData: {
+            ...node.extendedData,
+            modelIds: [parentNode.extendedData.modelId],
+            parentElementIds: parentNode.key.instanceKeys.map(({ id }) => id),
+          },
+        };
+      }
+      assert(ModelsTreeNodeInternal.isModelNode(parentNode), "Expected category node parent to be a model node");
       return {
         ...node,
-        extendedData: {
-          ...node.extendedData,
-          modelIds: parseIdsSelectorResult(node.extendedData.modelIds),
-          ...(node.extendedData.parentElementIds !== undefined
-            ? { parentElementIds: parseIdsSelectorResult(node.extendedData.parentElementIds) }
-            : {}),
-        },
+        extendedData: { ...node.extendedData, modelIds: parentNode.key.instanceKeys.map(({ id }) => id) },
+      };
+    }
+    if (ModelsTreeNodeInternal.isModelNode(node) && parentNode && ModelsTreeNodeInternal.isElementNode(parentNode)) {
+      return {
+        ...node,
+        extendedData: { ...node.extendedData, subModeledElementCategory: parentNode.extendedData.categoryId },
       };
     }
     return node;
@@ -519,10 +531,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   this.#hierarchyConfig.elements.excludedClasses.length
                     ? `IFNULL((
                         SELECT 1
-                        FROM ${this.#hierarchyConfig.elements.baseClass} e
+                        FROM ${CLASS_NAMES.Element} e
                         ${createWhereClause({
                           conditions: [
                             "e.Model.Id = m.ECInstanceId",
+                            `e.ECClassId IS (${this.#hierarchyConfig.elements.baseClass})`,
                             createExcludedClassesClause({
                               alias: "e",
                               excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -558,10 +571,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   private async createISubModeledElementChildrenQuery({
     parentNodeInstanceIds: elementIds,
-    parentNode,
     createSelectClause,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    assert(ModelsTreeNodeInternal.isElementNode(parentNode), "Expected parent node to be element node");
     const elementsHiddenClassesFilter = await ECSql.createHiddenClassesFilter({
       schemaProvider: this.#schemaProvider,
       baseClassName: this.#hierarchyConfig.elements.baseClass,
@@ -580,10 +591,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                 nodeLabel: "", // doesn't matter - the node is always hidden
                 hideNodeInHierarchy: true,
                 hasChildren: true,
-                extendedData: {
-                  type: "model",
-                  subModeledElementCategory: { selector: `IdToHex(${parentNode.extendedData.categoryId})` },
-                },
+                extendedData: { type: "model" },
               })}
             FROM ${CLASS_NAMES.GeometricModel3d} this
             JOIN IdSet(?) elementIdSet ON this.ModeledElement.Id = elementIdSet.id
@@ -591,11 +599,13 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               conditions: [
                 "NOT this.IsPrivate",
                 "NOT this.IsTemplate",
-                `this.ECInstanceId IN (
-                  SELECT c.Model.Id
-                  FROM ${this.#hierarchyConfig.elements.baseClass} c
+                `EXISTS (
+                  SELECT 1
+                  FROM ${CLASS_NAMES.Element} c
                   ${createWhereClause({
                     conditions: [
+                      "c.Model.Id = this.ECInstanceId",
+                      `c.ECClassId IS (${this.#hierarchyConfig.elements.baseClass})`,
                       createExcludedClassesClause({
                         alias: "c",
                         excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -678,38 +688,48 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         fullClassName: CLASS_NAMES.SpatialCategory,
         query: {
           ecsql: `
-            SELECT ${!categoriesToShow ? "DISTINCT" : ""}
-              ${await this.createCategoryNodeSelectClause({
-                createSelectClause,
-                extendedData: { modelIds: { selector: createIdsSelector(modelIds) } },
-              })}
+            SELECT ${
+              // filter joins may traverse to-many relationships and return the same category multiple times
+              categoryInstanceFilterClauses.joins ? "DISTINCT" : ""
+            }
+              ${await this.createCategoryNodeSelectClause({ createSelectClause })}
             FROM ${categoryInstanceFilterClauses.from} this
             ${
               categoriesToShow
                 ? "JOIN IdSet(?) categoryIdSet ON categoryIdSet.id = this.ECInstanceId"
                 : `
-                  JOIN ${this.#hierarchyConfig.elements.baseClass} ce ON ce.Category.Id = this.ECInstanceId
-                  JOIN IdSet(?) modelIdSet ON ce.Model.Id = modelIdSet.id
+                  JOIN (
+                    SELECT DISTINCT ce.Category.Id categoryId
+                    FROM IdSet(?) modelIdSet
+                    CROSS JOIN ${CLASS_NAMES.Element} e ON e.Model.Id = modelIdSet.id
+                    CROSS JOIN ${this.#hierarchyConfig.elements.baseClass} ce ON ce.ECInstanceId = e.ECInstanceId
+                    ${createWhereClause({
+                      conditions: [
+                        "e.Parent.Id IS NULL",
+                        createExcludedClassesClause({
+                          alias: "e",
+                          excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
+                        }),
+                        elementsHiddenClassesFilter.createWhereClause("e"),
+                      ],
+                    })}
+                  ) c ON c.categoryId = this.ECInstanceId
                 `
             }
             ${categoryInstanceFilterClauses.joins}
             ${createWhereClause({
               conditions: [
                 categoryInstanceFilterClauses.where,
-                !categoriesToShow && "ce.Parent.Id IS NULL",
-                !categoriesToShow &&
-                  createExcludedClassesClause({
-                    alias: "ce",
-                    excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
-                  }),
-                !categoriesToShow && elementsHiddenClassesFilter.createWhereClause("ce"),
-                !categoriesToShow &&
-                  subModeledElementCategory !== undefined &&
-                  `this.ECInstanceId <> ${subModeledElementCategory}`,
+                !categoriesToShow && subModeledElementCategory !== undefined && `this.ECInstanceId <> ?`,
               ],
             })}
           `,
-          bindings: [{ type: "idset", value: categoriesToShow ? categoriesToShow : modelIds }],
+          bindings: [
+            { type: "idset", value: categoriesToShow ? categoriesToShow : modelIds },
+            ...(!categoriesToShow && subModeledElementCategory !== undefined
+              ? [{ type: "id" as const, value: subModeledElementCategory }]
+              : []),
+          ],
         },
       });
     }
@@ -733,7 +753,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ${createWhereClause({
               conditions: [
                 "this.Parent.Id IS NULL",
-                `this.Category.Id = ${subModeledElementCategory}`,
+                `this.Category.Id = ?`,
                 createExcludedClassesClause({
                   alias: "this",
                   excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -743,7 +763,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               ],
             })}
           `,
-          bindings: [...bindings, { type: "idset", value: modelIds }],
+          bindings: [...bindings, { type: "idset", value: modelIds }, { type: "id", value: subModeledElementCategory }],
         },
       });
     }
@@ -769,10 +789,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           IFNULL(
             (
               SELECT 1
-              FROM ${this.#hierarchyConfig.elements.baseClass} ce
+              FROM ${CLASS_NAMES.Element} ce
               ${createWhereClause({
                 conditions: [
                   "ce.Parent.Id = this.ECInstanceId",
+                  `ce.ECClassId IS (${this.#hierarchyConfig.elements.baseClass})`,
                   createExcludedClassesClause({
                     alias: "ce",
                     excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -799,12 +820,13 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                       (
                         SELECT 1
                         FROM ${CLASS_NAMES.GeometricModel3d} m
-                        JOIN ${this.#hierarchyConfig.elements.baseClass} ce ON ce.Model.Id = m.ECInstanceId
+                        JOIN ${CLASS_NAMES.Element} ce ON ce.Model.Id = m.ECInstanceId
                         ${createWhereClause({
                           conditions: [
                             "m.ECInstanceId = this.ECInstanceId",
                             "NOT m.IsPrivate",
                             "NOT m.IsTemplate",
+                            `ce.ECClassId IS (${this.#hierarchyConfig.elements.baseClass})`,
                             createExcludedClassesClause({
                               alias: "ce",
                               excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -835,10 +857,8 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
 
   private async createCategoryNodeSelectClause({
     createSelectClause,
-    extendedData,
   }: {
     createSelectClause: DefineHierarchyLevelProps["createSelectClause"];
-    extendedData: Parameters<DefineHierarchyLevelProps["createSelectClause"]>[0]["extendedData"];
   }): Promise<string> {
     return createSelectClause({
       ecClassId: { selector: "this.ECClassId" },
@@ -848,7 +868,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         ? { grouping: { byLabel: { action: "merge", groupId: "category" } } }
         : {}),
       hasChildren: true,
-      extendedData: { type: "category", ...extendedData },
+      extendedData: { type: "category" },
       supportsFiltering: this.supportsFiltering(),
     });
   }
@@ -861,7 +881,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     createFilterClauses,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     assert(ModelsTreeNodeInternal.isCategoryNode(parentNode), "Expected category node as parent");
-    const modelIds = parseIdsSelectorResult(parentNode.extendedData.modelIds);
+    const modelIds = parentNode.extendedData.modelIds;
     const [instanceFilterClauses, allSubModels, elementsHiddenClassesFilter] = await Promise.all([
       createFilterClauses({
         filter: instanceFilter,
@@ -890,10 +910,21 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           ecsql: `
             SELECT
               ${selectClause}
-            FROM ${instanceFilterClauses.from} this
-            JOIN IdSet(?) categoryIdSet ON this.Category.Id = categoryIdSet.id
-            JOIN IdSet(?) modelIdSet ON this.Model.Id = modelIdSet.id
-            ${parentIds ? `JOIN IdSet(?) parentIdSet ON this.Parent.Id = parentIdSet.id` : ""}
+            ${
+              // CROSS JOIN pins the join order so that SQLite always drives the query from the most selective
+              // id set, instead of picking a full table scan based on iModel statistics
+              parentIds
+                ? `
+                  FROM IdSet(?) parentIdSet
+                  CROSS JOIN ${instanceFilterClauses.from} this ON this.Parent.Id = parentIdSet.id
+                  CROSS JOIN IdSet(?) categoryIdSet ON this.Category.Id = categoryIdSet.id
+                `
+                : `
+                  FROM IdSet(?) categoryIdSet
+                  CROSS JOIN ${instanceFilterClauses.from} this ON this.Category.Id = categoryIdSet.id
+                  `
+            }
+            CROSS JOIN IdSet(?) modelIdSet ON this.Model.Id = modelIdSet.id
             ${instanceFilterClauses.joins}
             ${createWhereClause({
               conditions: [
@@ -909,9 +940,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           `,
           bindings: [
             ...bindings,
+            ...(parentIds ? [{ type: "idset" as const, value: parentIds }] : []),
             { type: "idset", value: categoryIds },
             { type: "idset", value: modelIds },
-            ...(parentIds ? [{ type: "idset" as const, value: parentIds }] : []),
           ],
         },
       },
@@ -927,7 +958,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     assert(ModelsTreeNodeInternal.isElementNode(parentNode), "Expected parent node to be element node");
     const parentCategoryId = parentNode.extendedData.categoryId;
-    const parentModelId = parentNode.extendedData.modelId;
 
     const [elementInstanceFilterClauses, categoryInstanceFilterClauses, allSubModels, elementsHiddenClassesFilter] =
       await Promise.all([
@@ -967,7 +997,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
           ${elementInstanceFilterClauses.joins}
           ${createWhereClause({
             conditions: [
-              `this.Category.Id = ${parentCategoryId}`,
+              `this.Category.Id = ?`,
               createExcludedClassesClause({
                 alias: "this",
                 excludedClassNames: this.#hierarchyConfig.elements.excludedClasses,
@@ -977,26 +1007,22 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ],
           })}
         `,
-          bindings: [...bindings, { type: "idset", value: elementIds }],
+          bindings: [...bindings, { type: "idset", value: elementIds }, { type: "id", value: parentCategoryId }],
         },
       },
       {
         fullClassName: CLASS_NAMES.SpatialCategory,
         query: {
+          // Parent-specific ids (`modelIds`, `parentElementIds`) are set in `preProcessNode` rather than inlined into
+          // the query, so that the query text stays the same for every parent element and prepared statements get reused.
           ecsql: `
           SELECT
-            ${await this.createCategoryNodeSelectClause({
-              createSelectClause,
-              extendedData: {
-                modelIds: { selector: createIdsSelector([parentModelId]) },
-                parentElementIds: { selector: createIdsSelector(elementIds) },
-              },
-            })}
+            ${await this.createCategoryNodeSelectClause({ createSelectClause })}
           FROM ${categoryInstanceFilterClauses.from} this
           ${categoryInstanceFilterClauses.joins ? `${categoryInstanceFilterClauses.joins}` : ""}
           ${createWhereClause({
             conditions: [
-              `this.ECInstanceId <> ${parentCategoryId}`,
+              `this.ECInstanceId <> ?`,
               `this.ECInstanceId IN (
                 SELECT DISTINCT ce.Category.Id
                 FROM ${this.#hierarchyConfig.elements.baseClass} ce
@@ -1015,7 +1041,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             ],
           })}
         `,
-          bindings: [{ type: "idset", value: elementIds }],
+          bindings: [
+            { type: "id", value: parentCategoryId },
+            { type: "idset", value: elementIds },
+          ],
         },
       },
     ];
@@ -1690,9 +1719,13 @@ function createInstanceKeyPathsFromInstanceLabelObs(
               hierarchyConfig.models.withoutElements === "exclude" &&
                 `EXISTS (
                   SELECT 1
-                  FROM ${hierarchyConfig.elements.baseClass} me
+                  FROM ${CLASS_NAMES.Element} me
                   ${createWhereClause({
-                    conditions: ["me.Model.Id = m.ECInstanceId", elementsHiddenClassesFilter.createWhereClause("me")],
+                    conditions: [
+                      "me.Model.Id = m.ECInstanceId",
+                      `me.ECClassId IS (${hierarchyConfig.elements.baseClass})`,
+                      elementsHiddenClassesFilter.createWhereClause("me"),
+                    ],
                   })}
                 )`,
               "json_extract(e.JsonProperties, '$.PhysicalPartition.Model.Content') IS NULL",

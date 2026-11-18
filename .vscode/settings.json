@@ -23,6 +23,11 @@
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
+  "files.watcherExclude": {
+    ".git/**": true,
+    "**/node_modules/**": true,
+    "**/lib/**": true
+  },
 
   "[markdown]": {
     "editor.tabSize": 4
