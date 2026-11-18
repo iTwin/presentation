@@ -129,6 +129,25 @@ export const StrataKitTreeRenderer: FC<
       overscan: 10,
     });
     const items = virtualizer.getVirtualItems();
+    const onPlaceholderUnmount = useCallback((element: HTMLElement | null) => {
+      if (!element || document.activeElement !== element) {
+        return;
+      }
+
+      const index = element.dataset.index;
+      const level = element.getAttribute("aria-level");
+      if (index === undefined || level === null) {
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        if (document.activeElement !== document.body) {
+          return;
+        }
+        // A collapsed parent can leave a shallower sibling at the same index.
+        parentRef.current?.querySelector<HTMLElement>(`[data-index="${index}"][aria-level="${level}"]`)?.focus();
+      });
+    }, []);
     const expandAndScrollToNode = useExpandAndScrollToNode({ rootNodes, flatItems, expandNode, virtualizer });
 
     const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
@@ -207,6 +226,7 @@ export const StrataKitTreeRenderer: FC<
                     data-index={virtualizedItem.index}
                     start={virtualizedItem.start}
                     item={item}
+                    onPlaceholderUnmount={onPlaceholderUnmount}
                     selected={selected}
                     expandNode={expandNode}
                     reloadTree={reloadTree}
@@ -347,10 +367,14 @@ type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
   "data-index": number;
   item: FlatTreeItem;
+  onPlaceholderUnmount: (element: HTMLElement | null) => void;
 };
 
 const VirtualTreeItem = memo(
-  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
+    { start, item, onPlaceholderUnmount, ...props },
+    forwardedRef,
+  ) {
     const style: CSSProperties = useMemo(
       () => ({
         position: "absolute",
@@ -372,6 +396,7 @@ const VirtualTreeItem = memo(
           aria-level={item.level}
           aria-posinset={1}
           aria-setsize={1}
+          onUnmount={onPlaceholderUnmount}
         />
       );
     }
