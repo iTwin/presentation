@@ -370,15 +370,12 @@ function usePlaceholderFocus(flatItems: FlatTreeItem[], parentRef: { current: HT
     }
 
     const parent = flatItems[parentIndex];
-    const firstChild = flatItems[parentIndex + 1];
-    // The index can be out of bounds when child loading fails.
-    // oxlint-disable-next-line typescript/no-unnecessary-condition
-    if (firstChild && isPlaceholderItem(firstChild)) {
+    const nextItem: FlatTreeItem | undefined = flatItems[parentIndex + 1];
+    if (nextItem && isPlaceholderItem(nextItem)) {
       return;
     }
     // If loading produces no direct child, keep focus on the parent.
-    // oxlint-disable-next-line typescript/no-unnecessary-condition
-    const focusIndex = firstChild && firstChild.level === parent.level + 1 ? parentIndex + 1 : parentIndex;
+    const focusIndex = nextItem && nextItem.level === parent.level + 1 ? parentIndex + 1 : parentIndex;
     parentRef.current?.querySelector<HTMLElement>(`[data-index="${focusIndex}"]`)?.focus();
     focusedParentId.current = undefined;
   }, [flatItems, parentRef]);
