@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.4
+
+### Patch Changes
+
+- [#1741](https://github.com/iTwin/presentation/pull/1741): Preserve keyboard focus when a loading placeholder is replaced by its loaded child.
+
 ## 2.0.3
 
 ### Patch Changes
