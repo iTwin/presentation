@@ -67,9 +67,7 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  *
- * The `TParentProps` type parameter specifies props that identify the parent of the node being parsed. By default,
- * that's the `parentNode` attribute.
- *
+ * @template TParentProps Props that identify the parent of the node being parsed. Defaults to the `parentNode` attribute.
  * @public
  */
 export type NodeParser<
@@ -92,9 +90,8 @@ export type NodeParser<
  * it should return a new - modified - node, rather than modifying the given one. Returning `undefined` omits the node
  * from the hierarchy.
  *
- * The `TParentProps` type parameter specifies props that identify the parent of the node being pre-processed. By
- * default, that's the `parentNode` attribute.
- *
+ * @template TParentProps Props that identify the parent of the node being pre-processed. Defaults to the `parentNode`
+ * attribute.
  * @public
  */
 export type NodePreProcessor<
@@ -113,9 +110,8 @@ export type NodePreProcessor<
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
  * it should return a new - modified - node, rather than modifying the given one.
  *
- * The `TParentProps` type parameter specifies props that identify the parent of the node being post-processed. By
- * default, that's the `parentNode` attribute.
- *
+ * @template TParentProps Props that identify the parent of the node being post-processed. Defaults to the `parentNode`
+ * attribute.
  * @public
  */
 export type NodePostProcessor<
