@@ -310,7 +310,10 @@ describe("buildValueFilterClauses", () => {
   });
 
   it("builds inferred bindings for composite members", () => {
-    const structField: PropertyField = { ...propertyField, type: { kind: "struct", members: [] } };
+    const structField: PropertyField = {
+      ...propertyField,
+      type: { kind: "struct", className: "TestSchema.TestStruct", members: [] },
+    };
 
     const result = build([{ field: structField, member: "Street", operator: "is-equal", value: "Main" }]);
 

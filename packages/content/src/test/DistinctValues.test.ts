@@ -920,7 +920,7 @@ describe("buildDistinctValuesQuery", () => {
 
   it.each<{ type: ValueDescriptor; expectedKind: string }>([
     { type: { kind: "array", elementType: { kind: "primitive", type: "String" } }, expectedKind: "array" },
-    { type: { kind: "struct", members: [] }, expectedKind: "struct" },
+    { type: { kind: "struct", className: "TestSchema.TestStruct", members: [] }, expectedKind: "struct" },
   ])("rejects $expectedKind fields with a distinct-values-specific error", async ({ type, expectedKind }) => {
     const field = makePropertyField({ propertyName: "Composite", type });
 

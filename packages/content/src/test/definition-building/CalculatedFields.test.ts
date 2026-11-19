@@ -261,6 +261,7 @@ describe("collectCalculatedFields", () => {
               expression: target.primaryClass === "TestSchema.A" ? "1" : "2",
               type: {
                 kind: "struct",
+                className: "TestSchema.TestStruct",
                 members: [{ name: "m", label: "M", type: { kind: "primitive", type: "Integer" } }],
               },
             }),

@@ -605,6 +605,7 @@ describe("mergePropertyFieldsByIdentity", () => {
   it("merges candidates whose value types are structurally equal but distinct instances", () => {
     const type = (): PropertyField["type"] => ({
       kind: "struct",
+      className: "TestSchema.TestStruct",
       members: [
         {
           name: "coords",
