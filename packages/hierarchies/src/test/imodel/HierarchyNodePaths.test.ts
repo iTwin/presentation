@@ -5,18 +5,22 @@
 
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import { assert, beforeEach, describe, expect, it, vi } from "vitest";
-import { createHierarchyNodePaths } from "../hierarchies/HierarchyNodePaths.js";
-import { NodeSelectClauseColumnNames } from "../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { createIModelAccessStub, createTestSourceGenericNode } from "./Utils.js";
+import { createHierarchyNodePaths } from "../../hierarchies/imodel/HierarchyNodePaths.js";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { createIModelAccessStub, createTestSourceGenericNode } from "../Utils.js";
 
 import type { GenericInstanceFilter } from "@itwin/core-common";
-import type { DeepReadonly, Props } from "@itwin/presentation-shared";
-import type { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import type { HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey.js";
-import type { HierarchyDefinition } from "../hierarchies/imodel/IModelHierarchyDefinition.js";
-import type { InstanceHierarchyNodeProcessingParams } from "../hierarchies/imodel/IModelHierarchyNode.js";
-import type { HierarchyLevelPathProps } from "../hierarchies/imodel/PathBasedIModelHierarchyProvider.js";
-import type { RowDef } from "../hierarchies/imodel/TreeNodesReader.js";
+import type { Props } from "@itwin/presentation-shared";
+import type {
+  GroupingHierarchyNode,
+  HierarchyNode,
+  NonGroupingHierarchyNode,
+} from "../../hierarchies/HierarchyNode.js";
+import type { HierarchyNodeIdentifier } from "../../hierarchies/HierarchyNodeIdentifier.js";
+import type { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../../hierarchies/HierarchyNodeKey.js";
+import type { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import type { PathBasedHierarchyDefinition } from "../../hierarchies/imodel/PathBasedHierarchyDefinition.js";
+import type { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 
 describe("createHierarchyNodePaths", () => {
   const imodelKey = "test-imodel";
@@ -47,14 +51,14 @@ describe("createHierarchyNodePaths", () => {
   // classes of loaded nodes derive from search path classes
   const derivedClasses: { [derived: string]: string } = { "s.DerivedA": "s.A", "s.DerivedB": "s.B" };
   // the definition applies the instance filter by passing filtered IDs as query bindings
-  const defineHierarchyLevel = vi.fn<HierarchyDefinition<HierarchyLevelPathProps>["defineHierarchyLevel"]>();
+  const defineHierarchyLevel = vi.fn<PathBasedHierarchyDefinition["defineHierarchyLevel"]>();
 
-  function setRows(entries: Array<[DeepReadonly<IModelInstanceKey[]>, RowDef[]]>) {
+  function setRows(entries: Array<[HierarchyNodeIdentifier[], RowDef[]]>) {
     rows = new Map(entries.map(([path, levelRows]) => [getPathId(path), levelRows]));
   }
 
   function getHierarchyProviderProps(
-    hierarchyDefinition?: Partial<HierarchyDefinition<HierarchyLevelPathProps>>,
+    hierarchyDefinition?: Partial<PathBasedHierarchyDefinition>,
   ): Props<typeof createHierarchyNodePaths>["hierarchyProviderProps"] {
     return { imodelAccess, hierarchyDefinition: { defineHierarchyLevel, ...hierarchyDefinition } };
   }
@@ -96,8 +100,8 @@ describe("createHierarchyNodePaths", () => {
 
   /** Loads node paths for the given instance key paths and returns them with `searchPath` set to the instance key path. */
   async function loadPaths(
-    paths: IModelInstanceKey[][],
-    hierarchyDefinition?: Partial<HierarchyDefinition<HierarchyLevelPathProps>>,
+    paths: HierarchyNodeIdentifier[][],
+    hierarchyDefinition?: Partial<PathBasedHierarchyDefinition>,
   ) {
     const nodePaths = await createHierarchyNodePaths({
       hierarchyProviderProps: getHierarchyProviderProps(hierarchyDefinition),
@@ -213,32 +217,12 @@ describe("createHierarchyNodePaths", () => {
     ).toEqual([{ searchPath: [a, { ...b, imodelKey }], nodesPath: createPath([nodeA, nodeB]) }]);
   });
 
-  it("returns the same node for all entries matching its instance keys", async () => {
-    // nodes with the same label are merged into a single node with multiple instance keys
-    const byLabel = { byLabel: { action: "merge" as const } };
+  it("throws when nodes are merged by label", async () => {
     setRows([
       ...hierarchyRows,
-      [
-        [a, b],
-        [
-          createRow({ ...c, label: "merged", grouping: byLabel }),
-          createRow({ ...d, label: "merged", grouping: byLabel }),
-        ],
-      ],
+      [[a, b], [createRow({ ...c, label: "C", grouping: { byLabel: { action: "merge" } } })]],
     ]);
-    const mergedNode = {
-      key: { type: "instances" as const, instanceKeys: [c, d].map((key) => ({ ...key, imodelKey })) },
-      label: "merged",
-    };
-    expect(
-      await loadPaths([
-        [a, b, c],
-        [a, b, d],
-      ]),
-    ).toEqual([
-      { searchPath: [a, b, c], nodesPath: createPath([nodeA, nodeB, mergedNode]) },
-      { searchPath: [a, b, d], nodesPath: createPath([nodeA, nodeB, mergedNode]) },
-    ]);
+    await expect(loadPaths([[a, b, c]])).rejects.toThrow("don't support nodes merged by label");
   });
 
   it("doesn't match nodes of other classes with the same ID", async () => {
@@ -275,14 +259,48 @@ describe("createHierarchyNodePaths", () => {
     imodelAccess.createQueryReader.mock.calls.forEach(([_, config]) => expect(config?.limit).toBe("unbounded"));
   });
 
-  it("ignores generic nodes", async () => {
-    const nodes = await loadPaths([[a]], {
-      defineHierarchyLevel: async (props) => [
-        { node: createTestSourceGenericNode({ key: "generic", label: "generic" }) },
-        ...(await defineHierarchyLevel(props)),
-      ],
+  describe("generic nodes", () => {
+    const generic: GenericNodeKey = { type: "generic", id: "g" };
+    const genericNode = createTestSourceGenericNode({ key: "g", label: "G", children: true });
+
+    function defineLevelWithGenericNode(genericNodePath: HierarchyNodeIdentifier[]) {
+      return {
+        defineHierarchyLevel: async (props: Props<PathBasedHierarchyDefinition["defineHierarchyLevel"]>) => [
+          ...(getPathId(props.path) === getPathId(genericNodePath) ? [{ node: genericNode }] : []),
+          ...(await defineHierarchyLevel(props)),
+        ],
+      };
+    }
+
+    it("ignores generic nodes that weren't requested", async () => {
+      expect(await loadPaths([[a]], defineLevelWithGenericNode([]))).toEqual([
+        { searchPath: [a], nodesPath: createPath([nodeA]) },
+      ]);
     });
-    expect(nodes).toEqual([{ searchPath: [a], nodesPath: createPath([nodeA]) }]);
+
+    it("returns paths through generic nodes", async () => {
+      setRows([[[generic], [rowA]]]);
+      const result = await loadPaths([[generic, a], [generic]], defineLevelWithGenericNode([]));
+      const expectedGenericNode = {
+        key: { type: "generic" as const, id: "g", source: expect.any(String) },
+        label: "G",
+      };
+      expect(result).toEqual([
+        { searchPath: [generic, a], nodesPath: createPath([expectedGenericNode, nodeA]) },
+        { searchPath: [generic], nodesPath: createPath([expectedGenericNode]) },
+      ]);
+      // instances are excluded from the root level, because only a generic node is requested
+      expect(getFilteredIds(getRequests()[0].instanceFilter).size).toBe(0);
+      expect(getRequests()[1]).toEqual({ path: [generic], instanceFilter: createIdsFilter([a.id]) });
+    });
+
+    it("matches generic nodes by ID and source", async () => {
+      const result = await loadPaths(
+        [[{ ...generic, source: "other" }], [{ ...generic, id: "other" }]],
+        defineLevelWithGenericNode([]),
+      );
+      expect(result).toEqual([]);
+    });
   });
 
   it("ignores instance nodes that weren't requested", async () => {
@@ -313,6 +331,35 @@ describe("createHierarchyNodePaths", () => {
         { path: [a], instanceFilter: createIdsFilter([b.id]) },
         { path: [a, b], instanceFilter: createIdsFilter([c.id]) },
       ]);
+    });
+
+    it("doesn't group hidden nodes", async () => {
+      setRows([
+        ...hierarchyRows,
+        [
+          [a],
+          [createRow({ className: "s.DerivedB", id: b.id, label: "B", hidden: true, grouping: { byLabel: true } })],
+        ],
+      ]);
+      expect(await loadPaths([[a, b, c]])).toEqual([
+        { searchPath: [a, b, c], nodesPath: createPath([nodeA, { hidden: nodeB }, nodeC]) },
+      ]);
+    });
+
+    it("keeps the hidden flag when nodes are pre-processed and post-processed", async () => {
+      const preProcessNode = vi.fn(async ({ node }) => node) as NonNullable<
+        PathBasedHierarchyDefinition["preProcessNode"]
+      >;
+      // the post-processor drops attributes it doesn't know about
+      const postProcessNode = vi.fn<NonNullable<PathBasedHierarchyDefinition["postProcessNode"]>>(async ({ node }) => {
+        const { isHidden: _, ...rest } = node as typeof node & { isHidden?: boolean };
+        return rest;
+      });
+      expect(await loadPaths([[a, b, c]], { preProcessNode, postProcessNode })).toEqual([
+        { searchPath: [a, b, c], nodesPath: createPath([nodeA, { hidden: nodeB }, nodeC]) },
+      ]);
+      expect(preProcessNode).toHaveBeenCalledWith(expect.objectContaining({ path: [a] }));
+      expect(postProcessNode).toHaveBeenCalledWith(expect.objectContaining({ path: [a] }));
     });
 
     it("omits paths whose hidden ancestor isn't in the hierarchy", async () => {
@@ -506,7 +553,7 @@ function createLabelGroupingNode(label: string): ExpectedNode {
   return { key: { type: "label-grouping", label }, label };
 }
 
-function getPathId(path: DeepReadonly<IModelInstanceKey[]>): string {
+function getPathId(path: HierarchyNodeIdentifier[]): string {
   return path.map(({ id }) => id).join("/");
 }
 

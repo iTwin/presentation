@@ -229,9 +229,7 @@ function groupInstanceNodes(
           return;
         }
         if (HierarchyNode.isGroupingNode(parentNode)) {
-          if (parentNode.nonGroupingAncestor) {
-            groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
-          }
+          groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
           return;
         }
         // not sure why type checker doesn't pick this up

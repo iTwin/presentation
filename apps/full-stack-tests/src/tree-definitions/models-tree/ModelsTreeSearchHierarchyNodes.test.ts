@@ -217,10 +217,15 @@ describe("Models tree", () => {
       );
       expect(paths).toHaveLength(elementsCount);
       // hierarchy levels of node paths are identified by paths, and their sibling instances are requested using filters
-      const elementRequests = defineHierarchyLevelSpy.mock.calls.filter(
-        ([props]) =>
-          "path" in props && props.path.at(-1)?.className === "BisCore.SpatialCategory" && !!props.instanceFilter,
-      );
+      const elementRequests = defineHierarchyLevelSpy.mock.calls.filter(([props]) => {
+        const parentEntry = "path" in props ? props.path.at(-1) : undefined;
+        return (
+          !!parentEntry &&
+          "className" in parentEntry &&
+          parentEntry.className === "BisCore.SpatialCategory" &&
+          !!props.instanceFilter
+        );
+      });
       expect(elementRequests).toHaveLength(1);
     });
   });
@@ -234,7 +239,7 @@ function createTreeAndProvider({
   hierarchyConfig: ModelsTreeHierarchyConfiguration;
 }) {
   const imodelAccess = createIModelAccess(imodelConnection);
-  // node paths are created for hierarchies without label merging
+  // node paths can only be created for hierarchies without label merging
   const tree = createModelsTree({
     imodelAccess,
     hierarchyConfig: {
@@ -257,7 +262,7 @@ async function createNodePaths({
   imodelAccess,
   ...searchProps
 }: Parameters<ReturnType<typeof createModelsTree>["createInstanceKeyPaths"]>[0] & {
-  tree: ReturnType<typeof createModelsTree>;
+  tree: ReturnType<typeof createTreeAndProvider>["tree"];
   imodelAccess: ReturnType<typeof createIModelAccess>;
 }) {
   const nodePaths = await createHierarchyNodePaths({

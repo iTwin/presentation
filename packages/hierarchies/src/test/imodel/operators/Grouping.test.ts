@@ -221,29 +221,6 @@ describe("Grouping", () => {
       ]);
     });
 
-    it("doesn't assign `nonGroupingAncestor` when parent grouping node doesn't have it", async () => {
-      const parentNode = createTestProcessedGroupingNode();
-      const groupedNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
-        label: "1",
-      });
-      const labelGroupingNode = createTestProcessedGroupingNode({
-        label: "1",
-        key: { type: "label-grouping" as const, label: "1" },
-        groupedInstanceKeys: groupedNode.key.instanceKeys,
-        children: [groupedNode],
-      });
-
-      const [result] = await collect(
-        from([groupedNode]).pipe(
-          createGroupingOperator(imodelAccess, parentNode, formatter, testLocalizedStrings, undefined, undefined, [
-            async () => ({ groupingType: "label", grouped: [labelGroupingNode], ungrouped: [] }),
-          ]),
-        ),
-      );
-      expect(result).not.toHaveProperty("nonGroupingAncestor");
-    });
-
     it("calls `onGroupingNodeCreated` callback argument for each grouping node", async () => {
       const groupedNode1 = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },

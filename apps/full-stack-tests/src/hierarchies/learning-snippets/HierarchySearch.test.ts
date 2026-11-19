@@ -335,9 +335,9 @@ describe("Hierarchies", () => {
           hierarchyProviderProps: {
             imodelAccess,
             hierarchyDefinition: {
-              // Instead of a parent node, hierarchy level is identified by a path of instance keys from the root to
-              // the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has to
-              // be applied.
+              // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
+              // to the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has
+              // to be applied.
               defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
                 const { from, joins, where } = await createFilterClauses({
                   contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },

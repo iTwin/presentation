@@ -25,6 +25,7 @@ import { IModel } from "@itwin/core-common";
 import {
   createPredicateBasedHierarchyDefinition,
   HierarchyNode,
+  HierarchyNodeIdentifier,
   HierarchySearchTree,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
@@ -50,14 +51,16 @@ import type {
   GroupingHierarchyNode,
   HierarchyDefinition,
   HierarchyLevelDefinition,
+  HierarchyLevelPathProps,
   HierarchyNodesDefinition,
   IModelInstanceKey,
   LimitingECSqlQueryExecutor,
   NodePostProcessor,
   NodePreProcessor,
+  PathBasedDefineHierarchyLevelProps,
+  PathBasedHierarchyDefinition,
 } from "@itwin/presentation-hierarchies";
 import type {
-  DeepReadonly,
   EC,
   ECSchemaProvider,
   ECSqlBinding,
@@ -215,19 +218,8 @@ export interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identif
   children?: ModelsTreeSearchTree[];
 }
 
-/**
- * Props that identify the parent of a models tree hierarchy level by a path of instance keys from a root node.
- * @internal
- */
-interface ModelsTreePathProps {
-  path: DeepReadonly<IModelInstanceKey[]>;
-}
-
-/** Props that identify the parent of a hierarchy level for `defineHierarchyLevel` - a parent node or a path. */
-type ModelsTreeHierarchyLevelParentProps = Pick<DefineHierarchyLevelProps, "parentNode"> | ModelsTreePathProps;
-
 /** Props that identify the parent of a hierarchy level for node processors - a parent node or a path. */
-type ModelsTreeProcessorParentProps = Pick<Parameters<NodePostProcessor>[0], "parentNode"> | ModelsTreePathProps;
+type ModelsTreeProcessorParentProps = Pick<Parameters<NodePostProcessor>[0], "parentNode"> | HierarchyLevelPathProps;
 
 /** Props for creating a hierarchy level, regardless of how its parent is identified. */
 type ModelsTreeChildrenQueryProps = Pick<
@@ -236,20 +228,28 @@ type ModelsTreeChildrenQueryProps = Pick<
 >;
 
 /** Finds the closest entry of the given class in the path, going from its end. */
-function findClosestPathEntry(path: ModelsTreePathProps["path"], className: string) {
+function findClosestPathEntry(path: HierarchyLevelPathProps["path"], className: string) {
   for (let i = path.length - 1; i >= 0; --i) {
-    if (path[i].className === className) {
-      return path[i];
+    const entry = path[i];
+    if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry) && entry.className === className) {
+      return entry;
     }
   }
   return undefined;
+}
+
+/** Returns the last entry of the path. The models tree has no generic nodes, so all path entries are instance keys. */
+function getLastPathEntry(path: HierarchyLevelPathProps["path"]): IModelInstanceKey | undefined {
+  const entry = path.at(-1);
+  assert(entry === undefined || HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry), "Expected an instance key");
+  return entry;
 }
 
 /**
  * Returns ID of the category of the element at the end of the path. Child elements with the same category as their
  * parent element aren't grouped under category nodes, so the closest category in the path is the element's category.
  */
-function getElementCategoryId(path: ModelsTreePathProps["path"]): Id64String {
+function getElementCategoryId(path: HierarchyLevelPathProps["path"]): Id64String {
   const category = findClosestPathEntry(path, CLASS_NAMES.SpatialCategory);
   assert(category !== undefined, "Expected element to have a category in its path");
   return category.id;
@@ -259,7 +259,7 @@ function getElementCategoryId(path: ModelsTreePathProps["path"]): Id64String {
 function getCategoryNodeParentIds(parentProps: ModelsTreeProcessorParentProps): CategoryNodeProps {
   if ("path" in parentProps) {
     const { path } = parentProps;
-    const parentEntry = path.at(-1);
+    const parentEntry = getLastPathEntry(path);
     assert(parentEntry !== undefined, "Expected category node to have a parent");
     if (parentEntry.className === CLASS_NAMES.GeometricElement3d) {
       // elements are in the closest model of their path
@@ -286,7 +286,9 @@ function getCategoryNodeParentIds(parentProps: ModelsTreeProcessorParentProps): 
 function getSubModeledElementCategory(parentProps: ModelsTreeProcessorParentProps): Id64String | undefined {
   if ("path" in parentProps) {
     const { path } = parentProps;
-    return path.at(-1)?.className === CLASS_NAMES.GeometricElement3d ? getElementCategoryId(path) : undefined;
+    return getLastPathEntry(path)?.className === CLASS_NAMES.GeometricElement3d
+      ? getElementCategoryId(path)
+      : undefined;
   }
   const { parentNode } = parentProps;
   return parentNode && ModelsTreeNodeInternal.isElementNode(parentNode)
@@ -363,7 +365,7 @@ type ModelsTreeInstanceKeyPathsProps =
  * `@itwin/presentation-hierarchies`.
  * @internal
  */
-export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefinition<ModelsTreePathProps> {
+export class ModelsTreeDefinition implements HierarchyDefinition, PathBasedHierarchyDefinition {
   #impl: HierarchyDefinition;
   #idsProvider: ModelsTreeIdsProvider;
   #hierarchyConfig: RequiredModelsTreeHierarchyConfiguration;
@@ -501,7 +503,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
     };
   };
 
-  public async defineHierarchyLevel(props: DefineHierarchyLevelProps<ModelsTreeHierarchyLevelParentProps>) {
+  public async defineHierarchyLevel(props: DefineHierarchyLevelProps | PathBasedDefineHierarchyLevelProps) {
     if (this.#isSupported === undefined) {
       this.#isSupported = this.isSupported();
     }
@@ -511,8 +513,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
     }
 
     if ("path" in props) {
-      const { path, ...requestProps } = props;
-      return this.definePathHierarchyLevel({ ...requestProps, path });
+      return this.definePathHierarchyLevel(props);
     }
     return this.#impl.defineHierarchyLevel(props);
   }
@@ -521,11 +522,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition, HierarchyDefin
   private async definePathHierarchyLevel({
     path,
     ...requestProps
-  }: ModelsTreeChildrenQueryProps & ModelsTreePathProps): Promise<HierarchyLevelDefinition> {
-    if (!path.length) {
+  }: ModelsTreeChildrenQueryProps & HierarchyLevelPathProps): Promise<HierarchyLevelDefinition> {
+    const lastPathEntry = getLastPathEntry(path);
+    if (!lastPathEntry) {
       return this.createRootNodesQuery(requestProps);
     }
-    const lastPathEntry = path[path.length - 1];
     switch (lastPathEntry.className) {
       case CLASS_NAMES.Subject:
         return this.createSubjectChildrenQuery({ ...requestProps, parentNodeInstanceIds: [lastPathEntry.id] });

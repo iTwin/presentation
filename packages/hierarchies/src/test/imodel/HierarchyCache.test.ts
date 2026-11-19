@@ -5,29 +5,28 @@
 
 import { describe, expect, it } from "vitest";
 import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache.js";
-import { createTestGenericNodeKey } from "../Utils.js";
+import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils.js";
 
-import type { HierarchyNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
 import type { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
 
 describe("HierarchyCache", () => {
   it("returns `undefined` when cache is empty", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
-    const result = cache.get({ parentKeys: [] });
+    const result = cache.get({ parentNode: undefined });
     expect(result).toBeUndefined();
   });
 
   it("returns `undefined` for non-existing entry", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
-    cache.set({ parentKeys: [createTestGenericNodeKey()] }, "test");
-    const result = cache.get({ parentKeys: [] });
+    cache.set({ parentNode: createTestProcessedGenericNode() }, "test");
+    const result = cache.get({ parentNode: undefined });
     expect(result).toBeUndefined();
   });
 
   it("returns value for existing entry", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
     const value = "test";
-    const props = { parentKeys: [] };
+    const props = { parentNode: undefined };
     cache.set(props, value);
     const result = cache.get(props);
     expect(result).toBe(value);
@@ -36,7 +35,7 @@ describe("HierarchyCache", () => {
   it("returns `undefined` after clearing", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
     const value = "test";
-    const props = { parentKeys: [] };
+    const props = { parentNode: undefined };
     cache.set(props, value);
     cache.clear();
     expect(cache.get(props)).toBeUndefined();
@@ -44,9 +43,9 @@ describe("HierarchyCache", () => {
 
   it("clears recently used entries", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
-    const props1 = { parentKeys: [createTestGenericNodeKey({ id: "1" })] };
+    const props1 = { parentNode: createTestProcessedGenericNode({ key: createTestGenericNodeKey({ id: "1" }) }) };
     const value1 = "value 1";
-    const props2 = { parentKeys: [createTestGenericNodeKey({ id: "2" })] };
+    const props2 = { parentNode: createTestProcessedGenericNode({ key: createTestGenericNodeKey({ id: "2" }) }) };
     const value2 = "value 2";
 
     cache.set(props1, value1);
@@ -62,10 +61,10 @@ describe("HierarchyCache", () => {
     it("returns `undefined` for non-existing variation based on instance filter", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentKeys: [createTestGenericNodeKey()] };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
-      const variationProps: Omit<GetHierarchyNodesProps, "parentNode"> & { parentKeys: HierarchyNodeKey[] } = {
+      const variationProps: GetHierarchyNodesProps = {
         ...primaryProps,
         instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and", rules: [] } },
       };
@@ -76,7 +75,7 @@ describe("HierarchyCache", () => {
     it("returns existing variation based on instance filter", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentKeys: [createTestGenericNodeKey()] };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
       const variationProps = {
@@ -97,13 +96,10 @@ describe("HierarchyCache", () => {
     it("returns `undefined` for non-existing variation based on hierarchy level size limit", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentKeys: [createTestGenericNodeKey()] };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
-      const variationProps: Omit<GetHierarchyNodesProps, "parentNode"> & { parentKeys: HierarchyNodeKey[] } = {
-        ...primaryProps,
-        hierarchyLevelSizeLimit: 999,
-      };
+      const variationProps: GetHierarchyNodesProps = { ...primaryProps, hierarchyLevelSizeLimit: 999 };
       const result = cache.get(variationProps);
       expect(result).toBeUndefined();
     });
@@ -111,7 +107,7 @@ describe("HierarchyCache", () => {
     it("returns existing variation based on hierarchy level size limit", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentKeys: [createTestGenericNodeKey()] };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
       const variationProps = { ...primaryProps, hierarchyLevelSizeLimit: 999 };
@@ -125,7 +121,7 @@ describe("HierarchyCache", () => {
     it("keeps primary observable when adding variations", () => {
       const cache = new HierarchyCache<string>({ size: 1, variationsCount: 1 });
 
-      const primaryProps = { parentKeys: [] };
+      const primaryProps = { parentNode: undefined };
       const primaryValue = "primary";
       cache.set(primaryProps, primaryValue);
 
@@ -140,7 +136,7 @@ describe("HierarchyCache", () => {
     it("keeps limited number of least recently used variations", () => {
       const cache = new HierarchyCache<string>({ size: 1, variationsCount: 1 });
 
-      const primaryProps = { parentKeys: [] };
+      const primaryProps = { parentNode: undefined };
       cache.set(primaryProps, "primary");
 
       const variationProps1 = { ...primaryProps, hierarchyLevelSizeLimit: 111 };

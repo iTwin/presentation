@@ -238,7 +238,11 @@ expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
 
 ### Loading hierarchy nodes for search paths
 
-The `createHierarchyNodePaths` function loads a path of hierarchy nodes for each search path. The path contains the nodes that `HierarchyProvider.getNodes` would return for each hierarchy level, from the root down to the search target. The function creates a hierarchy provider internally, and its hierarchy definition identifies hierarchy levels by a `path` of instance keys from the root to the parent node, instead of a parent node. Siblings in search paths are requested together, so the definition should apply the `instanceFilter`. Nodes that are hidden in the hierarchy have to be included in the search paths - they're included in the resulting node paths with the `isHidden` flag, and their children take their place in the hierarchy. Search paths that target hidden nodes are omitted.
+The `createHierarchyNodePaths` function loads a path of hierarchy nodes for each search path. The path contains the nodes that `HierarchyProvider.getNodes` would return for each hierarchy level, from the root down to the search target. All hierarchy levels are requested concurrently, without loading their ancestors first.
+
+To make that possible, the function takes a `PathBasedHierarchyDefinition`. It is like a `HierarchyDefinition`, except its callbacks receive a `path` of node identifiers from the root to the parent node, instead of the parent node. The definition can't depend on parent node data, such as `extendedData` - everything it needs has to be derived from the path. Siblings in search paths are requested together, so the definition should apply the `instanceFilter`. Nodes can't be merged by label - the select clause factory doesn't accept label merging params, and the function throws if a node is merged anyway.
+
+Nodes that are hidden in the hierarchy have to be included in the search paths - they're included in the resulting node paths with the `isHidden` flag, and their children take their place in the hierarchy. Search paths that target hidden nodes are omitted.
 
 <!-- [[include: [Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePathsImports, Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePaths], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -250,9 +254,9 @@ const nodePaths = await createHierarchyNodePaths({
   hierarchyProviderProps: {
     imodelAccess,
     hierarchyDefinition: {
-      // Instead of a parent node, hierarchy level is identified by a path of instance keys from the root to
-      // the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has to
-      // be applied.
+      // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
+      // to the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has
+      // to be applied.
       defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
         const { from, joins, where } = await createFilterClauses({
           contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },

@@ -67,7 +67,7 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  *
- * The `TParentProps` type parameter specifies props that identify the parent of the node being parsed. By default
+ * The `TParentProps` type parameter specifies props that identify the parent of the node being parsed. By default,
  * that's the `parentNode` attribute.
  *
  * @public
@@ -92,8 +92,8 @@ export type NodeParser<
  * it should return a new - modified - node, rather than modifying the given one. Returning `undefined` omits the node
  * from the hierarchy.
  *
- * The `TParentProps` type parameter specifies props that identify the parent of the node being pre-processed. By default
- * that's the `parentNode` attribute.
+ * The `TParentProps` type parameter specifies props that identify the parent of the node being pre-processed. By
+ * default, that's the `parentNode` attribute.
  *
  * @public
  */
@@ -113,8 +113,8 @@ export type NodePreProcessor<
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
  * it should return a new - modified - node, rather than modifying the given one.
  *
- * The `TParentProps` type parameter specifies props that identify the parent of the node being post-processed. By default
- * that's the `parentNode` attribute.
+ * The `TParentProps` type parameter specifies props that identify the parent of the node being post-processed. By
+ * default, that's the `parentNode` attribute.
  *
  * @public
  */
@@ -141,43 +141,24 @@ export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "chil
 
 /**
  * Props for `HierarchyDefinition.defineHierarchyLevel`.
- *
- * The `TParentProps` type parameter specifies props that identify the parent of the hierarchy level. By default
- * that's the `parentNode` attribute.
- *
  * @public
  */
-export type DefineHierarchyLevelProps<
-  TParentProps extends {} = {
-    /** Parent node to get children for. Pass `undefined` to get root nodes. */
-    parentNode: HierarchyDefinitionParentNode | undefined;
-  },
-> = Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> & {
+export interface DefineHierarchyLevelProps extends Pick<
+  NodesQueryClauseFactory,
+  "createSelectClause" | "createFilterClauses"
+> {
+  /** Parent node to get children for. Pass `undefined` to get root nodes. */
+  parentNode: HierarchyDefinitionParentNode | undefined;
+
   /** Optional hierarchy level filter. */
   instanceFilter?: GenericInstanceFilter;
-} & TParentProps;
-
-/**
- * Resolves to `TDefault` if `T` is `undefined`, otherwise - to `T`.
- * @public
- */
-type OrDefault<T, TDefault> = [T] extends [undefined] ? TDefault : NonNullable<T>;
+}
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
- *
- * By default, the callbacks receive the parent as a `parentNode` attribute. The type parameters allow replacing that
- * with custom props:
- * - `TParentProps` - props that identify the parent for `parseNode` and `defineHierarchyLevel`, as well as for
- *   `preProcessNode` and `postProcessNode`, unless `TProcessingParentProps` is specified.
- * - `TProcessingParentProps` - props that identify the parent for `preProcessNode` and `postProcessNode`.
- *
  * @public
  */
-export interface HierarchyDefinition<
-  TParentProps extends {} | undefined = undefined,
-  TProcessingParentProps extends {} | undefined = TParentProps,
-> {
+export interface HierarchyDefinition {
   /**
    * An optional function for parsing ECInstance node from ECSQL row.
    *
@@ -188,7 +169,7 @@ export interface HierarchyDefinition<
    * Defaults to a function that parses all `HierarchyNode` attributes from a query, whose SELECT
    * clause is created using `NodeSelectQueryFactory.createSelectClause`.
    */
-  parseNode?: NodeParser<OrDefault<TParentProps, { parentNode?: HierarchyDefinitionParentNode }>>;
+  parseNode?: NodeParser;
 
   /**
    * An optional function for pre-processing nodes.
@@ -197,7 +178,7 @@ export interface HierarchyDefinition<
    * returned by this `HierarchyDefinition` and before their processing (hiding, grouping, sorting, etc.) starts.
    * The step allows assigning nodes additional data or excluding them from the hierarchy based on some attributes.
    */
-  preProcessNode?: NodePreProcessor<OrDefault<TProcessingParentProps, { parentNode?: ParentHierarchyNode }>>;
+  preProcessNode?: NodePreProcessor;
 
   /**
    * An optional function for post-processing nodes.
@@ -207,12 +188,8 @@ export interface HierarchyDefinition<
    * to nodes after they're processed. This is especially true for grouping nodes as they're only created during
    * processing.
    */
-  postProcessNode?: NodePostProcessor<OrDefault<TProcessingParentProps, { parentNode?: ParentHierarchyNode }>>;
+  postProcessNode?: NodePostProcessor;
 
   /** A function to create a hierarchy level definition for given parent node. */
-  defineHierarchyLevel(
-    props: DefineHierarchyLevelProps<
-      OrDefault<TParentProps, { parentNode: HierarchyDefinitionParentNode | undefined }>
-    >,
-  ): Promise<HierarchyLevelDefinition>;
+  defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
 }

@@ -9,17 +9,19 @@ import { mergeWithDefaults, validateIdsProviderConfig } from "../../shared/Utils
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 import { createModelsTreeIdsProvider, normalizeModelsTreeIdsProviderConfig } from "./ModelsTreeIdsProvider.js";
 
-import type { GuidString } from "@itwin/core-bentley";
+import type { GuidString, Id64String } from "@itwin/core-bentley";
 import type {
   HierarchyDefinition,
-  IModelInstanceKey,
   LimitingECSqlQueryExecutor,
+  PathBasedHierarchyDefinition,
 } from "@itwin/presentation-hierarchies";
-import type { DeepReadonly, ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
+import type { ECSchemaProvider, InstanceKey } from "@itwin/presentation-shared";
 import type {
   ElementsGroupInfo,
   ModelsTreeHierarchyConfiguration,
   ModelsTreeSearchOptions,
+  ModelsTreeSearchPath,
+  ModelsTreeSearchTree,
 } from "./ModelsTreeDefinition.js";
 import type { ModelsTreeIdsProvider } from "./ModelsTreeIdsProvider.js";
 
@@ -54,16 +56,88 @@ type ModelsTreeSearchProps = ModelsTreeSearchOptions & ModelsTreeSearchTargetPro
 type ModelsTreeSearchTargetProps = { targetItems: Array<InstanceKey | ElementsGroupInfo> } | { label: string };
 
 /**
+ * Models tree hierarchy configuration with label merging disabled for all node types.
+ * @beta
+ */
+type ModelsTreeHierarchyConfigurationWithoutLabelMerging = ModelsTreeHierarchyConfiguration & {
+  subjects: { labelMerging: "disable" };
+  categories: { labelMerging: "disable" };
+  models: { labelMerging: "disable" };
+};
+
+/**
+ * A models hierarchy definition and search helpers, returned by `createModelsTree`.
+ * @beta
+ */
+interface ModelsTree<THierarchyDefinition extends HierarchyDefinition = HierarchyDefinition> {
+  /** Hierarchy definition bound to the supplied iModel access and ID provider. */
+  hierarchyDefinition: THierarchyDefinition;
+  /**
+   * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
+   * @throws An error if the configured search limit is exceeded.
+   */
+  createInstanceKeyPaths: (
+    searchProps: ModelsTreeSearchProps,
+  ) => AsyncIterableIterator<{ path: ModelsTreeSearchPath; target: Id64String | ElementsGroupInfo }>;
+  /**
+   * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
+   * @throws An error if the configured search limit is exceeded.
+   */
+  createSearchTree: (
+    searchProps: ModelsTreeSearchProps & { revealTargets?: boolean },
+  ) => Promise<ModelsTreeSearchTree[]>;
+}
+
+/**
  * Creates a models hierarchy definition and search helpers that share hierarchy configuration and a unique ID.
  *
  * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
  *
- * Pass the returned `hierarchyDefinition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`, or
- * to `createHierarchyNodePaths` to load hierarchy nodes for paths created by `createInstanceKeyPaths`.
+ * Pass the returned `hierarchyDefinition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ *
+ * When label merging is disabled for subjects, categories and models, the returned `hierarchyDefinition` is also a
+ * `PathBasedHierarchyDefinition`, so it can be passed to `createHierarchyNodePaths` from
+ * `@itwin/presentation-hierarchies` to load hierarchy nodes for paths created by `createInstanceKeyPaths`:
+ *
+ * ```ts
+ * const tree = createModelsTree({
+ *   imodelAccess,
+ *   hierarchyConfig: {
+ *     subjects: { labelMerging: "disable" },
+ *     categories: { labelMerging: "disable" },
+ *     models: { labelMerging: "disable" },
+ *   },
+ * });
+ * const nodePaths = await createHierarchyNodePaths({
+ *   hierarchyProviderProps: { imodelAccess, hierarchyDefinition: tree.hierarchyDefinition },
+ *   paths: tree.createInstanceKeyPaths({ targetItems }),
+ * });
+ * // every `searchPath` in `nodePaths` is a `{ path, target }` object yielded by `createInstanceKeyPaths`
+ * ```
+ *
+ * Paths must be created with the default `includeOnlyVisibleNodeInstanceKeys: false`, because nodes that are hidden
+ * in the hierarchy have to be included in them.
+ *
  * @throws An error if the supplied ID provider configuration does not match the tree configuration.
  * @beta
  */
-export function createModelsTree(props: ModelsTreeProps) {
+export function createModelsTree(
+  props: ModelsTreeProps & { hierarchyConfig: ModelsTreeHierarchyConfigurationWithoutLabelMerging },
+): ModelsTree<HierarchyDefinition & PathBasedHierarchyDefinition>;
+/**
+ * Creates a models hierarchy definition and search helpers that share hierarchy configuration and a unique ID.
+ *
+ * Supply `idsProvider` to share an externally owned provider with hierarchy and search.
+ *
+ * Pass the returned `hierarchyDefinition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
+ *
+ * @throws An error if the supplied ID provider configuration does not match the tree configuration.
+ * @beta
+ */
+export function createModelsTree(props: ModelsTreeProps): ModelsTree;
+export function createModelsTree(
+  props: ModelsTreeProps,
+): ModelsTree<HierarchyDefinition & PathBasedHierarchyDefinition> {
   const hierarchyConfig = mergeWithDefaults({
     defaults: defaultHierarchyConfiguration,
     overrides: props.hierarchyConfig,
@@ -90,31 +164,14 @@ export function createModelsTree(props: ModelsTreeProps) {
     actual: idsProvider.config,
   });
   const uniqueId = props.uniqueId ?? Guid.createValue();
-  const hierarchyDefinition: HierarchyDefinition & HierarchyDefinition<{ path: DeepReadonly<IModelInstanceKey[]> }> =
-    new ModelsTreeDefinition({ imodelAccess: props.imodelAccess, hierarchyConfig, idsProvider, uniqueId });
+  const hierarchyDefinition = new ModelsTreeDefinition({
+    imodelAccess: props.imodelAccess,
+    hierarchyConfig,
+    idsProvider,
+    uniqueId,
+  });
   return {
-    /**
-     * Hierarchy definition bound to the supplied iModel access and ID provider.
-     *
-     * In addition to `createIModelHierarchyProvider`, the definition can be passed to `createHierarchyNodePaths` from
-     * `@itwin/presentation-hierarchies`, to load hierarchy nodes for paths created by `createInstanceKeyPaths`:
-     *
-     * ```ts
-     * const nodePaths = await createHierarchyNodePaths({
-     *   hierarchyProviderProps: { imodelAccess, hierarchyDefinition: tree.hierarchyDefinition },
-     *   paths: tree.createInstanceKeyPaths({ targetItems }),
-     * });
-     * // every `searchPath` in `nodePaths` is a `{ path, target }` object yielded by `createInstanceKeyPaths`
-     * ```
-     *
-     * Paths must be created with the default `includeOnlyVisibleNodeInstanceKeys: false`, because nodes that are hidden
-     * in the hierarchy have to be included in them.
-     */
     hierarchyDefinition,
-    /**
-     * Yields hierarchy paths to instances or grouping nodes matching the supplied search.
-     * @throws An error if the configured search limit is exceeded.
-     */
     createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) =>
       ModelsTreeDefinition.createInstanceKeyPaths({
         ...searchProps,
@@ -123,10 +180,6 @@ export function createModelsTree(props: ModelsTreeProps) {
         uniqueId,
         imodelAccess: props.imodelAccess,
       }),
-    /**
-     * Builds search paths for a hierarchy provider. Set `revealTargets` to expand ancestors of matching targets.
-     * @throws An error if the configured search limit is exceeded.
-     */
     createSearchTree: async (searchProps: ModelsTreeSearchProps & { revealTargets?: boolean }) =>
       ModelsTreeDefinition.createSearchTree({
         ...searchProps,

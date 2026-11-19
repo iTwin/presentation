@@ -43,9 +43,7 @@ export interface ClassGroupingNodeKey {
 }
 
 // @beta
-export function createHierarchyNodePaths<TSearchPath extends {
-    path: DeepReadonly<IModelInstanceKey[]>;
-}>(props: CreateHierarchyNodePathsProps<TSearchPath>): Promise<Array<{
+export function createHierarchyNodePaths<TSearchPath extends SearchPath>(props: CreateHierarchyNodePathsProps<TSearchPath>): Promise<Array<{
     searchPath: TSearchPath;
     nodesPath: Array<HierarchyNode & {
         isHidden?: boolean;
@@ -53,14 +51,10 @@ export function createHierarchyNodePaths<TSearchPath extends {
 }>>;
 
 // @beta
-interface CreateHierarchyNodePathsProps<TSearchPath extends {
-    path: DeepReadonly<IModelInstanceKey[]>;
-}> {
+interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> {
     hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
     hierarchyProviderProps: Pick<Props<typeof createIModelHierarchyProvider>, "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"> & {
-        hierarchyDefinition: HierarchyDefinition<{
-            path: DeepReadonly<IModelInstanceKey[]>;
-        }>;
+        hierarchyDefinition: PathBasedHierarchyDefinition;
     };
     paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
 }
@@ -110,11 +104,10 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 };
 
 // @public
-export type DefineHierarchyLevelProps<TParentProps extends {} = {
-    parentNode: HierarchyDefinitionParentNode | undefined;
-}> = Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> & {
+export interface DefineHierarchyLevelProps extends Pick<NodesQueryClauseFactory, "createSelectClause" | "createFilterClauses"> {
     instanceFilter?: GenericInstanceFilter;
-} & TParentProps;
+    parentNode: HierarchyDefinitionParentNode | undefined;
+}
 
 // @public
 export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
@@ -257,19 +250,11 @@ interface HierarchyChangedEventArgs {
 }
 
 // @public
-export interface HierarchyDefinition<TParentProps extends {} | undefined = undefined, TProcessingParentProps extends {} | undefined = TParentProps> {
-    defineHierarchyLevel(props: DefineHierarchyLevelProps<OrDefault<TParentProps, {
-        parentNode: HierarchyDefinitionParentNode | undefined;
-    }>>): Promise<HierarchyLevelDefinition>;
-    parseNode?: NodeParser<OrDefault<TParentProps, {
-        parentNode?: HierarchyDefinitionParentNode;
-    }>>;
-    postProcessNode?: NodePostProcessor<OrDefault<TProcessingParentProps, {
-        parentNode?: ParentHierarchyNode;
-    }>>;
-    preProcessNode?: NodePreProcessor<OrDefault<TProcessingParentProps, {
-        parentNode?: ParentHierarchyNode;
-    }>>;
+export interface HierarchyDefinition {
+    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
+    parseNode?: NodeParser;
+    postProcessNode?: NodePostProcessor;
+    preProcessNode?: NodePreProcessor;
 }
 
 // @public
@@ -277,6 +262,11 @@ type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 // @public
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
+
+// @beta
+export interface HierarchyLevelPathProps {
+    path: HierarchyNodeIdentifier[];
+}
 
 // @public
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
@@ -707,6 +697,13 @@ interface NodeSelectClauseProps {
     supportsFiltering?: boolean | ECSqlValueSelector;
 }
 
+// @beta
+type NodeSelectClausePropsWithoutLabelMerging = Omit<NodeSelectClauseProps, "grouping"> & {
+    grouping?: Omit<ECSqlSelectClauseGroupingParams, "byLabel"> & {
+        byLabel?: Exclude<ECSqlSelectClauseLabelGroupingParams, ECSqlSelectClauseLabelGroupingMergeParams>;
+    };
+};
+
 // @public
 interface NodesQueryClauseFactory {
     createFilterClauses(props: {
@@ -740,10 +737,20 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 }
 
 // @public
-type OrDefault<T, TDefault> = [T] extends [undefined] ? TDefault : NonNullable<T>;
-
-// @public
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
+
+// @beta
+export interface PathBasedDefineHierarchyLevelProps extends Omit<DefineHierarchyLevelProps, "parentNode" | "createSelectClause">, HierarchyLevelPathProps {
+    createSelectClause(props: NodeSelectClausePropsWithoutLabelMerging): Promise<string>;
+}
+
+// @beta
+export interface PathBasedHierarchyDefinition {
+    defineHierarchyLevel(props: PathBasedDefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
+    parseNode?: NodeParser<HierarchyLevelPathProps>;
+    postProcessNode?: NodePostProcessor<HierarchyLevelPathProps>;
+    preProcessNode?: NodePreProcessor<HierarchyLevelPathProps>;
+}
 
 // @public
 interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {
@@ -826,6 +833,11 @@ export class RowsLimitExceededError extends Error {
     readonly limit: number;
     readonly rows: ECSqlQueryRow[];
 }
+
+// @beta
+type SearchPath = {
+    path: DeepReadonly<HierarchyNodeIdentifier[]>;
+};
 
 // @public
 export function setLogger(logger: ILogger | undefined): void;
