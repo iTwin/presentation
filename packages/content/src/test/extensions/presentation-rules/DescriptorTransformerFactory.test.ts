@@ -20,6 +20,7 @@ function propertyField(props: {
   valueClassNames: EC.FullClassNameDotNotation[];
   pathFromTarget?: PropertyField["pathFromTarget"];
   label?: string;
+  category?: PropertyField["category"];
   hidden?: boolean;
 }): PropertyField {
   const id = PropertyField.computeId({
@@ -31,6 +32,7 @@ function propertyField(props: {
     kind: "property",
     id,
     label: props.label ?? "Label",
+    category: props.category ?? { type: "target" },
     type: { kind: "primitive", type: "String" },
     propertyClassName: props.sourceClassName,
     propertyName: props.propertyName,
@@ -304,14 +306,28 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
   });
 
   describe("property specification mapping", () => {
-    const run = async (spec: PresentationRules.PropertySpecification) => {
-      const field = propertyField({
+    const relatedPath: PropertyField["pathFromTarget"] = [
+      {
         sourceClassName: "Stuff.Thing",
+        relationshipName: "Stuff.ThingHasRelated",
+        targetClassName: "Stuff.Related",
+        relationshipReverse: false,
+      },
+    ];
+    const run = async (
+      spec: PresentationRules.PropertySpecification,
+      fieldProps?: Pick<Parameters<typeof propertyField>[0], "category" | "pathFromTarget">,
+    ) => {
+      const field = propertyField({
+        sourceClassName: fieldProps?.pathFromTarget ? "Stuff.Related" : "Stuff.Thing",
         propertyName: "Height",
-        valueClassNames: ["Stuff.Door"],
+        valueClassNames: [fieldProps?.pathFromTarget ? "Stuff.Related" : "Stuff.Door"],
+        ...fieldProps,
       });
       const descriptor = createDescriptor([field]);
-      const transformer = createDescriptorTransformerFromContentModifierRule({ rule: { propertyOverrides: [spec] } });
+      const transformer = createDescriptorTransformerFromContentModifierRule({
+        rule: { applyOnNestedContent: true, propertyOverrides: [spec] },
+      });
       await transformer.transform({
         descriptor: createTransformableDescriptor(descriptor),
         imodelAccess: createImodelAccess(),
@@ -324,15 +340,45 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
     });
 
     it("maps a string categoryId", async () => {
-      expect((await run({ name: "Height", categoryId: "Cat" })).categoryId).to.equal("Cat");
+      expect((await run({ name: "Height", categoryId: "Cat" })).category).to.deep.equal({
+        type: "category",
+        id: "Cat",
+      });
     });
 
     it("maps an Id categoryId", async () => {
-      expect((await run({ name: "Height", categoryId: { type: "Id", categoryId: "Cat" } })).categoryId).to.equal("Cat");
+      expect((await run({ name: "Height", categoryId: { type: "Id", categoryId: "Cat" } })).category).to.deep.equal({
+        type: "category",
+        id: "Cat",
+      });
     });
 
-    it("ignores a categoryId that cannot be mapped", async () => {
-      expect((await run({ name: "Height", categoryId: { type: "None" } })).categoryId).toBeUndefined();
+    it("maps an Id categoryId of a related field", async () => {
+      const field = await run(
+        { name: "Height", categoryId: { type: "Id", categoryId: "Cat" } },
+        { pathFromTarget: relatedPath, category: { type: "category", id: "Related" } },
+      );
+      expect(field.category).to.deep.equal({ type: "category", id: "Cat" });
+    });
+
+    for (const type of ["DefaultParent", "Root", "None"] as const) {
+      it(`places a direct field in the target category for a ${type} categoryId`, async () => {
+        const field = await run({ name: "Height", categoryId: { type } }, { category: { type: "category", id: "X" } });
+        expect(field.category).to.deep.equal({ type: "target" });
+      });
+
+      it(`keeps a related field's category for a ${type} categoryId`, async () => {
+        const field = await run(
+          { name: "Height", categoryId: { type } },
+          { pathFromTarget: relatedPath, category: { type: "category", id: "Related" } },
+        );
+        expect(field.category).to.deep.equal({ type: "category", id: "Related" });
+      });
+    }
+
+    it("keeps the category when categoryId is not specified", async () => {
+      const field = await run({ name: "Height", labelOverride: "New" }, { category: { type: "category", id: "X" } });
+      expect(field.category).to.deep.equal({ type: "category", id: "X" });
     });
 
     it("maps isReadOnly", async () => {
@@ -578,7 +624,7 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
         imodelAccess: createImodelAccess(),
       });
       expect(descriptor.categories.Cat).to.deep.include({ id: "Cat", label: "Category" });
-      expect(descriptor.fields[field.id].categoryId).to.equal("Cat");
+      expect(descriptor.fields[field.id].category).to.deep.equal({ type: "category", id: "Cat" });
     });
   });
 });

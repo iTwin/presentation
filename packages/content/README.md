@@ -24,6 +24,14 @@ A `ContentSource` is the resolved join shape for a content target. It captures w
 
 A `ContentDescriptor` is the public schema of the result — it describes all available fields, their metadata (labels, types, categories, read-only flags), and the sources they originate from. It does not expose query columns or field-to-column bindings; the provider keeps those loading details private. The descriptor is computed before loading any values, allowing consumers to inspect and customize what will be loaded.
 
+### Categories
+
+Fields are grouped into categories, which the descriptor's `categories` defines. A field's `category` and a category's `parent` say where it's placed:
+
+- `{ type: "category", id }` — in a category defined in `categories`.
+- `{ type: "target" }` — in the category of the content target's own properties: direct properties and properties of related classes shown as if they belonged to the target, such as element aspects. It has no definition in `categories`, so its label is up to the UI (e.g. "Selected Item(s)").
+- `{ type: "topLevel" }` — categories only: at the top level, next to the content target's category. Categories of related instances, such as element links, start here.
+
 ### Fields
 
 A `Field` represents a single loadable value in the content. There are three kinds:
@@ -69,7 +77,7 @@ The pipeline returns raw values: one `ContentItem` per primary instance. The val
 const { entries } = transformContent({ descriptor, items, config: { type: "propertyGrid" } });
 ```
 
-Each entry is either a single field with its raw values, one per item, or a group of fields of a many-cardinality relationship path holding the related instances of every item. Read related instance values with `getValue(field)`. Entries don't carry categories, so use the fields' `categoryId` and the descriptor's `categories`.
+Each entry is either a single field with its raw values, one per item, or a group of fields of a many-cardinality relationship path holding the related instances of every item. Read related instance values with `getValue(field)`. Entries don't carry categories, so use the fields' `category` and the descriptor's `categories`.
 
 The `propertyGrid` configuration shows content of one or more selected instances as a single set of entries:
 

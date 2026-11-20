@@ -7,6 +7,7 @@ import { serializeRelationshipPath } from "./Utils.js";
 
 import type { DeepReadonly, EC, ECSqlBinding, RelationshipPath, ValueDescriptor } from "@itwin/presentation-shared";
 import type { CardinalityHint } from "../ContentTarget.js";
+import type { FieldCategoryReference } from "./Category.js";
 
 /**
  * Base attributes shared by all field kinds.
@@ -29,8 +30,8 @@ interface BaseField {
    * its stored value is an array of this shape — see {@link (PropertyField:interface).pathCardinality}.
    */
   type: ValueDescriptor;
-  /** The category this field belongs to (by ID). */
-  categoryId?: string;
+  /** Where the field is placed: a category defined in the descriptor, or the content target's own category. */
+  category: FieldCategoryReference;
   /** If true, the field is queried but not displayed in UI. */
   hidden?: boolean;
   /**

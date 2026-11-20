@@ -29,20 +29,28 @@ export const SECONDARY_SOURCES_CATEGORY_ID = "secondary_sources";
 export const DOCUMENT_LINK_CATEGORY_ID = "document_link";
 
 function createSourceInformationCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
-  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: strings.sourceInformation };
+  return { id: SOURCE_INFORMATION_CATEGORY_ID, label: strings.sourceInformation, parent: { type: "target" } };
 }
 function createModelSourceCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
-  return { id: MODEL_SOURCE_CATEGORY_ID, label: strings.modelSource, parentId: SOURCE_INFORMATION_CATEGORY_ID };
+  return {
+    id: MODEL_SOURCE_CATEGORY_ID,
+    label: strings.modelSource,
+    parent: { type: "category", id: SOURCE_INFORMATION_CATEGORY_ID },
+  };
 }
 function createSecondarySourcesCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
   return {
     id: SECONDARY_SOURCES_CATEGORY_ID,
     label: strings.secondarySources,
-    parentId: SOURCE_INFORMATION_CATEGORY_ID,
+    parent: { type: "category", id: SOURCE_INFORMATION_CATEGORY_ID },
   };
 }
 function createDocumentLinkCategory(strings: BisCoreLocalizedStrings): CategoryDefinition {
-  return { id: DOCUMENT_LINK_CATEGORY_ID, label: strings.documentLink, parentId: SOURCE_INFORMATION_CATEGORY_ID };
+  return {
+    id: DOCUMENT_LINK_CATEGORY_ID,
+    label: strings.documentLink,
+    parent: { type: "category", id: SOURCE_INFORMATION_CATEGORY_ID },
+  };
 }
 
 /**

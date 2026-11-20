@@ -6,7 +6,7 @@
 import { isSchemaVersionAtLeast, isSchemaVersionBelow } from "../../InternalUtils.js";
 
 import type { ECSchemaProvider } from "@itwin/presentation-shared";
-import type { CategoryDefinition } from "../../model/Category.js";
+import type { CategoryDefinition, CategoryParentReference } from "../../model/Category.js";
 import type * as PresentationRules from "./PresentationRules.js";
 
 /**
@@ -57,6 +57,23 @@ export function resolveCategoryId(id: PresentationRules.PropertySpecification["c
 }
 
 /**
+ * Maps a `PropertyCategorySpecification.parentId` to the category's placement:
+ * - an ID (plain or `Id` form) places it in that category;
+ * - `None` places it at the top level, next to the content target's category;
+ * - `DefaultParent`, `Root` or no parent place it in the content target's category. For related properties
+ *   these refer to a related class category in presentation rules, which isn't supported.
+ */
+function resolveCategoryParent(
+  id: PresentationRules.PropertyCategorySpecification["parentId"],
+): CategoryParentReference {
+  if (typeof id === "object" && id.type === "None") {
+    return { type: "topLevel" };
+  }
+  const categoryId = resolveCategoryId(id);
+  return categoryId !== undefined ? { type: "category", id: categoryId } : { type: "target" };
+}
+
+/**
  * Maps an array of `PropertyCategorySpecification` into a `Record<id, CategoryDefinition>`.
  *
  * @internal
@@ -69,7 +86,7 @@ export function mapPropertyCategories(
     const cat: CategoryDefinition = {
       id: spec.id,
       label: spec.label,
-      parentId: resolveCategoryId(spec.parentId),
+      parent: resolveCategoryParent(spec.parentId),
       description: spec.description,
     };
     categories[cat.id] = cat;

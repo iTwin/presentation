@@ -55,6 +55,7 @@ describe("collectDirectPropertyFields", () => {
         valueClassNames: ["TestSchema.Element"],
         primaryClassNames: ["TestSchema.Element"],
         pathCardinality: "one",
+        category: { type: "target" },
       },
     ]);
   });

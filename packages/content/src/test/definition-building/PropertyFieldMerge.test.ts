@@ -30,6 +30,7 @@ function createField(props: {
   });
   const pathCardinality = props.pathCardinality ?? "one";
   return {
+    category: { type: "target" },
     kind: "property",
     id,
     label: props.label ?? "Label",

@@ -527,19 +527,30 @@ describe("createFieldsProviderFromContentModifierRule", () => {
       });
       const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
       expect(result?.categories).toEqual({
-        cat1: { id: "cat1", label: "Category 1", description: "Desc", parentId: "parent-cat" },
-        cat2: { id: "cat2", label: "Category 2", description: undefined, parentId: undefined },
+        cat1: { id: "cat1", label: "Category 1", description: "Desc", parent: { type: "category", id: "parent-cat" } },
+        cat2: { id: "cat2", label: "Category 2", description: undefined, parent: { type: "target" } },
       });
     });
 
-    it("maps parentId { type: 'Id' }", async () => {
-      const provider = createFieldsProviderFromContentModifierRule({
-        rule: {
-          propertyCategories: [{ id: "cat1", label: "Cat 1", parentId: { type: "Id", categoryId: "parent-id" } }],
+    it.each<{ name: string; parentId: PresentationRules.PropertyCategorySpecification["parentId"]; expected: unknown }>(
+      [
+        { name: "a string", parentId: "parent-id", expected: { type: "category", id: "parent-id" } },
+        {
+          name: "{ type: 'Id' }",
+          parentId: { type: "Id", categoryId: "parent-id" },
+          expected: { type: "category", id: "parent-id" },
         },
+        { name: "{ type: 'None' }", parentId: { type: "None" }, expected: { type: "topLevel" } },
+        { name: "{ type: 'DefaultParent' }", parentId: { type: "DefaultParent" }, expected: { type: "target" } },
+        { name: "{ type: 'Root' }", parentId: { type: "Root" }, expected: { type: "target" } },
+        { name: "undefined", parentId: undefined, expected: { type: "target" } },
+      ],
+    )("maps parentId $name", async ({ parentId, expected }) => {
+      const provider = createFieldsProviderFromContentModifierRule({
+        rule: { propertyCategories: [{ id: "cat1", label: "Cat 1", parentId }] },
       });
       const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
-      expect(result?.categories!.cat1.parentId).toEqual("parent-id");
+      expect(result!.categories!.cat1.parent).toEqual(expected);
     });
   });
 
@@ -1308,6 +1319,92 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           properties: [scopeOnly(1), scopeOnly(3), { stepIndex: 4, target: { select: "all" } }],
         }),
       ]);
+    });
+
+    describe("relationshipMeaning", () => {
+      const step = (className: string): PresentationRules.RelationshipStepSpecification => ({
+        relationship: { schemaName: "TestSchema", className: `To${className}` },
+        direction: "Forward",
+        targetClass: { schemaName: "TestSchema", className },
+      });
+      const getDeclarations = async (spec: PresentationRules.RelatedPropertiesSpecification) => {
+        const provider = createFieldsProviderFromContentModifierRule({ rule: { relatedProperties: [spec] } });
+        const result = await provider.getContribution({ imodelAccess: createIModelAccess(), target: createTarget() });
+        return result!.relatedProperties!;
+      };
+
+      it("attaches categories of a SameInstance spec to the parent context", async () => {
+        const [declaration] = await getDeclarations({
+          propertiesSource: step("A"),
+          properties: "*",
+          relationshipMeaning: "SameInstance",
+        });
+        expect(declaration.propertyCategoryScope).toBe("parent");
+      });
+
+      it("doesn't set category scope for a RelatedInstance spec", async () => {
+        const [declaration] = await getDeclarations({
+          propertiesSource: step("A"),
+          properties: "*",
+          relationshipMeaning: "RelatedInstance",
+        });
+        expect(declaration).not.toHaveProperty("propertyCategoryScope");
+      });
+
+      it("attaches categories of a SameInstance spec nested under a SameInstance spec to the parent context and omits parent steps", async () => {
+        const declarations = await getDeclarations({
+          propertiesSource: step("A"),
+          properties: "*",
+          relationshipMeaning: "SameInstance",
+          nestedRelatedProperties: [
+            { propertiesSource: step("B"), properties: "*", relationshipMeaning: "SameInstance" },
+          ],
+        });
+        expect(declarations).toHaveLength(2);
+        expect(declarations[1].propertyCategoryScope).toBe("parent");
+        expect(declarations[1].properties).toEqual([{ stepIndex: 1, target: { select: "all" } }]);
+      });
+
+      it("omits parent steps for a RelatedInstance spec nested under a SameInstance spec", async () => {
+        const declarations = await getDeclarations({
+          propertiesSource: step("A"),
+          properties: "*",
+          relationshipMeaning: "SameInstance",
+          nestedRelatedProperties: [{ propertiesSource: step("B"), properties: "*" }],
+        });
+        expect(declarations).toHaveLength(2);
+        expect(declarations[1]).not.toHaveProperty("propertyCategoryScope");
+        expect(declarations[1].properties).toEqual([{ stepIndex: 1, target: { select: "all" } }]);
+      });
+
+      it("keeps parent steps and doesn't set category scope for a SameInstance spec nested under a RelatedInstance spec", async () => {
+        const declarations = await getDeclarations({
+          propertiesSource: step("A"),
+          properties: "*",
+          relationshipMeaning: "RelatedInstance",
+          nestedRelatedProperties: [
+            { propertiesSource: step("B"), properties: "*", relationshipMeaning: "SameInstance" },
+          ],
+        });
+        expect(declarations).toHaveLength(2);
+        expect(declarations[1]).not.toHaveProperty("propertyCategoryScope");
+        expect(declarations[1].properties).toEqual([
+          { stepIndex: 0, target: { select: "none" } },
+          { stepIndex: 1, target: { select: "all" } },
+        ]);
+      });
+
+      it("maps relationshipMeaning of deprecated-form specs", async () => {
+        const declarations = await getDeclarations({
+          relationships: { schemaName: "TestSchema", classNames: ["ToA"] },
+          relatedClasses: { schemaName: "TestSchema", classNames: ["A"] },
+          requiredDirection: "Forward",
+          properties: "*",
+          relationshipMeaning: "SameInstance",
+        });
+        expect(declarations).toHaveLength(1);
+        expect(declarations[0].propertyCategoryScope).toBe("parent");
+      });
     });
 
     it("throws when propertiesSource class is not a relationship", async () => {

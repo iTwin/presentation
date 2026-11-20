@@ -21,7 +21,7 @@ import type { ValueDescriptor } from '@itwin/presentation-shared';
 
 // @public
 interface BaseField {
-    categoryId?: string;
+    category: FieldCategoryReference;
     hidden?: boolean;
     id: string;
     label: string;
@@ -80,7 +80,7 @@ export interface CategoryDefinition {
     description?: string;
     id: string;
     label: string;
-    parentId?: string;
+    parent: CategoryParentReference;
 }
 
 // @public (undocumented)
@@ -91,8 +91,11 @@ export namespace CategoryDefinition {
     }): CategoryDefinition["id"];
     export function create(props: {
         path: RelationshipPath;
-    } & Pick<CategoryDefinition, "label" | "description" | "parentId">): CategoryDefinition;
+    } & Pick<CategoryDefinition, "label" | "description" | "parent">): CategoryDefinition;
 }
+
+// @public
+type CategoryParentReference = FieldCategoryReference | TopLevelCategoryReference;
 
 // @public
 interface ClassPropertySpec {
@@ -227,6 +230,13 @@ export const DEFAULT_DESCRIPTOR_TRANSFORMER_PRIORITY = 1000;
 export const DEFAULT_FIELDS_PROVIDER_PRIORITY = 1000;
 
 // @public
+interface DefinedCategoryReference {
+    id: CategoryDefinition["id"];
+    // (undocumented)
+    type: "category";
+}
+
+// @public
 export function defineDescriptorTransformer(transformer: DescriptorTransformer): DescriptorTransformer;
 
 // @public
@@ -291,6 +301,9 @@ type ExternalInputValues<TInputs extends Record<string, InputPropertyDeclaration
 export type Field = PropertyField | CalculatedField | ExternalField;
 
 // @public
+type FieldCategoryReference = DefinedCategoryReference | TargetCategoryReference;
+
+// @public
 interface FieldsProviderContribution {
     calculatedFields?: CalculatedFieldDeclaration[];
     categories?: Record<CategoryDefinition["id"], CategoryDefinition>;
@@ -341,7 +354,7 @@ interface InstanceFilterExpression {
 export function mapItems<TIn, TOut>(items: AsyncIterable<TIn>, transform: (item: TIn) => TOut | Promise<TOut>): AsyncIterable<TOut>;
 
 // @public
-type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
+type MutableFieldMetadata = "label" | "category" | "hidden" | "readOnly";
 
 // @public
 export interface PropertyField extends BaseField {
@@ -492,6 +505,18 @@ interface StepPropertySpec {
     relationship?: ClassPropertySpec;
     stepIndex: number;
     target?: ClassPropertySpec;
+}
+
+// @public
+interface TargetCategoryReference {
+    // (undocumented)
+    type: "target";
+}
+
+// @public
+interface TopLevelCategoryReference {
+    // (undocumented)
+    type: "topLevel";
 }
 
 // @public

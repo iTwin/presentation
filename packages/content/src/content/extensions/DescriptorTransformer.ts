@@ -78,12 +78,12 @@ export function defineDescriptorTransformer(transformer: DescriptorTransformer):
  *
  * @public
  */
-type MutableFieldMetadata = "label" | "categoryId" | "hidden" | "readOnly";
+type MutableFieldMetadata = "label" | "category" | "hidden" | "readOnly";
 
 /**
  * A field exposed to descriptor transformers with everything except display metadata made readonly.
  *
- * Transformers may only modify metadata (`label`, `categoryId`, `hidden`, `readOnly`). Identity
+ * Transformers may only modify metadata (`label`, `category`, `hidden`, `readOnly`). Identity
  * (`id`), value shape (`type`), and the column-defining properties a field reads
  * (`propertyClassName`/`propertyName`/`pathFromTarget` for property fields,
  * `expression`/`targetAlias`/`bindings` for calculated fields) are deeply readonly, so a transformer
@@ -106,7 +106,7 @@ type TransformableField<TField extends Field = Field> = TField extends Field
  *
  * Enforces transformer rules at the type level:
  * - `sources` is readonly — the resolved source structure is immutable at this stage.
- * - Only field display metadata (`label`, `categoryId`, `hidden`, `readOnly`) is mutable; a field's
+ * - Only field display metadata (`label`, `category`, `hidden`, `readOnly`) is mutable; a field's
  *   identity, value shape, and column-defining properties are readonly.
  * - Fields can be removed via `descriptor.removeField(id)`.
  * - A field can be carved for a subset of its value-supplier classes via `descriptor.forkField(id, subset)`.
