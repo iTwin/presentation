@@ -162,6 +162,58 @@ describe("createHierarchyNodePaths", () => {
     expect(getRequests()).toHaveLength(2);
   });
 
+  describe("aborting", () => {
+    const reason = new Error("aborted");
+
+    it("rejects without loading nodes when the signal is already aborted", async () => {
+      await expect(
+        createHierarchyNodePaths({ ...getProps(), paths: [{ path: [a] }], abortSignal: AbortSignal.abort(reason) }),
+      ).rejects.toBe(reason);
+      expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
+    it("stops consuming paths when aborted", async () => {
+      const controller = new AbortController();
+      const firstPathConsumed = new ResolvablePromise<void>();
+      const releaseSecondPath = new ResolvablePromise<void>();
+      async function* createPaths() {
+        yield { path: [a, b] };
+        await firstPathConsumed.resolve();
+        await releaseSecondPath;
+        yield { path: [a, e] };
+      }
+      const result = createHierarchyNodePaths({ ...getProps(), paths: createPaths(), abortSignal: controller.signal });
+      await firstPathConsumed;
+      controller.abort(reason);
+      await expect(result).rejects.toBe(reason);
+      await releaseSecondPath.resolve();
+      expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
+    it("rejects without waiting for pending hierarchy levels when aborted", async () => {
+      const controller = new AbortController();
+      const childLevelRequested = new ResolvablePromise<void>();
+      const releaseChildLevel = new ResolvablePromise<void>();
+      const result = createHierarchyNodePaths({
+        ...getProps({
+          defineHierarchyLevel: async (props) => {
+            if (props.path.length > 0 && props.instanceFilter) {
+              await childLevelRequested.resolve();
+              await releaseChildLevel;
+            }
+            return defineHierarchyLevel(props);
+          },
+        }),
+        paths: [{ path: [a, b] }],
+        abortSignal: controller.signal,
+      });
+      await childLevelRequested;
+      controller.abort(reason);
+      await expect(result).rejects.toBe(reason);
+      await releaseChildLevel.resolve();
+    });
+  });
+
   it("requests all siblings together", async () => {
     const result = await loadPaths([
       [a, b, c],

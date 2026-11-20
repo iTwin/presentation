@@ -8,6 +8,8 @@ The function resolves with a `{ searchPath, nodesPath }` object for every search
 
 The function takes a `PathBasedHierarchyDefinition`, which is like `HierarchyDefinition`, except that its callbacks get a `path` of node identifiers from the root to the parent node, instead of the parent node. The definition should apply the `instanceFilter` it gets, and can't merge nodes by label.
 
+Loading can be stopped with the optional `abortSignal` prop, in which case the returned promise rejects with the signal's reason.
+
 ```ts
 const hierarchyDefinition: PathBasedHierarchyDefinition = {
   defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => [

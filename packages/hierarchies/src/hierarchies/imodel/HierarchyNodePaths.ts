@@ -3,7 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, from, lastValueFrom, mergeAll, mergeMap, of, reduce, toArray } from "rxjs";
+import {
+  defer,
+  finalize,
+  from,
+  fromEvent,
+  identity,
+  lastValueFrom,
+  mergeAll,
+  mergeMap,
+  of,
+  reduce,
+  takeUntil,
+  toArray,
+} from "rxjs";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
@@ -60,6 +73,12 @@ interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> extends 
    * `createInstanceKeyPaths`.
    */
   paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
+
+  /**
+   * Stops consuming paths and loading hierarchy levels when aborted. The returned promise then rejects with the
+   * signal's reason.
+   */
+  abortSignal?: AbortSignal;
 }
 
 type IdentifierKey = string;
@@ -90,24 +109,26 @@ type IdentifierKey = string;
  * - Instances are filtered by their `ECInstanceId` values using `OR` expressions, so hierarchy levels with many
  *   requested instances result in large queries.
  *
- * @throws An error if a hierarchy level size limit is exceeded, a node is merged by label, or loading fails.
+ * @throws An error if a hierarchy level size limit is exceeded, a node is merged by label, or loading fails. The
+ * signal's reason if `abortSignal` is aborted.
  * @beta
  */
 export async function createHierarchyNodePaths<TSearchPath extends SearchPath>(
   props: CreateHierarchyNodePathsProps<TSearchPath>,
 ): Promise<Array<{ searchPath: TSearchPath; nodesPath: Array<HierarchyNode & { isHidden?: boolean }> }>> {
-  const { paths: searchPaths, hierarchyLevelSizeLimit, hierarchyDefinition, ...providerProps } = props;
-  const hierarchyProvider = createIModelHierarchyProvider({
-    ...providerProps,
-    hierarchyDefinition: createHierarchyDefinitionFromPathBased(
-      createHiddenNodesFlaggingDefinition(hierarchyDefinition),
-    ),
-    // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
-    queryCacheSize: Number.MAX_SAFE_INTEGER,
-  });
-  try {
-    return await lastValueFrom(
-      from(searchPaths).pipe(
+  const { paths: searchPaths, hierarchyLevelSizeLimit, hierarchyDefinition, abortSignal, ...providerProps } = props;
+  abortSignal?.throwIfAborted();
+  const result = await lastValueFrom(
+    defer(() => {
+      const hierarchyProvider = createIModelHierarchyProvider({
+        ...providerProps,
+        hierarchyDefinition: createHierarchyDefinitionFromPathBased(
+          createHiddenNodesFlaggingDefinition(hierarchyDefinition),
+        ),
+        // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
+        queryCacheSize: Number.MAX_SAFE_INTEGER,
+      });
+      return from(searchPaths).pipe(
         // collect path entries by their parents as paths come in, so that siblings can be requested together once all
         // paths are received
         reduce(
@@ -152,12 +173,17 @@ export async function createHierarchyNodePaths<TSearchPath extends SearchPath>(
             }),
           ),
         ),
-        toArray(),
-      ),
-    );
-  } finally {
-    hierarchyProvider[Symbol.dispose]();
-  }
+        finalize(() => hierarchyProvider[Symbol.dispose]()),
+      );
+    }).pipe(
+      // unsubscribing stops consuming paths and loading hierarchy levels
+      abortSignal ? takeUntil(fromEvent(abortSignal, "abort")) : identity,
+      toArray(),
+    ),
+  );
+  // `takeUntil` completes the pipeline with partial results, so reject instead of returning them
+  abortSignal?.throwIfAborted();
+  return result;
 }
 
 /** A node returned by the hierarchy provider. Nodes hidden in the hierarchy have the `isHidden` flag. */

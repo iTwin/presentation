@@ -52,6 +52,7 @@ export function createHierarchyNodePaths<TSearchPath extends SearchPath>(props: 
 
 // @beta
 interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> extends Pick<Props<typeof createIModelHierarchyProvider>, "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"> {
+    abortSignal?: AbortSignal;
     hierarchyDefinition: PathBasedHierarchyDefinition;
     hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
     paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
