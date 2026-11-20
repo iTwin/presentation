@@ -21,6 +21,7 @@ import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 import { HierarchySearchTree } from "../HierarchySearch.js";
+import { releaseMainThreadOnItemsCount } from "../internal/operators/ReleaseMainThread.js";
 import { IModelHierarchyProviderImpl } from "./IModelHierarchyProvider.js";
 import { createHierarchyDefinitionFromPathBased } from "./PathBasedHierarchyDefinition.js";
 
@@ -107,6 +108,7 @@ export function createIModelHierarchyNodePaths(
       abortSignal?.throwIfAborted();
       return from(searchPaths);
     }).pipe(
+      releaseMainThreadOnItemsCount(1000),
       // collect paths into a search tree as they come in, so that siblings can be requested together once all paths
       // are received
       reduce(
