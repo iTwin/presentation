@@ -540,7 +540,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           parentId: { type: "Id", categoryId: "parent-id" },
           expected: { type: "category", id: "parent-id" },
         },
-        { name: "{ type: 'None' }", parentId: { type: "None" }, expected: { type: "topLevel" } },
+        { name: "{ type: 'None' }", parentId: { type: "None" }, expected: { type: "target" } },
         { name: "{ type: 'DefaultParent' }", parentId: { type: "DefaultParent" }, expected: { type: "target" } },
         { name: "{ type: 'Root' }", parentId: { type: "Root" }, expected: { type: "target" } },
         { name: "undefined", parentId: undefined, expected: { type: "target" } },

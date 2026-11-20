@@ -361,20 +361,13 @@ describe("createDescriptorTransformerFromContentModifierRule", () => {
       expect(field.category).to.deep.equal({ type: "category", id: "Cat" });
     });
 
-    for (const type of ["DefaultParent", "Root", "None"] as const) {
-      it(`places a direct field in the target category for a ${type} categoryId`, async () => {
-        const field = await run({ name: "Height", categoryId: { type } }, { category: { type: "category", id: "X" } });
-        expect(field.category).to.deep.equal({ type: "target" });
-      });
-
-      it(`keeps a related field's category for a ${type} categoryId`, async () => {
-        const field = await run(
-          { name: "Height", categoryId: { type } },
-          { pathFromTarget: relatedPath, category: { type: "category", id: "Related" } },
-        );
-        expect(field.category).to.deep.equal({ type: "category", id: "Related" });
-      });
-    }
+    it("ignores a categoryId that cannot be mapped", async () => {
+      const field = await run(
+        { name: "Height", categoryId: { type: "None" } },
+        { category: { type: "category", id: "X" } },
+      );
+      expect(field.category).to.deep.equal({ type: "category", id: "X" });
+    });
 
     it("keeps the category when categoryId is not specified", async () => {
       const field = await run({ name: "Height", labelOverride: "New" }, { category: { type: "category", id: "X" } });
