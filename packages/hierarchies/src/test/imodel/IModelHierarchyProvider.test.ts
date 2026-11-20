@@ -186,6 +186,42 @@ describe("createIModelHierarchyProvider", () => {
     expect(nodes).toEqual([expectedChild]);
   });
 
+  describe("Query alternatives", () => {
+    const createProvider = (query: ECSqlQueryDef[]) =>
+      createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            return parentNode ? [] : [{ fullClassName: "a.b", query }];
+          },
+        },
+      });
+
+    beforeEach(() => {
+      imodelAccess.createQueryReader.mockImplementation(async function* ({ ecsql }) {
+        if (ecsql.includes("SLOW")) {
+          await new Promise(() => {}); // never responds
+        }
+        yield { [0]: "a.b", [1]: "0x1", [2]: false, FullClassName: "a.b", ECInstanceId: "0x1", DisplayLabel: "x" };
+      });
+    });
+
+    it("uses nodes of the query that responds first", async () => {
+      using provider = createProvider([{ ecsql: "SLOW" }, { ecsql: "FAST" }]);
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toHaveLength(1);
+    });
+
+    it("uses instance keys of the query that responds first", async () => {
+      using provider = createProvider([{ ecsql: "SLOW" }, { ecsql: "FAST" }]);
+      expect(await collect(provider.getNodeInstanceKeys({ parentNode: undefined }))).toHaveLength(1);
+    });
+
+    it("returns no nodes when there are no queries", async () => {
+      using provider = createProvider([]);
+      expect(await collect(provider.getNodes({ parentNode: undefined }))).toEqual([]);
+    });
+  });
+
   [
     {
       parentNode: createTestGenericNode({

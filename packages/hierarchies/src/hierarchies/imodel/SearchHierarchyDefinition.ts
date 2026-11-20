@@ -13,6 +13,7 @@ import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { fromPossiblyPromise } from "../internal/Common.js";
 import { partition } from "../internal/operators/Partition.js";
 import { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
+import { mapQueryAlternatives } from "./Utils.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
@@ -284,10 +285,10 @@ export function applyECInstanceIdsSearch(
   const instanceIdsByClass = getClassECInstanceIds(targetInstanceKeys);
   return {
     ...def,
-    query: {
-      ...def.query,
+    query: mapQueryAlternatives(def.query, (query) => ({
+      ...query,
       ctes: [
-        ...(def.query.ctes ?? []),
+        ...(query.ctes ?? []),
         `SearchInfo(ECInstanceId, SearchClassName) AS (
           ${Array.from(instanceIdsByClass)
             .map(
@@ -306,11 +307,11 @@ export function applyECInstanceIdsSearch(
           IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_SearchECInstanceId}],
           [f].[SearchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
         FROM (
-          ${def.query.ecsql}
+          ${query.ecsql}
         ) [q]
         JOIN SearchInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
       `,
-    },
+    })),
   };
 }
 
@@ -318,16 +319,16 @@ export function applyECInstanceIdsSearch(
 export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): InstanceNodesQueryDefinition {
   return {
     ...def,
-    query: {
-      ...def.query,
+    query: mapQueryAlternatives(def.query, (query) => ({
+      ...query,
       ecsql: `
         SELECT
           [q].*,
           IdToHex([q].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_SearchECInstanceId}],
           [q].[${NodeSelectClauseColumnNames.FullClassName}] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
-        FROM (${def.query.ecsql}) [q]
+        FROM (${query.ecsql}) [q]
       `,
-    },
+    })),
   };
 }
 

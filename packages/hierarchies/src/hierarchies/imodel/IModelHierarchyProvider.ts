@@ -21,6 +21,7 @@ import {
   mergeAll,
   mergeMap,
   of,
+  race,
   reduce,
   Subject,
   take,
@@ -543,12 +544,18 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       if (HierarchyNodesDefinition.isGenericNode(def)) {
         return of({ ...def.node, key: { type: "generic" as const, id: def.node.key, source: this.#sourceName } });
       }
-      const query = createInstanceKeysFilteredQuery(def.query, props.targetInstanceKeys);
       const parser: Props<typeof parseNodes>["parser"] = parseNode
         ? ({ row }) => parseNode({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
         : undefined;
       return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
-        readNodes({ queryExecutor: imodelAccess, query, limit: props.hierarchyLevelSizeLimit, parser }).pipe(
+        raceQueryAlternatives(def.query, (query) =>
+          readNodes({
+            queryExecutor: imodelAccess,
+            query: createInstanceKeysFilteredQuery(query, props.targetInstanceKeys),
+            limit: props.hierarchyLevelSizeLimit,
+            parser,
+          }),
+        ).pipe(
           catchError((e) => {
             if (!(e instanceof RowsLimitExceededError)) {
               throw e;
@@ -887,8 +894,8 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const instanceKeys = instanceDefs.pipe(
       mergeMap(({ imodelAccess, hierarchyNodesDefinition: def }) =>
         this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
-          of(def.query).pipe(
-            mergeMap(async (query) => {
+          raceQueryAlternatives(def.query, (query) =>
+            defer(() => {
               const ecsql = `
                 SELECT
                   ${NodeSelectClauseColumnNames.FullClassName},
@@ -917,7 +924,6 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                 })),
               );
             }),
-            mergeAll(),
           ),
         ),
       ),
@@ -1038,6 +1044,15 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
     return [];
   }
   return [...parentNode.parentKeys, parentNode.key];
+}
+
+/** Runs all query alternatives in parallel and mirrors the first one to emit, unsubscribing from the rest. */
+function raceQueryAlternatives<T>(
+  query: ECSqlQueryDef | ECSqlQueryDef[],
+  factory: (query: ECSqlQueryDef) => Observable<T>,
+): Observable<T> {
+  const queries = Array.isArray(query) ? query : [query];
+  return queries.length > 0 ? race(queries.map(factory)) : EMPTY;
 }
 
 function createInstanceKeysFilteredQuery(
