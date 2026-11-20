@@ -15,7 +15,8 @@ const hierarchyDefinition: PathBasedHierarchyDefinition = {
   ],
 };
 const nodePaths = await createHierarchyNodePaths({
-  hierarchyProviderProps: { imodelAccess, hierarchyDefinition },
+  imodelAccess,
+  hierarchyDefinition,
   paths: [{ path: [rootElementKey, childElementKey] }],
 });
 ```

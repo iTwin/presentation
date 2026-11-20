@@ -109,7 +109,8 @@ interface ModelsTree<THierarchyDefinition extends HierarchyDefinition = Hierarch
  *   },
  * });
  * const nodePaths = await createHierarchyNodePaths({
- *   hierarchyProviderProps: { imodelAccess, hierarchyDefinition: tree.hierarchyDefinition },
+ *   imodelAccess,
+ *   hierarchyDefinition: tree.hierarchyDefinition,
  *   paths: tree.createInstanceKeyPaths({ targetItems }),
  * });
  * // every `searchPath` in `nodePaths` is a `{ path, target }` object yielded by `createInstanceKeyPaths`

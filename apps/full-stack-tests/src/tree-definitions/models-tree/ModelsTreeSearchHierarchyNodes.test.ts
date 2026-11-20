@@ -266,7 +266,8 @@ async function createNodePaths({
   imodelAccess: ReturnType<typeof createIModelAccess>;
 }) {
   const nodePaths = await createHierarchyNodePaths({
-    hierarchyProviderProps: { imodelAccess, hierarchyDefinition: tree.hierarchyDefinition },
+    imodelAccess,
+    hierarchyDefinition: tree.hierarchyDefinition,
     paths: tree.createInstanceKeyPaths(searchProps),
   });
   return nodePaths.map(({ searchPath, nodesPath }) => ({ path: nodesPath, target: searchPath.target }));

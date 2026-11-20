@@ -57,9 +57,9 @@ describe("createHierarchyNodePaths", () => {
     rows = new Map(entries.map(([path, levelRows]) => [getPathId(path), levelRows]));
   }
 
-  function getHierarchyProviderProps(
+  function getProps(
     hierarchyDefinition?: Partial<PathBasedHierarchyDefinition>,
-  ): Props<typeof createHierarchyNodePaths>["hierarchyProviderProps"] {
+  ): Omit<Props<typeof createHierarchyNodePaths>, "paths"> {
     return { imodelAccess, hierarchyDefinition: { defineHierarchyLevel, ...hierarchyDefinition } };
   }
 
@@ -104,7 +104,7 @@ describe("createHierarchyNodePaths", () => {
     hierarchyDefinition?: Partial<PathBasedHierarchyDefinition>,
   ) {
     const nodePaths = await createHierarchyNodePaths({
-      hierarchyProviderProps: getHierarchyProviderProps(hierarchyDefinition),
+      ...getProps(hierarchyDefinition),
       paths: paths.map((path) => ({ path })),
     });
     return nodePaths.map(({ searchPath, nodesPath }) => ({ searchPath: searchPath.path, nodesPath }));
@@ -132,10 +132,7 @@ describe("createHierarchyNodePaths", () => {
 
   it("passes provider props to the hierarchy provider", async () => {
     const formatter = vi.fn(async () => "formatted");
-    const [{ nodesPath }] = await createHierarchyNodePaths({
-      hierarchyProviderProps: { ...getHierarchyProviderProps(), formatter },
-      paths: [{ path: [a] }],
-    });
+    const [{ nodesPath }] = await createHierarchyNodePaths({ ...getProps(), formatter, paths: [{ path: [a] }] });
     expect(nodesPath).toEqual([expect.objectContaining({ label: "formatted" })]);
   });
 
@@ -157,10 +154,7 @@ describe("createHierarchyNodePaths", () => {
       await releaseSecondPath;
       yield { path: [a, e] };
     }
-    const result = createHierarchyNodePaths({
-      hierarchyProviderProps: getHierarchyProviderProps(),
-      paths: createPaths(),
-    });
+    const result = createHierarchyNodePaths({ ...getProps(), paths: createPaths() });
     await firstPathConsumed;
     expect(defineHierarchyLevel).not.toHaveBeenCalled();
     await releaseSecondPath.resolve();
@@ -192,10 +186,7 @@ describe("createHierarchyNodePaths", () => {
       { path: [a, b], target: "b" },
       { path: [a], target: "a" },
     ];
-    const result = await createHierarchyNodePaths({
-      hierarchyProviderProps: getHierarchyProviderProps(),
-      paths: createAsyncIterator(paths),
-    });
+    const result = await createHierarchyNodePaths({ ...getProps(), paths: createAsyncIterator(paths) });
     expect(result).toEqual([
       { searchPath: paths[0], nodesPath: createPath([nodeA, nodeB]) },
       { searchPath: paths[1], nodesPath: createPath([nodeA]) },
@@ -250,7 +241,7 @@ describe("createHierarchyNodePaths", () => {
 
   it("passes hierarchy level size limit to every request", async () => {
     const result = await createHierarchyNodePaths({
-      hierarchyProviderProps: getHierarchyProviderProps(),
+      ...getProps(),
       hierarchyLevelSizeLimit: "unbounded",
       paths: [{ path: [a, b, c] }],
     });

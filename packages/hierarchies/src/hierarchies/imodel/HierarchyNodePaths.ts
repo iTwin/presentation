@@ -35,22 +35,22 @@ type SearchPath = { path: DeepReadonly<HierarchyNodeIdentifier[]> };
  * Props for `createHierarchyNodePaths`.
  * @beta
  */
-interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> {
+interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> extends Pick<
+  Props<typeof createIModelHierarchyProvider>,
+  "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"
+> {
   /**
-   * Props for the hierarchy provider that `createHierarchyNodePaths` creates internally to load the nodes.
+   * Definition of the hierarchy to load nodes from.
    *
-   * The hierarchy definition gets a `path` of node identifiers from a root node to the parent node (empty for root
-   * nodes), instead of `parentNode`. The path is made of search path identifiers when loading nodes of search path
-   * entries, and of actual node keys when determining whether loaded nodes have children.
+   * The definition gets a `path` of node identifiers from a root node to the parent node (empty for root nodes),
+   * instead of `parentNode`. The path is made of search path identifiers when loading nodes of search path entries,
+   * and of actual node keys when determining whether loaded nodes have children.
    */
-  hierarchyProviderProps: Pick<
-    Props<typeof createIModelHierarchyProvider>,
-    "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"
-  > & { hierarchyDefinition: PathBasedHierarchyDefinition };
+  hierarchyDefinition: PathBasedHierarchyDefinition;
 
   /**
    * Hierarchy level size limit override, passed to every hierarchy level request. If not provided, the limit of
-   * `hierarchyProviderProps.imodelAccess` applies.
+   * `imodelAccess` applies.
    */
   hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
 
@@ -96,18 +96,18 @@ type IdentifierKey = string;
 export async function createHierarchyNodePaths<TSearchPath extends SearchPath>(
   props: CreateHierarchyNodePathsProps<TSearchPath>,
 ): Promise<Array<{ searchPath: TSearchPath; nodesPath: Array<HierarchyNode & { isHidden?: boolean }> }>> {
-  const { hierarchyProviderProps, hierarchyLevelSizeLimit } = props;
+  const { paths: searchPaths, hierarchyLevelSizeLimit, hierarchyDefinition, ...providerProps } = props;
   const hierarchyProvider = createIModelHierarchyProvider({
-    ...hierarchyProviderProps,
+    ...providerProps,
     hierarchyDefinition: createHierarchyDefinitionFromPathBased(
-      createHiddenNodesFlaggingDefinition(hierarchyProviderProps.hierarchyDefinition),
+      createHiddenNodesFlaggingDefinition(hierarchyDefinition),
     ),
     // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
     queryCacheSize: Number.MAX_SAFE_INTEGER,
   });
   try {
     return await lastValueFrom(
-      from(props.paths).pipe(
+      from(searchPaths).pipe(
         // collect path entries by their parents as paths come in, so that siblings can be requested together once all
         // paths are received
         reduce(
@@ -138,7 +138,7 @@ export async function createHierarchyNodePaths<TSearchPath extends SearchPath>(
         mergeMap(({ entriesByParent, paths }) =>
           getLoadedEntries({
             hierarchyProvider,
-            imodelAccess: hierarchyProviderProps.imodelAccess,
+            imodelAccess: providerProps.imodelAccess,
             hierarchyLevelSizeLimit,
             entriesByParent,
           }).pipe(

@@ -251,37 +251,35 @@ Nodes that are hidden in the hierarchy have to be included in the search paths -
 import { createHierarchyNodePaths } from "@itwin/presentation-hierarchies";
 
 const nodePaths = await createHierarchyNodePaths({
-  hierarchyProviderProps: {
-    imodelAccess,
-    hierarchyDefinition: {
-      // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
-      // to the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has
-      // to be applied.
-      defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
-        const { from, joins, where } = await createFilterClauses({
-          contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
-          filter: instanceFilter,
-        });
-        const parentId = path.length > 0 ? path[path.length - 1].id : undefined;
-        return [
-          {
-            fullClassName: "BisCore.PhysicalElement",
-            query: {
-              ecsql: `
-                SELECT ${await createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: { selector: "this.UserLabel" },
-                })}
-                FROM ${from} this
-                ${joins}
-                WHERE ${parentId ? "this.Parent.Id = ?" : "this.Parent IS NULL"} ${where ? `AND ${where}` : ""}
-              `,
-              bindings: parentId ? [{ type: "id", value: parentId }] : undefined,
-            },
+  imodelAccess,
+  hierarchyDefinition: {
+    // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
+    // to the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has
+    // to be applied.
+    defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
+      const { from, joins, where } = await createFilterClauses({
+        contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
+        filter: instanceFilter,
+      });
+      const parentId = path.length > 0 ? path[path.length - 1].id : undefined;
+      return [
+        {
+          fullClassName: "BisCore.PhysicalElement",
+          query: {
+            ecsql: `
+              SELECT ${await createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: "this.UserLabel" },
+              })}
+              FROM ${from} this
+              ${joins}
+              WHERE ${parentId ? "this.Parent.Id = ?" : "this.Parent IS NULL"} ${where ? `AND ${where}` : ""}
+            `,
+            bindings: parentId ? [{ type: "id", value: parentId }] : undefined,
           },
-        ];
-      },
+        },
+      ];
     },
   },
   paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
