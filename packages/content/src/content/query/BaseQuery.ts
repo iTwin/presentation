@@ -13,7 +13,13 @@ import {
   renderSourceClassJoin,
   resolveCalculatedFieldSources,
 } from "./CalculatedFieldSources.js";
-import { createJoinBudget, mergeJoinInfos, packPathsWithinBudget, partitionPathsByJoinBudget } from "./QueryLimits.js";
+import {
+  createJoinBudget,
+  mergeJoinInfos,
+  packPathsWithinBudget,
+  partitionPathsByJoinBudget,
+  resolveClassTableCounts,
+} from "./QueryLimits.js";
 import { buildTargetFilter } from "./TargetFilter.js";
 import { buildValueFilterClause, buildValueFilterClauses } from "./ValueFilters.js";
 
@@ -262,6 +268,14 @@ export async function buildBaseQuery(
     relatedClassAliases,
     getPrefixKeys,
   });
+  const classNames = new Set([
+    source.target.primaryClass,
+    ...calculatedFieldSources.joins.map(({ className }) => className),
+    ...groupPaths.flatMap(({ path }) => path.map((step) => step.targetClassName)),
+    ...filterPaths.flatMap((path) => path.map((step) => step.targetClassName)),
+    ...sortPaths.flatMap((path) => path.map((step) => step.targetClassName)),
+  ]);
+  const classTableCounts = await resolveClassTableCounts({ schemaProvider, classNames: [...classNames] });
 
   // Assembles one group's parts: every group shares FROM + target filter and renders its own subset of
   // related paths (merged so a shared prefix is joined once); only the group that owns the primaries (the
@@ -287,15 +301,20 @@ export async function buildBaseQuery(
   // Primary FROM, target-filter join and sort paths cannot spill. Sort paths
   // must stay on the anchor for ORDER BY, so reserve their complete cost before packing optional 1:1
   // filter paths. Overflow filters retain query-wide aliases and use correlated subqueries.
+  const primaryClassTablesCount = classTableCounts.get(source.target.primaryClass)!;
+  const calculatedSourceTablesCount = calculatedFieldSources.joins.reduce(
+    (count, join) => count + classTableCounts.get(join.className)!,
+    0,
+  );
   const fixedReserves =
-    1 +
-    (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0) +
+    primaryClassTablesCount +
     (targetFilter.joins?.length ?? 0) +
-    calculatedFieldSources.joins.length;
+    calculatedSourceTablesCount +
+    (includeRelatedJoins ? PAGE_ID_SET_JOIN_TABLES : 0);
   // One shared, running budget for everything the anchor joins — sort paths, then budget-fitting 1:1
   // filter paths, then (below, related-columns mode only) selected 1:1 paths — so a path sharing a
   // prefix with one already added costs only its own unshared suffix, not its full cost again.
-  const anchorBudget = createJoinBudget({ reservedTables: fixedReserves });
+  const anchorBudget = createJoinBudget({ reservedTables: fixedReserves, classTableCounts });
   const sortPathInfos = await Promise.all(
     sortPaths.map(async (path) => ({ path, joinInfo: await resolvePathInfo(path, "outer") })),
   );
@@ -353,10 +372,11 @@ export async function buildBaseQuery(
     classifyCardinality,
     paths: packablePaths,
     budget: anchorBudget,
+    classTableCounts,
     // An overflow partition is its own outer-joined group sharing only FROM + the target filter — no
     // sort paths — so it gets a fresh, more modestly reserved budget of its own.
     // The source-class joins stay on the anchor, so an overflow group doesn't reserve them.
-    overflowReservedTables: 1 + PAGE_ID_SET_JOIN_TABLES + (targetFilter.joins?.length ?? 0),
+    overflowReservedTables: primaryClassTablesCount + (targetFilter.joins?.length ?? 0) + PAGE_ID_SET_JOIN_TABLES,
   });
   const anchorPaths = [...preSeededPaths, ...packedAnchorPaths];
 
@@ -408,6 +428,7 @@ async function splitRelatedPaths(props: {
   resolvePathInfo: (path: RelationshipPath, joinType: "inner" | "outer") => Promise<RelationshipPathJoinInfo>;
   /** Shared, cached classifier (see `buildBaseQuery`), so a path already classified for filtering isn't re-read. */
   classifyCardinality: (path: RelationshipPath) => Promise<CardinalityHint>;
+  classTableCounts: ReadonlyMap<string, number>;
   paths: ResolvedPath[];
   /** The anchor's shared, running budget (see `buildBaseQuery`) — mutated in place as paths are packed. */
   budget: JoinBudget;
@@ -424,7 +445,11 @@ async function splitRelatedPaths(props: {
     if (cardinality === "many") {
       const joinInfo = await props.resolvePathInfo(resolved.path, "inner");
       // This path already forms its own group; call the partitioner only to validate it against a fresh budget.
-      partitionPathsByJoinBudget({ paths: [{ ...resolved, joinInfo }], reservedTables: props.overflowReservedTables });
+      partitionPathsByJoinBudget({
+        paths: [{ ...resolved, joinInfo }],
+        reservedTables: props.overflowReservedTables,
+        classTableCounts: props.classTableCounts,
+      });
       oneToManyGroups.push({ paths: [resolved], joinType: "inner", cardinality: "many" });
     } else {
       oneToOne.push(resolved);
@@ -440,7 +465,11 @@ async function splitRelatedPaths(props: {
     paths: oneToOneWithInfo,
     budget: props.budget,
   });
-  const extraPartitions = partitionPathsByJoinBudget({ paths: overflow, reservedTables: props.overflowReservedTables });
+  const extraPartitions = partitionPathsByJoinBudget({
+    paths: overflow,
+    reservedTables: props.overflowReservedTables,
+    classTableCounts: props.classTableCounts,
+  });
   const toResolvedPaths = (partition: typeof oneToOneWithInfo): ResolvedPath[] =>
     partition.map((entry) => ({ path: entry.path, targetClassNames: entry.targetClassNames }));
 
@@ -653,9 +682,9 @@ async function buildExistentialFilterClause(props: {
     `WHERE ${skeleton.correlation}${extraCondition ? ` AND (${extraCondition})` : ""}`;
 
   if (filter.operator === "is-null") {
-    // An aggregate query always returns exactly one row (even over zero joined rows: `COUNT(*)` is 0,
-    // so `COUNT(<selector>)` is too), so this single scan supplies both checks without an `EXISTS` twice.
-    const clause = `(SELECT COUNT(*) = 0 OR COUNT(${predicate.selector}) < COUNT(*) ${renderFrom()} ${renderWhere()})`;
+    // An aggregate query always returns exactly one row (even over zero joined rows), so `HAVING` tests
+    // both checks in a single scan. ECSQL doesn't accept the aggregate as a scalar predicate.
+    const clause = `EXISTS (SELECT COUNT(*) ${renderFrom()} ${renderWhere()} HAVING COUNT(*) = 0 OR COUNT(${predicate.selector}) < COUNT(*))`;
     return { clause, bindings };
   }
   return { clause: `EXISTS (SELECT 1 ${renderFrom()} ${renderWhere(predicate.clause)})`, bindings };
