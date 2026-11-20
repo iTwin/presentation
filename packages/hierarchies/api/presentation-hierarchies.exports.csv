@@ -1,9 +1,9 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;ClassGroupingNodeKey
-beta;function;createHierarchyNodePaths
 public;function;createHierarchyProvider
 public;function;createHierarchySearchHelper
+beta;function;createIModelHierarchyNodePaths
 public;function;createIModelHierarchyProvider
 public;function;createLimitingECSqlQueryExecutor
 public;function;createMergedIModelHierarchyProvider

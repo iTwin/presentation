@@ -2,25 +2,23 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Added `createHierarchyNodePaths` function, which loads hierarchy nodes along the given search paths - objects with a `path` of node identifiers, like the ones yielded by tree definitions' `createInstanceKeyPaths`. All hierarchy levels are requested concurrently, without loading their ancestor nodes first.
+Added `createIModelHierarchyNodePaths` function, which asynchronously loads paths of hierarchy nodes for the given instance key paths, e.g. the ones created by tree definitions' `createInstanceKeyPaths`. Each nodes path contains the same nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target.
 
-The function resolves with a `{ searchPath, nodesPath }` object for every search path, where `nodesPath` contains the same nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target, plus the hidden nodes. Nodes that are hidden in the hierarchy have to be included in the search paths - they're included in the resulting node paths with the `isHidden` flag. Search paths whose target isn't found or is hidden are omitted.
-
-The function takes a `PathBasedHierarchyDefinition`, which is like `HierarchyDefinition`, except that its callbacks get a `path` of node identifiers from the root to the parent node, instead of the parent node. The definition should apply the `instanceFilter` it gets, and can't merge nodes by label.
-
-Loading can be stopped with the optional `abortSignal` prop, in which case the returned promise rejects with the signal's reason.
+The function takes a `PathBasedHierarchyDefinition` - a hierarchy definition whose callbacks get a `path` of node identifiers to the parent node, instead of the parent node. Nodes with multiple instance keys, e.g. nodes merged by label, are not supported - the hierarchy must not have such nodes.
 
 ```ts
 const hierarchyDefinition: PathBasedHierarchyDefinition = {
-  defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => [
+  defineHierarchyLevel: async ({ path, createSelectClause }) => [
     // ...
   ],
 };
-const nodePaths = await createHierarchyNodePaths({
+for await (const nodesPath of createIModelHierarchyNodePaths({
   imodelAccess,
   hierarchyDefinition,
   paths: [{ path: [rootElementKey, childElementKey] }],
-});
+})) {
+  // ...
+}
 ```
 
 `NodeParser`, `NodePreProcessor` and `NodePostProcessor` got a `TParentProps` type parameter that specifies props identifying the parent of the node. It defaults to the `parentNode` attribute, so existing code is not affected.

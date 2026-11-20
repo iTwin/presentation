@@ -96,7 +96,7 @@ interface ModelsTree<THierarchyDefinition extends HierarchyDefinition = Hierarch
  * Pass the returned `hierarchyDefinition` to `createIModelHierarchyProvider` from `@itwin/presentation-hierarchies`.
  *
  * When label merging is disabled for subjects, categories and models, the returned `hierarchyDefinition` is also a
- * `PathBasedHierarchyDefinition`, so it can be passed to `createHierarchyNodePaths` from
+ * `PathBasedHierarchyDefinition`, so it can be passed to `createIModelHierarchyNodePaths` from
  * `@itwin/presentation-hierarchies` to load hierarchy nodes for paths created by `createInstanceKeyPaths`:
  *
  * ```ts
@@ -108,12 +108,13 @@ interface ModelsTree<THierarchyDefinition extends HierarchyDefinition = Hierarch
  *     models: { labelMerging: "disable" },
  *   },
  * });
- * const nodePaths = await createHierarchyNodePaths({
+ * for await (const nodesPath of createIModelHierarchyNodePaths({
  *   imodelAccess,
  *   hierarchyDefinition: tree.hierarchyDefinition,
  *   paths: tree.createInstanceKeyPaths({ targetItems }),
- * });
- * // every `searchPath` in `nodePaths` is a `{ path, target }` object yielded by `createInstanceKeyPaths`
+ * })) {
+ *   // `nodesPath` is a path of hierarchy nodes from the root to a target found in the hierarchy
+ * }
  * ```
  *
  * Paths must be created with the default `includeOnlyVisibleNodeInstanceKeys: false`, because nodes that are hidden

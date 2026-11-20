@@ -39,6 +39,11 @@ interface SearchHierarchyDefinitionProps {
   sourceName: string;
   targetPaths: HierarchySearchTree[];
   nodesParser?: RxjsNodeParser;
+  /**
+   * Whether hierarchy levels under search targets are filtered to search tree entries too. By default, they're not
+   * filtered, so whole subtrees of search targets are loaded.
+   */
+  filterUnderSearchTargets?: boolean;
 }
 
 /** @internal */
@@ -48,6 +53,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   private _targetPaths: HierarchySearchTree[];
   private _nodesParser: RxjsNodeParser;
   #sourceName: string;
+  #filterUnderSearchTargets: boolean;
 
   public constructor(props: SearchHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
@@ -55,6 +61,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     this.#sourceName = props.sourceName;
     this._targetPaths = props.targetPaths;
     this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
+    this.#filterUnderSearchTargets = !!props.filterUnderSearchTargets;
   }
 
   public get preProcessNode(): RxjsNodePreProcessor {
@@ -156,6 +163,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     if (!childNodeSearchIdentifiers) {
       return sourceDefinitions;
     }
+    // under search targets, all nodes are used, unless levels under search targets are filtered too
+    const useAllNodes = searchHelper.hasSearchTargetAncestor && !this.#filterUnderSearchTargets;
 
     const [genericNodeDefinitions, instanceNodeDefinitions] = partition(
       sourceDefinitions.pipe(mergeAll()),
@@ -165,7 +174,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
       genericNodeDefinitions.pipe(
         map((definition) => {
           if (
-            searchHelper.hasSearchTargetAncestor ||
+            useAllNodes ||
             childNodeSearchIdentifiers.some(
               (identifier) =>
                 HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
@@ -191,7 +200,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
 
       instanceNodeDefinitions.pipe(
         mergeMap((definition) => {
-          if (searchHelper.hasSearchTargetAncestor) {
+          if (useAllNodes) {
             // if we have a search target ancestor, we don't need to search the definitions - we use all of them
             return of(applyECInstanceIdsSelector(definition));
           }

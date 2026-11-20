@@ -56,7 +56,7 @@ export interface PathBasedDefineHierarchyLevelProps
  * Nodes can't be merged by label, because a merged node gets all of its instance keys only after its whole hierarchy
  * level is loaded.
  *
- * @see `createHierarchyNodePaths`
+ * @see `createIModelHierarchyNodePaths`
  * @beta
  */
 export interface PathBasedHierarchyDefinition {
@@ -86,40 +86,34 @@ export interface PathBasedHierarchyDefinition {
  * Creates a `HierarchyDefinition` that calls the given path-based definition. The path is created from keys of the
  * parent node and its ancestors, skipping grouping node keys. The path-based definition never gets the parent node.
  *
- * @throws An error if a node is merged by label, or a parent node has more than one instance key.
+ * @throws An error if a node or a parent node has more than one instance key, e.g. because it's merged by label.
  */
 export function createHierarchyDefinitionFromPathBased(source: PathBasedHierarchyDefinition): HierarchyDefinition {
   return {
     ...(source.parseNode
       ? { parseNode: async ({ parentNode, ...props }) => source.parseNode!({ ...props, path: createPath(parentNode) }) }
       : {}),
-    preProcessNode: async ({ node, parentNode }) => {
-      const result = source.preProcessNode ? await source.preProcessNode({ node, path: createPath(parentNode) }) : node;
-      if (result && isMergedByLabel(result)) {
-        throw new Error(MERGED_NODES_ERROR);
-      }
-      return result;
-    },
-    ...(source.postProcessNode
+    ...(source.preProcessNode
       ? {
-          postProcessNode: async ({ node, parentNode }) =>
-            source.postProcessNode!({ node, path: createPath(parentNode) }),
+          preProcessNode: async ({ node, parentNode }) =>
+            source.preProcessNode!({ node, path: createPath(parentNode) }),
         }
       : {}),
+    postProcessNode: async ({ node, parentNode }) => {
+      // nodes merged by label get all their instance keys when their hierarchy level is grouped, so they can only be
+      // detected after pre-processing
+      if (ProcessedHierarchyNode.isInstancesNode(node) && node.key.instanceKeys.length > 1) {
+        throw new Error(MULTIPLE_INSTANCE_KEYS_ERROR);
+      }
+      return source.postProcessNode ? source.postProcessNode({ node, path: createPath(parentNode) }) : node;
+    },
     defineHierarchyLevel: async ({ parentNode, ...props }) =>
       source.defineHierarchyLevel({ ...props, path: createPath(parentNode) }),
   };
 }
 
-const MERGED_NODES_ERROR = "Path-based hierarchy definitions don't support nodes merged by label.";
-
-function isMergedByLabel(node: ProcessedHierarchyNode): boolean {
-  if (!ProcessedHierarchyNode.isInstancesNode(node)) {
-    return false;
-  }
-  const byLabel = node.processingParams?.grouping?.byLabel;
-  return typeof byLabel === "object" && byLabel.action === "merge";
-}
+const MULTIPLE_INSTANCE_KEYS_ERROR =
+  "Path-based hierarchy definitions don't support nodes with multiple instance keys, e.g. nodes merged by label.";
 
 function createPath(
   parentNode: Pick<ParentHierarchyNode, "key" | "parentKeys"> | undefined,
@@ -135,7 +129,7 @@ function createPath(
       return [];
     }
     if (key.instanceKeys.length !== 1) {
-      throw new Error(MERGED_NODES_ERROR);
+      throw new Error(MULTIPLE_INSTANCE_KEYS_ERROR);
     }
     return [{ ...key.instanceKeys[0] }];
   });

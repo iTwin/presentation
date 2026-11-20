@@ -16,9 +16,10 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { withEditTxn } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import {
-  createHierarchyNodePaths,
+  createIModelHierarchyNodePaths,
   createIModelHierarchyProvider,
   HierarchyNode,
+  HierarchySearchTree,
 } from "@itwin/presentation-hierarchies";
 import { createModelsTree } from "@itwin/presentation-tree-definitions/internal";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -26,8 +27,8 @@ import { createIModelAccess } from "../Common.js";
 import { buildIModel } from "../IModelUtils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyProvider } from "@itwin/presentation-hierarchies";
-import type { InstanceKey } from "@itwin/presentation-shared";
+import type { HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+import type { DeepReadonly, InstanceKey } from "@itwin/presentation-shared";
 import type { ModelsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 describe("Models tree", () => {
@@ -64,16 +65,12 @@ describe("Models tree", () => {
 
       const paths = await createNodePaths({ tree, imodelAccess, targetItems: [targetKey] });
       const [{ path: instanceKeysPath }] = await collect(tree.createInstanceKeyPaths({ targetItems: [targetKey] }));
-      expect(paths).toEqual([
-        {
-          path: await loadNodesPathByTraversal({ provider, imodelAccess, path: instanceKeysPath }),
-          target: targetKey.id,
-        },
-      ]);
-      expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(types);
+      setHierarchySearch({ provider, paths: [instanceKeysPath] });
+      expect(paths).toEqual([await loadNodesPathByTraversal({ provider, imodelAccess, path: instanceKeysPath })]);
+      expect(paths[0].map((node) => node.extendedData?.type)).toEqual(types);
     });
 
-    it("flags models hidden by partition properties", async () => {
+    it("omits models hidden by partition properties", async () => {
       await using setupResult = await buildIModel(async (imodel) =>
         withEditTxn(imodel, (txn) => {
           const partition = insertPhysicalPartition({
@@ -98,25 +95,24 @@ describe("Models tree", () => {
 
       const paths = await createNodePaths({ tree, imodelAccess, targetItems: [keys.element] });
       expect(paths).toHaveLength(1);
-      expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(["subject", "model", "category", "element"]);
-      expect(paths[0].path.filter((node) => node.isHidden)).toMatchObject([
-        { key: { instanceKeys: [{ id: keys.model.id }] } },
-      ]);
-      await expectNodesPathExists({ provider, path: paths[0].path });
+      expect(paths[0].map((node) => node.extendedData?.type)).toEqual(["subject", "category", "element"]);
+      // the hidden model is still an ancestor of its children
+      expect(paths[0].at(-1)!.parentKeys).toContainEqual(createInstancesNodeKey(keys.model));
+      await expectNodesPathExists({ provider, path: paths[0] });
     });
 
     it.each([
       {
         name: "in the modeled element's category",
         sameCategory: true,
-        types: ["subject", "model", "category", "element", "model", "element"],
+        types: ["subject", "model", "category", "element", "element"],
       },
       {
         name: "in a different category",
         sameCategory: false,
-        types: ["subject", "model", "category", "element", "model", "category", "element"],
+        types: ["subject", "model", "category", "element", "category", "element"],
       },
-    ])("flags sub-models with elements $name", async ({ sameCategory, types }) => {
+    ])("omits sub-models with elements $name", async ({ sameCategory, types }) => {
       await using setupResult = await buildIModel(async (imodel, testSchema) =>
         withEditTxn(imodel, (txn) => {
           const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
@@ -145,11 +141,10 @@ describe("Models tree", () => {
 
       const paths = await createNodePaths({ tree, imodelAccess, targetItems: [keys.subModelElement] });
       expect(paths).toHaveLength(1);
-      expect(paths[0].path.map((node) => node.extendedData?.type)).toEqual(types);
-      expect(paths[0].path.filter((node) => node.isHidden)).toMatchObject([
-        { key: { instanceKeys: [{ id: keys.subModel.id }] } },
-      ]);
-      await expectNodesPathExists({ provider, path: paths[0].path });
+      expect(paths[0].map((node) => node.extendedData?.type)).toEqual(types);
+      // the hidden sub-model is still an ancestor of its children
+      expect(paths[0].at(-1)!.parentKeys).toContainEqual(createInstancesNodeKey(keys.subModel));
+      await expectNodesPathExists({ provider, path: paths[0] });
     });
 
     it.each(["enable", "enable-with-counts"] as const)(
@@ -171,7 +166,7 @@ describe("Models tree", () => {
 
         const paths = await createNodePaths({ tree, imodelAccess, targetItems: [keys.element] });
         expect(paths).toHaveLength(1);
-        const { path } = paths[0];
+        const [path] = paths;
         expect(path.map((node) => node.extendedData?.type)).toEqual([
           "subject",
           "model",
@@ -185,6 +180,50 @@ describe("Models tree", () => {
         await expectNodesPathExists({ provider, path });
       },
     );
+
+    it.each([
+      { name: "no options", options: undefined },
+      { name: "`reveal: true`", options: { reveal: true } },
+      { name: "`reveal` up to a grouping level", options: { reveal: { groupingLevel: 1 } } },
+      { name: "`autoExpand`", options: { autoExpand: true } },
+    ])("assigns the same search attributes as a provider with the search applied, with $name", async ({ options }) => {
+      await using setupResult = await buildIModel(async (imodel) =>
+        withEditTxn(imodel, (txn) => {
+          const model = insertPhysicalModelWithPartition({ txn, codeValue: "model" });
+          const category = insertSpatialCategory({ txn, codeValue: "category" });
+          const element1 = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+          const element2 = insertPhysicalElement({ txn, modelId: model.id, categoryId: category.id });
+          return { element1, element2 };
+        }),
+      );
+      const { imodelConnection, ...keys } = setupResult;
+      const { tree, provider, imodelAccess } = createTreeAndProvider({
+        imodelConnection,
+        hierarchyConfig: { elements: { classGrouping: "enable" } },
+      });
+      // both elements are under the same class grouping node, but only the first path has options
+      const searchPaths = [
+        ...(await collect(tree.createInstanceKeyPaths({ targetItems: [keys.element1] }))).map(({ path }) => ({
+          path,
+          options,
+        })),
+        ...(await collect(tree.createInstanceKeyPaths({ targetItems: [keys.element2] }))).map(({ path }) => ({ path })),
+      ];
+
+      const nodePaths = await collect(
+        createIModelHierarchyNodePaths({
+          imodelAccess,
+          hierarchyDefinition: tree.hierarchyDefinition,
+          paths: searchPaths,
+        }),
+      );
+      setHierarchySearch({ provider, paths: searchPaths });
+      expect(nodePaths).toEqual(
+        await Promise.all(
+          searchPaths.map(async ({ path }) => loadNodesPathByTraversal({ provider, imodelAccess, path })),
+        ),
+      );
+    });
 
     it("requests more than 100 elements in one level with a single request", async () => {
       const elementsCount = 101;
@@ -207,24 +246,16 @@ describe("Models tree", () => {
 
       const defineHierarchyLevelSpy = vi.spyOn(tree.hierarchyDefinition, "defineHierarchyLevel");
       const paths = await createNodePaths({ tree, imodelAccess, targetItems: elements, limit: "unbounded" });
-      expect(paths.map(({ path, target }) => ({ key: path[path.length - 1].key, target }))).toEqual(
+      expect(paths.map((path) => path[path.length - 1].key)).toEqual(
         expect.arrayContaining(
-          elements.map((key) => ({
-            key: { type: "instances", instanceKeys: [expect.objectContaining(key)] },
-            target: key.id,
-          })),
+          elements.map((key) => ({ type: "instances", instanceKeys: [expect.objectContaining(key)] })),
         ),
       );
       expect(paths).toHaveLength(elementsCount);
-      // hierarchy levels of node paths are identified by paths, and their sibling instances are requested using filters
+      // hierarchy levels of node paths are identified by paths, and sibling instances are requested together
       const elementRequests = defineHierarchyLevelSpy.mock.calls.filter(([props]) => {
         const parentEntry = "path" in props ? props.path.at(-1) : undefined;
-        return (
-          !!parentEntry &&
-          "className" in parentEntry &&
-          parentEntry.className === "BisCore.SpatialCategory" &&
-          !!props.instanceFilter
-        );
+        return !!parentEntry && "className" in parentEntry && parentEntry.className === "BisCore.SpatialCategory";
       });
       expect(elementRequests).toHaveLength(1);
     });
@@ -255,7 +286,7 @@ function createTreeAndProvider({
 
 /**
  * Loads hierarchy node paths for the given search targets, the way consumers are expected to: by passing the tree's
- * hierarchy definition and instance key paths to `createHierarchyNodePaths`.
+ * hierarchy definition and instance key paths to `createIModelHierarchyNodePaths`.
  */
 async function createNodePaths({
   tree,
@@ -265,12 +296,26 @@ async function createNodePaths({
   tree: ReturnType<typeof createTreeAndProvider>["tree"];
   imodelAccess: ReturnType<typeof createIModelAccess>;
 }) {
-  const nodePaths = await createHierarchyNodePaths({
-    imodelAccess,
-    hierarchyDefinition: tree.hierarchyDefinition,
-    paths: tree.createInstanceKeyPaths(searchProps),
+  return collect(
+    createIModelHierarchyNodePaths({
+      imodelAccess,
+      hierarchyDefinition: tree.hierarchyDefinition,
+      paths: tree.createInstanceKeyPaths(searchProps),
+    }),
+  );
+}
+
+/** Applies the given search paths to the provider, so that it assigns search attributes to nodes. */
+function setHierarchySearch({
+  provider,
+  paths,
+}: {
+  provider: HierarchyProvider;
+  paths: Array<DeepReadonly<HierarchySearchPath>>;
+}) {
+  provider.setHierarchySearch({
+    paths: paths.reduce((builder, path) => builder.accept({ path }), HierarchySearchTree.createBuilder()).getTree(),
   });
-  return nodePaths.map(({ searchPath, nodesPath }) => ({ path: nodesPath, target: searchPath.target }));
 }
 
 /** Loads nodes for the given path of instance keys by traversing the hierarchy from the root. */
@@ -328,24 +373,17 @@ async function loadGroupedInstanceNodeSegment({
   throw new Error(`Node for instance "${instanceKey.className}:${instanceKey.id}" not found`);
 }
 
-/**
- * Checks that every visible node of the path is a child of the preceding visible node. Hidden nodes are skipped, because
- * their children take their place in the hierarchy.
- */
-async function expectNodesPathExists({
-  provider,
-  path,
-}: {
-  provider: HierarchyProvider;
-  path: Array<HierarchyNode & { isHidden?: boolean }>;
-}) {
+/** Checks that every node of the path is a child of the preceding node, with the same ancestor keys. */
+async function expectNodesPathExists({ provider, path }: { provider: HierarchyProvider; path: HierarchyNode[] }) {
   let parentNode: HierarchyNode | undefined;
   for (const node of path) {
-    if (node.isHidden) {
-      continue;
-    }
     const children = await collect(provider.getNodes({ parentNode, ignoreCache: true }));
-    expect(children.map((child) => child.key)).toContainEqual(node.key);
+    expect(children).toContainEqual(expect.objectContaining({ key: node.key, parentKeys: node.parentKeys }));
     parentNode = node;
   }
+}
+
+/** Creates the key of an instances node, that has a node key matching the given instance key. */
+function createInstancesNodeKey(instanceKey: InstanceKey) {
+  return { type: "instances", instanceKeys: [expect.objectContaining(instanceKey)] };
 }

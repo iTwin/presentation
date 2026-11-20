@@ -9,46 +9,44 @@ import {
   from,
   fromEvent,
   identity,
-  lastValueFrom,
   mergeAll,
   mergeMap,
   of,
   reduce,
   takeUntil,
-  toArray,
+  throwError,
 } from "rxjs";
+import { eachValueFrom } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { createIModelHierarchyProvider } from "./IModelHierarchyProvider.js";
+import { HierarchySearchTree } from "../HierarchySearch.js";
+import { IModelHierarchyProviderImpl } from "./IModelHierarchyProvider.js";
 import { createHierarchyDefinitionFromPathBased } from "./PathBasedHierarchyDefinition.js";
 
 import type { Observable } from "rxjs";
 import type { Id64String } from "@itwin/core-bentley";
-import type {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-} from "@itwin/core-common";
 import type { DeepReadonly, EC, ECSchemaProvider, Props } from "@itwin/presentation-shared";
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import type { GenericNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import type { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
+import type { HierarchySearchPathOptions } from "../HierarchySearch.js";
 import type { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
+import type { createIModelHierarchyProvider } from "./IModelHierarchyProvider.js";
 import type { PathBasedHierarchyDefinition } from "./PathBasedHierarchyDefinition.js";
 
 /**
- * A search path for `createHierarchyNodePaths` - an object with a `path` of node identifiers from a root node to a
- * target node.
+ * A search path for `createIModelHierarchyNodePaths` - an object with a `path` of node identifiers from a root node to a
+ * target node, and optional search `options`, like the ones of `HierarchySearchPath`.
  * @beta
  */
-type SearchPath = { path: DeepReadonly<HierarchyNodeIdentifier[]> };
+type SearchPath = { path: DeepReadonly<HierarchyNodeIdentifier[]>; options?: HierarchySearchPathOptions };
 
 /**
- * Props for `createHierarchyNodePaths`.
+ * Props for `createIModelHierarchyNodePaths`.
  * @beta
  */
-interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> extends Pick<
+interface CreateIModelHierarchyNodePathsProps extends Pick<
   Props<typeof createIModelHierarchyProvider>,
   "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"
 > {
@@ -69,136 +67,85 @@ interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> extends 
 
   /**
    * Search paths to load hierarchy nodes for. Every search path object has a `path` of node identifiers from a root
-   * node to a target node, and may have any other properties, e.g. ones yielded by tree definitions'
+   * node to a target node, and optional search `options`, e.g. paths yielded by tree definitions'
    * `createInstanceKeyPaths`.
    */
-  paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
+  paths: Iterable<SearchPath> | AsyncIterable<SearchPath>;
 
   /**
-   * Stops consuming paths and loading hierarchy levels when aborted. The returned promise then rejects with the
-   * signal's reason.
+   * Stops consuming paths and loading hierarchy levels when aborted. The returned iterator then throws the signal's
+   * reason.
    */
   abortSignal?: AbortSignal;
 }
 
-type IdentifierKey = string;
-
 /**
- * Loads hierarchy nodes for the given paths of node identifiers.
+ * Asynchronously loads paths of hierarchy nodes for the given identifier paths. Each nodes path contains the same
+ * nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target.
  *
- * Paths are split into entries, and every unique entry is identified by its path from the root. This allows requesting
- * all hierarchy levels concurrently, without waiting for parent nodes to be loaded. All sibling entries are requested
- * together, using an `instanceFilter` on their `ECInstanceId` values.
+ * Nodes with multiple instance keys, e.g. nodes merged by label, are not supported - the hierarchy must not have such
+ * nodes.
  *
- * Because every hierarchy level is requested with exactly the instances in the paths, grouping nodes group the same
- * instances as when the paths are applied using `HierarchyProvider.setHierarchySearch`.
- *
- * Paths are consumed one by one as they come in, hierarchy levels are requested once all paths are consumed, and the
- * returned promise resolves once all hierarchy levels are loaded.
- *
- * Resolves with a nodes path for every input path, together with the input path object as `searchPath`. Nodes paths
- * contain grouping nodes before the nodes they group. Nodes that are hidden in the hierarchy are included in the paths
- * with the `isHidden` flag - their children are displayed in their place. Input paths whose target or an ancestor is
- * not found in the hierarchy, or whose target is hidden, are omitted.
- *
- * Notes:
- * - Nodes hidden in the hierarchy have to be included in the search paths. Their children are requested separately
- *   from their siblings, so they're not grouped together with them.
- * - Instance nodes are matched to search path identifiers by ID and class, and generic nodes - by ID and source, if
- *   the identifier has it.
- * - Instances are filtered by their `ECInstanceId` values using `OR` expressions, so hierarchy levels with many
- *   requested instances result in large queries.
- *
- * @throws An error if a hierarchy level size limit is exceeded, a node is merged by label, or loading fails. The
- * signal's reason if `abortSignal` is aborted.
+ * @throws Iterating the returned iterator throws an error if a hierarchy level size limit is exceeded, a node has
+ * multiple instance keys, or loading fails, and throws the signal's reason if `abortSignal` is aborted.
  * @beta
  */
-export async function createHierarchyNodePaths<TSearchPath extends SearchPath>(
-  props: CreateHierarchyNodePathsProps<TSearchPath>,
-): Promise<Array<{ searchPath: TSearchPath; nodesPath: Array<HierarchyNode & { isHidden?: boolean }> }>> {
-  const { paths: searchPaths, hierarchyLevelSizeLimit, hierarchyDefinition, abortSignal, ...providerProps } = props;
-  abortSignal?.throwIfAborted();
-  const result = await lastValueFrom(
+export function createIModelHierarchyNodePaths(
+  props: CreateIModelHierarchyNodePathsProps,
+): AsyncIterableIterator<HierarchyNode[]> {
+  const {
+    paths: searchPaths,
+    hierarchyLevelSizeLimit,
+    hierarchyDefinition,
+    abortSignal,
+    imodelAccess,
+    instanceLabelSelectClauseFactory,
+    ...providerProps
+  } = props;
+  return eachValueFrom(
     defer(() => {
-      const hierarchyProvider = createIModelHierarchyProvider({
-        ...providerProps,
-        hierarchyDefinition: createHierarchyDefinitionFromPathBased(
-          createHiddenNodesFlaggingDefinition(hierarchyDefinition),
-        ),
-        // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
-        queryCacheSize: Number.MAX_SAFE_INTEGER,
-      });
-      return from(searchPaths).pipe(
-        // collect path entries by their parents as paths come in, so that siblings can be requested together once all
-        // paths are received
-        reduce(
-          (acc, searchPath) => {
-            let parentEntry: SearchPathEntry | undefined;
-            const entriesPath = searchPath.path.map((identifier: HierarchyNodeIdentifier) => {
-              const children = getOrCreate(
-                acc.entriesByParent,
-                parentEntry,
-                () => new Map<IdentifierKey, SearchPathEntry>(),
-              );
-              const parentPath = parentEntry?.path ?? [];
-              const entry = getOrCreate(children, createIdentifierKey(identifier), () => ({
-                identifier,
-                path: [...parentPath, identifier],
-              }));
-              parentEntry = entry;
-              return entry;
-            });
-            acc.paths.push({ searchPath, entriesPath });
-            return acc;
-          },
-          {
-            entriesByParent: new Map() as EntriesByParent,
-            paths: new Array<{ searchPath: TSearchPath; entriesPath: SearchPathEntry[] }>(),
-          },
-        ),
-        mergeMap(({ entriesByParent, paths }) =>
-          getLoadedEntries({
-            hierarchyProvider,
-            imodelAccess: providerProps.imodelAccess,
-            hierarchyLevelSizeLimit,
-            entriesByParent,
-          }).pipe(
-            mergeMap((loadedEntries) => {
-              // shared by all paths, so that entries of common path prefixes are resolved only once
-              const resolvedEntriesAccumulator = new Map<SearchPathEntry, ResolvedEntry>();
-              return paths.flatMap(({ searchPath, entriesPath }) => {
-                const nodesPath = createNodesPath({ entriesPath, loadedEntries, resolvedEntriesAccumulator });
-                return nodesPath ? [{ searchPath, nodesPath }] : [];
-              });
-            }),
-          ),
-        ),
-        finalize(() => hierarchyProvider[Symbol.dispose]()),
-      );
+      abortSignal?.throwIfAborted();
+      return from(searchPaths);
     }).pipe(
-      // unsubscribing stops consuming paths and loading hierarchy levels
-      abortSignal ? takeUntil(fromEvent(abortSignal, "abort")) : identity,
-      toArray(),
+      // collect paths into a search tree as they come in, so that siblings can be requested together once all paths
+      // are received
+      reduce(
+        (builder, { path, options }) => builder.accept({ path: { path: path.map(withoutGenericNodeSource), options } }),
+        HierarchySearchTree.createBuilder(),
+      ),
+      mergeMap((searchTreeBuilder) =>
+        defer(() => {
+          const searchTree = searchTreeBuilder.getTree();
+          const hierarchyProvider = new IModelHierarchyProviderImpl({
+            ...providerProps,
+            imodels: [{ imodelAccess, instanceLabelSelectClauseFactory }],
+            getHierarchyDefinition: () =>
+              createHierarchyDefinitionFromPathBased(createHiddenNodesFlaggingDefinition(hierarchyDefinition)),
+            // the provider filters hierarchy levels to search tree entries, and assigns search attributes to nodes
+            search: { paths: searchTree },
+            // only the nodes of search tree entries are needed, including the ones under search targets
+            filterUnderSearchTargets: true,
+            // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
+            queryCacheSize: Number.MAX_SAFE_INTEGER,
+          });
+          return getLoadedEntries({ hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, searchTree }).pipe(
+            mergeMap((loadedEntries) => createNodesPaths({ searchTree, loadedEntries })),
+            finalize(() => hierarchyProvider[Symbol.dispose]()),
+          );
+        }),
+      ),
+      // fail with the signal's reason, which also stops consuming paths and loading hierarchy levels
+      abortSignal
+        ? takeUntil(fromEvent(abortSignal, "abort").pipe(mergeMap(() => throwError(() => abortSignal.reason))))
+        : identity,
     ),
   );
-  // `takeUntil` completes the pipeline with partial results, so reject instead of returning them
-  abortSignal?.throwIfAborted();
-  return result;
 }
 
 /** A node returned by the hierarchy provider. Nodes hidden in the hierarchy have the `isHidden` flag. */
 type NodeWithHiddenFlag = HierarchyNode & { isHidden?: boolean };
 
-interface SearchPathEntry {
-  identifier: HierarchyNodeIdentifier;
-  /** Identifiers of the search path from the root entry to this entry, inclusive. */
-  path: HierarchyNodeIdentifier[];
-}
-
-/** Search path entries by their parent entry, or `undefined` for root entries. */
-type EntriesByParent = Map<SearchPathEntry | undefined, Map<IdentifierKey, SearchPathEntry>>;
-
-/** A node loaded for a search path entry, together with the grouping nodes it's grouped under. */
+/** A node loaded for a search tree entry, together with the grouping nodes it's grouped under. */
 interface LoadedEntryNodes {
   node: NonGroupingHierarchyNode;
   /** Grouping nodes the node is grouped under, from the outermost to the innermost. */
@@ -208,11 +155,11 @@ interface LoadedEntryNodes {
 }
 
 /**
- * A search path entry with its nodes adjusted to the actual hierarchy, and information needed to resolve its children.
+ * A search tree entry with its nodes adjusted to the actual hierarchy, and information needed to resolve its children.
  */
 interface ResolvedEntry {
-  /** Grouping nodes and the node of the entry. Hidden nodes have the `isHidden` flag. */
-  nodes: NodeWithHiddenFlag[];
+  /** Grouping nodes and the node of the entry, or nothing if the node is hidden in the hierarchy. */
+  nodes: HierarchyNode[];
   /** Whether the entry's node is hidden in the hierarchy. */
   isHidden: boolean;
   /** Keys of the actual ancestors of the entry's children. */
@@ -221,20 +168,13 @@ interface ResolvedEntry {
   childrenParentNode: NonGroupingHierarchyNode;
 }
 
-/** A hierarchy level request for sibling search path entries. */
+/** A hierarchy level request for sibling search tree entries. */
 interface NodesRequest {
   parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
-  instanceFilter: GenericInstanceFilter;
   /** Requested instance node entries by their instance IDs. Used to match loaded nodes to entries. */
-  instanceEntries: Map<Id64String, Array<SearchPathEntry & { identifier: IModelInstanceKey }>>;
+  instanceEntries: Map<Id64String, Array<HierarchySearchTree & { identifier: IModelInstanceKey }>>;
   /** Requested generic node entries. */
-  genericEntries: Array<SearchPathEntry & { identifier: GenericNodeKey }>;
-}
-
-function createIdentifierKey(identifier: HierarchyNodeIdentifier): IdentifierKey {
-  return HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier)
-    ? JSON.stringify(["generic", identifier.source, identifier.id])
-    : JSON.stringify([identifier.imodelKey, identifier.className, identifier.id]);
+  genericEntries: Array<HierarchySearchTree & { identifier: GenericNodeKey }>;
 }
 
 /**
@@ -269,15 +209,48 @@ function isFlaggedAsHidden(node: ProcessedHierarchyNode): boolean {
 }
 
 /**
- * Creates a parent node, that stands in for the actual parent node of a hierarchy level identified by the given path.
- * The provider only uses keys of the node, and the definition adapter turns the keys back into the path.
+ * Creates a parent node, that stands in for the actual parent node of a hierarchy level identified by the given path of
+ * search tree entries. The definition adapter turns the node's keys back into a path of identifiers, and the provider
+ * filters the hierarchy level to the children of the last entry.
+ *
+ * The stand-in has the same search attributes as a provider with the search applied assigns to the actual parent node.
+ * Entries with children are search targets only if they're flagged as such.
  */
 function createStandInParentNode(
-  path: HierarchyNodeIdentifier[],
+  entriesPath: HierarchySearchTree[],
 ): ParentHierarchyNode<NonGroupingHierarchyNode> | undefined {
-  const keys = path.map(createNodeKey);
-  const key = keys.pop();
-  return key ? { key, parentKeys: keys, label: "" } : undefined;
+  const parentEntry = entriesPath.at(-1);
+  if (!parentEntry) {
+    return undefined;
+  }
+  const keys = entriesPath.map(({ identifier }) => createNodeKey(identifier));
+  const key = keys.pop()!;
+  const hasSearchTargetAncestor = entriesPath.slice(0, -1).some(({ isTarget }) => isTarget);
+  return {
+    key,
+    parentKeys: keys,
+    label: "",
+    search: {
+      ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : {}),
+      ...(parentEntry.isTarget ? { isSearchTarget: true } : {}),
+      childrenTargetPaths: parentEntry.children,
+      ...(parentEntry.options ? { options: parentEntry.options } : {}),
+    },
+  };
+}
+
+/**
+ * Removes `source` from generic node identifiers, because it never matches the unique source name of the hierarchy
+ * provider that loads the nodes.
+ */
+function withoutGenericNodeSource(
+  identifier: DeepReadonly<HierarchyNodeIdentifier>,
+): DeepReadonly<HierarchyNodeIdentifier> {
+  if (!HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier)) {
+    return identifier;
+  }
+  const { source: _, ...rest } = identifier;
+  return rest;
 }
 
 function createNodeKey(identifier: HierarchyNodeIdentifier): NonGroupingHierarchyNode["key"] {
@@ -288,40 +261,50 @@ function createNodeKey(identifier: HierarchyNodeIdentifier): NonGroupingHierarch
 }
 
 /**
- * Creates a path of nodes for the given path of entries, with ancestor keys of the actual hierarchy. Returns
- * `undefined` if the path's target or an ancestor is not in the hierarchy, or the target is hidden.
+ * Resolves loaded search tree entries level by level, from the root down, and creates a nodes path for every search
+ * target found in the hierarchy. Every resolved entry gets copies of its loaded nodes with ancestor keys of the actual
+ * hierarchy.
  *
  * Nodes are loaded with ancestor keys based on search path identifiers, which don't match the actual hierarchy (e.g.
- * class names may be more general, grouping node keys are missing). Resolved entries are stored in
- * `resolvedEntriesAccumulator`, so that they're reused by other paths with the same prefix.
+ * class names may be more general, grouping node keys are missing). Entries that aren't loaded, and their
+ * descendants, are skipped.
  */
-function createNodesPath({
-  entriesPath,
+function createNodesPaths({
+  searchTree,
   loadedEntries,
-  resolvedEntriesAccumulator,
 }: {
-  entriesPath: SearchPathEntry[];
-  loadedEntries: Map<SearchPathEntry, LoadedEntryNodes>;
-  resolvedEntriesAccumulator: Map<SearchPathEntry, ResolvedEntry>;
-}): ResolvedEntry["nodes"] | undefined {
-  const nodesPath: ResolvedEntry["nodes"] = [];
-  let resolvedParentEntry: Pick<ResolvedEntry, "childrenAncestorKeys" | "childrenParentNode"> | undefined;
-  let resolvedEntry: ResolvedEntry | undefined;
-  for (const entry of entriesPath) {
-    resolvedEntry = resolvedEntriesAccumulator.get(entry);
-    if (!resolvedEntry) {
+  searchTree: HierarchySearchTree[];
+  loadedEntries: Map<HierarchySearchTree, LoadedEntryNodes>;
+}): Array<ResolvedEntry["nodes"]> {
+  const nodesPaths = new Array<ResolvedEntry["nodes"]>();
+  const resolveChildren = (
+    entries: HierarchySearchTree[],
+    parent?: { resolvedEntry: ResolvedEntry; nodesPath: ResolvedEntry["nodes"] },
+  ) => {
+    // sibling entries match the same loaded node when their identifiers differ only by class
+    const entriesByLoaded = new Map<LoadedEntryNodes, HierarchySearchTree[]>();
+    for (const entry of entries) {
       const loadedEntry = loadedEntries.get(entry);
-      if (!loadedEntry) {
-        return undefined;
+      if (loadedEntry) {
+        getOrCreate(entriesByLoaded, loadedEntry, () => []).push(entry);
       }
-      resolvedEntry = getResolvedEntry({ loadedEntry, resolvedParentEntry });
-      resolvedEntriesAccumulator.set(entry, resolvedEntry);
     }
-    nodesPath.push(...resolvedEntry.nodes);
-    resolvedParentEntry = resolvedEntry;
-  }
-  // a hidden target isn't in the hierarchy
-  return resolvedEntry && !resolvedEntry.isHidden ? nodesPath : undefined;
+    for (const [loadedEntry, matchingEntries] of entriesByLoaded) {
+      const resolvedEntry = getResolvedEntry({ loadedEntry, resolvedParentEntry: parent?.resolvedEntry });
+      const nodesPath = [...(parent?.nodesPath ?? []), ...resolvedEntry.nodes];
+      // a hidden target isn't in the hierarchy
+      if (resolvedEntry.childrenParentNode.search?.isSearchTarget && !resolvedEntry.isHidden) {
+        nodesPaths.push(nodesPath);
+      }
+      for (const entry of matchingEntries) {
+        if (entry.children) {
+          resolveChildren(entry.children, { resolvedEntry, nodesPath });
+        }
+      }
+    }
+  };
+  resolveChildren(searchTree);
+  return nodesPaths;
 }
 
 /** Creates copies of the loaded entry nodes with ancestor keys of the actual hierarchy. */
@@ -351,8 +334,8 @@ function getResolvedEntry({
     parentKeys: [...ancestorKeys, ...groupingNodes.map(({ key }) => key)],
   };
   return {
-    // hidden nodes aren't grouped
-    nodes: loadedEntry.isHidden ? [{ ...node, isHidden: true }] : [...groupingNodes, node],
+    // hidden nodes aren't in the hierarchy, and they aren't grouped
+    nodes: loadedEntry.isHidden ? [] : [...groupingNodes, node],
     isHidden: loadedEntry.isHidden,
     childrenAncestorKeys: [...node.parentKeys, node.key],
     childrenParentNode: node,
@@ -360,7 +343,7 @@ function getResolvedEntry({
 }
 
 /**
- * Loads nodes for all given search path entries. Nodes of every hierarchy level are requested concurrently.
+ * Loads nodes for all given search tree entries. Nodes of every hierarchy level are requested concurrently.
  *
  * Emits a map from entries to their loaded nodes. Loaded nodes have ancestor keys based on search path identifiers.
  * Entries that aren't in the hierarchy are not in the map.
@@ -369,18 +352,17 @@ function getLoadedEntries({
   hierarchyProvider,
   imodelAccess,
   hierarchyLevelSizeLimit,
-  entriesByParent,
+  searchTree,
 }: {
   hierarchyProvider: Pick<HierarchyProvider, "getNodes">;
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
-  entriesByParent: EntriesByParent;
-}): Observable<Map<SearchPathEntry, LoadedEntryNodes>> {
-  return defer(() => from(getRequestPropsForGetNodes(entriesByParent))).pipe(
+  searchTree: HierarchySearchTree[];
+}): Observable<Map<HierarchySearchTree, LoadedEntryNodes>> {
+  return defer(() => from(getRequestPropsForGetNodes(searchTree))).pipe(
     mergeMap((request) => {
       const requestProps = {
         parentNode: request.parentNode,
-        instanceFilter: request.instanceFilter,
         ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
       };
       return from(hierarchyProvider.getNodes(requestProps)).pipe(
@@ -388,11 +370,11 @@ function getLoadedEntries({
         mergeMap((loaded) => matchEntries({ imodelAccess, request, loaded })),
       );
     }),
-    reduce((acc, { entry, loaded }) => acc.set(entry, loaded), new Map<SearchPathEntry, LoadedEntryNodes>()),
+    reduce((acc, { entry, loaded }) => acc.set(entry, loaded), new Map<HierarchySearchTree, LoadedEntryNodes>()),
   );
 }
 
-/** Finds the requested search path entries that match the given loaded node. */
+/** Finds the requested search tree entries that match the given loaded node. */
 function matchEntries({
   imodelAccess,
   request,
@@ -401,20 +383,18 @@ function matchEntries({
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   request: NodesRequest;
   loaded: LoadedEntryNodes;
-}): Observable<{ entry: SearchPathEntry; loaded: LoadedEntryNodes }> {
+}): Observable<{ entry: HierarchySearchTree; loaded: LoadedEntryNodes }> {
   const { key } = loaded.node;
   if (HierarchyNodeKey.isGeneric(key)) {
     return from(
-      request.genericEntries
-        .filter(
-          ({ identifier }) => identifier.id === key.id && (!identifier.source || identifier.source === key.source),
-        )
-        .map((entry) => ({ entry, loaded })),
+      request.genericEntries.filter(({ identifier }) => identifier.id === key.id).map((entry) => ({ entry, loaded })),
     );
   }
   return from(
     key.instanceKeys.flatMap((loadedKey) =>
-      (request.instanceEntries.get(loadedKey.id) ?? [])
+      // the provider only loads instances of the requested entries
+      request.instanceEntries
+        .get(loadedKey.id)!
         .filter(({ identifier }) => !identifier.imodelKey || identifier.imodelKey === loadedKey.imodelKey)
         .map((entry) => ({ entry, loadedKey })),
     ),
@@ -430,30 +410,40 @@ function matchEntries({
   );
 }
 
-/** Creates hierarchy level requests for the given search path entries - one for every parent with child entries. */
-function getRequestPropsForGetNodes(entriesByParent: EntriesByParent): NodesRequest[] {
-  return [...entriesByParent].map(([parentEntry, children]) => {
+/**
+ * Creates hierarchy level requests for the given search tree - one for the root level and one for every entry with
+ * children.
+ */
+function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesRequest[] {
+  const requests = new Array<NodesRequest>();
+  const addRequests = (entries: HierarchySearchTree[], parentEntries: HierarchySearchTree[]) => {
     const instanceEntries: NodesRequest["instanceEntries"] = new Map();
     const genericEntries: NodesRequest["genericEntries"] = [];
     // loaded nodes are mapped to the entry objects, so they're not copied
-    for (const entry of children.values()) {
+    for (const entry of entries) {
       if (isInstanceNodeEntry(entry)) {
         getOrCreate(instanceEntries, entry.identifier.id, () => []).push(entry);
       } else {
         // If entry is not instances it must be a generic node entry
-        genericEntries.push(entry as SearchPathEntry & { identifier: GenericNodeKey });
+        genericEntries.push(entry as HierarchySearchTree & { identifier: GenericNodeKey });
       }
     }
-    return {
-      parentNode: createStandInParentNode(parentEntry?.path ?? []),
-      instanceFilter: createECInstanceIdsFilter([...instanceEntries.keys()]),
-      instanceEntries,
-      genericEntries,
-    };
-  });
+    requests.push({ parentNode: createStandInParentNode(parentEntries), instanceEntries, genericEntries });
+    for (const entry of entries) {
+      if (entry.children) {
+        addRequests(entry.children, [...parentEntries, entry]);
+      }
+    }
+  };
+  if (searchTree.length > 0) {
+    addRequests(searchTree, []);
+  }
+  return requests;
 }
 
-function isInstanceNodeEntry(entry: SearchPathEntry): entry is SearchPathEntry & { identifier: IModelInstanceKey } {
+function isInstanceNodeEntry(
+  entry: HierarchySearchTree,
+): entry is HierarchySearchTree & { identifier: IModelInstanceKey } {
   return HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry.identifier);
 }
 
@@ -497,47 +487,6 @@ async function classesMatch({
   return (
     lhs === rhs || (await imodelAccess.classDerivesFrom(lhs, rhs)) || (await imodelAccess.classDerivesFrom(rhs, lhs))
   );
-}
-
-/**
- * Maximum number of rules in a single filter rule group. Every rule adds a term to the group's `OR` expression, so the
- * number is limited to keep queries within SQLite expression depth limits.
- */
-const MAX_RULES_IN_GROUP = 100;
-
-/**
- * Creates a filter for instances with given IDs. The filter doesn't specify property classes, so it applies to
- * instances of all classes in the hierarchy level.
- */
-function createECInstanceIdsFilter(ids: Id64String[]): GenericInstanceFilter {
-  if (ids.length === 0) {
-    // `ECInstanceId` is never null, so the filter excludes all instances
-    return {
-      propertyClassNames: [],
-      relatedInstances: [],
-      rules: { sourceAlias: "this", propertyName: "ECInstanceId", operator: "is-null", propertyTypeName: "long" },
-    };
-  }
-  let rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup> = ids.map((id) => ({
-    sourceAlias: "this",
-    propertyName: "ECInstanceId",
-    operator: "is-equal" as const,
-    propertyTypeName: "long",
-    value: { rawValue: id, displayValue: id },
-  }));
-  // every rule adds a term to an `OR` expression, so rules are nested into groups to keep the expressions short
-  while (rules.length > MAX_RULES_IN_GROUP) {
-    const groups = new Array<GenericInstanceFilterRuleGroup>();
-    for (let start = 0; start < rules.length; start += MAX_RULES_IN_GROUP) {
-      groups.push({ operator: "or", rules: rules.slice(start, start + MAX_RULES_IN_GROUP) });
-    }
-    rules = groups;
-  }
-  return {
-    propertyClassNames: [],
-    relatedInstances: [],
-    rules: rules.length === 1 ? rules[0] : { operator: "or", rules },
-  };
 }
 
 function getOrCreate<TKey, TValue>(source: Map<TKey, TValue>, key: TKey, createValue: () => TValue): TValue {

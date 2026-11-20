@@ -42,22 +42,6 @@ export interface ClassGroupingNodeKey {
     type: "class-grouping";
 }
 
-// @beta
-export function createHierarchyNodePaths<TSearchPath extends SearchPath>(props: CreateHierarchyNodePathsProps<TSearchPath>): Promise<Array<{
-    searchPath: TSearchPath;
-    nodesPath: Array<HierarchyNode & {
-        isHidden?: boolean;
-    }>;
-}>>;
-
-// @beta
-interface CreateHierarchyNodePathsProps<TSearchPath extends SearchPath> extends Pick<Props<typeof createIModelHierarchyProvider>, "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"> {
-    abortSignal?: AbortSignal;
-    hierarchyDefinition: PathBasedHierarchyDefinition;
-    hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
-    paths: Iterable<TSearchPath> | AsyncIterable<TSearchPath>;
-}
-
 // @public
 export function createHierarchyProvider<TPartialProvider extends Partial<Omit<HierarchyProvider, "hierarchyChanged">> & Pick<HierarchyProvider, "getNodes">>(partialFactory: (props: {
     hierarchyChanged: RaisableEvent<EventListener_2<HierarchyProvider["hierarchyChanged"]>>;
@@ -82,6 +66,17 @@ export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearc
         }): Promise<Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "search" | "autoExpand"> | undefined;
     };
 };
+
+// @beta
+export function createIModelHierarchyNodePaths(props: CreateIModelHierarchyNodePathsProps): AsyncIterableIterator<HierarchyNode[]>;
+
+// @beta
+interface CreateIModelHierarchyNodePathsProps extends Pick<Props<typeof createIModelHierarchyProvider>, "imodelAccess" | "instanceLabelSelectClauseFactory" | "queryConcurrency" | "localizedStrings" | "formatter"> {
+    abortSignal?: AbortSignal;
+    hierarchyDefinition: PathBasedHierarchyDefinition;
+    hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
+    paths: Iterable<SearchPath> | AsyncIterable<SearchPath>;
+}
 
 // @public
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & Disposable;
@@ -836,6 +831,7 @@ export class RowsLimitExceededError extends Error {
 // @beta
 type SearchPath = {
     path: DeepReadonly<HierarchyNodeIdentifier[]>;
+    options?: HierarchySearchPathOptions;
 };
 
 // @public

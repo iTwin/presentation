@@ -361,7 +361,7 @@ type ModelsTreeInstanceKeyPathsProps =
  * Defines a configurable hierarchy of subjects, models, categories, and geometric elements.
  *
  * Parents of hierarchy levels may be identified either by parent nodes, or by paths of instance keys from a root node,
- * so the definition can be used with `createIModelHierarchyProvider` and `createHierarchyNodePaths` from
+ * so the definition can be used with `createIModelHierarchyProvider` and `createIModelHierarchyNodePaths` from
  * `@itwin/presentation-hierarchies`.
  * @internal
  */

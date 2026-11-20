@@ -67,7 +67,7 @@ describe("createHierarchyDefinitionFromPathBased", () => {
             label: "merged",
           },
         }),
-      ).rejects.toThrow("don't support nodes merged by label");
+      ).rejects.toThrow("don't support nodes with multiple instance keys");
     });
   });
 
@@ -87,9 +87,8 @@ describe("createHierarchyDefinitionFromPathBased", () => {
   });
 
   describe("preProcessNode", () => {
-    it("returns the given node when source doesn't define a pre-processor", async () => {
-      const node = createTestProcessedInstanceNode();
-      expect(await createHierarchyDefinitionFromPathBased(createSource()).preProcessNode!({ node })).toBe(node);
+    it("is not defined when source doesn't define it", () => {
+      expect(createHierarchyDefinitionFromPathBased(createSource()).preProcessNode).toBeUndefined();
     });
 
     it("passes path of the parent node instead of the parent node", async () => {
@@ -108,32 +107,25 @@ describe("createHierarchyDefinitionFromPathBased", () => {
       const definition = createHierarchyDefinitionFromPathBased(createSource({ preProcessNode }));
       expect(await definition.preProcessNode!({ node: createTestProcessedInstanceNode() })).toBeUndefined();
     });
-
-    it("returns generic nodes", async () => {
-      const node = createTestProcessedGenericNode();
-      expect(await createHierarchyDefinitionFromPathBased(createSource()).preProcessNode!({ node })).toBe(node);
-    });
-
-    it("returns nodes grouped by label", async () => {
-      const node = createTestProcessedInstanceNode({
-        processingParams: { grouping: { byLabel: { action: "group" } } },
-      });
-      expect(await createHierarchyDefinitionFromPathBased(createSource()).preProcessNode!({ node })).toBe(node);
-    });
-
-    it("throws when node is merged by label", async () => {
-      const node = createTestProcessedInstanceNode({
-        processingParams: { grouping: { byLabel: { action: "merge" } } },
-      });
-      await expect(createHierarchyDefinitionFromPathBased(createSource()).preProcessNode!({ node })).rejects.toThrow(
-        "don't support nodes merged by label",
-      );
-    });
   });
 
   describe("postProcessNode", () => {
-    it("is not defined when source doesn't define it", () => {
-      expect(createHierarchyDefinitionFromPathBased(createSource()).postProcessNode).toBeUndefined();
+    it.each([
+      { name: "instance", node: createTestProcessedInstanceNode() },
+      { name: "generic", node: createTestProcessedGenericNode() },
+    ])("returns the given $name node when source doesn't define a post-processor", async ({ node }) => {
+      expect(await createHierarchyDefinitionFromPathBased(createSource()).postProcessNode!({ node })).toBe(node);
+    });
+
+    it("throws when node has multiple instance keys", async () => {
+      const postProcessNode = vi.fn();
+      const node = createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [instanceKey, { ...instanceKey, id: "0x3" }] },
+      });
+      await expect(
+        createHierarchyDefinitionFromPathBased(createSource({ postProcessNode })).postProcessNode!({ node }),
+      ).rejects.toThrow("don't support nodes with multiple instance keys");
+      expect(postProcessNode).not.toHaveBeenCalled();
     });
 
     it("passes path of the non-grouping ancestors instead of the parent node", async () => {

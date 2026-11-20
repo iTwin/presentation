@@ -38,7 +38,7 @@ export { NodesQueryRowsLimitExceededError, RowsLimitExceededError } from "./hier
 export type { GroupingHierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode.js";
 export { HierarchyNode } from "./hierarchies/HierarchyNode.js";
 export type { HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier.js";
-export { createHierarchyNodePaths } from "./hierarchies/imodel/HierarchyNodePaths.js";
+export { createIModelHierarchyNodePaths } from "./hierarchies/imodel/HierarchyNodePaths.js";
 export { HierarchyNodeIdentifier } from "./hierarchies/HierarchyNodeIdentifier.js";
 export type {
   GenericNodeKey,

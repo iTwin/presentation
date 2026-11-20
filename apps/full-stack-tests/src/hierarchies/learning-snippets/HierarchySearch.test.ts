@@ -32,8 +32,8 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePathsImports
-import { createHierarchyNodePaths } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateIModelHierarchyNodePathsImports
+import { createIModelHierarchyNodePaths } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { withEditTxn } from "@itwin/core-backend";
 import { buildTestIModel } from "../../IModelUtils.js";
@@ -330,13 +330,13 @@ describe("Hierarchies", () => {
 
       it("loads hierarchy node paths", async () => {
         const imodelAccess = createIModelAccess(imodelConnection);
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePaths
-        const nodePaths = await createHierarchyNodePaths({
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.CreateIModelHierarchyNodePaths
+        const labels = new Array<string[]>();
+        for await (const nodesPath of createIModelHierarchyNodePaths({
           imodelAccess,
           hierarchyDefinition: {
             // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
-            // to the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has
-            // to be applied.
+            // to the parent node.
             defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
               const { from, joins, where } = await createFilterClauses({
                 contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
@@ -364,9 +364,11 @@ describe("Hierarchies", () => {
             },
           },
           paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
-        });
-        // Each path contains the nodes a hierarchy provider returns for every hierarchy level
-        expect(nodePaths.map(({ nodesPath }) => nodesPath.map((node) => node.label))).toEqual([
+        })) {
+          // Each path contains the nodes a hierarchy provider returns for every hierarchy level
+          labels.push(nodesPath.map((node) => node.label));
+        }
+        expect(labels).toEqual([
           ["A", "B", "C"],
           ["A", "E"],
         ]);

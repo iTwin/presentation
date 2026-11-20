@@ -238,24 +238,22 @@ expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
 
 ### Loading hierarchy nodes for search paths
 
-The `createHierarchyNodePaths` function loads a path of hierarchy nodes for each search path. The path contains the nodes that `HierarchyProvider.getNodes` would return for each hierarchy level, from the root down to the search target. All hierarchy levels are requested concurrently, without loading their ancestors first.
+The `createIModelHierarchyNodePaths` function asynchronously loads paths of hierarchy nodes for the given instance key paths, e.g. the ones created by tree definitions' `createInstanceKeyPaths`. Each nodes path contains the same nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target.
 
-To make that possible, the function takes a `PathBasedHierarchyDefinition`. It is like a `HierarchyDefinition`, except its callbacks receive a `path` of node identifiers from the root to the parent node, instead of the parent node. The definition can't depend on parent node data, such as `extendedData` - everything it needs has to be derived from the path. Siblings in search paths are requested together, so the definition should apply the `instanceFilter`. Nodes can't be merged by label - the select clause factory doesn't accept label merging params, and the function throws if a node is merged anyway.
+The function takes a `PathBasedHierarchyDefinition` - a hierarchy definition whose callbacks get a `path` of node identifiers to the parent node, instead of the parent node. Nodes with multiple instance keys, e.g. nodes merged by label, are not supported - the hierarchy must not have such nodes.
 
-Nodes that are hidden in the hierarchy have to be included in the search paths - they're included in the resulting node paths with the `isHidden` flag, and their children take their place in the hierarchy. Search paths that target hidden nodes are omitted.
-
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePathsImports, Presentation.Hierarchies.HierarchySearch.CreateHierarchyNodePaths], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.CreateIModelHierarchyNodePathsImports, Presentation.Hierarchies.HierarchySearch.CreateIModelHierarchyNodePaths], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyNodePaths } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyNodePaths } from "@itwin/presentation-hierarchies";
 
-const nodePaths = await createHierarchyNodePaths({
+const labels = new Array<string[]>();
+for await (const nodesPath of createIModelHierarchyNodePaths({
   imodelAccess,
   hierarchyDefinition: {
     // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
-    // to the parent node. Sibling nodes in search paths are requested together, so the `instanceFilter` has
-    // to be applied.
+    // to the parent node.
     defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
       const { from, joins, where } = await createFilterClauses({
         contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
@@ -283,9 +281,11 @@ const nodePaths = await createHierarchyNodePaths({
     },
   },
   paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
-});
-// Each path contains the nodes a hierarchy provider returns for every hierarchy level
-expect(nodePaths.map(({ nodesPath }) => nodesPath.map((node) => node.label))).toEqual([
+})) {
+  // Each path contains the nodes a hierarchy provider returns for every hierarchy level
+  labels.push(nodesPath.map((node) => node.label));
+}
+expect(labels).toEqual([
   ["A", "B", "C"],
   ["A", "E"],
 ]);
