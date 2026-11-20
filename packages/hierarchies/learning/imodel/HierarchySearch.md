@@ -235,3 +235,60 @@ expect(await collectHierarchy(hierarchyProvider)).toMatchObject([
 ```
 
 <!-- END EXTRACTION -->
+
+### Loading hierarchy nodes for search paths
+
+The `createIModelHierarchyNodePaths` function asynchronously loads paths of hierarchy nodes for the given instance key paths, e.g. the ones created by tree definitions' `createInstanceKeyPaths`. Each nodes path contains the same nodes that `HierarchyProvider.getNodes` returns when the hierarchy is loaded from the root down to the path's target.
+
+The function takes a `PathBasedHierarchyDefinition` - a hierarchy definition whose callbacks get a `path` of node identifiers to the parent node, instead of the parent node. Nodes with multiple instance keys, e.g. nodes merged by label, are not supported - the hierarchy must not have such nodes.
+
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.CreateIModelHierarchyNodePathsImports, Presentation.Hierarchies.HierarchySearch.CreateIModelHierarchyNodePaths], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { createIModelHierarchyNodePaths } from "@itwin/presentation-hierarchies";
+
+const labels = new Array<string[]>();
+for await (const nodesPath of createIModelHierarchyNodePaths({
+  imodelAccess,
+  hierarchyDefinition: {
+    // Instead of a parent node, hierarchy level is identified by a path of node identifiers from the root
+    // to the parent node.
+    defineHierarchyLevel: async ({ path, instanceFilter, createSelectClause, createFilterClauses }) => {
+      const { from, joins, where } = await createFilterClauses({
+        contentClass: { fullName: "BisCore.PhysicalElement", alias: "this" },
+        filter: instanceFilter,
+      });
+      const parentId = path.length > 0 ? path[path.length - 1].id : undefined;
+      return [
+        {
+          fullClassName: "BisCore.PhysicalElement",
+          query: {
+            ecsql: `
+              SELECT ${await createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: "this.UserLabel" },
+              })}
+              FROM ${from} this
+              ${joins}
+              WHERE ${parentId ? "this.Parent.Id = ?" : "this.Parent IS NULL"} ${where ? `AND ${where}` : ""}
+            `,
+            bindings: parentId ? [{ type: "id", value: parentId }] : undefined,
+          },
+        },
+      ];
+    },
+  },
+  paths: [{ path: [elementKeys.a, elementKeys.b, elementKeys.c] }, { path: [elementKeys.a, elementKeys.e] }],
+})) {
+  // Each path contains the nodes a hierarchy provider returns for every hierarchy level
+  labels.push(nodesPath.map((node) => node.label));
+}
+expect(labels).toEqual([
+  ["A", "B", "C"],
+  ["A", "E"],
+]);
+```
+
+<!-- END EXTRACTION -->
