@@ -20,7 +20,7 @@ import { eachValueFrom } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
-import { HierarchySearchTree } from "../HierarchySearch.js";
+import { HierarchySearchPath, HierarchySearchTree } from "../HierarchySearch.js";
 import { releaseMainThreadOnItemsCount } from "../internal/operators/ReleaseMainThread.js";
 import { IModelHierarchyProviderImpl } from "./IModelHierarchyProvider.js";
 import { createHierarchyDefinitionFromPathBased } from "./PathBasedHierarchyDefinition.js";
@@ -31,17 +31,9 @@ import type { DeepReadonly, EC, ECSchemaProvider, Props } from "@itwin/presentat
 import type { GroupingHierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import type { GenericNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import type { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
-import type { HierarchySearchPathOptions } from "../HierarchySearch.js";
 import type { ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
 import type { createIModelHierarchyProvider } from "./IModelHierarchyProvider.js";
 import type { PathBasedHierarchyDefinition } from "./PathBasedHierarchyDefinition.js";
-
-/**
- * A search path for `createIModelHierarchyNodePaths` - an object with a `path` of node identifiers from a root node to a
- * target node, and optional search `options`, like the ones of `HierarchySearchPath`.
- * @beta
- */
-type SearchPath = { path: DeepReadonly<HierarchyNodeIdentifier[]>; options?: HierarchySearchPathOptions };
 
 /**
  * Props for `createIModelHierarchyNodePaths`.
@@ -66,12 +58,8 @@ interface CreateIModelHierarchyNodePathsProps extends Pick<
    */
   hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
 
-  /**
-   * Search paths to load hierarchy nodes for. Every search path object has a `path` of node identifiers from a root
-   * node to a target node, and optional search `options`, e.g. paths yielded by tree definitions'
-   * `createInstanceKeyPaths`.
-   */
-  paths: Iterable<SearchPath> | AsyncIterable<SearchPath>;
+  /** Search paths to load hierarchy nodes for, e.g. paths yielded by tree definitions' `createInstanceKeyPaths`. */
+  paths: Iterable<DeepReadonly<HierarchySearchPath>> | AsyncIterable<DeepReadonly<HierarchySearchPath>>;
 
   /**
    * Stops consuming paths and loading hierarchy levels when aborted. The returned iterator then throws the signal's
@@ -111,10 +99,10 @@ export function createIModelHierarchyNodePaths(
       releaseMainThreadOnItemsCount(1000),
       // collect paths into a search tree as they come in, so that siblings can be requested together once all paths
       // are received
-      reduce(
-        (builder, { path, options }) => builder.accept({ path: { path: path.map(withoutGenericNodeSource), options } }),
-        HierarchySearchTree.createBuilder(),
-      ),
+      reduce((builder, searchPath) => {
+        const { path, options } = HierarchySearchPath.normalize(searchPath);
+        return builder.accept({ path: { path: path.map(withoutGenericNodeSource), options } });
+      }, HierarchySearchTree.createBuilder()),
       mergeMap((searchTreeBuilder) =>
         defer(() => {
           const searchTree = searchTreeBuilder.getTree();

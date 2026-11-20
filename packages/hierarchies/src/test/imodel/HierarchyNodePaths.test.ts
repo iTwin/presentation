@@ -142,6 +142,12 @@ describe("createIModelHierarchyNodePaths", () => {
     expect(getRequests().map(({ path }) => path)).toEqual([[], [a], [a, b]]);
   });
 
+  it("accepts search paths as arrays of identifiers", async () => {
+    expect(await collect(createIModelHierarchyNodePaths({ ...getProps(), paths: [[a, b]] }))).toEqual([
+      createPath([nodeA, nodeB]),
+    ]);
+  });
+
   it("starts consuming paths when iteration starts", async () => {
     const getPaths = vi.fn(function* () {
       yield { path: [a] };

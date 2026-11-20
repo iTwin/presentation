@@ -75,7 +75,7 @@ interface CreateIModelHierarchyNodePathsProps extends Pick<Props<typeof createIM
     abortSignal?: AbortSignal;
     hierarchyDefinition: PathBasedHierarchyDefinition;
     hierarchyLevelSizeLimit?: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
-    paths: Iterable<SearchPath> | AsyncIterable<SearchPath>;
+    paths: Iterable<DeepReadonly<HierarchySearchPath>> | AsyncIterable<DeepReadonly<HierarchySearchPath>>;
 }
 
 // @public
@@ -827,12 +827,6 @@ export class RowsLimitExceededError extends Error {
     readonly limit: number;
     readonly rows: ECSqlQueryRow[];
 }
-
-// @beta
-type SearchPath = {
-    path: DeepReadonly<HierarchyNodeIdentifier[]>;
-    options?: HierarchySearchPathOptions;
-};
 
 // @public
 export function setLogger(logger: ILogger | undefined): void;
