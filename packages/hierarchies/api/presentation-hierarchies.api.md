@@ -572,7 +572,7 @@ interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingP
 // @public
 interface InstanceNodesQueryDefinition {
     fullClassName: EC.FullClassNameDotNotation;
-    query: ECSqlQueryDef;
+    query: ECSqlQueryDef | ECSqlQueryDef[];
 }
 
 // @public

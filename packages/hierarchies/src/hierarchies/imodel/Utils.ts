@@ -6,6 +6,7 @@
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
+import type { ECSqlQueryDef } from "@itwin/presentation-shared";
 import type {
   HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
@@ -13,6 +14,13 @@ import type {
 } from "./IModelHierarchyNode.js";
 
 export const ECSQL_PREFIX = "pres_";
+
+export function mapQueryAlternatives(
+  query: ECSqlQueryDef | ECSqlQueryDef[],
+  mapper: (query: ECSqlQueryDef) => ECSqlQueryDef,
+): ECSqlQueryDef | ECSqlQueryDef[] {
+  return Array.isArray(query) ? query.map(mapper) : mapper(query);
+}
 
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,
