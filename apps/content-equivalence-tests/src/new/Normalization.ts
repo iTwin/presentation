@@ -40,11 +40,20 @@ interface NewFieldMapping {
   sourceFields: ReadonlyPropertyField[];
 }
 
+/**
+ * Returns labels of the category a reference points to and its ancestors. Legacy content descriptors keep categories
+ * of the content target's own properties at the top level too, so neither the target's category nor the top level
+ * adds a label.
+ */
 function getCategoryPath(
-  category: Readonly<CategoryDefinition>,
+  reference: CategoryDefinition["parent"],
   categories: Readonly<Record<string, Readonly<CategoryDefinition>>>,
 ): string[] {
-  return [...(category.parentId ? getCategoryPath(categories[category.parentId], categories) : []), category.label];
+  if (reference.type !== "category") {
+    return [];
+  }
+  const category = categories[reference.id];
+  return [...getCategoryPath(category.parent, categories), category.label];
 }
 
 /** Normalized relationship names per `pathFromTarget` step, keyed by field id. */
@@ -67,7 +76,7 @@ interface NormalizationContext {
 
 /** Only direct fields qualify: related fields are always anchored to a class category. */
 function needsInheritedCategory(field: ReadonlyPropertyField) {
-  return field.categoryId === undefined && field.pathFromTarget.length === 0;
+  return field.category.type === "target" && field.pathFromTarget.length === 0;
 }
 
 function getPropertyKey(field: ReadonlyPropertyField) {
@@ -196,11 +205,8 @@ function createCanonicalField(
   const inheritedCategoryLabel = needsInheritedCategory(field) ? inherited?.categoryLabel : undefined;
   const inheritedKindOfQuantity = hasPrimitiveValueType(field.type) ? inherited?.kindOfQuantity : undefined;
   const canonicalField = {
-    category: field.categoryId
-      ? getCategoryPath(categories[field.categoryId], categories)
-      : inheritedCategoryLabel !== undefined
-        ? [inheritedCategoryLabel]
-        : [],
+    category:
+      inheritedCategoryLabel !== undefined ? [inheritedCategoryLabel] : getCategoryPath(field.category, categories),
     label: field.label,
     type: createCanonicalType(field.type, false, inheritedKindOfQuantity),
     propertyNames: [field.propertyName],

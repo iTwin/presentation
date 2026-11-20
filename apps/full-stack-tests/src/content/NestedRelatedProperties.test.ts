@@ -744,7 +744,7 @@ describe("Content", () => {
         validateCategoryChain(descriptor, field("TypeName"), ["WallType"]);
         validateCategoryChain(descriptor, field("AspectCategorized"), ["Geometry"]);
         validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallTypeAspect"]);
-        expect(field("TypeCategorized").categoryId).toBe(field("AspectCategorized").categoryId);
+        expect(field("TypeCategorized").category).toEqual(field("AspectCategorized").category);
       });
 
       it.each([
@@ -760,7 +760,7 @@ describe("Content", () => {
           validateCategoryChain(descriptor, field("DetailCategorized"), [...context, "Geometry"]);
           validateCategoryChain(descriptor, field("DetailUncategorized"), [...context, "WallTypeDetail"]);
           validateCategoryChain(descriptor, field("AspectCategorized"), [...context, "Geometry"]);
-          expect(field("DetailCategorized").categoryId).toBe(field("AspectCategorized").categoryId);
+          expect(field("DetailCategorized").category).toEqual(field("AspectCategorized").category);
         },
       );
 
@@ -882,7 +882,7 @@ describe("Content", () => {
         const fields = getRelatedPropertyFields(descriptor);
         const top = fields.find((field) => field.propertyName === "AspectUncategorized")!;
         const nested = fields.find((field) => field.propertyName === "AspectSecondUncategorized")!;
-        expect(top.categoryId).not.toBe(nested.categoryId);
+        expect(top.category).not.toEqual(nested.category);
         validateCategoryChain(descriptor, top, ["WallTypeAspect"]);
         validateCategoryChain(descriptor, nested, ["WallType", "WallTypeAspect"]);
       });

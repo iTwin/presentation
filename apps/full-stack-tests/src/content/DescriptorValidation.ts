@@ -16,13 +16,13 @@ import type { Descriptor } from "./Utils.js";
  */
 export function getCategoryLabelChain(descriptor: Descriptor, field: Field): string[] {
   const labelsLeafToRoot: string[] = [];
-  let id: string | undefined = field.categoryId;
+  let id: string | undefined = field.category.type === "category" ? field.category.id : undefined;
   const seen = new Set<string>();
   while (id !== undefined && !seen.has(id) && id in descriptor.categories) {
     seen.add(id);
     const category: Descriptor["categories"][string] = descriptor.categories[id];
     labelsLeafToRoot.push(category.label);
-    id = category.parentId;
+    id = category.parent.type === "category" ? category.parent.id : undefined;
   }
   return labelsLeafToRoot.reverse();
 }

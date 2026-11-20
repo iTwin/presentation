@@ -144,7 +144,7 @@ describe("Content", () => {
         id: "provider_v1",
         async getContribution() {
           return {
-            categories: { custom: { id: "custom", label: "Custom Category" } },
+            categories: { custom: { id: "custom", label: "Custom Category", parent: { type: "topLevel" } } },
             relatedProperties: [
               {
                 path: [
@@ -167,7 +167,7 @@ describe("Content", () => {
       });
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
-      expect(propB!.categoryId).toBe("custom");
+      expect(propB!.category).toEqual({ type: "category", id: "custom" });
       validateCategoryChain(descriptor, propB!, ["Custom Category"]);
     });
 
@@ -204,8 +204,8 @@ describe("Content", () => {
         async getContribution() {
           return {
             categories: {
-              parent: { id: "parent", label: "Parent Category" },
-              child: { id: "child", label: "Child Category", parentId: "parent" },
+              parent: { id: "parent", label: "Parent Category", parent: { type: "topLevel" } },
+              child: { id: "child", label: "Child Category", parent: { type: "category", id: "parent" } },
             },
             relatedProperties: [
               {
@@ -229,7 +229,7 @@ describe("Content", () => {
       });
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
-      expect(propB!.categoryId).toBe("child");
+      expect(propB!.category).toEqual({ type: "category", id: "child" });
       validateCategoryChain(descriptor, propB!, ["Parent Category", "Child Category"]);
     });
 
@@ -333,7 +333,7 @@ describe("Content", () => {
         id: "provider_v1",
         async getContribution() {
           return {
-            categories: { custom: { id: "custom", label: "Custom Category" } },
+            categories: { custom: { id: "custom", label: "Custom Category", parent: { type: "topLevel" } } },
             relatedProperties: [
               {
                 path,
@@ -351,7 +351,7 @@ describe("Content", () => {
 
       const categorized = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "Categorized");
       // The override wins over the field's EC schema property category.
-      expect(categorized!.categoryId).toBe("custom");
+      expect(categorized!.category).toEqual({ type: "category", id: "custom" });
       validateCategoryChain(descriptor, categorized!, ["Custom Category"]);
     });
 
@@ -407,7 +407,7 @@ describe("Content", () => {
       validateCategoryChain(descriptor, categorized!, ["Class B", "B Category"]);
     });
 
-    it("leaves a direct field without a category when it has none", async () => {
+    it("places a direct field without a category in the content target's category", async () => {
       using setup = await buildTestECDb(async (builder, testName) => {
         const s = await importSchema(
           testName,
@@ -429,9 +429,9 @@ describe("Content", () => {
         targets: [{ primaryClass: setup.schema.items.A.fullName }],
       });
 
-      // There is no default category: an uncategorized direct field simply has no category.
+      // An uncategorized direct field is placed in the content target's category, which has no definition.
       const uncategorized = getPropertyFieldByName(descriptor, "Uncategorized");
-      expect(uncategorized.categoryId).toBeUndefined();
+      expect(uncategorized.category).toEqual({ type: "target" });
       expect(getFieldCategory(descriptor, uncategorized)).toBeUndefined();
 
       // The categorized field still gets its EC schema category.
@@ -496,7 +496,7 @@ describe("Content", () => {
       });
 
       const propB = getRelatedPropertyFields(descriptor).find((f) => f.propertyName === "PropB");
-      expect(propB!.categoryId).toBe("does-not-exist");
+      expect(propB!.category).toEqual({ type: "category", id: "does-not-exist" });
       // The undeclared category is not fabricated, so the field resolves to no category chain.
       validateCategoryChain(descriptor, propB!, []);
     });
@@ -723,7 +723,7 @@ describe("Content", () => {
           defaultOverrides?: { categoryId: string };
           overrides?: Record<string, { categoryId: string }>;
         }>,
-        categories?: Record<string, { id: string; label: string; parentId?: string }>,
+        categories?: Record<string, CategoryDefinition>,
       ) {
         return defineIModelFieldsProvider({
           id: "provider_v1",
@@ -791,10 +791,10 @@ describe("Content", () => {
 
         const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
         validateCategoryChain(descriptor, categorized, ["Geometry"]);
-        expect(descriptor.categories[categorized.categoryId!].parentId).toBeUndefined();
+        expect(getFieldCategory(descriptor, categorized)!.parent).toEqual({ type: "target" });
         // Uncategorized properties keep the related class fallback.
         validateCategoryChain(descriptor, uncategorized, ["Class B"]);
-        expect(descriptor.categories[uncategorized.categoryId!].parentId).toBeUndefined();
+        expect(getFieldCategory(descriptor, uncategorized)!.parent).toEqual({ type: "target" });
       });
 
       it.each(["relatedClass", "parent"] as const)(
@@ -804,12 +804,12 @@ describe("Content", () => {
           const descriptor = await buildScopeDescriptor(
             setup,
             createScopeProvider(setup, [{ relationship: "AtoB", scope, defaultOverrides: { categoryId: "custom" } }], {
-              custom: { id: "custom", label: "Custom" },
+              custom: { id: "custom", label: "Custom", parent: { type: "topLevel" } },
             }),
           );
 
           const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
-          expect(categorized.categoryId).toBe("custom");
+          expect(categorized.category).toEqual({ type: "category", id: "custom" });
           validateCategoryChain(descriptor, categorized, ["Custom"]);
           validateCategoryChain(descriptor, uncategorized, ["Custom"]);
         },
@@ -829,8 +829,8 @@ describe("Content", () => {
         const viaSecond = fieldsOf(descriptor, "AtoB2");
         // Two distinct fields, one category each for the class fallback and for the property category.
         expect(viaFirst.uncategorized.id).not.toBe(viaSecond.uncategorized.id);
-        expect(viaFirst.uncategorized.categoryId).toBe(viaSecond.uncategorized.categoryId);
-        expect(viaFirst.categorized.categoryId).toBe(viaSecond.categorized.categoryId);
+        expect(viaFirst.uncategorized.category).toEqual(viaSecond.uncategorized.category);
+        expect(viaFirst.categorized.category).toEqual(viaSecond.categorized.category);
         validateCategoryChain(descriptor, viaFirst.uncategorized, ["Class B"]);
         validateCategoryChain(descriptor, viaSecond.uncategorized, ["Class B"]);
         validateCategoryChain(descriptor, viaFirst.categorized, ["Geometry"]);
@@ -848,7 +848,11 @@ describe("Content", () => {
             },
           ],
         });
-        const child = { id: "child", label: "Child", parentId: originalClassCategoryId };
+        const child: CategoryDefinition = {
+          id: "child",
+          label: "Child",
+          parent: { type: "category", id: originalClassCategoryId },
+        };
         const propertyName = "Categorized";
         const descriptor = await buildScopeDescriptor(
           setup,
@@ -872,7 +876,7 @@ describe("Content", () => {
         validateCategoryChain(descriptor, viaFirst.uncategorized, ["Class B"]);
         validateCategoryChain(descriptor, viaSecond.uncategorized, ["Class B"]);
         expect(Object.keys(descriptor.categories)).not.toContain(originalClassCategoryId);
-        expect(child.parentId).toBe(originalClassCategoryId);
+        expect(child.parent).toEqual({ type: "category", id: originalClassCategoryId });
       });
 
       it("keeps class and property categories with matching unqualified names separate across schemas", async () => {
@@ -938,7 +942,7 @@ describe("Content", () => {
           const selected = fields.filter((field) => field.propertyName === propertyName);
           expect(selected).toHaveLength(2);
           expect(selected[0].id).not.toBe(selected[1].id);
-          expect(selected[0].categoryId).not.toBe(selected[1].categoryId);
+          expect(selected[0].category).not.toEqual(selected[1].category);
         }
         expect(
           Object.values(descriptor.categories)
@@ -959,7 +963,7 @@ describe("Content", () => {
 
         const topLevel = fieldsOf(descriptor, "AtoB").categorized;
         const nested = fieldsOf(descriptor, "AtoB2").categorized;
-        expect(topLevel.categoryId).not.toBe(nested.categoryId);
+        expect(topLevel.category).not.toEqual(nested.category);
         validateCategoryChain(descriptor, topLevel, ["Geometry"]);
         validateCategoryChain(descriptor, nested, ["Class B", "Geometry"]);
       });
