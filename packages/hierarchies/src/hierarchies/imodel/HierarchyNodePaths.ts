@@ -231,12 +231,6 @@ interface NodesRequest {
   genericEntries: Array<SearchPathEntry & { identifier: GenericNodeKey }>;
 }
 
-/**
- * Maximum number of rules in a single filter rule group. Every rule adds a term to the group's `OR` expression, so the
- * number is limited to keep queries within SQLite expression depth limits.
- */
-const MAX_RULES_IN_GROUP = 100;
-
 function createIdentifierKey(identifier: HierarchyNodeIdentifier): IdentifierKey {
   return HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier)
     ? JSON.stringify(["generic", identifier.source, identifier.id])
@@ -504,6 +498,12 @@ async function classesMatch({
     lhs === rhs || (await imodelAccess.classDerivesFrom(lhs, rhs)) || (await imodelAccess.classDerivesFrom(rhs, lhs))
   );
 }
+
+/**
+ * Maximum number of rules in a single filter rule group. Every rule adds a term to the group's `OR` expression, so the
+ * number is limited to keep queries within SQLite expression depth limits.
+ */
+const MAX_RULES_IN_GROUP = 100;
 
 /**
  * Creates a filter for instances with given IDs. The filter doesn't specify property classes, so it applies to
