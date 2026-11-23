@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -13,6 +14,7 @@ interface Metric {
   unit: string;
   value: number;
   extra?: string;
+  comparisonId?: string;
 }
 
 const BLOCKING_SUFFIX = " (P95 of main thread blocks)";
@@ -37,7 +39,8 @@ export function readResults(file: string): Metric[] {
       typeof entry.value !== "number" ||
       !Number.isFinite(entry.value) ||
       entry.value < 0 ||
-      ("extra" in entry && typeof entry.extra !== "string")
+      ("extra" in entry && typeof entry.extra !== "string") ||
+      ("comparisonId" in entry && (typeof entry.comparisonId !== "string" || entry.comparisonId.length === 0))
     ) {
       throw new Error(`Invalid benchmark metric in ${file}.`);
     }
@@ -50,6 +53,9 @@ export function readResults(file: string): Metric[] {
       unit: entry.unit,
       value: entry.value,
       ...("extra" in entry && typeof entry.extra === "string" ? { extra: entry.extra } : {}),
+      ...("comparisonId" in entry && typeof entry.comparisonId === "string"
+        ? { comparisonId: entry.comparisonId }
+        : {}),
     };
   });
   for (let index = 0; index < metrics.length; index += 2) {
@@ -90,6 +96,7 @@ export function runComparison(
   outputName: string,
   files: string[],
 ) {
+  const comparisonId = randomUUID();
   const temporaryDirectory = mkdtempSync(join(tmpdir(), "benchmark-comparison-"));
   const revisions: { name: string; directory: string; rounds: Metric[][] }[] = [
     { name: "base", directory: baseDirectory, rounds: [] },
@@ -125,7 +132,15 @@ export function runComparison(
     for (const revision of revisions) {
       const output = join(outputDirectory, revision.name, `${outputName}.json`);
       mkdirSync(dirname(output), { recursive: true });
-      writeFileSync(output, JSON.stringify(revision.rounds.length ? selectFastest(revision.rounds) : [], undefined, 2));
+      const metrics = revision.rounds.length ? selectFastest(revision.rounds) : [];
+      writeFileSync(
+        output,
+        JSON.stringify(
+          metrics.map((metric) => ({ ...metric, comparisonId })),
+          undefined,
+          2,
+        ),
+      );
     }
   } finally {
     rmSync(temporaryDirectory, { recursive: true, force: true });
@@ -152,6 +167,10 @@ export function formatComparison(name: string, base: Metric[], head: Metric[]): 
       change = "New";
     } else if (!b) {
       change = "Removed";
+    } else if (!a.comparisonId || !b.comparisonId) {
+      change = "N/A (runner unknown)";
+    } else if (a.comparisonId !== b.comparisonId) {
+      change = "N/A (different runners)";
     } else if (a.value === 0) {
       change = b.value === 0 ? "0.00%" : "N/A";
     } else {
@@ -164,7 +183,7 @@ export function formatComparison(name: string, base: Metric[], head: Metric[]): 
     `## ${escape(name)} benchmark`,
     "",
     `A/B/A/B/A/B on the same runner per shard. Each test uses its fastest of ${ROUNDS} runs; blocking metrics come from that same run.`,
-    "All values are milliseconds. Negative changes are faster. New and removed tests have no comparison.",
+    "All values are milliseconds. Negative changes are faster. Percentages require matching A/B invocation IDs; tests measured on different runners or without provenance have no comparison, nor do new and removed tests.",
     "",
     "| Test / metric | Base | PR | Change |",
     "| --- | ---: | ---: | ---: |",
