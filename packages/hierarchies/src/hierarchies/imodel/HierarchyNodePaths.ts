@@ -114,7 +114,7 @@ export function createIModelHierarchyNodePaths(
             // the provider filters hierarchy levels to search tree entries, and assigns search attributes to nodes
             search: { paths: searchTree },
             // only the nodes of search tree entries are needed, including the ones under search targets
-            filterUnderSearchTargets: true,
+            searchTargetsChildrenLoadingMode: "search-paths",
             // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
             queryCacheSize: Number.MAX_SAFE_INTEGER,
           });

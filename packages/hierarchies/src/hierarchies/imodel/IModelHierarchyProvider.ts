@@ -281,10 +281,10 @@ interface RequestContextProp {
 type IModelHierarchyProviderImplProps = MergedIModelHierarchyProviderProps & {
   sourceName?: string;
   /**
-   * Whether hierarchy levels under search targets are filtered to search tree entries too. By default, they're not
-   * filtered, so whole subtrees of search targets are loaded.
+   * Controls which children of search targets are loaded. Defaults to `"all-descendants"`, which loads whole subtrees;
+   * `"search-paths"` loads only hierarchy levels that are search tree entries.
    */
-  filterUnderSearchTargets?: boolean;
+  searchTargetsChildrenLoadingMode?: "all-descendants" | "search-paths";
 };
 
 export class IModelHierarchyProviderImpl implements HierarchyProvider {
@@ -307,7 +307,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
   #componentId: GuidString;
   #componentName: string;
   #sourceName: string;
-  #filterUnderSearchTargets: boolean;
+  #searchTargetsChildrenLoadingMode: "all-descendants" | "search-paths";
 
   public constructor(props: IModelHierarchyProviderImplProps) {
     if (props.imodels.length === 0) {
@@ -317,7 +317,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
     this.#componentId = Guid.createValue();
     this.#componentName = "IModelHierarchyProviderImpl";
     this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
-    this.#filterUnderSearchTargets = !!props.filterUnderSearchTargets;
+    this.#searchTargetsChildrenLoadingMode = props.searchTargetsChildrenLoadingMode ?? "all-descendants";
     this._imodelProps = props.imodels;
     this._imodelContexts = props.imodels.map((imodelProps) => {
       const sourceHierarchyDefinition = getRxjsHierarchyDefinition(
@@ -417,7 +417,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
           source: sourceHierarchyDefinition,
           sourceName: this.#sourceName,
           targetPaths: this._targetPaths,
-          filterUnderSearchTargets: this.#filterUnderSearchTargets,
+          searchTargetsChildrenLoadingMode: this.#searchTargetsChildrenLoadingMode,
         });
   }
 

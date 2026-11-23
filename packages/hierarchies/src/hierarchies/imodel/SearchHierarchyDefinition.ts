@@ -40,10 +40,10 @@ interface SearchHierarchyDefinitionProps {
   targetPaths: HierarchySearchTree[];
   nodesParser?: RxjsNodeParser;
   /**
-   * Whether hierarchy levels under search targets are filtered to search tree entries too. By default, they're not
-   * filtered, so whole subtrees of search targets are loaded.
+   * Controls which children of search targets are loaded. Defaults to `"all-descendants"`, which loads whole
+   * subtrees; `"search-paths"` loads only hierarchy levels that are search tree entries.
    */
-  filterUnderSearchTargets?: boolean;
+  searchTargetsChildrenLoadingMode?: "all-descendants" | "search-paths";
 }
 
 /** @internal */
@@ -53,7 +53,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   private _targetPaths: HierarchySearchTree[];
   private _nodesParser: RxjsNodeParser;
   #sourceName: string;
-  #filterUnderSearchTargets: boolean;
+  #searchTargetsChildrenLoadingMode: "all-descendants" | "search-paths";
 
   public constructor(props: SearchHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
@@ -61,7 +61,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     this.#sourceName = props.sourceName;
     this._targetPaths = props.targetPaths;
     this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
-    this.#filterUnderSearchTargets = !!props.filterUnderSearchTargets;
+    this.#searchTargetsChildrenLoadingMode = props.searchTargetsChildrenLoadingMode ?? "all-descendants";
   }
 
   public get preProcessNode(): RxjsNodePreProcessor {
@@ -163,8 +163,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     if (!childNodeSearchIdentifiers) {
       return sourceDefinitions;
     }
-    // under search targets, all nodes are used, unless levels under search targets are filtered too
-    const useAllNodes = searchHelper.hasSearchTargetAncestor && !this.#filterUnderSearchTargets;
+    // Under search targets, all nodes are used in "all-descendants" mode.
+    const useAllNodes =
+      searchHelper.hasSearchTargetAncestor && this.#searchTargetsChildrenLoadingMode === "all-descendants";
 
     const [genericNodeDefinitions, instanceNodeDefinitions] = partition(
       sourceDefinitions.pipe(mergeAll()),

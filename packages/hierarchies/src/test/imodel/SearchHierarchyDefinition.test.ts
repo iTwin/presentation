@@ -53,7 +53,7 @@ describe("SearchHierarchyDefinition", () => {
     source?: Partial<RxjsHierarchyDefinition>;
     imodelAccess?: Partial<Pick<ECSchemaProvider, "classDerivesFrom"> & { imodelKey: string }>;
     sourceName?: string;
-    filterUnderSearchTargets?: boolean;
+    searchTargetsChildrenLoadingMode?: "all-descendants" | "search-paths";
   }) {
     return new SearchHierarchyDefinition({
       imodelAccess: {
@@ -63,7 +63,7 @@ describe("SearchHierarchyDefinition", () => {
       source: createStubSourceDefinition(props.source),
       sourceName: props.sourceName ?? "test-source",
       targetPaths: props.targetPaths,
-      filterUnderSearchTargets: props.filterUnderSearchTargets,
+      searchTargetsChildrenLoadingMode: props.searchTargetsChildrenLoadingMode,
     });
   }
 
@@ -594,7 +594,7 @@ describe("SearchHierarchyDefinition", () => {
       expect(ecsql).toContain(NodeSelectClauseColumnNames.FullClassName);
     });
 
-    it("filters hierarchy levels under search targets when `filterUnderSearchTargets` is set", async () => {
+    it("loads only search paths under search targets in `search-paths` mode", async () => {
       const targetPaths: HierarchySearchTree[] = [
         { identifier: { className: "Schema.Class", id: "0x1" } },
         { identifier: { type: "generic", id: "matching" } },
@@ -619,7 +619,7 @@ describe("SearchHierarchyDefinition", () => {
               { node: { key: "other", label: "other" } },
             ]),
         },
-        filterUnderSearchTargets: true,
+        searchTargetsChildrenLoadingMode: "search-paths",
       });
       const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, ...constProps }));
       // the generic node that isn't in search paths is omitted
