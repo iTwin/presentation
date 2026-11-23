@@ -105,6 +105,7 @@
     "cspell.json",
     "dependabot.yml",
     "apps/content-equivalence-tests/imodels.json",
-    "apps/content-equivalence-tests/output"
+    "apps/content-equivalence-tests/output",
+    "apps/performance-tests/datasets"
   ]
 }
