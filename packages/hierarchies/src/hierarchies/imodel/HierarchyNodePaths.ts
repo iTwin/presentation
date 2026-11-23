@@ -121,7 +121,7 @@ export function createIModelHierarchyNodePaths(
             queryCacheSize: Number.MAX_SAFE_INTEGER,
           });
           return loadSearchTreeNodes({ hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, searchTree }).pipe(
-            mergeMap((loadedNodesByBranch) => createNodesPaths({ searchTree, loadedNodesByBranch })),
+            mergeMap((loadedNodesByIdentifier) => createNodesPaths({ searchTree, loadedNodesByIdentifier })),
             finalize(() => hierarchyProvider[Symbol.dispose]()),
           );
         }),
@@ -145,10 +145,10 @@ interface GroupedNode<TNode extends HierarchyNode = NonGroupingHierarchyNode> {
 /** A hierarchy level request for sibling search tree branches. */
 interface NodesRequest {
   parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
-  /** Requested instance node branches by their instance IDs. Used to match loaded nodes to branches. */
-  instanceBranches: Map<Id64String, Array<HierarchySearchTree & { identifier: IModelInstanceKey }>>;
-  /** Requested generic node branches. */
-  genericBranches: Array<HierarchySearchTree & { identifier: GenericNodeKey }>;
+  /** Identifiers of requested instance node branches by their instance IDs. Used to match loaded nodes to branches. */
+  instanceIdentifiers: Map<Id64String, IModelInstanceKey[]>;
+  /** Identifiers of requested generic node branches. */
+  genericIdentifiers: GenericNodeKey[];
 }
 
 /**
@@ -245,13 +245,16 @@ function createNodeKey(identifier: HierarchyNodeIdentifier): NonGroupingHierarch
  * Nodes are loaded with ancestor keys based on search path identifiers, which don't match the actual hierarchy (e.g.
  * class names may be more general, grouping node keys are missing). Branches that aren't loaded, and their
  * descendants, are skipped.
+ *
+ * Loaded nodes are mapped to branches by identifier references, so the same identifier object is expected to appear in
+ * one branch only - equal identifiers may appear at different hierarchy levels, as long as they're different objects.
  */
 function createNodesPaths({
   searchTree,
-  loadedNodesByBranch,
+  loadedNodesByIdentifier,
 }: {
   searchTree: HierarchySearchTree[];
-  loadedNodesByBranch: Map<HierarchySearchTree, GroupedNode>;
+  loadedNodesByIdentifier: Map<HierarchyNodeIdentifier, GroupedNode>;
 }): HierarchyNode[][] {
   const nodesPaths = new Array<HierarchyNode[]>();
   const resolveChildren = (
@@ -261,7 +264,7 @@ function createNodesPaths({
     // sibling branches match the same loaded node when their identifiers differ only by class
     const branchesByLoadedNode = new Map<GroupedNode, HierarchySearchTree[]>();
     for (const branch of branches) {
-      const loadedNode = loadedNodesByBranch.get(branch);
+      const loadedNode = loadedNodesByIdentifier.get(branch.identifier);
       if (loadedNode) {
         getOrCreate(branchesByLoadedNode, loadedNode, () => []).push(branch);
       }
@@ -322,8 +325,8 @@ function withoutHiddenFlag({ isHidden: _, ...node }: GroupedNode["node"]): NonGr
 /**
  * Loads nodes for all given search tree branches. Nodes of every hierarchy level are requested concurrently.
  *
- * Emits a map from branches to their loaded nodes. Loaded nodes have ancestor keys based on search path identifiers.
- * Branches that aren't in the hierarchy are not in the map.
+ * Emits a map from branch identifiers to their loaded nodes. Loaded nodes have ancestor keys based on search path
+ * identifiers. Identifiers of branches that aren't in the hierarchy are not in the map.
  */
 function loadSearchTreeNodes({
   hierarchyProvider,
@@ -335,7 +338,7 @@ function loadSearchTreeNodes({
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
   searchTree: HierarchySearchTree[];
-}): Observable<Map<HierarchySearchTree, GroupedNode>> {
+}): Observable<Map<HierarchyNodeIdentifier, GroupedNode>> {
   return defer(() => from(getRequestPropsForGetNodes(searchTree))).pipe(
     mergeMap((request) => {
       const requestProps = {
@@ -356,46 +359,49 @@ function loadSearchTreeNodes({
         mergeMap(({ node, groupingNodes }) =>
           HierarchyNode.isGroupingNode(node)
             ? EMPTY
-            : matchBranches({ imodelAccess, request, loadedNode: { node, groupingNodes } }),
+            : matchBranchIdentifiers({ imodelAccess, request, groupedNode: { node, groupingNodes } }),
         ),
       );
     }),
-    reduce((acc, { branch, loadedNode }) => acc.set(branch, loadedNode), new Map<HierarchySearchTree, GroupedNode>()),
+    reduce(
+      (acc, { branchIdentifier, groupedNode }) => acc.set(branchIdentifier, groupedNode),
+      new Map<HierarchyNodeIdentifier, GroupedNode>(),
+    ),
   );
 }
 
-/** Finds the requested search tree branches that match the given loaded node. */
-function matchBranches({
+/** Finds identifiers of the requested search tree branches that match the given loaded node. */
+function matchBranchIdentifiers({
   imodelAccess,
   request,
-  loadedNode,
+  groupedNode,
 }: {
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   request: NodesRequest;
-  loadedNode: GroupedNode;
-}): Observable<{ branch: HierarchySearchTree; loadedNode: GroupedNode }> {
-  const { key } = loadedNode.node;
+  groupedNode: GroupedNode;
+}): Observable<{ branchIdentifier: HierarchyNodeIdentifier; groupedNode: GroupedNode }> {
+  const { key } = groupedNode.node;
   if (HierarchyNodeKey.isGeneric(key)) {
     return from(
-      request.genericBranches
-        .filter(({ identifier }) => identifier.id === key.id)
-        .map((branch) => ({ branch, loadedNode })),
+      request.genericIdentifiers
+        .filter(({ id }) => id === key.id)
+        .map((branchIdentifier) => ({ branchIdentifier, groupedNode })),
     );
   }
   return from(
     key.instanceKeys.flatMap((loadedKey) =>
       // the provider only loads instances of the requested branches
-      request.instanceBranches
+      request.instanceIdentifiers
         .get(loadedKey.id)!
-        .filter(({ identifier }) => !identifier.imodelKey || identifier.imodelKey === loadedKey.imodelKey)
-        .map((branch) => ({ branch, loadedKey })),
+        .filter(({ imodelKey }) => !imodelKey || imodelKey === loadedKey.imodelKey)
+        .map((branchIdentifier) => ({ branchIdentifier, loadedKey })),
     ),
   ).pipe(
     // instances of different classes may share IDs (e.g. a model and its modeled element), so in addition to
     // IDs, the loaded instance class has to match the search path class
-    mergeMap(async ({ branch, loadedKey }) =>
-      (await classesMatch({ imodelAccess, lhs: branch.identifier.className, rhs: loadedKey.className }))
-        ? [{ branch, loadedNode }]
+    mergeMap(async ({ branchIdentifier, loadedKey }) =>
+      (await classesMatch({ imodelAccess, lhs: branchIdentifier.className, rhs: loadedKey.className }))
+        ? [{ branchIdentifier, groupedNode }]
         : [],
     ),
     mergeAll(),
@@ -409,21 +415,20 @@ function matchBranches({
 function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesRequest[] {
   const requests = new Array<NodesRequest>();
   const addRequests = (branches: HierarchySearchTree[], parent?: StandInParentNodeProps) => {
-    const instanceBranches: NodesRequest["instanceBranches"] = new Map();
-    const genericBranches: NodesRequest["genericBranches"] = [];
-    // loaded nodes are mapped to the branch objects, so they're not copied
-    for (const branch of branches) {
-      if (isInstanceNodeSearchTreeBranch(branch)) {
-        getOrCreate(instanceBranches, branch.identifier.id, () => []).push(branch);
+    const instanceIdentifiers: NodesRequest["instanceIdentifiers"] = new Map();
+    const genericIdentifiers: NodesRequest["genericIdentifiers"] = [];
+    // loaded nodes are mapped to branch identifiers by reference, so they're not copied
+    for (const { identifier } of branches) {
+      if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+        getOrCreate(instanceIdentifiers, identifier.id, () => []).push(identifier);
       } else {
-        // If branch is not instances it must be a generic node branch
-        genericBranches.push(branch as HierarchySearchTree & { identifier: GenericNodeKey });
+        genericIdentifiers.push(identifier);
       }
     }
     requests.push({
       parentNode: parent ? createStandInParentNode(parent) : undefined,
-      instanceBranches,
-      genericBranches,
+      instanceIdentifiers,
+      genericIdentifiers,
     });
     for (const branch of branches) {
       if (branch.children) {
@@ -439,13 +444,6 @@ function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesReq
     addRequests(searchTree);
   }
   return requests;
-}
-
-// This narrows the whole branch, so casting with `as` is not needed.
-function isInstanceNodeSearchTreeBranch(
-  branch: HierarchySearchTree,
-): branch is HierarchySearchTree & { identifier: IModelInstanceKey } {
-  return HierarchyNodeIdentifier.isInstanceNodeIdentifier(branch.identifier);
 }
 
 /** Checks whether one of the given classes derives from the other. */
