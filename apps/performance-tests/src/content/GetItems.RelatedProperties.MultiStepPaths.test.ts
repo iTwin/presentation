@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
-import { describe, expect } from "vitest";
+import { assert, describe, expect } from "vitest";
 import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
 import { getPropertyFields, PAGE_SIZE, runContentTest } from "./ContentTestUtilities.js";
 
@@ -59,16 +58,15 @@ describe("Content items", () => {
         }
 
         for (const { field, aspectClassIndex } of typeAspectFields) {
-          assert.equal(item.getValue(field), aspectClassIndex + aspectClassCount);
+          expect(item.getValue(field)).toBe(aspectClassIndex + aspectClassCount);
         }
 
         const ownedAspects = ownedAspectFields.filter(({ field }) => item.getValue(field) !== undefined);
         for (const { field, aspectClassIndex } of ownedAspects) {
-          assert.equal(item.getValue(field), aspectClassIndex);
+          expect(item.getValue(field)).toBe(aspectClassIndex);
         }
         const typeIndex = ownedAspects[0].aspectClassIndex % typeCount;
-        assert.deepEqual(
-          ownedAspects.map(({ aspectClassIndex }) => aspectClassIndex).sort((a, b) => a - b),
+        expect(ownedAspects.map(({ aspectClassIndex }) => aspectClassIndex).sort((a, b) => a - b)).toEqual(
           Array.from({ length: aspectClassCount / typeCount }, (_, i) => typeIndex + i * typeCount),
         );
 

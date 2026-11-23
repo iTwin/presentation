@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
-import { describe, expect } from "vitest";
+import { assert, describe, expect } from "vitest";
 import { createContentProvider, defineIModelFieldsProvider, resolveContentSources } from "@itwin/presentation-content";
 import { getPropertyFields, PAGE_SIZE, runContentTest } from "./ContentTestUtilities.js";
 
@@ -59,8 +58,8 @@ describe("Content items", () => {
         const value = item.getValue(calculatedField);
         const ordinal = item.getValue(ordinalField);
         assert(typeof value === "number" && typeof ordinal === "number");
-        assert.equal(value, ordinal % bucketCount);
-        assert(value >= previous);
+        expect(value).toBe(ordinal % bucketCount);
+        expect(value).toBeGreaterThanOrEqual(previous);
         previous = value;
         if (++count === PAGE_SIZE) {
           break;
@@ -117,7 +116,7 @@ describe("Content items", () => {
       const classes = new Set<string>();
       let count = 0;
       for await (const item of provider.getItems({ sorting: [{ field: constantField, direction: "asc" }] })) {
-        assert.equal(item.getValue(constantField), 1);
+        expect(item.getValue(constantField)).toBe(1);
         ids.add(item.primaryKey.id);
         classes.add(item.primaryKey.className);
         ++count;

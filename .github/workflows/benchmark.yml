@@ -50,15 +50,16 @@ jobs:
         env:
           SUITES: ${{ steps.changes.outputs.suites }}
 
-  # Generate and cache datasets for the head revision.
-  prepare-head-datasets:
-    name: Prepare head datasets
+  # Look up the head dataset cache and provide its key to benchmark jobs.
+  check-head-datasets:
+    name: Check head dataset cache
     needs: select-suites
     if: needs.select-suites.outputs.suites != '[]'
     runs-on: ubuntu-latest
     outputs:
       # Cache key of the head revision datasets, restored from `./apps/performance-tests/datasets/*.bim`.
       key: ${{ steps.key.outputs.key }}
+      cache-hit: ${{ steps.lookup.outputs.cache-hit }}
     steps:
       - name: Checkout head revision
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -79,45 +80,56 @@ jobs:
           key: ${{ steps.key.outputs.key }}
           lookup-only: true
 
+  # Generate the head datasets only when the cache is missing.
+  prepare-head-datasets:
+    name: Prepare head datasets
+    needs: [select-suites, check-head-datasets]
+    if: >-
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.check-head-datasets.outputs.cache-hit != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout head revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Install pnpm
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
 
       - name: Use Node.js 24
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 24.15.0
           cache: 'pnpm'
 
       - name: Install dependencies
-        if: steps.lookup.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build benchmark tests
-        if: steps.lookup.outputs.cache-hit != 'true'
         run: pnpm lage build --to presentation-performance-tests
 
       - name: Generate datasets
-        if: steps.lookup.outputs.cache-hit != 'true'
         run: pnpm --dir apps/performance-tests prepare:datasets
 
       - name: Save datasets
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./apps/performance-tests/datasets/*.bim
-          key: ${{ steps.key.outputs.key }}
+          key: ${{ needs.check-head-datasets.outputs.key }}
 
-  # Generate and cache datasets for the pull request base revision.
-  prepare-base-datasets:
-    name: Prepare base datasets
+  # Look up the base dataset cache and provide its key to benchmark jobs.
+  check-base-datasets:
+    name: Check base dataset cache
     needs: select-suites
-    if: github.event_name == 'pull_request' && needs.select-suites.outputs.suites != '[]'
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]'
     runs-on: ubuntu-latest
     outputs:
       # Cache key of the base revision datasets, restored from `./.benchmark-base/apps/performance-tests/datasets/*.bim`.
       key: ${{ steps.key.outputs.key }}
+      cache-hit: ${{ steps.lookup.outputs.cache-hit }}
     steps:
       - name: Checkout base revision
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -140,14 +152,29 @@ jobs:
           key: ${{ steps.key.outputs.key }}
           lookup-only: true
 
+  # Generate the base datasets only when the cache is missing.
+  prepare-base-datasets:
+    name: Prepare base datasets
+    needs: [select-suites, check-base-datasets]
+    if: >-
+      github.event_name == 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.check-base-datasets.outputs.cache-hit != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base revision
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .benchmark-base
+          persist-credentials: false
+
       - name: Install pnpm
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
         with:
           package_json_file: .benchmark-base/package.json
 
       - name: Use Node.js 24
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 24.15.0
@@ -155,32 +182,34 @@ jobs:
           cache-dependency-path: .benchmark-base/pnpm-lock.yaml
 
       - name: Install dependencies
-        if: steps.lookup.outputs.cache-hit != 'true'
         working-directory: .benchmark-base
         run: pnpm install --frozen-lockfile
 
       - name: Build benchmark tests
-        if: steps.lookup.outputs.cache-hit != 'true'
         working-directory: .benchmark-base
         run: pnpm lage build --to presentation-performance-tests
 
       - name: Generate datasets
-        if: steps.lookup.outputs.cache-hit != 'true'
         working-directory: .benchmark-base
         run: pnpm --dir apps/performance-tests prepare:datasets
 
       - name: Save datasets
-        if: steps.lookup.outputs.cache-hit != 'true'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./.benchmark-base/apps/performance-tests/datasets/*.bim
-          key: ${{ steps.key.outputs.key }}
+          key: ${{ needs.check-base-datasets.outputs.key }}
 
   # Run master/manual benchmarks without comparing against a second checkout.
   benchmark:
     name: '${{ matrix.shard.suite.name }}: Benchmark performance (shard ${{ matrix.shard.index }})'
-    needs: [select-suites, prepare-head-datasets]
-    if: ${{ github.event_name != 'pull_request' }}
+    needs: [select-suites, check-head-datasets, prepare-head-datasets]
+    if: >-
+      ${{ !cancelled() &&
+      github.event_name != 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.select-suites.result == 'success' &&
+      needs.check-head-datasets.result == 'success' &&
+      (needs.prepare-head-datasets.result == 'success' || needs.prepare-head-datasets.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -233,7 +262,9 @@ jobs:
   merge:
     name: Merge benchmark results
     needs: [select-suites, benchmark]
-    if: ${{ needs.select-suites.outputs.suites != '[]' && needs.benchmark.result == 'success' }}
+    if: >-
+      ${{ needs.select-suites.outputs.suites != '[]' &&
+      needs.benchmark.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -258,7 +289,11 @@ jobs:
   # Append master results to the existing gh-pages benchmark history.
   publish:
     name: Publish benchmark
-    if: ${{ !cancelled() && needs.select-suites.result == 'success' && needs.merge.result == 'success' && github.ref == 'refs/heads/master' }}
+    if: >-
+      ${{ !cancelled() &&
+      needs.select-suites.result == 'success' &&
+      needs.merge.result == 'success' &&
+      github.ref == 'refs/heads/master' }}
     needs: [select-suites, merge]
     runs-on: ubuntu-latest
     permissions:
@@ -287,8 +322,23 @@ jobs:
   # Build base and PR revisions, then alternate their benchmarks on the same runner.
   benchmark-pr:
     name: '${{ matrix.shard.suite.name }}: Benchmark A/B performance (shard ${{ matrix.shard.index }})'
-    needs: [select-suites, prepare-head-datasets, prepare-base-datasets]
-    if: ${{ github.event_name == 'pull_request' }}
+    needs:
+      [
+        select-suites,
+        check-head-datasets,
+        prepare-head-datasets,
+        check-base-datasets,
+        prepare-base-datasets,
+      ]
+    if: >-
+      ${{ !cancelled() &&
+      github.event_name == 'pull_request' &&
+      needs.select-suites.outputs.suites != '[]' &&
+      needs.select-suites.result == 'success' &&
+      needs.check-head-datasets.result == 'success' &&
+      (needs.prepare-head-datasets.result == 'success' || needs.prepare-head-datasets.result == 'skipped') &&
+      needs.check-base-datasets.result == 'success' &&
+      (needs.prepare-base-datasets.result == 'success' || needs.prepare-base-datasets.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -336,13 +386,13 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./apps/performance-tests/datasets/*.bim
-          key: ${{ needs.prepare-head-datasets.outputs.key }}
+          key: ${{ needs.check-head-datasets.outputs.key }}
 
       - name: Restore base datasets
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ./.benchmark-base/apps/performance-tests/datasets/*.bim
-          key: ${{ needs.prepare-base-datasets.outputs.key }}
+          key: ${{ needs.check-base-datasets.outputs.key }}
 
       - name: Run alternating base and PR benchmarks
         run: |
@@ -364,7 +414,9 @@ jobs:
   compare-pr:
     name: '${{ matrix.suite.name }}: Compare A/B benchmark results'
     needs: [select-suites, benchmark-pr]
-    if: ${{ needs.select-suites.outputs.suites != '[]' && needs.benchmark-pr.result == 'success' }}
+    if: >-
+      ${{ needs.select-suites.outputs.suites != '[]' &&
+      needs.benchmark-pr.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
