@@ -57,7 +57,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = setupResult;
-      const { tree, provider, imodelAccess } = createTreeAndProvider({
+      const { tree, imodelAccess } = createTreeAndProvider({
         imodelConnection,
         hierarchyConfig: { elements: { classGrouping: "disable" } },
       });
@@ -65,7 +65,7 @@ describe("Models tree", () => {
 
       const paths = await createNodePaths({ tree, imodelAccess, targetItems: [targetKey] });
       const searchPaths = await collect(tree.createInstanceKeyPaths({ targetItems: [targetKey] }));
-      expect(paths).toEqual(await loadNodesPathsByTraversal({ provider, imodelAccess, searchPaths }));
+      expect(paths).toEqual(await loadNodesPathsByTraversal({ tree, imodelAccess, searchPaths }));
       expect(paths[0].map((node) => node.extendedData?.type)).toEqual(types);
     });
 
@@ -196,7 +196,7 @@ describe("Models tree", () => {
         }),
       );
       const { imodelConnection, ...keys } = setupResult;
-      const { tree, provider, imodelAccess } = createTreeAndProvider({
+      const { tree, imodelAccess } = createTreeAndProvider({
         imodelConnection,
         hierarchyConfig: { elements: { classGrouping: "enable" } },
       });
@@ -216,7 +216,7 @@ describe("Models tree", () => {
           paths: searchPaths,
         }),
       );
-      expect(nodePaths).toEqual(await loadNodesPathsByTraversal({ provider, imodelAccess, searchPaths }));
+      expect(nodePaths).toEqual(await loadNodesPathsByTraversal({ tree, imodelAccess, searchPaths }));
     });
 
     it("requests more than 100 elements in one level with a single request", async () => {
@@ -300,19 +300,28 @@ async function createNodePaths({
 }
 
 /**
- * Loads nodes paths for the given search paths by applying the search to the provider and traversing the hierarchy
- * from the root. The search is applied once for all paths, because search attributes of nodes depend on all of them.
+ * Loads nodes paths for the given search paths by creating a provider with the search applied and traversing the
+ * hierarchy from the root. The search is applied once for all paths, because search attributes of nodes depend on all
+ * of them.
  */
 async function loadNodesPathsByTraversal({
+  tree,
+  imodelAccess,
   searchPaths,
-  ...props
 }: {
-  provider: HierarchyProvider;
+  tree: ReturnType<typeof createTreeAndProvider>["tree"];
   imodelAccess: ReturnType<typeof createIModelAccess>;
   searchPaths: Array<{ path: ReadonlyArray<Readonly<InstanceKey>>; options?: HierarchySearchPathOptions }>;
 }): Promise<HierarchyNode[][]> {
-  props.provider.setHierarchySearch({ paths: await HierarchySearchTree.createFromPathsList(searchPaths) });
-  return Promise.all(searchPaths.map(async ({ path }) => loadNodesPathByTraversal({ ...props, path })));
+  using provider = createIModelHierarchyProvider({
+    imodelAccess,
+    hierarchyDefinition: tree.hierarchyDefinition,
+    search: { paths: await HierarchySearchTree.createFromPathsList(searchPaths) },
+  });
+  // awaited, so that the provider isn't disposed before the paths are loaded
+  return await Promise.all(
+    searchPaths.map(async ({ path }) => loadNodesPathByTraversal({ provider, imodelAccess, path })),
+  );
 }
 
 /** Loads nodes for the given path of instance keys by traversing the hierarchy from the root. */
