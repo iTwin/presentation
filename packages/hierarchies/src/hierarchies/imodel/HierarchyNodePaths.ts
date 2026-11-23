@@ -411,7 +411,7 @@ function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesReq
     const genericEntries: NodesRequest["genericEntries"] = [];
     // loaded nodes are mapped to the entry objects, so they're not copied
     for (const entry of entries) {
-      if (isInstanceNodeEntry(entry)) {
+      if (isInstanceNodeSearchTreeEntry(entry)) {
         getOrCreate(instanceEntries, entry.identifier.id, () => []).push(entry);
       } else {
         // If entry is not instances it must be a generic node entry
@@ -431,7 +431,8 @@ function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesReq
   return requests;
 }
 
-function isInstanceNodeEntry(
+// This narrows the whole entry, so casting with `as` is not needed.
+function isInstanceNodeSearchTreeEntry(
   entry: HierarchySearchTree,
 ): entry is HierarchySearchTree & { identifier: IModelInstanceKey } {
   return HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry.identifier);
