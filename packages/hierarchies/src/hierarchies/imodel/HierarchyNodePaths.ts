@@ -198,27 +198,31 @@ function isFlaggedAsHidden(node: ProcessedHierarchyNode): boolean {
   return "isHidden" in node && !!node.isHidden;
 }
 
+interface StandInParentNodeProps {
+  /** The search tree entry whose node the stand-in replaces. */
+  parentEntry: HierarchySearchTree;
+  /** Identifiers of the parent entry's ancestors, from the root. */
+  ancestors: HierarchyNodeIdentifier[];
+  /** Whether any of the parent entry's ancestors is a search target. */
+  hasSearchTargetAncestor: boolean;
+}
+
 /**
- * Creates a parent node, that stands in for the actual parent node of a hierarchy level identified by the given path of
- * search tree entries. The definition adapter turns the node's keys back into a path of identifiers, and the provider
- * filters the hierarchy level to the children of the last entry.
+ * Creates a parent node, that stands in for the actual parent node of a hierarchy level identified by the given search
+ * tree entry and its ancestors. The definition adapter turns the node's keys back into a path of identifiers, and the
+ * provider filters the hierarchy level to the children of the parent entry.
  *
  * The stand-in has the same search attributes as a provider with the search applied assigns to the actual parent node.
  * Entries with children are search targets only if they're flagged as such.
  */
-function createStandInParentNode(
-  entriesPath: HierarchySearchTree[],
-): ParentHierarchyNode<NonGroupingHierarchyNode> | undefined {
-  const parentEntry = entriesPath.at(-1);
-  if (!parentEntry) {
-    return undefined;
-  }
-  const keys = entriesPath.map(({ identifier }) => createNodeKey(identifier));
-  const key = keys.pop()!;
-  const hasSearchTargetAncestor = entriesPath.slice(0, -1).some(({ isTarget }) => isTarget);
+function createStandInParentNode({
+  parentEntry,
+  ancestors,
+  hasSearchTargetAncestor,
+}: StandInParentNodeProps): ParentHierarchyNode<NonGroupingHierarchyNode> {
   return {
-    key,
-    parentKeys: keys,
+    key: createNodeKey(parentEntry.identifier),
+    parentKeys: ancestors.map(createNodeKey),
     label: "",
     search: {
       ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : {}),
@@ -406,7 +410,7 @@ function matchEntries({
  */
 function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesRequest[] {
   const requests = new Array<NodesRequest>();
-  const addRequests = (entries: HierarchySearchTree[], parentEntries: HierarchySearchTree[]) => {
+  const addRequests = (entries: HierarchySearchTree[], parent?: StandInParentNodeProps) => {
     const instanceEntries: NodesRequest["instanceEntries"] = new Map();
     const genericEntries: NodesRequest["genericEntries"] = [];
     // loaded nodes are mapped to the entry objects, so they're not copied
@@ -418,15 +422,23 @@ function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesReq
         genericEntries.push(entry as HierarchySearchTree & { identifier: GenericNodeKey });
       }
     }
-    requests.push({ parentNode: createStandInParentNode(parentEntries), instanceEntries, genericEntries });
+    requests.push({
+      parentNode: parent ? createStandInParentNode(parent) : undefined,
+      instanceEntries,
+      genericEntries,
+    });
     for (const entry of entries) {
       if (entry.children) {
-        addRequests(entry.children, [...parentEntries, entry]);
+        addRequests(entry.children, {
+          parentEntry: entry,
+          ancestors: parent ? [...parent.ancestors, parent.parentEntry.identifier] : [],
+          hasSearchTargetAncestor: !!parent && (parent.hasSearchTargetAncestor || !!parent.parentEntry.isTarget),
+        });
       }
     }
   };
   if (searchTree.length > 0) {
-    addRequests(searchTree, []);
+    addRequests(searchTree);
   }
   return requests;
 }
