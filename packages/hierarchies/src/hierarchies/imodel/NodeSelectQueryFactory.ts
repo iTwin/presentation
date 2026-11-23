@@ -92,6 +92,17 @@ interface NodeSelectClauseProps {
 }
 
 /**
+ * Props for `PathBasedDefineHierarchyLevelProps.createSelectClause`. Same as props for
+ * `NodesQueryClauseFactory.createSelectClause`, except that nodes can't be merged by label.
+ * @beta
+ */
+export type NodeSelectClausePropsWithoutLabelMerging = Omit<NodeSelectClauseProps, "grouping"> & {
+  grouping?: Omit<ECSqlSelectClauseGroupingParams, "byLabel"> & {
+    byLabel?: Exclude<ECSqlSelectClauseLabelGroupingParams, ECSqlSelectClauseLabelGroupingMergeParams>;
+  };
+};
+
+/**
  * A data structure for defining nodes' grouping requirements.
  * @public
  */

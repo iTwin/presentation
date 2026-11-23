@@ -20,6 +20,7 @@ import type { InstanceKey } from '@itwin/presentation-shared';
 import type { InstancesNodeKey } from '@itwin/presentation-hierarchies';
 import type { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import type { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import type { PathBasedHierarchyDefinition } from '@itwin/presentation-hierarchies';
 import type { Subscribable } from '@itwin/presentation-shared';
 
 // @beta
@@ -307,16 +308,12 @@ export function createClassificationsTree(props: ClassificationsTreeProps): {
 export function createClassificationsTreeIdsProvider(input: ClassificationsTreeIdsProviderProps): ClassificationsTreeIdsProvider;
 
 // @beta
-export function createModelsTree(props: ModelsTreeProps): {
-    hierarchyDefinition: HierarchyDefinition;
-    createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
-        path: ModelsTreeSearchPath;
-        target: Id64String | ElementsGroupInfo;
-    }>;
-    createSearchTree: (searchProps: ModelsTreeSearchProps & {
-        revealTargets?: boolean;
-    }) => Promise<ModelsTreeSearchTree[]>;
-};
+export function createModelsTree(props: ModelsTreeProps & {
+    hierarchyConfig: ModelsTreeHierarchyConfigurationWithoutLabelMerging;
+}): ModelsTree<HierarchyDefinition & PathBasedHierarchyDefinition>;
+
+// @beta
+export function createModelsTree(props: ModelsTreeProps): ModelsTree;
 
 // @beta
 export function createModelsTreeIdsProvider(input: ModelsTreeIdsProviderProps): ModelsTreeIdsProvider;
@@ -381,6 +378,18 @@ interface ModelsCategoriesInfoEntry {
 }
 
 // @beta
+interface ModelsTree<THierarchyDefinition extends HierarchyDefinition = HierarchyDefinition> {
+    createInstanceKeyPaths: (searchProps: ModelsTreeSearchProps) => AsyncIterableIterator<{
+        path: ModelsTreeSearchPath;
+        target: Id64String | ElementsGroupInfo;
+    }>;
+    createSearchTree: (searchProps: ModelsTreeSearchProps & {
+        revealTargets?: boolean;
+    }) => Promise<ModelsTreeSearchTree[]>;
+    hierarchyDefinition: THierarchyDefinition;
+}
+
+// @beta
 interface ModelsTreeHierarchyConfiguration {
     categories?: {
         labelMerging?: "enable" | "disable";
@@ -400,6 +409,19 @@ interface ModelsTreeHierarchyConfiguration {
         labelMerging?: "enable" | "disable";
     };
 }
+
+// @beta
+type ModelsTreeHierarchyConfigurationWithoutLabelMerging = ModelsTreeHierarchyConfiguration & {
+    subjects: {
+        labelMerging: "disable";
+    };
+    categories: {
+        labelMerging: "disable";
+    };
+    models: {
+        labelMerging: "disable";
+    };
+};
 
 // @beta
 export interface ModelsTreeIdsProvider {
@@ -490,11 +512,14 @@ type ModelsTreeSearchPathKey = IModelInstanceKey & {
 };
 
 // @beta
-type ModelsTreeSearchProps = ModelsTreeSearchOptions & ({
+type ModelsTreeSearchProps = ModelsTreeSearchOptions & ModelsTreeSearchTargetProps;
+
+// @beta
+type ModelsTreeSearchTargetProps = {
     targetItems: Array<InstanceKey | ElementsGroupInfo>;
 } | {
     label: string;
-});
+};
 
 // @beta
 interface ModelsTreeSearchTree extends Omit<HierarchySearchTree, "identifier" | "children"> {

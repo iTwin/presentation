@@ -53,6 +53,7 @@ describe("SearchHierarchyDefinition", () => {
     source?: Partial<RxjsHierarchyDefinition>;
     imodelAccess?: Partial<Pick<ECSchemaProvider, "classDerivesFrom"> & { imodelKey: string }>;
     sourceName?: string;
+    searchTargetsChildrenLoadingMode?: "all-descendants" | "search-paths";
   }) {
     return new SearchHierarchyDefinition({
       imodelAccess: {
@@ -62,6 +63,7 @@ describe("SearchHierarchyDefinition", () => {
       source: createStubSourceDefinition(props.source),
       sourceName: props.sourceName ?? "test-source",
       targetPaths: props.targetPaths,
+      searchTargetsChildrenLoadingMode: props.searchTargetsChildrenLoadingMode,
     });
   }
 
@@ -590,6 +592,46 @@ describe("SearchHierarchyDefinition", () => {
       // Should use selector (IdToHex + FullClassName) instead of search CTE
       const ecsql = trimWhitespace((result[0] as InstanceNodesQueryDefinition).query.ecsql);
       expect(ecsql).toContain(NodeSelectClauseColumnNames.FullClassName);
+    });
+
+    it("loads only search paths under search targets in `search-paths` mode", async () => {
+      const targetPaths: HierarchySearchTree[] = [
+        { identifier: { className: "Schema.Class", id: "0x1" } },
+        { identifier: { type: "generic", id: "matching" } },
+      ];
+      const instanceDef: InstanceNodesQueryDefinition = {
+        fullClassName: "Schema.Class",
+        query: { ecsql: "SELECT * FROM Schema.Class" },
+      };
+      const parentNode = {
+        key: createTestInstanceNodeKey({ instanceKeys: [{ className: "Schema.Parent", id: "0x2" }] }),
+        label: "parent",
+        parentKeys: [],
+        search: { hasSearchTargetAncestor: true, childrenTargetPaths: targetPaths },
+      };
+      const def = createSearchHierarchyDefinition({
+        targetPaths,
+        source: {
+          defineHierarchyLevel: () =>
+            of([
+              instanceDef,
+              { node: { key: "matching", label: "matching" } },
+              { node: { key: "other", label: "other" } },
+            ]),
+        },
+        searchTargetsChildrenLoadingMode: "search-paths",
+      });
+      const result = await firstValueFrom(def.defineHierarchyLevel({ parentNode, ...constProps }));
+      // the generic node that isn't in search paths is omitted
+      expect(result.map((definition) => ("node" in definition ? definition.node.key : undefined))).toEqual([
+        "matching",
+        undefined,
+      ]);
+      // instances are filtered using the search CTE
+      const searchCte = (result[1] as InstanceNodesQueryDefinition).query.ctes!.find((cte) =>
+        cte.includes("SearchInfo"),
+      );
+      expect(trimWhitespace(searchCte!)).toContain("0x1");
     });
 
     it("skips generic identifiers when looking for instance definitions", async () => {

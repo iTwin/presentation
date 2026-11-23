@@ -277,9 +277,17 @@ interface RequestContextProp {
   };
 }
 
-type WithSourceNameOverride<T> = T & { sourceName?: string };
+/** Props for `IModelHierarchyProviderImpl`, including ones that public factory functions don't expose. */
+type IModelHierarchyProviderImplProps = MergedIModelHierarchyProviderProps & {
+  sourceName?: string;
+  /**
+   * Controls which children of search targets are loaded. Defaults to `"all-descendants"`, which loads whole subtrees;
+   * `"search-paths"` loads only hierarchy levels that are search tree entries.
+   */
+  searchTargetsChildrenLoadingMode?: "all-descendants" | "search-paths";
+};
 
-class IModelHierarchyProviderImpl implements HierarchyProvider {
+export class IModelHierarchyProviderImpl implements HierarchyProvider {
   private readonly _imodelProps: MergedIModelHierarchyProviderProps["imodels"];
   private _imodelContexts: Array<{
     imodelAccess: IModelAccess;
@@ -299,8 +307,9 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   #componentId: GuidString;
   #componentName: string;
   #sourceName: string;
+  #searchTargetsChildrenLoadingMode: "all-descendants" | "search-paths";
 
-  public constructor(props: WithSourceNameOverride<MergedIModelHierarchyProviderProps>) {
+  public constructor(props: IModelHierarchyProviderImplProps) {
     if (props.imodels.length === 0) {
       throw new Error(`Creating an iModel hierarchy provider requires at least one iModel.`);
     }
@@ -308,6 +317,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this.#componentId = Guid.createValue();
     this.#componentName = "IModelHierarchyProviderImpl";
     this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
+    this.#searchTargetsChildrenLoadingMode = props.searchTargetsChildrenLoadingMode ?? "all-descendants";
     this._imodelProps = props.imodels;
     this._imodelContexts = props.imodels.map((imodelProps) => {
       const sourceHierarchyDefinition = getRxjsHierarchyDefinition(
@@ -407,6 +417,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           source: sourceHierarchyDefinition,
           sourceName: this.#sourceName,
           targetPaths: this._targetPaths,
+          searchTargetsChildrenLoadingMode: this.#searchTargetsChildrenLoadingMode,
         });
   }
 
