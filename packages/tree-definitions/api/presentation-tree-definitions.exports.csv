@@ -9,6 +9,7 @@ beta;function;createCategoriesTreeIdsProvider
 beta;function;createClassificationsTree
 beta;function;createClassificationsTreeIdsProvider
 beta;function;createModelsTree
+beta;function;createModelsTree
 beta;function;createModelsTreeIdsProvider
 beta;function;createSharedIdsProvider
 beta;type;IdsProviderDataState

@@ -10,50 +10,53 @@ import { computeSelection } from "@itwin/unified-selection";
 import { Datasets } from "../util/Datasets.js";
 import { run } from "../util/TestUtilities.js";
 
+import type { Id64String } from "@itwin/core-bentley";
 import type { Props } from "@itwin/presentation-shared";
-import type { IModelName } from "../util/Datasets.js";
+import type { Dataset, IModelName } from "../util/Datasets.js";
 import type { RunOptions } from "../util/TestUtilities.js";
 
 describe("compute", () => {
   runSelectionScopeTest({
     testName: "selection for 50k elements",
-    iModelName: "50k elements",
+    imodelName: "50k hierarchical 2D and 3D elements",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: "element",
-    expectedCounts: [
-      { className: "Generic.PhysicalObject", count: 25_000 },
-      { className: "BisCore.DrawingGraphic", count: 25_000 },
+    getExpectedCounts: ({ elementCount, physicalElementClassName, drawingGraphicClassName }) => [
+      { className: physicalElementClassName, count: elementCount / 2 },
+      { className: drawingGraphicClassName, count: elementCount / 2 },
     ],
   });
 
   runSelectionScopeTest({
     testName: "parent selection for 50k elements",
-    iModelName: "50k elements",
+    imodelName: "50k hierarchical 2D and 3D elements",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: { id: "element", ancestorLevel: 1 },
-    expectedCounts: [
-      { className: "Generic.PhysicalObject", count: 24_000 },
-      { className: "BisCore.DrawingGraphic", count: 24_000 },
+    // All elements except chain leaves are parents.
+    getExpectedCounts: ({ elementCount, chainCount, physicalElementClassName, drawingGraphicClassName }) => [
+      { className: physicalElementClassName, count: elementCount / 2 - chainCount },
+      { className: drawingGraphicClassName, count: elementCount / 2 - chainCount },
     ],
   });
 
   runSelectionScopeTest({
     testName: "top ancestor selection for 50k elements",
-    iModelName: "50k elements",
+    imodelName: "50k hierarchical 2D and 3D elements",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: { id: "element", ancestorLevel: -1 },
-    expectedCounts: [
-      { className: "Generic.PhysicalObject", count: 1_000 },
-      { className: "BisCore.DrawingGraphic", count: 1_000 },
+    getExpectedCounts: ({ chainCount, physicalElementClassName, drawingGraphicClassName }) => [
+      { className: physicalElementClassName, count: chainCount },
+      { className: drawingGraphicClassName, count: chainCount },
     ],
   });
 
   runSelectionScopeTest({
     testName: "category selection for 50k elements",
-    iModelName: "50k elements",
+    imodelName: "50k hierarchical 2D and 3D elements",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: "category",
-    expectedCounts: [
+    // All 2D and 3D elements belong to one category of each kind.
+    getExpectedCounts: () => [
       { className: "BisCore.DrawingCategory", count: 1 },
       { className: "BisCore.SpatialCategory", count: 1 },
     ],
@@ -61,10 +64,11 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "model selection for 50k elements",
-    iModelName: "50k elements",
+    imodelName: "50k hierarchical 2D and 3D elements",
     inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: "model",
-    expectedCounts: [
+    // All 2D and 3D elements belong to one model of each kind.
+    getExpectedCounts: () => [
       { className: "BisCore.PhysicalModel", count: 1 },
       { className: "BisCore.DrawingModel", count: 1 },
     ],
@@ -72,74 +76,92 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "functional selection for 50k 3D elements",
-    iModelName: "50k functional 3D elements",
-    inputQuery: "SELECT ECInstanceId FROM Generic:PhysicalObject",
+    imodelName: "50k functional 3D elements",
+    inputQuery: ({ physicalElementClassName }) => `SELECT ECInstanceId FROM ${physicalElementClassName}`,
     scope: "functional",
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 50_000 }],
+    getExpectedCounts: ({ elementCount, functionalElementClassName }) => [
+      { className: functionalElementClassName, count: elementCount },
+    ],
   });
 
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 3D elements",
-    iModelName: "50k functional 3D elements",
-    inputQuery: "SELECT ECInstanceId FROM Generic:PhysicalObject",
+    imodelName: "50k functional 3D elements",
+    inputQuery: ({ physicalElementClassName }) => `SELECT ECInstanceId FROM ${physicalElementClassName}`,
     scope: { id: "functional", ancestorLevel: 1 },
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 49_000 }],
+    // All functional elements except chain leaves are parents.
+    getExpectedCounts: ({ elementCount, chainCount, functionalElementClassName }) => [
+      { className: functionalElementClassName, count: elementCount - chainCount },
+    ],
   });
 
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 3D elements",
-    iModelName: "50k functional 3D elements",
-    inputQuery: "SELECT ECInstanceId FROM Generic:PhysicalObject",
+    imodelName: "50k functional 3D elements",
+    inputQuery: ({ physicalElementClassName }) => `SELECT ECInstanceId FROM ${physicalElementClassName}`,
     scope: { id: "functional", ancestorLevel: -1 },
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
+    getExpectedCounts: ({ chainCount, functionalElementClassName }) => [
+      { className: functionalElementClassName, count: chainCount },
+    ],
   });
 
   runSelectionScopeTest({
     testName: "functional selection for 50k 2D elements",
-    iModelName: "50k functional 2D elements",
-    inputQuery: "SELECT ECInstanceId FROM BisCore:DrawingGraphic WHERE UserLabel = 'test_element'",
+    imodelName: "50k functional 2D elements",
+    inputQuery: ({ drawingGraphicClassName, drawingGraphicUserLabel }) =>
+      `SELECT ECInstanceId FROM ${drawingGraphicClassName} WHERE UserLabel = '${drawingGraphicUserLabel}'`,
     scope: "functional",
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
+    getExpectedCounts: ({ chainCount, functionalElementClassName }) => [
+      { className: functionalElementClassName, count: chainCount },
+    ],
   });
 
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 2D elements",
-    iModelName: "50k functional 2D elements",
-    inputQuery: "SELECT ECInstanceId FROM BisCore:DrawingGraphic WHERE UserLabel = 'test_element'",
+    imodelName: "50k functional 2D elements",
+    inputQuery: ({ drawingGraphicClassName, drawingGraphicUserLabel }) =>
+      `SELECT ECInstanceId FROM ${drawingGraphicClassName} WHERE UserLabel = '${drawingGraphicUserLabel}'`,
     scope: { id: "functional", ancestorLevel: 1 },
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
+    getExpectedCounts: ({ chainCount, functionalElementClassName }) => [
+      { className: functionalElementClassName, count: chainCount },
+    ],
   });
 
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 2D elements",
-    iModelName: "50k functional 2D elements",
-    inputQuery: "SELECT ECInstanceId FROM BisCore:DrawingGraphic WHERE UserLabel = 'test_element'",
+    imodelName: "50k functional 2D elements",
+    inputQuery: ({ drawingGraphicClassName, drawingGraphicUserLabel }) =>
+      `SELECT ECInstanceId FROM ${drawingGraphicClassName} WHERE UserLabel = '${drawingGraphicUserLabel}'`,
     scope: { id: "functional", ancestorLevel: -1 },
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
+    getExpectedCounts: ({ chainCount, functionalElementClassName }) => [
+      { className: functionalElementClassName, count: chainCount },
+    ],
   });
 });
 
-function runSelectionScopeTest(
+function runSelectionScopeTest<TName extends IModelName>(
   testProps: {
-    iModelName: IModelName;
-    inputQuery: string;
+    imodelName: TName;
+    inputQuery: string | ((meta: Dataset<TName>["meta"]) => string);
     scope: Props<typeof computeSelection>["scope"];
-    expectedCounts?: { className: string; count: number }[];
+    getExpectedCounts?: (meta: Dataset<TName>["meta"]) => { className: string; count: number }[];
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
-  const { iModelName } = testProps;
+  const { imodelName } = testProps;
   run({
     ...testProps,
     setup: async () => {
-      const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
-      const queryExecutor = createECSqlQueryExecutor(iModel);
-      const elementIds: string[] = [];
+      const { imodelPath, meta } = Datasets.getDataset({ name: imodelName });
+      const imodel = SnapshotDb.openFile(imodelPath);
+      const queryExecutor = createECSqlQueryExecutor(imodel);
+      const elementIds: Id64String[] = [];
+      const ecsql = typeof testProps.inputQuery === "string" ? testProps.inputQuery : testProps.inputQuery(meta);
 
-      for await (const row of queryExecutor.createQueryReader({ ecsql: testProps.inputQuery })) {
+      for await (const row of queryExecutor.createQueryReader({ ecsql })) {
         elementIds.push(row.ECInstanceId);
       }
 
-      return { iModel, elementIds, queryExecutor };
+      return { imodel, elementIds, queryExecutor, expectedCounts: testProps.getExpectedCounts?.(meta) };
     },
     test: async (props) => {
       const iterator = computeSelection({
@@ -158,12 +180,12 @@ function runSelectionScopeTest(
         }
       }
 
-      if (testProps.expectedCounts !== undefined) {
-        for (const entry of testProps.expectedCounts) {
+      if (props.expectedCounts !== undefined) {
+        for (const entry of props.expectedCounts) {
           expect(counts.get(entry.className)?.count).toBe(entry.count);
         }
       }
     },
-    cleanup: ({ iModel }) => iModel.close(),
+    cleanup: ({ imodel }) => imodel.close(),
   });
 }
