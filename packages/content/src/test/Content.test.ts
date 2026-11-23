@@ -2421,8 +2421,20 @@ describe("resolveContentSources", () => {
     });
 
     it.each([
-      { scopes: ["relatedClass", "parent"], expectedContexts: [[{ stepIndex: 0, kind: "targetClass" }], []] },
-      { scopes: ["parent", "relatedClass"], expectedContexts: [[], [{ stepIndex: 0, kind: "targetClass" }]] },
+      {
+        scopes: ["relatedClass", "parent"],
+        expectedContexts: [
+          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "relatedClass" }],
+          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "parent" }],
+        ],
+      },
+      {
+        scopes: ["parent", "relatedClass"],
+        expectedContexts: [
+          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "parent" }],
+          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "relatedClass" }],
+        ],
+      },
     ] as const)(
       "preserves nested groups with different ancestor scopes in $scopes order",
       async ({ scopes, expectedContexts }) => {

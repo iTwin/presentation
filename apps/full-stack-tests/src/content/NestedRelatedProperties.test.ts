@@ -8,7 +8,7 @@ import { defineIModelFieldsProvider, resolveContentSources } from "@itwin/presen
 import { buildTestECDb } from "../ECDbUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
 import { importSchema } from "../SchemaUtils.js";
-import { validateCategoryChain } from "./DescriptorValidation.js";
+import { getCategoryChainBase, validateCategoryChain } from "./DescriptorValidation.js";
 import {
   buildDescriptor,
   createContentIModelAccess,
@@ -737,37 +737,42 @@ describe("Content", () => {
         validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
       });
 
-      it("shares the outer and nested property category when both declarations use parent scope", async () => {
+      it("attaches a parent-scoped nested declaration to a parent-scoped enclosing class category", async () => {
         const { descriptor, field } = await describeChain(setup, { type: "parent", aspect: "parent" });
 
         validateCategoryChain(descriptor, field("TypeCategorized"), ["Geometry"]);
         validateCategoryChain(descriptor, field("TypeName"), ["WallType"]);
-        validateCategoryChain(descriptor, field("AspectCategorized"), ["Geometry"]);
-        validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallTypeAspect"]);
-        expect(field("TypeCategorized").category).toEqual(field("AspectCategorized").category);
+        validateCategoryChain(descriptor, field("AspectCategorized"), ["WallType", "Geometry"]);
+        validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
+        for (const name of ["TypeCategorized", "TypeName", "AspectCategorized", "AspectUncategorized"]) {
+          expect(getCategoryChainBase(descriptor, field(name))).toBe("target");
+        }
       });
 
       it.each([
-        { type: "parent", aspect: "parent", context: [] },
-        { type: "relatedClass", aspect: "parent", context: ["WallType"] },
-        { type: "parent", aspect: "relatedClass", context: ["WallTypeAspect"] },
-        { type: "relatedClass", aspect: "relatedClass", context: ["WallType", "WallTypeAspect"] },
+        { type: "parent", aspect: "parent", base: "target" },
+        { type: "relatedClass", aspect: "parent", base: "topLevel" },
+        { type: "parent", aspect: "relatedClass", base: "target" },
+        { type: "relatedClass", aspect: "relatedClass", base: "topLevel" },
       ] as const)(
-        "inherits type=$type and aspect=$aspect scope at the detail level",
-        async ({ type, aspect, context }) => {
+        "nests a parent-scoped detail under every ancestor class with type=$type and aspect=$aspect",
+        async ({ type, aspect, base }) => {
           const { descriptor, field } = await describeChain(setup, { type, aspect, detail: "parent" });
 
-          validateCategoryChain(descriptor, field("DetailCategorized"), [...context, "Geometry"]);
-          validateCategoryChain(descriptor, field("DetailUncategorized"), [...context, "WallTypeDetail"]);
-          validateCategoryChain(descriptor, field("AspectCategorized"), [...context, "Geometry"]);
-          expect(field("DetailCategorized").category).toEqual(field("AspectCategorized").category);
+          validateCategoryChain(descriptor, field("DetailCategorized"), ["WallType", "WallTypeAspect", "Geometry"]);
+          validateCategoryChain(descriptor, field("DetailUncategorized"), [
+            "WallType",
+            "WallTypeAspect",
+            "WallTypeDetail",
+          ]);
+          expect(getCategoryChainBase(descriptor, field("DetailCategorized"))).toBe(base);
         },
       );
 
       it.each([
-        { type: "parent", context: [] },
-        { type: "relatedClass", context: ["WallType"] },
-      ] as const)("inherits $type scope from an ancestor that displays no properties", async ({ type, context }) => {
+        { type: "parent", base: "target" },
+        { type: "relatedClass", base: "topLevel" },
+      ] as const)("keeps a $type-scoped ancestor that displays no properties in the chain", async ({ type, base }) => {
         const { descriptor, field } = await describeChain(setup, {
           type,
           aspect: "parent",
@@ -775,8 +780,9 @@ describe("Content", () => {
         });
 
         expect(getRelatedPropertyFields(descriptor).some((f) => f.propertyName === "TypeName")).toBe(false);
-        validateCategoryChain(descriptor, field("AspectCategorized"), [...context, "Geometry"]);
-        validateCategoryChain(descriptor, field("AspectUncategorized"), [...context, "WallTypeAspect"]);
+        validateCategoryChain(descriptor, field("AspectCategorized"), ["WallType", "Geometry"]);
+        validateCategoryChain(descriptor, field("AspectUncategorized"), ["WallType", "WallTypeAspect"]);
+        expect(getCategoryChainBase(descriptor, field("AspectCategorized"))).toBe(base);
       });
 
       it.each([false, true])(

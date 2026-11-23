@@ -13,20 +13,25 @@ import type { StepPropertySpec } from "./model/PropertySpec.js";
  * Appends the classes named by step specs to inherited ancestry. Every `target` and `relationship` spec
  * counts, whether or not it selects properties, if `include` accepts it. Classes are ordered by path
  * step with relationship classes first, deduplicated, and offset by `stepIndexOffset` into full-path
- * indexes. Inputs are not modified.
+ * indexes. Each entry records its step's scope — the spec's own, else `propertyCategoryScope`. Inputs
+ * are not modified.
  */
 export function buildCategoryContext(props: {
   inheritedContext: Readonly<CategoryContext>;
   properties: DeepReadonly<StepPropertySpec[]>;
+  /** The declaration's scope, used for steps that don't set their own. */
+  propertyCategoryScope: StepPropertySpec["propertyCategoryScope"];
   stepIndexOffset: number;
   include: (entry: CategoryContext[number]) => boolean;
 }): CategoryContext {
   const entries = props.properties
     .flatMap((spec): CategoryContext => {
       const stepIndex = props.stepIndexOffset + spec.stepIndex;
+      const propertyCategoryScope = spec.propertyCategoryScope ?? props.propertyCategoryScope;
+      const scope = propertyCategoryScope ? { propertyCategoryScope } : undefined;
       return [
-        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const }] : []),
-        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const }] : []),
+        ...(spec.relationship ? [{ stepIndex, kind: "relationshipClass" as const, ...scope }] : []),
+        ...(spec.target ? [{ stepIndex, kind: "targetClass" as const, ...scope }] : []),
       ];
     })
     .filter(props.include)

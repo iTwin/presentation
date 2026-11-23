@@ -116,20 +116,23 @@ export interface RelatedPropertiesDeclaration {
   cardinalityHint?: CardinalityHint;
 
   /**
-   * Where the categories of this declaration's properties are placed.
+   * Where the property categories of this declaration's properties are placed. Applies to every step
+   * that doesn't set its own `StepPropertySpec.propertyCategoryScope`.
    *
-   * - `"relatedClass"` (default): each property appears under its own class's category, nested under
-   *   the categories of the classes named at earlier steps of this declaration. A property with
-   *   property category `Geometry` of class `C`, on a path `A > B > C` whose step specs name `B`,
-   *   appears under `B > C > Geometry`.
-   * - `"parent"`: categories attach to the category context enclosing this declaration — the top level
-   *   for a declaration applied to the content target, or the inherited context for a declaration
-   *   applied recursively (see `IModelFieldsProvider.applyRecursively`). A property with a property
-   *   category appears directly under that context (`Geometry` in the example above). A property
-   *   without one still appears under its own class's category, but classes at earlier steps no longer
-   *   enclose it (`C`). A target-class property remains under its own step's relationship class
-   *   category when that relationship class is named. Declarations applied recursively on this
-   *   declaration's classes inherit the enclosing context, without this declaration's classes.
+   * Every class named by the step specs gets a category nested under the categories of the classes
+   * named at earlier steps (and under the context inherited by a declaration applied recursively, see
+   * `IModelFieldsProvider.applyRecursively`). Properties without a property category always appear under
+   * their own class's category. The scope decides where properties with a property category go:
+   *
+   * - `"relatedClass"` (default): under their own class's category. A property with property category
+   *   `Geometry` of class `C`, on a path `A > B > C` whose step specs name `B` and `C`, appears under
+   *   `B > C > Geometry`.
+   * - `"parent"`: under the category enclosing their own class's category, as if the properties
+   *   belonged to the class of the parent category (`B > Geometry` in the example above). Without an
+   *   enclosing category, they appear in the content target's category.
+   *
+   * The scope of the outermost class in a category chain also decides where the chain is placed: in
+   * the content target's category when that class's scope is `"parent"`, at the top level otherwise.
    *
    * A property's explicit category override takes precedence over both modes. The setting affects only
    * category placement — not property selection, values or cardinality.

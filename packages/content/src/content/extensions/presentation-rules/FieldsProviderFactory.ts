@@ -91,7 +91,6 @@ export function createFieldsProviderFromContentModifierRule(
           imodelAccess,
           specs: rule.relatedProperties,
           sourceClassName,
-          isSameInstanceContext: true,
         });
       }
 
@@ -306,36 +305,40 @@ async function mapRelatedPropertiesSpec(props: {
       ? { select: "none" }
       : undefined;
 
-  return { path, properties: [{ stepIndex: steps.length - 1, target: targetSpec, relationship: relSpec }] };
+  return {
+    path,
+    properties: [
+      {
+        stepIndex: steps.length - 1,
+        target: targetSpec,
+        relationship: relSpec,
+        ...(spec.relationshipMeaning === "SameInstance" ? { propertyCategoryScope: "parent" as const } : undefined),
+      },
+    ],
+  };
 }
 
 /**
  * Recursively flattens a `RelatedPropertiesSpecification` and all its `nestedRelatedProperties`
  * into a flat list of `RelatedPropertiesDeclaration`s. Nested specs produce declarations whose
- * paths are the concatenation of the parent's path + the nested spec's own path.
+ * paths are the concatenation of the parent's path + the nested spec's own path, and whose step specs
+ * keep the parent's classes (without their properties) so they enclose the nested spec's categories.
  *
- * A spec with `relationshipMeaning: "SameInstance"` shows its properties as if they belonged to the content target,
- * so its declaration attaches categories to the top-level context (`propertyCategoryScope: "parent"`) — but only
- * when every enclosing spec has that meaning too. Otherwise the properties belong to the closest enclosing related
- * instance and stay in its category.
+ * A spec with `relationshipMeaning: "SameInstance"` shows its properties as if they belonged to the
+ * enclosing spec's class (or the content target), so its step's property categories attach to the
+ * enclosing category (`propertyCategoryScope: "parent"`).
  */
 async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
   specs: PresentationRules.RelatedPropertiesSpecification[];
   sourceClassName: EC.FullClassNameDotNotation;
-  /** Whether every enclosing spec has `SameInstance` relationship meaning. `true` for top-level specs. */
-  isSameInstanceContext: boolean;
 }): Promise<RelatedPropertiesDeclaration[]> {
-  const { imodelAccess, specs, sourceClassName, isSameInstanceContext } = props;
+  const { imodelAccess, specs, sourceClassName } = props;
   const declarations: RelatedPropertiesDeclaration[] = [];
 
   for (const spec of specs) {
     for (const normalizedSpec of normalizeRelatedPropertiesSpec(spec)) {
-      const isSameInstance = isSameInstanceContext && normalizedSpec.relationshipMeaning === "SameInstance";
       const result = await mapRelatedPropertiesSpec({ imodelAccess, spec: normalizedSpec, sourceClassName });
-      if (isSameInstance) {
-        result.propertyCategoryScope = "parent";
-      }
       declarations.push(result);
 
       // Recursively flatten nestedRelatedProperties.
@@ -347,7 +350,6 @@ async function flattenRelatedPropertiesSpecs(props: {
           imodelAccess,
           specs: normalizedSpec.nestedRelatedProperties,
           sourceClassName: lastTargetClassName,
-          isSameInstanceContext: isSameInstance,
         });
 
         const offset = result.path.length;
@@ -356,15 +358,13 @@ async function flattenRelatedPropertiesSpecs(props: {
             ...nestedDecl,
             path: [...result.path, ...nestedDecl.path],
             properties: [
-              // The parent declaration already loads these classes' properties; keep only their categories, unless
-              // the parent's properties belong to the content target and have no categories of their own.
-              ...(isSameInstance
-                ? []
-                : result.properties.map((step): StepPropertySpec => ({
-                    stepIndex: step.stepIndex,
-                    target: { select: "none" },
-                    ...(step.relationship ? { relationship: { select: "none" } } : undefined),
-                  }))),
+              // The parent declaration already loads these classes' properties; keep only their categories.
+              ...result.properties.map((step): StepPropertySpec => ({
+                stepIndex: step.stepIndex,
+                target: { select: "none" },
+                ...(step.relationship ? { relationship: { select: "none" } } : undefined),
+                ...(step.propertyCategoryScope ? { propertyCategoryScope: step.propertyCategoryScope } : undefined),
+              })),
               ...nestedDecl.properties.map((step) => ({ ...step, stepIndex: offset + step.stepIndex })),
             ],
           });

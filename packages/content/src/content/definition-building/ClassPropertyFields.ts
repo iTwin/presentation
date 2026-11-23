@@ -37,9 +37,12 @@ export interface FieldCategorization {
   category?:
     | { source: "override"; id: CategoryDefinition["id"] }
     | { source: "propertyCategory"; id: EC.FullClassNameDotNotation; label: string };
-  /** The declaration's `propertyCategoryScope`; omitted means `"relatedClass"`. */
+  /** The `propertyCategoryScope` in effect for the field's step; omitted means `"relatedClass"`. */
   propertyCategoryScope?: RelatedPropertiesDeclaration["propertyCategoryScope"];
-  /** Ordered enclosing class categories; an empty context places the field's category at the root. */
+  /**
+   * Ordered enclosing class categories; an empty context places the field's category at the root. For a
+   * property category with the `"parent"` scope, excludes the field's own step.
+   */
   categoryContext: Readonly<CategoryContext>;
 }
 

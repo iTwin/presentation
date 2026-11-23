@@ -73,6 +73,7 @@ type CardinalityHint = "one" | "many";
 type CategoryContext = {
     stepIndex: number;
     kind: "targetClass" | "relationshipClass";
+    propertyCategoryScope?: "relatedClass" | "parent";
 }[];
 
 // @public
@@ -502,6 +503,7 @@ type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-no
 
 // @public
 interface StepPropertySpec {
+    propertyCategoryScope?: "relatedClass" | "parent";
     relationship?: ClassPropertySpec;
     stepIndex: number;
     target?: ClassPropertySpec;

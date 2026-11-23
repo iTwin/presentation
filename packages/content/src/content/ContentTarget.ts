@@ -201,12 +201,18 @@ export interface ResolvedPath {
 
 /**
  * Ordered class categories enclosing a related-properties declaration, from root to leaf.
- * Each entry identifies a class at a zero-based step of the resolved relationship path.
+ * Each entry identifies a class at a zero-based step of the resolved relationship path, along with
+ * the `propertyCategoryScope` in effect for that step. The outermost entry's scope decides whether the
+ * categories are placed in the content target's category (`"parent"`) or at the top level.
  * An empty context places categories at the root.
  *
  * @public
  */
-export type CategoryContext = { stepIndex: number; kind: "targetClass" | "relationshipClass" }[];
+export type CategoryContext = {
+  stepIndex: number;
+  kind: "targetClass" | "relationshipClass";
+  propertyCategoryScope?: "relatedClass" | "parent";
+}[];
 
 /**
  * A group of concrete relationship paths resolved from a single provider declaration.

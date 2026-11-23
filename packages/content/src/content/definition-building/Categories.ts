@@ -141,8 +141,7 @@ interface FieldCategoryRequest {
  * to their anchor, scope, and enclosing context. Matching declared IDs take precedence over generation.
  *
  * Categories of the content target's own properties are placed in the target's category: direct properties, and
- * properties of declarations whose categories attach to the top-level context (`propertyCategoryScope: "parent"`).
- * Categories of other related properties start at the top level.
+ * chains whose outermost class has the `"parent"` property category scope. Other chains start at the top level.
  *
  * Requests describe placement before equivalent categories are shared and their final IDs are chosen.
  */
@@ -166,10 +165,9 @@ function resolveFieldCategoryRequests(
 
   return fields.map(({ field, categorization }) => {
     const { category, propertyCategoryScope, categoryContext } = categorization;
-    const base: CategoryBase =
-      categorization.anchor === "none" || (propertyCategoryScope === "parent" && categoryContext.length === 0)
-        ? "target"
-        : "topLevel";
+    const outermostScope =
+      categoryContext.length > 0 ? categoryContext[0].propertyCategoryScope : propertyCategoryScope;
+    const base: CategoryBase = categorization.anchor === "none" || outermostScope === "parent" ? "target" : "topLevel";
     if (category?.source === "override") {
       return { field, category: { kind: "declared", id: category.id }, base };
     }

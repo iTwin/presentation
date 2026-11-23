@@ -27,6 +27,15 @@ export function getCategoryLabelChain(descriptor: Descriptor, field: Field): str
   return labelsLeafToRoot.reverse();
 }
 
+/** Returns where the outermost category of a field's chain is placed: in the content target's category or at the top level. */
+export function getCategoryChainBase(descriptor: Descriptor, field: Field): "target" | "topLevel" {
+  let reference: Descriptor["categories"][string]["parent"] = field.category;
+  while (reference.type === "category") {
+    reference = descriptor.categories[reference.id].parent;
+  }
+  return reference.type;
+}
+
 /** Validates a field's root-to-leaf category label chain. */
 export function validateCategoryChain(descriptor: Descriptor, field: Field, expectedLabelsRootToField: string[]): void {
   const actualLabels = getCategoryLabelChain(descriptor, field);

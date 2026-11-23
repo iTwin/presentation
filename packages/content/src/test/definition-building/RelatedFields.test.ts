@@ -98,21 +98,32 @@ async function enumerate(props: Parameters<typeof collectRelatedPropertyFields>[
 }
 
 describe("collectRelatedPropertyFields", () => {
-  it("keeps only a same-step property-less relationship category when property categories attach to the parent", async () => {
+  it("encloses a `parent`-scoped step's fields in earlier steps, except its own classes for property categories", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({ fullName: "TestSchema.B" }),
       createEntityClass({
         fullName: "TestSchema.C",
-        properties: [createPrimitiveProperty({ name: "Nested", declaringClass: "TestSchema.C" })],
+        properties: [
+          createPrimitiveProperty({ name: "Plain", declaringClass: "TestSchema.C" }),
+          createPrimitiveProperty({
+            name: "Categorized",
+            declaringClass: "TestSchema.C",
+            category: { fullName: "TestSchema.Geometry" },
+          }),
+        ],
       }),
     ]);
     const provider = createProvider("p_v1", [
       {
         path: [aToB, bToC],
-        propertyCategoryScope: "parent",
         properties: [
           { stepIndex: 0, target: { select: "none" } },
-          { stepIndex: 1, relationship: { select: "none" }, target: { select: "all" } },
+          {
+            stepIndex: 1,
+            relationship: { select: "none" },
+            target: { select: "all" },
+            propertyCategoryScope: "parent",
+          },
         ],
       },
     ]);
@@ -120,8 +131,22 @@ describe("collectRelatedPropertyFields", () => {
       { providerId: provider.id, declarationIndex: 0, paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])] },
     ]);
     const fields = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
-    expect(fields.map(({ categorization }) => categorization.categoryContext)).toEqual([
-      [{ stepIndex: 1, kind: "relationshipClass" }],
+    expect(
+      fields.map(({ field, categorization }) => ({
+        name: field.propertyName,
+        scope: categorization.propertyCategoryScope,
+        context: categorization.categoryContext,
+      })),
+    ).toEqual([
+      {
+        name: "Plain",
+        scope: "parent",
+        context: [
+          { stepIndex: 0, kind: "targetClass" },
+          { stepIndex: 1, kind: "relationshipClass", propertyCategoryScope: "parent" },
+        ],
+      },
+      { name: "Categorized", scope: "parent", context: [{ stepIndex: 0, kind: "targetClass" }] },
     ]);
   });
 
@@ -171,7 +196,7 @@ describe("collectRelatedPropertyFields", () => {
         propertyCategoryScope: "parent",
         properties: [{ stepIndex: 1, relationship: { select: { include: ["RelProp"] } }, target: { select: "all" } }],
       },
-      expected: [{ stepIndex: 1, kind: "relationshipClass" }],
+      expected: [{ stepIndex: 1, kind: "relationshipClass", propertyCategoryScope: "parent" }],
     },
   ])("encloses later fields in $name", async ({ declaration, expected }) => {
     const imodelAccess = createSchemaAccess([

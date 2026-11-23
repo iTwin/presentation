@@ -123,10 +123,14 @@ function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): b
     a.category?.id === b.category?.id &&
     (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass") &&
     a.categoryContext.length === b.categoryContext.length &&
-    a.categoryContext.every(
-      (context, index) =>
-        context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
-    ) &&
+    a.categoryContext.every((context, index) => {
+      const other = b.categoryContext[index];
+      return (
+        context.stepIndex === other.stepIndex &&
+        context.kind === other.kind &&
+        (context.propertyCategoryScope ?? "relatedClass") === (other.propertyCategoryScope ?? "relatedClass")
+      );
+    }) &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
 }

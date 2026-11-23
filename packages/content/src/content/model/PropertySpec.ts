@@ -30,6 +30,11 @@ export interface StepPropertySpec {
    * fields, which nest under the target category (`CategoryDefinition.computeId({ path })`).
    */
   relationship?: ClassPropertySpec;
+  /**
+   * Where the property categories of this step's properties are placed, overriding the declaration's
+   * `RelatedPropertiesDeclaration.propertyCategoryScope` for this step.
+   */
+  propertyCategoryScope?: "relatedClass" | "parent";
 }
 
 /**

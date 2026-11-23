@@ -1333,13 +1333,16 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         return result!.relatedProperties!;
       };
 
-      it("attaches categories of a SameInstance spec to the parent context", async () => {
+      it("sets the parent category scope on a SameInstance spec's step", async () => {
         const [declaration] = await getDeclarations({
           propertiesSource: step("A"),
           properties: "*",
           relationshipMeaning: "SameInstance",
         });
-        expect(declaration.propertyCategoryScope).toBe("parent");
+        expect(declaration).not.toHaveProperty("propertyCategoryScope");
+        expect(declaration.properties).toEqual([
+          { stepIndex: 0, target: { select: "all" }, propertyCategoryScope: "parent" },
+        ]);
       });
 
       it("doesn't set category scope for a RelatedInstance spec", async () => {
@@ -1349,50 +1352,32 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           relationshipMeaning: "RelatedInstance",
         });
         expect(declaration).not.toHaveProperty("propertyCategoryScope");
+        expect(declaration.properties).toEqual([{ stepIndex: 0, target: { select: "all" } }]);
       });
 
-      it("attaches categories of a SameInstance spec nested under a SameInstance spec to the parent context and omits parent steps", async () => {
-        const declarations = await getDeclarations({
-          propertiesSource: step("A"),
-          properties: "*",
-          relationshipMeaning: "SameInstance",
-          nestedRelatedProperties: [
-            { propertiesSource: step("B"), properties: "*", relationshipMeaning: "SameInstance" },
-          ],
-        });
-        expect(declarations).toHaveLength(2);
-        expect(declarations[1].propertyCategoryScope).toBe("parent");
-        expect(declarations[1].properties).toEqual([{ stepIndex: 1, target: { select: "all" } }]);
-      });
-
-      it("omits parent steps for a RelatedInstance spec nested under a SameInstance spec", async () => {
-        const declarations = await getDeclarations({
-          propertiesSource: step("A"),
-          properties: "*",
-          relationshipMeaning: "SameInstance",
-          nestedRelatedProperties: [{ propertiesSource: step("B"), properties: "*" }],
-        });
-        expect(declarations).toHaveLength(2);
-        expect(declarations[1]).not.toHaveProperty("propertyCategoryScope");
-        expect(declarations[1].properties).toEqual([{ stepIndex: 1, target: { select: "all" } }]);
-      });
-
-      it("keeps parent steps and doesn't set category scope for a SameInstance spec nested under a RelatedInstance spec", async () => {
-        const declarations = await getDeclarations({
-          propertiesSource: step("A"),
-          properties: "*",
-          relationshipMeaning: "RelatedInstance",
-          nestedRelatedProperties: [
-            { propertiesSource: step("B"), properties: "*", relationshipMeaning: "SameInstance" },
-          ],
-        });
-        expect(declarations).toHaveLength(2);
-        expect(declarations[1]).not.toHaveProperty("propertyCategoryScope");
-        expect(declarations[1].properties).toEqual([
-          { stepIndex: 0, target: { select: "none" } },
-          { stepIndex: 1, target: { select: "all" } },
-        ]);
-      });
+      it.each([
+        { parent: "RelatedInstance", nested: "SameInstance" },
+        { parent: "SameInstance", nested: "RelatedInstance" },
+        { parent: "SameInstance", nested: "SameInstance" },
+      ] as const)(
+        "keeps parent steps with their scopes for a $nested spec nested under a $parent spec",
+        async ({ parent, nested }) => {
+          const scope = (meaning: typeof parent) =>
+            meaning === "SameInstance" ? { propertyCategoryScope: "parent" } : undefined;
+          const declarations = await getDeclarations({
+            propertiesSource: step("A"),
+            properties: "*",
+            relationshipMeaning: parent,
+            nestedRelatedProperties: [{ propertiesSource: step("B"), properties: "*", relationshipMeaning: nested }],
+          });
+          expect(declarations).toHaveLength(2);
+          expect(declarations[1]).not.toHaveProperty("propertyCategoryScope");
+          expect(declarations[1].properties).toEqual([
+            { stepIndex: 0, target: { select: "none" }, ...scope(parent) },
+            { stepIndex: 1, target: { select: "all" }, ...scope(nested) },
+          ]);
+        },
+      );
 
       it("maps relationshipMeaning of deprecated-form specs", async () => {
         const declarations = await getDeclarations({
@@ -1403,7 +1388,9 @@ describe("createFieldsProviderFromContentModifierRule", () => {
           relationshipMeaning: "SameInstance",
         });
         expect(declarations).toHaveLength(1);
-        expect(declarations[0].propertyCategoryScope).toBe("parent");
+        expect(declarations[0].properties).toEqual([
+          { stepIndex: 0, target: { select: "all" }, propertyCategoryScope: "parent" },
+        ]);
       });
     });
 

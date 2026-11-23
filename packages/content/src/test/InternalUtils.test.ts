@@ -32,7 +32,13 @@ describe("buildCategoryContext", () => {
     ] as const);
 
     expect(
-      buildCategoryContext({ inheritedContext, properties, stepIndexOffset: 1, include: includeAll }),
+      buildCategoryContext({
+        inheritedContext,
+        properties,
+        propertyCategoryScope: undefined,
+        stepIndexOffset: 1,
+        include: includeAll,
+      }),
     ).to.deep.equal([
       { stepIndex: 0, kind: "targetClass" },
       { stepIndex: 1, kind: "relationshipClass" },
@@ -51,6 +57,7 @@ describe("buildCategoryContext", () => {
       buildCategoryContext({
         inheritedContext: [],
         properties,
+        propertyCategoryScope: undefined,
         stepIndexOffset: 0,
         include: (entry) => entry.stepIndex === 0 && entry.kind === "targetClass",
       }),
@@ -62,7 +69,13 @@ describe("buildCategoryContext", () => {
     { name: "inherited", inheritedContext: [{ stepIndex: 0, kind: "targetClass" }] },
   ] as const)("preserves the $name context when no step specs are given", ({ inheritedContext }) => {
     expect(
-      buildCategoryContext({ inheritedContext, properties: [], stepIndexOffset: 0, include: includeAll }),
+      buildCategoryContext({
+        inheritedContext,
+        properties: [],
+        propertyCategoryScope: undefined,
+        stepIndexOffset: 0,
+        include: includeAll,
+      }),
     ).to.deep.equal(inheritedContext);
   });
 
@@ -70,10 +83,37 @@ describe("buildCategoryContext", () => {
     const spec = { stepIndex: 0, target: { select: "none" }, relationship: { select: "all" } } as const;
 
     expect(
-      buildCategoryContext({ inheritedContext: [], properties: [spec, spec], stepIndexOffset: 0, include: includeAll }),
+      buildCategoryContext({
+        inheritedContext: [],
+        properties: [spec, spec],
+        propertyCategoryScope: undefined,
+        stepIndexOffset: 0,
+        include: includeAll,
+      }),
     ).to.deep.equal([
       { stepIndex: 0, kind: "relationshipClass" },
       { stepIndex: 0, kind: "targetClass" },
+    ]);
+  });
+
+  it("records each step's own scope, else the given one", () => {
+    const properties = [
+      { stepIndex: 0, target: { select: "none" }, propertyCategoryScope: "parent" },
+      { stepIndex: 1, target: { select: "all" }, relationship: { select: "all" } },
+    ] as const;
+
+    expect(
+      buildCategoryContext({
+        inheritedContext: [],
+        properties,
+        propertyCategoryScope: "relatedClass",
+        stepIndexOffset: 0,
+        include: includeAll,
+      }),
+    ).to.deep.equal([
+      { stepIndex: 0, kind: "targetClass", propertyCategoryScope: "parent" },
+      { stepIndex: 1, kind: "relationshipClass", propertyCategoryScope: "relatedClass" },
+      { stepIndex: 1, kind: "targetClass", propertyCategoryScope: "relatedClass" },
     ]);
   });
 });

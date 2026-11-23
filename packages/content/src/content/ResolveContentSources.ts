@@ -644,15 +644,13 @@ function createNestedCategoryContext(props: {
   inheritedContext: CategoryContext;
 }): CategoryContext {
   const { declaration, stepIndexOffset, anchorStepIndex, inheritedContext } = props;
-  if (declaration.propertyCategoryScope === "parent") {
-    return inheritedContext;
-  }
   const selections = declaration.properties ?? [
     { stepIndex: anchorStepIndex - stepIndexOffset, target: { select: "all" } },
   ];
   return buildCategoryContext({
     inheritedContext,
     properties: selections,
+    propertyCategoryScope: declaration.propertyCategoryScope,
     stepIndexOffset,
     include: (entry) => entry.stepIndex <= anchorStepIndex,
   });
