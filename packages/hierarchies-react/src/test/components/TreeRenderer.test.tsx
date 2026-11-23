@@ -302,7 +302,9 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         expect(ref.current!.scrollToNode((node) => node.id === "node-99", onComplete)).toBe("success");
 
         await expect.element(locator.getByRole("treeitem", { name: "Node 99" })).toBeInViewport();
-        expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "node-99" }));
+        await vi.waitFor(() =>
+          expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "node-99" })),
+        );
         expect(props.expandNode).not.toHaveBeenCalled();
       });
 
@@ -335,7 +337,9 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         expect(ref.current!.scrollToNode((node) => node.id === "child", onComplete)).toBe("success");
 
         await expect.element(locator.getByRole("treeitem", { name: "Target Child" })).toBeInViewport();
-        expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "child" }));
+        await vi.waitFor(() =>
+          expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "child" })),
+        );
       });
     });
 

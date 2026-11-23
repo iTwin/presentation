@@ -147,13 +147,7 @@ export const StrataKitTreeRenderer: FC<
     const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
     useImperativeHandle(forwardedRef, () => ({
       renameNode: (nodePredicate) =>
-        expandAndScrollToNode({
-          nodePredicate,
-          onComplete: (targetNode) => {
-            // give time to scroll node into view before starting rename
-            requestAnimationFrame(() => renameContext.startRename(targetNode));
-          },
-        }),
+        expandAndScrollToNode({ nodePredicate, onComplete: (targetNode) => renameContext.startRename(targetNode) }),
       scrollToNode: (nodePredicate, onComplete) => expandAndScrollToNode({ nodePredicate, onComplete }),
     }));
 
@@ -312,7 +306,10 @@ function useExpandAndScrollToNode({
       return;
     }
     virtualizer.scrollToIndex(index, { align: "center" });
-    scrollToNode.current.onScrollComplete?.();
+    const { onScrollComplete } = scrollToNode.current;
+    if (onScrollComplete) {
+      requestAnimationFrame(onScrollComplete);
+    }
     scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
 
@@ -337,7 +334,10 @@ function useExpandAndScrollToNode({
     } else {
       const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
       virtualizer.scrollToIndex(index, { align: "center" });
-      onComplete?.(targetNode);
+      if (onComplete) {
+        // give the virtualizer a frame to render the node before notifying
+        requestAnimationFrame(() => onComplete(targetNode));
+      }
     }
     return "success";
   };
