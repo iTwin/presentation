@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
-import { describe, expect } from "vitest";
+import { assert, describe, expect } from "vitest";
 import { FILTER_SCENARIOS } from "./ContentSelectionScenarios.js";
 import { runContentTest } from "./ContentTestUtilities.js";
 

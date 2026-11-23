@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
-import { describe, expect } from "vitest";
+import { assert, describe, expect } from "vitest";
 import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
 import { getPropertyFields, runContentTest } from "./ContentTestUtilities.js";
 
@@ -39,10 +38,10 @@ describe("Content items", () => {
       let count = 0;
       for await (const item of provider.getItems()) {
         const related = item.getRelatedInstances({ pathFromTarget: groupLabelField.pathFromTarget });
-        assert.equal(related.length, meta.groupsPerElement);
+        expect(related.length).toBe(meta.groupsPerElement);
         const groupLabels = item.getValue(groupLabelField);
         assert(Array.isArray(groupLabels));
-        assert.equal(groupLabels.length, meta.groupsPerElement);
+        expect(groupLabels.length).toBe(meta.groupsPerElement);
         assert(groupLabels.every((label) => typeof label === "string" && label.startsWith(meta.groupUserLabelPrefix)));
         related.forEach((group) => groups.add(group.key.id));
         ++count;
