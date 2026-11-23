@@ -155,25 +155,26 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
   }),
 );
 
+type PlaceholderNodeProps = Pick<
+  StrataKitTreeItemProps,
+  "style" | "aria-level" | "aria-posinset" | "aria-setsize" | "onFocus" | "onBlur"
+>;
+
 export const PlaceholderNode: FC<
   // oxlint-disable-next-line @typescript-eslint/no-deprecated
-  PropsWithRef<
-    Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & RefAttributes<HTMLElement>
-  >
+  PropsWithRef<PlaceholderNodeProps & RefAttributes<HTMLElement>>
 > = memo(
-  forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(
-    function PlaceholderNode({ ...props }, forwardedRef) {
-      const translate = useTranslation();
-      return (
-        <Tree.Item
-          {...props}
-          ref={forwardedRef}
-          label={translate("loading")}
-          unstable_decorations={<CircularProgress size={16} title={translate("loading")} />}
-        />
-      );
-    },
-  ),
+  forwardRef<HTMLElement, PlaceholderNodeProps>(function PlaceholderNode(props, forwardedRef) {
+    const translate = useTranslation();
+    return (
+      <Tree.Item
+        {...props}
+        ref={forwardedRef}
+        label={translate("loading")}
+        unstable_decorations={<CircularProgress size={16} title={translate("loading")} />}
+      />
+    );
+  }),
 );
 
 function injectActionVariant(actions: ReactNode[], variant: TreeActionBaseAttributes["variant"]) {

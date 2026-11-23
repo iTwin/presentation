@@ -62,7 +62,7 @@
     "deep-equal-in-any-order": "catalog:test-tools",
     "fast-xml-parser": "catalog:miscellaneous",
     "happy-dom": "catalog:test-tools",
-    "i18next-http-backend": "^4.0.10",
+    "i18next-http-backend": "^4.1.0",
     "object-hash": "^3.0.0",
     "presentation-test-utilities": "workspace:*",
     "react": "catalog:react",

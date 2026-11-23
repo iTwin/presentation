@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
@@ -117,8 +117,8 @@ export const StrataKitTreeRenderer: FC<
     });
     const flatItems = useFlatTreeItems(rootNodes);
     const errorNodes = useErrorNodes(rootNodes);
-
     const parentRef = useRef<HTMLDivElement>(null);
+    const { onPlaceholderFocus, onPlaceholderBlur } = usePlaceholderFocus(flatItems, parentRef);
 
     // oxlint-disable-next-line react-hooks/incompatible-library
     const virtualizer = useVirtualizer({
@@ -207,6 +207,7 @@ export const StrataKitTreeRenderer: FC<
                     data-index={virtualizedItem.index}
                     start={virtualizedItem.start}
                     item={item}
+                    placeholderProps={{ onFocus: onPlaceholderFocus, onBlur: onPlaceholderBlur }}
                     selected={selected}
                     expandNode={expandNode}
                     reloadTree={reloadTree}
@@ -343,14 +344,59 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
   return undefined;
 }
 
+function usePlaceholderFocus(flatItems: FlatTreeItem[], parentRef: { current: HTMLDivElement | null }) {
+  const focusedParentId = useRef<string | undefined>(undefined);
+  const onPlaceholderFocus = useCallback(
+    (event: Parameters<NonNullable<StrataKitTreeItemProps["onFocus"]>>[0]) => {
+      const index = Number(event.currentTarget.dataset.index);
+      focusedParentId.current = flatItems[index - 1]?.id;
+    },
+    [flatItems],
+  );
+  const onPlaceholderBlur = useCallback(() => {
+    focusedParentId.current = undefined;
+  }, []);
+
+  useLayoutEffect(() => {
+    const parentId = focusedParentId.current;
+    if (parentId === undefined) {
+      return;
+    }
+
+    const parentIndex = flatItems.findIndex((item) => item.id === parentId);
+    if (parentIndex === -1) {
+      focusedParentId.current = undefined;
+      return;
+    }
+
+    const parent = flatItems[parentIndex];
+    const nextItem: FlatTreeItem | undefined = flatItems[parentIndex + 1];
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    if (nextItem && isPlaceholderItem(nextItem)) {
+      return;
+    }
+    // If loading produces no direct child, keep focus on the parent.
+    // oxlint-disable-next-line typescript/no-unnecessary-condition
+    const focusIndex = nextItem && nextItem.level === parent.level + 1 ? parentIndex + 1 : parentIndex;
+    parentRef.current?.querySelector<HTMLElement>(`[data-index="${focusIndex}"]`)?.focus();
+    focusedParentId.current = undefined;
+  }, [flatItems, parentRef]);
+
+  return { onPlaceholderFocus, onPlaceholderBlur };
+}
+
 type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
   "data-index": number;
   item: FlatTreeItem;
+  placeholderProps: Pick<StrataKitTreeItemProps, "onFocus" | "onBlur">;
 };
 
 const VirtualTreeItem = memo(
-  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
+    { start, item, placeholderProps, ...props },
+    forwardedRef,
+  ) {
     const style: CSSProperties = useMemo(
       () => ({
         position: "absolute",
@@ -372,6 +418,7 @@ const VirtualTreeItem = memo(
           aria-level={item.level}
           aria-posinset={1}
           aria-setsize={1}
+          {...placeholderProps}
         />
       );
     }
