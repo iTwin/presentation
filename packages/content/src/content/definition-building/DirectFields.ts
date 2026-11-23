@@ -62,6 +62,7 @@ export async function collectDirectPropertyFields(props: {
       spec: { select: "all" },
       anchor: "none",
       categoryContext: [],
+      categoryRoot: "target",
     }),
   );
 }

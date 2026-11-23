@@ -1742,6 +1742,7 @@ describe("resolveContentSources", () => {
                 ...(includeRelationshipCategory ? [{ stepIndex: 0, kind: "relationshipClass" }] : []),
                 { stepIndex: 0, kind: "targetClass" },
               ],
+              categoryRoot: "topLevel",
             },
           },
         ]);
@@ -1812,6 +1813,7 @@ describe("resolveContentSources", () => {
             ...(relationship ? [{ stepIndex: 0, kind: "relationshipClass" }] : []),
             { stepIndex: 1, kind: "targetClass" },
           ],
+          categoryRoot: "topLevel",
         },
       ]);
     });
@@ -2022,6 +2024,7 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassB",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
         {
@@ -2035,6 +2038,7 @@ describe("resolveContentSources", () => {
               { stepIndex: 0, kind: "targetClass" },
               { stepIndex: 1, kind: "targetClass" },
             ],
+            categoryRoot: "topLevel",
           },
         },
       ]);
@@ -2086,6 +2090,7 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassX",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
       ]);
@@ -2137,6 +2142,7 @@ describe("resolveContentSources", () => {
           anchorClassName: "TestSchema.ClassB",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       });
     });
@@ -2291,6 +2297,7 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassC",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
         {
@@ -2301,6 +2308,7 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassC",
             prefixStepCount: 2,
             categoryContext: [{ stepIndex: 1, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
       ]);
@@ -2357,6 +2365,7 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassB",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
       ]);
@@ -2415,31 +2424,20 @@ describe("resolveContentSources", () => {
             anchorClassName: "TestSchema.ClassB",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
       ]);
     });
 
     it.each([
-      {
-        scopes: ["relatedClass", "parent"],
-        expectedContexts: [
-          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "relatedClass" }],
-          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "parent" }],
-        ],
-      },
-      {
-        scopes: ["parent", "relatedClass"],
-        expectedContexts: [
-          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "parent" }],
-          [{ stepIndex: 0, kind: "targetClass", propertyCategoryScope: "relatedClass" }],
-        ],
-      },
+      { meanings: ["relatedInstance", "sameInstance"], expectedRoots: ["topLevel", "target"] },
+      { meanings: ["sameInstance", "relatedInstance"], expectedRoots: ["target", "topLevel"] },
     ] as const)(
-      "preserves nested groups with different ancestor scopes in $scopes order",
-      async ({ scopes, expectedContexts }) => {
+      "preserves nested groups with different ancestor meanings in $meanings order",
+      async ({ meanings, expectedRoots }) => {
         const providerA = createMockIModelFieldsProvider("providerA_v1", {
-          relatedProperties: scopes.map((propertyCategoryScope) => ({ path: [aToB], propertyCategoryScope })),
+          relatedProperties: meanings.map((relationshipMeaning) => ({ path: [aToB], relationshipMeaning })),
         });
         const providerB: IModelFieldsProvider = {
           id: "providerB_v1",
@@ -2475,7 +2473,9 @@ describe("resolveContentSources", () => {
         });
 
         const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
-        expect(nestedGroups.map((group) => group.nested?.categoryContext)).to.deep.equal(expectedContexts);
+        expect(
+          nestedGroups.map((group) => ({ context: group.nested?.categoryContext, root: group.nested?.categoryRoot })),
+        ).to.deep.equal(expectedRoots.map((root) => ({ context: [{ stepIndex: 0, kind: "targetClass" }], root })));
         for (const group of nestedGroups) {
           expect(group.paths).to.deep.equal([{ path: [aToB, bToC], targetClassNames: ["TestSchema.ClassA"] }]);
         }
@@ -2634,6 +2634,7 @@ describe("resolveContentSources", () => {
           anchorClassName: "TestSchema.ClassC",
           prefixStepCount: 2,
           categoryContext: [{ stepIndex: 1, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       });
     });
@@ -2743,6 +2744,7 @@ describe("resolveContentSources", () => {
               anchorClassName: "TestSchema.ClassB",
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryRoot: "topLevel",
             },
           },
         ]);

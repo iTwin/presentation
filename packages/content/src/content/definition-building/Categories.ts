@@ -8,7 +8,7 @@ import { collectInParallel, getClassLabel } from "../InternalUtils.js";
 import { CategoryDefinition } from "../model/Category.js";
 
 import type { EC, ECSchemaProvider, RelationshipPath } from "@itwin/presentation-shared";
-import type { ContentSource } from "../ContentTarget.js";
+import type { CategoryRoot, ContentSource } from "../ContentTarget.js";
 import type { ExternalFieldsProvider } from "../extensions/ExternalFieldsProvider.js";
 import type { IModelFieldsProvider } from "../extensions/IModelFieldsProvider.js";
 import type { CategoryParentReference } from "../model/Category.js";
@@ -123,25 +123,18 @@ type CategoryRequest =
       parent?: CategoryRequest;
     };
 
-/**
- * Where the outermost category of a request chain is placed: in the content target's own category, or at the top
- * level next to it.
- */
-type CategoryBase = "target" | "topLevel";
-
 interface FieldCategoryRequest {
   field: PropertyField;
   category?: CategoryRequest;
-  base: CategoryBase;
+  /** Where the outermost category of the request chain is placed. */
+  base: CategoryRoot;
 }
 
 /**
  * Resolves each field's category and parent chain into requests without assigning field category IDs.
  * Overrides reference declared categories; other fields request class or property categories according
- * to their anchor, scope, and enclosing context. Matching declared IDs take precedence over generation.
- *
- * Categories of the content target's own properties are placed in the target's category: direct properties, and
- * chains whose outermost class has the `"parent"` property category scope. Other chains start at the top level.
+ * to their anchor, relationship meaning, and enclosing context. Matching declared IDs take precedence over
+ * generation. Each chain is placed per the field's `categoryRoot`.
  *
  * Requests describe placement before equivalent categories are shared and their final IDs are chosen.
  */
@@ -164,10 +157,7 @@ function resolveFieldCategoryRequests(
   };
 
   return fields.map(({ field, categorization }) => {
-    const { category, propertyCategoryScope, categoryContext } = categorization;
-    const outermostScope =
-      categoryContext.length > 0 ? categoryContext[0].propertyCategoryScope : propertyCategoryScope;
-    const base: CategoryBase = categorization.anchor === "none" || outermostScope === "parent" ? "target" : "topLevel";
+    const { category, relationshipMeaning, categoryContext, categoryRoot: base } = categorization;
     if (category?.source === "override") {
       return { field, category: { kind: "declared", id: category.id }, base };
     }
@@ -177,7 +167,7 @@ function resolveFieldCategoryRequests(
     }
     if (
       categorization.anchor !== "none" &&
-      !(propertyCategoryScope === "parent" && category?.source === "propertyCategory")
+      !(relationshipMeaning === "sameInstance" && category?.source === "propertyCategory")
     ) {
       anchor = requestAnchor(field.pathFromTarget, categorization.anchor, anchor);
     }
@@ -222,12 +212,12 @@ async function materializeCategories(
     request: CategoryRequest;
     parent?: SharedCategory;
     /** Where the category is placed when it has no parent category. */
-    base: CategoryBase;
+    base: CategoryRoot;
     id?: string;
   }
   const shared = new Map<string, SharedCategory>();
   const aliases = new Map<string, Set<SharedCategory>>();
-  const getOrCreateSharedCategory = (request: CategoryRequest, base: CategoryBase): SharedCategory => {
+  const getOrCreateSharedCategory = (request: CategoryRequest, base: CategoryRoot): SharedCategory => {
     const parent =
       request.kind !== "declared" && request.parent ? getOrCreateSharedCategory(request.parent, base) : undefined;
     const key = JSON.stringify(

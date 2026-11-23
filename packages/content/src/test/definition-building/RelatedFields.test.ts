@@ -98,7 +98,7 @@ async function enumerate(props: Parameters<typeof collectRelatedPropertyFields>[
 }
 
 describe("collectRelatedPropertyFields", () => {
-  it("encloses a `parent`-scoped step's fields in earlier steps, except its own classes for property categories", async () => {
+  it("encloses a same-instance step's fields in earlier steps, except its own classes for property categories", async () => {
     const imodelAccess = createSchemaAccess([
       createEntityClass({ fullName: "TestSchema.B" }),
       createEntityClass({
@@ -122,7 +122,7 @@ describe("collectRelatedPropertyFields", () => {
             stepIndex: 1,
             relationship: { select: "none" },
             target: { select: "all" },
-            propertyCategoryScope: "parent",
+            relationshipMeaning: "sameInstance",
           },
         ],
       },
@@ -134,25 +134,32 @@ describe("collectRelatedPropertyFields", () => {
     expect(
       fields.map(({ field, categorization }) => ({
         name: field.propertyName,
-        scope: categorization.propertyCategoryScope,
+        meaning: categorization.relationshipMeaning,
         context: categorization.categoryContext,
+        root: categorization.categoryRoot,
       })),
     ).toEqual([
       {
         name: "Plain",
-        scope: "parent",
+        meaning: "sameInstance",
         context: [
           { stepIndex: 0, kind: "targetClass" },
-          { stepIndex: 1, kind: "relationshipClass", propertyCategoryScope: "parent" },
+          { stepIndex: 1, kind: "relationshipClass" },
         ],
+        root: "topLevel",
       },
-      { name: "Categorized", scope: "parent", context: [{ stepIndex: 0, kind: "targetClass" }] },
+      {
+        name: "Categorized",
+        meaning: "sameInstance",
+        context: [{ stepIndex: 0, kind: "targetClass" }],
+        root: "topLevel",
+      },
     ]);
   });
 
   it.each<{
     name: string;
-    declaration: Pick<RelatedPropertiesDeclaration, "properties" | "propertyCategoryScope">;
+    declaration: Pick<RelatedPropertiesDeclaration, "properties" | "relationshipMeaning">;
     expected: CategoryContext;
   }>([
     {
@@ -193,10 +200,10 @@ describe("collectRelatedPropertyFields", () => {
     {
       name: "a same-step relationship whose fields attach to parent property categories",
       declaration: {
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
         properties: [{ stepIndex: 1, relationship: { select: { include: ["RelProp"] } }, target: { select: "all" } }],
       },
-      expected: [{ stepIndex: 1, kind: "relationshipClass", propertyCategoryScope: "parent" }],
+      expected: [{ stepIndex: 1, kind: "relationshipClass" }],
     },
   ])("encloses later fields in $name", async ({ declaration, expected }) => {
     const imodelAccess = createSchemaAccess([
@@ -214,7 +221,7 @@ describe("collectRelatedPropertyFields", () => {
       createRelationshipClass({
         fullName: "TestSchema.BToC",
         properties:
-          declaration.propertyCategoryScope === "parent"
+          declaration.relationshipMeaning === "sameInstance"
             ? [
                 createPrimitiveProperty({
                   name: "RelProp",
@@ -262,6 +269,7 @@ describe("collectRelatedPropertyFields", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -419,8 +427,9 @@ describe("collectRelatedPropertyFields", () => {
         anchor: "targetClass",
         category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
         categoryContext: [],
+        categoryRoot: "topLevel",
       },
-      { anchor: "targetClass", categoryContext: [] },
+      { anchor: "targetClass", categoryContext: [], categoryRoot: "topLevel" },
     ]);
   });
 
@@ -473,11 +482,12 @@ describe("collectRelatedPropertyFields", () => {
       anchor: "relationshipClass",
       category: { source: "override", id: "custom" },
       categoryContext: [],
+      categoryRoot: "topLevel",
     });
   });
 
   it.each([false, true])(
-    "reports inherited category scope with explicit property selections: %s",
+    "reports the relationship meaning and inherited root with explicit property selections: %s",
     async (explicitSelection) => {
       const imodelAccess = createSchemaAccess([
         createEntityClass({
@@ -499,7 +509,7 @@ describe("collectRelatedPropertyFields", () => {
             relatedProperties: [
               {
                 path: [bToC],
-                propertyCategoryScope: "parent",
+                relationshipMeaning: "sameInstance",
                 properties: explicitSelection ? [{ stepIndex: 0, target: { select: "all" } }] : undefined,
               },
             ],
@@ -511,7 +521,7 @@ describe("collectRelatedPropertyFields", () => {
           providerId: nestedProvider.id,
           declarationIndex: 0,
           paths: [resolvedPath([aToB, bToC], ["TestSchema.A"])],
-          nested: { categoryContext: [], anchorClassName: "TestSchema.B", prefixStepCount: 1 },
+          nested: { categoryContext: [], categoryRoot: "target", anchorClassName: "TestSchema.B", prefixStepCount: 1 },
         },
       ]);
 
@@ -522,11 +532,12 @@ describe("collectRelatedPropertyFields", () => {
       });
 
       expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
-        { anchor: "targetClass", propertyCategoryScope: "parent", categoryContext: [] },
+        { anchor: "targetClass", relationshipMeaning: "sameInstance", categoryContext: [], categoryRoot: "target" },
         {
           anchor: "targetClass",
-          propertyCategoryScope: "parent",
+          relationshipMeaning: "sameInstance",
           categoryContext: [],
+          categoryRoot: "target",
           category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
         },
       ]);
@@ -685,6 +696,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -717,6 +729,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           prefixStepCount: 1,
           effectiveCardinalityHint: "many",
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -750,6 +763,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -779,6 +793,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -804,6 +819,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -824,6 +840,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -845,6 +862,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);
@@ -883,6 +901,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
       {
@@ -893,6 +912,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryRoot: "topLevel",
         },
       },
     ]);

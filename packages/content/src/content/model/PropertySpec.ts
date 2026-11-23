@@ -31,10 +31,10 @@ export interface StepPropertySpec {
    */
   relationship?: ClassPropertySpec;
   /**
-   * Where the property categories of this step's properties are placed, overriding the declaration's
-   * `RelatedPropertiesDeclaration.propertyCategoryScope` for this step.
+   * Whether this step's classes are shown as part of the enclosing instance, overriding the declaration's
+   * `RelatedPropertiesDeclaration.relationshipMeaning` for this step.
    */
-  propertyCategoryScope?: "relatedClass" | "parent";
+  relationshipMeaning?: "relatedInstance" | "sameInstance";
 }
 
 /**

@@ -73,7 +73,6 @@ type CardinalityHint = "one" | "many";
 type CategoryContext = {
     stepIndex: number;
     kind: "targetClass" | "relationshipClass";
-    propertyCategoryScope?: "relatedClass" | "parent";
 }[];
 
 // @public
@@ -97,6 +96,9 @@ export namespace CategoryDefinition {
 
 // @public
 type CategoryParentReference = FieldCategoryReference | TopLevelCategoryReference;
+
+// @public
+type CategoryRoot = "target" | "topLevel";
 
 // @public
 interface ClassPropertySpec {
@@ -455,7 +457,7 @@ interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
     path: RelationshipPath;
     properties?: StepPropertySpec[];
-    propertyCategoryScope?: "relatedClass" | "parent";
+    relationshipMeaning?: "relatedInstance" | "sameInstance";
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
@@ -479,6 +481,7 @@ interface ResolvedDeclarationGroup {
         anchorClassName: EC.FullClassNameDotNotation;
         prefixStepCount: number;
         categoryContext: CategoryContext;
+        categoryRoot: CategoryRoot;
         effectiveCardinalityHint?: CardinalityHint;
     };
     paths: ResolvedPath[];
@@ -503,8 +506,8 @@ type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-no
 
 // @public
 interface StepPropertySpec {
-    propertyCategoryScope?: "relatedClass" | "parent";
     relationship?: ClassPropertySpec;
+    relationshipMeaning?: "relatedInstance" | "sameInstance";
     stepIndex: number;
     target?: ClassPropertySpec;
 }

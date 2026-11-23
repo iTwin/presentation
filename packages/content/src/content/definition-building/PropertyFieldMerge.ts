@@ -113,27 +113,25 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
 }
 
 /**
- * Compares category facts and their resolved ancestry. Scopes only need to agree where they affect placement: the
- * outermost ancestry entry's scope, and the field's own scope when it has a property category or no ancestry.
+ * Compares category facts and their resolved ancestry. A field's own relationship meaning only affects placement of
+ * a property category, so it only needs to agree for fields with one.
  */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
   if (a.category?.source === "override") {
     return b.category?.source === "override" && a.category.id === b.category.id;
   }
-  const ownScopeAffectsPlacement = a.category?.source === "propertyCategory" || a.categoryContext.length === 0;
   return (
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
-    (!ownScopeAffectsPlacement ||
-      (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass")) &&
+    (a.category?.source !== "propertyCategory" ||
+      (a.relationshipMeaning ?? "relatedInstance") === (b.relationshipMeaning ?? "relatedInstance")) &&
+    a.categoryRoot === b.categoryRoot &&
     a.categoryContext.length === b.categoryContext.length &&
     a.categoryContext.every(
       (context, index) =>
         context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
     ) &&
-    (a.categoryContext[0]?.propertyCategoryScope ?? "relatedClass") ===
-      (b.categoryContext[0]?.propertyCategoryScope ?? "relatedClass") &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
 }

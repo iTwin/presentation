@@ -1333,25 +1333,25 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         return result!.relatedProperties!;
       };
 
-      it("sets the parent category scope on a SameInstance spec's step", async () => {
+      it("sets the same-instance meaning on a SameInstance spec's step", async () => {
         const [declaration] = await getDeclarations({
           propertiesSource: step("A"),
           properties: "*",
           relationshipMeaning: "SameInstance",
         });
-        expect(declaration).not.toHaveProperty("propertyCategoryScope");
+        expect(declaration).not.toHaveProperty("relationshipMeaning");
         expect(declaration.properties).toEqual([
-          { stepIndex: 0, target: { select: "all" }, propertyCategoryScope: "parent" },
+          { stepIndex: 0, target: { select: "all" }, relationshipMeaning: "sameInstance" },
         ]);
       });
 
-      it("doesn't set category scope for a RelatedInstance spec", async () => {
+      it("doesn't set the meaning for a RelatedInstance spec", async () => {
         const [declaration] = await getDeclarations({
           propertiesSource: step("A"),
           properties: "*",
           relationshipMeaning: "RelatedInstance",
         });
-        expect(declaration).not.toHaveProperty("propertyCategoryScope");
+        expect(declaration).not.toHaveProperty("relationshipMeaning");
         expect(declaration.properties).toEqual([{ stepIndex: 0, target: { select: "all" } }]);
       });
 
@@ -1360,10 +1360,10 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         { parent: "SameInstance", nested: "RelatedInstance" },
         { parent: "SameInstance", nested: "SameInstance" },
       ] as const)(
-        "keeps parent steps with their scopes for a $nested spec nested under a $parent spec",
+        "keeps parent steps with their meanings for a $nested spec nested under a $parent spec",
         async ({ parent, nested }) => {
-          const scope = (meaning: typeof parent) =>
-            meaning === "SameInstance" ? { propertyCategoryScope: "parent" } : undefined;
+          const meaningOf = (meaning: typeof parent) =>
+            meaning === "SameInstance" ? { relationshipMeaning: "sameInstance" } : undefined;
           const declarations = await getDeclarations({
             propertiesSource: step("A"),
             properties: "*",
@@ -1371,10 +1371,10 @@ describe("createFieldsProviderFromContentModifierRule", () => {
             nestedRelatedProperties: [{ propertiesSource: step("B"), properties: "*", relationshipMeaning: nested }],
           });
           expect(declarations).toHaveLength(2);
-          expect(declarations[1]).not.toHaveProperty("propertyCategoryScope");
+          expect(declarations[1]).not.toHaveProperty("relationshipMeaning");
           expect(declarations[1].properties).toEqual([
-            { stepIndex: 0, target: { select: "none" }, ...scope(parent) },
-            { stepIndex: 1, target: { select: "all" }, ...scope(nested) },
+            { stepIndex: 0, target: { select: "none" }, ...meaningOf(parent) },
+            { stepIndex: 1, target: { select: "all" }, ...meaningOf(nested) },
           ]);
         },
       );
@@ -1389,7 +1389,7 @@ describe("createFieldsProviderFromContentModifierRule", () => {
         });
         expect(declarations).toHaveLength(1);
         expect(declarations[0].properties).toEqual([
-          { stepIndex: 0, target: { select: "all" }, propertyCategoryScope: "parent" },
+          { stepIndex: 0, target: { select: "all" }, relationshipMeaning: "sameInstance" },
         ]);
       });
     });

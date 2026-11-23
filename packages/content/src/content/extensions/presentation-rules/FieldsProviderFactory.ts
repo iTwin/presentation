@@ -312,7 +312,7 @@ async function mapRelatedPropertiesSpec(props: {
         stepIndex: steps.length - 1,
         target: targetSpec,
         relationship: relSpec,
-        ...(spec.relationshipMeaning === "SameInstance" ? { propertyCategoryScope: "parent" as const } : undefined),
+        ...(spec.relationshipMeaning === "SameInstance" ? { relationshipMeaning: "sameInstance" as const } : undefined),
       },
     ],
   };
@@ -324,9 +324,8 @@ async function mapRelatedPropertiesSpec(props: {
  * paths are the concatenation of the parent's path + the nested spec's own path, and whose step specs
  * keep the parent's classes (without their properties) so they enclose the nested spec's categories.
  *
- * A spec with `relationshipMeaning: "SameInstance"` shows its properties as if they belonged to the
- * enclosing spec's class (or the content target), so its step's property categories attach to the
- * enclosing category (`propertyCategoryScope: "parent"`).
+ * Each spec's `relationshipMeaning` is set on its own step (`StepPropertySpec.relationshipMeaning`), so nested specs
+ * with mixed meanings keep them in the flattened declaration.
  */
 async function flattenRelatedPropertiesSpecs(props: {
   imodelAccess: ECSchemaProvider;
@@ -363,7 +362,7 @@ async function flattenRelatedPropertiesSpecs(props: {
                 stepIndex: step.stepIndex,
                 target: { select: "none" },
                 ...(step.relationship ? { relationship: { select: "none" } } : undefined),
-                ...(step.propertyCategoryScope ? { propertyCategoryScope: step.propertyCategoryScope } : undefined),
+                ...(step.relationshipMeaning ? { relationshipMeaning: step.relationshipMeaning } : undefined),
               })),
               ...nestedDecl.properties.map((step) => ({ ...step, stepIndex: offset + step.stepIndex })),
             ],

@@ -88,16 +88,25 @@ function createCategorizedField(props: {
   anchor?: FieldCategorization["anchor"];
   propertyCategory?: { id: EC.FullClassNameDotNotation; label: string };
   overrideCategoryId?: string;
-  propertyCategoryScope?: FieldCategorization["propertyCategoryScope"];
+  relationshipMeaning?: FieldCategorization["relationshipMeaning"];
   categoryContext?: FieldCategorization["categoryContext"];
+  /** Defaults to the content target's category for direct fields and same-instance fields without context. */
+  categoryRoot?: FieldCategorization["categoryRoot"];
 }): CategorizedField {
   const id = props.id ?? "field";
+  const anchor = props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none");
+  const categoryContext = props.categoryContext ?? [];
   const categorization: FieldCategorization = {
-    anchor: props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none"),
-    categoryContext: props.categoryContext ?? [],
+    anchor,
+    categoryContext,
+    categoryRoot:
+      props.categoryRoot ??
+      (anchor === "none" || (props.relationshipMeaning === "sameInstance" && categoryContext.length === 0)
+        ? "target"
+        : "topLevel"),
   };
-  if (props.propertyCategoryScope !== undefined) {
-    categorization.propertyCategoryScope = props.propertyCategoryScope;
+  if (props.relationshipMeaning !== undefined) {
+    categorization.relationshipMeaning = props.relationshipMeaning;
   }
   if (props.propertyCategory) {
     categorization.category = { source: "propertyCategory", ...props.propertyCategory };
@@ -754,22 +763,23 @@ describe("collectCategories", () => {
             anchorClassName: "TestSchema.B",
             prefixStepCount: 1,
             categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryRoot: "topLevel",
           },
         },
       ],
     });
 
-    it("places a parent-scoped property category in the target category and keeps the class fallback for uncategorized properties", async () => {
+    it("places a same-instance property category in the target category and keeps the class fallback for uncategorized properties", async () => {
       const categorized = createCategorizedField({
         id: "categorized",
         pathFromTarget: [aToB],
         propertyCategory: geometryCategory,
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const uncategorized = createCategorizedField({
         id: "uncategorized",
         pathFromTarget: [aToB],
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const categories = await collect([categorized, uncategorized]);
       const bId = CategoryDefinition.computeId({ path: [aToB] });
@@ -781,17 +791,17 @@ describe("collectCategories", () => {
       });
     });
 
-    it("does not create the related class category when only parent-scoped property categories are used", async () => {
+    it("does not create the related class category when only same-instance property categories are used", async () => {
       const field = createCategorizedField({
         pathFromTarget: [aToB],
         propertyCategory: geometryCategory,
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const categories = await collect([field]);
       expect(Object.keys(categories)).to.deep.equal([geometryCategory.id]);
     });
 
-    it("nests a related-class scoped nested declaration's property category under the anchor and nested classes", async () => {
+    it("nests a related-instance nested declaration's property category under the anchor and nested classes", async () => {
       const field = createCategorizedField({
         pathFromTarget: [aToB, bToC],
         propertyCategory: geometryCategory,
@@ -811,18 +821,18 @@ describe("collectCategories", () => {
       expect(categories[bId]).to.deep.equal({ id: bId, label: "The B", parent: { type: "topLevel" } });
     });
 
-    it("attaches a parent-scoped nested declaration's property category to the anchor category", async () => {
+    it("attaches a same-instance nested declaration's property category to the anchor category", async () => {
       const categorized = createCategorizedField({
         id: "categorized",
         pathFromTarget: [aToB, bToC],
         propertyCategory: geometryCategory,
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
         categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
       });
       const uncategorized = createCategorizedField({
         id: "uncategorized",
         pathFromTarget: [aToB, bToC],
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
         categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
       });
       const categories = await collect([categorized, uncategorized], nestedSource());
@@ -860,14 +870,14 @@ describe("collectCategories", () => {
         propertyName: "P1",
         pathFromTarget: [aToB],
         propertyCategory: geometryCategory,
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const viaSecond = createCategorizedField({
         id: "second",
         propertyName: "P2",
         pathFromTarget: [aToB2],
         propertyCategory: geometryCategory,
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const underAnchor = createCategorizedField({
         id: "third",
@@ -887,14 +897,14 @@ describe("collectCategories", () => {
         propertyName: "P1",
         pathFromTarget: [aToB],
         propertyCategory: { id: "TestSchema.First", label: "Same" },
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const second = createCategorizedField({
         id: "second",
         propertyName: "P2",
         pathFromTarget: [aToB],
         propertyCategory: { id: "TestSchema.Second", label: "Same" },
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const categories = await collect([first, second]);
       expect(Object.keys(categories)).to.have.members(["TestSchema.First", "TestSchema.Second"]);
@@ -906,7 +916,7 @@ describe("collectCategories", () => {
           id: "inTarget",
           propertyName: "P1",
           pathFromTarget: [aToB],
-          propertyCategoryScope: "parent",
+          relationshipMeaning: "sameInstance",
         }),
         createCategorizedField({ id: "topLevel", propertyName: "P2", pathFromTarget: [aToB] }),
         createCategorizedField({
@@ -944,7 +954,7 @@ describe("collectCategories", () => {
         id: "second",
         propertyName: "P2",
         pathFromTarget: [aToB2],
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const categories = await collect([viaFirst, viaSecond]);
       const firstId = CategoryDefinition.computeId({ path: [aToB] });
@@ -1032,7 +1042,7 @@ describe("collectCategories", () => {
       const inTarget = createCategorizedField({
         id: "inTarget",
         pathFromTarget: [aToB],
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const topLevel = createCategorizedField({ id: "topLevel", pathFromTarget: [aToB] });
       const custom = createCategorizedField({ id: "custom", overrideCategoryId: "child" });
@@ -1041,12 +1051,12 @@ describe("collectCategories", () => {
       expect(Object.keys(categories)).to.have.members([bId, `topLevel/${bId}`, "child"]);
     });
 
-    it("keeps a parent-scoped class fallback in the target category even when a field uses a shorter path", async () => {
+    it("keeps a same-instance class fallback in the target category even when a field uses a shorter path", async () => {
       const prefixField = createCategorizedField({ id: "prefix", pathFromTarget: [aToB] });
       const terminalField = createCategorizedField({
         id: "terminal",
         pathFromTarget: [aToB, bToC],
-        propertyCategoryScope: "parent",
+        relationshipMeaning: "sameInstance",
       });
       const prefixCategoryId = CategoryDefinition.computeId({ path: [aToB] });
       const terminalCategoryId = CategoryDefinition.computeId({ path: [aToB, bToC] });
@@ -1097,11 +1107,11 @@ describe("collectCategories", () => {
     it("keeps different category contexts on the same path distinct and order independent", async () => {
       const createFields = () => [
         createCategorizedField({ id: "prefix", pathFromTarget: [aToB] }),
-        createCategorizedField({ id: "top", pathFromTarget: [aToB, bToC], propertyCategoryScope: "parent" }),
+        createCategorizedField({ id: "top", pathFromTarget: [aToB, bToC], relationshipMeaning: "sameInstance" }),
         createCategorizedField({
           id: "nested",
           pathFromTarget: [aToB, bToC],
-          propertyCategoryScope: "parent",
+          relationshipMeaning: "sameInstance",
           categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
         }),
       ];
@@ -1141,6 +1151,7 @@ describe("collectCategories", () => {
               anchorClassName: props.anchorClassName,
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryRoot: "topLevel",
             },
           },
         ],
@@ -1228,6 +1239,7 @@ describe("collectCategories", () => {
               anchorClassName: "TestSchema.B",
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryRoot: "topLevel",
             },
           },
           {
@@ -1238,6 +1250,7 @@ describe("collectCategories", () => {
               anchorClassName: "TestSchema.B",
               prefixStepCount: 1,
               categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryRoot: "topLevel",
             },
           },
         ],

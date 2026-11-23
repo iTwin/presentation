@@ -669,11 +669,11 @@ describe("Content", () => {
       );
     });
 
-    describe("property category scope", () => {
-      type Scope = "relatedClass" | "parent" | undefined;
+    describe("relationship meaning", () => {
+      type Meaning = "relatedInstance" | "sameInstance" | undefined;
 
       /** `A -[AtoB]-> B` and `A -[AtoB2]-> B` over one `B` carrying categorized and uncategorized properties. */
-      async function buildScopeSetup() {
+      async function buildMeaningSetup() {
         return buildTestECDb(async (builder, testName) => {
           const s = await importSchema(
             testName,
@@ -713,13 +713,13 @@ describe("Content", () => {
         });
       }
 
-      type ScopeSetup = Awaited<ReturnType<typeof buildScopeSetup>>;
+      type MeaningSetup = Awaited<ReturnType<typeof buildMeaningSetup>>;
 
-      function createScopeProvider(
-        setup: ScopeSetup,
+      function createMeaningProvider(
+        setup: MeaningSetup,
         declarations: Array<{
           relationship: "AtoB" | "AtoB2";
-          scope: Scope;
+          meaning: Meaning;
           defaultOverrides?: { categoryId: string };
           overrides?: Record<string, { categoryId: string }>;
         }>,
@@ -730,7 +730,7 @@ describe("Content", () => {
           async getContribution() {
             return {
               ...(categories ? { categories } : undefined),
-              relatedProperties: declarations.map(({ relationship, scope, defaultOverrides, overrides }) => ({
+              relatedProperties: declarations.map(({ relationship, meaning, defaultOverrides, overrides }) => ({
                 path: [
                   {
                     sourceClassName: setup.schema.items.A.fullName,
@@ -739,7 +739,7 @@ describe("Content", () => {
                   },
                 ],
                 cardinalityHint: "one" as const,
-                ...(scope ? { propertyCategoryScope: scope } : undefined),
+                ...(meaning ? { relationshipMeaning: meaning } : undefined),
                 ...(defaultOverrides || overrides
                   ? { properties: [{ stepIndex: 0, target: { select: "all" as const, defaultOverrides, overrides } }] }
                   : undefined),
@@ -749,7 +749,7 @@ describe("Content", () => {
         });
       }
 
-      async function buildScopeDescriptor(setup: ScopeSetup, provider: ReturnType<typeof createScopeProvider>) {
+      async function buildMeaningDescriptor(setup: MeaningSetup, provider: ReturnType<typeof createMeaningProvider>) {
         return buildDescriptor({
           imodelAccess: createContentIModelAccess(setup.ecdb),
           targets: [{ primaryClass: setup.schema.items.A.fullName }],
@@ -757,7 +757,10 @@ describe("Content", () => {
         });
       }
 
-      function fieldsOf(descriptor: Awaited<ReturnType<typeof buildScopeDescriptor>>, relationship: "AtoB" | "AtoB2") {
+      function fieldsOf(
+        descriptor: Awaited<ReturnType<typeof buildMeaningDescriptor>>,
+        relationship: "AtoB" | "AtoB2",
+      ) {
         const fields = getRelatedPropertyFields(descriptor).filter((f) =>
           f.pathFromTarget[0].relationshipName.endsWith(relationship),
         );
@@ -767,13 +770,13 @@ describe("Content", () => {
         };
       }
 
-      it.each([undefined, "relatedClass" as const])(
-        `nests property categories under the related class category when scope is %s`,
-        async (scope) => {
-          using setup = await buildScopeSetup();
-          const descriptor = await buildScopeDescriptor(
+      it.each([undefined, "relatedInstance" as const])(
+        `nests property categories under the related class category when meaning is %s`,
+        async (meaning) => {
+          using setup = await buildMeaningSetup();
+          const descriptor = await buildMeaningDescriptor(
             setup,
-            createScopeProvider(setup, [{ relationship: "AtoB", scope }]),
+            createMeaningProvider(setup, [{ relationship: "AtoB", meaning }]),
           );
 
           const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
@@ -782,11 +785,11 @@ describe("Content", () => {
         },
       );
 
-      it("attaches property categories to the enclosing context when scope is parent", async () => {
-        using setup = await buildScopeSetup();
-        const descriptor = await buildScopeDescriptor(
+      it("attaches property categories to the enclosing context when meaning is sameInstance", async () => {
+        using setup = await buildMeaningSetup();
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(setup, [{ relationship: "AtoB", scope: "parent" }]),
+          createMeaningProvider(setup, [{ relationship: "AtoB", meaning: "sameInstance" }]),
         );
 
         const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
@@ -797,15 +800,17 @@ describe("Content", () => {
         expect(getFieldCategory(descriptor, uncategorized)!.parent).toEqual({ type: "target" });
       });
 
-      it.each(["relatedClass", "parent"] as const)(
-        "prefers an explicit category override over scope %s",
-        async (scope) => {
-          using setup = await buildScopeSetup();
-          const descriptor = await buildScopeDescriptor(
+      it.each(["relatedInstance", "sameInstance"] as const)(
+        "prefers an explicit category override over meaning %s",
+        async (meaning) => {
+          using setup = await buildMeaningSetup();
+          const descriptor = await buildMeaningDescriptor(
             setup,
-            createScopeProvider(setup, [{ relationship: "AtoB", scope, defaultOverrides: { categoryId: "custom" } }], {
-              custom: { id: "custom", label: "Custom", parent: { type: "topLevel" } },
-            }),
+            createMeaningProvider(
+              setup,
+              [{ relationship: "AtoB", meaning, defaultOverrides: { categoryId: "custom" } }],
+              { custom: { id: "custom", label: "Custom", parent: { type: "topLevel" } } },
+            ),
           );
 
           const { categorized, uncategorized } = fieldsOf(descriptor, "AtoB");
@@ -816,12 +821,12 @@ describe("Content", () => {
       );
 
       it("shares a class category reached over different relationships under the same parent", async () => {
-        using setup = await buildScopeSetup();
-        const descriptor = await buildScopeDescriptor(
+        using setup = await buildMeaningSetup();
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(setup, [
-            { relationship: "AtoB", scope: "parent" },
-            { relationship: "AtoB2", scope: "parent" },
+          createMeaningProvider(setup, [
+            { relationship: "AtoB", meaning: "sameInstance" },
+            { relationship: "AtoB2", meaning: "sameInstance" },
           ]),
         );
 
@@ -838,7 +843,7 @@ describe("Content", () => {
       });
 
       it("updates provider category parents and overrides when class categories are merged", async () => {
-        using setup = await buildScopeSetup();
+        using setup = await buildMeaningSetup();
         const originalClassCategoryId = CategoryDefinition.computeId({
           path: [
             {
@@ -854,15 +859,15 @@ describe("Content", () => {
           parent: { type: "category", id: originalClassCategoryId },
         };
         const propertyName = "Categorized";
-        const descriptor = await buildScopeDescriptor(
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(
+          createMeaningProvider(
             setup,
             [
-              { relationship: "AtoB", scope: "parent", overrides: { [propertyName]: { categoryId: "child" } } },
+              { relationship: "AtoB", meaning: "sameInstance", overrides: { [propertyName]: { categoryId: "child" } } },
               {
                 relationship: "AtoB2",
-                scope: "parent",
+                meaning: "sameInstance",
                 overrides: { [propertyName]: { categoryId: originalClassCategoryId } },
               },
             ],
@@ -921,7 +926,7 @@ describe("Content", () => {
                   return {
                     relatedProperties: [
                       {
-                        propertyCategoryScope: "parent",
+                        relationshipMeaning: "sameInstance",
                         path: [
                           {
                             sourceClassName: schema.items.A.fullName,
@@ -952,12 +957,12 @@ describe("Content", () => {
       });
 
       it("keeps a property category with the same name distinct under different parents", async () => {
-        using setup = await buildScopeSetup();
-        const descriptor = await buildScopeDescriptor(
+        using setup = await buildMeaningSetup();
+        const descriptor = await buildMeaningDescriptor(
           setup,
-          createScopeProvider(setup, [
-            { relationship: "AtoB", scope: "parent" },
-            { relationship: "AtoB2", scope: "relatedClass" },
+          createMeaningProvider(setup, [
+            { relationship: "AtoB", meaning: "sameInstance" },
+            { relationship: "AtoB2", meaning: "relatedInstance" },
           ]),
         );
 
@@ -969,9 +974,9 @@ describe("Content", () => {
       });
 
       it.each([
-        { scope: "relatedClass" as const, categorizedChain: ["A To B", "Geometry"] },
-        { scope: "parent" as const, categorizedChain: ["Geometry"] },
-      ])("applies $scope scope to relationship class properties", async ({ scope, categorizedChain }) => {
+        { meaning: "relatedInstance" as const, categorizedChain: ["A To B", "Geometry"] },
+        { meaning: "sameInstance" as const, categorizedChain: ["Geometry"] },
+      ])("applies $meaning meaning to relationship class properties", async ({ meaning, categorizedChain }) => {
         using setup = await buildTestECDb(async (builder, testName) => {
           const s = await importSchema(
             testName,
@@ -1020,7 +1025,7 @@ describe("Content", () => {
                     relatedProperties: [
                       {
                         path,
-                        propertyCategoryScope: scope,
+                        relationshipMeaning: meaning,
                         properties: [{ stepIndex: 0, target: { select: "all" }, relationship: { select: "all" } }],
                       },
                     ],

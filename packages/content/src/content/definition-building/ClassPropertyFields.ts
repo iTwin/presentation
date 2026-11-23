@@ -7,7 +7,7 @@ import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext, CategoryRoot } from "../ContentTarget.js";
 import type { RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
@@ -37,13 +37,15 @@ export interface FieldCategorization {
   category?:
     | { source: "override"; id: CategoryDefinition["id"] }
     | { source: "propertyCategory"; id: EC.FullClassNameDotNotation; label: string };
-  /** The `propertyCategoryScope` in effect for the field's step; omitted means `"relatedClass"`. */
-  propertyCategoryScope?: RelatedPropertiesDeclaration["propertyCategoryScope"];
+  /** The `relationshipMeaning` in effect for the field's step; omitted means `"relatedInstance"`. */
+  relationshipMeaning?: RelatedPropertiesDeclaration["relationshipMeaning"];
   /**
    * Ordered enclosing class categories; an empty context places the field's category at the root. For a
-   * property category with the `"parent"` scope, excludes the field's own step.
+   * property category of a `"sameInstance"` step, excludes the field's own step.
    */
   categoryContext: Readonly<CategoryContext>;
+  /** Where the outermost category of the field's chain is placed. */
+  categoryRoot: CategoryRoot;
 }
 
 /** A property field paired with the category facts the categorization pass needs. */
@@ -80,10 +82,12 @@ interface CreatePropertyFieldsProps {
   spec: ClassPropertySpec;
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
   anchor: FieldCategorization["anchor"];
-  /** See {@link FieldCategorization.propertyCategoryScope}. */
-  propertyCategoryScope?: FieldCategorization["propertyCategoryScope"];
+  /** See {@link FieldCategorization.relationshipMeaning}. */
+  relationshipMeaning?: FieldCategorization["relationshipMeaning"];
   /** See {@link FieldCategorization.categoryContext}. */
   categoryContext: CategoryContext;
+  /** See {@link FieldCategorization.categoryRoot}. */
+  categoryRoot: CategoryRoot;
 }
 
 /**
@@ -111,7 +115,16 @@ interface CreatePropertyFieldsProps {
  * `mergePropertyFieldsByIdentity`.
  */
 export function createPropertyFields(props: CreatePropertyFieldsProps): CategorizedField[] {
-  const { properties, relationshipInfo, valueClassNames, spec, anchor, propertyCategoryScope, categoryContext } = props;
+  const {
+    properties,
+    relationshipInfo,
+    valueClassNames,
+    spec,
+    anchor,
+    relationshipMeaning,
+    categoryContext,
+    categoryRoot,
+  } = props;
   const pathFromTarget = relationshipInfo?.pathFromTarget ?? [];
   const pathCardinality = relationshipInfo?.pathCardinality ?? "one";
   const primaryClassNames = relationshipInfo?.primaryClassNames ?? valueClassNames;
@@ -155,9 +168,9 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       field.hidden = overrides.hidden;
     }
     // Report the raw category facts: an explicit spec override, else the EC schema property category.
-    const categorization: FieldCategorization = { anchor, categoryContext };
-    if (propertyCategoryScope !== undefined) {
-      categorization.propertyCategoryScope = propertyCategoryScope;
+    const categorization: FieldCategorization = { anchor, categoryContext, categoryRoot };
+    if (relationshipMeaning !== undefined) {
+      categorization.relationshipMeaning = relationshipMeaning;
     }
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
