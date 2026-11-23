@@ -200,35 +200,35 @@ function isFlaggedAsHidden(node: ProcessedHierarchyNode): boolean {
 
 interface StandInParentNodeProps {
   /** The search tree branch whose node the stand-in replaces. */
-  parentBranch: HierarchySearchTree;
-  /** Identifiers of the parent branch's ancestors, from the root. */
+  branch: HierarchySearchTree;
+  /** Identifiers of the branch's ancestors, from the root. */
   ancestors: HierarchyNodeIdentifier[];
-  /** Whether any of the parent branch's ancestors is a search target. */
+  /** Whether any of the branch's ancestors is a search target. */
   hasSearchTargetAncestor: boolean;
 }
 
 /**
  * Creates a parent node, that stands in for the actual parent node of a hierarchy level identified by the given search
  * tree branch and its ancestors. The definition adapter turns the node's keys back into a path of identifiers, and the
- * provider filters the hierarchy level to the children of the parent branch.
+ * provider filters the hierarchy level to the children of the branch.
  *
  * The stand-in has the same search attributes as a provider with the search applied assigns to the actual parent node.
  * Branches with children are search targets only if they're flagged as such.
  */
 function createStandInParentNode({
-  parentBranch,
+  branch,
   ancestors,
   hasSearchTargetAncestor,
 }: StandInParentNodeProps): ParentHierarchyNode<NonGroupingHierarchyNode> {
   return {
-    key: createNodeKey(parentBranch.identifier),
+    key: createNodeKey(branch.identifier),
     parentKeys: ancestors.map(createNodeKey),
     label: "",
     search: {
       ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : {}),
-      ...(parentBranch.isTarget ? { isSearchTarget: true } : {}),
-      childrenTargetPaths: parentBranch.children,
-      ...(parentBranch.options ? { options: parentBranch.options } : {}),
+      ...(branch.isTarget ? { isSearchTarget: true } : {}),
+      childrenTargetPaths: branch.children,
+      ...(branch.options ? { options: branch.options } : {}),
     },
   };
 }
@@ -448,9 +448,9 @@ function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesReq
     for (const branch of branches) {
       if (branch.children) {
         addRequests(branch.children, {
-          parentBranch: branch,
-          ancestors: parent ? [...parent.ancestors, parent.parentBranch.identifier] : [],
-          hasSearchTargetAncestor: !!parent && (parent.hasSearchTargetAncestor || !!parent.parentBranch.isTarget),
+          branch,
+          ancestors: parent ? [...parent.ancestors, parent.branch.identifier] : [],
+          hasSearchTargetAncestor: !!parent && (parent.hasSearchTargetAncestor || !!parent.branch.isTarget),
         });
       }
     }
