@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795424860056,
+  "lastUpdate": 1795439762482,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Unified selection benchmark": [
@@ -57509,6 +57509,162 @@ window.BENCHMARK_DATA = {
             "value": 54,
             "unit": "ms",
             "extra": "count: 21\nmax: 79\np95: 54\nmedian: 31"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "909ebc0d1b9369ef3d725b6068b9d2003a1a253c",
+          "message": "[Tree definitions]: add option to get search node paths (#1707)\n\n* [Tree definitions]: add option to get search node paths\n\n* Simplify implementation & add tests & docs\n\n* Add helper function to hierarchies package that returns search nodes\n\n* cleanup\n\n* Add PathBasedIModelHierarchyProvider\n\n* Add stand-in nodes with adapter\n\n* Add template tag\n\n* Spread `hierarchyProviderProps`\n\n* Add abort signal and finalize\n\n* Move MAX_RULES_IN_GROUP\n\n* Simplify\n\n* Add release main thread\n\n* Remove redundant type\n\n* Use union type for loading mode\n\n* rename to loadAllNodes\n\n* Add explanatory comment\n\n* make createStandInParentNode accept props\n\n* Renames and minor adjustments\n\n* rename from parentBranch to branch\n\n* Remove resolvedBranch type\n\n* use identifiers\n\n* create provider in function",
+          "timestamp": "2026-11-23T15:11:24+02:00",
+          "tree_id": "8f13befd1d1b572cd7ccd54e89736b1d9363ca85",
+          "url": "https://github.com/iTwin/presentation/commit/909ebc0d1b9369ef3d725b6068b9d2003a1a253c"
+        },
+        "date": 1795439760916,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "search searches with 50000 paths",
+            "value": 4375,
+            "unit": "ms"
+          },
+          {
+            "name": "search searches with 50000 paths (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 21385,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 23,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 23\np95: 23\nmedian: 23"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 104,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 31,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6497,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 1604,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 105,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 105\np95: 105\nmedian: 105"
+          },
+          {
+            "name": "grouping by label",
+            "value": 3846,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 59,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 59\np95: 59\nmedian: 32"
+          },
+          {
+            "name": "grouping by class",
+            "value": 3826,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 41,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 41\np95: 41\nmedian: 32"
+          },
+          {
+            "name": "grouping by property",
+            "value": 4751,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 52\np95: 52\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 5111,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 62,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 62\np95: 62\nmedian: 34"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 9749,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 43,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 43\np95: 43\nmedian: 35"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 3282,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 44,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 44\np95: 44\nmedian: 31"
           }
         ]
       }
