@@ -142,22 +142,6 @@ interface GroupedNode<TNode extends HierarchyNode = NonGroupingHierarchyNode> {
   groupingNodes: GroupingHierarchyNode[];
 }
 
-/**
- * A search tree branch with its nodes adjusted to the actual hierarchy, and information needed to resolve its child
- * branches.
- */
-interface ResolvedBranch {
-  /** Grouping nodes and the node of the branch, or nothing if the node is hidden in the hierarchy. */
-  nodes: HierarchyNode[];
-  /** Whether the branch's node is hidden in the hierarchy. */
-  isHidden: boolean;
-  /**
-   * The non-grouping node of the branch, with ancestor keys of the actual hierarchy. Unlike `nodes`, it's set even if
-   * the node is hidden, because nodes of child branches still have it as their ancestor.
-   */
-  node: NonGroupingHierarchyNode;
-}
-
 /** A hierarchy level request for sibling search tree branches. */
 interface NodesRequest {
   parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
@@ -256,8 +240,7 @@ function createNodeKey(identifier: HierarchyNodeIdentifier): NonGroupingHierarch
 
 /**
  * Resolves loaded search tree branches level by level, from the root down, and creates a nodes path for every search
- * target found in the hierarchy. Every resolved branch gets copies of its loaded nodes with ancestor keys of the actual
- * hierarchy.
+ * target found in the hierarchy. Nodes of every branch are copied with ancestor keys of the actual hierarchy.
  *
  * Nodes are loaded with ancestor keys based on search path identifiers, which don't match the actual hierarchy (e.g.
  * class names may be more general, grouping node keys are missing). Branches that aren't loaded, and their
@@ -269,11 +252,11 @@ function createNodesPaths({
 }: {
   searchTree: HierarchySearchTree[];
   loadedNodesByBranch: Map<HierarchySearchTree, GroupedNode>;
-}): Array<ResolvedBranch["nodes"]> {
-  const nodesPaths = new Array<ResolvedBranch["nodes"]>();
+}): HierarchyNode[][] {
+  const nodesPaths = new Array<HierarchyNode[]>();
   const resolveChildren = (
     branches: HierarchySearchTree[],
-    parent?: { resolvedBranch: ResolvedBranch; nodesPath: ResolvedBranch["nodes"] },
+    parent?: { node: GroupedNode["node"]; nodesPath: HierarchyNode[] },
   ) => {
     // sibling branches match the same loaded node when their identifiers differ only by class
     const branchesByLoadedNode = new Map<GroupedNode, HierarchySearchTree[]>();
@@ -284,15 +267,15 @@ function createNodesPaths({
       }
     }
     for (const [loadedNode, matchingBranches] of branchesByLoadedNode) {
-      const resolvedBranch = getResolvedBranch({ loadedNode, resolvedParentBranch: parent?.resolvedBranch });
-      const nodesPath = [...(parent?.nodesPath ?? []), ...resolvedBranch.nodes];
-      // a hidden target isn't in the hierarchy
-      if (resolvedBranch.node.search?.isSearchTarget && !resolvedBranch.isHidden) {
+      const { node, groupingNodes } = resolveGroupedNode({ groupedNode: loadedNode, parentNode: parent?.node });
+      // hidden nodes aren't in the hierarchy, and they aren't grouped
+      const nodesPath = [...(parent?.nodesPath ?? []), ...(node.isHidden ? [] : [...groupingNodes, node])];
+      if (node.search?.isSearchTarget && !node.isHidden) {
         nodesPaths.push(nodesPath);
       }
       for (const branch of matchingBranches) {
         if (branch.children) {
-          resolveChildren(branch.children, { resolvedBranch, nodesPath });
+          resolveChildren(branch.children, { node, nodesPath });
         }
       }
     }
@@ -301,42 +284,39 @@ function createNodesPaths({
   return nodesPaths;
 }
 
-/** Creates copies of the nodes loaded for a branch, with ancestor keys of the actual hierarchy. */
-function getResolvedBranch({
-  loadedNode,
-  resolvedParentBranch,
+/** Creates a copy of the given grouped node, with ancestor keys of the actual hierarchy. */
+function resolveGroupedNode({
+  groupedNode,
+  parentNode,
 }: {
-  loadedNode: GroupedNode;
-  resolvedParentBranch: Pick<ResolvedBranch, "node"> | undefined;
-}): ResolvedBranch {
-  const parentNode = resolvedParentBranch?.node;
+  groupedNode: GroupedNode;
+  parentNode: GroupedNode["node"] | undefined;
+}): GroupedNode {
   const ancestorKeys = parentNode ? [...parentNode.parentKeys, parentNode.key] : [];
+  // the hidden flag is internal, so it's removed from a hidden parent node before it's returned as `nonGroupingAncestor`
+  // of grouping nodes - other parent nodes don't have the flag, and are returned as is, because they're in the path too
+  const nonGroupingAncestor = parentNode?.isHidden ? withoutHiddenFlag(parentNode) : parentNode;
   // Nodes of this branch were requested with a stand-in parent node, created from the branch's search path, so their
   // `parentKeys` and grouping nodes' `nonGroupingAncestor` are based on search path identifiers: ancestor class names
   // may be base classes, and grouping and hidden nodes' keys may differ. Here they're replaced with the actual
   // ancestors - `ancestorKeys`, resolved from the parent branch, followed by keys of the branch's grouping nodes that
   // precede the node.
-  const groupingNodes = loadedNode.groupingNodes.map((groupingNode, index): GroupingHierarchyNode => {
+  const groupingNodes = groupedNode.groupingNodes.map((groupingNode, index): GroupingHierarchyNode => {
     const { nonGroupingAncestor: _, ...rest } = groupingNode;
     return {
       ...rest,
-      parentKeys: [...ancestorKeys, ...loadedNode.groupingNodes.slice(0, index).map(({ key }) => key)],
-      ...(parentNode ? { nonGroupingAncestor: parentNode } : {}),
+      parentKeys: [...ancestorKeys, ...groupedNode.groupingNodes.slice(0, index).map(({ key }) => key)],
+      ...(nonGroupingAncestor ? { nonGroupingAncestor } : {}),
     };
   });
-  // the flag is internal, so it's removed from nodes that are returned (a hidden node is returned as
-  // `nonGroupingAncestor` of grouping nodes under it)
-  const { isHidden, ...loadedNonGroupingNode } = loadedNode.node;
-  const node: NonGroupingHierarchyNode = {
-    ...loadedNonGroupingNode,
-    parentKeys: [...ancestorKeys, ...groupingNodes.map(({ key }) => key)],
-  };
   return {
-    // hidden nodes aren't in the hierarchy, and they aren't grouped
-    nodes: isHidden ? [] : [...groupingNodes, node],
-    isHidden: !!isHidden,
-    node,
+    node: { ...groupedNode.node, parentKeys: [...ancestorKeys, ...groupingNodes.map(({ key }) => key)] },
+    groupingNodes,
   };
+}
+
+function withoutHiddenFlag({ isHidden: _, ...node }: GroupedNode["node"]): NonGroupingHierarchyNode {
+  return node;
 }
 
 /**
