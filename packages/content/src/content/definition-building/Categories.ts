@@ -28,7 +28,7 @@ interface CollectCategoriesProps {
 
 /**
  * Collects provider categories, resolves field placement, and materializes shared category trees.
- * Assigns each field's `categoryId` without mutating provider-owned category definitions.
+ * Places each field in its category (`field.category`) without mutating provider-owned category definitions.
  */
 export async function collectCategories(
   props: CollectCategoriesProps,

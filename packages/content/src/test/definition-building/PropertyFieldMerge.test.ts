@@ -499,6 +499,33 @@ describe("mergePropertyFieldsByIdentity", () => {
         ]),
       ).to.deep.equal({ anchor: "targetClass", categoryContext: innerContext });
     });
+
+    it("accepts divergent own scopes of fields without property categories within a context from the same provider", () => {
+      expect(
+        placementOf([
+          { providerId: "a_v1", context: outerContext },
+          { providerId: "a_v1", context: outerContext, scope: "parent" },
+        ]),
+      ).to.deep.equal({ anchor: "targetClass", categoryContext: outerContext });
+    });
+
+    it("rejects divergent own scopes of fields with property categories within a context from the same provider", () => {
+      const category = { source: "propertyCategory", id: "Stuff.Geometry", label: "Geometry" } as const;
+      expect(() =>
+        mergePropertyFieldsByIdentity(
+          ([undefined, "parent"] as const).map((scope, index) => ({
+            field: create(`Stuff.V${index}`),
+            categorization: {
+              anchor: "targetClass" as const,
+              category,
+              ...(scope ? { propertyCategoryScope: scope } : undefined),
+              categoryContext: outerContext,
+            },
+            provider: { id: "a_v1" as const },
+          })),
+        ),
+      ).to.throw(/divergent metadata/);
+    });
   });
 
   it("merges candidates that agree on property category facts", () => {

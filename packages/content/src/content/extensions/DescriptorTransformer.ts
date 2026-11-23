@@ -199,6 +199,8 @@ export function createTransformableDescriptor(
       }
       const fork: PropertyField = {
         ...field,
+        // Transformers may modify the reference in place, so the fork mustn't share it with the original.
+        category: { ...field.category },
         id: forkedId,
         valueClassNames: subset,
         primaryClassNames: isDirect ? [...subset] : field.primaryClassNames,

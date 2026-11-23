@@ -18,7 +18,7 @@ type PropertyOverrides = NonNullable<ClassPropertySpec["overrides"]>[string];
 /**
  * The raw category facts of an enumerated property field. Field enumeration only reports these
  * facts; the single categorization pass (`collectCategories`) turns them into concrete category ids,
- * creates the category tree, and assigns each field's `categoryId`.
+ * creates the category tree, and places each field in its category (`field.category`).
  */
 export interface FieldCategorization {
   /**
@@ -102,8 +102,9 @@ interface CreatePropertyFieldsProps {
  * - `id` is derived from `(propertyClassName, propertyName, pathFromTarget)`.
  *
  * Each field is paired with its {@link FieldCategorization} — the raw category facts (its EC schema
- * property category and/or spec override, plus the given `anchor`) — but no `categoryId` is assigned
- * and no category is created here: that is the categorization pass's job.
+ * property category and/or spec override, plus the given `anchor`). Fields start in the content target's
+ * category (`{ type: "target" }`) and no category is created here: placing fields in their categories is
+ * the categorization pass's job.
  *
  * Properties with unsupported value types (e.g. `Binary`/`IGeometry`) are skipped. The returned
  * fields are candidates whose identity is finalized (and same-property variants merged) by

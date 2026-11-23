@@ -52,7 +52,7 @@ interface PropertyFieldCandidate extends CategorizedField {
  *   of other fields or external inputs that happen to use the same path.
  *
  * The winning candidate's {@link FieldCategorization} is carried on each merged field so the
- * categorization pass can turn it into a `categoryId`. This is the inverse of `forkField`: it merges
+ * categorization pass can turn it into the field's `category`. This is the inverse of `forkField`: it merges
  * many candidates into one field on the way in, while `forkField` splits one field into a carved
  * subset on demand.
  */
@@ -113,18 +113,20 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
 }
 
 /**
- * Compares category facts and their resolved ancestry. Of the ancestry's scopes, only the outermost one affects
- * placement, so the rest don't need to agree.
+ * Compares category facts and their resolved ancestry. Scopes only need to agree where they affect placement: the
+ * outermost ancestry entry's scope, and the field's own scope when it has a property category or no ancestry.
  */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
   if (a.category?.source === "override") {
     return b.category?.source === "override" && a.category.id === b.category.id;
   }
+  const ownScopeAffectsPlacement = a.category?.source === "propertyCategory" || a.categoryContext.length === 0;
   return (
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
-    (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass") &&
+    (!ownScopeAffectsPlacement ||
+      (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass")) &&
     a.categoryContext.length === b.categoryContext.length &&
     a.categoryContext.every(
       (context, index) =>
