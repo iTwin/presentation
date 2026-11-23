@@ -227,75 +227,6 @@ type ModelsTreeChildrenQueryProps = Pick<
   "instanceFilter" | "createSelectClause" | "createFilterClauses"
 >;
 
-/** Finds the closest entry of the given class in the path, going from its end. */
-function findClosestPathEntry(path: HierarchyLevelPathProps["path"], className: string) {
-  for (let i = path.length - 1; i >= 0; --i) {
-    const entry = path[i];
-    if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry) && entry.className === className) {
-      return entry;
-    }
-  }
-  return undefined;
-}
-
-/** Returns the last entry of the path. The models tree has no generic nodes, so all path entries are instance keys. */
-function getLastPathEntry(path: HierarchyLevelPathProps["path"]): IModelInstanceKey | undefined {
-  const entry = path.at(-1);
-  assert(entry === undefined || HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry), "Expected an instance key");
-  return entry;
-}
-
-/**
- * Returns ID of the category of the element at the end of the path. Child elements with the same category as their
- * parent element aren't grouped under category nodes, so the closest category in the path is the element's category.
- */
-function getElementCategoryId(path: HierarchyLevelPathProps["path"]): Id64String {
-  const category = findClosestPathEntry(path, CLASS_NAMES.SpatialCategory);
-  assert(category !== undefined, "Expected element to have a category in its path");
-  return category.id;
-}
-
-/** Returns IDs of models and parent elements of category nodes - categories are children of either models or elements. */
-function getCategoryNodeParentIds(parentProps: ModelsTreeProcessorParentProps): CategoryNodeProps {
-  if ("path" in parentProps) {
-    const { path } = parentProps;
-    const parentEntry = getLastPathEntry(path);
-    assert(parentEntry !== undefined, "Expected category node to have a parent");
-    if (parentEntry.className === CLASS_NAMES.GeometricElement3d) {
-      // elements are in the closest model of their path
-      const model = findClosestPathEntry(path, CLASS_NAMES.GeometricModel3d);
-      assert(model !== undefined, "Expected element to have a model in its path");
-      return { modelIds: [model.id], parentElementIds: [parentEntry.id] };
-    }
-    assert(parentEntry.className === CLASS_NAMES.GeometricModel3d, "Expected category node parent to be a model");
-    return { modelIds: [parentEntry.id] };
-  }
-  const { parentNode } = parentProps;
-  assert(parentNode !== undefined, "Expected category node to have a parent node");
-  if (ModelsTreeNodeInternal.isElementNode(parentNode)) {
-    return {
-      modelIds: [parentNode.extendedData.modelId],
-      parentElementIds: parentNode.key.instanceKeys.map(({ id }) => id),
-    };
-  }
-  assert(ModelsTreeNodeInternal.isModelNode(parentNode), "Expected category node parent to be a model node");
-  return { modelIds: parentNode.key.instanceKeys.map(({ id }) => id) };
-}
-
-/** Returns the category of the modeled element, if the model is a sub-model, i.e. a child of an element. */
-function getSubModeledElementCategory(parentProps: ModelsTreeProcessorParentProps): Id64String | undefined {
-  if ("path" in parentProps) {
-    const { path } = parentProps;
-    return getLastPathEntry(path)?.className === CLASS_NAMES.GeometricElement3d
-      ? getElementCategoryId(path)
-      : undefined;
-  }
-  const { parentNode } = parentProps;
-  return parentNode && ModelsTreeNodeInternal.isElementNode(parentNode)
-    ? parentNode.extendedData.categoryId
-    : undefined;
-}
-
 /** @internal */
 interface ModelsTreeDefinitionProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor;
@@ -454,7 +385,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, PathBasedHiera
       return { ...node, extendedData: { ...node.extendedData, ...getCategoryNodeParentIds(parentProps) } };
     }
     if (ModelsTreeNodeInternal.isModelNode(node)) {
-      const subModeledElementCategory = getSubModeledElementCategory(parentProps);
+      const subModeledElementCategory = getSubModeledElementCategoryId(parentProps);
       if (subModeledElementCategory !== undefined) {
         return { ...node, extendedData: { ...node.extendedData, subModeledElementCategory } };
       }
@@ -534,7 +465,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition, PathBasedHiera
         return this.createGeometricModel3dChildrenQuery({
           ...requestProps,
           modelIds: [lastPathEntry.id],
-          subModeledElementCategory: getSubModeledElementCategory({ path: path.slice(0, -1) }),
+          subModeledElementCategory: getSubModeledElementCategoryId({ path: path.slice(0, -1) }),
         });
       case CLASS_NAMES.SpatialCategory:
         return this.createSpatialCategoryChildrenQuery({
@@ -554,8 +485,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition, PathBasedHiera
         ]);
         return [...childrenFromParent, ...childrenFromModel];
       }
-      default:
-        return [];
     }
   }
 
@@ -1918,4 +1847,89 @@ function createInstanceKeyPathsFromInstanceLabelObs(
     }),
     createSearchPathsForDifferentTypes(props),
   );
+}
+
+/** Finds the closest entry of the given class in the path, going from its end. */
+function findClosestPathEntry(path: HierarchyLevelPathProps["path"], className: string) {
+  for (let i = path.length - 1; i >= 0; --i) {
+    const entry = path[i];
+    if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry) && entry.className === className) {
+      return entry;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Returns the last entry of the path. Paths are created from models tree search paths, so all path entries are
+ * instance keys of search path classes.
+ */
+function getLastPathEntry(path: HierarchyLevelPathProps["path"]): ModelsTreeSearchPathKey | undefined {
+  const entry = path.at(-1);
+  assert(entry === undefined || isSearchPathKey(entry), "Expected an instance key of a models tree search path class");
+  return entry;
+}
+
+function isSearchPathKey(identifier: HierarchyNodeIdentifier): identifier is ModelsTreeSearchPathKey {
+  if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+    return false;
+  }
+  const { className } = identifier;
+  return (
+    className === CLASS_NAMES.Subject ||
+    className === CLASS_NAMES.GeometricModel3d ||
+    className === CLASS_NAMES.SpatialCategory ||
+    className === CLASS_NAMES.GeometricElement3d
+  );
+}
+
+/**
+ * Returns ID of the category of the element at the end of the path. Child elements with the same category as their
+ * parent element aren't grouped under category nodes, so the closest category in the path is the element's category.
+ */
+function getElementCategoryId(path: HierarchyLevelPathProps["path"]): Id64String {
+  const category = findClosestPathEntry(path, CLASS_NAMES.SpatialCategory);
+  assert(category !== undefined, "Expected element to have a category in its path");
+  return category.id;
+}
+
+/** Returns IDs of models and parent elements of category nodes - categories are children of either models or elements. */
+function getCategoryNodeParentIds(parentProps: ModelsTreeProcessorParentProps): CategoryNodeProps {
+  if ("path" in parentProps) {
+    const { path } = parentProps;
+    const parentEntry = getLastPathEntry(path);
+    assert(parentEntry !== undefined, "Expected category node to have a parent");
+    if (parentEntry.className === CLASS_NAMES.GeometricElement3d) {
+      // elements are in the closest model of their path
+      const model = findClosestPathEntry(path, CLASS_NAMES.GeometricModel3d);
+      assert(model !== undefined, "Expected element to have a model in its path");
+      return { modelIds: [model.id], parentElementIds: [parentEntry.id] };
+    }
+    assert(parentEntry.className === CLASS_NAMES.GeometricModel3d, "Expected category node parent to be a model");
+    return { modelIds: [parentEntry.id] };
+  }
+  const { parentNode } = parentProps;
+  assert(parentNode !== undefined, "Expected category node to have a parent node");
+  if (ModelsTreeNodeInternal.isElementNode(parentNode)) {
+    return {
+      modelIds: [parentNode.extendedData.modelId],
+      parentElementIds: parentNode.key.instanceKeys.map(({ id }) => id),
+    };
+  }
+  assert(ModelsTreeNodeInternal.isModelNode(parentNode), "Expected category node parent to be a model node");
+  return { modelIds: parentNode.key.instanceKeys.map(({ id }) => id) };
+}
+
+/** Returns the category of the modeled element, if the model is a sub-model, i.e. a child of an element. */
+function getSubModeledElementCategoryId(parentProps: ModelsTreeProcessorParentProps): Id64String | undefined {
+  if ("path" in parentProps) {
+    const { path } = parentProps;
+    return getLastPathEntry(path)?.className === CLASS_NAMES.GeometricElement3d
+      ? getElementCategoryId(path)
+      : undefined;
+  }
+  const { parentNode } = parentProps;
+  return parentNode && ModelsTreeNodeInternal.isElementNode(parentNode)
+    ? parentNode.extendedData.categoryId
+    : undefined;
 }

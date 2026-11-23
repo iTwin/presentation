@@ -316,6 +316,11 @@ describe("createIModelHierarchyNodePaths", () => {
     expect(await loadPaths([[a], [derivedA]])).toEqual([createPath([nodeA])]);
   });
 
+  it("matches loaded nodes to search tree branches rather than identifiers", async () => {
+    // `b` is under `a`, but not at the root level
+    expect(await loadPaths([[b], [a, b]])).toEqual([createPath([nodeA, nodeB])]);
+  });
+
   it("passes hierarchy level size limit to every request", async () => {
     const result = await collect(
       createIModelHierarchyNodePaths({

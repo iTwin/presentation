@@ -27,8 +27,8 @@ import { createIModelAccess } from "../Common.js";
 import { buildIModel } from "../IModelUtils.js";
 
 import type { IModelConnection } from "@itwin/core-frontend";
-import type { HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
-import type { DeepReadonly, InstanceKey } from "@itwin/presentation-shared";
+import type { HierarchyProvider, HierarchySearchPathOptions } from "@itwin/presentation-hierarchies";
+import type { InstanceKey } from "@itwin/presentation-shared";
 import type { ModelsTreeHierarchyConfiguration } from "@itwin/presentation-tree-definitions/internal";
 
 describe("Models tree", () => {
@@ -64,9 +64,8 @@ describe("Models tree", () => {
       const targetKey = keys[target];
 
       const paths = await createNodePaths({ tree, imodelAccess, targetItems: [targetKey] });
-      const [{ path: instanceKeysPath }] = await collect(tree.createInstanceKeyPaths({ targetItems: [targetKey] }));
-      setHierarchySearch({ provider, paths: [instanceKeysPath] });
-      expect(paths).toEqual([await loadNodesPathByTraversal({ provider, imodelAccess, path: instanceKeysPath })]);
+      const searchPaths = await collect(tree.createInstanceKeyPaths({ targetItems: [targetKey] }));
+      expect(paths).toEqual(await loadNodesPathsByTraversal({ provider, imodelAccess, searchPaths }));
       expect(paths[0].map((node) => node.extendedData?.type)).toEqual(types);
     });
 
@@ -97,7 +96,7 @@ describe("Models tree", () => {
       expect(paths).toHaveLength(1);
       expect(paths[0].map((node) => node.extendedData?.type)).toEqual(["subject", "category", "element"]);
       // the hidden model is still an ancestor of its children
-      expect(paths[0].at(-1)!.parentKeys).toContainEqual(createInstancesNodeKey(keys.model));
+      expect(paths[0].at(-1)!.parentKeys).toContainEqual(matchInstancesNodeKey(keys.model));
       await expectNodesPathExists({ provider, path: paths[0] });
     });
 
@@ -143,7 +142,7 @@ describe("Models tree", () => {
       expect(paths).toHaveLength(1);
       expect(paths[0].map((node) => node.extendedData?.type)).toEqual(types);
       // the hidden sub-model is still an ancestor of its children
-      expect(paths[0].at(-1)!.parentKeys).toContainEqual(createInstancesNodeKey(keys.subModel));
+      expect(paths[0].at(-1)!.parentKeys).toContainEqual(matchInstancesNodeKey(keys.subModel));
       await expectNodesPathExists({ provider, path: paths[0] });
     });
 
@@ -217,12 +216,7 @@ describe("Models tree", () => {
           paths: searchPaths,
         }),
       );
-      setHierarchySearch({ provider, paths: searchPaths });
-      expect(nodePaths).toEqual(
-        await Promise.all(
-          searchPaths.map(async ({ path }) => loadNodesPathByTraversal({ provider, imodelAccess, path })),
-        ),
-      );
+      expect(nodePaths).toEqual(await loadNodesPathsByTraversal({ provider, imodelAccess, searchPaths }));
     });
 
     it("requests more than 100 elements in one level with a single request", async () => {
@@ -305,17 +299,20 @@ async function createNodePaths({
   );
 }
 
-/** Applies the given search paths to the provider, so that it assigns search attributes to nodes. */
-function setHierarchySearch({
-  provider,
-  paths,
+/**
+ * Loads nodes paths for the given search paths by applying the search to the provider and traversing the hierarchy
+ * from the root. The search is applied once for all paths, because search attributes of nodes depend on all of them.
+ */
+async function loadNodesPathsByTraversal({
+  searchPaths,
+  ...props
 }: {
   provider: HierarchyProvider;
-  paths: Array<DeepReadonly<HierarchySearchPath>>;
-}) {
-  provider.setHierarchySearch({
-    paths: paths.reduce((builder, path) => builder.accept({ path }), HierarchySearchTree.createBuilder()).getTree(),
-  });
+  imodelAccess: ReturnType<typeof createIModelAccess>;
+  searchPaths: Array<{ path: ReadonlyArray<Readonly<InstanceKey>>; options?: HierarchySearchPathOptions }>;
+}): Promise<HierarchyNode[][]> {
+  props.provider.setHierarchySearch({ paths: await HierarchySearchTree.createFromPathsList(searchPaths) });
+  return Promise.all(searchPaths.map(async ({ path }) => loadNodesPathByTraversal({ ...props, path })));
 }
 
 /** Loads nodes for the given path of instance keys by traversing the hierarchy from the root. */
@@ -384,6 +381,6 @@ async function expectNodesPathExists({ provider, path }: { provider: HierarchyPr
 }
 
 /** Creates the key of an instances node, that has a node key matching the given instance key. */
-function createInstancesNodeKey(instanceKey: InstanceKey) {
+function matchInstancesNodeKey(instanceKey: InstanceKey) {
   return { type: "instances", instanceKeys: [expect.objectContaining(instanceKey)] };
 }

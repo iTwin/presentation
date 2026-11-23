@@ -5,13 +5,15 @@
 
 import {
   defer,
+  EMPTY,
+  expand,
   finalize,
   from,
   fromEvent,
   identity,
+  map,
   mergeAll,
   mergeMap,
-  of,
   reduce,
   takeUntil,
   throwError,
@@ -111,15 +113,15 @@ export function createIModelHierarchyNodePaths(
             imodels: [{ imodelAccess, instanceLabelSelectClauseFactory }],
             getHierarchyDefinition: () =>
               createHierarchyDefinitionFromPathBased(createHiddenNodesFlaggingDefinition(hierarchyDefinition)),
-            // the provider filters hierarchy levels to search tree entries, and assigns search attributes to nodes
+            // the provider filters hierarchy levels to search tree branches, and assigns search attributes to nodes
             search: { paths: searchTree },
-            // only the nodes of search tree entries are needed, including the ones under search targets
+            // only the nodes of search tree branches are needed, including the ones under search targets
             searchTargetsChildrenLoadingMode: "search-paths",
             // the provider is short-lived and grouping nodes' children are retrieved from cache, so don't limit it
             queryCacheSize: Number.MAX_SAFE_INTEGER,
           });
-          return getLoadedEntries({ hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, searchTree }).pipe(
-            mergeMap((loadedEntries) => createNodesPaths({ searchTree, loadedEntries })),
+          return loadSearchTreeNodes({ hierarchyProvider, imodelAccess, hierarchyLevelSizeLimit, searchTree }).pipe(
+            mergeMap((loadedNodesByBranch) => createNodesPaths({ searchTree, loadedNodesByBranch })),
             finalize(() => hierarchyProvider[Symbol.dispose]()),
           );
         }),
@@ -132,39 +134,37 @@ export function createIModelHierarchyNodePaths(
   );
 }
 
-/** A node returned by the hierarchy provider. Nodes hidden in the hierarchy have the `isHidden` flag. */
-type NodeWithHiddenFlag = HierarchyNode & { isHidden?: boolean };
-
-/** A node loaded for a search tree entry, together with the grouping nodes it's grouped under. */
-interface LoadedEntryNodes {
-  node: NonGroupingHierarchyNode;
+/** A node returned by the hierarchy provider, together with the grouping nodes it's grouped under. */
+interface GroupedNode<TNode extends HierarchyNode = NonGroupingHierarchyNode> {
+  /** Nodes hidden in the hierarchy have the `isHidden` flag. Hidden nodes aren't grouped. */
+  node: TNode & { isHidden?: boolean };
   /** Grouping nodes the node is grouped under, from the outermost to the innermost. */
   groupingNodes: GroupingHierarchyNode[];
-  /** Whether the node is hidden in the hierarchy. Hidden nodes aren't grouped. */
-  isHidden: boolean;
 }
 
 /**
- * A search tree entry with its nodes adjusted to the actual hierarchy, and information needed to resolve its children.
+ * A search tree branch with its nodes adjusted to the actual hierarchy, and information needed to resolve its child
+ * branches.
  */
-interface ResolvedEntry {
-  /** Grouping nodes and the node of the entry, or nothing if the node is hidden in the hierarchy. */
+interface ResolvedBranch {
+  /** Grouping nodes and the node of the branch, or nothing if the node is hidden in the hierarchy. */
   nodes: HierarchyNode[];
-  /** Whether the entry's node is hidden in the hierarchy. */
+  /** Whether the branch's node is hidden in the hierarchy. */
   isHidden: boolean;
-  /** Keys of the actual ancestors of the entry's children. */
-  childrenAncestorKeys: HierarchyNodeKey[];
-  /** The actual non-grouping parent node of the entry's children. May be a hidden node. */
-  childrenParentNode: NonGroupingHierarchyNode;
+  /**
+   * The non-grouping node of the branch, with ancestor keys of the actual hierarchy. Unlike `nodes`, it's set even if
+   * the node is hidden, because nodes of child branches still have it as their ancestor.
+   */
+  node: NonGroupingHierarchyNode;
 }
 
-/** A hierarchy level request for sibling search tree entries. */
+/** A hierarchy level request for sibling search tree branches. */
 interface NodesRequest {
   parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
-  /** Requested instance node entries by their instance IDs. Used to match loaded nodes to entries. */
-  instanceEntries: Map<Id64String, Array<HierarchySearchTree & { identifier: IModelInstanceKey }>>;
-  /** Requested generic node entries. */
-  genericEntries: Array<HierarchySearchTree & { identifier: GenericNodeKey }>;
+  /** Requested instance node branches by their instance IDs. Used to match loaded nodes to branches. */
+  instanceBranches: Map<Id64String, Array<HierarchySearchTree & { identifier: IModelInstanceKey }>>;
+  /** Requested generic node branches. */
+  genericBranches: Array<HierarchySearchTree & { identifier: GenericNodeKey }>;
 }
 
 /**
@@ -199,36 +199,36 @@ function isFlaggedAsHidden(node: ProcessedHierarchyNode): boolean {
 }
 
 interface StandInParentNodeProps {
-  /** The search tree entry whose node the stand-in replaces. */
-  parentEntry: HierarchySearchTree;
-  /** Identifiers of the parent entry's ancestors, from the root. */
+  /** The search tree branch whose node the stand-in replaces. */
+  parentBranch: HierarchySearchTree;
+  /** Identifiers of the parent branch's ancestors, from the root. */
   ancestors: HierarchyNodeIdentifier[];
-  /** Whether any of the parent entry's ancestors is a search target. */
+  /** Whether any of the parent branch's ancestors is a search target. */
   hasSearchTargetAncestor: boolean;
 }
 
 /**
  * Creates a parent node, that stands in for the actual parent node of a hierarchy level identified by the given search
- * tree entry and its ancestors. The definition adapter turns the node's keys back into a path of identifiers, and the
- * provider filters the hierarchy level to the children of the parent entry.
+ * tree branch and its ancestors. The definition adapter turns the node's keys back into a path of identifiers, and the
+ * provider filters the hierarchy level to the children of the parent branch.
  *
  * The stand-in has the same search attributes as a provider with the search applied assigns to the actual parent node.
- * Entries with children are search targets only if they're flagged as such.
+ * Branches with children are search targets only if they're flagged as such.
  */
 function createStandInParentNode({
-  parentEntry,
+  parentBranch,
   ancestors,
   hasSearchTargetAncestor,
 }: StandInParentNodeProps): ParentHierarchyNode<NonGroupingHierarchyNode> {
   return {
-    key: createNodeKey(parentEntry.identifier),
+    key: createNodeKey(parentBranch.identifier),
     parentKeys: ancestors.map(createNodeKey),
     label: "",
     search: {
       ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : {}),
-      ...(parentEntry.isTarget ? { isSearchTarget: true } : {}),
-      childrenTargetPaths: parentEntry.children,
-      ...(parentEntry.options ? { options: parentEntry.options } : {}),
+      ...(parentBranch.isTarget ? { isSearchTarget: true } : {}),
+      childrenTargetPaths: parentBranch.children,
+      ...(parentBranch.options ? { options: parentBranch.options } : {}),
     },
   };
 }
@@ -255,44 +255,44 @@ function createNodeKey(identifier: HierarchyNodeIdentifier): NonGroupingHierarch
 }
 
 /**
- * Resolves loaded search tree entries level by level, from the root down, and creates a nodes path for every search
- * target found in the hierarchy. Every resolved entry gets copies of its loaded nodes with ancestor keys of the actual
+ * Resolves loaded search tree branches level by level, from the root down, and creates a nodes path for every search
+ * target found in the hierarchy. Every resolved branch gets copies of its loaded nodes with ancestor keys of the actual
  * hierarchy.
  *
  * Nodes are loaded with ancestor keys based on search path identifiers, which don't match the actual hierarchy (e.g.
- * class names may be more general, grouping node keys are missing). Entries that aren't loaded, and their
+ * class names may be more general, grouping node keys are missing). Branches that aren't loaded, and their
  * descendants, are skipped.
  */
 function createNodesPaths({
   searchTree,
-  loadedEntries,
+  loadedNodesByBranch,
 }: {
   searchTree: HierarchySearchTree[];
-  loadedEntries: Map<HierarchySearchTree, LoadedEntryNodes>;
-}): Array<ResolvedEntry["nodes"]> {
-  const nodesPaths = new Array<ResolvedEntry["nodes"]>();
+  loadedNodesByBranch: Map<HierarchySearchTree, GroupedNode>;
+}): Array<ResolvedBranch["nodes"]> {
+  const nodesPaths = new Array<ResolvedBranch["nodes"]>();
   const resolveChildren = (
-    entries: HierarchySearchTree[],
-    parent?: { resolvedEntry: ResolvedEntry; nodesPath: ResolvedEntry["nodes"] },
+    branches: HierarchySearchTree[],
+    parent?: { resolvedBranch: ResolvedBranch; nodesPath: ResolvedBranch["nodes"] },
   ) => {
-    // sibling entries match the same loaded node when their identifiers differ only by class
-    const entriesByLoaded = new Map<LoadedEntryNodes, HierarchySearchTree[]>();
-    for (const entry of entries) {
-      const loadedEntry = loadedEntries.get(entry);
-      if (loadedEntry) {
-        getOrCreate(entriesByLoaded, loadedEntry, () => []).push(entry);
+    // sibling branches match the same loaded node when their identifiers differ only by class
+    const branchesByLoadedNode = new Map<GroupedNode, HierarchySearchTree[]>();
+    for (const branch of branches) {
+      const loadedNode = loadedNodesByBranch.get(branch);
+      if (loadedNode) {
+        getOrCreate(branchesByLoadedNode, loadedNode, () => []).push(branch);
       }
     }
-    for (const [loadedEntry, matchingEntries] of entriesByLoaded) {
-      const resolvedEntry = getResolvedEntry({ loadedEntry, resolvedParentEntry: parent?.resolvedEntry });
-      const nodesPath = [...(parent?.nodesPath ?? []), ...resolvedEntry.nodes];
+    for (const [loadedNode, matchingBranches] of branchesByLoadedNode) {
+      const resolvedBranch = getResolvedBranch({ loadedNode, resolvedParentBranch: parent?.resolvedBranch });
+      const nodesPath = [...(parent?.nodesPath ?? []), ...resolvedBranch.nodes];
       // a hidden target isn't in the hierarchy
-      if (resolvedEntry.childrenParentNode.search?.isSearchTarget && !resolvedEntry.isHidden) {
+      if (resolvedBranch.node.search?.isSearchTarget && !resolvedBranch.isHidden) {
         nodesPaths.push(nodesPath);
       }
-      for (const entry of matchingEntries) {
-        if (entry.children) {
-          resolveChildren(entry.children, { resolvedEntry, nodesPath });
+      for (const branch of matchingBranches) {
+        if (branch.children) {
+          resolveChildren(branch.children, { resolvedBranch, nodesPath });
         }
       }
     }
@@ -301,48 +301,51 @@ function createNodesPaths({
   return nodesPaths;
 }
 
-/** Creates copies of the loaded entry nodes with ancestor keys of the actual hierarchy. */
-function getResolvedEntry({
-  loadedEntry,
-  resolvedParentEntry,
+/** Creates copies of the nodes loaded for a branch, with ancestor keys of the actual hierarchy. */
+function getResolvedBranch({
+  loadedNode,
+  resolvedParentBranch,
 }: {
-  loadedEntry: LoadedEntryNodes;
-  resolvedParentEntry: Pick<ResolvedEntry, "childrenAncestorKeys" | "childrenParentNode"> | undefined;
-}): ResolvedEntry {
-  const ancestorKeys = resolvedParentEntry?.childrenAncestorKeys ?? [];
-  // Nodes of this entry were requested with a stand-in parent node, created from the entry's search path, so their
+  loadedNode: GroupedNode;
+  resolvedParentBranch: Pick<ResolvedBranch, "node"> | undefined;
+}): ResolvedBranch {
+  const parentNode = resolvedParentBranch?.node;
+  const ancestorKeys = parentNode ? [...parentNode.parentKeys, parentNode.key] : [];
+  // Nodes of this branch were requested with a stand-in parent node, created from the branch's search path, so their
   // `parentKeys` and grouping nodes' `nonGroupingAncestor` are based on search path identifiers: ancestor class names
   // may be base classes, and grouping and hidden nodes' keys may differ. Here they're replaced with the actual
-  // ancestors - `ancestorKeys`, resolved from the parent entry, followed by keys of the entry's grouping nodes that
+  // ancestors - `ancestorKeys`, resolved from the parent branch, followed by keys of the branch's grouping nodes that
   // precede the node.
-  const groupingNodes = loadedEntry.groupingNodes.map((groupingNode, index): GroupingHierarchyNode => {
+  const groupingNodes = loadedNode.groupingNodes.map((groupingNode, index): GroupingHierarchyNode => {
     const { nonGroupingAncestor: _, ...rest } = groupingNode;
     return {
       ...rest,
-      parentKeys: [...ancestorKeys, ...loadedEntry.groupingNodes.slice(0, index).map(({ key }) => key)],
-      ...(resolvedParentEntry ? { nonGroupingAncestor: resolvedParentEntry.childrenParentNode } : {}),
+      parentKeys: [...ancestorKeys, ...loadedNode.groupingNodes.slice(0, index).map(({ key }) => key)],
+      ...(parentNode ? { nonGroupingAncestor: parentNode } : {}),
     };
   });
+  // the flag is internal, so it's removed from nodes that are returned (a hidden node is returned as
+  // `nonGroupingAncestor` of grouping nodes under it)
+  const { isHidden, ...loadedNonGroupingNode } = loadedNode.node;
   const node: NonGroupingHierarchyNode = {
-    ...loadedEntry.node,
+    ...loadedNonGroupingNode,
     parentKeys: [...ancestorKeys, ...groupingNodes.map(({ key }) => key)],
   };
   return {
     // hidden nodes aren't in the hierarchy, and they aren't grouped
-    nodes: loadedEntry.isHidden ? [] : [...groupingNodes, node],
-    isHidden: loadedEntry.isHidden,
-    childrenAncestorKeys: [...node.parentKeys, node.key],
-    childrenParentNode: node,
+    nodes: isHidden ? [] : [...groupingNodes, node],
+    isHidden: !!isHidden,
+    node,
   };
 }
 
 /**
- * Loads nodes for all given search tree entries. Nodes of every hierarchy level are requested concurrently.
+ * Loads nodes for all given search tree branches. Nodes of every hierarchy level are requested concurrently.
  *
- * Emits a map from entries to their loaded nodes. Loaded nodes have ancestor keys based on search path identifiers.
- * Entries that aren't in the hierarchy are not in the map.
+ * Emits a map from branches to their loaded nodes. Loaded nodes have ancestor keys based on search path identifiers.
+ * Branches that aren't in the hierarchy are not in the map.
  */
-function getLoadedEntries({
+function loadSearchTreeNodes({
   hierarchyProvider,
   imodelAccess,
   hierarchyLevelSizeLimit,
@@ -352,7 +355,7 @@ function getLoadedEntries({
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   hierarchyLevelSizeLimit: GetHierarchyNodesProps["hierarchyLevelSizeLimit"];
   searchTree: HierarchySearchTree[];
-}): Observable<Map<HierarchySearchTree, LoadedEntryNodes>> {
+}): Observable<Map<HierarchySearchTree, GroupedNode>> {
   return defer(() => from(getRequestPropsForGetNodes(searchTree))).pipe(
     mergeMap((request) => {
       const requestProps = {
@@ -360,44 +363,59 @@ function getLoadedEntries({
         ...(hierarchyLevelSizeLimit !== undefined ? { hierarchyLevelSizeLimit } : {}),
       };
       return from(hierarchyProvider.getNodes(requestProps)).pipe(
-        mergeMap((node) => getEntryNodes({ hierarchyProvider, requestProps, node, groupingNodes: [] })),
-        mergeMap((loaded) => matchEntries({ imodelAccess, request, loaded })),
+        map((node): GroupedNode<HierarchyNode> => ({ node, groupingNodes: [] })),
+        // load nodes grouped under grouping nodes - children of grouping nodes are cached by the provider for the same
+        // request props
+        expand(({ node, groupingNodes }): Observable<GroupedNode<HierarchyNode>> =>
+          HierarchyNode.isGroupingNode(node)
+            ? from(hierarchyProvider.getNodes({ ...requestProps, parentNode: node })).pipe(
+                map((childNode) => ({ node: childNode, groupingNodes: [...groupingNodes, node] })),
+              )
+            : EMPTY,
+        ),
+        mergeMap(({ node, groupingNodes }) =>
+          HierarchyNode.isGroupingNode(node)
+            ? EMPTY
+            : matchBranches({ imodelAccess, request, loadedNode: { node, groupingNodes } }),
+        ),
       );
     }),
-    reduce((acc, { entry, loaded }) => acc.set(entry, loaded), new Map<HierarchySearchTree, LoadedEntryNodes>()),
+    reduce((acc, { branch, loadedNode }) => acc.set(branch, loadedNode), new Map<HierarchySearchTree, GroupedNode>()),
   );
 }
 
-/** Finds the requested search tree entries that match the given loaded node. */
-function matchEntries({
+/** Finds the requested search tree branches that match the given loaded node. */
+function matchBranches({
   imodelAccess,
   request,
-  loaded,
+  loadedNode,
 }: {
   imodelAccess: Pick<ECSchemaProvider, "classDerivesFrom">;
   request: NodesRequest;
-  loaded: LoadedEntryNodes;
-}): Observable<{ entry: HierarchySearchTree; loaded: LoadedEntryNodes }> {
-  const { key } = loaded.node;
+  loadedNode: GroupedNode;
+}): Observable<{ branch: HierarchySearchTree; loadedNode: GroupedNode }> {
+  const { key } = loadedNode.node;
   if (HierarchyNodeKey.isGeneric(key)) {
     return from(
-      request.genericEntries.filter(({ identifier }) => identifier.id === key.id).map((entry) => ({ entry, loaded })),
+      request.genericBranches
+        .filter(({ identifier }) => identifier.id === key.id)
+        .map((branch) => ({ branch, loadedNode })),
     );
   }
   return from(
     key.instanceKeys.flatMap((loadedKey) =>
-      // the provider only loads instances of the requested entries
-      request.instanceEntries
+      // the provider only loads instances of the requested branches
+      request.instanceBranches
         .get(loadedKey.id)!
         .filter(({ identifier }) => !identifier.imodelKey || identifier.imodelKey === loadedKey.imodelKey)
-        .map((entry) => ({ entry, loadedKey })),
+        .map((branch) => ({ branch, loadedKey })),
     ),
   ).pipe(
     // instances of different classes may share IDs (e.g. a model and its modeled element), so in addition to
     // IDs, the loaded instance class has to match the search path class
-    mergeMap(async ({ entry, loadedKey }) =>
-      (await classesMatch({ imodelAccess, lhs: entry.identifier.className, rhs: loadedKey.className }))
-        ? [{ entry, loaded }]
+    mergeMap(async ({ branch, loadedKey }) =>
+      (await classesMatch({ imodelAccess, lhs: branch.identifier.className, rhs: loadedKey.className }))
+        ? [{ branch, loadedNode }]
         : [],
     ),
     mergeAll(),
@@ -405,34 +423,34 @@ function matchEntries({
 }
 
 /**
- * Creates hierarchy level requests for the given search tree - one for the root level and one for every entry with
+ * Creates hierarchy level requests for the given search tree - one for the root level and one for every branch with
  * children.
  */
 function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesRequest[] {
   const requests = new Array<NodesRequest>();
-  const addRequests = (entries: HierarchySearchTree[], parent?: StandInParentNodeProps) => {
-    const instanceEntries: NodesRequest["instanceEntries"] = new Map();
-    const genericEntries: NodesRequest["genericEntries"] = [];
-    // loaded nodes are mapped to the entry objects, so they're not copied
-    for (const entry of entries) {
-      if (isInstanceNodeSearchTreeEntry(entry)) {
-        getOrCreate(instanceEntries, entry.identifier.id, () => []).push(entry);
+  const addRequests = (branches: HierarchySearchTree[], parent?: StandInParentNodeProps) => {
+    const instanceBranches: NodesRequest["instanceBranches"] = new Map();
+    const genericBranches: NodesRequest["genericBranches"] = [];
+    // loaded nodes are mapped to the branch objects, so they're not copied
+    for (const branch of branches) {
+      if (isInstanceNodeSearchTreeBranch(branch)) {
+        getOrCreate(instanceBranches, branch.identifier.id, () => []).push(branch);
       } else {
-        // If entry is not instances it must be a generic node entry
-        genericEntries.push(entry as HierarchySearchTree & { identifier: GenericNodeKey });
+        // If branch is not instances it must be a generic node branch
+        genericBranches.push(branch as HierarchySearchTree & { identifier: GenericNodeKey });
       }
     }
     requests.push({
       parentNode: parent ? createStandInParentNode(parent) : undefined,
-      instanceEntries,
-      genericEntries,
+      instanceBranches,
+      genericBranches,
     });
-    for (const entry of entries) {
-      if (entry.children) {
-        addRequests(entry.children, {
-          parentEntry: entry,
-          ancestors: parent ? [...parent.ancestors, parent.parentEntry.identifier] : [],
-          hasSearchTargetAncestor: !!parent && (parent.hasSearchTargetAncestor || !!parent.parentEntry.isTarget),
+    for (const branch of branches) {
+      if (branch.children) {
+        addRequests(branch.children, {
+          parentBranch: branch,
+          ancestors: parent ? [...parent.ancestors, parent.parentBranch.identifier] : [],
+          hasSearchTargetAncestor: !!parent && (parent.hasSearchTargetAncestor || !!parent.parentBranch.isTarget),
         });
       }
     }
@@ -443,38 +461,11 @@ function getRequestPropsForGetNodes(searchTree: HierarchySearchTree[]): NodesReq
   return requests;
 }
 
-// This narrows the whole entry, so casting with `as` is not needed.
-function isInstanceNodeSearchTreeEntry(
-  entry: HierarchySearchTree,
-): entry is HierarchySearchTree & { identifier: IModelInstanceKey } {
-  return HierarchyNodeIdentifier.isInstanceNodeIdentifier(entry.identifier);
-}
-
-/**
- * Emits the given node, or nodes grouped under the given grouping node, together with the grouping nodes they're
- * grouped under.
- */
-function getEntryNodes({
-  hierarchyProvider,
-  requestProps,
-  node,
-  groupingNodes,
-}: {
-  hierarchyProvider: Pick<HierarchyProvider, "getNodes">;
-  requestProps: Omit<GetHierarchyNodesProps, "parentNode">;
-  node: NodeWithHiddenFlag;
-  groupingNodes: GroupingHierarchyNode[];
-}): Observable<LoadedEntryNodes> {
-  if (HierarchyNode.isGroupingNode(node)) {
-    // children of grouping nodes are cached by the provider for the same request props
-    return from(hierarchyProvider.getNodes({ ...requestProps, parentNode: node })).pipe(
-      mergeMap((childNode) =>
-        getEntryNodes({ hierarchyProvider, requestProps, node: childNode, groupingNodes: [...groupingNodes, node] }),
-      ),
-    );
-  }
-  const { isHidden, ...nonGroupingNode } = node;
-  return of({ node: nonGroupingNode, groupingNodes, isHidden: !!isHidden });
+// This narrows the whole branch, so casting with `as` is not needed.
+function isInstanceNodeSearchTreeBranch(
+  branch: HierarchySearchTree,
+): branch is HierarchySearchTree & { identifier: IModelInstanceKey } {
+  return HierarchyNodeIdentifier.isInstanceNodeIdentifier(branch.identifier);
 }
 
 /** Checks whether one of the given classes derives from the other. */
