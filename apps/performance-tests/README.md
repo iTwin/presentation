@@ -31,14 +31,18 @@ By default, each test runs once. Set `BENCHMARK_ITERATIONS=3` to report the fast
 ## Datasets
 
 [Datasets.ts](./src/util/Datasets.ts) initializes all iModels in `./datasets`, creating or downloading any that are missing. Run `pnpm prepare:datasets` to prepare them without running benchmarks. After changing a generator, delete the affected `.bim` files from `./datasets` and run `pnpm prepare:datasets` again.
+Dataset preparation downloads Baytown first, then creates the missing iModels in a single process and logs each one's generation time. Set `RECREATE=true` to regenerate all of them.
 
 ## GitHub workflows
 
 The [benchmark workflow](../../.github/workflows/benchmark.yml) runs on pull requests, pushes to `master` and manual dispatch:
 
-1. [getChangedBenchmarks.mjs](../../scripts/getChangedBenchmarks.mjs) picks the suites affected by the changes. Manual runs pick all suites.
-2. The datasets get generated and cached. The cache key depends on the generators, test utilities and dependency lockfile.
-3. Each picked suite runs in its own job. On pull requests the job runs one iteration and posts results as a comment. On `master` it runs three iterations and a separate job publishes the suite's benchmark history to `gh-pages`.
+1. [getChangedBenchmarks.mjs](../../scripts/getChangedBenchmarks.mjs) picks the suites affected by the changes. Manual runs pick all suites. Content uses 8 shards, hierarchies 4 and unified selection 2. Long content cases are in separate files so they can run on separate workers. Content item tests are grouped by operation, with file names such as `GetItems.Sorted.*`, `GetItems.RelatedProperties.*`, `GetItems.IdsFilter.*`, and `GetItems.Filters.*`.
+2. The datasets get generated and cached before any benchmark starts. One job prepares them for the head revision and, on pull requests, a separate job prepares them for the base revision. The cache key depends on the contents of the generators, test utilities and dependency lockfile, so each job reuses its cache until those inputs change.
+3. On pull requests, each shard builds both the exact base and PR head revisions on the same runner. The shard runs its assigned files in A/B/A/B/A/B order, with one measured iteration per test per invocation. [BenchmarkComparison.ts](./tools/BenchmarkComparison.ts) keeps each test's fastest duration and the blocking metrics from that same invocation.
+4. The matrix uses the union of base and head test files so additions and deletions cannot shift the comparison to different files. Tests present in only one revision are reported as new or removed, without a percentage comparison.
+5. PR-only benchmark and comparison jobs combine shard results separately for base and head, then post one comparison comment per suite. Later runs update the same comment. The comparison is also available in the job summary; fork pull requests use only the summary because their tokens cannot write comments.
+6. Separate benchmark and merge jobs handle `master` and manual runs. Each test still uses the fastest of three iterations with shared setup and cleanup. The merge job combines all suites into one result set, and a publishing job sends `master` results to the "Performance benchmark" history on `gh-pages`. PR comparisons never read or write that history.
 
 Draft pull requests are skipped.
 

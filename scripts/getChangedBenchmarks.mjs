@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Writes the benchmark suites affected by changes between `BASE_SHA` and `HEAD_SHA` and their shard runs to GitHub
- * Actions outputs. All suites are selected when `BASE_SHA` is not set (e.g. manual runs).
- * Each suite gets one shard per test file, matching Vitest's file-level sharding.
+ * Writes the benchmark suites affected by changes between `BASE_SHA` and `HEAD_SHA` to a GitHub Actions output.
+ * All suites are selected when `BASE_SHA` is not set (e.g. manual runs).
+ * Each suite contains its shard assignments, shared between base and head for PR comparisons.
  */
 
 import { execFileSync } from "node:child_process";
@@ -32,15 +32,23 @@ const COMMON_PATHS = [
 ];
 
 const SUITES = [
-  { id: "content", name: "Content", paths: ["apps/performance-tests/src/content/**", "packages/content/**"] },
+  // `shards` is the number of parallel jobs to split the suite's test files across.
+  {
+    id: "content",
+    name: "Content",
+    shards: 8,
+    paths: ["apps/performance-tests/src/content/**", "packages/content/**"],
+  },
   {
     id: "hierarchies",
     name: "Hierarchies",
+    shards: 4,
     paths: ["apps/performance-tests/src/hierarchies/**", "packages/hierarchies/**", "packages/tree-definitions/**"],
   },
   {
     id: "unified-selection",
     name: "Unified selection",
+    shards: 2,
     paths: ["apps/performance-tests/src/unified-selection/**", "packages/unified-selection/**"],
   },
 ];
@@ -65,15 +73,32 @@ if (base && !/^0+$/.test(base)) {
 const suites = SUITES.filter(
   ({ paths }) =>
     !changedFiles || changedFiles.some((file) => [...COMMON_PATHS, ...paths].some((glob) => matchesGlob(file, glob))),
-).map(({ id, name }) => ({ id, name }));
-const runs = suites.flatMap((suite) => {
-  const shards = globSync(`apps/performance-tests/src/${suite.id}/**/*.test.ts`).length;
-  if (shards === 0) {
-    throw new Error(`No benchmark test files found for suite "${suite.id}".`);
+).map(({ id, name, shards: requestedShards }) => {
+  const directory = `apps/performance-tests/src/${id}`;
+  const headFiles = globSync(`${directory}/**/*.test.ts`);
+  const baseFiles =
+    eventName === "pull_request" && base
+      ? execFileSync("git", ["ls-tree", "-r", "--name-only", base, "--", directory], { encoding: "utf8" })
+          .split("\n")
+          .filter((file) => file.endsWith(".test.ts"))
+      : [];
+  const files = [...new Set([...headFiles, ...baseFiles])].sort((a, b) => a.localeCompare(b));
+  if (files.length === 0) {
+    throw new Error(`No benchmark test files found for suite "${id}".`);
   }
-  return Array.from({ length: shards }, (_, index) => ({ ...suite, shard: index + 1, shards }));
+  const count = Math.min(requestedShards, files.length);
+  return {
+    id,
+    name,
+    shards: Array.from({ length: count }, (_, index) => ({
+      index: index + 1,
+      files: files
+        .filter((_file, fileIndex) => fileIndex % count === index)
+        .map((file) => file.slice("apps/performance-tests/".length))
+        .join(" "),
+    })),
+  };
 });
 
 console.log(`Changed benchmark suites: ${suites.map(({ name }) => name).join(", ") || "none"}`);
 appendFileSync(output, `suites=${JSON.stringify(suites)}\n`);
-appendFileSync(output, `runs=${JSON.stringify(runs)}\n`);
