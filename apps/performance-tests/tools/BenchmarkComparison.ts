@@ -180,7 +180,7 @@ export function formatComparison(name: string, base: Metric[], head: Metric[]): 
     } else {
       const difference = b.value - a.value;
       const percent = (difference / a.value) * 100;
-      change = `${percent > 0 ? "+" : ""}${percent.toFixed(2)}%`;
+      change = `${percent > 0 ? "+" : ""}${percent.toFixed(1)}%`;
       if (difference === 0) {
         status = "🟰";
       } else if (Math.abs(difference) > 50 && Math.abs(percent) > 10) {
@@ -189,16 +189,16 @@ export function formatComparison(name: string, base: Metric[], head: Metric[]): 
         status = "〰️";
       }
     }
-    return `| ${escape(metricName)} | ${a ? a.value.toFixed(2) : "-"} | ${b ? b.value.toFixed(2) : "-"} | ${change} | ${status} |`;
+    return `| ${escape(metricName)} | ${a ? a.value.toFixed(0) : "-"} | ${b ? b.value.toFixed(0) : "-"} | ${change} | ${status} |`;
   });
   return [
     `## ${escape(name)} benchmark`,
     "",
     `A/B/A/B/A/B on the same runner per shard. Each test uses its fastest of ${ROUNDS} runs; blocking metrics come from that same run.`,
-    "All values are milliseconds. Negative changes are faster. Percentages require matching A/B invocation IDs; tests measured on different runners or without provenance have no comparison, nor do new and removed tests.",
+    "Timings are rounded to the nearest millisecond; percentages and status use unrounded values. Negative changes are faster. Percentages require matching A/B invocation IDs; tests measured on different runners or without provenance have no comparison, nor do new and removed tests.",
     "🟰 unchanged; 🚨 slower; ✅ faster; 〰️ below threshold. Slower and faster require a change greater than both 10% and 50 ms.",
     "",
-    "| Test / metric | Base | PR | Change | Status |",
+    "| Test / metric | Base (ms) | PR (ms) | Change | Status |",
     "| --- | ---: | ---: | ---: | :---: |",
     ...rows,
     "",
