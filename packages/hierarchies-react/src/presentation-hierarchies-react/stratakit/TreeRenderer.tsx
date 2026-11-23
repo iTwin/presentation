@@ -307,10 +307,10 @@ function useExpandAndScrollToNode({
     }
     virtualizer.scrollToIndex(index, { align: "center" });
     const { onScrollComplete } = scrollToNode.current;
+    scrollToNode.current = undefined;
     if (onScrollComplete) {
       requestAnimationFrame(onScrollComplete);
     }
-    scrollToNode.current = undefined;
   }, [flatItems, virtualizer]);
 
   return ({
