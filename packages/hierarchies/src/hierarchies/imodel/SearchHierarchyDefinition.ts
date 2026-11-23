@@ -163,8 +163,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     if (!childNodeSearchIdentifiers) {
       return sourceDefinitions;
     }
-    // Under search targets, all nodes are used in "all-descendants" mode.
-    const useAllNodes =
+    // Under search targets, all nodes are loaded in "all-descendants" mode.
+    const loadAllNodes =
       searchHelper.hasSearchTargetAncestor && this.#searchTargetsChildrenLoadingMode === "all-descendants";
 
     const [genericNodeDefinitions, instanceNodeDefinitions] = partition(
@@ -175,7 +175,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
       genericNodeDefinitions.pipe(
         map((definition) => {
           if (
-            useAllNodes ||
+            loadAllNodes ||
             childNodeSearchIdentifiers.some(
               (identifier) =>
                 HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
@@ -201,8 +201,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
 
       instanceNodeDefinitions.pipe(
         mergeMap((definition) => {
-          if (useAllNodes) {
-            // if we have a search target ancestor, we don't need to search the definitions - we use all of them
+          if (loadAllNodes) {
+            // If we have a search target ancestor, we don't need to search the definitions - load all of them.
             return of(applyECInstanceIdsSelector(definition));
           }
           return defer(async () => {
