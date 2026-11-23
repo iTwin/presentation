@@ -112,7 +112,10 @@ function metadataAgrees(a: PropertyFieldCandidate, b: PropertyFieldCandidate): b
   );
 }
 
-/** Compares category facts and their resolved ancestry. */
+/**
+ * Compares category facts and their resolved ancestry. Of the ancestry's scopes, only the outermost one affects
+ * placement, so the rest don't need to agree.
+ */
 function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): boolean {
   if (a.category?.source === "override") {
     return b.category?.source === "override" && a.category.id === b.category.id;
@@ -123,14 +126,12 @@ function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): b
     a.category?.id === b.category?.id &&
     (a.propertyCategoryScope ?? "relatedClass") === (b.propertyCategoryScope ?? "relatedClass") &&
     a.categoryContext.length === b.categoryContext.length &&
-    a.categoryContext.every((context, index) => {
-      const other = b.categoryContext[index];
-      return (
-        context.stepIndex === other.stepIndex &&
-        context.kind === other.kind &&
-        (context.propertyCategoryScope ?? "relatedClass") === (other.propertyCategoryScope ?? "relatedClass")
-      );
-    }) &&
+    a.categoryContext.every(
+      (context, index) =>
+        context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
+    ) &&
+    (a.categoryContext[0]?.propertyCategoryScope ?? "relatedClass") ===
+      (b.categoryContext[0]?.propertyCategoryScope ?? "relatedClass") &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
 }

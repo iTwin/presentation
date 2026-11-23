@@ -481,6 +481,24 @@ describe("mergePropertyFieldsByIdentity", () => {
         ]),
       ).to.throw(/divergent metadata/);
     });
+
+    it("rejects contexts with divergent outermost scopes from the same provider", () => {
+      expect(() =>
+        placementOf([
+          { providerId: "a_v1", context: innerContext },
+          { providerId: "a_v1", context: [{ ...innerContext[0], propertyCategoryScope: "parent" }, innerContext[1]] },
+        ]),
+      ).to.throw(/divergent metadata/);
+    });
+
+    it("accepts contexts that differ only in later entries' scopes from the same provider", () => {
+      expect(
+        placementOf([
+          { providerId: "a_v1", context: innerContext },
+          { providerId: "a_v1", context: [innerContext[0], { ...innerContext[1], propertyCategoryScope: "parent" }] },
+        ]),
+      ).to.deep.equal({ anchor: "targetClass", categoryContext: innerContext });
+    });
   });
 
   it("merges candidates that agree on property category facts", () => {
