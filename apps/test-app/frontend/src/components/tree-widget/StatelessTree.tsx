@@ -221,20 +221,17 @@ function Tree({
         {imodel.isBriefcaseConnection() ? (
           <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button>
         ) : null}
-        <Button
-          onClick={() => {
-            if (!treeRef.current) {
-              return;
-            }
-            const selectedElements = getSelectedElementIds(imodel);
-            treeRef.current.renameNode(
-              (node) =>
-                HierarchyNodeKey.isInstances(node.nodeData.key) &&
-                selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
-            );
-          }}
-        >
+        <Button onClick={() => treeRef.current?.renameNode(createSelectedNodePredicate(imodel))}>
           Rename selected node
+        </Button>
+        <Button
+          onClick={() =>
+            treeRef.current?.scrollToNode(createSelectedNodePredicate(imodel), (node) =>
+              console.log(`Scrolled to node "${node.label}"`),
+            )
+          }
+        >
+          Scroll to selected node
         </Button>
       </Stack>
       {renderContent()}
@@ -358,6 +355,12 @@ async function removeSelectedElements(imodel: IModelConnection) {
   }
 
   await MyAppFrontend.deleteElements(imodel, keys);
+}
+
+function createSelectedNodePredicate(imodel: IModelConnection) {
+  const selectedElements = getSelectedElementIds(imodel);
+  return (node: TreeNode) =>
+    HierarchyNodeKey.isInstances(node.nodeData.key) && selectedElements.includes(node.nodeData.key.instanceKeys[0].id);
 }
 
 function getSelectedElementIds(imodel: IModelConnection) {

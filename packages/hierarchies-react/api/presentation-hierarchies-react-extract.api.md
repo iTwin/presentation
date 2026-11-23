@@ -208,6 +208,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 // @alpha (undocumented)
 export interface StrataKitTreeRendererAttributes {
     renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+    scrollToNode: (nodePredicate: (node: TreeNode) => boolean, onComplete?: (node: TreeNode) => void) => "node-not-found" | "success";
 }
 
 // @alpha (undocumented)

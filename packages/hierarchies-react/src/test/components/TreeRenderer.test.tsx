@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { createRef, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { page } from "vitest/browser";
 import { TreeActionBase } from "../../presentation-hierarchies-react/stratakit/TreeAction.js";
@@ -14,7 +15,9 @@ import { createTreeNode } from "./TestUtils.js";
 
 import placeholderSvg from "@stratakit/icons/placeholder.svg";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, Ref } from "react";
+import type { StrataKitTreeRendererAttributes } from "../../presentation-hierarchies-react/stratakit/TreeRenderer.js";
+import type { TreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
 
 type StrataKitTreeRendererProps = ComponentProps<typeof StrataKitTreeRenderer>;
 
@@ -42,6 +45,32 @@ async function renderTree(
     </div>,
     { colorScheme },
   );
+}
+
+function TreeWithExpansionState({
+  initialRootNodes,
+  treeRef,
+  ...props
+}: Omit<StrataKitTreeRendererProps, "rootNodes" | "expandNode"> & {
+  initialRootNodes: TreeNode[];
+  treeRef: Ref<StrataKitTreeRendererAttributes>;
+}) {
+  const [rootNodes, setRootNodes] = useState(initialRootNodes);
+  const expandNode = (nodeId: string, isExpanded: boolean) =>
+    setRootNodes((nodes) => setNodeExpanded(nodes, nodeId, isExpanded));
+  return (
+    <div style={{ height: 100, width: 300 }}>
+      <StrataKitTreeRenderer {...props} ref={treeRef} rootNodes={rootNodes} expandNode={expandNode} />
+    </div>
+  );
+}
+
+function setNodeExpanded(nodes: TreeNode[], nodeId: string, isExpanded: boolean): TreeNode[] {
+  return nodes.map((node) => ({
+    ...node,
+    isExpanded: node.id === nodeId ? isExpanded : node.isExpanded,
+    children: node.children === true ? true : setNodeExpanded(node.children, nodeId, isExpanded),
+  }));
 }
 
 COLOR_SCHEMES.forEach((colorScheme) => {
@@ -238,6 +267,76 @@ COLOR_SCHEMES.forEach((colorScheme) => {
       expect(otherBranchChild.element().getAttribute("data-index")).toBe(placeholderIndex);
       expect(otherBranchChild.element().getAttribute("aria-level")).toBe(placeholderLevel);
       await expect.element(otherBranchChild).not.toHaveFocus();
+    });
+
+    describe("scrollToNode", () => {
+      it("returns `node-not-found` when no node matches the predicate", async () => {
+        const ref = createRef<StrataKitTreeRendererAttributes>();
+        const onComplete = vi.fn();
+        const props = createDefaultProps({ rootNodes: [createTreeNode({ id: "node-1", label: "Node 1" })] });
+        await renderWithTheme(
+          <div style={{ height: 100, width: 300 }}>
+            <StrataKitTreeRenderer {...props} ref={ref} />
+          </div>,
+          { colorScheme },
+        );
+
+        expect(ref.current!.scrollToNode((node) => node.id === "missing", onComplete)).toBe("node-not-found");
+        expect(onComplete).not.toHaveBeenCalled();
+      });
+
+      it("scrolls to node that's out of view", async () => {
+        const ref = createRef<StrataKitTreeRendererAttributes>();
+        const onComplete = vi.fn();
+        const props = createDefaultProps({
+          rootNodes: Array.from({ length: 100 }, (_, i) => createTreeNode({ id: `node-${i}`, label: `Node ${i}` })),
+        });
+        const { locator } = await renderWithTheme(
+          <div style={{ height: 100, width: 300 }}>
+            <StrataKitTreeRenderer {...props} ref={ref} />
+          </div>,
+          { colorScheme },
+        );
+        await expect.element(locator.getByRole("treeitem", { name: "Node 99" })).not.toBeInTheDocument();
+
+        expect(ref.current!.scrollToNode((node) => node.id === "node-99", onComplete)).toBe("success");
+
+        await expect.element(locator.getByRole("treeitem", { name: "Node 99" })).toBeInViewport();
+        expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "node-99" }));
+        expect(props.expandNode).not.toHaveBeenCalled();
+      });
+
+      it("expands collapsed ancestors of a deeply nested node and scrolls to it", async () => {
+        const ref = createRef<StrataKitTreeRendererAttributes>();
+        const onComplete = vi.fn();
+        const { locator } = await renderWithTheme(
+          <TreeWithExpansionState
+            {...createDefaultProps()}
+            treeRef={ref}
+            initialRootNodes={[
+              ...Array.from({ length: 50 }, (_, i) => createTreeNode({ id: `node-${i}`, label: `Node ${i}` })),
+              createTreeNode({
+                id: "grandparent",
+                label: "Grandparent",
+                children: [
+                  createTreeNode({
+                    id: "parent",
+                    label: "Parent",
+                    children: [createTreeNode({ id: "child", label: "Target Child" })],
+                  }),
+                ],
+              }),
+            ]}
+          />,
+          { colorScheme },
+        );
+        await expect.element(locator.getByRole("treeitem", { name: "Target Child" })).not.toBeInTheDocument();
+
+        expect(ref.current!.scrollToNode((node) => node.id === "child", onComplete)).toBe("success");
+
+        await expect.element(locator.getByRole("treeitem", { name: "Target Child" })).toBeInViewport();
+        expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "child" }));
+      });
     });
 
     it("renders tree with selected node", async () => {

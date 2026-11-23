@@ -75,6 +75,19 @@ export interface StrataKitTreeRendererAttributes {
    * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
   renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+  /**
+   * Scrolls the first node that matches the given predicate into view. Node must be already loaded in the tree.
+   * If the node is under a collapsed parent or deep in the hierarchy, all its collapsed ancestors are expanded
+   * to make it visible before scrolling to it.
+   *
+   * The optional `onComplete` callback is called with the target node after it's scrolled into view.
+   *
+   * Returns "node-not-found" if no node matches the predicate, "success" if scrolling was initiated.
+   */
+  scrollToNode: (
+    nodePredicate: (node: TreeNode) => boolean,
+    onComplete?: (node: TreeNode) => void,
+  ) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -141,6 +154,7 @@ export const StrataKitTreeRenderer: FC<
             requestAnimationFrame(() => renameContext.startRename(targetNode));
           },
         }),
+      scrollToNode: (nodePredicate, onComplete) => expandAndScrollToNode({ nodePredicate, onComplete }),
     }));
 
     const cancelRename = renameContext.cancelRename;
