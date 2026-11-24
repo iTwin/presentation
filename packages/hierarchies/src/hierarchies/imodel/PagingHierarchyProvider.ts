@@ -23,23 +23,22 @@ import {
   throwError,
 } from "rxjs";
 import { BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
-import {
-  createDefaultValueFormatter,
-  createIModelInstanceLabelSelectClauseFactory,
-  formatConcatenatedValue,
-} from "@itwin/presentation-shared";
+import { createDefaultValueFormatter } from "@itwin/presentation-shared";
 import { HierarchyRequestInterruptedError, InvalidContinuationTokenError } from "../HierarchyErrors.js";
-import { HierarchyNode } from "../HierarchyNode.js";
-import {
-  LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
-  createNodeIdentifierForLogging,
-  hasChildren,
-} from "../internal/Common.js";
+import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, createNodeIdentifierForLogging } from "../internal/Common.js";
 import { doLog } from "../internal/LoggingUtils.js";
 import { getRxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import {
+  createGenericSourceNode,
+  createIModelNodesQueryClauseFactory,
+  defineHierarchyLevel,
+  getOwnParentNode,
+  parseSourceNode,
+  preProcessSourceNode,
+  toFinalNode,
+} from "./HierarchyProviderUtils.js";
 import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
-import { createNodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
-import { defaultNodesParser } from "./TreeNodesReader.js";
+import { readNodeRows } from "./TreeNodesReader.js";
 
 import type { MonoTypeOperatorFunction, Subscription } from "rxjs";
 import type { GenericInstanceFilter } from "@itwin/core-common";
@@ -53,21 +52,16 @@ import type {
   IPrimitiveValueFormatter,
 } from "@itwin/presentation-shared";
 import type { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
-import type { GenericNodeKey } from "../HierarchyNodeKey.js";
 import type { HierarchyProvider } from "../HierarchyProvider.js";
 import type { RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
+import type { ProviderSourceNode } from "./HierarchyProviderUtils.js";
 import type {
   GenericHierarchyNodeDefinition,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "./IModelHierarchyDefinition.js";
-import type {
-  ProcessedGenericHierarchyNode,
-  ProcessedInstanceHierarchyNode,
-  SourceGenericHierarchyNode,
-  SourceInstanceHierarchyNode,
-} from "./IModelHierarchyNode.js";
+import type { ProcessedGenericHierarchyNode, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import type { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import type { NodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 
@@ -227,9 +221,6 @@ export function createPagingHierarchyProvider(props: PagingHierarchyProviderProp
 
 type PagingParentNode = ParentHierarchyNode<NonGroupingHierarchyNode>;
 type PagingProcessedNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode;
-type PagingSourceNode =
-  | SourceInstanceHierarchyNode
-  | (Omit<SourceGenericHierarchyNode, "key"> & { key: GenericNodeKey });
 
 /**
  * Identifies a node in a hierarchy level: `definitionIndex` is the index of hierarchy level definition the node was
@@ -296,7 +287,7 @@ interface StreamLevelProps extends Omit<ReadLevelProps<never>, "processNode"> {
 }
 
 interface ReadSourceNode {
-  sourceNode: PagingSourceNode;
+  sourceNode: ProviderSourceNode;
   offset: number;
   nestedContinuationToken?: ContinuationToken;
 }
@@ -328,11 +319,9 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     this.#sourceName = props.sourceName ?? `PagingHierarchyProvider:${this.#componentId}`;
     this.#valuesFormatter = props.formatter ?? createDefaultValueFormatter();
     this.#createNodesQueryClauseFactory = () =>
-      createNodesQueryClauseFactory({
+      createIModelNodesQueryClauseFactory({
         imodelAccess: props.imodelAccess,
-        instanceLabelSelectClauseFactory:
-          props.instanceLabelSelectClauseFactory ??
-          createIModelInstanceLabelSelectClauseFactory({ imodelAccess: props.imodelAccess }),
+        instanceLabelSelectClauseFactory: props.instanceLabelSelectClauseFactory,
       });
     this.#nodesQueryClauseFactory = this.#createNodesQueryClauseFactory();
 
@@ -483,7 +472,9 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
    */
   #readLevel<TResult>(props: ReadLevelProps<TResult>): Observable<TResult> {
     const { parentNode, instanceFilter, demand, processNode } = props;
-    const ownParentNode = parentNode ? this.#getOwnParentNode(parentNode) : undefined;
+    const ownParentNode = parentNode
+      ? getOwnParentNode(parentNode, { sourceName: this.#sourceName, imodelKey: this.#imodelAccess.imodelKey })
+      : undefined;
     if (parentNode && !ownParentNode) {
       return EMPTY;
     }
@@ -545,7 +536,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     }
     return [
       {
-        sourceNode: { ...definition.node, key: { type: "generic", id: definition.node.key, source: this.#sourceName } },
+        sourceNode: createGenericSourceNode(definition, this.#sourceName),
         offset: 0,
         ...(resume ? { nestedContinuationToken: resume.nestedContinuationToken } : undefined),
       },
@@ -610,16 +601,12 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   }
 
   #readQueryPage({ query, offset }: { query: ECSqlQueryDef; offset: number }): Observable<ECSqlQueryRow> {
-    return defer(() =>
-      from(
-        this.#imodelAccess.createQueryReader(createPageQuery({ query, offset, limit: this.#pageSize }), {
-          rowFormat: "ECSqlPropertyNames",
-          // the query has its own limit - reaching it means there's another page rather than a failure
-          limit: "unbounded",
-          restartToken: `PagingHierarchyProvider/${this.#componentId}/${Guid.createValue()}`,
-        }),
-      ),
-    );
+    return readNodeRows({
+      queryExecutor: this.#imodelAccess,
+      query: createPageQuery({ query, offset, limit: this.#pageSize }),
+      // the query has its own limit - reaching it means there's another page rather than a failure
+      limit: "unbounded",
+    });
   }
 
   /** Finalizes the node the way it's returned by `getNodes`. Completes without a value if the node should be omitted. */
@@ -636,10 +623,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
       concatMap((children) =>
         postProcessNode ? postProcessNode({ node: { ...node, children }, parentNode }) : of({ ...node, children }),
       ),
-      map((postProcessed) => {
-        const { processingParams: _, ...finalNode } = postProcessed as PagingProcessedNode;
-        return { ...finalNode, children: hasChildren(finalNode) };
-      }),
+      map((postProcessed) => toFinalNode(postProcessed as PagingProcessedNode)),
     );
   }
 
@@ -647,15 +631,11 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     parentNode,
     instanceFilter,
   }: Pick<ReadLevelProps<never>, "parentNode" | "instanceFilter">): Observable<HierarchyLevelDefinition> {
-    return defer(() => {
-      const nodesQueryClauseFactory = this.#nodesQueryClauseFactory;
-      return this.#hierarchyDefinition.defineHierarchyLevel({
-        parentNode,
-        ...(instanceFilter ? { instanceFilter } : undefined),
-        createSelectClause: async (selectClauseProps) => nodesQueryClauseFactory.createSelectClause(selectClauseProps),
-        createFilterClauses: async (filterClausesProps) =>
-          nodesQueryClauseFactory.createFilterClauses(filterClausesProps),
-      });
+    return defineHierarchyLevel({
+      hierarchyDefinition: this.#hierarchyDefinition,
+      nodesQueryClauseFactory: this.#nodesQueryClauseFactory,
+      parentNode,
+      ...(instanceFilter ? { instanceFilter } : undefined),
     });
   }
 
@@ -665,15 +645,13 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   }: {
     row: ECSqlQueryRow;
     parentNode: PagingParentNode | undefined;
-  }): Observable<PagingSourceNode> {
-    const imodelKey = this.#imodelAccess.imodelKey;
-    const parse = this.#hierarchyDefinition.parseNode ?? ((props) => of(defaultNodesParser(props)));
-    return parse({ row, parentNode, imodelKey }).pipe(
-      map((node) => ({
-        ...node,
-        key: { ...node.key, instanceKeys: node.key.instanceKeys.map((key) => ({ ...key, imodelKey })) },
-      })),
-    );
+  }): Observable<ProviderSourceNode> {
+    return parseSourceNode({
+      row,
+      parentNode,
+      imodelKey: this.#imodelAccess.imodelKey,
+      parseNode: this.#hierarchyDefinition.parseNode,
+    });
   }
 
   /** Pre-processes the given source node. Completes without a value if the node is omitted. */
@@ -681,19 +659,15 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     sourceNode,
     parentNode,
   }: {
-    sourceNode: PagingSourceNode;
+    sourceNode: ProviderSourceNode;
     parentNode: PagingParentNode | undefined;
   }): Observable<PagingProcessedNode> {
-    const { preProcessNode } = this.#hierarchyDefinition;
-    return from(formatConcatenatedValue({ value: sourceNode.label, valueFormatter: this.#valuesFormatter })).pipe(
-      map((label) => ({
-        ...sourceNode,
-        label,
-        parentKeys: parentNode ? [...parentNode.parentKeys, parentNode.key] : [],
-      })),
-      concatMap((node) => (preProcessNode ? preProcessNode({ node, parentNode }) : of(node))),
-      map((node) => omitGroupingParams(node)),
-    );
+    return preProcessSourceNode({
+      node: sourceNode,
+      parentNode,
+      valueFormatter: this.#valuesFormatter,
+      preProcessNode: this.#hierarchyDefinition.preProcessNode,
+    }).pipe(map((node) => omitGroupingParams(node)));
   }
 
   #determineChildren(node: PagingProcessedNode): Observable<boolean> {
@@ -716,27 +690,6 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
       take(1),
       defaultIfEmpty(false),
     );
-  }
-
-  /**
-   * Returns the given parent node the way it should be passed to the hierarchy definition - without the parts that
-   * don't belong to this provider. Returns `undefined` if no part of the node belongs to this provider, meaning it
-   * can't have children here.
-   */
-  #getOwnParentNode(parentNode: PagingParentNode): PagingParentNode | undefined {
-    if (HierarchyNode.isGroupingNode(parentNode)) {
-      return undefined;
-    }
-    const { key } = parentNode;
-    if (key.type === "generic") {
-      return !key.source || key.source === this.#sourceName ? parentNode : undefined;
-    }
-    // The node may represent instances from multiple iModels. Instance ids are only unique within an iModel, so
-    // querying children of other iModels' instances could return children of unrelated instances of this iModel.
-    const instanceKeys = key.instanceKeys.filter(
-      (instanceKey) => !instanceKey.imodelKey || instanceKey.imodelKey === this.#imodelAccess.imodelKey,
-    );
-    return instanceKeys.length > 0 ? { ...parentNode, key: { ...key, instanceKeys } } : undefined;
   }
 }
 

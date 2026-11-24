@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, of } from "rxjs";
+import { defer, from, mergeMap, of } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
 import { parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
@@ -28,13 +28,27 @@ interface ReadNodesProps {
 
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
-  const { queryExecutor, query, limit, parser } = props;
-  const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
-    rowFormat: "ECSqlPropertyNames",
-    restartToken: `readNodes/${Guid.createValue()}`,
-    ...(limit !== undefined ? { limit } : undefined),
-  };
-  return parseNodes({ rows: queryExecutor.createQueryReader(query, config), parser });
+  return parseNodes({ rows: readNodeRows(props), parser: props.parser });
+}
+
+/**
+ * Reads rows of the given nodes query in the format expected by node parsers. The query is started on subscription.
+ * @internal
+ */
+export function readNodeRows({
+  queryExecutor,
+  query,
+  limit,
+}: Omit<ReadNodesProps, "parser">): Observable<ECSqlQueryRow> {
+  return defer(() =>
+    from(
+      queryExecutor.createQueryReader(query, {
+        rowFormat: "ECSqlPropertyNames",
+        restartToken: `readNodes/${Guid.createValue()}`,
+        ...(limit !== undefined ? { limit } : undefined),
+      }),
+    ),
+  );
 }
 
 /**
