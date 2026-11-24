@@ -15,7 +15,7 @@ import { createTreeNode } from "./TestUtils.js";
 
 import placeholderSvg from "@stratakit/icons/placeholder.svg";
 
-import type { ComponentProps, ReactNode, Ref } from "react";
+import type { ComponentProps, Ref } from "react";
 import type { StrataKitTreeRendererAttributes } from "../../presentation-hierarchies-react/stratakit/TreeRenderer.js";
 import type { TreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
 
@@ -34,8 +34,17 @@ function createDefaultProps(overrides?: Partial<StrataKitTreeRendererProps>): St
   };
 }
 
-function TreeContainer({ height, width, children }: { height?: number; width?: number; children: ReactNode }) {
-  return <div style={{ height: height ?? 100, width: width ?? 300 }}>{children}</div>;
+function TreeRenderer({
+  height,
+  width,
+  treeRef,
+  ...props
+}: StrataKitTreeRendererProps & { height?: number; width?: number; treeRef?: Ref<StrataKitTreeRendererAttributes> }) {
+  return (
+    <div style={{ height: height ?? 100, width: width ?? 300 }}>
+      <StrataKitTreeRenderer {...props} ref={treeRef} />
+    </div>
+  );
 }
 
 async function renderTree(
@@ -43,12 +52,7 @@ async function renderTree(
   colorScheme: "light" | "dark",
   options?: { height?: number; width?: number },
 ) {
-  return renderWithTheme(
-    <TreeContainer height={options?.height} width={options?.width}>
-      <StrataKitTreeRenderer {...props} />
-    </TreeContainer>,
-    { colorScheme },
-  );
+  return renderWithTheme(<TreeRenderer {...props} height={options?.height} width={options?.width} />, { colorScheme });
 }
 
 function TreeWithExpansionState({
@@ -62,11 +66,7 @@ function TreeWithExpansionState({
   const [rootNodes, setRootNodes] = useState(initialRootNodes);
   const expandNode = (nodeId: string, isExpanded: boolean) =>
     setRootNodes((nodes) => setNodeExpanded(nodes, nodeId, isExpanded));
-  return (
-    <TreeContainer>
-      <StrataKitTreeRenderer {...props} ref={treeRef} rootNodes={rootNodes} expandNode={expandNode} />
-    </TreeContainer>
-  );
+  return <TreeRenderer {...props} treeRef={treeRef} rootNodes={rootNodes} expandNode={expandNode} />;
 }
 
 function setNodeExpanded(nodes: TreeNode[], nodeId: string, isExpanded: boolean): TreeNode[] {
@@ -123,9 +123,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
     it("moves focus from a loading placeholder to its loaded child", async () => {
       const props = createDefaultProps();
       const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
-        <TreeContainer>
-          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
-        </TreeContainer>
+        <TreeRenderer {...props} rootNodes={rootNodes} />
       );
       const { locator, rerender } = await renderWithTheme(
         renderTreeWithNodes([
@@ -152,9 +150,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
     it("returns focus to the parent when loading children fails", async () => {
       const props = createDefaultProps();
       const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
-        <TreeContainer>
-          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
-        </TreeContainer>
+        <TreeRenderer {...props} rootNodes={rootNodes} />
       );
       const { locator, rerender } = await renderWithTheme(
         renderTreeWithNodes([
@@ -181,9 +177,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
     it("does not move focus on children load if active element is not placeholder", async () => {
       const props = createDefaultProps();
       const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
-        <TreeContainer>
-          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
-        </TreeContainer>
+        <TreeRenderer {...props} rootNodes={rootNodes} />
       );
       const { locator, rerender } = await renderWithTheme(
         renderTreeWithNodes([
@@ -212,9 +206,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
     it("does not focus another branch at the placeholder's former index and level", async () => {
       const props = createDefaultProps();
       const renderTreeWithNodes = (rootNodes: StrataKitTreeRendererProps["rootNodes"]) => (
-        <TreeContainer height={200}>
-          <StrataKitTreeRenderer {...props} rootNodes={rootNodes} />
-        </TreeContainer>
+        <TreeRenderer {...props} rootNodes={rootNodes} height={200} />
       );
       const { locator, rerender } = await renderWithTheme(
         renderTreeWithNodes([
@@ -278,12 +270,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         const ref = createRef<StrataKitTreeRendererAttributes>();
         const onComplete = vi.fn();
         const props = createDefaultProps({ rootNodes: [createTreeNode({ id: "node-1", label: "Node 1" })] });
-        await renderWithTheme(
-          <TreeContainer>
-            <StrataKitTreeRenderer {...props} ref={ref} />
-          </TreeContainer>,
-          { colorScheme },
-        );
+        await renderWithTheme(<TreeRenderer {...props} treeRef={ref} />, { colorScheme });
 
         expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "missing", onComplete })).toBe(
           "node-not-found",
@@ -305,12 +292,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
             }),
           ],
         });
-        await renderWithTheme(
-          <TreeContainer>
-            <StrataKitTreeRenderer {...props} ref={ref} />
-          </TreeContainer>,
-          { colorScheme },
-        );
+        await renderWithTheme(<TreeRenderer {...props} treeRef={ref} />, { colorScheme });
 
         expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "child", onComplete })).toBe(
           "node-not-found",
@@ -326,12 +308,7 @@ COLOR_SCHEMES.forEach((colorScheme) => {
         const props = createDefaultProps({
           rootNodes: Array.from({ length: 100 }, (_, i) => createTreeNode({ id: `node-${i}`, label: `Node ${i}` })),
         });
-        const { locator } = await renderWithTheme(
-          <TreeContainer>
-            <StrataKitTreeRenderer {...props} ref={ref} />
-          </TreeContainer>,
-          { colorScheme },
-        );
+        const { locator } = await renderWithTheme(<TreeRenderer {...props} treeRef={ref} />, { colorScheme });
         await expect.element(locator.getByRole("treeitem", { name: "Node 99" })).not.toBeInTheDocument();
 
         expect(ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "node-99", onComplete })).toBe(
