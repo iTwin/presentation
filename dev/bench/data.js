@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795439762482,
+  "lastUpdate": 1795516338768,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Unified selection benchmark": [
@@ -59929,6 +59929,780 @@ window.BENCHMARK_DATA = {
           },
           {
             "name": "Content instance keys type-aspect filter without matches (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          }
+        ]
+      }
+    ],
+    "Performance benchmark": [
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3633a20ffd6e307d1e30be59c5a913a8707d4a49",
+          "message": "Fix benchmark cache and skipped result jobs (#1753)\n\n* Agent Host changes for agents/fix-benchmark-cache-restore-error\n\n* Fix skipped benchmark comparison and merge jobs\n\nAllow result jobs to run when dataset preparation is skipped on a cache hit, while still requiring successful benchmark shards.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-11-24T12:25:51+02:00",
+          "tree_id": "7e9783d6c628442596cc3a7f7be203523484f14e",
+          "url": "https://github.com/iTwin/presentation/commit/3633a20ffd6e307d1e30be59c5a913a8707d4a49"
+        },
+        "date": 1795516336497,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Content source resolution 500 concrete classes through 1 target base class",
+            "value": 22,
+            "unit": "ms"
+          },
+          {
+            "name": "Content source resolution 500 concrete classes through 1 target base class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content source resolution overlap checks for 10 disjoint scopes of the same class",
+            "value": 224,
+            "unit": "ms"
+          },
+          {
+            "name": "Content source resolution overlap checks for 10 disjoint scopes of the same class (P95 of main thread blocks)",
+            "value": 65,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 65\np95: 65\nmedian: 65"
+          },
+          {
+            "name": "Content source resolution owned and type-aspect paths for 50k elements",
+            "value": 683,
+            "unit": "ms"
+          },
+          {
+            "name": "Content source resolution owned and type-aspect paths for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content items all 10k items with 100 related groups each",
+            "value": 17935,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all 10k items with 100 related groups each (P95 of main thread blocks)",
+            "value": 567,
+            "unit": "ms",
+            "extra": "count: 32\nmax: 572\np95: 567\nmedian: 55.5"
+          },
+          {
+            "name": "Content size 50k explicit IDs",
+            "value": 14570,
+            "unit": "ms"
+          },
+          {
+            "name": "Content size 50k explicit IDs (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content size direct-property filter",
+            "value": 9,
+            "unit": "ms"
+          },
+          {
+            "name": "Content size direct-property filter (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content size related-property filter",
+            "value": 30,
+            "unit": "ms"
+          },
+          {
+            "name": "Content size related-property filter (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content size type-aspect filter without matches",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Content size type-aspect filter without matches (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content instance keys 50k explicit IDs",
+            "value": 14457,
+            "unit": "ms"
+          },
+          {
+            "name": "Content instance keys 50k explicit IDs (P95 of main thread blocks)",
+            "value": 156,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 156\np95: 156\nmedian: 156"
+          },
+          {
+            "name": "Content instance keys direct-property filter",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Content instance keys direct-property filter (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content instance keys related-property filter",
+            "value": 66,
+            "unit": "ms"
+          },
+          {
+            "name": "Content instance keys related-property filter (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content instance keys type-aspect filter without matches",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Content instance keys type-aspect filter without matches (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content items first 5 pages of items with many properties, owned and type aspects",
+            "value": 24037,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items first 5 pages of items with many properties, owned and type aspects (P95 of main thread blocks)",
+            "value": 1023,
+            "unit": "ms",
+            "extra": "count: 18\nmax: 1023\np95: 1023\nmedian: 355"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, fresh schema provider",
+            "value": 84,
+            "unit": "ms"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, fresh schema provider (P95 of main thread blocks)",
+            "value": 64,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 64\np95: 64\nmedian: 64"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, 50 display modifiers, fresh schema provider",
+            "value": 486,
+            "unit": "ms"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, 50 display modifiers, fresh schema provider (P95 of main thread blocks)",
+            "value": 397,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 397\np95: 397\nmedian: 233"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, reused schema provider",
+            "value": 71,
+            "unit": "ms"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, reused schema provider (P95 of main thread blocks)",
+            "value": 61,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 61\np95: 61\nmedian: 61"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, 50 display modifiers, reused schema provider",
+            "value": 455,
+            "unit": "ms"
+          },
+          {
+            "name": "Content descriptor 500 concrete classes, 50 display modifiers, reused schema provider (P95 of main thread blocks)",
+            "value": 445,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 445\np95: 445\nmedian: 445"
+          },
+          {
+            "name": "Content distinct values inherited property across 500 concrete classes",
+            "value": 12,
+            "unit": "ms"
+          },
+          {
+            "name": "Content distinct values inherited property across 500 concrete classes (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content distinct values navigation property across 500 concrete classes",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Content distinct values navigation property across 500 concrete classes (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content distinct values 10 distinct values among 50k elements",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Content distinct values 10 distinct values among 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content distinct values 50k distinct values among 50k elements",
+            "value": 114,
+            "unit": "ms"
+          },
+          {
+            "name": "Content distinct values 50k distinct values among 50k elements (P95 of main thread blocks)",
+            "value": 74,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 74\np95: 74\nmedian: 74"
+          },
+          {
+            "name": "Content items all 50k items, sorted",
+            "value": 17464,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all 50k items, sorted (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content items first page of items with many properties, owned and type aspects, sorted by a related field",
+            "value": 4485,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items first page of items with many properties, owned and type aspects, sorted by a related field (P95 of main thread blocks)",
+            "value": 354,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 354\np95: 354\nmedian: 317"
+          },
+          {
+            "name": "Content items all items with direct-property filter",
+            "value": 56,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all items with direct-property filter (P95 of main thread blocks)",
+            "value": 32,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 32\np95: 32\nmedian: 32"
+          },
+          {
+            "name": "Content items all items with related-property filter",
+            "value": 2367,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all items with related-property filter (P95 of main thread blocks)",
+            "value": 28,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 28\np95: 28\nmedian: 23.5"
+          },
+          {
+            "name": "Content items all items with type-aspect filter without matches",
+            "value": 404,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all items with type-aspect filter without matches (P95 of main thread blocks)",
+            "value": 69,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 69\np95: 69\nmedian: 69"
+          },
+          {
+            "name": "Content items first page of 50k items, sorted by a calculated field",
+            "value": 227,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items first page of 50k items, sorted by a calculated field (P95 of main thread blocks)",
+            "value": 27,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 27\np95: 27\nmedian: 27"
+          },
+          {
+            "name": "Content items 5000 sorted items across 50 sources with equal sort values",
+            "value": 589,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items 5000 sorted items across 50 sources with equal sort values (P95 of main thread blocks)",
+            "value": 51,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 51\np95: 51\nmedian: 43"
+          },
+          {
+            "name": "Content items first 5 pages of items in 500 classes targeted by 50k explicit instance IDs",
+            "value": 84242,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items first 5 pages of items in 500 classes targeted by 50k explicit instance IDs (P95 of main thread blocks)",
+            "value": 395,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 395\np95: 395\nmedian: 332"
+          },
+          {
+            "name": "Content items all items targeted by 50k explicit instance IDs",
+            "value": 7684,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all items targeted by 50k explicit instance IDs (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content items first page of 50k items, sorted",
+            "value": 436,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items first page of 50k items, sorted (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content items 10 items with 50k related groups each",
+            "value": 6549,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items 10 items with 50k related groups each (P95 of main thread blocks)",
+            "value": 1966,
+            "unit": "ms",
+            "extra": "count: 12\nmax: 1966\np95: 1966\nmedian: 30.5"
+          },
+          {
+            "name": "Content items first page of 50k items, unsorted",
+            "value": 96,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items first page of 50k items, unsorted (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content items all 50k items, unsorted",
+            "value": 7010,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all 50k items, unsorted (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content property grid simple elements, fresh schema provider",
+            "value": 1800,
+            "unit": "ms"
+          },
+          {
+            "name": "Content property grid simple elements, fresh schema provider (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content property grid simple elements, reused schema provider",
+            "value": 1310,
+            "unit": "ms"
+          },
+          {
+            "name": "Content property grid simple elements, reused schema provider (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "Content property grid elements with many properties, owned and type aspects, fresh schema provider",
+            "value": 22517,
+            "unit": "ms"
+          },
+          {
+            "name": "Content property grid elements with many properties, owned and type aspects, fresh schema provider (P95 of main thread blocks)",
+            "value": 57,
+            "unit": "ms",
+            "extra": "count: 14\nmax: 57\np95: 57\nmedian: 31.5"
+          },
+          {
+            "name": "Content property grid elements with many properties, owned and type aspects, reused schema provider",
+            "value": 22733,
+            "unit": "ms"
+          },
+          {
+            "name": "Content property grid elements with many properties, owned and type aspects, reused schema provider (P95 of main thread blocks)",
+            "value": 65,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 65\np95: 65\nmedian: 31.5"
+          },
+          {
+            "name": "Content items all 50k items with related groups of 10k members",
+            "value": 9368,
+            "unit": "ms"
+          },
+          {
+            "name": "Content items all 50k items with related groups of 10k members (P95 of main thread blocks)",
+            "value": 27,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 27\np95: 27\nmedian: 23"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 45,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7924,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2449,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 121,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 121\np95: 121\nmedian: 35"
+          },
+          {
+            "name": "flat 50k elements list",
+            "value": 5211,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 54,
+            "unit": "ms",
+            "extra": "count: 21\nmax: 76\np95: 54\nmedian: 31"
+          },
+          {
+            "name": "search searches with 50000 paths",
+            "value": 7543,
+            "unit": "ms"
+          },
+          {
+            "name": "search searches with 50000 paths (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 52\np95: 52\nmedian: 29"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7889,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 108,
+            "unit": "ms",
+            "extra": "count: 19\nmax: 108\np95: 108\nmedian: 35"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 14225,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 72,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 72\np95: 72\nmedian: 36"
+          },
+          {
+            "name": "grouping by label",
+            "value": 3716,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 43,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 43\np95: 43\nmedian: 30.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 3787,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 44,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 44\np95: 44\nmedian: 32"
+          },
+          {
+            "name": "grouping by property",
+            "value": 4855,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 57,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 57\np95: 57\nmedian: 32.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 35825,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 30,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 30\np95: 30\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 165,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "hilite 50k elements",
+            "value": 649,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k elements (P95 of main thread blocks)",
+            "value": 32,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 32\np95: 32\nmedian: 32"
+          },
+          {
+            "name": "hilite 50k group elements",
+            "value": 123,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k group elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "hilite 1k subjects",
+            "value": 366,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 1k subjects (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "hilite 50k subcategories",
+            "value": 125,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k subcategories (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "hilite 50k functional 3D elements",
+            "value": 16479,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k functional 3D elements (P95 of main thread blocks)",
+            "value": 40,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 40\np95: 40\nmedian: 35.5"
+          },
+          {
+            "name": "hilite 50k functional 2D elements",
+            "value": 3504,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k functional 2D elements (P95 of main thread blocks)",
+            "value": 46,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 46\np95: 46\nmedian: 38.5"
+          },
+          {
+            "name": "compute selection for 50k elements",
+            "value": 216,
+            "unit": "ms"
+          },
+          {
+            "name": "compute selection for 50k elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute parent selection for 50k elements",
+            "value": 250,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent selection for 50k elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute top ancestor selection for 50k elements",
+            "value": 432,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute category selection for 50k elements",
+            "value": 73,
+            "unit": "ms"
+          },
+          {
+            "name": "compute category selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute model selection for 50k elements",
+            "value": 65,
+            "unit": "ms"
+          },
+          {
+            "name": "compute model selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute functional selection for 50k 3D elements",
+            "value": 309,
+            "unit": "ms"
+          },
+          {
+            "name": "compute functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "compute parent functional selection for 50k 3D elements",
+            "value": 342,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 31\np95: 31\nmedian: 30.5"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 3D elements",
+            "value": 953,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 25,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 25\np95: 25\nmedian: 25"
+          },
+          {
+            "name": "compute functional selection for 50k 2D elements",
+            "value": 2332,
+            "unit": "ms"
+          },
+          {
+            "name": "compute functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute parent functional selection for 50k 2D elements",
+            "value": 2292,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 2D elements",
+            "value": 2304,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 2D elements (P95 of main thread blocks)",
             "value": 0,
             "unit": "ms",
             "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
