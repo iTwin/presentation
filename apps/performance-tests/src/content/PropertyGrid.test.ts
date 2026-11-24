@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
 import { collect } from "presentation-test-utilities";
-import { describe, expect } from "vitest";
+import { assert, describe, expect } from "vitest";
 import { createContentProvider, resolveContentSources } from "@itwin/presentation-content";
 import { getPropertyFields, runContentTest, SCHEMA_PROVIDER_SCENARIOS } from "./ContentTestUtilities.js";
 
@@ -132,8 +131,8 @@ function runPropertyGridTests<
       test: async ({ load, selectedIds }) => {
         for (const id of selectedIds) {
           const { items } = await load(id);
-          assert.equal(items.length, 1);
-          assert.equal(items[0].primaryKey.id, id);
+          expect(items.length).toBe(1);
+          expect(items[0].primaryKey.id).toBe(id);
         }
       },
     });

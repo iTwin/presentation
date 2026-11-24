@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from "node:assert/strict";
 import { collect } from "presentation-test-utilities";
-import { describe, expect } from "vitest";
+import { assert, describe, expect } from "vitest";
 import { createContentProvider, getDistinctFieldValues, resolveContentSources } from "@itwin/presentation-content";
 import { getPropertyFields, runContentTest } from "./ContentTestUtilities.js";
 
