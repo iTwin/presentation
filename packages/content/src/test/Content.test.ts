@@ -5,8 +5,9 @@
 
 import { ResolvablePromise } from "presentation-test-utilities";
 import { describe, expect, it, vi } from "vitest";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import { resolveContentSources } from "../content/Content.js";
-import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetFilter.js";
+import { TARGET_FILTER_JOIN_ALIAS } from "../content/query/TargetQuery.js";
 
 import type {
   EC,
@@ -920,8 +921,11 @@ describe("resolveContentSources", () => {
       expect(imodelAccess.createQueryReader).toHaveBeenCalled();
       const call = vi.mocked(imodelAccess.createQueryReader).mock.calls[0];
       const query = call[0];
-      expect(query.ecsql).to.include(
-        `JOIN IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}] ON [${TARGET_FILTER_JOIN_ALIAS}].[id] = [this].[ECInstanceId]`,
+      expect(trimWhitespace(query.ecsql)).to.include(
+        trimWhitespace(`
+          FROM IdSet(:${TARGET_FILTER_JOIN_ALIAS}) [${TARGET_FILTER_JOIN_ALIAS}]
+          CROSS JOIN [TestSchema].[ClassA] [this] ON [this].[ECInstanceId] = [${TARGET_FILTER_JOIN_ALIAS}].[id]
+        `),
       );
       expect(query.bindings).to.deep.equal({ [TARGET_FILTER_JOIN_ALIAS]: { type: "idset", value: ["0x1", "0x2"] } });
     });
