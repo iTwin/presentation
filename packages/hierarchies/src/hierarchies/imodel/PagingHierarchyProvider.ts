@@ -311,7 +311,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
 
   public constructor(props: PagingHierarchyProviderProps & { sourceName?: string }) {
     this.#pageSize = props.pageSize ?? DEFAULT_PAGE_SIZE;
-    if (!Number.isInteger(this.#pageSize) || this.#pageSize < 1) {
+    if (!Number.isSafeInteger(this.#pageSize) || this.#pageSize < 1) {
       throw new Error(`Invalid page size: ${this.#pageSize}. Expected a positive integer.`);
     }
     this.#imodelAccess = props.imodelAccess;
@@ -823,7 +823,7 @@ function isContinuationTokenPayload(value: unknown): value is ContinuationTokenP
       (position) =>
         Array.isArray(position) &&
         position.length === 2 &&
-        position.every((item) => Number.isInteger(item) && item >= 0),
+        position.every((item) => Number.isSafeInteger(item) && item >= 0),
     )
   );
 }
