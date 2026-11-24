@@ -75,6 +75,7 @@ export function getImplementationFingerprints(): Fingerprints {
         [
           ...legacyPackages,
           hashSourceFile("property-grid/Capture.ts"),
+          hashSourceFile("property-grid/Frontend.ts"),
           hashSourceFile("property-grid/legacy/Adapter.ts"),
           getPackageVersion("@itwin/presentation-frontend"),
           hashDirectory(path.join(packagesDirectory, "components", "src", "presentation-components"), [".ts", ".tsx"]),

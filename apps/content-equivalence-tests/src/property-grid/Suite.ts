@@ -17,6 +17,12 @@ async function runPropertyGridScenario(
 ): Promise<ScenarioResult> {
   const { config, imodel, imodelFingerprint, fingerprints, scenario, signal, diagnostics } = props;
   const scenarioContext = `${imodel.name}/${scenario.id}`;
+  if (scenario.keys.length === 0) {
+    // Otherwise both captures are empty, and the scenario passes without comparing anything.
+    throw new Error(
+      `No instances were sampled from '${imodel.name}'. Increase 'sampling.perClass' or specify 'instanceKeys'.`,
+    );
+  }
   const legacy = await loadOrCreateCapture<PropertyGridCapture<"legacy">, SampledElementsPropertyGridScenario>({
     config,
     imodel,

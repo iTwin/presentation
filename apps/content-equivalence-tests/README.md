@@ -153,9 +153,9 @@ sources, so changing that package also invalidates only new captures
 automatically. Changes to normalization and comparison code reuse both captures.
 
 Property grid captures have separate fingerprints. The legacy one also includes
-`@itwin/presentation-components` sources, and the new one also includes the test
-app's mapping, so changing either only invalidates the affected property grid
-captures.
+`@itwin/presentation-components` sources and the in-process frontend setup, and
+the new one also includes the test app's mapping, so changing any of them only
+invalidates the affected property grid captures.
 
 ## Property grid comparison
 
@@ -163,8 +163,10 @@ The legacy provider uses the default property grid ruleset, extended with the
 same supplemental rules as other legacy captures. Its favorites category is
 disabled. Before comparing, property grid data is normalized:
 
-- categories and records are matched by label, because their names are
-  implementation-specific;
+- categories, records and struct members are matched by label, because their
+  names are implementation-specific. Implementations order entries with equal
+  labels differently, so such entries are matched in the order of their
+  normalized content;
 - the root categories for fields without a category ("Selected Item(s)" and
   the test app's "Miscellaneous") are treated as the same category;
 - only raw values are compared, except for navigation values, whose display

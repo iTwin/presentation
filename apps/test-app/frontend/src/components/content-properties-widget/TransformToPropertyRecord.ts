@@ -9,8 +9,12 @@ import { createDefaultValueFormatter, formatConcatenatedValue } from "@itwin/pre
 
 import type { PropertyDescription, PropertyValue } from "@itwin/appui-abstract";
 import type { PropertyCategory, PropertyData } from "@itwin/components-react";
-import type { CategoryDefinition, PropertyGridEntry } from "@itwin/presentation-content";
-import type { Content } from "@itwin/presentation-content-react";
+import type {
+  CategoryDefinition,
+  ContentItem,
+  PropertyGridEntry,
+  ReadonlyContentDescriptor,
+} from "@itwin/presentation-content";
 import type { DeepReadonly, NavigationValue, PrimitiveValue, Value, ValueDescriptor } from "@itwin/presentation-shared";
 
 const DEFAULT_CATEGORY: CategoryDefinition = { id: "/default-category/", label: "Miscellaneous" };
@@ -20,7 +24,10 @@ const navigationLabelFormatter = createDefaultValueFormatter();
 const labelCollator = new Intl.Collator(undefined, { sensitivity: "base" });
 
 /** Maps content of the selected instances to `PropertyData` for the `PropertyGrid` component. */
-export async function createPropertyData(content: Content): Promise<PropertyData> {
+export async function createPropertyData(content: {
+  descriptor: ReadonlyContentDescriptor;
+  items: ContentItem[];
+}): Promise<PropertyData> {
   const { categories } = content.descriptor;
   const { entries } = transformContent({ ...content, config: { type: "propertyGrid" } });
   const tree = createCategoryTree(categories);
@@ -56,7 +63,7 @@ interface RecordProps {
   isMemberReadonly?: (memberName: string) => boolean;
 }
 
-type CategoryDefinitions = Content["descriptor"]["categories"];
+type CategoryDefinitions = ReadonlyContentDescriptor["categories"];
 
 /** Entries take their category from their field. All fields of a related instances entry share the same category. */
 function getCategoryId(entry: PropertyGridEntry): string | undefined {

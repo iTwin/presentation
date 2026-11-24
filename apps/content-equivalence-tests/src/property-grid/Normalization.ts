@@ -53,38 +53,48 @@ export interface CanonicalPropertyCategory {
 export interface CanonicalPropertyGridItem {
   primaryKey: InstanceKey;
   categories: Record<string, CanonicalPropertyCategory>;
-  /** Record values, keyed by category label path and record label, joined with ` / `. */
+  /** Record values, keyed by JSON arrays of the category keys path and the record key. */
   values: Record<string, CanonicalValue>;
 }
 
 /**
  * Creates a key for each entry that's unique among `entries`, based on the entry's label. Labels aren't unique, so
- * later duplicates are keyed by a `[label, occurrence]` tuple. Labels that look like such a tuple are always keyed by
- * one, so they can't collide with keys of duplicates.
+ * duplicates after the first one are keyed by a `[label, occurrence]` tuple. Labels that look like such a tuple are
+ * always keyed by one, so they can't collide with keys of duplicates.
+ *
+ * Implementations list entries with equal labels in different orders, so duplicates are numbered in the order of
+ * their normalized content. Equal entries then get equal keys on both sides, regardless of their order.
  */
-function keyByLabel<TEntry>(entries: TEntry[], getLabel: (entry: TEntry) => string): Array<[string, TEntry]> {
-  const counts = new Map<string, number>();
-  return entries.map((entry) => {
-    const label = getLabel(entry);
-    const count = (counts.get(label) ?? 0) + 1;
-    counts.set(label, count);
-    return [count > 1 || label.startsWith("[") ? JSON.stringify([label, count]) : label, entry];
+function keyByLabel<TEntry>(entries: Array<{ label: string; entry: TEntry }>): Array<[string, TEntry]> {
+  const groups = Map.groupBy(entries, ({ label }) => label);
+  return [...groups].flatMap(([label, group]) => {
+    const ordered =
+      group.length > 1
+        ? group
+            .map(({ entry }) => ({ entry, content: stableStringify(entry) }))
+            .sort((lhs, rhs) => lhs.content.localeCompare(rhs.content))
+        : group;
+    return ordered.map(({ entry }, index): [string, TEntry] => [
+      index > 0 || label.startsWith("[") ? JSON.stringify([label, index + 1]) : label,
+      entry,
+    ]);
   });
 }
 
-function getDistinctItemTypes(items: CapturedPropertyRecord[]): CanonicalPropertyRecordType[] {
-  const types = new Map(
-    items.map((item) => {
-      const type = createCanonicalRecordType(item);
-      return [stableStringify(type), type];
-    }),
-  );
-  return [...types].sort(([lhs], [rhs]) => lhs.localeCompare(rhs)).map(([, type]) => type);
+/** Normalized type and value of a record. They're created together, so that both key struct members the same way. */
+interface CanonicalRecord {
+  type: CanonicalPropertyRecordType;
+  value: CanonicalValue;
 }
 
-function createCanonicalRecordType(record: CapturedPropertyRecord): CanonicalPropertyRecordType {
+function getDistinctTypes(types: CanonicalPropertyRecordType[]): CanonicalPropertyRecordType[] {
+  const distinct = new Map(types.map((type) => [stableStringify(type), type]));
+  return [...distinct].sort(([lhs], [rhs]) => lhs.localeCompare(rhs)).map(([, type]) => type);
+}
+
+function createCanonicalRecord(record: CapturedPropertyRecord): CanonicalRecord {
   const { property, value } = record;
-  return {
+  const type: CanonicalPropertyRecordType = {
     typename: property.typename,
     ...(property.kindOfQuantityName !== undefined
       ? { kindOfQuantityName: normalizeFullClassName(property.kindOfQuantityName) }
@@ -93,20 +103,35 @@ function createCanonicalRecordType(record: CapturedPropertyRecord): CanonicalPro
       ? { enum: createCanonicalEnumeration(property.enum.isStrict ?? false, property.enum.choices) }
       : undefined),
     ...(record.isMerged ? { isMerged: true } : undefined),
-    ...(value.valueFormat === "array"
-      ? { itemsTypeName: value.itemsTypeName, items: getDistinctItemTypes(value.items) }
-      : undefined),
-    ...(value.valueFormat === "struct"
-      ? {
-          members: Object.fromEntries(
-            keyByLabel(Object.values(value.members), (member) => member.property.displayLabel).map(([key, member]) => [
-              key,
-              createCanonicalRecordType(member),
-            ]),
-          ),
-        }
-      : undefined),
   };
+  switch (value.valueFormat) {
+    case "primitive":
+      return { type, value: createCanonicalPrimitiveValue({ ...record, value }) };
+    case "struct": {
+      const members = keyByLabel(
+        Object.values(value.members).map((member) => ({
+          label: member.property.displayLabel,
+          entry: createCanonicalRecord(member),
+        })),
+      );
+      return {
+        type: { ...type, members: Object.fromEntries(members.map(([key, member]) => [key, member.type])) },
+        value: Object.fromEntries(members.map(([key, member]) => [key, member.value])),
+      };
+    }
+    case "array": {
+      const items = value.items.map(createCanonicalRecord);
+      return {
+        // Distinct item types are included, so that types of items' members are compared too.
+        type: { ...type, itemsTypeName: value.itemsTypeName, items: getDistinctTypes(items.map((item) => item.type)) },
+        // Only the items matter, not their order: related instances aren't ordered, and differences in the order of
+        // array property items aren't what these tests look for.
+        value: items
+          .map((item) => item.value)
+          .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs))),
+      };
+    }
+  }
 }
 
 function isInstanceKey(value: unknown): value is InstanceKey {
@@ -144,61 +169,65 @@ function createCanonicalPrimitiveValue(record: CapturedPropertyRecord & { value:
   throw new Error(`Unexpected '${record.property.typename}' value: ${stableStringify(value)}.`);
 }
 
-function createCanonicalRecordValue(record: CapturedPropertyRecord): CanonicalValue {
-  const { value } = record;
-  switch (value.valueFormat) {
-    case "primitive":
-      return createCanonicalPrimitiveValue({ ...record, value });
-    case "struct":
-      return Object.fromEntries(
-        keyByLabel(Object.values(value.members), (member) => member.property.displayLabel).map(([key, member]) => [
-          key,
-          createCanonicalRecordValue(member),
-        ]),
-      );
-    case "array":
-      // Only the items matter, not their order: related instances aren't ordered, and differences in the order of
-      // array property items aren't what these tests look for.
-      return value.items
-        .map(createCanonicalRecordValue)
-        .sort((lhs, rhs) => stableStringify(lhs).localeCompare(stableStringify(rhs)));
-  }
+/**
+ * A normalized category, with values of its records and descendant categories' records, keyed by relative path.
+ * Values are sorted by path, so that equal categories have equal content regardless of the order of their records.
+ */
+interface CanonicalCategoryContent {
+  category: CanonicalPropertyCategory;
+  values: Array<[path: string[], value: CanonicalValue]>;
+}
+
+function createCanonicalCategories(
+  categories: CapturedPropertyCategory[],
+  data: CapturedPropertyData,
+  isRoot: boolean,
+): Array<[string, CanonicalCategoryContent]> {
+  return keyByLabel(
+    categories.map((category) => ({
+      label: isRoot && ROOT_CATEGORY_NAMES.has(category.name) ? ROOT_CATEGORY_LABEL : category.label,
+      entry: createCanonicalCategory(category, data),
+    })),
+  );
+}
+
+function createCanonicalCategory(category: CapturedPropertyCategory, data: CapturedPropertyData) {
+  const records = keyByLabel(
+    (data.records[category.name] ?? []).map((record) => ({
+      label: record.property.displayLabel,
+      entry: createCanonicalRecord(record),
+    })),
+  );
+  const childCategories = createCanonicalCategories(category.childCategories, data, false);
+  return {
+    category: {
+      records: Object.fromEntries(records.map(([key, record]) => [key, record.type])),
+      childCategories: Object.fromEntries(childCategories.map(([key, child]) => [key, child.category])),
+    },
+    values: [
+      ...records.map(([key, record]): [string[], CanonicalValue] => [[key], record.value]),
+      ...childCategories.flatMap(([key, child]) =>
+        child.values.map(([path, value]): [string[], CanonicalValue] => [[key, ...path], value]),
+      ),
+    ].sort(([lhs], [rhs]) => JSON.stringify(lhs).localeCompare(JSON.stringify(rhs))),
+  } satisfies CanonicalCategoryContent;
 }
 
 function createCanonicalPropertyGridItem(
   primaryKey: InstanceKey,
   data: CapturedPropertyData,
 ): CanonicalPropertyGridItem {
-  const values: Record<string, CanonicalValue> = {};
-  const createCategories = (
-    categories: CapturedPropertyCategory[],
-    parentPath: string[],
-  ): Record<string, CanonicalPropertyCategory> =>
-    Object.fromEntries(
-      keyByLabel(categories, (category) =>
-        parentPath.length === 0 && ROOT_CATEGORY_NAMES.has(category.name) ? ROOT_CATEGORY_LABEL : category.label,
-      ).map(([categoryKey, category]) => {
-        const path = [...parentPath, categoryKey];
-        const records = keyByLabel(data.records[category.name] ?? [], (record) => record.property.displayLabel);
-        for (const [recordKey, record] of records) {
-          values[[...path, recordKey].join(" / ")] = createCanonicalRecordValue(record);
-        }
-        return [
-          categoryKey,
-          {
-            records: Object.fromEntries(
-              records.map(([recordKey, record]) => [recordKey, createCanonicalRecordType(record)]),
-            ),
-            childCategories: createCategories(category.childCategories, path),
-          },
-        ];
-      }),
-    );
+  const categories = createCanonicalCategories(data.categories, data, true);
   // Data labels and descriptions aren't compared: the test app shows the class name in place of the instance label.
   return {
     primaryKey: { className: normalizeFullClassName(primaryKey.className), id: primaryKey.id },
-    categories: createCategories(data.categories, []),
-    values,
+    categories: Object.fromEntries(categories.map(([key, category]) => [key, category.category])),
+    // Paths are JSON-encoded, because labels may contain any separator.
+    values: Object.fromEntries(
+      categories.flatMap(([key, category]) =>
+        category.values.map(([path, value]) => [JSON.stringify([key, ...path]), value]),
+      ),
+    ),
   };
 }
 
