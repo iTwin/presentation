@@ -15,7 +15,7 @@ env:
 
 jobs:
   update-screenshots:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     # run on manual trigger, or when a trusted user adds /update-screenshots comment to a PR
     if: >-
