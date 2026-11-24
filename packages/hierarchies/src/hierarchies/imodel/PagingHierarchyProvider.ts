@@ -896,9 +896,9 @@ function isContinuationTokenPayload(value: unknown): value is ContinuationTokenP
   );
 }
 
-/** Creates a short fingerprint of request's parent node key and instance filter. */
+/** Creates a short fingerprint of request's parent node key, its parent keys and instance filter. */
 function createRequestFingerprint({ parentNode, instanceFilter }: GetPagedHierarchyNodesProps): string {
-  return hashString(stableStringify([parentNode?.key, instanceFilter]));
+  return hashString(stableStringify([parentNode?.key, parentNode?.parentKeys, instanceFilter]));
 }
 
 /** Serializes the value to JSON with object keys sorted, so equal values produce equal strings. */

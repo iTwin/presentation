@@ -643,6 +643,10 @@ describe("createPagingHierarchyProvider", () => {
       for (const props of [
         { parentNode: undefined, instanceFilter },
         { parentNode: { ...parentNode, key: { type: "generic" as const, id: "other" } }, instanceFilter },
+        {
+          parentNode: { ...parentNode, parentKeys: [{ type: "generic" as const, id: "grandparent" }] },
+          instanceFilter,
+        },
         { parentNode },
       ]) {
         expect(() => provider.getNodes({ ...props, continuationToken })).toThrow(
@@ -653,7 +657,7 @@ describe("createPagingHierarchyProvider", () => {
       }
     });
 
-    it("accepts the token for an equal parent node key and instance filter", async () => {
+    it("accepts the token for an equal parent node key, parent keys and instance filter", async () => {
       setupQueries({ Q: createRows(2) });
       using provider = createPagingHierarchyProvider({
         imodelAccess,
@@ -662,7 +666,7 @@ describe("createPagingHierarchyProvider", () => {
       const parentNode = {
         key: { type: "instances" as const, instanceKeys: [{ className: "a.b" as const, id: "0x1" }] },
         label: "p",
-        parentKeys: [],
+        parentKeys: [{ type: "generic" as const, id: "grandparent" }],
       };
       const [{ continuationToken }] = await collect(provider.getNodes({ parentNode }));
       expect(
@@ -670,7 +674,7 @@ describe("createPagingHierarchyProvider", () => {
           provider.getNodes({
             parentNode: {
               label: "other",
-              parentKeys: [],
+              parentKeys: [{ id: "grandparent", type: "generic" }],
               key: { instanceKeys: [{ id: "0x1", className: "a.b" }], type: "instances" },
             },
             continuationToken,
