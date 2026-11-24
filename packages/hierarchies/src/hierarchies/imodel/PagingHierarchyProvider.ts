@@ -146,7 +146,8 @@ export interface GetPagedHierarchyNodesProps {
   /**
    * A `PagedHierarchyNode.continuationToken` of a node, previously returned for the same parent node and instance filter.
    * When specified, the provider continues streaming nodes from the one that follows the node, the token belongs to.
-   * Continuing from the last node in the hierarchy level returns no nodes.
+   * Continuing from the last node in the hierarchy level returns no nodes. Tokens created before an iModel change can't
+   * be used after it.
    */
   continuationToken?: string;
 }
@@ -173,7 +174,7 @@ export interface PagingHierarchyProvider extends Disposable {
   /**
    * An event that provider raises due to a hierarchy change that requires a reload. In-flight `getNodes` requests fail
    * with `HierarchyRequestInterruptedError` when the event is raised. Continuation tokens of nodes returned before an
-   * iModel change may point to different positions in the hierarchy after it.
+   * iModel change can't be used after it.
    */
   readonly hierarchyChanged: HierarchyProvider["hierarchyChanged"];
 
@@ -188,7 +189,8 @@ export interface PagingHierarchyProvider extends Disposable {
    * Nodes with `hideInHierarchy` processing param are replaced by their children in place. Nodes with `hideIfNoChildren`
    * processing param are omitted if they have no children.
    *
-   * @throws `InvalidContinuationTokenError` if the given `continuationToken` is malformed.
+   * @throws `InvalidContinuationTokenError` if the given `continuationToken` is malformed, was created for a different
+   * parent node or instance filter, or was created before an iModel change.
    * @throws `InvalidContinuationTokenError` from the iterator, if the given `continuationToken` points to a hierarchy
    * level definition that doesn't exist.
    * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
@@ -288,6 +290,8 @@ interface StreamLevelProps extends Omit<ReadLevelProps<never>, "processNode"> {
   requestedParentNode: PagingParentNode | undefined;
   /** Continuation token of the hidden parent node, used as a prefix for continuation tokens of this level's nodes. */
   parentContinuationToken: ContinuationToken;
+  /** Request-specific data, encoded into continuation tokens of this level's nodes. */
+  tokenContext: ContinuationTokenContext;
 }
 
 interface ReadSourceNode {
@@ -306,6 +310,8 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   readonly #pageSize: number;
   // incremented whenever the hierarchy changes or the provider is disposed - requests started before that fail
   readonly #interruptGeneration = new BehaviorSubject(0);
+  // incremented whenever the iModel changes - continuation tokens created before that can't be used anymore
+  #hierarchyGeneration = 0;
   #disposed = false;
   #nodesQueryClauseFactory: NodesQueryClauseFactory;
   #valuesFormatter: IPrimitiveValueFormatter;
@@ -338,6 +344,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
           message: () => `Data source changed: "${this.#imodelAccess.imodelKey}"`,
         });
         this.#interrupt();
+        ++this.#hierarchyGeneration;
         // the iModel's schemas may have changed, so re-create the query factory to drop its schema-derived caches
         this.#nodesQueryClauseFactory = this.#createNodesQueryClauseFactory();
         this.#hierarchyChanged.raiseEvent({});
@@ -369,9 +376,15 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   }
 
   public getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode> {
+    const tokenContext: ContinuationTokenContext = {
+      generation: this.#hierarchyGeneration,
+      fingerprint: createRequestFingerprint(props),
+    };
     // decode the token eagerly to fail early on invalid input
     const continuationToken =
-      props.continuationToken !== undefined ? decodeContinuationToken(props.continuationToken) : undefined;
+      props.continuationToken !== undefined
+        ? decodeContinuationToken(props.continuationToken, tokenContext)
+        : undefined;
     // number of nodes that the consumer has requested, but hasn't received yet
     const pendingRequestsCount = new BehaviorSubject(0);
     // the request is interrupted by any hierarchy change after this call, even if iteration hasn't started yet
@@ -379,7 +392,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     const interrupt = this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
     return requestOnDemand({
       iterator: eachValueFrom(
-        this.#getNodesObservable({ ...props, continuationToken, pendingRequestsCount }).pipe(
+        this.#getNodesObservable({ ...props, continuationToken, tokenContext, pendingRequestsCount }).pipe(
           throwOnInterrupt(interrupt),
         ),
       ),
@@ -391,9 +404,11 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     parentNode,
     instanceFilter,
     continuationToken,
+    tokenContext,
     pendingRequestsCount,
   }: Omit<GetPagedHierarchyNodesProps, "continuationToken"> & {
     continuationToken: ContinuationToken | undefined;
+    tokenContext: ContinuationTokenContext;
     pendingRequestsCount: BehaviorSubject<number>;
   }): Observable<PagedHierarchyNode> {
     return defer(() => {
@@ -406,6 +421,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
         instanceFilter,
         continuationToken,
         parentContinuationToken: [],
+        tokenContext,
         // only read nodes that the consumer is waiting for
         demand: pendingRequestsCount.pipe(filter((count) => count > 0)),
       }).pipe(
@@ -430,7 +446,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
    * children.
    */
   #streamLevel(props: StreamLevelProps): Observable<PagedHierarchyNode> {
-    const { parentNode, requestedParentNode, instanceFilter, parentContinuationToken, demand } = props;
+    const { parentNode, requestedParentNode, instanceFilter, parentContinuationToken, tokenContext, demand } = props;
     return this.#readLevel({
       parentNode,
       instanceFilter,
@@ -442,7 +458,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
           return this.#finalizeNode({ node, parentNode: requestedParentNode }).pipe(
             map((finalNode): PagedHierarchyNode => ({
               ...finalNode,
-              continuationToken: encodeContinuationToken(nodeContinuationToken),
+              continuationToken: encodeContinuationToken(nodeContinuationToken, tokenContext),
             })),
           );
         }
@@ -455,6 +471,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
           instanceFilter,
           continuationToken: nestedContinuationToken,
           parentContinuationToken: nodeContinuationToken,
+          tokenContext,
           demand,
         });
       },
@@ -799,24 +816,38 @@ function createPageQuery({
 
 const CONTINUATION_TOKEN_VERSION = 1;
 
+/** Request-specific data, encoded into continuation tokens and validated when a token is used. */
+interface ContinuationTokenContext {
+  /** Hierarchy generation the token was created in - tokens created before an iModel change can't be used after it. */
+  generation: number;
+  /** Fingerprint of the parent node and instance filter the token was created for. */
+  fingerprint: string;
+}
+
 /** Serialized form of a continuation token. */
 interface ContinuationTokenPayload {
   /** Format version. */
   v: typeof CONTINUATION_TOKEN_VERSION;
+  /** Hierarchy generation. */
+  g: number;
+  /** Parent node and instance filter fingerprint. */
+  f: string;
   /** Token path as `[definitionIndex, offset]` pairs. */
   p: Array<[number, number]>;
 }
 
-function encodeContinuationToken(token: ContinuationToken): string {
+function encodeContinuationToken(token: ContinuationToken, context: ContinuationTokenContext): string {
   const payload: ContinuationTokenPayload = {
     v: CONTINUATION_TOKEN_VERSION,
+    g: context.generation,
+    f: context.fingerprint,
     p: token.map(({ definitionIndex, offset }) => [definitionIndex, offset]),
   };
   // the payload only contains ASCII characters, so `btoa` can encode it; use URL-safe base64 alphabet without padding
   return btoa(JSON.stringify(payload)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function decodeContinuationToken(token: string): ContinuationToken {
+function decodeContinuationToken(token: string, context: ContinuationTokenContext): ContinuationToken {
   let payload: unknown;
   try {
     payload = JSON.parse(atob(token.replace(/-/g, "+").replace(/_/g, "/")));
@@ -826,6 +857,16 @@ function decodeContinuationToken(token: string): ContinuationToken {
   if (!isContinuationTokenPayload(payload)) {
     throw new InvalidContinuationTokenError(`Invalid continuation token: "${token}".`);
   }
+  if (payload.g !== context.generation) {
+    throw new InvalidContinuationTokenError(
+      `Continuation token "${token}" was created before a hierarchy change and can't be used anymore.`,
+    );
+  }
+  if (payload.f !== context.fingerprint) {
+    throw new InvalidContinuationTokenError(
+      `Continuation token "${token}" was created for a different parent node or instance filter.`,
+    );
+  }
   return payload.p.map(([definitionIndex, offset]) => ({ definitionIndex, offset }));
 }
 
@@ -833,9 +874,13 @@ function isContinuationTokenPayload(value: unknown): value is ContinuationTokenP
   if (typeof value !== "object" || value === null) {
     return false;
   }
-  const { v, p } = value as { [key in keyof ContinuationTokenPayload]?: unknown };
+  const { v, g, f, p } = value as {
+    [key in keyof ContinuationTokenPayload]?: unknown;
+  };
   return (
     v === CONTINUATION_TOKEN_VERSION &&
+    Number.isSafeInteger(g) &&
+    typeof f === "string" &&
     Array.isArray(p) &&
     p.length > 0 &&
     p.every(
@@ -845,4 +890,28 @@ function isContinuationTokenPayload(value: unknown): value is ContinuationTokenP
         position.every((item) => Number.isSafeInteger(item) && item >= 0),
     )
   );
+}
+
+/** Creates a short fingerprint of request's parent node key and instance filter. */
+function createRequestFingerprint({ parentNode, instanceFilter }: GetPagedHierarchyNodesProps): string {
+  return hashString(stableStringify([parentNode?.key, instanceFilter]));
+}
+
+/** Serializes the value to JSON with object keys sorted, so equal values produce equal strings. */
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_, item: unknown) =>
+    typeof item === "object" && item !== null && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([lhs], [rhs]) => (lhs < rhs ? -1 : 1)))
+      : item,
+  );
+}
+
+/** Calculates 32-bit FNV-1a hash of the string and returns it in base 36. */
+function hashString(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; ++i) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
 }

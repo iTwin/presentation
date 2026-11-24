@@ -590,20 +590,76 @@ describe("createPagingHierarchyProvider", () => {
         "invalid!",
         encode(null),
         encode(1),
-        encode({ p: [[0, 0]] }),
-        encode({ v: 2, p: [[0, 0]] }),
-        encode({ v: 1 }),
-        encode({ v: 1, p: [] }),
-        encode({ v: 1, p: [1] }),
-        encode({ v: 1, p: [[0]] }),
-        encode({ v: 1, p: [[0, -1]] }),
-        encode({ v: 1, p: [[0, 0.5]] }),
-        encode({ v: 1, p: [[0, 0, 0]] }),
+        encode({ g: 0, f: "x", p: [[0, 0]] }),
+        encode({ v: 2, g: 0, f: "x", p: [[0, 0]] }),
+        encode({ v: 1, f: "x", p: [[0, 0]] }),
+        encode({ v: 1, g: 0.5, f: "x", p: [[0, 0]] }),
+        encode({ v: 1, g: 0, p: [[0, 0]] }),
+        encode({ v: 1, g: 0, f: 1, p: [[0, 0]] }),
+        encode({ v: 1, g: 0, f: "x" }),
+        encode({ v: 1, g: 0, f: "x", p: [] }),
+        encode({ v: 1, g: 0, f: "x", p: [1] }),
+        encode({ v: 1, g: 0, f: "x", p: [[0]] }),
+        encode({ v: 1, g: 0, f: "x", p: [[0, -1]] }),
+        encode({ v: 1, g: 0, f: "x", p: [[0, 0.5]] }),
+        encode({ v: 1, g: 0, f: "x", p: [[0, 0, 0]] }),
       ]) {
         expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
           new InvalidContinuationTokenError(`Invalid continuation token: "${continuationToken}".`),
         );
       }
+    });
+
+    it("throws when the token was created for a different parent node or instance filter", async () => {
+      setupQueries({ Q: createRows(1) });
+      using provider = createPagingHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      });
+      const parentNode = { key: { type: "generic" as const, id: "p" }, label: "p", parentKeys: [] };
+      const instanceFilter: GenericInstanceFilter = {
+        propertyClassNames: ["a.b"],
+        relatedInstances: [],
+        rules: { operator: "and", rules: [] },
+      };
+      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode, instanceFilter }));
+      for (const props of [
+        { parentNode: undefined, instanceFilter },
+        { parentNode: { ...parentNode, key: { type: "generic" as const, id: "other" } }, instanceFilter },
+        { parentNode },
+      ]) {
+        expect(() => provider.getNodes({ ...props, continuationToken })).toThrow(
+          new InvalidContinuationTokenError(
+            `Continuation token "${continuationToken}" was created for a different parent node or instance filter.`,
+          ),
+        );
+      }
+    });
+
+    it("accepts the token for an equal parent node key and instance filter", async () => {
+      setupQueries({ Q: createRows(2) });
+      using provider = createPagingHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      });
+      const parentNode = {
+        key: { type: "instances" as const, instanceKeys: [{ className: "a.b" as const, id: "0x1" }] },
+        label: "p",
+        parentKeys: [],
+      };
+      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode }));
+      expect(
+        await collectLabels(
+          provider.getNodes({
+            parentNode: {
+              label: "other",
+              parentKeys: [],
+              key: { instanceKeys: [{ id: "0x1", className: "a.b" }], type: "instances" },
+            },
+            continuationToken,
+          }),
+        ),
+      ).toEqual(["0x2"]);
     });
 
     it("throws when the token points to a hierarchy level definition that doesn't exist", async () => {
@@ -1102,6 +1158,32 @@ describe("createPagingHierarchyProvider", () => {
         HierarchyRequestInterruptedError,
       );
       expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
+    it("throws when the token was created before an iModel change", async () => {
+      const imodelChanged = new BeEvent<() => void>();
+      setupQueries({ Q: createRows(2) });
+      const props = {
+        imodelAccess,
+        imodelChanged,
+        hierarchyDefinition: { defineHierarchyLevel: async () => [createQueryDefinition("Q")] },
+      };
+      using provider = createPagingHierarchyProvider(props);
+      const [{ continuationToken }] = await collect(provider.getNodes({ parentNode: undefined }));
+
+      provider.setFormatter(undefined);
+      expect(await collectLabels(provider.getNodes({ parentNode: undefined, continuationToken }))).toEqual(["0x2"]);
+      using otherProvider = createPagingHierarchyProvider(props);
+      expect(await collectLabels(otherProvider.getNodes({ parentNode: undefined, continuationToken }))).toEqual([
+        "0x2",
+      ]);
+
+      imodelChanged.raiseEvent();
+      expect(() => provider.getNodes({ parentNode: undefined, continuationToken })).toThrow(
+        new InvalidContinuationTokenError(
+          `Continuation token "${continuationToken}" was created before a hierarchy change and can't be used anymore.`,
+        ),
+      );
     });
 
     it("unsubscribes from iModel changes and fails in-flight requests on dispose", async () => {
