@@ -80,7 +80,8 @@ export interface StrataKitTreeRendererAttributes {
    * If the node is under a collapsed parent or deep in the hierarchy, all its collapsed ancestors are expanded
    * to make it visible before scrolling to it.
    *
-   * The optional `onComplete` callback is called with the target node after it's scrolled into view.
+   * The optional `onComplete` callback is called with the target node after it's scrolled into view. A newer call
+   * supersedes a pending one, whose `onComplete` is then never called.
    *
    * Returns "node-not-found" if no node matches the predicate or the matching node can't be displayed (e.g. one of its
    * ancestors has an error that blocks expansion), "success" if scrolling was initiated.
@@ -333,6 +334,8 @@ function useExpandAndScrollToNode({
         onScrollComplete: onComplete ? () => onComplete(targetNode) : undefined,
       };
     } else {
+      // supersede any request still waiting for expansion
+      scrollToNode.current = undefined;
       const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
       virtualizer.scrollToIndex(index, { align: "center" });
       if (onComplete) {

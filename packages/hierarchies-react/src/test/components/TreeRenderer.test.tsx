@@ -378,6 +378,39 @@ COLOR_SCHEMES.forEach((colorScheme) => {
           expect(onComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "child" })),
         );
       });
+
+      it("lets a newer request supersede one pending on expansion", async () => {
+        const ref = createRef<StrataKitTreeRendererAttributes>();
+        const onFirstComplete = vi.fn();
+        const onSecondComplete = vi.fn();
+        const { locator } = await renderWithTheme(
+          <TreeWithExpansionState
+            {...createDefaultProps()}
+            treeRef={ref}
+            initialRootNodes={[
+              ...Array.from({ length: 50 }, (_, i) => createTreeNode({ id: `node-${i}`, label: `Node ${i}` })),
+              createTreeNode({
+                id: "parent",
+                label: "Parent",
+                children: [createTreeNode({ id: "child", label: "Target Child" })],
+              }),
+            ]}
+          />,
+          { colorScheme },
+        );
+
+        ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "child", onComplete: onFirstComplete });
+        ref.current!.scrollToNode({ nodePredicate: (node) => node.id === "node-25", onComplete: onSecondComplete });
+
+        await vi.waitFor(() =>
+          expect(onSecondComplete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: "node-25" })),
+        );
+        // let the expansion re-render settle
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await expect.element(locator.getByRole("treeitem", { name: "Node 25" })).toBeInViewport();
+        expect(locator.getByRole("treeitem", { name: "Target Child" }).query()).toBeNull();
+        expect(onFirstComplete).not.toHaveBeenCalled();
+      });
     });
 
     it("renders tree with selected node", async () => {
