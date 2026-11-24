@@ -102,8 +102,10 @@ export interface PagingHierarchyProviderProps {
    *
    * The provider doesn't group, sort or merge nodes, so grouping processing params assigned to nodes are ignored. Nodes
    * are returned in the order of hierarchy level definitions and, within each instance nodes query definition, in the
-   * order of query results. Queries must have a deterministic order (e.g. use `ORDER BY`) for paging and continuation
-   * tokens to be reliable.
+   * order of query results. Paging and continuation tokens rely on a query returning rows in the same order every time
+   * it's run. Without an `ORDER BY` clause, that holds as long as the query, its bindings and the iModel stay the same,
+   * but the order may change after an SQLite upgrade or a query planner statistics update. Use `ORDER BY` if
+   * continuation tokens need to stay valid across such changes, e.g. when they're persisted.
    */
   hierarchyDefinition: HierarchyDefinition;
 
