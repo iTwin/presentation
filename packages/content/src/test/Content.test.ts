@@ -2493,6 +2493,67 @@ describe("resolveContentSources", () => {
       }
     });
 
+    it("merges nested groups of ancestors that only differ in an inner step's meaning", async () => {
+      const providerA = createMockIModelFieldsProvider("providerA_v1", {
+        relatedProperties: (["relatedInstance", "sameInstance"] as const).map((relationshipMeaning) => ({
+          path: [aToB, bToC],
+          properties: [
+            { stepIndex: 0, target: { select: "none" } },
+            { stepIndex: 1, target: { select: "all" }, relationshipMeaning },
+          ],
+        })),
+      });
+      const providerC: IModelFieldsProvider = {
+        id: "providerC_v1",
+        applyRecursively: true,
+        async getContribution({ target }) {
+          return target.primaryClass === "TestSchema.ClassC" ? { relatedProperties: [{ path: [cToD] }] } : undefined;
+        },
+      };
+      const abc = row(
+        "TestSchema.ClassA",
+        "TestSchema.RelAB",
+        "TestSchema.ClassB",
+        "TestSchema.RelBC",
+        "TestSchema.ClassC",
+      );
+      const imodelAccess = createRoutedIModelAccess({
+        routeRows: routeByStepCount({
+          2: [[abc], [abc]],
+          3: [
+            [
+              row(
+                "TestSchema.ClassA",
+                "TestSchema.RelAB",
+                "TestSchema.ClassB",
+                "TestSchema.RelBC",
+                "TestSchema.ClassC",
+                "TestSchema.RelCD",
+                "TestSchema.ClassD",
+              ),
+            ],
+          ],
+        }),
+      });
+
+      const [result] = await resolveContentSources({
+        imodelAccess,
+        targets: [targetA],
+        config: { imodelFieldsProviders: [providerA, providerC] },
+      });
+
+      const nestedGroups = result.resolvedDeclarations.filter((group) => group.nested);
+      expect(nestedGroups.map((group) => [group.nested?.categoryContext, group.paths])).to.deep.equal([
+        [
+          [
+            { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+            { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+          ],
+          [{ path: [aToB, bToC, cToD], targetClassNames: ["TestSchema.ClassA"] }],
+        ],
+      ]);
+    });
+
     it("computes the nested group's effective cardinality hint by combining the parent and nested hints", async () => {
       const providerA = createMockIModelFieldsProvider("providerA_v1", {
         relatedProperties: [{ path: [aToB], cardinalityHint: "many" }],

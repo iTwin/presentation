@@ -94,11 +94,9 @@ function createCategorizedField(props: {
   const id = props.id ?? "field";
   const categorization: FieldCategorization = {
     anchor: props.anchor ?? (props.pathFromTarget?.length ? "targetClass" : "none"),
+    relationshipMeaning: props.relationshipMeaning ?? "relatedInstance",
     categoryContext: props.categoryContext ?? [],
   };
-  if (props.relationshipMeaning !== undefined) {
-    categorization.relationshipMeaning = props.relationshipMeaning;
-  }
   if (props.propertyCategory) {
     categorization.category = { source: "propertyCategory", ...props.propertyCategory };
   }

@@ -425,10 +425,11 @@ describe("collectRelatedPropertyFields", () => {
     expect(candidates.map((candidate) => candidate.categorization)).to.deep.equal([
       {
         anchor: "targetClass",
+        relationshipMeaning: "relatedInstance",
         category: { source: "propertyCategory", id: "TestSchema.Geometry", label: "Geometry" },
         categoryContext: [],
       },
-      { anchor: "targetClass", categoryContext: [] },
+      { anchor: "targetClass", relationshipMeaning: "relatedInstance", categoryContext: [] },
     ]);
   });
 
@@ -479,6 +480,7 @@ describe("collectRelatedPropertyFields", () => {
     const candidate = candidates.find(({ field }) => field.propertyName === "relProp");
     expect(candidate?.categorization).to.deep.equal({
       anchor: "relationshipClass",
+      relationshipMeaning: "relatedInstance",
       category: { source: "override", id: "custom" },
       categoryContext: [],
     });

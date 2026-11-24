@@ -5,7 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { DEFAULT_FIELDS_PROVIDER_PRIORITY } from "../extensions/BaseFieldsProvider.js";
-import { getOrCreate } from "../InternalUtils.js";
+import { getCategoryContextKey, getOrCreate } from "../InternalUtils.js";
 import { PropertyField } from "../model/Field.js";
 import { toSortedUniqueClassNames } from "../model/Utils.js";
 import { resolveCardinality } from "../PathCardinality.js";
@@ -33,8 +33,8 @@ interface PropertyFieldCandidate extends CategorizedField {
   /**
    * For a candidate of a declaration applied on a nested anchor, the category context inherited from the
    * declarations it was applied below. Different ancestor declarations can place the same nested property
-   * differently, which isn't a bug of the candidate's provider, so candidates with different inherited contexts are
-   * resolved like candidates of different providers.
+   * differently, which isn't a bug of the candidate's provider, so candidates with inherited contexts that place
+   * categories differently (see `getCategoryContextKey`) are resolved like candidates of different providers.
    */
   inheritedCategoryContext?: Readonly<CategoryContext>;
 }
@@ -100,7 +100,10 @@ function priorityOf(candidate: PropertyFieldCandidate): number {
 function assertNoIntraProviderDivergence(baseId: Field["id"], group: PropertyFieldCandidate[]): void {
   const representativeBySource = new Map<string, PropertyFieldCandidate>();
   for (const candidate of group) {
-    const sourceKey = JSON.stringify([candidate.provider?.id ?? null, candidate.inheritedCategoryContext ?? []]);
+    const sourceKey = JSON.stringify([
+      candidate.provider?.id ?? null,
+      getCategoryContextKey(candidate.inheritedCategoryContext ?? []),
+    ]);
     const representative = representativeBySource.get(sourceKey);
     if (!representative) {
       representativeBySource.set(sourceKey, candidate);
@@ -138,7 +141,7 @@ function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): b
     a.anchor === b.anchor &&
     a.category?.source === b.category?.source &&
     a.category?.id === b.category?.id &&
-    (!ownMeaningAffectsPlacement || meaningsAgree(a.relationshipMeaning, b.relationshipMeaning)) &&
+    (!ownMeaningAffectsPlacement || a.relationshipMeaning === b.relationshipMeaning) &&
     a.categoryContext.length === b.categoryContext.length &&
     a.categoryContext.every((context, index) => {
       const other = b.categoryContext[index];
@@ -150,13 +153,6 @@ function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): b
     }) &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
-}
-
-function meaningsAgree(
-  a: FieldCategorization["relationshipMeaning"],
-  b: FieldCategorization["relationshipMeaning"],
-): boolean {
-  return (a ?? "relatedInstance") === (b ?? "relatedInstance");
 }
 
 /** The property category's label, or `undefined` for an override / no category. */

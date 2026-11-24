@@ -8,7 +8,7 @@ import { buildCategoryContext, collectInParallel } from "../InternalUtils.js";
 import { createPropertyFields } from "./ClassPropertyFields.js";
 
 import type { EC, ECSchemaProvider, Props, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext, ContentSource } from "../ContentTarget.js";
+import type { CardinalityHint, CategoryContext, ContentSource, RelationshipMeaning } from "../ContentTarget.js";
 import type { IModelFieldsProvider, RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { PathCardinalityClassifier } from "../PathCardinality.js";
@@ -98,7 +98,7 @@ export async function collectRelatedPropertyFields(props: {
             properties: declaration.properties,
             primaryClassNames: targetClassNames,
             stepIndexOffset,
-            relationshipMeaning: declaration.relationshipMeaning,
+            relationshipMeaning: declaration.relationshipMeaning ?? "relatedInstance",
             categoryContext: group.nested ? group.nested.categoryContext : [],
           }),
         ),
@@ -144,7 +144,8 @@ async function createFieldsForPath(props: {
    * `path`. `0` for a base (non-nested) declaration.
    */
   stepIndexOffset: number;
-  relationshipMeaning: RelatedPropertiesDeclaration["relationshipMeaning"];
+  /** The declaration's relationship meaning, used for steps that don't set their own. */
+  relationshipMeaning: RelationshipMeaning;
   categoryContext: CategoryContext;
 }): Promise<CategorizedField[]> {
   const {
@@ -228,7 +229,8 @@ async function createFieldsForStep(props: {
   primaryClassNames: EC.FullClassNameDotNotation[];
   /** See {@link createFieldsForPath}. */
   stepIndexOffset: number;
-  relationshipMeaning: RelatedPropertiesDeclaration["relationshipMeaning"];
+  /** The declaration's relationship meaning, used for steps that don't set their own. */
+  relationshipMeaning: RelationshipMeaning;
   categoryContext: CategoryContext;
 }): Promise<CategorizedField[]> {
   const {

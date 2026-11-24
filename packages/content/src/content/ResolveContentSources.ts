@@ -8,6 +8,7 @@ import { ECSql, getClass } from "@itwin/presentation-shared";
 import {
   buildCategoryContext,
   ECSQL_PREFIX,
+  getCategoryContextKey,
   getOrCreate,
   getStepSourceConstraintClassName,
   PRIMARY_CLASS_ALIAS,
@@ -650,7 +651,7 @@ function createNestedCategoryContext(props: {
   return buildCategoryContext({
     inheritedContext,
     properties: selections,
-    relationshipMeaning: declaration.relationshipMeaning,
+    relationshipMeaning: declaration.relationshipMeaning ?? "relatedInstance",
     stepIndexOffset,
     include: (entry) => entry.stepIndex <= anchorStepIndex,
   });
@@ -757,7 +758,8 @@ async function resolveNestedGroups({
   // Merged discoveries across all expansion levels, keyed by `(providerId, declarationIndex,
   // anchorClassName, prefixStepCount, categoryContext)` in deterministic (breadth-first, then provider order, then
   // declaration order) first-discovery order. Distinct branches reaching the same anchor class at the
-  // same prefix depth merge into one group, de-duplicated by serialized path.
+  // same prefix depth merge into one group, de-duplicated by serialized path. Contexts that only differ in meanings
+  // that don't affect placement (see `getCategoryContextKey`) share a group, which keeps the first one's context.
   interface MergedNestedGroup {
     providerId: IModelFieldsProvider["id"];
     declarationIndex: number;
@@ -841,7 +843,7 @@ async function resolveNestedGroups({
         declarationIndex,
         entry.anchorClassName,
         entry.prefixSteps.length,
-        entry.categoryContext,
+        getCategoryContextKey(entry.categoryContext),
       ]);
       let merged = groupsByKey.get(groupKey);
       if (!merged) {

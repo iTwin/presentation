@@ -7,8 +7,7 @@ import { PropertyField } from "../model/Field.js";
 import { createValueDescriptorFromProperty } from "../model/PropertyValueDescriptor.js";
 
 import type { EC, RelationshipPath } from "@itwin/presentation-shared";
-import type { CardinalityHint, CategoryContext } from "../ContentTarget.js";
-import type { RelatedPropertiesDeclaration } from "../extensions/IModelFieldsProvider.js";
+import type { CardinalityHint, CategoryContext, RelationshipMeaning } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { ClassPropertySpec } from "../model/PropertySpec.js";
 
@@ -37,8 +36,8 @@ export interface FieldCategorization {
   category?:
     | { source: "override"; id: CategoryDefinition["id"] }
     | { source: "propertyCategory"; id: EC.FullClassNameDotNotation; label: string };
-  /** The `relationshipMeaning` in effect for the field's step; omitted means `"relatedInstance"`. */
-  relationshipMeaning?: RelatedPropertiesDeclaration["relationshipMeaning"];
+  /** The `relationshipMeaning` in effect for the field's step; `"relatedInstance"` for direct fields. */
+  relationshipMeaning: RelationshipMeaning;
   /**
    * Ordered enclosing class categories; an empty context places the field's category at the root. For a
    * property category of a `"sameInstance"` step, excludes the field's own step.
@@ -81,7 +80,7 @@ interface CreatePropertyFieldsProps {
   /** How the produced fields anchor for categorization (see {@link FieldCategorization.anchor}). */
   anchor: FieldCategorization["anchor"];
   /** See {@link FieldCategorization.relationshipMeaning}. */
-  relationshipMeaning?: FieldCategorization["relationshipMeaning"];
+  relationshipMeaning: RelationshipMeaning;
   /** See {@link FieldCategorization.categoryContext}. */
   categoryContext: CategoryContext;
 }
@@ -155,10 +154,7 @@ export function createPropertyFields(props: CreatePropertyFieldsProps): Categori
       field.hidden = overrides.hidden;
     }
     // Report the raw category facts: an explicit spec override, else the EC schema property category.
-    const categorization: FieldCategorization = { anchor, categoryContext };
-    if (relationshipMeaning !== undefined) {
-      categorization.relationshipMeaning = relationshipMeaning;
-    }
+    const categorization: FieldCategorization = { anchor, relationshipMeaning, categoryContext };
     if (overrides.categoryId !== undefined) {
       categorization.category = { source: "override", id: overrides.categoryId };
     } else {

@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCategoryContext,
   collectInParallel,
+  getCategoryContextKey,
   getClassLabel,
   isSchemaVersionAtLeast,
   isSchemaVersionBelow,
@@ -37,7 +38,7 @@ describe("buildCategoryContext", () => {
       buildCategoryContext({
         inheritedContext,
         properties,
-        relationshipMeaning: undefined,
+        relationshipMeaning: "relatedInstance",
         stepIndexOffset: 1,
         include: includeAll,
       }),
@@ -59,7 +60,7 @@ describe("buildCategoryContext", () => {
       buildCategoryContext({
         inheritedContext: [],
         properties,
-        relationshipMeaning: undefined,
+        relationshipMeaning: "relatedInstance",
         stepIndexOffset: 0,
         include: (entry) => entry.stepIndex === 0 && entry.kind === "targetClass",
       }),
@@ -77,7 +78,7 @@ describe("buildCategoryContext", () => {
       buildCategoryContext({
         inheritedContext,
         properties: [],
-        relationshipMeaning: undefined,
+        relationshipMeaning: "relatedInstance",
         stepIndexOffset: 0,
         include: includeAll,
       }),
@@ -91,7 +92,7 @@ describe("buildCategoryContext", () => {
       buildCategoryContext({
         inheritedContext: [],
         properties: [spec, spec],
-        relationshipMeaning: undefined,
+        relationshipMeaning: "relatedInstance",
         stepIndexOffset: 0,
         include: includeAll,
       }),
@@ -122,6 +123,26 @@ describe("buildCategoryContext", () => {
       { stepIndex: 1, kind: "targetClass", relationshipMeaning: "sameInstance" },
       { stepIndex: 2, kind: "targetClass", relationshipMeaning: "relatedInstance" },
     ]);
+  });
+});
+
+describe("getCategoryContextKey", () => {
+  const outer = { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" } as const;
+  const inner = { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "relatedInstance" } as const;
+
+  it("ignores meanings of entries other than the outermost one", () => {
+    expect(getCategoryContextKey([outer, inner])).toBe(
+      getCategoryContextKey([outer, { ...inner, relationshipMeaning: "sameInstance" }]),
+    );
+  });
+
+  it.each([
+    { name: "outermost meaning", other: [{ ...outer, relationshipMeaning: "sameInstance" }, inner] },
+    { name: "step index", other: [outer, { ...inner, stepIndex: 2 }] },
+    { name: "kind", other: [outer, { ...inner, kind: "targetClass" }] },
+    { name: "length", other: [outer] },
+  ] as const)("distinguishes contexts with different $name", ({ other }) => {
+    expect(getCategoryContextKey([outer, inner])).not.toBe(getCategoryContextKey(other));
   });
 });
 

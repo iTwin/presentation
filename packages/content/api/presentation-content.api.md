@@ -73,7 +73,7 @@ type CardinalityHint = "one" | "many";
 type CategoryContext = {
     stepIndex: number;
     kind: "targetClass" | "relationshipClass";
-    relationshipMeaning: "relatedInstance" | "sameInstance";
+    relationshipMeaning: RelationshipMeaning;
 }[];
 
 // @public
@@ -452,12 +452,15 @@ interface RelatedPropertiesDeclaration {
     cardinalityHint?: CardinalityHint;
     path: RelationshipPath;
     properties?: StepPropertySpec[];
-    relationshipMeaning?: "relatedInstance" | "sameInstance";
+    relationshipMeaning?: RelationshipMeaning;
     resolve?(props: {
         imodelAccess: ECSqlQueryExecutor | ECSchemaProvider;
         target: ContentTarget;
     }): Promise<ResolvedPath[]>;
 }
+
+// @public
+type RelationshipMeaning = "relatedInstance" | "sameInstance";
 
 // @public
 export function resolveContentSources(props: ResolveContentSourcesProps): Promise<ContentSource[]>;
@@ -501,7 +504,7 @@ type ScalarValueFilterOperator = Exclude<ValueFilterOperator, "is-null" | "is-no
 // @public
 interface StepPropertySpec {
     relationship?: ClassPropertySpec;
-    relationshipMeaning?: "relatedInstance" | "sameInstance";
+    relationshipMeaning?: RelationshipMeaning;
     stepIndex: number;
     target?: ClassPropertySpec;
 }

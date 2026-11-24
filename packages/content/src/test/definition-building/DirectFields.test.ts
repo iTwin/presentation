@@ -297,6 +297,7 @@ describe("collectDirectPropertyFields", () => {
 
     expect(categorization).to.deep.equal({
       categoryContext: [],
+      relationshipMeaning: "relatedInstance",
       anchor: "none",
       category: { source: "propertyCategory", id: "TestSchema.Identity", label: "Identity" },
     });

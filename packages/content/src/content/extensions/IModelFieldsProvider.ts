@@ -11,7 +11,7 @@ import type {
   RelationshipPath,
   ValueDescriptor,
 } from "@itwin/presentation-shared";
-import type { CardinalityHint, ContentTarget, ResolvedPath } from "../ContentTarget.js";
+import type { CardinalityHint, ContentTarget, RelationshipMeaning, ResolvedPath } from "../ContentTarget.js";
 import type { CategoryDefinition } from "../model/Category.js";
 import type { StepPropertySpec } from "../model/PropertySpec.js";
 import type { BaseFieldsProvider } from "./BaseFieldsProvider.js";
@@ -138,7 +138,7 @@ export interface RelatedPropertiesDeclaration {
    * A property's explicit category override takes precedence over both meanings. The setting affects only
    * category placement — not property selection, values or cardinality.
    */
-  relationshipMeaning?: "relatedInstance" | "sameInstance";
+  relationshipMeaning?: RelationshipMeaning;
 
   /**
    * Optional custom resolution callback. When provided, the system delegates
