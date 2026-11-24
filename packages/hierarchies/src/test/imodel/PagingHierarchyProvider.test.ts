@@ -1081,6 +1081,29 @@ describe("createPagingHierarchyProvider", () => {
       await expect(iterator.next()).rejects.toThrow(HierarchyRequestInterruptedError);
     });
 
+    it("fails requests that haven't started iterating when hierarchy changes", async () => {
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
+        createQueryDefinition("Q"),
+      ]);
+      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      const iterator = provider.getNodes({ parentNode: undefined });
+      provider.setFormatter(undefined);
+      await expect(iterator.next()).rejects.toThrow(HierarchyRequestInterruptedError);
+      expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
+    it("fails requests made after the provider is disposed", async () => {
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
+        createQueryDefinition("Q"),
+      ]);
+      const provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      provider[Symbol.dispose]();
+      await expect(provider.getNodes({ parentNode: undefined }).next()).rejects.toThrow(
+        HierarchyRequestInterruptedError,
+      );
+      expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
     it("unsubscribes from iModel changes and fails in-flight requests on dispose", async () => {
       const imodelChanged = new BeEvent<() => void>();
       const definitionsPromise = new ResolvablePromise<HierarchyLevelDefinition>();

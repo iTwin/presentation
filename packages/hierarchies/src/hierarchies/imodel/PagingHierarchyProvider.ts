@@ -18,7 +18,6 @@ import {
   Observable,
   of,
   repeat,
-  Subject,
   take,
   tap,
   throwError,
@@ -193,7 +192,8 @@ export interface PagingHierarchyProvider extends Disposable {
    * @throws `InvalidContinuationTokenError` from the iterator, if the given `continuationToken` points to a hierarchy
    * level definition that doesn't exist.
    * @throws `HierarchyRequestInterruptedError` from the iterator, if the hierarchy changes or the provider is disposed
-   * before all nodes are streamed. The iterator only finishes without an error after the last node of the hierarchy level.
+   * after `getNodes` is called and before all nodes are streamed, or if the provider was already disposed when
+   * `getNodes` was called. The iterator only finishes without an error after the last node of the hierarchy level.
    */
   getNodes(props: GetPagedHierarchyNodesProps): AsyncIterableIterator<PagedHierarchyNode>;
 
@@ -304,8 +304,9 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   readonly #componentId = Guid.createValue();
   readonly #sourceName: string;
   readonly #pageSize: number;
-  // emits whenever the hierarchy changes or the provider is disposed - in-flight requests fail when that happens
-  readonly #interrupt = new Subject<void>();
+  // incremented whenever the hierarchy changes or the provider is disposed - requests started before that fail
+  readonly #interruptGeneration = new BehaviorSubject(0);
+  #disposed = false;
   #nodesQueryClauseFactory: NodesQueryClauseFactory;
   #valuesFormatter: IPrimitiveValueFormatter;
   #unsubscribe?: () => void;
@@ -336,7 +337,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
           category: `${LOGGING_NAMESPACE}.Events`,
           message: () => `Data source changed: "${this.#imodelAccess.imodelKey}"`,
         });
-        this.#interrupt.next();
+        this.#interrupt();
         // the iModel's schemas may have changed, so re-create the query factory to drop its schema-derived caches
         this.#nodesQueryClauseFactory = this.#createNodesQueryClauseFactory();
         this.#hierarchyChanged.raiseEvent({});
@@ -346,8 +347,13 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     }
   }
 
+  #interrupt() {
+    this.#interruptGeneration.next(this.#interruptGeneration.value + 1);
+  }
+
   public [Symbol.dispose]() {
-    this.#interrupt.next();
+    this.#disposed = true;
+    this.#interrupt();
     this.#unsubscribe?.();
     this.#unsubscribe = undefined;
   }
@@ -357,7 +363,7 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   }
 
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
-    this.#interrupt.next();
+    this.#interrupt();
     this.#valuesFormatter = formatter ?? createDefaultValueFormatter();
     this.#hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this.#valuesFormatter } });
   }
@@ -368,8 +374,15 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
       props.continuationToken !== undefined ? decodeContinuationToken(props.continuationToken) : undefined;
     // number of nodes that the consumer has requested, but hasn't received yet
     const pendingRequestsCount = new BehaviorSubject(0);
+    // the request is interrupted by any hierarchy change after this call, even if iteration hasn't started yet
+    const generation = this.#interruptGeneration.value;
+    const interrupt = this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
     return requestOnDemand({
-      iterator: eachValueFrom(this.#getNodesObservable({ ...props, continuationToken, pendingRequestsCount })),
+      iterator: eachValueFrom(
+        this.#getNodesObservable({ ...props, continuationToken, pendingRequestsCount }).pipe(
+          throwOnInterrupt(interrupt),
+        ),
+      ),
       onRequest: () => pendingRequestsCount.next(pendingRequestsCount.value + 1),
     });
   }
@@ -400,7 +413,6 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
           ++nodesCount;
           pendingRequestsCount.next(pendingRequestsCount.value - 1);
         }),
-        throwOnInterrupt(this.#interrupt),
         finalize(() => {
           /* v8 ignore next -- @preserve */
           doLog({
@@ -712,12 +724,17 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
   }
 }
 
-/** Fails the stream with `HierarchyRequestInterruptedError` if `interrupt` emits before the stream finishes. */
-function throwOnInterrupt<T>(interrupt: Observable<void>): MonoTypeOperatorFunction<T> {
+/**
+ * Fails the stream with `HierarchyRequestInterruptedError` if `interrupt` emits before the stream finishes. When
+ * `interrupt` emits synchronously on subscription, the source isn't subscribed to at all.
+ */
+function throwOnInterrupt<T>(interrupt: Observable<unknown>): MonoTypeOperatorFunction<T> {
   return (source) =>
     new Observable<T>((subscriber) => {
       subscriber.add(interrupt.subscribe(() => subscriber.error(new HierarchyRequestInterruptedError())));
-      subscriber.add(source.subscribe(subscriber));
+      if (!subscriber.closed) {
+        subscriber.add(source.subscribe(subscriber));
+      }
     });
 }
 
