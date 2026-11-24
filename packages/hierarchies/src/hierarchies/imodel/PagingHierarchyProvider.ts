@@ -453,13 +453,14 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
    */
   #readLevel<TResult>(props: ReadLevelProps<TResult>): Observable<TResult> {
     const { parentNode, instanceFilter, demand, processNode } = props;
-    if (parentNode && !this.#canHaveChildren(parentNode)) {
+    const ownParentNode = parentNode ? this.#getOwnParentNode(parentNode) : undefined;
+    if (parentNode && !ownParentNode) {
       return EMPTY;
     }
     const resumePosition: LevelPosition | undefined = props.continuationToken?.[0];
     const resumeNestedContinuationToken = props.continuationToken?.slice(1) ?? [];
     const startDefinitionIndex = resumePosition?.definitionIndex ?? 0;
-    return this.#defineHierarchyLevel({ parentNode, instanceFilter }).pipe(
+    return this.#defineHierarchyLevel({ parentNode: ownParentNode, instanceFilter }).pipe(
       concatMap((definitions) => {
         if (startDefinitionIndex >= definitions.length && resumePosition) {
           return throwError(
@@ -687,14 +688,25 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     );
   }
 
-  #canHaveChildren(parentNode: PagingParentNode) {
+  /**
+   * Returns the given parent node the way it should be passed to the hierarchy definition - without the parts that
+   * don't belong to this provider. Returns `undefined` if no part of the node belongs to this provider, meaning it
+   * can't have children here.
+   */
+  #getOwnParentNode(parentNode: PagingParentNode): PagingParentNode | undefined {
     if (HierarchyNode.isGroupingNode(parentNode)) {
-      return false;
+      return undefined;
     }
-    if (HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this.#sourceName) {
-      return false;
+    const { key } = parentNode;
+    if (key.type === "generic") {
+      return !key.source || key.source === this.#sourceName ? parentNode : undefined;
     }
-    return true;
+    // The node may represent instances from multiple iModels. Instance ids are only unique within an iModel, so
+    // querying children of other iModels' instances could return children of unrelated instances of this iModel.
+    const instanceKeys = key.instanceKeys.filter(
+      (instanceKey) => !instanceKey.imodelKey || instanceKey.imodelKey === this.#imodelAccess.imodelKey,
+    );
+    return instanceKeys.length > 0 ? { ...parentNode, key: { ...key, instanceKeys } } : undefined;
   }
 }
 

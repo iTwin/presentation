@@ -869,7 +869,7 @@ describe("createPagingHierarchyProvider", () => {
       );
     });
 
-    it("returns no nodes for grouping and other source generic parent nodes", async () => {
+    it("returns no nodes for grouping, other source generic and other iModel instance parent nodes", async () => {
       const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
         { node: createTestSourceGenericNode() },
       ]);
@@ -886,7 +886,54 @@ describe("createPagingHierarchyProvider", () => {
           }),
         ),
       ).toEqual([]);
+      expect(
+        await collect(
+          provider.getNodes({
+            parentNode: {
+              key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "other-imodel" }] },
+              label: "",
+              parentKeys: [],
+            },
+          }),
+        ),
+      ).toEqual([]);
       expect(defineHierarchyLevel).not.toHaveBeenCalled();
+    });
+
+    it("passes only instance keys of provider's iModel to hierarchy definition", async () => {
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => [
+        { node: createTestSourceGenericNode({ key: "child", children: false }) },
+      ]);
+      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      const parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> = {
+        key: {
+          type: "instances",
+          instanceKeys: [
+            { className: "a.b", id: "0x1", imodelKey: "other-imodel" },
+            { className: "a.b", id: "0x2", imodelKey: "test-imodel" },
+            { className: "a.b", id: "0x3" },
+          ],
+        },
+        label: "parent",
+        parentKeys: [],
+      };
+      const nodes = await collect(provider.getNodes({ parentNode }));
+      expect(defineHierarchyLevel).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          parentNode: {
+            ...parentNode,
+            key: {
+              type: "instances",
+              instanceKeys: [
+                { className: "a.b", id: "0x2", imodelKey: "test-imodel" },
+                { className: "a.b", id: "0x3" },
+              ],
+            },
+          },
+        }),
+      );
+      // child nodes still refer to the parent node the way it was given
+      expect(nodes.map((n) => n.parentKeys)).toEqual([[parentNode.key]]);
     });
   });
 
