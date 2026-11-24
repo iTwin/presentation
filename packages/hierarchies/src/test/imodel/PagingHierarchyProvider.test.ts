@@ -353,6 +353,23 @@ describe("createPagingHierarchyProvider", () => {
       expect(imodelAccess.createQueryReader).toHaveBeenCalledOnce();
     });
 
+    it("stops loading immediately when the consumer stops while a node is being loaded", async () => {
+      const definitions = new ResolvablePromise<HierarchyLevelDefinition>();
+      setupQueries({ Q: createRows(1) });
+      const defineHierarchyLevel = vi.fn<HierarchyDefinition["defineHierarchyLevel"]>(async () => definitions);
+      using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition: { defineHierarchyLevel } });
+      const iterator = provider.getNodes({ parentNode: undefined });
+
+      const result = iterator.next();
+      await waitFor(() => expect(defineHierarchyLevel).toHaveBeenCalledOnce());
+      await expect(iterator.return!()).resolves.toEqual({ done: true, value: undefined });
+      await expect(result).resolves.toEqual({ done: true, value: undefined });
+
+      await definitions.resolve([createQueryDefinition("Q")]);
+      expect(imodelAccess.createQueryReader).not.toHaveBeenCalled();
+      await expect(iterator.next()).resolves.toEqual({ done: true, value: undefined });
+    });
+
     it("fails when a query fails", async () => {
       const error = new Error("test error");
       const rows = createRows(6);

@@ -26,7 +26,6 @@ import { BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
 import {
   createDefaultValueFormatter,
   createIModelInstanceLabelSelectClauseFactory,
-  eachValueFrom,
   formatConcatenatedValue,
 } from "@itwin/presentation-shared";
 import { HierarchyRequestInterruptedError, InvalidContinuationTokenError } from "../HierarchyErrors.js";
@@ -42,7 +41,7 @@ import { HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
 import { createNodesQueryClauseFactory } from "./NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "./TreeNodesReader.js";
 
-import type { MonoTypeOperatorFunction } from "rxjs";
+import type { MonoTypeOperatorFunction, Subscription } from "rxjs";
 import type { GenericInstanceFilter } from "@itwin/core-common";
 import type {
   ECSchemaProvider,
@@ -391,10 +390,8 @@ class PagingHierarchyProviderImpl implements PagingHierarchyProvider {
     const generation = this.#interruptGeneration.value;
     const interrupt = this.#interruptGeneration.pipe(filter((value) => this.#disposed || value !== generation));
     return requestOnDemand({
-      iterator: eachValueFrom(
-        this.#getNodesObservable({ ...props, continuationToken, tokenContext, pendingRequestsCount }).pipe(
-          throwOnInterrupt(interrupt),
-        ),
+      source: this.#getNodesObservable({ ...props, continuationToken, tokenContext, pendingRequestsCount }).pipe(
+        throwOnInterrupt(interrupt),
       ),
       onRequest: () => pendingRequestsCount.next(pendingRequestsCount.value + 1),
     });
@@ -761,28 +758,80 @@ function onDemand<T>(demand: Observable<unknown>, work: () => Observable<T>): Ob
 }
 
 /**
- * Converts the given iterator into one that calls `onRequest` whenever the consumer requests the next value, before
- * the value is requested from the source iterator.
+ * Creates an iterator that subscribes to `source` on the first `next()` call and calls `onRequest` whenever the
+ * consumer requests the next value. Unlike async generators, `return()` takes effect immediately, even while a `next()`
+ * call is pending: it unsubscribes from `source` and settles pending `next()` calls as done.
  */
-async function* requestOnDemand<T>({
-  iterator,
+function requestOnDemand<T>({
+  source,
   onRequest,
 }: {
-  iterator: AsyncIterableIterator<T>;
+  source: Observable<T>;
   onRequest: () => void;
 }): AsyncIterableIterator<T> {
-  try {
-    while (true) {
-      onRequest();
-      const result = await iterator.next();
-      if (result.done) {
-        return;
-      }
-      yield result.value;
+  // values received from `source`, but not yet taken by `next()` calls
+  const values: T[] = [];
+  // `next()` calls waiting for a value
+  const pending: Array<{ resolve: (result: IteratorResult<T>) => void; reject: (reason: unknown) => void }> = [];
+  let subscription: Subscription | undefined;
+  let finished = false;
+  // wrapped to tell apart "no error" from an error with `undefined` reason
+  let error: { reason: unknown } | undefined;
+  const done = (): IteratorResult<T> => ({ done: true, value: undefined });
+  // matches received values, errors and completion with pending `next()` calls
+  const settle = () => {
+    while (pending.length && values.length) {
+      pending.shift()!.resolve({ done: false, value: values.shift()! });
     }
-  } finally {
-    await iterator.return?.();
-  }
+    if (pending.length && error) {
+      // the error is reported once - subsequent `next()` calls report the iterator as done
+      const { reason } = error;
+      error = undefined;
+      pending.shift()!.reject(reason);
+    }
+    if (finished) {
+      pending.splice(0).forEach(({ resolve }) => resolve(done()));
+    }
+  };
+  return {
+    [Symbol.asyncIterator]() {
+      return this;
+    },
+    async next() {
+      // register the request before subscribing, because `source` may emit synchronously
+      const result = new Promise<IteratorResult<T>>((resolve, reject) => pending.push({ resolve, reject }));
+      // a buffered value already satisfies the request, so only ask `source` for more when there's none
+      if (!finished && !values.length) {
+        onRequest();
+        subscription ??= source.subscribe({
+          next: (value) => {
+            values.push(value);
+            settle();
+          },
+          error: (reason: unknown) => {
+            error = { reason };
+            finished = true;
+            settle();
+          },
+          complete: () => {
+            finished = true;
+            settle();
+          },
+        });
+      }
+      settle();
+      return result;
+    },
+    async return() {
+      // unsubscribing cancels any in-flight work, e.g. a query that's waiting for a page
+      subscription?.unsubscribe();
+      values.length = 0;
+      error = undefined;
+      finished = true;
+      settle();
+      return done();
+    },
+  };
 }
 
 function toDefinitionParentNode(parentNode: PagingParentNode): PagingParentNode {
