@@ -4,7 +4,7 @@
 
 Added `createPagingHierarchyProvider` for creating a hierarchy provider that loads iModel-based hierarchy levels in pages.
 
-Instead of requesting all nodes of a hierarchy level at once, the provider requests them page by page as they're read, so a hierarchy level of any size can be loaded in full. The page size defaults to 10 000 rows and can be changed through the `pageSize` prop. Each returned node has a `continuationToken`, which can be passed to `getNodes` to continue loading the hierarchy level from that node:
+Instead of requesting all nodes of a hierarchy level at once, the provider requests them page by page as they're read, so a hierarchy level of any size can be loaded in full. The page size defaults to 10k rows and can be changed through the `pageSize` prop. Each returned node has a `continuationToken`, which can be passed to `getNodes` to continue loading the hierarchy level from that node:
 
 ```ts
 using provider = createPagingHierarchyProvider({ imodelAccess, hierarchyDefinition });
