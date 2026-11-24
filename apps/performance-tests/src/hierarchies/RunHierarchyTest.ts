@@ -22,20 +22,20 @@ import type { RunOptions } from "../util/TestUtilities.js";
  */
 export function runHierarchyTest(
   testProps: {
-    iModelName: IModelName;
+    imodelName: IModelName;
     fullClassName?: EC.FullClassNameDotNotation;
     nodeSelectProps?: Partial<Props<DefineHierarchyLevelProps["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
-  const { iModelName, nodeSelectProps } = testProps;
+  const { imodelName, nodeSelectProps } = testProps;
   run({
     ...testProps,
     setup: () => {
-      const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
+      const imodel = SnapshotDb.openFile(Datasets.getDataset({ name: imodelName }).imodelPath);
       const fullClassName = testProps.fullClassName ?? normalizeFullClassName(PhysicalElement.classFullName);
       return {
-        iModel,
+        imodel,
         getHierarchyFactory: () => ({
           async defineHierarchyLevel({ parentNode, createSelectClause }: DefineHierarchyLevelProps) {
             if (parentNode) {
@@ -63,12 +63,17 @@ export function runHierarchyTest(
       };
     },
     test: async (props) => {
-      const provider = await StatelessHierarchyProvider.create({ ...props, rowLimit: "unbounded" });
+      const { imodel, ...hierarchyProps } = props;
+      const provider = await StatelessHierarchyProvider.create({
+        ...hierarchyProps,
+        iModel: imodel,
+        rowLimit: "unbounded",
+      });
       const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
         expect(nodeCount).toBe(testProps.expectedNodeCount);
       }
     },
-    cleanup: ({ iModel }) => iModel.close(),
+    cleanup: ({ imodel }) => imodel.close(),
   });
 }

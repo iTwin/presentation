@@ -70,21 +70,6 @@ export function getOptimalBatchSize({
   return Math.ceil(totalSize / Math.ceil(totalSize / maximumBatchSize));
 }
 
-/** @internal */
-export function createIdsSelector(ids: Id64Array): string {
-  // Note: `json_array` function only accepts up to 127 arguments and we may have more `ids` than that. As a workaround,
-  // we're creating an array of arrays
-  const slices = new Array<Id64String[]>();
-  for (let sliceStartIndex = 0; sliceStartIndex < ids.length; sliceStartIndex += 127) {
-    let sliceEndIndex: number | undefined = sliceStartIndex + 127;
-    if (sliceEndIndex > ids.length) {
-      sliceEndIndex = undefined;
-    }
-    slices.push(ids.slice(sliceStartIndex, sliceEndIndex));
-  }
-  return `json_array(${slices.map((sliceIds) => `json_array(${sliceIds.map((id) => `'${id}'`).join(",")})`).join(",")})`;
-}
-
 /**
  * Builds an ECSQL fragment that excludes the given classes via `<alias>.ECClassId IS NOT (...)`.
  * Returns an empty string when no classes are provided.
@@ -116,17 +101,6 @@ export function createWhereClause({ conditions }: { conditions: Array<string | u
     return `WHERE ${filteredConditions[0]}`;
   }
   return `WHERE ${filteredConditions.map((condition) => `(${condition})`).join(" AND ")}`;
-}
-
-/** @internal */
-export function parseIdsSelectorResult(selectorResult: any): Id64Array {
-  if (!Array.isArray(selectorResult)) {
-    return [];
-  }
-  return selectorResult.reduce(
-    (arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])],
-    new Array<Id64String>(),
-  );
 }
 
 /** @internal */
