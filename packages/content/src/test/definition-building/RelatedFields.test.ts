@@ -142,11 +142,15 @@ describe("collectRelatedPropertyFields", () => {
         name: "Plain",
         meaning: "sameInstance",
         context: [
-          { stepIndex: 0, kind: "targetClass" },
+          { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
           { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "sameInstance" },
         ],
       },
-      { name: "Categorized", meaning: "sameInstance", context: [{ stepIndex: 0, kind: "targetClass" }] },
+      {
+        name: "Categorized",
+        meaning: "sameInstance",
+        context: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
+      },
     ]);
   });
 
@@ -163,7 +167,7 @@ describe("collectRelatedPropertyFields", () => {
           { stepIndex: 1, target: { select: "all" } },
         ],
       },
-      expected: [{ stepIndex: 0, kind: "targetClass" }],
+      expected: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     },
     {
       name: "an earlier step whose fields all have category overrides",
@@ -173,7 +177,7 @@ describe("collectRelatedPropertyFields", () => {
           { stepIndex: 1, target: { select: "all" } },
         ],
       },
-      expected: [{ stepIndex: 0, kind: "targetClass" }],
+      expected: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     },
     {
       name: "an earlier step selecting all from a class without properties",
@@ -183,12 +187,12 @@ describe("collectRelatedPropertyFields", () => {
           { stepIndex: 1, target: { select: "all" } },
         ],
       },
-      expected: [{ stepIndex: 0, kind: "targetClass" }],
+      expected: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     },
     {
       name: "a same-step relationship without properties",
       declaration: { properties: [{ stepIndex: 1, relationship: { select: "all" }, target: { select: "all" } }] },
-      expected: [{ stepIndex: 1, kind: "relationshipClass" }],
+      expected: [{ stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
     },
     {
       name: "a same-step relationship whose fields attach to parent property categories",
@@ -261,19 +265,19 @@ describe("collectRelatedPropertyFields", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
     const fields = await collectRelatedPropertyFields({ imodelAccess, source, ...wireProviders([provider]) });
     expect(fields.map(({ categorization }) => categorization.categoryContext)).toEqual([
       [
-        { stepIndex: 0, kind: "targetClass" },
-        { stepIndex: 1, kind: "relationshipClass" },
+        { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+        { stepIndex: 1, kind: "relationshipClass", relationshipMeaning: "relatedInstance" },
       ],
     ]);
     expect(fields.map(({ inheritedCategoryContext }) => inheritedCategoryContext)).toEqual([
-      [{ stepIndex: 0, kind: "targetClass" }],
+      [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     ]);
   });
 
@@ -688,7 +692,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -720,7 +724,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
           effectiveCardinalityHint: "many",
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -753,7 +757,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -782,7 +786,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -807,7 +811,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -827,7 +831,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -848,7 +852,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);
@@ -886,7 +890,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
       {
@@ -896,7 +900,7 @@ describe("collectRelatedPropertyFields — nested groups", () => {
         nested: {
           anchorClassName: "TestSchema.B",
           prefixStepCount: 1,
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         },
       },
     ]);

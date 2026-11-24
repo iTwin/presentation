@@ -310,7 +310,12 @@ describe("mergePropertyFieldsByIdentity", () => {
   });
 
   it.each<{ name: string; placement: Partial<FieldCategorization> }>([
-    { name: "ancestry", placement: { categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }] } },
+    {
+      name: "ancestry",
+      placement: {
+        categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
+      },
+    },
     { name: "relationship meaning", placement: { relationshipMeaning: "sameInstance" } },
     { name: "anchor", placement: { anchor: "relationshipClass" } },
   ])("merges identical explicit category overrides with different $name", ({ placement }) => {
@@ -369,8 +374,11 @@ describe("mergePropertyFieldsByIdentity", () => {
   });
 
   describe("category placement", () => {
-    const outerContext = [{ stepIndex: 0, kind: "targetClass" }] as const;
-    const innerContext = [...outerContext, { stepIndex: 1, kind: "targetClass" }] as const;
+    const outerContext = [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }] as const;
+    const innerContext = [
+      ...outerContext,
+      { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+    ] as const;
     const geometry = { source: "propertyCategory", id: "Stuff.Geometry", label: "Geometry" } as const;
     const create = (valueClassName: EC.FullClassNameDotNotation) =>
       createField({ propertyClassName: "Stuff.Thing", propertyName: "Height", valueClassNames: [valueClassName] });
@@ -533,7 +541,10 @@ describe("mergePropertyFieldsByIdentity", () => {
       expect(() =>
         placementOf([
           { providerId: "a_v1", context: outerContext },
-          { providerId: "a_v1", context: [{ stepIndex: 1, kind: "targetClass" }] },
+          {
+            providerId: "a_v1",
+            context: [{ stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
+          },
         ]),
       ).to.throw(/divergent metadata/);
     });
@@ -542,7 +553,10 @@ describe("mergePropertyFieldsByIdentity", () => {
       expect(() =>
         placementOf([
           { providerId: "a_v1", context: outerContext },
-          { providerId: "a_v1", context: [{ stepIndex: 0, kind: "relationshipClass" }] },
+          {
+            providerId: "a_v1",
+            context: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
+          },
         ]),
       ).to.throw(/divergent metadata/);
     });

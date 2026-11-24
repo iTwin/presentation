@@ -73,7 +73,7 @@ type CardinalityHint = "one" | "many";
 type CategoryContext = {
     stepIndex: number;
     kind: "targetClass" | "relationshipClass";
-    relationshipMeaning?: "relatedInstance" | "sameInstance";
+    relationshipMeaning: "relatedInstance" | "sameInstance";
 }[];
 
 // @public

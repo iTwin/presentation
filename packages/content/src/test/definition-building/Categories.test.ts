@@ -364,7 +364,7 @@ describe("collectCategories", () => {
       id: "d",
       propertyName: "PD",
       pathFromTarget: [aToB, bToC, cToD],
-      categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
@@ -391,15 +391,15 @@ describe("collectCategories", () => {
       id: "c",
       propertyName: "PC",
       pathFromTarget: [aToB, bToC],
-      categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     });
     const dField = createCategorizedField({
       id: "d",
       propertyName: "PD",
       pathFromTarget: [aToB, bToC, cToD],
       categoryContext: [
-        { stepIndex: 0, kind: "targetClass" },
-        { stepIndex: 1, kind: "targetClass" },
+        { stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" },
+        { stepIndex: 1, kind: "targetClass", relationshipMeaning: "relatedInstance" },
       ],
     });
     const categories = await collectCategories({
@@ -555,14 +555,14 @@ describe("collectCategories", () => {
       propertyName: "TargetUn",
       pathFromTarget: [aToB],
       anchor: "targetClass",
-      categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }],
+      categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
     });
     const targetCat = createCategorizedField({
       id: "targetCat",
       propertyName: "TargetCat",
       pathFromTarget: [aToB],
       anchor: "targetClass",
-      categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }],
+      categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
       propertyCategory: geometry,
     });
     const categories = await collectCategories({
@@ -622,7 +622,7 @@ describe("collectCategories", () => {
       propertyName: "BC",
       pathFromTarget: [aToB, bToC],
       anchor: "relationshipClass",
-      categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+      categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
@@ -659,7 +659,7 @@ describe("collectCategories", () => {
       propertyName: "BC",
       pathFromTarget: [aToB, bToC],
       anchor: "relationshipClass",
-      categoryContext: [{ stepIndex: 0, kind: "relationshipClass" }],
+      categoryContext: [{ stepIndex: 0, kind: "relationshipClass", relationshipMeaning: "relatedInstance" }],
     });
     const categories = await collectCategories({
       imodelAccess: createSchemaAccess([
@@ -751,7 +751,7 @@ describe("collectCategories", () => {
           nested: {
             anchorClassName: "TestSchema.B",
             prefixStepCount: 1,
-            categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+            categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
           },
         },
       ],
@@ -793,7 +793,7 @@ describe("collectCategories", () => {
       const field = createCategorizedField({
         pathFromTarget: [aToB, bToC],
         propertyCategory: geometryCategory,
-        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
       });
       const categories = await collect([field], nestedSource());
       const bId = CategoryDefinition.computeId({ path: [aToB] });
@@ -815,13 +815,13 @@ describe("collectCategories", () => {
         pathFromTarget: [aToB, bToC],
         propertyCategory: geometryCategory,
         relationshipMeaning: "sameInstance",
-        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
       });
       const uncategorized = createCategorizedField({
         id: "uncategorized",
         pathFromTarget: [aToB, bToC],
         relationshipMeaning: "sameInstance",
-        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
       });
       const categories = await collect([categorized, uncategorized], nestedSource());
       const bId = CategoryDefinition.computeId({ path: [aToB] });
@@ -911,7 +911,7 @@ describe("collectCategories", () => {
           id: "nested",
           propertyName: "P3",
           pathFromTarget: [aToB, bToC],
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         }),
       ];
       const forward = createFields();
@@ -1101,7 +1101,7 @@ describe("collectCategories", () => {
           id: "nested",
           pathFromTarget: [aToB, bToC],
           relationshipMeaning: "sameInstance",
-          categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+          categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
         }),
       ];
       const forward = createFields();
@@ -1139,7 +1139,7 @@ describe("collectCategories", () => {
             nested: {
               anchorClassName: props.anchorClassName,
               prefixStepCount: 1,
-              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
             },
           },
         ],
@@ -1226,7 +1226,7 @@ describe("collectCategories", () => {
             nested: {
               anchorClassName: "TestSchema.B",
               prefixStepCount: 1,
-              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
             },
           },
           {
@@ -1236,7 +1236,7 @@ describe("collectCategories", () => {
             nested: {
               anchorClassName: "TestSchema.B",
               prefixStepCount: 1,
-              categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+              categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
             },
           },
         ],

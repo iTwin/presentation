@@ -140,11 +140,14 @@ function categorizationAgrees(a: FieldCategorization, b: FieldCategorization): b
     a.category?.id === b.category?.id &&
     (!ownMeaningAffectsPlacement || meaningsAgree(a.relationshipMeaning, b.relationshipMeaning)) &&
     a.categoryContext.length === b.categoryContext.length &&
-    a.categoryContext.every(
-      (context, index) =>
-        context.stepIndex === b.categoryContext[index].stepIndex && context.kind === b.categoryContext[index].kind,
-    ) &&
-    meaningsAgree(a.categoryContext[0]?.relationshipMeaning, b.categoryContext[0]?.relationshipMeaning) &&
+    a.categoryContext.every((context, index) => {
+      const other = b.categoryContext[index];
+      return (
+        context.stepIndex === other.stepIndex &&
+        context.kind === other.kind &&
+        (index > 0 || context.relationshipMeaning === other.relationshipMeaning)
+      );
+    }) &&
     propertyCategoryLabelOf(a) === propertyCategoryLabelOf(b)
   );
 }

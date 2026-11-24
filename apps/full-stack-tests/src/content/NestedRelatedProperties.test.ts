@@ -311,7 +311,7 @@ describe("Content", () => {
       expect(nestedGroup!.nested).toEqual({
         anchorClassName: setup.schema.items.Node.fullName,
         prefixStepCount: 1,
-        categoryContext: [{ stepIndex: 0, kind: "targetClass" }],
+        categoryContext: [{ stepIndex: 0, kind: "targetClass", relationshipMeaning: "relatedInstance" }],
       });
       expect(nestedGroup!.paths).toHaveLength(1);
       expect(nestedGroup!.paths[0].path).toHaveLength(2);
