@@ -6,7 +6,7 @@
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
+import { isErrorBlockingExpansion, isPlaceholderItem, useErrorNodes, useFlatTreeItems } from "../FlatTreeNode.js";
 import { useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent, useMergedRefs } from "../Utils.js";
 import { TreeNodeLabelEditorOverlay } from "./LabelEditor.js";
@@ -75,6 +75,21 @@ export interface StrataKitTreeRendererAttributes {
    * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
   renameNode: (nodePredicate: (node: TreeNode) => boolean) => "node-not-found" | "success";
+  /**
+   * Scrolls the first node that matches the given predicate into view. Node must be already loaded in the tree.
+   * If the node is under a collapsed parent or deep in the hierarchy, all its collapsed ancestors are expanded
+   * to make it visible before scrolling to it.
+   *
+   * The optional `onComplete` callback is called with the target node after it's scrolled into view. A newer call
+   * supersedes a pending one, whose `onComplete` is then never called.
+   *
+   * Returns "node-not-found" if no node matches the predicate or the matching node can't be displayed (e.g. one of its
+   * ancestors has an error that blocks expansion), "success" if scrolling was initiated.
+   */
+  scrollToNode: (props: {
+    nodePredicate: (node: TreeNode) => boolean;
+    onComplete?: (node: TreeNode) => void;
+  }) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -134,13 +149,8 @@ export const StrataKitTreeRenderer: FC<
     const renameContext = useTreeNodeRenameContextValue({ getEditingProps });
     useImperativeHandle(forwardedRef, () => ({
       renameNode: (nodePredicate) =>
-        expandAndScrollToNode({
-          nodePredicate,
-          onComplete: (targetNode) => {
-            // give time to scroll node into view before starting rename
-            requestAnimationFrame(() => renameContext.startRename(targetNode));
-          },
-        }),
+        expandAndScrollToNode({ nodePredicate, onComplete: (targetNode) => renameContext.startRename(targetNode) }),
+      scrollToNode: expandAndScrollToNode,
     }));
 
     const cancelRename = renameContext.cancelRename;
@@ -298,8 +308,11 @@ function useExpandAndScrollToNode({
       return;
     }
     virtualizer.scrollToIndex(index, { align: "center" });
-    scrollToNode.current.onScrollComplete?.();
+    const { onScrollComplete } = scrollToNode.current;
     scrollToNode.current = undefined;
+    if (onScrollComplete) {
+      requestAnimationFrame(onScrollComplete);
+    }
   }, [flatItems, virtualizer]);
 
   return ({
@@ -321,9 +334,14 @@ function useExpandAndScrollToNode({
         onScrollComplete: onComplete ? () => onComplete(targetNode) : undefined,
       };
     } else {
+      // supersede any request still waiting for expansion
+      scrollToNode.current = undefined;
       const index = flatItems.findIndex((flatItem) => flatItem.id === targetNode.id);
       virtualizer.scrollToIndex(index, { align: "center" });
-      onComplete?.(targetNode);
+      if (onComplete) {
+        // give the virtualizer a frame to render the node before notifying
+        requestAnimationFrame(() => onComplete(targetNode));
+      }
     }
     return "success";
   };
@@ -334,7 +352,8 @@ function findPathToNode(rootNodes: TreeNode[], nodePredicate: (node: TreeNode) =
     if (nodePredicate(parent)) {
       return [parent];
     }
-    if (parent.children !== true) {
+    // children of nodes with expansion-blocking errors are never rendered
+    if (parent.children !== true && !parent.errors.some(isErrorBlockingExpansion)) {
       const childPath = findPathToNode(parent.children, nodePredicate);
       if (childPath) {
         return [parent, ...childPath];
